@@ -21,7 +21,7 @@
 import {TextTypes} from '../../types/common';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {availConfLevels} from './confIntervalCalc';
@@ -55,7 +55,7 @@ export const enum FreqQuantities {
 /**
  * This is a common ancestor for both 2d and flat frequency tables.
  */
-export abstract class GeneralCTStore extends SimplePageStore {
+export abstract class GeneralCTStore extends StatefulModel {
 
     protected pageModel:PageModel;
 

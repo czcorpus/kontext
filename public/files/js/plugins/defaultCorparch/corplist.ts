@@ -22,7 +22,7 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import * as common from './common';
@@ -40,7 +40,7 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
 /**
  * A general store for processing corpus listing queries
  */
-export class QueryProcessingStore extends SimplePageStore {
+export class QueryProcessingStore extends StatefulModel {
 
     protected tagPrefix:string;
 
@@ -215,7 +215,7 @@ export interface CorplistDataResponse extends Kontext.AjaxResponse, CorplistData
 /**
  * This store handles table dataset
  */
-export class CorplistTableStore extends SimplePageStore {
+export class CorplistTableStore extends StatefulModel {
 
     protected pluginApi:IPluginApi;
 

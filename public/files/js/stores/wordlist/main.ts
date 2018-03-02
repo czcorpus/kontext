@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore, validateGzNumber} from '../base';
+import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {WordlistFormStore} from './form';
@@ -68,7 +68,7 @@ export interface WlSizeAjaxResponse extends Kontext.AjaxResponse {
 /**
  *
  */
-export class WordlistResultStore extends SimplePageStore {
+export class WordlistResultStore extends StatefulModel {
 
     layoutModel:PageModel;
 

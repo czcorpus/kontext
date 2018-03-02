@@ -26,7 +26,7 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import * as Rx from '@reactivex/rxjs';
-import {SynchronizedModel, SimplePageStore} from '../base';
+import {SynchronizedModel, StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
@@ -784,7 +784,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 /**
  *
  */
-export class QueryHintStore extends SimplePageStore {
+export class QueryHintStore extends StatefulModel {
 
     private hints:Array<string>;
 

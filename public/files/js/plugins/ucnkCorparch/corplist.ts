@@ -21,7 +21,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
@@ -141,7 +141,7 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
     }
 }
 
-export class CorpusAccessRequestStore extends SimplePageStore {
+export class CorpusAccessRequestStore extends StatefulModel {
 
     private pluginApi:IPluginApi;
 

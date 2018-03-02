@@ -19,7 +19,7 @@
  */
 
 import {Kontext, TextTypes} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -119,7 +119,7 @@ export const enum Dimensions {
 /**
  *
  */
-export class CTFreqFormStore extends SimplePageStore {
+export class CTFreqFormStore extends StatefulModel {
 
     public static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
 

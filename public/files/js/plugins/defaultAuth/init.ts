@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -35,7 +35,7 @@ import {UserProfileStore} from './profile';
 /**
  *
  */
-export class UserStatusStore extends SimplePageStore {
+export class UserStatusStore extends StatefulModel {
 
     pluginApi:IPluginApi;
 

@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
@@ -102,7 +102,7 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 /**
  *
  */
-export class SortStore extends SimplePageStore implements ISubmitableSortStore {
+export class SortStore extends StatefulModel implements ISubmitableSortStore {
 
     private pageModel:PageModel;
 
@@ -269,7 +269,7 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
 /**
  *
  */
-export class MultiLevelSortStore extends SimplePageStore implements ISubmitableSortStore {
+export class MultiLevelSortStore extends StatefulModel implements ISubmitableSortStore {
 
     private static LEFTMOST_CTX = ['-3<0', '-2<0', '-1<0', '0~0<0', '1<0', '2<0', '3<0'];
     private static RIGHTMOST_CTX = ['-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0'];

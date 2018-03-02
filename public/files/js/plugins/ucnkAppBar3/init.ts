@@ -26,10 +26,10 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
-export class AppBarStore extends SimplePageStore {
+export class AppBarStore extends StatefulModel {
 
     private layoutModel:PageModel;
 

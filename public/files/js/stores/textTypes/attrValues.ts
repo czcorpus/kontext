@@ -20,7 +20,7 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -103,7 +103,7 @@ export interface InitialData {
  * All the state data is based on Immutable.js except for individual data
  * items which are updated via manual copying (i.e. no Immutable.Record).
  */
-export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTypesStore,
+export class TextTypesStore extends StatefulModel implements TextTypes.ITextTypesStore,
         TextTypes.IAdHocSubcorpusDetector {
 
     private attributes:Immutable.List<TextTypes.AttributeSelection>;

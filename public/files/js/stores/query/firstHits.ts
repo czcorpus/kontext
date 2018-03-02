@@ -23,12 +23,12 @@
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
-export class FirstHitsStore extends SimplePageStore {
+export class FirstHitsStore extends StatefulModel {
 
     private layoutModel:PageModel;
 

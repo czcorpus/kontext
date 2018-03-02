@@ -19,7 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -43,7 +43,7 @@ export function fetchSampleFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 }
 
 
-export class SampleStore extends SimplePageStore {
+export class SampleStore extends StatefulModel {
 
     private pageModel:PageModel;
 

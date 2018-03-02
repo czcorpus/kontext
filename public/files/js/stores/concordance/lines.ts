@@ -26,7 +26,7 @@ import {Kontext, TextTypes, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
-import {SimplePageStore, SynchronizedModel} from '../base';
+import {StatefulModel, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -248,7 +248,7 @@ function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
 /**
  *
  */
-export class DummySyntaxViewStore extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
+export class DummySyntaxViewStore extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
 
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
 

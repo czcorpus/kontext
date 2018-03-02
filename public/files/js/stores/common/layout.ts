@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
@@ -31,7 +31,7 @@ import * as Immutable from 'immutable';
 /**
  *
  */
-export class MessageStore extends SimplePageStore implements Kontext.MessagePageStore {
+export class MessageStore extends StatefulModel implements Kontext.MessagePageStore {
 
     messages:Immutable.List<Kontext.UserNotification>;
 
@@ -155,7 +155,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
 /**
  *
  */
-export class CorpusInfoStore extends SimplePageStore {
+export class CorpusInfoStore extends StatefulModel {
 
     pluginApi:IPluginApi;
 

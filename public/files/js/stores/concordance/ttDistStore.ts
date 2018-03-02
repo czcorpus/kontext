@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
@@ -92,7 +92,7 @@ export interface FreqBlock {
 
 
 
-export class TextTypesDistStore extends SimplePageStore {
+export class TextTypesDistStore extends StatefulModel {
 
     private static SAMPLE_SIZE = 10000;
 

@@ -19,13 +19,13 @@
  */
 
 import {MultiDict} from '../../util';
-import {SimplePageStore, validateNumber} from '../base';
+import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 
 
-export class ConcSaveStore extends SimplePageStore {
+export class ConcSaveStore extends StatefulModel {
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 

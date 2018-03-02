@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
@@ -49,7 +49,7 @@ export interface CollFormProps extends CollFormInputs {
 /**
  *
  */
-export class CollFormStore extends SimplePageStore {
+export class CollFormStore extends StatefulModel {
 
     private pageModel:PageModel;
 

@@ -22,7 +22,7 @@
 
 import {Kontext} from '../../types/common';
 import {FreqResultResponse} from '../../types/ajaxResponses';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -60,7 +60,7 @@ export interface ResultBlock {
 }
 
 
-export class FreqDataRowsStore extends SimplePageStore {
+export class FreqDataRowsStore extends StatefulModel {
 
     private pageModel:PageModel;
 

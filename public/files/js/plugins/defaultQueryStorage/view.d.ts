@@ -25,5 +25,5 @@ import {Kontext} from '../../types/common';
 export function init(
     dispatcher:Kontext.ActionDispatcher,
     he:Kontext.ComponentHelpers,
-    queryStorageStore:Kontext.PageStore
+    queryStorageStore:Kontext.EventEmitter
 ):{QueryStorage:React.ComponentClass};

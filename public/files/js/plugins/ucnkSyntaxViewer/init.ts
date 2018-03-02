@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import {createGenerator} from './ucnkTreeView';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
@@ -34,7 +34,7 @@ require('./style.less'); // webpack
 /**
  *
  */
-class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
+class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
 
     private pluginApi:IPluginApi;
 

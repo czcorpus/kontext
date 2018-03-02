@@ -27,7 +27,7 @@ import * as RSVP from 'vendor/rsvp';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {SimplePageStore, validateGzNumber} from '../base';
+import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 
@@ -61,7 +61,7 @@ export interface WordlistFormProps {
 /**
  *
  */
-export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpusSwitchAware<WordlistFormProps>, PluginInterfaces.ICorparchStore {
+export class WordlistFormStore extends StatefulModel implements Kontext.ICorpusSwitchAware<WordlistFormProps>, PluginInterfaces.ICorparchStore {
 
     private layoutModel:PageModel;
 

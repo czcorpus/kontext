@@ -24,7 +24,7 @@ import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {init as wordlistResultViewInit} from 'views/wordlist/result';
 import {init as wordlistSaveViewInit} from 'views/wordlist/save';
-import {SimplePageStore} from '../stores/base';
+import {StatefulModel} from '../stores/base';
 import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../stores/wordlist/main';
 import {WordlistFormStore, WordlistFormProps} from '../stores/wordlist/form';
 import {WordlistSaveStore} from '../stores/wordlist/save';
@@ -36,7 +36,7 @@ require('styles/wordlist.less');
 /**
  *
  */
-export class WordlistPage extends SimplePageStore  {
+export class WordlistPage extends StatefulModel  {
 
     private layoutModel:PageModel;
 

@@ -22,7 +22,7 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import {SimplePageStore, validateGzNumber} from '../../stores/base';
+import {StatefulModel, validateGzNumber} from '../../stores/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {CollFormStore} from '../../stores/coll/collForm';
@@ -49,7 +49,7 @@ export interface AjaxResponse extends Kontext.AjaxResponse {
 }
 
 
-export class CollResultsSaveStore extends SimplePageStore {
+export class CollResultsSaveStore extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -291,7 +291,7 @@ class CalcWatchdog {
 /**
  *
  */
-export class CollResultStore extends SimplePageStore {
+export class CollResultStore extends StatefulModel {
 
     private layoutModel:PageModel;
 

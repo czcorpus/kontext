@@ -20,7 +20,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import {Kontext, TextTypes} from '../../types/common';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';
@@ -62,7 +62,7 @@ export interface CalculationResults {
 /**
  *
  */
-export class SubcMixerStore extends SimplePageStore {
+export class SubcMixerStore extends StatefulModel {
 
     static DispatchToken:string;
 

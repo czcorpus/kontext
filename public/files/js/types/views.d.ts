@@ -45,7 +45,7 @@ declare module "views/concordance/lineSelection" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        lineSelectionStore:Kontext.PageStore
+        lineSelectionStore:Kontext.EventEmitter
     ):LineSelectionViews;
 }
 
@@ -61,7 +61,7 @@ declare module "views/concordance/lineExtras" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        lineStore:Kontext.PageStore
+        lineStore:Kontext.EventEmitter
     );
 }
 
@@ -75,9 +75,9 @@ declare module "views/concordance/lines" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        lineStore:Kontext.PageStore,
-        lineSelectionStore:Kontext.PageStore,
-        concDetailStore:Kontext.PageStore
+        lineStore:Kontext.EventEmitter,
+        lineSelectionStore:Kontext.EventEmitter,
+        concDetailStore:Kontext.EventEmitter
     ):ConcLinesViews;
 }
 
@@ -91,7 +91,7 @@ declare module "views/concordance/paginator" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        lineStore:Kontext.PageStore
+        lineStore:Kontext.EventEmitter
     ):PaginatorViews;
 }
 
@@ -117,9 +117,9 @@ declare module "views/concordance/detail" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        concDetailStore:Kontext.PageStore,
-        refsDetailStore:Kontext.PageStore,
-        lineStore:Kontext.PageStore
+        concDetailStore:Kontext.EventEmitter,
+        refsDetailStore:Kontext.EventEmitter,
+        lineStore:Kontext.EventEmitter
     ):RefDetail;
 }
 
@@ -133,7 +133,7 @@ declare module "views/concordance/save" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        concSaveStore:Kontext.PageStore
+        concSaveStore:Kontext.EventEmitter
     ):ConcSaveViews;
 }
 
@@ -148,8 +148,8 @@ declare module "views/subcorp/forms" {
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         corparchComponent:React.ComponentClass,
-        subcorpFormStore:Kontext.PageStore,
-        subcorpWithinFormStore:Kontext.PageStore
+        subcorpFormStore:Kontext.EventEmitter,
+        subcorpWithinFormStore:Kontext.EventEmitter
     ):SubcorpFormViews;
 }
 
@@ -163,7 +163,7 @@ declare module "views/subcorp/list" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        subcorpListStore:Kontext.PageStore
+        subcorpListStore:Kontext.EventEmitter
     ):SubcorpListViews;
 }
 
@@ -177,7 +177,7 @@ declare module "views/textTypes" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        textTypesStore:Kontext.PageStore
+        textTypesStore:Kontext.EventEmitter
     ):TextTypesViews;
 
 }
@@ -193,7 +193,7 @@ declare module "views/menu" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         concArgHandler:Kontext.IConcArgsHandler,
-        mainMenuStore:Kontext.PageStore,
+        mainMenuStore:Kontext.EventEmitter,
         asyncTaskStore:Kontext.IAsyncTaskStore,
         layoutViews:Kontext.LayoutViews
     ):MainMenuViews;
@@ -211,12 +211,12 @@ declare module "views/query/main" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         CorparchWidget:React.ComponentClass,
-        queryStore:Kontext.PageStore,
-        textTypesStore:Kontext.PageStore,
-        queryHintStore:Kontext.PageStore,
-        withinBuilderStore:Kontext.PageStore,
-        virtualKeyboardStore:Kontext.PageStore,
-        queryContextStore:Kontext.PageStore,
+        queryStore:Kontext.EventEmitter,
+        textTypesStore:Kontext.EventEmitter,
+        queryHintStore:Kontext.EventEmitter,
+        withinBuilderStore:Kontext.EventEmitter,
+        virtualKeyboardStore:Kontext.EventEmitter,
+        queryContextStore:Kontext.EventEmitter,
         cqlEditorStore:any // TODO
     ):QueryFormViews;
 }
@@ -231,11 +231,11 @@ declare module "views/query/aligned" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        queryStore:Kontext.PageStore,
-        queryHintStore:Kontext.PageStore,
-        withinBuilderStore:Kontext.PageStore,
-        virtualKeyboardStore:Kontext.PageStore,
-        cqlEditorStore:Kontext.PageStore
+        queryStore:Kontext.EventEmitter,
+        queryHintStore:Kontext.EventEmitter,
+        withinBuilderStore:Kontext.EventEmitter,
+        virtualKeyboardStore:Kontext.EventEmitter,
+        cqlEditorStore:Kontext.EventEmitter
     ):AlignedQueryFormViews;
 }
 
@@ -261,8 +261,8 @@ declare module "views/query/sort" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        sortStore:Kontext.PageStore,
-        multiLevelSortStore:Kontext.PageStore
+        sortStore:Kontext.EventEmitter,
+        multiLevelSortStore:Kontext.EventEmitter
     ):SortFormViews;
 }
 
@@ -302,9 +302,9 @@ declare module "views/query/overview" {
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         viewDeps:QueryToolbarViewDeps,
-        queryReplayStore:Kontext.PageStore,
-        mainMenuStore:Kontext.PageStore,
-        saveAsFormStore:Kontext.PageStore
+        queryReplayStore:Kontext.EventEmitter,
+        mainMenuStore:Kontext.EventEmitter,
+        saveAsFormStore:Kontext.EventEmitter
     ):QueryToolbarViews;
 }
 
@@ -319,7 +319,7 @@ declare module "views/query/history" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        queryHistoryStore:Kontext.PageStore
+        queryHistoryStore:Kontext.EventEmitter
     ):RecentQueriesPageViews;
 }
 
@@ -334,7 +334,7 @@ declare module "views/query/save" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        saveAsFormStore:Kontext.PageStore
+        saveAsFormStore:Kontext.EventEmitter
     ):QuerySaveViews;
 }
 
@@ -350,7 +350,7 @@ declare module "views/wordlist/save" {
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         commonViews:CommonViews,
-        wordlistSaveStore:Kontext.PageStore
+        wordlistSaveStore:Kontext.EventEmitter
     ):WordlistSaveViews;
 }
 
@@ -367,7 +367,7 @@ declare module "views/wordlist/form" {
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         CorparchWidget:React.ComponentClass,
-        wordlistFormStore:Kontext.PageStore
+        wordlistFormStore:Kontext.EventEmitter
     ):WordlistFormViews;
 }
 
@@ -382,8 +382,8 @@ declare module "views/wordlist/result" {
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         wordlistSaveViews:any, // TODO type
-        wordlistResultStore:Kontext.PageStore,
-        wordlistSaveStore:Kontext.PageStore
+        wordlistResultStore:Kontext.EventEmitter,
+        wordlistSaveStore:Kontext.EventEmitter
     ):WordlistResultViews;
 }
 
@@ -398,7 +398,7 @@ declare module "views/options/structsAttrs" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
-        mainMenustore:Kontext.PageStore
+        mainMenustore:Kontext.EventEmitter
     ):StructsAndAttrsViews;
 }
 
@@ -430,7 +430,7 @@ declare module "views/options/main" {
         layoutViews:Kontext.LayoutViews,
         generalOptionsStore:ViewOptions.IGeneralViewOptionsStore,
         corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
-        mainMenuStore:Kontext.PageStore
+        mainMenuStore:Kontext.EventEmitter
     ):OptionsContainerViews;
 }
 
@@ -445,7 +445,7 @@ declare module "views/overview" {
     export function init(
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        corpusInfoStore:Kontext.PageStore
+        corpusInfoStore:Kontext.EventEmitter
     ):OverviewViews;
 }
 
@@ -462,7 +462,7 @@ declare module "views/analysis" {
         layoutViews:Kontext.LayoutViews,
         collFormViews:any, // TODO type
         freqFormViews:any, // TODO type
-        mainMenuStore:Kontext.PageStore
+        mainMenuStore:Kontext.EventEmitter
     ):AnalysisFrameViews;
 }
 
@@ -477,7 +477,7 @@ declare module "views/coll/forms" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        collFormStore:Kontext.PageStore
+        collFormStore:Kontext.EventEmitter
     ):CollFormViews;
 }
 
@@ -492,6 +492,6 @@ declare module "views/coll/result" {
         dispatcher:Kontext.ActionDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        collFormStore:Kontext.PageStore
+        collFormStore:Kontext.EventEmitter
     ):CollResultView;
 }

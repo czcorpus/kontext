@@ -77,7 +77,7 @@ export namespace PluginInterfaces {
         getWidgetView():React.ComponentClass;
     }
 
-    export interface ISyntaxViewer extends Kontext.PageStore {
+    export interface ISyntaxViewer extends Kontext.EventEmitter {
         render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
         close():void;
         onPageResize():void;
@@ -88,7 +88,7 @@ export namespace PluginInterfaces {
         getWidgetView():React.ComponentClass;
     }
 
-    export interface IQueryStorageStore extends Kontext.PageStore {
+    export interface IQueryStorageStore extends Kontext.EventEmitter {
 
         /**
          *

@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext, ViewOptions} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -29,7 +29,7 @@ import * as RSVP from 'vendor/rsvp';
 
 
 
-export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptions.ICorpViewOptionsStore {
+export class CorpusViewOptionsStore extends StatefulModel implements ViewOptions.ICorpViewOptionsStore {
 
     private layoutModel:PageModel;
 

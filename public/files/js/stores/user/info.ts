@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
@@ -29,7 +29,7 @@ import * as Immutable from 'immutable';
 
 /**
  */
-export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore {
+export class UserInfo extends StatefulModel implements Kontext.IUserInfoStore {
 
     private layoutModel:PageModel;
 

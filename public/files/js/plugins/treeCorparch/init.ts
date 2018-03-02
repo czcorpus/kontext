@@ -24,7 +24,7 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import * as Immutable from 'immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
 import {QueryStore} from '../../stores/query/main';
@@ -43,7 +43,7 @@ export interface Node {
 /**
  *
  */
-export class TreeWidgetStore extends SimplePageStore {
+export class TreeWidgetStore extends StatefulModel {
 
     static DispatchToken:string;
 

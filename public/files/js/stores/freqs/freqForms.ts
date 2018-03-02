@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -57,7 +57,7 @@ function validateGzNumber(s:string):boolean {
 /**
  *
  */
-export class MLFreqFormStore extends SimplePageStore {
+export class MLFreqFormStore extends StatefulModel {
 
     private pageModel:PageModel;
 
@@ -253,7 +253,7 @@ export class MLFreqFormStore extends SimplePageStore {
 /**
  *
  */
-export class TTFreqFormStore extends SimplePageStore {
+export class TTFreqFormStore extends StatefulModel {
 
     private pageModel:PageModel;
 

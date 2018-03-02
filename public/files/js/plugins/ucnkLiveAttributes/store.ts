@@ -22,7 +22,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext, TextTypes} from '../../types/common';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
@@ -92,7 +92,7 @@ function isArr(v) {
  * attr2: v2#3 [OK]
  * attr3: v3#1 v3#2 [WRONG]
  */
-export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrValueTextInputListener {
+export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValueTextInputListener {
 
     private pluginApi:IPluginApi;
 

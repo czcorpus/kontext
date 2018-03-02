@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
@@ -29,7 +29,7 @@ declare var kbLayouts:Array<Kontext.VirtualKeyboardLayout>; // generated on comp
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 
 
-export class VirtualKeyboardStore extends SimplePageStore {
+export class VirtualKeyboardStore extends StatefulModel {
 
     private pageModel:PageModel;
 

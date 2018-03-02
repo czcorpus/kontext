@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext, ViewOptions} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -42,7 +42,7 @@ interface ViewOptsResponse extends Kontext.AjaxResponse {
 }
 
 
-export class GeneralViewOptionsStore extends SimplePageStore implements ViewOptions.IGeneralViewOptionsStore {
+export class GeneralViewOptionsStore extends StatefulModel implements ViewOptions.IGeneralViewOptionsStore {
 
     private layoutModel:PageModel;
 

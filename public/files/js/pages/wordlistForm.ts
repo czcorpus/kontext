@@ -23,7 +23,7 @@ import {PageModel, PluginApi} from '../app/main';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
-import {SimplePageStore} from '../stores/base';
+import {StatefulModel} from '../stores/base';
 import {WordlistFormStore} from '../stores/wordlist/form';
 
 declare var require:any;

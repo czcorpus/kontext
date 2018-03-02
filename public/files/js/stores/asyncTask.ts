@@ -21,7 +21,7 @@
 import {Kontext} from '../types/common';
 import * as Immutable from 'immutable';
 import {IPluginApi} from '../types/plugins';
-import {SimplePageStore} from './base';
+import {StatefulModel} from './base';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 
 
@@ -37,7 +37,7 @@ interface AsyncTaskResponse extends Kontext.AjaxResponse {
  * Possible task statuses: PENDING, STARTED, RETRY, FAILURE, SUCCESS
  * (see Python module kontext.AsyncTaskStatus)
  */
-export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncTaskStore {
+export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTaskStore {
 
     private pageModel:IPluginApi;
 

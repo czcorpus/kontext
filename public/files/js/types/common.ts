@@ -125,7 +125,7 @@ export namespace Kontext {
      * A Flux Store. Please note that only Flux Views are expected
      * to (un)register store's events.
      */
-    export interface PageStore {
+    export interface EventEmitter {
 
         addChangeListener(fn:()=>void):void;
 
@@ -135,16 +135,9 @@ export namespace Kontext {
     }
 
     /**
-     * A store that another store can wait for.
-     */
-    export interface ComposableStore extends PageStore {
-        getDispatcherToken():string;
-    }
-
-    /**
      * A store managing access to a user information
      */
-    export interface IUserInfoStore extends PageStore {
+    export interface IUserInfoStore extends EventEmitter {
         getCredentials():UserCredentials;
         loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
     }
@@ -153,7 +146,7 @@ export namespace Kontext {
      * A store handling state of server-asynchronous
      * tasks.
      */
-    export interface IAsyncTaskStore extends PageStore {
+    export interface IAsyncTaskStore extends EventEmitter {
 
         registerTask(task:Kontext.AsyncTaskInfo):void;
 
@@ -191,7 +184,7 @@ export namespace Kontext {
      * menu item.
      *
      */
-    export interface IMainMenuStore extends PageStore {
+    export interface IMainMenuStore extends EventEmitter {
 
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
@@ -237,7 +230,7 @@ export namespace Kontext {
     /**
      * A store managing system messages presented to a user
      */
-    export interface MessagePageStore extends PageStore {
+    export interface MessagePageStore extends EventEmitter {
         addMessage(messageType:string, messageText:string, onClose:()=>void);
         getMessages():Immutable.List<UserNotification>;
         getTransitionTime():number;
@@ -318,7 +311,7 @@ export namespace Kontext {
     }
 
     export interface LayoutStores {
-        corpusInfoStore:PageStore,
+        corpusInfoStore:EventEmitter,
         messageStore:MessagePageStore,
         userInfoStore:IUserInfoStore,
         corpusViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
@@ -603,7 +596,7 @@ export namespace ViewOptions {
         widectx_globals:Array<[string, string]>;
     }
 
-    export interface ICorpViewOptionsStore extends Kontext.PageStore {
+    export interface ICorpViewOptionsStore extends Kontext.EventEmitter {
         getCorpusIdent():Kontext.FullCorpusIdent;
         initFromPageData(data:ViewOptions.PageData):void;
         loadData():RSVP.Promise<ViewOptions.PageData>;
@@ -620,7 +613,7 @@ export namespace ViewOptions {
         getAttrsAllpos():string;
     }
 
-    export interface IGeneralViewOptionsStore extends Kontext.PageStore {
+    export interface IGeneralViewOptionsStore extends Kontext.EventEmitter {
         getPageSize():string;
         getNewCtxSize():string;
         getLineNumbers():boolean;
@@ -836,7 +829,7 @@ export namespace TextTypes {
     /**
      *
      */
-    export interface ITextTypesStore extends Kontext.PageStore {
+    export interface ITextTypesStore extends Kontext.EventEmitter {
 
         applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
 

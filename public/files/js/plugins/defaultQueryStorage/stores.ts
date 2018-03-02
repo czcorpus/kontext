@@ -26,7 +26,7 @@ import {ActionPayload} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {SimplePageStore, cloneRecord} from '../../stores/base';
+import {StatefulModel, cloneRecord} from '../../stores/base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {highlightSyntax} from '../../stores/query/cqleditor/main';
@@ -48,7 +48,7 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
 };
 
 
-export class QueryStorageStore extends SimplePageStore implements PluginInterfaces.IQueryStorageStore {
+export class QueryStorageStore extends StatefulModel implements PluginInterfaces.IQueryStorageStore {
 
     private pluginApi:IPluginApi;
 

@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../types/common';
-import {SimplePageStore} from './base';
+import {StatefulModel} from './base';
 import {PageModel} from '../app/main';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -98,7 +98,7 @@ function importMenuData(data:InitialMenuData):Immutable.List<MenuEntry> {
 /**
  *
  */
-export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuStore {
+export class MainMenuStore extends StatefulModel implements Kontext.IMainMenuStore {
 
     private pageModel:PageModel;
 

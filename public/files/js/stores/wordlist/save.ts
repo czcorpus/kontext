@@ -20,11 +20,11 @@
 
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {MultiDict} from '../../util';
 
 
-export class WordlistSaveStore extends SimplePageStore {
+export class WordlistSaveStore extends StatefulModel {
 
     private layoutModel:PageModel;
 

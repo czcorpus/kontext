@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as common from './common';
 import {IPluginApi} from '../../types/plugins';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
@@ -48,7 +48,7 @@ export interface Options  {
 /**
  *
  */
-export class CorplistWidgetStore extends SimplePageStore {
+export class CorplistWidgetStore extends StatefulModel {
 
     private pluginApi:IPluginApi;
 

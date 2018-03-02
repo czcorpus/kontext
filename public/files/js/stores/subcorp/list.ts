@@ -26,7 +26,7 @@ import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../../app/main';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
@@ -59,7 +59,7 @@ export interface SortKey {
     reverse:boolean;
 }
 
-export class SubcorpListStore extends SimplePageStore {
+export class SubcorpListStore extends StatefulModel {
 
     private layoutModel:PageModel;
 

@@ -24,7 +24,7 @@ import {MultiDict, importColor} from '../../util';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
@@ -73,7 +73,7 @@ export interface SpeechOptions {
 /**
  * A store providing access to a detailed/extended kwic information.
  */
-export class ConcDetailStore extends SimplePageStore {
+export class ConcDetailStore extends StatefulModel {
 
     private static SPK_LABEL_OPACITY:number = 0.8;
 
@@ -785,7 +785,7 @@ export interface RefsColumn {
 /**
  * Store providing structural attribute information (aka "text types") related to a specific token
  */
-export class RefsDetailStore extends SimplePageStore {
+export class RefsDetailStore extends StatefulModel {
 
     private layoutModel:PageModel;
 

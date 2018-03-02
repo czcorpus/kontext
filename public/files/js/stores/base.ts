@@ -23,9 +23,9 @@ import * as Rx from '@reactivex/rxjs';
 import {ActionDispatcher, ActionPayload, IReducer, SideEffectHandler} from '../app/dispatcher';
 
 /**
- * A base class for KonText's Flux stores.
+ * A base class for KonText's legacy models.
  */
-export class SimplePageStore implements Kontext.PageStore {
+export class StatefulModel implements Kontext.EventEmitter {
 
     dispatcher:ActionDispatcher;
 
@@ -77,7 +77,7 @@ export class SimplePageStore implements Kontext.PageStore {
      * @param eventType
      * @param error
      */
-    notifyChangeListeners(eventType:string=SimplePageStore.CHANGE_EVENT, error:Error=null):void {
+    notifyChangeListeners(eventType:string=StatefulModel.CHANGE_EVENT, error:Error=null):void {
         const handlers = this.changeListeners.slice(0);
         for (let i = 0; i < handlers.length; i += 1) {
             try {
@@ -112,7 +112,7 @@ export class SimplePageStore implements Kontext.PageStore {
  * function which is more general but it can easily
  * handle synchronization too.
  */
-export class SynchronizedModel extends SimplePageStore {
+export class SynchronizedModel extends StatefulModel {
 
     constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);

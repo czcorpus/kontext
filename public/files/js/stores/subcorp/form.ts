@@ -19,14 +19,14 @@
  */
 
 import {TextTypes} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TextTypesStore} from '../../stores/textTypes/attrValues';
 
-export class SubcorpFormStore extends SimplePageStore {
+export class SubcorpFormStore extends StatefulModel {
 
     private pageModel:PageModel;
 
@@ -139,7 +139,7 @@ export class WithinLine {
 /**
  *
  */
-export class SubcorpWithinFormStore extends SimplePageStore {
+export class SubcorpWithinFormStore extends StatefulModel {
 
     private lines:Immutable.List<WithinLine>;
 

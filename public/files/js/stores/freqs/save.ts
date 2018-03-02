@@ -19,7 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
@@ -29,7 +29,7 @@ import {CTFlatStore} from './flatCtable';
 /**
  *
  */
-export class FreqResultsSaveStore extends SimplePageStore {
+export class FreqResultsSaveStore extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -176,7 +176,7 @@ export class FreqResultsSaveStore extends SimplePageStore {
 
 
 
-export class FreqCTResultsSaveStore extends SimplePageStore {
+export class FreqCTResultsSaveStore extends StatefulModel {
 
     ctTableStore:ContingencyTableStore;
 

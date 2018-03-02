@@ -25,12 +25,12 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../stores/base';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
 
-export class IssueReportingStore extends SimplePageStore {
+export class IssueReportingStore extends StatefulModel {
 
     private pluginApi:IPluginApi;
 

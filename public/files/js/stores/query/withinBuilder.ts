@@ -19,7 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -27,7 +27,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 /**
  *
  */
-export class WithinBuilderStore extends SimplePageStore {
+export class WithinBuilderStore extends StatefulModel {
 
     private pageModel:PageModel;
 

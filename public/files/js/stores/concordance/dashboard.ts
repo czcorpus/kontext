@@ -19,7 +19,7 @@
  */
 
 import {Kontext, ViewOptions} from '../../types/common';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -30,7 +30,7 @@ export interface ConcDashboardProps {
 }
 
 
-export class ConcDashboard extends SimplePageStore {
+export class ConcDashboard extends StatefulModel {
 
     private layoutModel:PageModel;
 

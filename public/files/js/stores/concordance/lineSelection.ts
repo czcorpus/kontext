@@ -22,7 +22,7 @@
 
 import {Kontext} from '../../types/common';
 import {MultiDict} from '../../util';
-import {SimplePageStore} from '../base';
+import {StatefulModel} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -40,12 +40,12 @@ interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
 }
 
 /**
- * This Flux store class handles state of selected concordance lines.
+ * This class handles state of selected concordance lines.
  * The selection can have one of two modes:
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionStore extends SimplePageStore {
+export class LineSelectionStore extends StatefulModel {
 
     static FILTER_NEGATIVE = 'n';
 
