@@ -19,10 +19,9 @@
  */
 
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';

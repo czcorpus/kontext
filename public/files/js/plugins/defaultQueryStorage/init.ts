@@ -16,13 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {QueryStorageModel} from './models';
 import {init as viewsInit} from './view';
 

@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../vendor.d.ts/react.d.ts" />
-
 /*
 The following part contains "fake" plugin modules representing
 virtual general plug-ins implementations with proper module

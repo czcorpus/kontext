@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
@@ -40,7 +38,7 @@ interface FrequencyFormState {
 }
 
 export interface FreqFormViews {
-    FrequencyForm:React.ComponentClass<FrequencyFormProps, FrequencyFormState>;
+    FrequencyForm:React.ComponentClass<FrequencyFormProps>;
 }
 
 
@@ -61,7 +59,7 @@ export function init(
         fttattr:Immutable.Set<string>;
     }
 
-    const StructAttrSelect:React.FuncComponent<StructAttrSelectProps> = (props) => {
+    const StructAttrSelect:React.SFC<StructAttrSelectProps> = (props) => {
 
         const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
@@ -115,7 +113,7 @@ export function init(
         flimit:string;
     }
 
-    const FreqLimitInput:React.FuncComponent<FreqLimitInputProps> = (props) => {
+    const FreqLimitInput:React.SFC<FreqLimitInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -136,7 +134,7 @@ export function init(
         fttIncludeEmpty:boolean;
     }
 
-    const IncludeEmptyCheckbox:React.FuncComponent<IncludeEmptyCheckboxProps> = (props) => {
+    const IncludeEmptyCheckbox:React.SFC<IncludeEmptyCheckboxProps> = (props) => {
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
@@ -157,7 +155,7 @@ export function init(
     interface TTFreqFormState {
         flimit:string;
         structAttrListSplitTypes:Immutable.List<Immutable.List<Kontext.AttrItem>>;
-        fttattr:Immutable.Set<String>;
+        fttattr:Immutable.Set<string>;
         fttIncludeEmpty:boolean;
     }
 
@@ -190,7 +188,7 @@ export function init(
             ttFreqFormModel.removeChangeListener(this._modelChangeHandler);
         }
 
-        render():React.ReactElement {
+        render():React.ReactElement<{}> {
             return (
                 <div>
                     <table className="form">
@@ -220,7 +218,7 @@ export function init(
                     <table className="form">
                         <tbody>
                             <tr>
-                                <td colSpan="2">
+                                <td colSpan={2}>
                                     <StructAttrSelect structAttrListSplitTypes={this.state.structAttrListSplitTypes}
                                             fttattr={this.state.fttattr} />
                                 </td>
@@ -240,7 +238,7 @@ export function init(
         attrList:Immutable.List<Kontext.AttrItem>;
     }
 
-    const MLAttrSelection:React.FuncComponent<MLAttrSelectionProps> = (props) => {
+    const MLAttrSelection:React.SFC<MLAttrSelectionProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -266,10 +264,10 @@ export function init(
 
     interface MLIgnoreCaseCheckboxProps {
         levelIdx:number;
-        mlxicaseValue:string;
+        mlxicaseValue:boolean;
     }
 
-    const MLIgnoreCaseCheckbox:React.FuncComponent<MLIgnoreCaseCheckboxProps> = (props) => {
+    const MLIgnoreCaseCheckbox:React.SFC<MLIgnoreCaseCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -292,7 +290,7 @@ export function init(
         positionRangeLabels:Array<string>;
     }
 
-    const MLPositionSelect:React.FuncComponent<MLPositionSelectProps> = (props) => {
+    const MLPositionSelect:React.SFC<MLPositionSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -321,7 +319,7 @@ export function init(
         alignType:AlignTypes;
     }
 
-    const MLPosAlignmentSelect:React.FuncComponent<MLPosAlignmentSelectProps> = (props) => {
+    const MLPosAlignmentSelect:React.SFC<MLPosAlignmentSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -349,7 +347,7 @@ export function init(
         numLevels:number;
     }
 
-    const MLMoveLevelControl:React.FuncComponent<MLMoveLevelControlProps> = (props) => {
+    const MLMoveLevelControl:React.SFC<MLMoveLevelControlProps> = (props) => {
 
         const handleClick = (direction) => {
             dispatcher.dispatch({
@@ -384,15 +382,15 @@ export function init(
         levelIdx:number;
         attrList:Immutable.List<Kontext.AttrItem>;
         mlxAttrValue:string;
-        mlxicaseValue:string;
+        mlxicaseValue:boolean;
         positionRangeLabels:Array<string>;
         mlxctxIndex:number;
-        alignType:string; // TODO use enum, use general align definition (not just CT)
+        alignType:AlignTypes;
         numLevels:number;
         isRemovable:boolean;
     }
 
-    const SingleLevelFieldTR:React.FuncComponent<SingleLevelFieldTRProps> = (props) => {
+    const SingleLevelFieldTR:React.SFC<SingleLevelFieldTRProps> = (props) => {
 
         const handleRemoveLevelClick = () => {
             dispatcher.dispatch({
@@ -458,7 +456,7 @@ export function init(
         mlxicaseValues:Immutable.List<boolean>;
         positionRangeLabels:Array<string>;
         mlxctxIndices:Immutable.List<number>;
-        alignTypes:Immutable.List<string>;
+        alignTypes:Immutable.List<AlignTypes>;
         maxNumLevels:number;
     }
 
@@ -518,7 +516,7 @@ export function init(
                             <td />
                         </tr>
                         <tr>
-                            <td colSpan="2">
+                            <td colSpan={2}>
                                 <table className="multilevel-freq-params">
                                     <tbody>
                                         <tr>
@@ -559,7 +557,7 @@ export function init(
                                                     <a id="add-freq-level-button" title={he.translate('freq__add_level_btn')}
                                                         onClick={this._handleAddLevelClick}>+</a>
                                                 </td>
-                                                <td colSpan="6" />
+                                                <td colSpan={6} />
                                             </tr>)
                                         : null}
                                     </tbody>
@@ -580,7 +578,7 @@ export function init(
         formType:string;
     }
 
-    const FreqFormSelector:React.FuncComponent<FreqFormSelectorProps> = (props) => {
+    const FreqFormSelector:React.SFC<FreqFormSelectorProps> = (props) => {
 
         const onItemClick = (ident) => {
             return () => {

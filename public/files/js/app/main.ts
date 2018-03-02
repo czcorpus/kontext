@@ -22,13 +22,11 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../types/compat.d.ts" />
-/// <reference path="../vendor.d.ts/react.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
-import * as React from 'vendor/react';
-import * as ReactDOM from 'vendor/react-dom';
-import * as RSVP from 'vendor/rsvp';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import RSVP from 'rsvp';
 import * as Rx from '@reactivex/rxjs';
 
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
@@ -164,7 +162,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
      */
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
             target:HTMLElement, props?:T):void {
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
@@ -859,7 +857,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.getComponentHelpers();
     }
 
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
             target:HTMLElement, props?:T):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
     }

@@ -19,8 +19,6 @@
  */
 
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 
 import {Kontext, TextTypes, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
@@ -31,7 +29,7 @@ import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {AudioPlayer} from './media';
 import {ConcSaveModel} from './save';
 

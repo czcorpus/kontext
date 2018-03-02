@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="./js-treex-view.d.ts" />
 
 /// <amd-dependency path="./js-treex-view" />
@@ -26,7 +24,7 @@ declare var $:any;
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 

@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext, TextTypes} from '../../types/common';
 import * as Immutable from 'immutable';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 import {init as ctFlatResultFactory} from './ctFlatResult';
 import {init as ctViewOptsFactory} from './ctViewOpts';
@@ -40,7 +38,11 @@ const enum TableViewMode {
 }
 
 
-interface CTFreqResultViewProps {}
+interface CTFreqResultViewProps {
+    onConfIntervalFrameReady:()=>void;
+    d3PaneWidth:number;
+    d3PaneHeight:number;
+}
 
 
 interface CTFreqResultViewState {
@@ -49,7 +51,7 @@ interface CTFreqResultViewState {
 
 
 interface Views {
-    CTFreqResultView:React.ComponentClass<CTFreqResultViewProps, CTFreqResultViewState>;
+    CTFreqResultView:React.ComponentClass<CTFreqResultViewProps>;
 }
 
 
@@ -415,7 +417,7 @@ export function init(
                                     <TableSortColsSelect sortAttr={this.props.sortDim2} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
-                                    <ColorMappingSelector value={this.props.colorMapping} />
+                                    <ColorMappingSelector colorMapping={this.props.colorMapping} />
                                 </li>
                             </ul>
                         </div>) :
@@ -464,7 +466,7 @@ export function init(
                         <th>
                             {this.props.attr1}
                         </th>
-                        <td colSpan="2">
+                        <td colSpan={2}>
                             <input className={this.state.highlighted ? 'highlighted' : null}
                                     type="text" readOnly value={this.props.label1} />
                         </td>
@@ -473,14 +475,14 @@ export function init(
                         <th>
                             {this.props.attr2}
                         </th>
-                        <td colSpan="2">
+                        <td colSpan={2}>
                             <input className={this.state.highlighted ? 'highlighted' : null}
                                     type="text" readOnly value={this.props.label2} />
                         </td>
                     </tr>
                     <tr>
                         <th />
-                        <td colSpan="2">
+                        <td colSpan={2}>
                             <a className="conc" href={this.props.pfilter}
                                     onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
                                 {he.translate('freq__ct_pfilter_btn_label')}
@@ -551,10 +553,7 @@ export function init(
         confIntervalLeftMinWarn:number;
         attr1:string;
         attr2:string;
-        ipmConfInterval:[number, number];
-        absConfInterval:[number, number];
         isHighlighted:boolean;
-        color:string;
         canProvideIpm:boolean;
         label1:string;
         label2:string;
@@ -636,8 +635,7 @@ export function init(
 
         shouldComponentUpdate(nextProps, nextState) {
             return this.props.data !== nextProps.data || this.props.attr1 !== nextProps.attr1 ||
-                    this.props.attr2 !== nextProps.attr2 || this.props.absConfInterval !== nextProps.absConfInterval ||
-                    this.props.ipmConfInterval !== nextProps.ipmConfInterval ||
+                    this.props.attr2 !== nextProps.attr2 ||
                     this.props.confIntervalLeftMinWarn !== nextProps.confIntervalLeftMinWarn ||
                     this.props.quantity !== nextProps.quantity || this.props.isHighlighted !== nextProps.isHighlighted;
         }
@@ -805,7 +803,7 @@ export function init(
      *
      * @param {*} props
      */
-    const CTFullDataTable:React.FuncComponent<CTFullDataTableProps> = (props) => {
+    const CTFullDataTable:React.SFC<CTFullDataTableProps> = (props) => {
         const labels1 = () => {
             return props.d1Labels.filter(x => x[1]).map(x => x[0]);
         };
@@ -885,7 +883,8 @@ export function init(
                                         <a onClick={handleClickHighlightedGroupFn([null, i])}
                                                     className="visualisation"
                                                     title={he.translate('freq__ct_click_to_compare_col')}>
-                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')}
+                                                            alt="chart-icon.svg" />
                                             </a>
                                     </td>
                                 )}
@@ -903,7 +902,8 @@ export function init(
                                         {props.displayQuantity === 'ipm' ?
                                             <a className="visualisation-r" onClick={handleClickHighlightedGroupFn([i, null])}
                                                     title={he.translate('freq__ct_click_to_compare_row')}>
-                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')}
+                                                            alt="chart-icon.svg" />
                                             </a> : null}
                                     </th>
                                     {labels2().map((label2, j) => {
@@ -985,12 +985,6 @@ export function init(
 
     // ---------------- <CT2dFreqResultView /> -----------------------------
 
-    interface CT2dFreqResultViewProps {
-        onConfIntervalFrameReady:()=>void;
-        d3PaneWidth:number;
-        d3PaneHeight:number;
-    }
-
     interface CT2dFreqResultViewState {
         d1Labels:Immutable.List<[string, boolean]>;
         d2Labels:Immutable.List<[string, boolean]>;
@@ -1022,7 +1016,7 @@ export function init(
     /**
      *
      */
-    class CT2dFreqResultView extends React.Component<CT2dFreqResultViewProps, CT2dFreqResultViewState> {
+    class CT2dFreqResultView extends React.Component<CTFreqResultViewProps, CT2dFreqResultViewState> {
 
         constructor(props) {
             super(props);
@@ -1128,7 +1122,7 @@ export function init(
                                 onConfIntervalFrameReady={this.props.onConfIntervalFrameReady}
                                 d3PaneWidth={this.props.d3PaneWidth}
                                 d3PaneHeight={this.props.d3PaneHeight}
-                                alphaLevel={this.state.alphaLevel} /> : null}
+                                alphaLevel={parseFloat(this.state.alphaLevel)} /> : null}
                     {this.state.isWaiting ?
                         <WaitingAnim attr1={this.state.attr1}
                                 attr2={this.state.attr2} /> :

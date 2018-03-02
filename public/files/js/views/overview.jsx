@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 
 export function init(dispatcher, he, corpusInfoModel) {
@@ -58,14 +58,14 @@ export function init(dispatcher, he, corpusInfoModel) {
                     <ItemAndNumRow key={i} label={row.name} value={row.size} />);
 
         } else {
-            values = <tr><td colSpan="2">{he.translate('failed to load')}</td></tr>;
+            values = <tr><td colSpan={2}>{he.translate('failed to load')}</td></tr>;
         }
 
         return (
             <table className="attrib-list">
                 <tbody>
                 <tr>
-                    <th colSpan="2" className="attrib-heading">
+                    <th colSpan={2} className="attrib-heading">
                         {he.translate('global__attributes') }
                     </th>
                 </tr>
@@ -83,7 +83,7 @@ export function init(dispatcher, he, corpusInfoModel) {
             <table className="struct-list">
                 <tbody>
                 <tr>
-                    <th colSpan="2" className="attrib-heading">{he.translate('global__structures')}</th>
+                    <th colSpan={2} className="attrib-heading">{he.translate('global__structures')}</th>
                 </tr>
                 {props.rows.map((row, i) =>
                     <ItemAndNumRow key={i} brackets={true} label={row.name} value={row.size} />)}

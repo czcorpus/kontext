@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, TextTypes} from '../types/common';
 import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
+import {Kontext, TextTypes} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
-
 
 
 /**
@@ -41,7 +41,7 @@ export interface IPluginApi {
     userIsAnonymous():boolean;
     dispatcher():ActionDispatcher;
     getComponentHelpers():Kontext.ComponentHelpers;
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
                             target:HTMLElement, props?:T):void;
     unmountReactComponent(element:HTMLElement):boolean;
     getModels():Kontext.LayoutModel;

@@ -30,7 +30,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 /**
  *

@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import React from 'vendor/react';
+import React from 'react';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 
 
@@ -345,7 +343,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
         return (
             <tr className="load-more">
-                <td colSpan="5">
+                <td colSpan={5}>
                     <a onClick={linkClickHandler}>{he.translate('ucnkCorparch__load_all')}</a>
                 </td>
             </tr>

@@ -20,7 +20,7 @@
 
 /// <reference path="../../types/plugins.d.ts" />
 
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {IPluginApi} from '../../types/plugins';
 import {Kontext} from '../../types/common';
 

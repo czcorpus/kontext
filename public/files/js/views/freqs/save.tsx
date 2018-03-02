@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {FreqResultsSaveModel} from '../../models/freqs/save';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -39,7 +37,7 @@ interface SaveFreqFormState {
 }
 
 interface ExportedViews {
-    SaveFreqForm:React.ComponentClass<SaveFreqFormProps, SaveFreqFormState>;
+    SaveFreqForm:React.ComponentClass<SaveFreqFormProps>;
 }
 
 
@@ -62,7 +60,7 @@ export function init(
     /**
      *
      */
-    const TRSaveFormatSelect:React.FuncComponent<TRSaveFormatSelectProps> = (props) => {
+    const TRSaveFormatSelect:React.SFC<TRSaveFormatSelectProps> = (props) => {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
@@ -92,13 +90,13 @@ export function init(
     // ---------------------------- <TRIncludeHeadingCheckbox /> ----------------------------
 
     interface TRIncludeHeadingCheckboxProps {
-        value:string;
+        value:boolean;
     }
 
     /**
      *
      */
-    const TRIncludeHeadingCheckbox:React.FuncComponent<TRIncludeHeadingCheckboxProps> = (props) => {
+    const TRIncludeHeadingCheckbox:React.SFC<TRIncludeHeadingCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -127,13 +125,13 @@ export function init(
     // ---------------------------- <TRColHeadersCheckbox /> --------------------------------
 
     interface TRColHeadersCheckboxProps {
-        value:string;
+        value:boolean;
     }
 
     /**
      *
      */
-    const TRColHeadersCheckbox:React.FuncComponent<TRColHeadersCheckboxProps> = (props) => {
+    const TRColHeadersCheckbox:React.SFC<TRColHeadersCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -162,7 +160,7 @@ export function init(
         toValue:string;
     }
 
-    const TRSelLineRangeInputs:React.FuncComponent<TRSelLineRangeInputsProps> = (props) => {
+    const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
@@ -258,7 +256,7 @@ export function init(
                 case 'xlsx':
                     return <TRColHeadersCheckbox value={this.state.includeColHeaders} />
                 default:
-                return <tr><td colSpan="2" /></tr>;
+                return <tr><td colSpan={2} /></tr>;
             }
         }
 

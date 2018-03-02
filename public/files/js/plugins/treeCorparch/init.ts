@@ -18,14 +18,13 @@
 
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
 import {init as viewInit, TreeCorparchViews} from './view';
 import {QueryModel} from '../../models/query/main';
 

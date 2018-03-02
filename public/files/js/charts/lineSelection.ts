@@ -20,13 +20,12 @@
 
 /// <reference path="../vendor.d.ts/d3.d.ts" />
 /// <reference path="../vendor.d.ts/d3-color.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
 import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 
 export type LineGroupChartData = Array<{groupId:number; group:string; count:number}>;

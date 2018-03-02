@@ -1,6 +1,4 @@
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 export class EmptyPlugin {
 

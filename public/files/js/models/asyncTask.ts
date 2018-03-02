@@ -18,8 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
 import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
+import {Kontext} from '../types/common';
 import {IPluginApi} from '../types/plugins';
 import {StatefulModel} from './base';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';

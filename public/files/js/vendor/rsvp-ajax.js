@@ -2,7 +2,7 @@
  * author: "Alexander Shabanov <avshabanov@gmail.com> (https://github.com/avshabanov)
  * license: "Apache-2.0
  */
-define(['vendor/rsvp'], function (rsvp) {
+define(['rsvp'], function (rsvp) {
 
   var module = {exports: {}};
   var HttpRequest = XMLHttpRequest;

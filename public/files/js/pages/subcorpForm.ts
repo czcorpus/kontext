@@ -19,12 +19,10 @@
  */
 
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../vendor.d.ts/react.d.ts" />
 
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
 import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
@@ -35,7 +33,7 @@ import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
 import * as corplistComponent from 'plugins/corparch/init'
 import * as Immutable from 'immutable';
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page

@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 
 export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpFormModel, subcorpWithinFormModel) {
@@ -90,7 +88,7 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
         return (
             <tr className="within-rel">
                 <td className="line-id" rowSpan="2">{props.viewIdx + 1})</td>
-                    <td colSpan="3">
+                    <td colSpan={3}>
                     <span className="set-desc">{createPrevLinkRef(props.viewIdx)}</span>
                 </td>
             </tr>
@@ -395,7 +393,7 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
                 case 'gui':
                     return (
                         <tr>
-                            <td colSpan="2">
+                            <td colSpan={2}>
                                 <this.props.ttComponent {...this.props.ttProps} />
                             </td>
                         </tr>

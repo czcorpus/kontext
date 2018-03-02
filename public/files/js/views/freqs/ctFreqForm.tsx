@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext} from '../../types/common';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -50,7 +48,7 @@ interface CTFreqFormState {
 }
 
 interface ExportedComponents {
-    CTFreqForm:React.ComponentClass<CTFreqFormProps, CTFreqFormState>;
+    CTFreqForm:React.ComponentClass<CTFreqFormProps>;
 }
 
 
@@ -68,7 +66,7 @@ export function init(
         hint:string;
     }
 
-    const CTFreqFormMinFreqInput:React.FuncComponent<CTFreqFormMinFreqInputProps> = (props) => {
+    const CTFreqFormMinFreqInput:React.SFC<CTFreqFormMinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -110,11 +108,11 @@ export function init(
 
     interface CTFreqPosSelectProps {
         dim:number;
-        value:string;
-        positionRangeLabels:Immutable.List<string>;
+        value:number;
+        positionRangeLabels:Array<string>;
     }
 
-    const CTFreqPosSelect:React.FuncComponent<CTFreqPosSelectProps> = (props) => {
+    const CTFreqPosSelect:React.SFC<CTFreqPosSelectProps> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -140,7 +138,7 @@ export function init(
         value:string;
     }
 
-    const CTFreqNodeStartSelect:React.FuncComponent<CTFreqNodeStartSelectProps> = (props) => {
+    const CTFreqNodeStartSelect:React.SFC<CTFreqNodeStartSelectProps> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -266,7 +264,7 @@ export function init(
                     <table className="form">
                         <tbody className="dim1">
                             <tr>
-                                <th className="main" rowSpan="3">
+                                <th className="main" rowSpan={3}>
                                     <strong>1.</strong>
                                     ({he.translate('freq__ct_dim1')})
                                 </th>
@@ -287,11 +285,11 @@ export function init(
                                     </select>
                                 </td>
                             </tr>
-                            {!this.state.attr1IsStruct ? this._renderPosAttrOpts(1) : <tr><td colSpan="2" rowSpan="2" /></tr>}
+                            {!this.state.attr1IsStruct ? this._renderPosAttrOpts(1) : <tr><td colSpan={2} rowSpan={2} /></tr>}
                         </tbody>
                         <tbody className="dim2">
                             <tr>
-                                <th className="main" rowSpan="3">
+                                <th className="main" rowSpan={3}>
                                     <strong>2.</strong>
                                     ({he.translate('freq__ct_dim2')})
                                 </th>
@@ -312,7 +310,7 @@ export function init(
                                     </select>
                                 </td>
                             </tr>
-                            {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : <tr><td colSpan="2" rowSpan="2" /></tr>}
+                            {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : <tr><td colSpan={2} rowSpan={2} /></tr>}
                         </tbody>
                     </table>
                     {this._renderWarning()}

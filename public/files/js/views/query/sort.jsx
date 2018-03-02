@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 
 export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
@@ -331,7 +329,7 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
                 <table className="MLSingleLevelFields">
                     <tbody>
                         <tr>
-                            <th colSpan="2" className="level">
+                            <th colSpan={2} className="level">
                                 {this.props.level + 1}.
                                 {this.props.level > 1 || this.props.numLevels > 1 ?
                                     (<a className="close-icon" onClick={this.props.onRemoveLevel}>

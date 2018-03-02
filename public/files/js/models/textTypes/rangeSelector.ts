@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext, TextTypes} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 
 
@@ -259,9 +257,6 @@ export class RangeSelector {
                         this.modeStatus = this.modeStatus.set(attrName, false);
                     }
                     return ans;
-                },
-                (err) => {
-                    this.pluginApi.showMessage('error', this.pluginApi.translate('ucnkLA__failed_to_calc_range'));
                 }
             );
         }

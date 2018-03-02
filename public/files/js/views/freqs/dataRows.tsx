@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext} from '../../types/common';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 import {FreqDataRowsModel, ResultHeader, ResultItem} from '../../models/freqs/dataRows';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -35,7 +33,7 @@ interface DataTableProps {
 
 
 interface ExportedComponents {
-    DataTable:React.FuncComponent<DataTableProps>;
+    DataTable:React.SFC<DataTableProps>;
 }
 
 export function init(
@@ -50,7 +48,7 @@ export function init(
         nfilter:string;
     }
 
-    const DataRowPNFilter:React.FuncComponent<DataRowPNFilterProps> = (props) => {
+    const DataRowPNFilter:React.SFC<DataRowPNFilterProps> = (props) => {
 
         if (props.pfilter || props.nfilter) {
             return (
@@ -76,7 +74,7 @@ export function init(
         data:ResultItem;
     }
 
-    const DataRow:React.FuncComponent<DataRowProps> = (props) => {
+    const DataRow:React.SFC<DataRowProps> = (props) => {
 
         return (
             <tr>
@@ -98,7 +96,7 @@ export function init(
         data:ResultItem;
     }
 
-    const DataRowNoRel:React.FuncComponent<DataRowNoRelProps> = (props) => {
+    const DataRowNoRel:React.SFC<DataRowNoRelProps> = (props) => {
 
         return (
             <tr>
@@ -123,7 +121,7 @@ export function init(
         setLoadingFlag:()=>void;
     }
 
-    const TableColHead:React.FuncComponent<TableColHeadProps> = (props) => {
+    const TableColHead:React.SFC<TableColHeadProps> = (props) => {
 
         const handleClick = () => {
             props.setLoadingFlag();
@@ -164,7 +162,7 @@ export function init(
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    const DataTable:React.FuncComponent<DataTableProps> = (props) => {
+    const DataTable:React.SFC<DataTableProps> = (props) => {
 
         const getBarChartTitle = () => {
             if (props.head.size > 0) {

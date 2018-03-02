@@ -164,12 +164,7 @@
         const moduleMap = {
             'translations': path.resolve(jsPath, '.compiled/translations'),
             'views': path.resolve(jsPath, 'views'),
-            'stores': path.resolve(jsPath, 'stores'),
-            'vendor/rsvp' : path.resolve(jsPath, 'vendor/rsvp.min'),
             'vendor/rsvp-ajax' : path.resolve(jsPath, 'vendor/rsvp-ajax'),
-            'vendor/react': path.resolve(jsPath, reactModule),
-            'vendor/react-dom': path.resolve(jsPath, reactDomModule),
-            'vendor/invariant' : path.resolve(jsPath, 'vendor/invariant'),
             'vendor/d3': path.resolve(jsPath, 'vendor/d3.min'),
             'vendor/d3-color': path.resolve(jsPath, 'vendor/d3-color.min'),
             'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),
@@ -227,12 +222,12 @@
      */
     module.exports.listPackedModules = function (confDoc, pluginsPath, isProduction) {
         let modules = [
-            'vendor/rsvp',
+            'rsvp',
             'vendor/rsvp-ajax',
-            'vendor/react',
-            'vendor/react-dom',
-            'vendor/immutable',
-            'vendor/Dispatcher',
+            'react',
+            'react-dom',
+            '@reactivex/rxjs',
+            'immutable',
             'SoundManager',
             'vendor/intl-messageformat',
             'vendor/d3',

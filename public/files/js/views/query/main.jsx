@@ -19,7 +19,7 @@
  */
 
 
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {init as inputInit} from './input';
 import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';

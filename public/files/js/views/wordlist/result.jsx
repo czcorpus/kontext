@@ -19,7 +19,7 @@
  */
 
 
-import * as React from 'vendor/react';
+import * as React from 'react';
 import { WordlistSaveModel } from '../../models/wordlist/save';
 
 /**

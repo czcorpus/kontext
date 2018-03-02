@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 
 export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
@@ -137,7 +135,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
         };
         return (
             <tr className="load-more">
-                <td colSpan="5">
+                <td colSpan={5}>
                     <a onClick={linkClickHandler}>{he.translate('global__load_more')}</a>
                 </td>
             </tr>

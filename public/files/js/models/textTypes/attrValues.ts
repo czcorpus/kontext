@@ -24,7 +24,7 @@ import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
 

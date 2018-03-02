@@ -23,7 +23,8 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
+import {AlignTypes} from './ctFreqForm';
 
 
 export interface FreqFormInputs {
@@ -73,7 +74,7 @@ export class MLFreqFormModel extends StatefulModel {
 
     private mlxctxIndices:Immutable.List<number>;
 
-    private alignType:Immutable.List<string>;
+    private alignType:Immutable.List<AlignTypes>;
 
     private maxNumLevels:number;
 
@@ -92,7 +93,7 @@ export class MLFreqFormModel extends StatefulModel {
         this.mlxattr = Immutable.List<string>(props.mlxattr);
         this.mlxicase = Immutable.List<boolean>(props.mlxicase);
         this.mlxctxIndices = Immutable.List<number>(props.mlxctx.map(item => this.importMlxctxValue(item)));
-        this.alignType = Immutable.List<string>(props.alignType);
+        this.alignType = Immutable.List<AlignTypes>(props.alignType);
         this.maxNumLevels = maxNumLevels;
 
         dispatcher.register((payload:ActionPayload) => {
@@ -172,7 +173,7 @@ export class MLFreqFormModel extends StatefulModel {
         this.mlxattr = this.mlxattr.push(this.attrList.get(0).n);
         this.mlxicase = this.mlxicase.push(false);
         this.mlxctxIndices = this.mlxctxIndices.push(this.importMlxctxValue('0>0'));
-        this.alignType = this.alignType.push('left');
+        this.alignType = this.alignType.push(AlignTypes.LEFT);
     }
 
     private removeLevel(levelIdx:number):void {
@@ -241,7 +242,7 @@ export class MLFreqFormModel extends StatefulModel {
         return this.mlxctxIndices;
     }
 
-    getAlignTypes():Immutable.List<string> {
+    getAlignTypes():Immutable.List<AlignTypes> {
         return this.alignType;
     }
 
