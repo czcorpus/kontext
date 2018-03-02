@@ -343,7 +343,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         RSVP.all([p1, p2, p3]).then(
             (args:any) => {
                 const [taghelper, qsplug, props] = args;
-                props['tagHelperView'] = this.layoutModel.isInstalledPlugin(taghelper) ? taghelper.getWidgetView() : null;
+                props['tagHelperView'] = this.layoutModel.isNotEmptyPlugin(taghelper) ? taghelper.getWidgetView() : null;
                 props['queryStorageView'] = qsplug.getWidgetView();
                 props['allowCorpusSelection'] = true;
                 props['actionPrefix'] = '';
