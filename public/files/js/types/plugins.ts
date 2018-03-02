@@ -41,7 +41,7 @@ export interface IPluginApi {
     userIsAnonymous():boolean;
     dispatcher():ActionDispatcher;
     getComponentHelpers():Kontext.ComponentHelpers;
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
                             target:HTMLElement, props?:T):void;
     unmountReactComponent(element:HTMLElement):boolean;
     getModels():Kontext.LayoutModel;

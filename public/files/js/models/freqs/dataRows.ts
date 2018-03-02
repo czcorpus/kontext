@@ -35,8 +35,8 @@ import {MultiDict} from '../../util';
 export interface ResultItem {
     idx:number;
     Word:Immutable.List<string>;
-    pfilter:Immutable.List<[string, string]>;
-    nfilter:Immutable.List<[string, string]>;
+    pfilter:string;
+    nfilter:string;
     fbar:number;
     freqbar:number;
     rel:number;

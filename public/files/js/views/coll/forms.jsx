@@ -19,7 +19,7 @@
  */
 
 
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 
 export function init(dispatcher, he, layoutViews, collFormModel) {
@@ -259,7 +259,7 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
                                 </td>
                             </tr>
                             <tr>
-                                <td colSpan="2">
+                                <td colSpan={2}>
                                     <fieldset className="colloc-metrics">
                                         <legend>
                                             {he.translate('coll__show_measures_legend')}

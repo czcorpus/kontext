@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {init as dataRowsInit} from './dataRows';
@@ -45,7 +43,7 @@ interface FreqResultViewState {
 }
 
 interface ExportedComponents {
-    FreqResultView:React.ComponentClass<FreqResultViewProps, FreqResultViewState>;
+    FreqResultView:React.ComponentClass<FreqResultViewProps>;
 }
 
 // ------------------------ factory --------------------------------
@@ -66,7 +64,7 @@ export function init(
         totalItems:number;
     }
 
-    const ResultSizeInfo:React.FuncComponent<ResultSizeInfoProps> = (props) => {
+    const ResultSizeInfo:React.SFC<ResultSizeInfoProps> = (props) => {
 
         return (
             <p>
@@ -85,14 +83,13 @@ export function init(
 
     interface PaginatorProps {
         isLoading:boolean;
-        currentPage:number;
+        currentPage:string;
         hasNextPage:boolean;
         hasPrevPage:boolean;
-        current:number; // TODO !!!
         setLoadingFlag:()=>void;
     }
 
-    const Paginator:React.FuncComponent<PaginatorProps> = (props) => {
+    const Paginator:React.SFC<PaginatorProps> = (props) => {
 
         const handlePageChangeByClick = (curr, step) => {
             props.setLoadingFlag();
@@ -141,7 +138,7 @@ export function init(
                         </div>
                         {renderPageNum()}
                         <div className="bonito-pagination-right">
-                            {props.current}
+                            {props.currentPage}
                             {props.hasNextPage ?
                                 (<a onClick={(e) => handlePageChangeByClick(props.currentPage, 1)}>
                                     <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
@@ -161,9 +158,9 @@ export function init(
         setLoadingFlag:()=>void;
     }
 
-    const FilterForm:React.FuncComponent<FilterFormProps> = (props) => {
+    const FilterForm:React.SFC<FilterFormProps> = (props) => {
 
-        const handleInputChange = (evt) => {
+        const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_SET_MIN_FREQ_VAL',
                 props: {value: evt.target.value}
@@ -178,7 +175,7 @@ export function init(
             });
         };
 
-        const inputKeyDownHandler = (evt:KeyboardEvent) => {
+        const inputKeyDownHandler = (evt:React.KeyboardEvent<{}>) => {
             if (evt.keyCode === 13) {
                 props.setLoadingFlag();
                 dispatcher.dispatch({

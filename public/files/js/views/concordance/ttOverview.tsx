@@ -18,11 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
 /// <reference path="../../vendor.d.ts/d3-color.d.ts" />
 
 import {Kontext} from '../../types/common';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as d3Color from 'vendor/d3-color';
 import * as Immutable from 'immutable';
 import {TextTypesDistModel, FreqItem, FreqBlock} from '../../models/concordance/ttDistModel';
@@ -112,7 +111,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         };
 
         return <a className="CloseIcon" onClick={handleClick} title={he.translate('global__close')}>
-            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} />
+            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')} />
         </a>;
     };
 

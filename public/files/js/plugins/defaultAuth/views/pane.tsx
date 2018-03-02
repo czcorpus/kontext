@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {Kontext} from '../../../types/common';
 import {MultiDict} from '../../../util';
 import {UserStatusModel} from '../init';
@@ -165,7 +163,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             userModel.removeChangeListener(this.handleModelChange);
         }
 
-        render():React.ReactElement {
+        render():React.ReactElement<{}> {
             return (
                 <div className="UserPane">
                     <span className="user">

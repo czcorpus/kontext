@@ -18,12 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {Kontext} from '../../../types/common';
 import {UserProfileModel} from '../profile';
-import { ReactElement } from 'vendor/react';
+import { ReactElement } from 'react';
 import {ActionDispatcher} from '../../../app/dispatcher';
 
 export interface UserProfileViews {
@@ -198,7 +196,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
             profileModel.removeChangeListener(this._handleModelChange);
         }
 
-        render():ReactElement {
+        render():ReactElement<{}> {
             return (
                 <div className="UserProfileView">
                     <form>

@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 export function init(dispatcher, util, widgetModel, queryModel) {
 
@@ -97,7 +95,7 @@ export function init(dispatcher, util, widgetModel, queryModel) {
                         </th>
                     </tr>
                     {props.anonymousUser ?
-                        <tr><td colSpan="3">{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td></tr> :
+                        <tr><td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td></tr> :
                         props.data.map(item => <TRFavoriteItem key={item.id} data={item} editEnable={props.editEnable} />)
                     }
                 </tbody>
@@ -145,7 +143,7 @@ export function init(dispatcher, util, widgetModel, queryModel) {
             <table className="featured-list">
                 <tbody>
                     <tr>
-                        <th colSpan="2">
+                        <th colSpan={2}>
                             {util.translate('defaultCorparch__featured_corpora')}
                         </th>
                     </tr>

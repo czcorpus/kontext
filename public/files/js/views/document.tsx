@@ -17,11 +17,10 @@
  */
 
 /// <reference path="../types/coreViews.d.ts" />
-/// <reference path="../vendor.d.ts/react.d.ts" />
 
 import {Kontext} from '../types/common';
-import * as React from 'vendor/react';
-import * as ReactDOM from 'vendor/react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import {ActionDispatcher} from '../app/dispatcher';
 
 
@@ -86,7 +85,7 @@ export function init(
 
         componentDidMount() {
             if (this.props.onReady) {
-                this.props.onReady(ReactDOM.findDOMNode(this));
+                this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
             }
         }
 
@@ -211,7 +210,7 @@ export function init(
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    const CloseableFrame:React.FuncComponent<CoreViews.CloseableFrame.Props> = (props) => {
+    const CloseableFrame:React.SFC<CoreViews.CloseableFrame.Props> = (props) => {
 
         const closeClickHandler = () => {
             if (typeof props.onCloseClick === 'function') {
@@ -266,7 +265,8 @@ export function init(
                         <a className="context-help" onClick={this._clickHandler}>
                             <ImgWithMouseover
                                     htmlClass="over-img"
-                                    src={he.createStaticUrl('img/question-mark.svg')} />
+                                    src={he.createStaticUrl('img/question-mark.svg')}
+                                    alt="question-mark.svg" />
                         </a>
                     </sup>
                     {this.state.helpVisible ?
@@ -291,7 +291,7 @@ export function init(
     // ------------------------------ <Message /> -----------------------------
     // (info/error/warning message box)
 
-    const Message:React.FuncComponent<CoreViews.Message.Props> = (props) => {
+    const Message:React.SFC<CoreViews.Message.Props> = (props) => {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
@@ -324,7 +324,7 @@ export function init(
         };
 
         return (
-            <FadeInFrame transitionName="msganim" mode={props.fadingOut ? 'fadeout' : 'fadein'}
+            <FadeInFrame mode={props.fadingOut ? 'fadeout' : 'fadein'}
                     transitionTime={props.transitionTime}>
                 <div className={'message ' + props.messageType}>
                     <div className="button-box">
@@ -365,7 +365,7 @@ export function init(
                 animationDuration: `${this.props.transitionTime}ms`,
                 animationName: this.props.mode,
                 animationIterationCount: 1,
-                opacity: this.state.opacity.toFixed(1)
+                opacity: this.state.opacity
             };
             return (
                 <div style={style} onAnimationEnd={this._handleAnimationEnd}>
@@ -421,7 +421,7 @@ export function init(
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
-    const CorpnameInfoTrigger:React.FuncComponent<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
+    const CorpnameInfoTrigger:React.SFC<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch({
@@ -473,7 +473,7 @@ export function init(
 
     // ------------------------ <IssueReportingLink /> --------------------------------
 
-    const IssueReportingLink:React.FuncComponent<CoreViews.IssueReportingLink.Props> = (props) => {
+    const IssueReportingLink:React.SFC<CoreViews.IssueReportingLink.Props> = (props) => {
         if (props.type === 'static') {
             return (
                 <a href={props.url} target={props.blank_window ? '_blank' : '_self'}
@@ -493,19 +493,19 @@ export function init(
 
     // ------------------------ <AjaxLoaderImage /> --------------------------------
 
-    const AjaxLoaderImage:React.FuncComponent<CoreViews.AjaxLoaderImage.Props> = (props) => {
+    const AjaxLoaderImage:React.SFC<CoreViews.AjaxLoaderImage.Props> = (props) => {
         return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
 
-    const AjaxLoaderBarImage:React.FuncComponent<CoreViews.AjaxLoaderBarImage.Props> = (props) => {
+    const AjaxLoaderBarImage:React.SFC<CoreViews.AjaxLoaderBarImage.Props> = (props) => {
         return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
     };
 
     // ------------------------------------------------------------------------------------
 
-    const Shortener:React.FuncComponent<CoreViews.Shortener.Props> = (props) => {
+    const Shortener:React.SFC<CoreViews.Shortener.Props> = (props) => {
         const limit = props.limit ? props.limit : 50;
         return <span title={props.text.length > limit ? props.text : null} className={props.className}>
             {props.text.length > limit ? props.text.substr(0, props.limit) + '\u2026' : props.text}

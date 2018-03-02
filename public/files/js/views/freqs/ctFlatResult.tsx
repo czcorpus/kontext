@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext} from '../../types/common';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Freq2DFlatViewModel, FreqDataItem} from '../../models/freqs/flatCtable';
 import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
@@ -47,7 +45,7 @@ interface CTFlatFreqResultViewState {
 }
 
 interface Views {
-    CTFlatFreqResultView:React.ComponentClass<CTFlatFreqResultViewProps, CTFlatFreqResultViewState>;
+    CTFlatFreqResultView:React.ComponentClass<CTFlatFreqResultViewProps>;
 }
 
 // ------------------------- factory -----------------------------------------

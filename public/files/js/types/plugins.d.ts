@@ -19,7 +19,6 @@
  */
 
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../vendor.d.ts/react.d.ts" />
 
 /*
 The following part contains "fake" plugin modules representing

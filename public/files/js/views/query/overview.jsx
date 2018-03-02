@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {init as saveViewInit} from './save';
 import {init as basicOverviewInit} from './basicOverview';
 

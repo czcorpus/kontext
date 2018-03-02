@@ -16,11 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/react.d.ts" />
-
-
-
-
 declare interface CommonViews {
     SaveFormatSelect:React.ComponentClass;
 }
@@ -186,7 +181,7 @@ declare module "views/textTypes" {
 declare module "views/menu" {
 
     export interface MainMenuViews {
-        MainMenu:React.ComponentClass|React.FuncComponent;
+        MainMenu:React.ComponentClass|React.SFC;
     }
 
     export function init(

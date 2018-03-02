@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext} from '../../types/common';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -30,7 +28,7 @@ import {ActionDispatcher} from '../../app/dispatcher';
 export interface CQLEditorProps {
     sourceId:string;
     attachCurrInputElement:(elm:HTMLElement)=>void;
-    inputKeyHandler:(evt:KeyboardEvent)=>void;
+    inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
 
 export interface CQLEditorViews {
@@ -64,8 +62,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
             editorModel.removeChangeListener(this.handleModelChange);
         }
 
-        render():React.ReactElement {
-            return <textarea className="cql-input" rows="2" cols="60" name="cql"
+        render():React.ReactElement<{}> {
+            return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={item => this.props.attachCurrInputElement(item)}
                                 value={this.state.rawCode.get(this.props.sourceId)}
                                 onKeyDown={this.props.inputKeyHandler}
@@ -176,7 +174,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
             return null;
         }
 
-        private handleEditorClick(evt:React.KeyboardEvent) {
+        private handleEditorClick(evt:React.MouseEvent<{}>) {
             const a = this.findLinkParent(evt.target as HTMLElement);
             if (a !== null && evt.ctrlKey) {
                 switch (a.getAttribute('data-type')) {

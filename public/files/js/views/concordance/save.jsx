@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 export function init(dispatcher, he, layoutViews, concSaveModel) {
 

@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 
 
 export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormModel) {
@@ -550,7 +548,7 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
                     <table className="form">
                         <tbody>
                             <tr>
-                                <td colSpan="2">
+                                <td colSpan={2}>
                                     <table>
                                         <tbody>
                                             <TRCorpusField corparchWidget={CorparchWidget}

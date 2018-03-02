@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/react.d.ts" />
-
 
 declare namespace CoreViews {
 
@@ -27,14 +25,14 @@ declare namespace CoreViews {
 
         interface Props {
             onCloseKey:()=>void;
-            isScrollable:boolean;
-            children:React.ReactElement;
+            isScrollable?:boolean;
+            children:React.ReactNode;
         }
 
         interface State {
         }
 
-        type Component = React.ComponentClass<Props, State>;
+        type Component = React.ComponentClass<Props>;
     }
 
     // ---------------------------
@@ -46,14 +44,14 @@ declare namespace CoreViews {
             /**
              * a custom action to be performed once the component is mounted
              */
-            onReady:(elm:HTMLElement)=>void;
+            onReady?:(elm:HTMLElement)=>void;
 
             /**
              * a custom action to be performed when user clicks 'close'
              */
             onCloseClick:()=>void;
 
-            status:string;
+            status?:string;
 
             /**
              * an optional inline CSS
@@ -70,18 +68,18 @@ declare namespace CoreViews {
             /**
              * an optional function called in case of a 'onKeyDown' event
              */
-            keyPressHandler:(evt:React.SyntheticEvent)=>void;
+            keyPressHandler?:(evt:React.SyntheticEvent<{}>)=>void;
 
-            customClass:string;
+            customClass?:string;
 
-            autoSize:boolean;
+            autoSize?:boolean;
 
-            children:Array<React.ReactElement>;
+            children:React.ReactNode;
         }
 
         interface State {}
 
-        type Component = React.ComponentClass<Props, State>;
+        type Component = React.ComponentClass<Props>;
 
     }
 
@@ -92,8 +90,8 @@ declare namespace CoreViews {
         interface Props {
             src:string;
             src2?:string;
-            htmlClass:string;
-            clickHandler:()=>void;
+            htmlClass?:string;
+            clickHandler?:()=>void;
             alt:string;
         }
 
@@ -101,7 +99,7 @@ declare namespace CoreViews {
             isMouseover:boolean;
         }
 
-        type Component = React.ComponentClass<Props, State>;
+        type Component = React.ComponentClass<Props>;
     }
 
     // -------------------------------
@@ -110,13 +108,13 @@ declare namespace CoreViews {
 
         interface Props {
             onCloseClick:()=>void;
-            customClass:string;
-            scrollable:boolean;
+            customClass?:string;
+            scrollable?:boolean;
             label:string;
-            children:Array<React.ReactElement>;
+            children:React.ReactNode;
         }
 
-        type Component = React.FuncComponent<Props>;
+        type Component = React.SFC<Props>;
 
     }
 
@@ -125,8 +123,8 @@ declare namespace CoreViews {
     namespace InlineHelp {
 
         interface Props {
-            customStyle:string;
-            children:Array<React.ReactElement>;
+            customStyle:{[key:string]:string};
+            children:React.ReactNode;
             url?:string;
         }
 
@@ -134,7 +132,7 @@ declare namespace CoreViews {
             helpVisible:boolean;
         }
 
-        type Component = React.ComponentClass<Props, State>;
+        type Component = React.ComponentClass<Props>;
 
     }
 
@@ -153,7 +151,7 @@ declare namespace CoreViews {
         interface Props {
             mode:string;
             transitionTime:number;
-            children:Array<React.ReactElement>;
+            children:React.ReactNode;
         }
     }
 
@@ -168,7 +166,7 @@ declare namespace CoreViews {
             transitionTime:number;
         }
 
-        type Component = React.ComponentClass<Props, State>;
+        type Component = React.ComponentClass<Props>;
     }
 
     // -------------------------------
@@ -182,10 +180,10 @@ declare namespace CoreViews {
         interface Props {
             transitionTime:number;
             mode:string;
-            children:Array<React.ReactElement>;
+            children:React.ReactNode;
         }
 
-        type Component = React.ComponentClass<Props, State>;
+        type Component = React.ComponentClass<Props>;
     }
 
     // -------------------------------
@@ -200,21 +198,21 @@ declare namespace CoreViews {
             onClick:()=>void;
         }
 
-        type Component = React.FuncComponent<Props>;
+        type Component = React.SFC<Props>;
     }
 
     // -------------------------------
 
     namespace AjaxLoaderImage {
         interface Props {}
-        type Component = React.FuncComponent<Props>;
+        type Component = React.SFC<Props>;
     }
 
     // -------------------------------
 
     namespace AjaxLoaderBarImage {
         interface Props {}
-        type Component = React.FuncComponent<Props>;
+        type Component = React.SFC<Props>;
     }
 
     // -------------------------------
@@ -227,7 +225,7 @@ declare namespace CoreViews {
             humanCorpname:string;
         }
 
-        type Component = React.FuncComponent<Props>;
+        type Component = React.SFC<Props>;
 
     }
 
@@ -239,7 +237,7 @@ declare namespace CoreViews {
             className?:string;
         }
 
-        type Component = React.FuncComponent<Props>;
+        type Component = React.SFC<Props>;
     }
 
     // -------------------------------

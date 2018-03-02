@@ -22,6 +22,7 @@ const merge = require('webpack-merge');
 const common = require('./scripts/build/webpack.common.js');
 const kontext = require('./scripts/build/kontext');
 const kplugins = require('./scripts/build/plugins');
+const webpack = require('webpack');
 const path = require('path');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -49,6 +50,9 @@ module.exports = merge(common, {
             cssPath: CSS_PATH,
             themesPath: THEMES_PATH,
             isProduction: true
-        })
+		}),
+		new webpack.DefinePlugin({
+			'process.env.NODE_ENV': JSON.stringify('production')
+		}),
 	]
 });

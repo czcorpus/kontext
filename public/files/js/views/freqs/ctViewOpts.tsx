@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import * as React from 'vendor/react';
+import * as React from 'react';
 import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -48,8 +46,8 @@ interface MinFreqInputProps {
 // -------------------
 
 interface ExportedComponents {
-    MinFreqInput:React.FuncComponent<MinFreqInputProps>,
-    AlphaLevelSelect:React.ComponentClass<AlphaLevelSelectProps, AlphaLevelSelectState>;
+    MinFreqInput:React.SFC<MinFreqInputProps>,
+    AlphaLevelSelect:React.ComponentClass<AlphaLevelSelectProps>;
 }
 
 
@@ -60,7 +58,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):E
     /**
      *
      */
-    const MinFreqInput:React.FuncComponent<MinFreqInputProps> = (props) => {
+    const MinFreqInput:React.SFC<MinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({

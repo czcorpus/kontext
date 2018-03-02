@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import * as React from 'vendor/react';
+import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionPayload, ActionDispatcher} from '../../app/dispatcher';
 import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
@@ -43,13 +41,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
-    const TagDisplay:React.FuncComponent<{
+    const TagDisplay:React.SFC<{
                 onEscKey:()=>void;
                 displayPattern:string;
             }> = (props) => {
 
 
-        const keyEventHandler = (evt:KeyboardEvent) => {
+        const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
             evt.preventDefault();
             evt.stopPropagation();
             if (typeof props.onEscKey === 'function' && evt.keyCode === 27) {
@@ -64,7 +62,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <InsertButton /> ----------------------------
 
-    const InsertButton:React.FuncComponent<{onClick:()=>void}> = (props) => {
+    const InsertButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
         return (
             <button className="util-button" type="button"
                     value="insert" onClick={props.onClick}>
@@ -75,7 +73,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <UndoButton /> ----------------------------
 
-    const UndoButton:React.FuncComponent<{onClick:()=>void; enabled:boolean}> = (props) => {
+    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button" value="undo"
@@ -95,7 +93,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <ResetButton /> ----------------------------
 
-    const ResetButton:React.FuncComponent<{onClick:()=>void; enabled:boolean}> = (props) => {
+    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button cancel"
@@ -116,7 +114,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <TagButtons /> ----------------------------
 
-    const TagButtons:React.FuncComponent<{
+    const TagButtons:React.SFC<{
                 range:[number, number];
                 sourceId:string;
                 onInsert?:()=>void;
@@ -178,7 +176,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <ValueLine /> ----------------------------
 
-    const ValueLine:React.FuncComponent<{
+    const ValueLine:React.SFC<{
                 data:{selected:boolean};
                 lineIdx:number;
                 sublineIdx:number;
@@ -216,8 +214,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <ValueList /> ----------------------------
 
-    const ValueList:React.FuncComponent<{
-                positionValues:Immutable.List<PositionValue>,
+    const ValueList:React.SFC<{
+                positionValues:Immutable.Iterable<number, PositionValue>,
                 lineIdx:number;
                 isLocked:boolean;
                 checkboxHandler:CheckboxHandler;
@@ -238,7 +236,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         const renderUnfulfilledCheckbox = () => {
             return (
                 <tr>
-                    <td className="checkbox-cell"><input type="checkbox" checked="checked" disabled={true} /></td>
+                    <td className="checkbox-cell"><input type="checkbox" checked={true} disabled={true} /></td>
                     <td>{he.translate('taghelper__unfulfilled')}</td>
                 </tr>
             );
@@ -261,7 +259,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <PositionLine /> ----------------------------
 
-    const PositionLine:React.FuncComponent<{
+    const PositionLine:React.SFC<{
                 clickHandler:(lineIdx:number, isActive:boolean)=>void;
                 lineIdx:number;
                 isActive:boolean;
@@ -304,7 +302,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     class PositionList extends React.Component<{
                 stateId:string;
-                positions:Immutable.List<PositionValue>;
+                positions:Immutable.List<PositionOptions>;
                 checkboxHandler:CheckboxHandler;
             },
             {
@@ -390,7 +388,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     <TagDisplay displayPattern={this.state.displayPattern} onEscKey={this.props.onEscKey} />
                     <TagButtons sourceId={this.props.sourceId}
                                 onInsert={this.props.onInsert}
-                                actionPrefix={this.props.actionPrefix}
                                 canUndo={this.state.canUndo}
                                 range={this.props.range}
                                 displayPattern={this.state.displayPattern} />

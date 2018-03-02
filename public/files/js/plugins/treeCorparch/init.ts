@@ -19,7 +19,6 @@
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
