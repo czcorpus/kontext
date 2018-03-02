@@ -209,7 +209,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
         this.highlightedGroup = [null, null];
 
-        // TODO attrs from form store:
+        // TODO attrs from form model:
         // 1.
 
         dispatcher.register((payload:ActionPayload) => {

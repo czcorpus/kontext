@@ -381,7 +381,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
         return (
             <div className="last-row">
                 <a onClick={handleClick}>
-                    {props.storeIsBusy ?
+                    {props.modelIsBusy ?
                     (<img src={he.createStaticUrl('img/ajax-loader.gif')}
                             alt={he.translate('global__loading')} />) :
                     <span>{he.translate('qhistory__load_more_link')}</span>
@@ -406,7 +406,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
     const DataTableFooter = (props) => {
         if (props.dataLength > 0) {
             if (props.hasMoreItems) {
-                return <LoadMoreBlock storeIsBusy={props.storeIsBusy} />
+                return <LoadMoreBlock modelIsBusy={props.modelIsBusy} />
 
             } else {
                 return null;
@@ -429,7 +429,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
                                             editingQueryName={hasEditor ? props.editingQueryName : undefined} />;
                         })}
                     </ul>
-                    <DataTableFooter dataLength={props.data.size} storeIsBusy={props.storeIsBusy}
+                    <DataTableFooter dataLength={props.data.size} modelIsBusy={props.modelIsBusy}
                             hasMoreItems={props.hasMoreItems} />
             </div>
         );
@@ -451,7 +451,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
                 currentCorpusOnly: queryHistoryModel.getCurrentCorpusOnly(),
                 offset: queryHistoryModel.getOffset(),
                 data: queryHistoryModel.getData(),
-                storeIsBusy: queryHistoryModel.getIsBusy(),
+                modelIsBusy: queryHistoryModel.getIsBusy(),
                 hasMoreItems: queryHistoryModel.getHasMoreItems(),
                 archivedOnly: queryHistoryModel.getArchivedOnly(),
                 editingQueryId: queryHistoryModel.getEditingQueryId(),
@@ -476,10 +476,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
                 <div className="RecentQueriesPageList">
                     <FilterForm queryType={this.state.queryType}
                             currentCorpusOnly={this.state.currentCorpusOnly}
-                            storeIsBusy={this.state.storeIsBusy}
+                            modelIsBusy={this.state.modelIsBusy}
                             archivedOnly={this.state.archivedOnly} />
                     <DataTable data={this.state.data} offset={this.state.offset}
-                            storeIsBusy={this.state.storeIsBusy}
+                            modelIsBusy={this.state.modelIsBusy}
                             hasMoreItems={this.state.hasMoreItems}
                             editingQueryId={this.state.editingQueryId}
                             editingQueryName={this.state.editingQueryName} />

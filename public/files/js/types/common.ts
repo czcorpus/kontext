@@ -959,7 +959,7 @@ export namespace TextTypes {
         getRangeModes():Immutable.Map<string, boolean>;
 
         /**
-         * Other stores may listen for selection changes and update
+         * Other models may listen for selection changes and update
          * themselves accordingly.
          */
         addSelectionChangeListener(fn:(target:TextTypes.ITextTypesModel)=>void):void;
