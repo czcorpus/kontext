@@ -20,7 +20,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import {Kontext, TextTypes} from '../../types/common';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';
@@ -62,7 +62,7 @@ export interface CalculationResults {
 /**
  *
  */
-export class SubcMixerStore extends SimplePageStore {
+export class SubcMixerModel extends StatefulModel {
 
     static DispatchToken:string;
 
@@ -82,16 +82,16 @@ export class SubcMixerStore extends SimplePageStore {
 
     private corpusIdAttr:string;
 
-    textTypesStore:TextTypes.ITextTypesStore;
+    textTypesModel:TextTypes.ITextTypesModel;
 
-    private errorTolerance:number = SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
+    private errorTolerance:number = SubcMixerModel.CATEGORY_SIZE_ERROR_TOLERANCE;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
-            textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
+            textTypesModel:TextTypes.ITextTypesModel, getCurrentSubcnameFn:()=>string,
             getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>, corpusIdAttr:string) {
         super(dispatcher);
         this.pluginApi = pluginApi;
-        this.textTypesStore = textTypesStore;
+        this.textTypesModel = textTypesModel;
         this.shares = Immutable.List<SubcMixerExpression>();
         this.getCurrentSubcnameFn = getCurrentSubcnameFn; // connects us with and old, non-React form
         this.getAlignedCorporaFn = getAlignedCorporaFn;
@@ -271,14 +271,14 @@ export class SubcMixerStore extends SimplePageStore {
     }
 
     private getAvailableValues():Immutable.List<TextTypeAttrVal> {
-        return Immutable.List(this.textTypesStore.getAttributes())
+        return Immutable.List(this.textTypesModel.getAttributes())
             .filter(item => item.hasUserChanges())
             .flatMap(item => {
-                const tmp = this.textTypesStore.getAttribute(item.name)
+                const tmp = this.textTypesModel.getAttribute(item.name)
                         .getValues()
                         .filter(item => item.selected)
                         .map(item => item.value);
-                return this.textTypesStore.getInitialAvailableValues(item.name)
+                return this.textTypesModel.getInitialAvailableValues(item.name)
                     .map(subItem => {
                         return {
                             attrName: item.name,
@@ -335,9 +335,9 @@ export class SubcMixerStore extends SimplePageStore {
                 Immutable.Map<string, number>()
             );
         this.shares = availableValues.map<SubcMixerExpression>((item, i, arr) => {
-            const attrVal = this.textTypesStore.getAttribute(item.attrName).getValues()
+            const attrVal = this.textTypesModel.getAttribute(item.attrName).getValues()
                     .find(item2 => item2.value == item.attrValue);
-            const total = this.textTypesStore.getAttrSize(item.attrName);
+            const total = this.textTypesModel.getAttrSize(item.attrName);
             return {
                 attrName: item.attrName,
                 attrValue: item.attrValue,
@@ -381,22 +381,22 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 
     pluginApi:IPluginApi
 
-    private store:SubcMixerStore;
+    private model:SubcMixerModel;
 
-    constructor(pluginApi:IPluginApi, store:SubcMixerStore) {
+    constructor(pluginApi:IPluginApi, model:SubcMixerModel) {
         this.pluginApi = pluginApi;
-        this.store = store;
+        this.model = model;
     }
 
     refreshData():void {
-        this.store.refreshData();
+        this.model.refreshData();
     }
 
     getWidgetView():React.ComponentClass {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            this.store
+            this.model
         ).Widget;
     }
 
@@ -405,19 +405,19 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 
 export default function create(
         pluginApi:IPluginApi,
-        textTypesStore:TextTypes.ITextTypesStore,
+        textTypesModel:TextTypes.ITextTypesModel,
         getCurrentSubcnameFn:()=>string,
         getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
         corpusIdAttr:string):RSVP.Promise<PluginInterfaces.ISubcMixer> {
-    const store = new SubcMixerStore(
+    const model = new SubcMixerModel(
         pluginApi.dispatcher(),
         pluginApi,
-        textTypesStore,
+        textTypesModel,
         getCurrentSubcnameFn,
         getAlignedCorporaFn,
         corpusIdAttr
     );
     return new RSVP.Promise<PluginInterfaces.ISubcMixer>((resolve:(v)=>void, reject:(err)=>void) => {
-        resolve(new SubcmixerPlugin(pluginApi, store));
+        resolve(new SubcmixerPlugin(pluginApi, model));
     });
 }

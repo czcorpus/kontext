@@ -25,9 +25,9 @@ import {init as keyboardInit} from './keyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 
 
-export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore) {
-    const keyboardViews = keyboardInit(dispatcher, he, queryStore, virtualKeyboardStore);
-    const cqlEditorViews = cqlEditoInit(dispatcher, he, cqlEditorStore);
+export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel) {
+    const keyboardViews = keyboardInit(dispatcher, he, queryModel, virtualKeyboardModel);
+    const cqlEditorViews = cqlEditoInit(dispatcher, he, cqlEditorModel);
     const layoutViews = he.getLayoutViews();
 
 
@@ -39,11 +39,11 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             super(props);
             this._changeListener = this._changeListener.bind(this);
             this._clickHandler = this._clickHandler.bind(this);
-            this.state = {hintText: queryHintStore.getHint()};
+            this.state = {hintText: queryHintModel.getHint()};
         }
 
         _changeListener() {
-            this.setState({hintText: queryHintStore.getHint()});
+            this.setState({hintText: queryHintModel.getHint()});
         }
 
         _clickHandler() {
@@ -54,11 +54,11 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         }
 
         componentDidMount() {
-            queryHintStore.addChangeListener(this._changeListener);
+            queryHintModel.addChangeListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            queryHintStore.removeChangeListener(this._changeListener);
+            queryHintModel.removeChangeListener(this._changeListener);
         }
 
         render() {
@@ -212,25 +212,25 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleKeyDown = this._handleKeyDown.bind(this);
             this._handleAttrChange = this._handleAttrChange.bind(this);
             this._handleInsert = this._handleInsert.bind(this);
             this.state = {
-                data: withinBuilderStore.getData(),
-                query: withinBuilderStore.getQuery(),
-                attr: withinBuilderStore.getCurrAttrIdx(),
-                exportedQuery: withinBuilderStore.exportQuery()
+                data: withinBuilderModel.getData(),
+                query: withinBuilderModel.getQuery(),
+                attr: withinBuilderModel.getCurrAttrIdx(),
+                exportedQuery: withinBuilderModel.exportQuery()
             };
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({
-                data: withinBuilderStore.getData(),
-                query: withinBuilderStore.getQuery(),
-                attr: withinBuilderStore.getCurrAttrIdx(),
-                exportedQuery: withinBuilderStore.exportQuery()
+                data: withinBuilderModel.getData(),
+                query: withinBuilderModel.getQuery(),
+                attr: withinBuilderModel.getCurrAttrIdx(),
+                exportedQuery: withinBuilderModel.exportQuery()
             });
         }
 
@@ -273,7 +273,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         }
 
         componentDidMount() {
-            withinBuilderStore.addChangeListener(this._handleStoreChange);
+            withinBuilderModel.addChangeListener(this._handleModelChange);
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
                 props: {
@@ -283,7 +283,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         }
 
         componentWillUnmount() {
-            withinBuilderStore.removeChangeListener(this._handleStoreChange);
+            withinBuilderModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {
@@ -365,10 +365,10 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             this._handleWidgetTrigger = this._handleWidgetTrigger.bind(this);
             this._handleHistoryWidget = this._handleHistoryWidget.bind(this);
             this._handleCloseWidget = this._handleCloseWidget.bind(this);
-            this._handleQueryStoreChange = this._handleQueryStoreChange.bind(this);
+            this._handleQueryModelChange = this._handleQueryModelChange.bind(this);
             this.state = {
-                activeWidget: queryStore.getActiveWidget(this.props.sourceId),
-                widgetArgs: queryStore.getWidgetArgs()
+                activeWidget: queryModel.getActiveWidget(this.props.sourceId),
+                widgetArgs: queryModel.getWidgetArgs()
             };
         }
 
@@ -438,19 +438,19 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             }
         }
 
-        _handleQueryStoreChange() {
+        _handleQueryModelChange() {
             this.setState({
-                activeWidget: queryStore.getActiveWidget(this.props.sourceId),
-                widgetArgs: queryStore.getWidgetArgs()
+                activeWidget: queryModel.getActiveWidget(this.props.sourceId),
+                widgetArgs: queryModel.getWidgetArgs()
             });
         }
 
         componentDidMount() {
-            queryStore.addChangeListener(this._handleQueryStoreChange);
+            queryModel.addChangeListener(this._handleQueryModelChange);
         }
 
         componentWillUnmount() {
-            queryStore.removeChangeListener(this._handleQueryStoreChange);
+            queryModel.removeChangeListener(this._handleQueryModelChange);
         }
 
         render() {
@@ -558,15 +558,15 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             super(props);
             this._queryInputElement = null;
             this._handleInputChange = this._handleInputChange.bind(this);
-            this._handleQueryStoreChange = this._handleQueryStoreChange.bind(this);
-            this._handleCQLEditorStoreChange = this._handleCQLEditorStoreChange.bind(this);
+            this._handleQueryModelChange = this._handleQueryModelChange.bind(this);
+            this._handleCQLEditorModelChange = this._handleCQLEditorModelChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this._attachInputElementRef = this._attachInputElementRef.bind(this);
             this.state = {
-                query: queryStore.getQuery(this.props.sourceId),
+                query: queryModel.getQuery(this.props.sourceId),
                 historyVisible: false,
-                cqlEditorMessage: cqlEditorStore.getState().message.get(this.props.sourceId)
+                cqlEditorMessage: cqlEditorModel.getState().message.get(this.props.sourceId)
             };
         }
 
@@ -580,15 +580,15 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             });
         }
 
-        _handleQueryStoreChange(store, action) {
+        _handleQueryModelChange() {
             this.setState({
-                query: queryStore.getQuery(this.props.sourceId),
+                query: queryModel.getQuery(this.props.sourceId),
                 historyVisible: false,
                 cqlEditorMessage: this.state.cqlEditorMessage
             });
         }
 
-        _handleCQLEditorStoreChange(state) {
+        _handleCQLEditorModelChange(state) {
             this.setState({
                 query: this.state.query,
                 historyVisible: this.state.historyVisible,
@@ -612,20 +612,20 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
 
         _toggleHistoryWidget() {
             this.setState({
-                query: queryStore.getQuery(this.props.sourceId),
+                query: queryModel.getQuery(this.props.sourceId),
                 historyVisible: !this.state.historyVisible,
                 cqlEditorMessage: this.state.cqlEditorMessage
             });
         }
 
         componentDidMount() {
-            cqlEditorStore.addChangeListener(this._handleCQLEditorStoreChange);
-            queryStore.addChangeListener(this._handleQueryStoreChange);
+            cqlEditorModel.addChangeListener(this._handleCQLEditorModelChange);
+            queryModel.addChangeListener(this._handleQueryModelChange);
         }
 
         componentWillUnmount() {
-            cqlEditorStore.removeChangeListener(this._handleCQLEditorStoreChange);
-            queryStore.removeChangeListener(this._handleQueryStoreChange);
+            cqlEditorModel.removeChangeListener(this._handleCQLEditorModelChange);
+            queryModel.removeChangeListener(this._handleQueryModelChange);
         }
 
         componentDidUpdate(prevProps, prevState) {

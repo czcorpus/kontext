@@ -22,7 +22,7 @@
 
 import * as React from 'vendor/react';
 import {Kontext} from '../../types/common';
-import {FreqResultsSaveStore} from '../../stores/freqs/save';
+import {FreqResultsSaveModel} from '../../models/freqs/save';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 
@@ -48,7 +48,7 @@ interface ExportedViews {
 export function init(
         dispatcher:ActionDispatcher,
         utils:Kontext.ComponentHelpers,
-        freqSaveStore:FreqResultsSaveStore):ExportedViews {
+        freqSaveModel:FreqResultsSaveModel):ExportedViews {
 
 
     const layoutViews = utils.getLayoutViews();
@@ -185,7 +185,7 @@ export function init(
         return (
             <tr>
                 <th style={{verticalAlign: 'top'}}>
-                    {utils.translate('coll__save_form_lines_to_store')}:
+                    {utils.translate('coll__save_form_lines_to_model')}:
                 </th>
                 <td>
                     {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
@@ -214,18 +214,18 @@ export function init(
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                saveformat: freqSaveStore.getSaveformat(),
-                includeColHeaders: freqSaveStore.getIncludeColHeaders(),
-                includeHeading: freqSaveStore.getIncludeHeading(),
-                fromLine: freqSaveStore.getFromLine(),
-                toLine: freqSaveStore.getToLine()
+                saveformat: freqSaveModel.getSaveformat(),
+                includeColHeaders: freqSaveModel.getIncludeColHeaders(),
+                includeHeading: freqSaveModel.getIncludeHeading(),
+                fromLine: freqSaveModel.getFromLine(),
+                toLine: freqSaveModel.getToLine()
             };
         }
 
@@ -236,18 +236,18 @@ export function init(
             });
         }
 
-        _handleStoreChange() {
-            if (freqSaveStore.getFormIsActive()) {
-                this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            if (freqSaveModel.getFormIsActive()) {
+                this.setState(this._fetchModelState());
             }
         }
 
         componentDidMount() {
-            freqSaveStore.addChangeListener(this._handleStoreChange);
+            freqSaveModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            freqSaveStore.removeChangeListener(this._handleStoreChange);
+            freqSaveModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderFormatDependentOptions() {

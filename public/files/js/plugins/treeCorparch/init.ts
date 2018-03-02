@@ -24,10 +24,10 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
-import {QueryStore} from '../../stores/query/main';
+import {QueryModel} from '../../models/query/main';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -43,7 +43,7 @@ export interface Node {
 /**
  *
  */
-export class TreeWidgetStore extends SimplePageStore {
+export class TreeWidgetModel extends StatefulModel {
 
     static DispatchToken:string;
 
@@ -161,16 +161,16 @@ export class TreeWidgetStore extends SimplePageStore {
  * @param options A configuration of the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-            queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
+            queryModel:QueryModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
     const widgetWrapper = window.document.createElement('div');
 
-    const treeStore = new TreeWidgetStore(
+    const treeModel = new TreeWidgetModel(
         pluginApi,
         pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
         querySetupHandler,
         options.itemClickAction
     );
-    return viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), treeStore).CorptreeWidget;
+    return viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), treeModel).CorptreeWidget;
 }
 
 
@@ -178,13 +178,13 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     private pluginApi:IPluginApi;
 
-    private treeStore:TreeWidgetStore;
+    private treeModel:TreeWidgetModel;
 
     private viewsLib:TreeCorparchViews;
 
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
-        this.treeStore = new TreeWidgetStore(
+        this.treeModel = new TreeWidgetModel(
             pluginApi,
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             {
@@ -201,7 +201,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
         this.viewsLib = viewInit(
             pluginApi.dispatcher(),
             pluginApi.getComponentHelpers(),
-            this.treeStore
+            this.treeModel
         );
     }
 

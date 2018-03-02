@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
+export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -150,25 +150,25 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
-            const data = listStore.getData();
-            const detail = listStore.getDetail();
+        _fetchModelState() {
+            const data = listModel.getData();
+            const detail = listModel.getDetail();
             return {
                 rows: data.rows,
                 nextOffset: data.nextOffset,
                 detail: detail,
-                isWaiting: listStore.isBusy()
+                isWaiting: listModel.isBusy()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         _detailClickHandler(corpusId) {
@@ -188,11 +188,11 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
         }
 
         componentDidMount() {
-            listStore.addChangeListener(this._storeChangeHandler);
+            listModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            listStore.removeChangeListener(this._storeChangeHandler);
+            listModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderDetailBox() {
@@ -275,20 +275,20 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this.state = {active: Boolean(this.props.isActive)};
         }
 
-        _storeChangeHandler(store, action) {
-            this.setState({active: formStore.getKeywordState(this.props.keyword)});
+        _modelChangeHandler(model, action) {
+            this.setState({active: formModel.getKeywordState(this.props.keyword)});
         }
 
         componentDidMount() {
-            formStore.addChangeListener(this._storeChangeHandler);
+            formModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            formStore.removeChangeListener(this._storeChangeHandler);
+            formModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _handleClickFn(active) {
@@ -515,21 +515,21 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._initWaiting = this._initWaiting.bind(this);
             this.state = {isWaiting: false};
         }
 
-        _storeChangeHandler() {
+        _modelChangeHandler() {
             this.setState({isWaiting: false}); // TODO this is fake and wrong
         }
 
         componentDidMount() {
-            listStore.addChangeListener(this._storeChangeHandler);
+            listModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            listStore.removeChangeListener(this._storeChangeHandler);
+            listModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _initWaiting() {

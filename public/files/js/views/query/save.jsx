@@ -22,7 +22,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, saveAsFormStore) {
+export function init(dispatcher, he, layoutViews, saveAsFormModel) {
 
 
     // ------------------ <QueryNameInput /> -------------------------------
@@ -84,14 +84,14 @@ export function init(dispatcher, he, layoutViews, saveAsFormStore) {
         constructor(props) {
             super(props);
             this._handleCloseEvent = this._handleCloseEvent.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
-            this.state = this._fetchStoreState();
+            this._handleModelChange = this._handleModelChange.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                name: saveAsFormStore.getName(),
-                isWaiting: saveAsFormStore.getIsBusy()
+                name: saveAsFormModel.getName(),
+                isWaiting: saveAsFormModel.getIsBusy()
             };
         }
 
@@ -102,16 +102,16 @@ export function init(dispatcher, he, layoutViews, saveAsFormStore) {
             });
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            saveAsFormStore.addChangeListener(this._handleStoreChange);
+            saveAsFormModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            saveAsFormStore.removeChangeListener(this._handleStoreChange);
+            saveAsFormModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

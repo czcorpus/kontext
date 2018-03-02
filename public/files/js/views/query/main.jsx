@@ -26,14 +26,14 @@ import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
 
 
-export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore, queryHintStore,
-        withinBuilderStore, virtualKeyboardStore, queryContextStore, cqlEditorStore) {
+export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel, queryHintModel,
+        withinBuilderModel, virtualKeyboardModel, queryContextModel, cqlEditorModel) {
     const inputViews = inputInit(
-        dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore);
-    const alignedViews = alignedInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore,
-            cqlEditorStore);
-    const contextViews = contextInit(dispatcher, he, queryContextStore);
-    const ttViews = ttViewsInit(dispatcher, he, textTypesStore);
+        dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel);
+    const alignedViews = alignedInit(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
+            cqlEditorModel);
+    const contextViews = contextInit(dispatcher, he, queryContextModel);
+    const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
     const layoutViews = he.getLayoutViews();
 
 
@@ -92,44 +92,44 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
             this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
             this._handleTextTypesFormVisibility = this._handleTextTypesFormVisibility.bind(this);
             this._keyEventHandler = this._keyEventHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                corpora: queryStore.getCorpora(),
-                availableAlignedCorpora: queryStore.getAvailableAlignedCorpora(),
-                supportsParallelCorpora: queryStore.supportsParallelCorpora(),
-                queryTypes: queryStore.getQueryTypes(),
-                supportedWidgets: queryStore.getSupportedWidgets(),
-                lposValues: queryStore.getLposValues(),
-                matchCaseValues: queryStore.getMatchCaseValues(),
-                forcedAttr: queryStore.getForcedAttr(),
-                defaultAttrValues: queryStore.getDefaultAttrValues(),
-                attrList: queryStore.getAttrList(),
-                structAttrList: queryStore.getStructAttrList(),
-                tagsetDocUrls: queryStore.getTagsetDocUrls(),
-                pcqPosNegValues: queryStore.getPcqPosNegValues(),
-                lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
-                posWindowSizes: queryStore.getPosWindowSizes(),
-                hasLemmaAttr: queryStore.getHasLemmaAttr(),
-                wPoSList: queryStore.getwPoSList(),
+                corpora: queryModel.getCorpora(),
+                availableAlignedCorpora: queryModel.getAvailableAlignedCorpora(),
+                supportsParallelCorpora: queryModel.supportsParallelCorpora(),
+                queryTypes: queryModel.getQueryTypes(),
+                supportedWidgets: queryModel.getSupportedWidgets(),
+                lposValues: queryModel.getLposValues(),
+                matchCaseValues: queryModel.getMatchCaseValues(),
+                forcedAttr: queryModel.getForcedAttr(),
+                defaultAttrValues: queryModel.getDefaultAttrValues(),
+                attrList: queryModel.getAttrList(),
+                structAttrList: queryModel.getStructAttrList(),
+                tagsetDocUrls: queryModel.getTagsetDocUrls(),
+                pcqPosNegValues: queryModel.getPcqPosNegValues(),
+                lemmaWindowSizes: queryModel.getLemmaWindowSizes(),
+                posWindowSizes: queryModel.getPosWindowSizes(),
+                hasLemmaAttr: queryModel.getHasLemmaAttr(),
+                wPoSList: queryModel.getwPoSList(),
                 contextFormVisible: false, // TODO use data from session?
-                textTypesFormVisible: textTypesStore.hasSelectedItems(),
-                inputLanguages: queryStore.getInputLanguages(),
-                textTypesNotes: queryStore.getTextTypesNotes(),
-                useCQLEditor: queryStore.getUseCQLEditor(),
-                tagAttr: queryStore.getTagAttr()
+                textTypesFormVisible: textTypesModel.hasSelectedItems(),
+                inputLanguages: queryModel.getInputLanguages(),
+                textTypesNotes: queryModel.getTextTypesNotes(),
+                useCQLEditor: queryModel.getUseCQLEditor(),
+                tagAttr: queryModel.getTagAttr()
             };
         }
 
-        _storeChangeHandler() {
-            const state = this._fetchStoreState();
+        _modelChangeHandler() {
+            const state = this._fetchModelState();
             state['contextFormVisible'] = this.state.contextFormVisible;
             state['textTypesFormVisible'] = this.state.textTypesFormVisible;
             this.setState(state);
@@ -168,13 +168,13 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
         }
 
         componentDidMount() {
-            queryStore.addChangeListener(this._storeChangeHandler);
-            textTypesStore.addChangeListener(this._storeChangeHandler);
+            queryModel.addChangeListener(this._modelChangeHandler);
+            textTypesModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            queryStore.removeChangeListener(this._storeChangeHandler);
-            textTypesStore.removeChangeListener(this._storeChangeHandler);
+            queryModel.removeChangeListener(this._modelChangeHandler);
+            textTypesModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {
@@ -298,32 +298,32 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
             this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                corpora: queryStore.getCorpora(),
-                queryTypes: queryStore.getQueryTypes(),
-                supportedWidgets: queryStore.getSupportedWidgets(),
-                lposValues: queryStore.getLposValues(),
-                matchCaseValues: queryStore.getMatchCaseValues(),
-                forcedAttr: queryStore.getForcedAttr(),
-                defaultAttrValues: queryStore.getDefaultAttrValues(),
-                attrList: queryStore.getAttrList(),
-                tagsetDocUrls: queryStore.getTagsetDocUrls(),
-                pcqPosNegValues: queryStore.getPcqPosNegValues(),
-                lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
-                posWindowSizes: queryStore.getPosWindowSizes(),
-                hasLemmaAttr: queryStore.getHasLemmaAttr(),
-                wPoSList: queryStore.getwPoSList(),
+                corpora: queryModel.getCorpora(),
+                queryTypes: queryModel.getQueryTypes(),
+                supportedWidgets: queryModel.getSupportedWidgets(),
+                lposValues: queryModel.getLposValues(),
+                matchCaseValues: queryModel.getMatchCaseValues(),
+                forcedAttr: queryModel.getForcedAttr(),
+                defaultAttrValues: queryModel.getDefaultAttrValues(),
+                attrList: queryModel.getAttrList(),
+                tagsetDocUrls: queryModel.getTagsetDocUrls(),
+                pcqPosNegValues: queryModel.getPcqPosNegValues(),
+                lemmaWindowSizes: queryModel.getLemmaWindowSizes(),
+                posWindowSizes: queryModel.getPosWindowSizes(),
+                hasLemmaAttr: queryModel.getHasLemmaAttr(),
+                wPoSList: queryModel.getwPoSList(),
                 contextFormVisible: false,
-                inputLanguages: queryStore.getInputLanguages(),
-                hasSelectedTextTypes: textTypesStore.hasSelectedItems(),
-                textTypeSelections: textTypesStore.exportSelections(),
-                useCQLEditor: queryStore.getUseCQLEditor()
+                inputLanguages: queryModel.getInputLanguages(),
+                hasSelectedTextTypes: textTypesModel.hasSelectedItems(),
+                textTypeSelections: textTypesModel.exportSelections(),
+                useCQLEditor: queryModel.getUseCQLEditor()
             };
         }
 
@@ -369,18 +369,18 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
             }
         }
 
-        _storeChangeHandler(store, action) {
-            const state = this._fetchStoreState();
+        _modelChangeHandler() {
+            const state = this._fetchModelState();
             state['contextFormVisible'] = this.state.contextFormVisible;
             this.setState(state);
         }
 
         componentDidMount() {
-            queryStore.addChangeListener(this._storeChangeHandler);
+            queryModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            queryStore.removeChangeListener(this._storeChangeHandler);
+            queryModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {

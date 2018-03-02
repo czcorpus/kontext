@@ -38,9 +38,9 @@ may or may not be available without additional AJAX request.
 */
 
 
-export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, mainMenuStore, querySaveAsStore) {
+export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, mainMenuModel, querySaveAsModel) {
 
-    const saveViews = saveViewInit(dispatcher, he, layoutViews, querySaveAsStore);
+    const saveViews = saveViewInit(dispatcher, he, layoutViews, querySaveAsModel);
     const basicOverviewViews = basicOverviewInit(dispatcher, he);
 
 
@@ -271,16 +271,16 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
             super(props);
             this._handleEditClick = this._handleEditClick.bind(this);
             this._handleEditorClose = this._handleEditorClose.bind(this);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._modelChangeListener = this._modelChangeListener.bind(this);
             this.state = {
-                replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
-                ops: queryReplayStore.getCurrEncodedOperations(),
+                replayIsRunning: queryReplayModel.getBranchReplayIsRunning(),
+                ops: queryReplayModel.getCurrEncodedOperations(),
                 editOpIdx: null,
                 editOpKey: null,
                 isLoading: false,
-                queryOverview: queryReplayStore.getCurrentQueryOverview(),
-                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
-                editIsLocked: queryReplayStore.editIsLocked()
+                queryOverview: queryReplayModel.getCurrentQueryOverview(),
+                modeRunFullQuery: queryReplayModel.getRunFullQuery(),
+                editIsLocked: queryReplayModel.editIsLocked()
             };
         }
 
@@ -293,36 +293,36 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
 
         _handleEditorClose() {
             this.setState({
-                replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
-                ops: queryReplayStore.getCurrEncodedOperations(),
+                replayIsRunning: queryReplayModel.getBranchReplayIsRunning(),
+                ops: queryReplayModel.getCurrEncodedOperations(),
                 editOpIdx: null,
                 editOpKey: null,
                 isLoading: false,
                 queryOverview: null,
-                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
-                editIsLocked: queryReplayStore.editIsLocked()
+                modeRunFullQuery: queryReplayModel.getRunFullQuery(),
+                editIsLocked: queryReplayModel.editIsLocked()
             });
         }
 
-        _storeChangeListener(store, action) {
+        _modelChangeListener() {
             this.setState({
-                replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
-                ops: queryReplayStore.getCurrEncodedOperations(),
-                editOpIdx: queryReplayStore.getEditedOperationIdx(),
-                editOpKey: queryReplayStore.opIdxToCachedQueryKey(this.state.editOpIdx),
+                replayIsRunning: queryReplayModel.getBranchReplayIsRunning(),
+                ops: queryReplayModel.getCurrEncodedOperations(),
+                editOpIdx: queryReplayModel.getEditedOperationIdx(),
+                editOpKey: queryReplayModel.opIdxToCachedQueryKey(this.state.editOpIdx),
                 isLoading: false,
-                queryOverview: queryReplayStore.getCurrentQueryOverview(),
-                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
-                editIsLocked: queryReplayStore.editIsLocked()
+                queryOverview: queryReplayModel.getCurrentQueryOverview(),
+                modeRunFullQuery: queryReplayModel.getRunFullQuery(),
+                editIsLocked: queryReplayModel.editIsLocked()
             });
         }
 
         componentDidMount() {
-            queryReplayStore.addChangeListener(this._storeChangeListener);
+            queryReplayModel.addChangeListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            queryReplayStore.removeChangeListener(this._storeChangeListener);
+            queryReplayModel.removeChangeListener(this._modelChangeListener);
         }
 
         _getEditorProps(opIdx, opId) {
@@ -520,28 +520,28 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
 
         constructor(props) {
             super(props);
-            this._mainMenuStoreChangeListener = this._mainMenuStoreChangeListener.bind(this);
-            this.state = this._fetchStoreState();
+            this._mainMenuModelChangeListener = this._mainMenuModelChangeListener.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                activeItem: mainMenuStore.getActiveItem(),
-                lastOpSize: queryReplayStore.getCurrEncodedOperations().size > 0 ?
-                        queryReplayStore.getCurrEncodedOperations().get(-1).size : 0
+                activeItem: mainMenuModel.getActiveItem(),
+                lastOpSize: queryReplayModel.getCurrEncodedOperations().size > 0 ?
+                        queryReplayModel.getCurrEncodedOperations().get(-1).size : 0
             };
         }
 
-        _mainMenuStoreChangeListener() {
-            this.setState(this._fetchStoreState());
+        _mainMenuModelChangeListener() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            mainMenuStore.addChangeListener(this._mainMenuStoreChangeListener);
+            mainMenuModel.addChangeListener(this._mainMenuModelChangeListener);
         }
 
         componentWillUnmount() {
-            mainMenuStore.removeChangeListener(this._mainMenuStoreChangeListener);
+            mainMenuModel.removeChangeListener(this._mainMenuModelChangeListener);
         }
 
         _renderOperationForm() {
@@ -586,27 +586,27 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                ops: queryReplayStore.getCurrEncodedOperations(),
-                queryOverview: queryReplayStore.getCurrentQueryOverview()
+                ops: queryReplayModel.getCurrEncodedOperations(),
+                queryOverview: queryReplayModel.getCurrentQueryOverview()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            queryReplayStore.addChangeListener(this._handleStoreChange);
+            queryReplayModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            queryReplayStore.removeChangeListener(this._handleStoreChange);
+            queryReplayModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

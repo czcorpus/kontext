@@ -27,11 +27,11 @@ import {PluginInterfaces} from '../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
-import {SubcorpWithinFormStore, SubcorpFormStore} from '../stores/subcorp/form';
+import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import {UserSettings} from '../app/userSettings';
-import {TextTypesStore} from '../stores/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
 import * as corplistComponent from 'plugins/corparch/init'
 import * as Immutable from 'immutable';
@@ -45,7 +45,7 @@ require('styles/subcorpForm.less');
 export interface TTInitData {
     component:React.ComponentClass;
     props:{[p:string]:any};
-    ttStore:TextTypesStore;
+    ttModel:TextTypesModel;
     attachedAlignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 }
 
@@ -63,11 +63,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     private viewComponents:any; // TODO types
 
-    private subcorpFormStore:SubcorpFormStore;
+    private subcorpFormModel:SubcorpFormModel;
 
-    private subcorpWithinFormStore:SubcorpWithinFormStore;
+    private subcorpWithinFormModel:SubcorpWithinFormModel;
 
-    private textTypesStore:TextTypesStore;
+    private textTypesModel:TextTypesModel;
 
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
@@ -77,7 +77,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     registerCorpusSelectionListener(fn:(corpname:string, aligned:Immutable.List<string>, subcorp:string)=>void) {}
 
     getCurrentSubcorpus():string {
-        return this.subcorpFormStore.getSubcname();
+        return this.subcorpFormModel.getSubcname();
     }
 
     getCorpora():Immutable.List<string> {
@@ -102,7 +102,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     createTextTypesComponents():RSVP.Promise<TTInitData> {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesStore = new TextTypesStore(
+        this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData
@@ -110,14 +110,14 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.textTypesStore
+            this.textTypesModel
         );
 
         const p1 = liveAttributes(
             this.layoutModel.pluginApi(),
-            this.textTypesStore,
+            this.textTypesModel,
             null, // no corplist provider => manual aligned corp. selection mode
-            () => this.textTypesStore.hasSelectedItems(),
+            () => this.textTypesModel.hasSelectedItems(),
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
@@ -128,16 +128,16 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         const p2 = p1.then(
             (liveAttrsPlugin:TextTypes.AttrValueTextInputListener) => {
                 if (this.layoutModel.pluginIsActive('live_attributes')) {
-                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-                    this.textTypesStore.addSelectionChangeListener(target => {
+                    this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
+                    this.textTypesModel.addSelectionChangeListener(target => {
                         liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
                                 liveAttrsPlugin.hasSelectedLanguages());
                     });
                 }
                 return subcMixer(
                     this.layoutModel.pluginApi(),
-                    this.textTypesStore,
-                    () => this.subcorpFormStore.getSubcname(),
+                    this.textTypesModel,
+                    () => this.subcorpFormModel.getSubcname(),
                     () => liveAttrsPlugin.getAlignedCorpora(),
                     this.layoutModel.getConf<string>('CorpusIdAttr')
                 );
@@ -160,7 +160,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 } else {
                     subcMixerComponent = null;
                 }
-                const liveAttrsViews = liveAttrs ? liveAttrs.getViews(subcMixerComponent,this.textTypesStore) : {};
+                const liveAttrsViews = liveAttrs ? liveAttrs.getViews(subcMixerComponent,this.textTypesModel) : {};
 
                 const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
                     () => liveAttrs.getAlignedCorpora() : () => Immutable.List<TextTypes.AlignedLanguageItem>();
@@ -170,11 +170,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     props: {
                         liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
                         liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                        attributes: this.textTypesStore.getAttributes(),
+                        attributes: this.textTypesModel.getAttributes(),
                         alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                         manualAlignCorporaMode: true
                     },
-                    ttStore: this.textTypesStore,
+                    ttModel: this.textTypesModel,
                     attachedAlignedCorporaProvider: attachedAlignedCorporaProvider
                 };
             }
@@ -182,7 +182,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     }
 
     init(conf:Kontext.Conf):void {
-        const getStoredAlignedCorp = () => {
+        const getModeldAlignedCorp = () => {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
         };
 
@@ -192,16 +192,16 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             }
         ).then(
             (ttComponent) => {
-                 this.subcorpWithinFormStore = new SubcorpWithinFormStore(
+                 this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
                 );
-                this.subcorpFormStore = new SubcorpFormStore(
+                this.subcorpFormModel = new SubcorpFormModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
-                    this.subcorpWithinFormStore,
-                    ttComponent.ttStore,
+                    this.subcorpWithinFormModel,
+                    ttComponent.ttModel,
                     this.layoutModel.getConf<string>('corpname'),
                     ttComponent.attachedAlignedCorporaProvider
                 );
@@ -217,8 +217,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     {
                         getCurrentSubcorpus: () => null,
                         getAvailableSubcorpora: () => Immutable.List<string>(),
-                        addChangeListener: (fn:Kontext.StoreListener) => undefined,
-                        removeChangeListener:(fn:Kontext.StoreListener) => undefined
+                        addChangeListener: (fn:Kontext.ModelListener) => undefined,
+                        removeChangeListener:(fn:Kontext.ModelListener) => undefined
                     },
                     this,
                     {
@@ -238,8 +238,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     items[1],
-                    this.subcorpFormStore,
-                    this.subcorpWithinFormStore
+                    this.subcorpFormModel,
+                    this.subcorpWithinFormModel
                 );
                 this.initSubcorpForm(items[0].component, items[0].props);
             }

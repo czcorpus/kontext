@@ -27,26 +27,26 @@ import {init as concSaveViewsInit} from 'views/concordance/save';
 import {init as ttOverviewInit} from './ttOverview';
 
 
-export function init(dispatcher, he, stores) {
+export function init(dispatcher, he, models) {
 
     const layoutViews = he.getLayoutViews();
 
-    const lineSelectionStore = stores.lineSelectionStore;
-    const lineStore = stores.lineViewStore;
-    const concSaveStore = lineStore.getSaveStore();
-    const concDetailStore = stores.concDetailStore;
-    const refsDetailStore = stores.refsDetailStore;
-    const userInfoStore = stores.userInfoStore;
-    const mainMenuStore = stores.mainMenuStore;
-    const syntaxViewStore = lineStore.getSyntaxViewStore();
-    const dashboardStore = stores.dashboardStore;
+    const lineSelectionModel = models.lineSelectionModel;
+    const lineModel = models.lineViewModel;
+    const lconcSaveModel = lineModel.getSaveModel();
+    const concDetailModel = models.concDetailModel;
+    const refsDetailModel = models.refsDetailModel;
+    const userInfoModel = models.userInfoModel;
+    const mainMenuModel = models.mainMenuModel;
+    const syntaxViewModel = lineModel.getSyntaxViewModel();
+    const dashboardModel = models.dashboardModel;
 
-    const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionStore, userInfoStore);
-    const paginationViews = paginatorViewsInit(dispatcher, he, lineStore);
-    const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore, concDetailStore);
-    const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailStore, refsDetailStore, lineStore);
-    const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, concSaveStore);
-    const ttDistViews = ttOverviewInit(dispatcher, he, stores.ttDistStore);
+    const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionModel, userInfoModel);
+    const paginationViews = paginatorViewsInit(dispatcher, he, lineModel);
+    const linesViews = linesViewInit(dispatcher, he, lineModel, lineSelectionModel, concDetailModel);
+    const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailModel, refsDetailModel, lineModel);
+    const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, lconcSaveModel);
+    const ttDistViews = ttOverviewInit(dispatcher, he, models.ttDistModel);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -83,7 +83,7 @@ export function init(dispatcher, he, stores) {
             this._selectChangeHandler = this._selectChangeHandler.bind(this);
             this._selectMenuTriggerHandler = this._selectMenuTriggerHandler.bind(this);
             this._closeMenuHandler = this._closeMenuHandler.bind(this);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this.state = {
                 menuVisible: false
             };
@@ -110,18 +110,18 @@ export function init(dispatcher, he, stores) {
             });
         }
 
-        _storeChangeHandler() {
+        _modelChangeHandler() {
             this.setState({
                 menuVisible: false // <- data of lines changed => no need for menu
             });
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._storeChangeHandler);
+            lineModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._storeChangeHandler);
+            lineModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _getMsgStatus() {
@@ -165,7 +165,7 @@ export function init(dispatcher, he, stores) {
         }
 
         render() {
-            const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionStore.getMode();
+            const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionModel.getMode();
             return (
                 <div className="lines-selection-controls">
                     {he.translate('concview__line_sel')}:{'\u00A0'}
@@ -199,16 +199,16 @@ export function init(dispatcher, he, stores) {
         constructor(props) {
             super(props);
             this._handleCalcIpmClick = this._handleCalcIpmClick.bind(this);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                canCalculateAdHocIpm: lineStore.getProvidesAdHocIpm(),
-                fastAdHocIpm: lineStore.getFastAdHocIpm(),
-                adHocIpm: lineStore.getAdHocIpm(),
-                subCorpName: lineStore.getSubCorpName(),
+                canCalculateAdHocIpm: lineModel.getProvidesAdHocIpm(),
+                fastAdHocIpm: lineModel.getFastAdHocIpm(),
+                adHocIpm: lineModel.getAdHocIpm(),
+                subCorpName: lineModel.getSubCorpName(),
                 isWaiting: false
             };
         }
@@ -235,19 +235,19 @@ export function init(dispatcher, he, stores) {
             return ans;
         }
 
-        _storeChangeHandler(store, action) {
-            const newState = this._fetchStoreState();
+        _modelChangeHandler(model, action) {
+            const newState = this._fetchModelState();
             // TODO antipattern here:
             newState.isWaiting = action === '$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC' ? false : this.state.isWaiting;
             this.setState(newState);
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._storeChangeHandler);
+            lineModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._storeChangeHandler);
+            lineModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _getIpm() {
@@ -368,22 +368,22 @@ export function init(dispatcher, he, stores) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this.state = {
-                currViewAttrs: lineStore.getViewAttrs()
+                currViewAttrs: lineModel.getViewAttrs()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState({currViewAttrs: lineStore.getViewAttrs()});
+        _modelChangeHandler() {
+            this.setState({currViewAttrs: lineModel.getViewAttrs()});
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._storeChangeHandler);
+            lineModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._storeChangeHandler);
+            lineModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderMouseOverInfo() {
@@ -431,27 +431,27 @@ export function init(dispatcher, he, stores) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                numSelected: lineSelectionStore.size(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+                numSelected: lineSelectionModel.size(),
+                numItemsInLockedGroups: lineModel.getNumItemsInLockedGroups()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            lineSelectionStore.addChangeListener(this._storeChangeHandler);
+            lineSelectionModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineSelectionStore.removeChangeListener(this._storeChangeHandler);
+            lineSelectionModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {
@@ -510,19 +510,19 @@ export function init(dispatcher, he, stores) {
         constructor(props) {
             super(props);
             this.state = {
-                waiting: syntaxViewStore.isWaiting()
+                waiting: syntaxViewModel.isWaiting()
             };
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({
-                waiting: syntaxViewStore.isWaiting()
+                waiting: syntaxViewModel.isWaiting()
             });
         }
 
         componentDidMount() {
-            syntaxViewStore.addChangeListener(this._handleStoreChange);
+            syntaxViewModel.addChangeListener(this._handleModelChange);
             this.props.onReady(
                 this.props.tokenNumber,
                 this.props.kwicLength
@@ -531,7 +531,7 @@ export function init(dispatcher, he, stores) {
 
         componentWillUnmount() {
             this.props.onClose();
-            syntaxViewStore.removeChangeListener(this._handleStoreChange);
+            syntaxViewModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {
@@ -560,8 +560,8 @@ export function init(dispatcher, he, stores) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleDetailCloseClick = this._handleDetailCloseClick.bind(this);
             this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
             this._handleAnonymousUserWarning = this._handleAnonymousUserWarning.bind(this);
@@ -570,25 +570,25 @@ export function init(dispatcher, he, stores) {
             this._detailClickHandler = this._detailClickHandler.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                hasConcDetailData: concDetailStore.hasConcDetailData(),
-                tokenDetailData: concDetailStore.getTokenDetailData(),
-                tokenDetailIsBusy: concDetailStore.getTokenDetailIsBusy(),
-                concDetailStoreIsBusy: concDetailStore.getIsBusy(),
-                refsDetailData: refsDetailStore.getData(),
-                viewMode: lineStore.getViewAttrsVmode(),
-                isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
-                concSummary: lineStore.getConcSummary(),
+                hasConcDetailData: concDetailModel.hasConcDetailData(),
+                tokenDetailData: concDetailModel.getTokenDetailData(),
+                tokenDetailIsBusy: concDetailModel.getTokenDetailIsBusy(),
+                concDetailModelIsBusy: concDetailModel.getIsBusy(),
+                refsDetailData: refsDetailModel.getData(),
+                viewMode: lineModel.getViewAttrsVmode(),
+                isUnfinishedCalculation: lineModel.isUnfinishedCalculation(),
+                concSummary: lineModel.getConcSummary(),
                 showAnonymousUserWarn: this.props.anonymousUser,
-                saveFormVisible: concSaveStore.getFormIsActive(),
-                supportsSyntaxView: lineStore.getSupportsSyntaxView(),
+                saveFormVisible: lconcSaveModel.getFormIsActive(),
+                supportsSyntaxView: lineModel.getSupportsSyntaxView(),
                 syntaxBoxData: null
             };
         }
 
-        _handleStoreChange() {
-            const state = this._fetchStoreState();
+        _handleModelChange() {
+            const state = this._fetchModelState();
             state.showAnonymousUserWarn = this.state.showAnonymousUserWarn;
             this.setState(state);
         }
@@ -605,7 +605,7 @@ export function init(dispatcher, he, stores) {
         }
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
-            if (concDetailStore.getViewMode() === 'default') {
+            if (concDetailModel.getViewMode() === 'default') {
                 if (kwicLength > 0) {
                     dispatcher.dispatch({
                         actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
@@ -628,7 +628,7 @@ export function init(dispatcher, he, stores) {
                     });
                 }
 
-            } else if (concDetailStore.getViewMode() === 'speech') {
+            } else if (concDetailModel.getViewMode() === 'speech') {
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
                     props: {
@@ -653,7 +653,7 @@ export function init(dispatcher, he, stores) {
         }
 
         _handleAnonymousUserWarning() {
-            const state = this._fetchStoreState();
+            const state = this._fetchModelState();
             state.showAnonymousUserWarn = false;
             this.setState(state);
         }
@@ -678,22 +678,22 @@ export function init(dispatcher, he, stores) {
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._handleStoreChange);
-            concSaveStore.addChangeListener(this._handleStoreChange);
-            concDetailStore.addChangeListener(this._handleStoreChange);
-            refsDetailStore.addChangeListener(this._handleStoreChange);
+            lineModel.addChangeListener(this._handleModelChange);
+            lconcSaveModel.addChangeListener(this._handleModelChange);
+            concDetailModel.addChangeListener(this._handleModelChange);
+            refsDetailModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._handleStoreChange);
-            concSaveStore.removeChangeListener(this._handleStoreChange);
-            concDetailStore.removeChangeListener(this._handleStoreChange);
-            refsDetailStore.removeChangeListener(this._handleStoreChange);
+            lineModel.removeChangeListener(this._handleModelChange);
+            lconcSaveModel.removeChangeListener(this._handleModelChange);
+            concDetailModel.removeChangeListener(this._handleModelChange);
+            refsDetailModel.removeChangeListener(this._handleModelChange);
         }
 
         _shouldDisplayConcDetailBox() {
             return this.state.hasConcDetailData || this.state.tokenDetailData.length > 0 ||
-                    this.state.concDetailStoreIsBusy || this.state.tokenDetailIsBusy;
+                    this.state.concDetailModelIsBusy || this.state.tokenDetailIsBusy;
         }
 
         render() {
@@ -758,26 +758,26 @@ export function init(dispatcher, he, stores) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this.state = this._fetchModelState();
+            this._modelChangeListener = this._modelChangeListener.bind(this);
         }
 
-        _storeChangeListener() {
-            this.setState(this._fetchStoreState());
+        _modelChangeListener() {
+            this.setState(this._fetchModelState());
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                showTTOverview: dashboardStore.getShowTTOverview()
+                showTTOverview: dashboardModel.getShowTTOverview()
             };
         }
 
         componentDidMount() {
-            dashboardStore.addChangeListener(this._storeChangeListener);
+            dashboardModel.addChangeListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            dashboardStore.removeChangeListener(this._storeChangeListener);
+            dashboardModel.removeChangeListener(this._modelChangeListener);
         }
 
         render() {

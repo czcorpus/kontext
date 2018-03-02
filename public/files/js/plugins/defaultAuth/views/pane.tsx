@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 import {Kontext} from '../../../types/common';
 import {MultiDict} from '../../../util';
-import {UserStatusStore} from '../init';
+import {UserStatusModel} from '../init';
 import {ActionDispatcher} from '../../../app/dispatcher';
 
 
@@ -40,7 +40,7 @@ export interface UserPaneState {
  *
  */
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
-            userStore:UserStatusStore):UserPaneViews {
+            userModel:UserStatusModel):UserPaneViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -111,23 +111,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-            this.state = this.fetchStoreState();
+            this.state = this.fetchModelState();
             this.handleLoginClick = this.handleLoginClick.bind(this);
             this.handleLogoutClick = this.handleLogoutClick.bind(this);
             this.handleProfileTrigger = this.handleProfileTrigger.bind(this);
             this.handleFormClose = this.handleFormClose.bind(this);
-            this.handleStoreChange = this.handleStoreChange.bind(this);
+            this.handleModelChange = this.handleModelChange.bind(this);
         }
 
-        private fetchStoreState():UserPaneState {
+        private fetchModelState():UserPaneState {
             return {
-                loginFormVisible: userStore.getLoginFormVisible(),
-                returnUrl: userStore.getReturnUrl()
+                loginFormVisible: userModel.getLoginFormVisible(),
+                returnUrl: userModel.getReturnUrl()
             };
         }
 
-        private handleStoreChange():void {
-            this.setState(this.fetchStoreState());
+        private handleModelChange():void {
+            this.setState(this.fetchModelState());
         }
 
         private handleLoginClick():void {
@@ -158,11 +158,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount():void {
-            userStore.addChangeListener(this.handleStoreChange);
+            userModel.addChangeListener(this.handleModelChange);
         }
 
         componentWillUnmount():void {
-            userStore.removeChangeListener(this.handleStoreChange);
+            userModel.removeChangeListener(this.handleModelChange);
         }
 
         render():React.ReactElement {

@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as d3Color from 'vendor/d3-color';
 import * as Immutable from 'immutable';
-import {TextTypesDistStore, FreqItem, FreqBlock} from '../../stores/concordance/ttDistStore';
+import {TextTypesDistModel, FreqItem, FreqBlock} from '../../models/concordance/ttDistModel';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 
@@ -46,7 +46,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, ttDistStore:TextTypesDistStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, ttDistModel:TextTypesDistModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -123,26 +123,26 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         constructor(props:TextTypesProps) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState():TextTypesState {
+        _fetchModelState():TextTypesState {
             return {
-                blocks: ttDistStore.getBlocks(),
-                isBusy: ttDistStore.getIsBusy(),
-                minFreq: ttDistStore.getMinFreq(),
-                sampleSize: ttDistStore.getSampleSize(),
-                blockedByAsyncConc: ttDistStore.getBlockedByAsyncConc()
+                blocks: ttDistModel.getBlocks(),
+                isBusy: ttDistModel.getIsBusy(),
+                minFreq: ttDistModel.getMinFreq(),
+                sampleSize: ttDistModel.getSampleSize(),
+                blockedByAsyncConc: ttDistModel.getBlockedByAsyncConc()
             };
         }
 
-        _handleStoreChange():void {
-            this.setState(this._fetchStoreState());
+        _handleModelChange():void {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            ttDistStore.addChangeListener(this._handleStoreChange);
+            ttDistModel.addChangeListener(this._handleModelChange);
             if (!this.state.blockedByAsyncConc) {
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
@@ -152,7 +152,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         componentWillUnmount() {
-            ttDistStore.removeChangeListener(this._handleStoreChange);
+            ttDistModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

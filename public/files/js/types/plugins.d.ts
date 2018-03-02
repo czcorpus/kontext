@@ -61,7 +61,7 @@ declare module 'plugins/footerBar/init' {
 declare module "plugins/corparch/init" {
 
     export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.ComponentClass;
+        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.ComponentClass;
 
     export function initCorplistPageComponents(pluginApi:IPluginApi):PluginInterfaces.ICorplistPage;
 }
@@ -69,7 +69,7 @@ declare module "plugins/corparch/init" {
 declare module "plugins/liveAttributes/init" {
 
     export default function create(pluginApi:IPluginApi,
-                     textTypesStore:TextTypes.ITextTypesStore,
+                     textTypesModel:TextTypes.ITextTypesModel,
                      selectedCorporaProvider:()=>Immutable.List<string>,
                      ttCheckStatusProvider:()=>boolean,
                      args:PluginInterfaces.ILiveAttrsInitArgs):RSVP.Promise<PluginInterfaces.ILiveAttributes>;
@@ -97,7 +97,7 @@ declare module "plugins/syntaxViewer/init" {
 declare module "plugins/subcmixer/init" {
 
     export default function create(pluginApi:IPluginApi,
-            textTypesStore:TextTypes.ITextTypesStore,
+            textTypesModel:TextTypes.ITextTypesModel,
             getCurrentSubcnameFn:()=>string,
             getAlignedCoroporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
             corpusIdAttr:string):RSVP.Promise<PluginInterfaces.ISubcMixer>;

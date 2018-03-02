@@ -25,12 +25,12 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
 
-export class IssueReportingStore extends SimplePageStore {
+export class IssueReportingModel extends StatefulModel {
 
     private pluginApi:IPluginApi;
 
@@ -110,12 +110,12 @@ export class IssueReportingStore extends SimplePageStore {
 
 export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
-    private store:IssueReportingStore;
+    private model:IssueReportingModel;
 
     private view:React.ComponentClass;
 
-    constructor(store:IssueReportingStore, view:React.ComponentClass) {
-        this.store = store;
+    constructor(model:IssueReportingModel, view:React.ComponentClass) {
+        this.model = model;
         this.view = view;
     }
 
@@ -127,9 +127,9 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
 
 export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
-    const store = new IssueReportingStore(pluginApi);
-    const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), store);
+    const model = new IssueReportingModel(pluginApi);
+    const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), model);
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {
-        resolve(new IssueReportingPlugin(store, view.IssueReportingWidget));
+        resolve(new IssueReportingPlugin(model, view.IssueReportingWidget));
     });
 }

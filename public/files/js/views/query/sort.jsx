@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, sortStore, multiLevelSortStore) {
+export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -94,7 +94,7 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
             this._handleSicaseCheck = this._handleSicaseCheck.bind(this);
             this._handleSbwardCheck = this._handleSbwardCheck.bind(this);
             this._handleSposChange = this._handleSposChange.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this.state = this._fetchStateValues();
         }
 
@@ -140,25 +140,25 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
 
         _fetchStateValues() {
             return {
-                availAttrs: sortStore.getAllAvailAttrs(),
-                sattr: sortStore.getSattrValues().get(this.props.sortId),
-                skey: sortStore.getSkeyValues().get(this.props.sortId),
-                spos: sortStore.getSposValues().get(this.props.sortId),
-                sicase: sortStore.getSicaseValues().get(this.props.sortId),
-                sbward: sortStore.getSbwardValues().get(this.props.sortId)
+                availAttrs: sortModel.getAllAvailAttrs(),
+                sattr: sortModel.getSattrValues().get(this.props.sortId),
+                skey: sortModel.getSkeyValues().get(this.props.sortId),
+                spos: sortModel.getSposValues().get(this.props.sortId),
+                sicase: sortModel.getSicaseValues().get(this.props.sortId),
+                sbward: sortModel.getSbwardValues().get(this.props.sortId)
             };
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState(this._fetchStateValues());
         }
 
         componentDidMount() {
-            sortStore.addChangeListener(this._handleStoreChange);
+            sortModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            sortStore.removeChangeListener(this._handleStoreChange);
+            sortModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {
@@ -423,34 +423,34 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._addLevel = this._addLevel.bind(this);
             this.state = this._fetchStateValues();
         }
 
         _fetchStateValues() {
              return {
-                availAttrs: multiLevelSortStore.getAllAvailAttrs(),
-                levels: multiLevelSortStore.getLevelIndices(this.props.sortId),
-                maxNumLevels: multiLevelSortStore.getMaxNumLevels(this.props.sortId),
-                mlxattrValues: multiLevelSortStore.getMlxattrValues(this.props.sortId),
-                mlxicaseValues: multiLevelSortStore.getMlxicaseValues(this.props.sortId),
-                mlxbwardValues: multiLevelSortStore.getMlxbwardValues(this.props.sortId),
-                ctxIndexValues: multiLevelSortStore.getCtxIndexValues(this.props.sortId),
-                ctxAlignValues: multiLevelSortStore.getCtxAlignValues(this.props.sortId)
+                availAttrs: multiLevelConcSortModel.getAllAvailAttrs(),
+                levels: multiLevelConcSortModel.getLevelIndices(this.props.sortId),
+                maxNumLevels: multiLevelConcSortModel.getMaxNumLevels(this.props.sortId),
+                mlxattrValues: multiLevelConcSortModel.getMlxattrValues(this.props.sortId),
+                mlxicaseValues: multiLevelConcSortModel.getMlxicaseValues(this.props.sortId),
+                mlxbwardValues: multiLevelConcSortModel.getMlxbwardValues(this.props.sortId),
+                ctxIndexValues: multiLevelConcSortModel.getCtxIndexValues(this.props.sortId),
+                ctxAlignValues: multiLevelConcSortModel.getCtxAlignValues(this.props.sortId)
             };
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState(this._fetchStateValues());
         }
 
         componentDidMount() {
-            multiLevelSortStore.addChangeListener(this._handleStoreChange);
+            multiLevelConcSortModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            multiLevelSortStore.removeChangeListener(this._handleStoreChange);
+            multiLevelConcSortModel.removeChangeListener(this._handleModelChange);
         }
 
         _addLevel() {
@@ -571,10 +571,10 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
         }
 
         _getDefaultFormType() {
-            if (sortStore.isActiveActionValue(this.props.sortId)) {
+            if (sortModel.isActiveActionValue(this.props.sortId)) {
                 return 'sortx';
 
-            } else if (multiLevelSortStore.isActiveActionValue(this.props.sortId)) {
+            } else if (multiLevelConcSortModel.isActiveActionValue(this.props.sortId)) {
                 return 'mlsortx';
 
             } else {

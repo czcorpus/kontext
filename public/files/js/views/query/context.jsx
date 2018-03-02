@@ -28,7 +28,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, queryContextStore) {
+export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
 
@@ -226,22 +226,22 @@ export function init(dispatcher, he, queryContextStore) {
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this.state = {
-                data: queryContextStore.getData()
+                data: queryContextModel.getData()
             };
         }
 
-        _handleStoreChange() {
-            this.setState({data: queryContextStore.getData()});
+        _handleModelChange() {
+            this.setState({data: queryContextModel.getData()});
         }
 
         componentDidMount() {
-            queryContextStore.addChangeListener(this._handleStoreChange);
+            queryContextModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            queryContextStore.removeChangeListener(this._handleStoreChange);
+            queryContextModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

@@ -23,8 +23,8 @@
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
-import {SampleStore} from '../../stores/query/sample';
-import {SwitchMainCorpStore} from '../../stores/query/switchmc';
+import {ConcSampleModel} from '../../models/query/sample';
+import {SwitchMainCorpModel} from '../../models/query/switchmc';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 
@@ -74,7 +74,7 @@ export interface SwitchMainCorpFormState {
 // --------
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
-        sampleStore:SampleStore, switchMcStore:SwitchMainCorpStore):SampleFormViews {
+        sampleModel:ConcSampleModel, switchMcModel:SwitchMainCorpModel):SampleFormViews {
 
     // ------------------------ <SampleForm /> --------------------------------
 
@@ -82,17 +82,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleSubmitEvent = this._handleSubmitEvent.bind(this);
             this.state = {
-                rlines: sampleStore.getRlinesValues().get(this.props.sampleId)
+                rlines: sampleModel.getRlinesValues().get(this.props.sampleId)
             };
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({
-                rlines: sampleStore.getRlinesValues().get(this.props.sampleId)
+                rlines: sampleModel.getRlinesValues().get(this.props.sampleId)
             })
         }
 
@@ -126,11 +126,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            sampleStore.addChangeListener(this._handleStoreChange);
+            sampleModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            sampleStore.removeChangeListener(this._handleStoreChange);
+            sampleModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {
@@ -236,21 +236,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-            this.state = {maincorpValues: switchMcStore.getMainCorpValues()};
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = {maincorpValues: switchMcModel.getMainCorpValues()};
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitEvent = this._handleSubmitEvent.bind(this);
         }
 
-        _handleStoreChange() {
-            this.setState({maincorpValues: switchMcStore.getMainCorpValues()});
+        _handleModelChange() {
+            this.setState({maincorpValues: switchMcModel.getMainCorpValues()});
         }
 
         componentDidMount() {
-            switchMcStore.addChangeListener(this._handleStoreChange);
+            switchMcModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            switchMcStore.removeChangeListener(this._handleStoreChange);
+            switchMcModel.removeChangeListener(this._handleModelChange);
         }
 
         _handleSubmitEvent(evt) {

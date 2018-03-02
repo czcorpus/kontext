@@ -22,7 +22,7 @@ import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginApi} from '../app/main';
 import * as corplist from 'plugins/corparch/init';
-import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
+import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';
 
 declare var require:any;
@@ -58,7 +58,7 @@ class SubcorpListPage {
 
     private layoutModel:PageModel;
 
-    private subcorpListStore:SubcorpListStore;
+    private subcorpListModel:SubcorpListModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -68,7 +68,7 @@ class SubcorpListPage {
         const views = listViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.subcorpListStore
+            this.subcorpListModel
         );
         const props = {};
         this.layoutModel.renderReactComponent(
@@ -81,7 +81,7 @@ class SubcorpListPage {
     init():void {
         this.layoutModel.init().then(
             (data) => {
-                this.subcorpListStore = new SubcorpListStore(
+                this.subcorpListModel = new SubcorpListModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),

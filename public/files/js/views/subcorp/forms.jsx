@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpFormStore, subcorpWithinFormStore) {
+export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpFormModel, subcorpWithinFormModel) {
 
     // ------------------------------------------- <WithinSwitch /> ----------------------------
 
@@ -168,9 +168,9 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
         constructor(props) {
             super(props);
             this.state = {
-                lines: subcorpWithinFormStore.getLines()
+                lines: subcorpWithinFormModel.getLines()
             };
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._addLineHandler = this._addLineHandler.bind(this);
         }
 
@@ -185,16 +185,16 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
             });
         }
 
-        _storeChangeHandler() {
-            this.setState({lines: subcorpWithinFormStore.getLines()});
+        _modelChangeHandler() {
+            this.setState({lines: subcorpWithinFormModel.getLines()});
         }
 
         componentDidMount() {
-            subcorpWithinFormStore.addChangeListener(this._storeChangeHandler);
+            subcorpWithinFormModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            subcorpWithinFormStore.removeChangeListener(this._storeChangeHandler);
+            subcorpWithinFormModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderStructLine(line, viewIdx) {
@@ -347,21 +347,21 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputModeChange = this._handleInputModeChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                subcname: subcorpFormStore.getSubcname(),
-                inputMode: subcorpFormStore.getInputMode()
+                subcname: subcorpFormModel.getSubcname(),
+                inputMode: subcorpFormModel.getInputMode()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         _handleInputModeChange(v) {
@@ -381,11 +381,11 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
         }
 
         componentDidMount() {
-            subcorpFormStore.addChangeListener(this._handleStoreChange);
+            subcorpFormModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcorpFormStore.removeChangeListener(this._handleStoreChange);
+            subcorpFormModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderTextTypeSelection() {

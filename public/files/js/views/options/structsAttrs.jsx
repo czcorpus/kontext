@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
+export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     const layoutViews = helpers.getLayoutViews();
 
@@ -386,42 +386,42 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
-            this._handleViewOptsStoreChange = this._handleViewOptsStoreChange.bind(this);
-            this.state = this._fetchStoreState();
+            this._handleModelChange = this._handleModelChange.bind(this);
+            this._handleViewOptsModelChange = this._handleViewOptsModelChange.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                corpusIdent: viewOptionsStore.getCorpusIdent(),
-                fixedAttr: viewOptionsStore.getFixedAttr(),
-                attrList: viewOptionsStore.getAttributes(),
-                availStructs: viewOptionsStore.getStructures(),
-                structAttrs: viewOptionsStore.getStructAttrs(),
-                availRefs: viewOptionsStore.getReferences(),
-                hasSelectAllAttrs: viewOptionsStore.getSelectAllAttributes(),
-                hasSellectAllRefs: viewOptionsStore.getSelectAllReferences(),
-                hasLoadedData: viewOptionsStore.isLoaded(),
-                attrsVmode: viewOptionsStore.getAttrsVmode(),
-                attrsAllpos: viewOptionsStore.getAttrsAllpos(),
-                showConcToolbar: viewOptionsStore.getShowConcToolbar(),
-                isWaiting: viewOptionsStore.getIsWaiting(),
+                corpusIdent: viewOptionsModel.getCorpusIdent(),
+                fixedAttr: viewOptionsModel.getFixedAttr(),
+                attrList: viewOptionsModel.getAttributes(),
+                availStructs: viewOptionsModel.getStructures(),
+                structAttrs: viewOptionsModel.getStructAttrs(),
+                availRefs: viewOptionsModel.getReferences(),
+                hasSelectAllAttrs: viewOptionsModel.getSelectAllAttributes(),
+                hasSellectAllRefs: viewOptionsModel.getSelectAllReferences(),
+                hasLoadedData: viewOptionsModel.isLoaded(),
+                attrsVmode: viewOptionsModel.getAttrsVmode(),
+                attrsAllpos: viewOptionsModel.getAttrsAllpos(),
+                showConcToolbar: viewOptionsModel.getShowConcToolbar(),
+                isWaiting: viewOptionsModel.getIsWaiting(),
                 isVisible: false
             };
         }
 
-        _handleStoreChange() {
-            const activeItem = mainMenuStore.getActiveItem();
+        _handleModelChange() {
+            const activeItem = mainMenuModel.getActiveItem();
             if (activeItem &&
                     activeItem.actionName === 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS') {
-                const state = this._fetchStoreState();
+                const state = this._fetchModelState();
                 state.isVisible = true;
                 this.setState(state);
             }
         }
 
-        _handleViewOptsStoreChange() {
-            const state = this._fetchStoreState();
+        _handleViewOptsModelChange() {
+            const state = this._fetchModelState();
             if (this.state.isWaiting && !state.isWaiting) {
                 state.isVisible = false;
 
@@ -432,8 +432,8 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
         }
 
         componentDidMount() {
-            mainMenuStore.addChangeListener(this._handleStoreChange);
-            viewOptionsStore.addChangeListener(this._handleViewOptsStoreChange);
+            mainMenuModel.addChangeListener(this._handleModelChange);
+            viewOptionsModel.addChangeListener(this._handleViewOptsModelChange);
             // ---> not needed (see action prerequisite)
             if (this.state.isVisible) {
                 dispatcher.dispatch({
@@ -444,8 +444,8 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
         }
 
         componentWillUnmount() {
-            mainMenuStore.removeChangeListener(this._handleStoreChange);
-            viewOptionsStore.removeChangeListener(this._handleViewOptsStoreChange);
+            mainMenuModel.removeChangeListener(this._handleModelChange);
+            viewOptionsModel.removeChangeListener(this._handleViewOptsModelChange);
         }
 
         render() {

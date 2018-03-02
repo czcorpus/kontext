@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
-import {QueryStorageStore} from './stores';
+import {QueryStorageModel} from './models';
 import {init as viewsInit} from './view';
 
 declare var require:any;
@@ -33,33 +33,33 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
     private pluginApi:IPluginApi;
 
-    private store:QueryStorageStore;
+    private model:QueryStorageModel;
 
-    constructor(pluginApi:IPluginApi, store:QueryStorageStore) {
+    constructor(pluginApi:IPluginApi, model:QueryStorageModel) {
         this.pluginApi = pluginApi;
-        this.store = store;
+        this.model = model;
     }
 
     getWidgetView():React.ComponentClass {
         return viewsInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            this.store
+            this.model
         ).QueryStorage;
     }
 
-    getStore():PluginInterfaces.IQueryStorageStore {
-        return this.store;
+    getModel():PluginInterfaces.IQueryStorageModel {
+        return this.model;
     }
 
     importData(data:Array<Kontext.QueryHistoryItem>):void {
-        this.store.importData(data);
+        this.model.importData(data);
     }
 
 }
 
 export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage> {
     return new RSVP.Promise<PluginInterfaces.IQueryStorage>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        resolve(new QueryStoragePlugin(pluginApi, new QueryStorageStore(pluginApi, offset, limit, pageSize)));
+        resolve(new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize)));
     });
 }

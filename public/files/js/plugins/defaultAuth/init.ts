@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -29,13 +29,13 @@ import * as RSVP from 'vendor/rsvp';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
-import {UserProfileStore} from './profile';
+import {UserProfileModel} from './profile';
 
 
 /**
  *
  */
-export class UserStatusStore extends SimplePageStore {
+export class UserStatusModel extends StatefulModel {
 
     pluginApi:IPluginApi;
 
@@ -81,28 +81,28 @@ export class UserStatusStore extends SimplePageStore {
  */
 export class AuthPlugin implements PluginInterfaces.IAuth {
 
-    private store:UserStatusStore;
+    private model:UserStatusModel;
 
-    private profileStore:UserProfileStore;
+    private profileModel:UserProfileModel;
 
     private userPaneViews:UserPaneViews;
 
     private userProfileViews:UserProfileViews;
 
-    constructor(profileStore:UserProfileStore, store:UserStatusStore, pluginApi:IPluginApi) {
-        this.profileStore = profileStore;
-        this.store = store;
+    constructor(profileModel:UserProfileModel, model:UserStatusModel, pluginApi:IPluginApi) {
+        this.profileModel = profileModel;
+        this.model = model;
 
         this.userPaneViews = userPaneViewsFactory(
             pluginApi.dispatcher(),
             pluginApi.getComponentHelpers(),
-            this.store
+            this.model
         );
 
         this.userProfileViews = userProfileViewsFactory(
             pluginApi.dispatcher(),
             pluginApi.getComponentHelpers(),
-            this.profileStore
+            this.profileModel
         );
     }
 
@@ -118,12 +118,12 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 
 export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
     const plugin = new AuthPlugin(
-        new UserProfileStore(
+        new UserProfileModel(
             pluginApi.dispatcher(),
             pluginApi,
             pluginApi.getConf<Kontext.UserCredentials>('User')
         ),
-        new UserStatusStore(
+        new UserStatusModel(
             pluginApi.dispatcher(),
             pluginApi
         ),

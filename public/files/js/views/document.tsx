@@ -30,7 +30,7 @@ import {ActionDispatcher} from '../app/dispatcher';
 export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
-        storeProvider:Kontext.LayoutStores):CoreViews.Runtime {
+        modelProvider:Kontext.LayoutModel):CoreViews.Runtime {
 
     // ------------------------------ <ModalOverlay /> -----------------------------
 
@@ -383,24 +383,24 @@ export function init(
             super(props);
             this._changeListener = this._changeListener.bind(this);
             this.state = {
-                messages: storeProvider.messageStore.getMessages(),
-                transitionTime: storeProvider.messageStore.getTransitionTime()
+                messages: modelProvider.messageModel.getMessages(),
+                transitionTime: modelProvider.messageModel.getTransitionTime()
             };
         }
 
         _changeListener() {
             this.setState({
-                messages: storeProvider.messageStore.getMessages(),
-                transitionTime: storeProvider.messageStore.getTransitionTime()
+                messages: modelProvider.messageModel.getMessages(),
+                transitionTime: modelProvider.messageModel.getTransitionTime()
             });
         }
 
         componentDidMount() {
-            storeProvider.messageStore.addChangeListener(this._changeListener);
+            modelProvider.messageModel.addChangeListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            storeProvider.messageStore.removeChangeListener(this._changeListener);
+            modelProvider.messageModel.removeChangeListener(this._changeListener);
         }
 
         render() {

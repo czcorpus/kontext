@@ -25,6 +25,6 @@ import {Kontext} from '../../types/common';
 export function init(
     dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
-    widgetStore:Kontext.PageStore,
-    queryStore
+    widgetModel:Kontext.EventEmitter,
+    queryModel
 ):React.ComponentClass;

@@ -25,7 +25,7 @@ import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 
-import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
+import {Freq2DFormModel, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
 
 
 interface CTFreqFormProps {
@@ -57,7 +57,7 @@ interface ExportedComponents {
 export function init(
     dispatcher:ActionDispatcher,
     he:Kontext.ComponentHelpers,
-    ctFreqFormStore:CTFreqFormStore):ExportedComponents {
+    ctFreqFormModel:Freq2DFormModel):ExportedComponents {
 
 
     // -------------------- <CTFreqFormMinFreqInput /> --------------------------------------------
@@ -167,28 +167,28 @@ export function init(
         constructor(props) {
             super(props);
             this.state = this._fetchState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleAttrSelChange = this._handleAttrSelChange.bind(this);
         }
 
 
         _fetchState() {
             return {
-                posAttrs: ctFreqFormStore.getPosAttrs(),
-                structAttrs: ctFreqFormStore.getStructAttrs(),
-                attr1: ctFreqFormStore.getAttr1(),
-                attr1IsStruct: ctFreqFormStore.getAttr1IsStruct(),
-                attr2: ctFreqFormStore.getAttr2(),
-                attr2IsStruct: ctFreqFormStore.getAttr2IsStruct(),
-                minFreq: ctFreqFormStore.getMinFreq(),
-                minFreqType: ctFreqFormStore.getMinFreqType(),
-                minFreqHint: ctFreqFormStore.getMinFreqHint(),
-                positionRangeLabels: ctFreqFormStore.getPositionRangeLabels(),
-                alignType1: ctFreqFormStore.getAlignType(1),
-                alignType2: ctFreqFormStore.getAlignType(2),
-                ctxIndex1: ctFreqFormStore.getCtxIndex(1),
-                ctxIndex2: ctFreqFormStore.getCtxIndex(2),
-                usesAdHocSubcorpus: ctFreqFormStore.getUsesAdHocSubcorpus()
+                posAttrs: ctFreqFormModel.getPosAttrs(),
+                structAttrs: ctFreqFormModel.getStructAttrs(),
+                attr1: ctFreqFormModel.getAttr1(),
+                attr1IsStruct: ctFreqFormModel.getAttr1IsStruct(),
+                attr2: ctFreqFormModel.getAttr2(),
+                attr2IsStruct: ctFreqFormModel.getAttr2IsStruct(),
+                minFreq: ctFreqFormModel.getMinFreq(),
+                minFreqType: ctFreqFormModel.getMinFreqType(),
+                minFreqHint: ctFreqFormModel.getMinFreqHint(),
+                positionRangeLabels: ctFreqFormModel.getPositionRangeLabels(),
+                alignType1: ctFreqFormModel.getAlignType(1),
+                alignType2: ctFreqFormModel.getAlignType(2),
+                ctxIndex1: ctFreqFormModel.getCtxIndex(1),
+                ctxIndex2: ctFreqFormModel.getCtxIndex(2),
+                usesAdHocSubcorpus: ctFreqFormModel.getUsesAdHocSubcorpus()
             };
         }
 
@@ -197,14 +197,14 @@ export function init(
         }
 
         componentDidMount() {
-            ctFreqFormStore.addChangeListener(this._storeChangeHandler);
+            ctFreqFormModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            ctFreqFormStore.removeChangeListener(this._storeChangeHandler);
+            ctFreqFormModel.removeChangeListener(this._modelChangeHandler);
         }
 
-        _storeChangeHandler() {
+        _modelChangeHandler() {
             this.setState(this._fetchState());
         }
 

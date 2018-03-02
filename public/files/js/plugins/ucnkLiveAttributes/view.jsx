@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, SubcmixerComponent, textTypesStore, liveAttrsStore) {
+export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel) {
 
     // ----------------------------- <StepLoader /> --------------------------
 
@@ -170,7 +170,7 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesStore, liveAtt
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
             this._changeHandler = this._changeHandler.bind(this);
             this._mkClickHandler = this._mkClickHandler.bind(this);
         }
@@ -192,28 +192,28 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesStore, liveAtt
             }
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                selectionSteps: liveAttrsStore.getSelectionSteps(),
-                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLoading: liveAttrsStore.getIsBusy(),
-                controlsEnabled: liveAttrsStore.getControlsEnabled(),
-                canUndoRefine: liveAttrsStore.canUndoRefine()
+                selectionSteps: liveAttrsModel.getSelectionSteps(),
+                alignedCorpora: liveAttrsModel.getAlignedCorpora(),
+                isLoading: liveAttrsModel.getIsBusy(),
+                controlsEnabled: liveAttrsModel.getControlsEnabled(),
+                canUndoRefine: liveAttrsModel.canUndoRefine()
             };
         }
 
         _changeHandler() {
-            this.setState(this._fetchStoreState());
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            textTypesStore.addChangeListener(this._changeHandler);
-            liveAttrsStore.addChangeListener(this._changeHandler);
+            textTypesModel.addChangeListener(this._changeHandler);
+            liveAttrsModel.addChangeListener(this._changeHandler);
         }
 
         componentWillUnmount() {
-            textTypesStore.removeChangeListener(this._changeHandler);
-            liveAttrsStore.removeChangeListener(this._changeHandler);
+            textTypesModel.removeChangeListener(this._changeHandler);
+            liveAttrsModel.removeChangeListener(this._changeHandler);
         }
 
         _widgetIsActive() {
@@ -275,29 +275,29 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesStore, liveAtt
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
             this._changeHandler = this._changeHandler.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                hasAvailableAlignedCorpora: liveAttrsStore.hasAvailableAlignedCorpora(),
-                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLocked: liveAttrsStore.hasLockedAlignedLanguages(),
-                manualAlignCorporaMode: liveAttrsStore.isManualAlignCorporaMode()
+                hasAvailableAlignedCorpora: liveAttrsModel.hasAvailableAlignedCorpora(),
+                alignedCorpora: liveAttrsModel.getAlignedCorpora(),
+                isLocked: liveAttrsModel.hasLockedAlignedLanguages(),
+                manualAlignCorporaMode: liveAttrsModel.isManualAlignCorporaMode()
             };
         }
 
         _changeHandler() {
-            this.setState(this._fetchStoreState());
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            liveAttrsStore.addChangeListener(this._changeHandler);
+            liveAttrsModel.addChangeListener(this._changeHandler);
         }
 
         componentWillUnmount() {
-            liveAttrsStore.removeChangeListener(this._changeHandler);
+            liveAttrsModel.removeChangeListener(this._changeHandler);
         }
 
         _renderHint() {

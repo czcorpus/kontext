@@ -25,7 +25,7 @@ import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import {init as initQueryHistoryViews} from 'views/query/history';
-import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
+import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
 import {init as basicOverviewViewsInit} from 'views/query/basicOverview';
 
@@ -46,7 +46,7 @@ class QueryHistoryPage {
         const corpInfoViews = corpnameLinkInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.getStores().corpusInfoStore
+            this.layoutModel.getModels().corpusInfoModel
         );
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
@@ -75,13 +75,13 @@ class QueryHistoryPage {
             }
 
         ).then(
-            (qsStore) => {
-                qsStore.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
+            (qsModel) => {
+                qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
                 const qhViews = initQueryHistoryViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
-                    qsStore.getStore()
+                    qsModel.getModel()
                 );
 
                 this.layoutModel.renderReactComponent(

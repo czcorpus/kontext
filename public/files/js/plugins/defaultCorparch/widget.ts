@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as common from './common';
 import {IPluginApi} from '../../types/plugins';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
@@ -48,7 +48,7 @@ export interface Options  {
 /**
  *
  */
-export class CorplistWidgetStore extends SimplePageStore {
+export class CorplistWidgetModel extends StatefulModel {
 
     private pluginApi:IPluginApi;
 
@@ -220,7 +220,7 @@ export class CorplistWidgetStore extends SimplePageStore {
         if (this.inputThrottleTimer) {
             window.clearTimeout(this.inputThrottleTimer);
         }
-        if (this.currSearchPhrase.length >= CorplistWidgetStore.MIN_SEARCH_PHRASE_ACTIVATION_LENGTH ||
+        if (this.currSearchPhrase.length >= CorplistWidgetModel.MIN_SEARCH_PHRASE_ACTIVATION_LENGTH ||
                 this.searchEngine.hasSelectedKeywords()) {
             this.inputThrottleTimer = window.setTimeout(() => {
                 this.searchCorpus(this.currSearchPhrase).then(

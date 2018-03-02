@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenuStore) {
+export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenuModel) {
 
     // ------------------------- <AnalysisFrame /> ---------------------------
 
@@ -31,8 +31,8 @@ export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenu
 
         constructor(props) {
             super(props);
-            this.state = {activeItem: mainMenuStore.getActiveItem()};
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = {activeItem: mainMenuModel.getActiveItem()};
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleCloseClick = this._handleCloseClick.bind(this);
         }
 
@@ -62,9 +62,9 @@ export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenu
                     && actions.indexOf(this.state.activeItem.actionName) > -1;
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({
-                activeItem: mainMenuStore.getActiveItem()
+                activeItem: mainMenuModel.getActiveItem()
             });
         }
 
@@ -76,11 +76,11 @@ export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenu
         }
 
         componentDidMount() {
-            mainMenuStore.addChangeListener(this._handleStoreChange);
+            mainMenuModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            mainMenuStore.removeChangeListener(this._handleStoreChange);
+            mainMenuModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

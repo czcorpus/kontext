@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, textTypesStore) {
+export function init(dispatcher, he, textTypesModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -43,7 +43,7 @@ export function init(dispatcher, he, textTypesStore) {
                 toValue: null,
                 keepCurrent: false,
                 intervalBehavior: 'strict',
-                hasSelectedValues: textTypesStore.hasSelectedItems(this.props.attrName),
+                hasSelectedValues: textTypesModel.hasSelectedItems(this.props.attrName),
                 showHelp: false
             };
         }
@@ -246,7 +246,7 @@ export function init(dispatcher, he, textTypesStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this.state = {isWaiting: false};
         }
 
@@ -263,18 +263,18 @@ export function init(dispatcher, he, textTypesStore) {
             }
         }
 
-        _storeChangeHandler(store, action) {
+        _modelChangeHandler() {
             if (this.state.isWaiting && this.props.containsExtendedInfo) {
-                this.setState({isWaiting: textTypesStore.isBusy()});
+                this.setState({isWaiting: textTypesModel.isBusy()});
             }
         }
 
         componentDidMount() {
-            textTypesStore.addChangeListener(this._storeChangeHandler);
+            textTypesModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            textTypesStore.removeChangeListener(this._storeChangeHandler);
+            textTypesModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {
@@ -473,7 +473,7 @@ export function init(dispatcher, he, textTypesStore) {
                                             : 'sca_' + this.props.attrObj.name}
                                     onChange={this._inputChangeHandler}
                                     value={this.props.attrObj.getTextFieldValue()}
-                                    placeholder={textTypesStore.getTextInputPlaceholder()}
+                                    placeholder={textTypesModel.getTextInputPlaceholder()}
                                     autoComplete="off" />
                                 {this._renderAutoComplete()}
                             </td>
@@ -576,8 +576,8 @@ export function init(dispatcher, he, textTypesStore) {
             this._helpCloseHandler = this._helpCloseHandler.bind(this);
             this.state = {
                 metaInfoHelpVisible: false,
-                hasExtendedInfo: textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name),
-                metaInfo: textTypesStore.getAttrSummary().get(this.props.attrObj.name)
+                hasExtendedInfo: textTypesModel.hasDefinedExtendedInfo(this.props.attrObj.name),
+                metaInfo: textTypesModel.getAttrSummary().get(this.props.attrObj.name)
             };
         }
 
@@ -748,30 +748,30 @@ export function init(dispatcher, he, textTypesStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                attributes: textTypesStore.getAttributes(),
-                rangeModes: textTypesStore.getRangeModes()
+                attributes: textTypesModel.getAttributes(),
+                rangeModes: textTypesModel.getRangeModes()
             };
         }
 
-        _storeChangeHandler(store, action) {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            textTypesStore.addChangeListener(this._storeChangeHandler);
+            textTypesModel.addChangeListener(this._modelChangeHandler);
             if (typeof this.props.onReady === 'function') {
                 this.props.onReady();
             }
         }
 
         componentWillUnmount() {
-            textTypesStore.removeChangeListener(this._storeChangeHandler);
+            textTypesModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {

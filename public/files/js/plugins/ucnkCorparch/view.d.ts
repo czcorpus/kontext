@@ -31,6 +31,6 @@ export function init(
     dispatcher:Kontext.ActionDispatcher,
     componentHelper:Kontext.ComponentHelpers,
     CorpusInfoBox:React.ComponentClass,
-    formStore:Kontext.PageStore,
-    listStore:Kontext.PageStore
+    formModel:Kontext.EventEmitter,
+    listModel:Kontext.EventEmitter
 );

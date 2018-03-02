@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IssueReportingStore} from './init';
+import {IssueReportingModel} from './init';
 import {Kontext} from '../../types/common';
 
 export interface IssueReportingViews {
@@ -26,4 +26,4 @@ export interface IssueReportingViews {
 }
 
 export function init(dispatcher:Kontext.ActionDispatcher, he:Kontext.ComponentHelpers,
-            reportingStore:IssueReportingStore):IssueReportingViews;
+            reportingModel:IssueReportingModel):IssueReportingViews;

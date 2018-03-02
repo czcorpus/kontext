@@ -24,9 +24,9 @@ import {calcTextColorFromBg, color2str, importColor} from '../../util';
 import {init as lineExtrasViewsInit} from './lineExtras';
 
 
-export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailStore) {
+export function init(dispatcher, he, lineModel, lineSelectionModel, concDetailModel) {
 
-    const extras = lineExtrasViewsInit(dispatcher, he, lineStore);
+    const extras = lineExtrasViewsInit(dispatcher, he, lineModel);
 
     // ------------------------- <ConcColHideSwitch /> ---------------------------
 
@@ -171,13 +171,13 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                selectionValue: lineSelectionStore.getLine(this.props.data.languages.first().tokenNumber)
+                selectionValue: lineSelectionModel.getLine(this.props.data.languages.first().tokenNumber)
             };
         }
 
@@ -338,8 +338,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
             this.props.tokenDetailClickHandler(corpusId, tokenNumber, -1, lineIdx);
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         shouldComponentUpdate(nextProps, nextState) {
@@ -353,11 +353,11 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
         }
 
         componentDidMount() {
-            lineSelectionStore.addChangeListener(this._handleStoreChange);
+            lineSelectionModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            lineSelectionStore.removeChangeListener(this._handleStoreChange);
+            lineSelectionModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {
@@ -434,52 +434,52 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
 
         constructor(props) {
             super(props);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
-            this.state = this._fetchStoreState();
+            this._modelChangeListener = this._modelChangeListener.bind(this);
+            this.state = this._fetchModelState();
         }
 
         _getLineSelMode() {
-            if (lineStore.getNumItemsInLockedGroups() > 0) {
+            if (lineModel.getNumItemsInLockedGroups() > 0) {
                 return 'groups';
 
             } else {
-                return lineSelectionStore.getMode();
+                return lineSelectionModel.getMode();
             }
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                lines: lineStore.getLines(),
-                lineSelData: lineSelectionStore.asMap(),
+                lines: lineModel.getLines(),
+                lineSelData: lineSelectionModel.asMap(),
                 lineSelMode: this._getLineSelMode(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
-                audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
-                useSafeFont: lineStore.getUseSafeFont(),
-                emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder(),
-                corporaColumns: lineStore.getCorporaColumns(),
-                viewMode: lineStore.getViewMode(),
-                supportsTokenDetail: concDetailStore.supportsTokenDetail(),
-                showLineNumbers: lineStore.getShowLineNumbers()
+                numItemsInLockedGroups: lineModel.getNumItemsInLockedGroups(),
+                audioPlayerIsVisible: lineModel.audioPlayerIsVisible(),
+                useSafeFont: lineModel.getUseSafeFont(),
+                emptyRefValPlaceholder: lineModel.getEmptyRefValPlaceholder(),
+                corporaColumns: lineModel.getCorporaColumns(),
+                viewMode: lineModel.getViewMode(),
+                supportsTokenDetail: concDetailModel.supportsTokenDetail(),
+                showLineNumbers: lineModel.getShowLineNumbers()
             };
         }
 
-        _storeChangeListener() {
-            this.setState(this._fetchStoreState());
+        _modelChangeListener() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._storeChangeListener);
-            lineSelectionStore.addChangeListener(this._storeChangeListener);
-            concDetailStore.addChangeListener(this._storeChangeListener);
+            lineModel.addChangeListener(this._modelChangeListener);
+            lineSelectionModel.addChangeListener(this._modelChangeListener);
+            concDetailModel.addChangeListener(this._modelChangeListener);
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
                 this.props.onReady();
             }
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._storeChangeListener);
-            lineSelectionStore.removeChangeListener(this._storeChangeListener);
-            concDetailStore.removeChangeListener(this._storeChangeListener);
+            lineModel.removeChangeListener(this._modelChangeListener);
+            lineSelectionModel.removeChangeListener(this._modelChangeListener);
+            concDetailModel.removeChangeListener(this._modelChangeListener);
         }
 
         _getCatColors(dataItem) {

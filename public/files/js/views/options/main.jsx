@@ -25,29 +25,29 @@ import {init as generalViewsInit} from './general';
 import {init as structsAttrsViewsInit} from './structsAttrs';
 
 
-export function init(dispatcher, helpers, layoutViews, generalOptionsStore, viewOptionsStore, mainMenuStore) {
+export function init(dispatcher, helpers, layoutViews, generalOptionsModel, viewOptionsModel, mainMenuModel) {
 
-    const generalOptionsViews = generalViewsInit(dispatcher, helpers, layoutViews, generalOptionsStore);
-    const structsAttrsOptionsViews = structsAttrsViewsInit(dispatcher, helpers, viewOptionsStore, mainMenuStore);
+    const generalOptionsViews = generalViewsInit(dispatcher, helpers, layoutViews, generalOptionsModel);
+    const structsAttrsOptionsViews = structsAttrsViewsInit(dispatcher, helpers, viewOptionsModel, mainMenuModel);
 
     class OptionsContainer extends React.Component {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                activeItem: mainMenuStore.getActiveItem(),
-                corpusIdent: viewOptionsStore.getCorpusIdent()
+                activeItem: mainMenuModel.getActiveItem(),
+                corpusIdent: viewOptionsModel.getCorpusIdent()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         _isActiveItem(itemName) {
@@ -67,11 +67,11 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore, view
         }
 
         componentDidMount() {
-             mainMenuStore.addChangeListener(this._handleStoreChange);
+             mainMenuModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            mainMenuStore.removeChangeListener(this._handleStoreChange);
+            mainMenuModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderForm() {

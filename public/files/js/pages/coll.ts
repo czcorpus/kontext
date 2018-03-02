@@ -21,18 +21,18 @@
 import {Kontext, TextTypes} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../stores/freqs/ctFreqForm';
-import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
-import {QuerySaveAsFormStore} from '../stores/query/save';
-import {CollResultStore, CollResultData, CollResultHeading} from '../stores/coll/result';
+import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
+import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
+import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay';
+import {QuerySaveAsFormModel} from '../models/query/save';
+import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as collResultViewInit} from 'views/coll/result';
 import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
-import {TextTypesStore} from '../stores/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/attrValues';
 
 
 declare var require:any;
@@ -46,19 +46,19 @@ export class CollPage {
 
     private layoutModel:PageModel;
 
-    private collFormStore:CollFormStore;
+    private collFormModel:CollFormModel;
 
-    private mlFreqStore:MLFreqFormStore;
+    private mlFreqModel:MLFreqFormModel;
 
-    private ttFreqStore:TTFreqFormStore;
+    private ttFreqModel:TTFreqFormModel;
 
-    private ctFreqFormStore:CTFreqFormStore;
+    private ctFreqFormModel:Freq2DFormModel;
 
-    private queryReplayStore:IndirectQueryReplayStore;
+    private queryReplayModel:IndirectQueryReplayModel;
 
-    private collResultStore:CollResultStore;
+    private collResultModel:CollResultModel;
 
-    private querySaveAsFormStore:QuerySaveAsFormStore;
+    private querySaveAsFormModel:QuerySaveAsFormModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -83,14 +83,14 @@ export class CollPage {
             alignType: ['left']
         }
 
-        this.mlFreqStore = new MLFreqFormStore(
+        this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps,
             this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
         );
 
-        this.ttFreqStore = new TTFreqFormStore(
+        this.ttFreqModel = new TTFreqFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps
@@ -110,7 +110,7 @@ export class CollPage {
         };
 
 
-        this.ctFreqFormStore = new CTFreqFormStore(
+        this.ctFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps,
@@ -120,14 +120,14 @@ export class CollPage {
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.mlFreqStore,
-            this.ttFreqStore,
-            this.ctFreqFormStore
+            this.mlFreqModel,
+            this.ttFreqModel,
+            this.ctFreqFormModel
         );
 
         // collocations ------------------------------------
 
-        this.collFormStore = new CollFormStore(
+        this.collFormModel = new CollFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
@@ -145,7 +145,7 @@ export class CollPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
-            this.collFormStore
+            this.collFormModel
         );
         // TODO: init freq form
         const analysisViews = analysisFrameInit(
@@ -154,7 +154,7 @@ export class CollPage {
             this.layoutModel.layoutViews,
             collFormViews,
             freqFormViews,
-            this.layoutModel.getStores().mainMenuStore
+            this.layoutModel.getModels().mainMenuModel
         );
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
@@ -166,10 +166,10 @@ export class CollPage {
 
         // ---- coll result
 
-        this.collResultStore = new CollResultStore(
+        this.collResultModel = new CollResultModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.collFormStore,
+            this.collFormModel,
             this.layoutModel.getConf<CollResultData>('CollResultData'),
             this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
             this.layoutModel.getConf<number>('CollPageSize'),
@@ -182,7 +182,7 @@ export class CollPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
-            this.collResultStore
+            this.collResultModel
         );
 
         this.layoutModel.renderReactComponent(
@@ -193,12 +193,12 @@ export class CollPage {
     }
 
     private initQueryOpNavigation():void {
-        this.queryReplayStore = new IndirectQueryReplayStore(
+        this.queryReplayModel = new IndirectQueryReplayModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || []
         );
-        this.querySaveAsFormStore = new QuerySaveAsFormStore(
+        this.querySaveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<string>('concPersistenceOpId')
@@ -217,9 +217,9 @@ export class CollPage {
                 ShuffleForm: null,
                 SwitchMainCorpForm: null
             },
-            this.queryReplayStore,
-            this.layoutModel.getStores().mainMenuStore,
-            this.querySaveAsFormStore
+            this.queryReplayModel,
+            this.layoutModel.getModels().mainMenuModel,
+            this.querySaveAsFormModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
@@ -242,7 +242,7 @@ export class CollPage {
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
-        return  new TextTypesStore(
+        return  new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
             this.layoutModel.getConf<any>('textTypesData')
@@ -252,14 +252,14 @@ export class CollPage {
     init():void {
         this.layoutModel.init().then(
             () => {
-                const mainMenuStore = this.layoutModel.getStores().mainMenuStore;
+                const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
                 // we must capture concordance-related actions which lead
                 // to specific "pop-up" forms and redirect user back to
                 // the 'view' action with additional information (encoded in
                 // the fragment part of the URL) which form should be opened
                 // once the 'view' page is loaded
-                mainMenuStore.addChangeListener(() => {
-                    const activeItem = mainMenuStore.getActiveItem() || {actionName: null, actionArgs: []};
+                mainMenuModel.addChangeListener(() => {
+                    const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
                     switch (activeItem.actionName) {
                         case 'MAIN_MENU_SHOW_FILTER':
                             const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));

@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, queryHistoryStore) {
+export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     const queryTypes = {
         'iquery': he.translate('query__qt_basic'),
@@ -441,34 +441,34 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                queryType: queryHistoryStore.getQueryType(),
-                currentCorpusOnly: queryHistoryStore.getCurrentCorpusOnly(),
-                offset: queryHistoryStore.getOffset(),
-                data: queryHistoryStore.getData(),
-                storeIsBusy: queryHistoryStore.getIsBusy(),
-                hasMoreItems: queryHistoryStore.getHasMoreItems(),
-                archivedOnly: queryHistoryStore.getArchivedOnly(),
-                editingQueryId: queryHistoryStore.getEditingQueryId(),
-                editingQueryName: queryHistoryStore.getEditingQueryName()
+                queryType: queryHistoryModel.getQueryType(),
+                currentCorpusOnly: queryHistoryModel.getCurrentCorpusOnly(),
+                offset: queryHistoryModel.getOffset(),
+                data: queryHistoryModel.getData(),
+                storeIsBusy: queryHistoryModel.getIsBusy(),
+                hasMoreItems: queryHistoryModel.getHasMoreItems(),
+                archivedOnly: queryHistoryModel.getArchivedOnly(),
+                editingQueryId: queryHistoryModel.getEditingQueryId(),
+                editingQueryName: queryHistoryModel.getEditingQueryName()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            queryHistoryStore.addChangeListener(this._handleStoreChange);
+            queryHistoryModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            queryHistoryStore.removeChangeListener(this._handleStoreChange);
+            queryHistoryModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

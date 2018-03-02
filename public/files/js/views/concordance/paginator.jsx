@@ -22,7 +22,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, lineStore) {
+export function init(dispatcher, he, lineModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -161,7 +161,7 @@ export function init(dispatcher, he, lineStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._navigActionHandler = this._navigActionHandler.bind(this);
             this._pageInputHandler = this._pageInputHandler.bind(this);
             this._inputKeyDownHandler = this._inputKeyDownHandler.bind(this);
@@ -169,19 +169,19 @@ export function init(dispatcher, he, lineStore) {
         }
 
         _importPaginationInfo() {
-            const pagination = lineStore.getPagination();
+            const pagination = lineModel.getPagination();
             return {
                 firstPage: pagination.firstPage,
                 prevPage: pagination.prevPage,
                 nextPage: pagination.nextPage,
                 lastPage: pagination.lastPage,
-                currentPage: lineStore.getCurrentPage(),
-                currentPageInput: lineStore.getCurrentPage(),
+                currentPage: lineModel.getCurrentPage(),
+                currentPageInput: lineModel.getCurrentPage(),
                 loader: false
             };
         }
 
-        _storeChangeListener() {
+        _modelChangeListener() {
             const state = this._importPaginationInfo();
             state.loader = false;
             this.setState(state);
@@ -215,11 +215,11 @@ export function init(dispatcher, he, lineStore) {
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._storeChangeListener);
+            lineModel.addChangeListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._storeChangeListener);
+            lineModel.removeChangeListener(this._modelChangeListener);
         }
 
         render() {

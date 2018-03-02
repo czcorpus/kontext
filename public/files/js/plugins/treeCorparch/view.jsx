@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, treeStore) {
+export function init(dispatcher, he, treeModel) {
 
     // --------------------------------- <TreeNode /> --------------------------
 
@@ -108,8 +108,8 @@ export function init(dispatcher, he, treeStore) {
             this._changeListener = this._changeListener.bind(this);
             this.state = {
                 active: false,
-                data: treeStore.getData(),
-                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+                data: treeModel.getData(),
+                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
             };
         }
 
@@ -124,25 +124,25 @@ export function init(dispatcher, he, treeStore) {
                 this.setState({
                     active: !this.state.active,
                     data: this.state.data,
-                    currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+                    currentCorpusIdent: treeModel.getCurrentCorpusIdent()
                 });
             }
         }
 
-        _changeListener(store, action) {
+        _changeListener(model, action) {
             this.setState({
                 active: true,
-                data: store.getData(),
-                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+                data: model.getData(),
+                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
             });
         }
 
         componentDidMount() {
-            treeStore.addChangeListener(this._changeListener);
+            treeModel.addChangeListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            treeStore.removeChangeListener(this._changeListener);
+            treeModel.removeChangeListener(this._changeListener);
         }
 
         render() {
@@ -168,19 +168,19 @@ export function init(dispatcher, he, treeStore) {
             this._changeListener = this._changeListener.bind(this);
             this.state = {
                 data: null,
-                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
             };
         }
 
-        _changeListener(store, action) {
+        _changeListener(model, action) {
             this.setState({
-                data: store.getData(),
-                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+                data: model.getData(),
+                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
             });
         }
 
         componentDidMount() {
-            treeStore.addChangeListener(this._changeListener);
+            treeModel.addChangeListener(this._changeListener);
             dispatcher.dispatch({
                 actionType: 'TREE_CORPARCH_GET_DATA',
                 props: {}
@@ -188,7 +188,7 @@ export function init(dispatcher, he, treeStore) {
         }
 
         componentWillUnmount() {
-            treeStore.removeChangeListener(this._changeListener);
+            treeModel.removeChangeListener(this._changeListener);
         }
 
         render() {

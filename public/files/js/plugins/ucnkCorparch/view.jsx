@@ -22,9 +22,9 @@ import React from 'vendor/react';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 
 
-export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
+export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
-    const defaultComponents = defaultViewInit(dispatcher, he, CorpusInfoBox, formStore, listStore);
+    const defaultComponents = defaultViewInit(dispatcher, he, CorpusInfoBox, formModel, listModel);
     const layoutViews = he.getLayoutViews();
 
     // --------------- <RequestForm /> ---------------------------------
@@ -241,25 +241,25 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
-            const data = listStore.getData();
-            const detail = listStore.getDetail();
+        _fetchModelState() {
+            const data = listModel.getData();
+            const detail = listModel.getDetail();
             return {
                 rows: data.rows,
                 nextOffset: data.nextOffset,
                 detail: detail,
-                isWaiting: listStore.isBusy()
+                isWaiting: listModel.isBusy()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         _detailClickHandler(corpusId) {
@@ -281,11 +281,11 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
         }
 
         componentDidMount() {
-            listStore.addChangeListener(this._storeChangeHandler);
+            listModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            listStore.removeChangeListener(this._storeChangeHandler);
+            listModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderDetailBox() {

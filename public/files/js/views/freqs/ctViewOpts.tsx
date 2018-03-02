@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as React from 'vendor/react';
-import {FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
+import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 

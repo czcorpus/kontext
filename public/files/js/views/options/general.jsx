@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
+export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRConcPageSizeInput /> ---------------------
 
@@ -354,7 +354,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
             });
         };
 
-        if (props.storeIsBusy) {
+        if (props.modelIsBusy) {
             return <img src={helpers.createStaticUrl('img/ajax-loader-bar.gif')}
                         className="button-replace ajax-loader"
                         alt={helpers.translate('global__loading')} />;
@@ -375,35 +375,35 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                pageSize: generalOptionsStore.getPageSize(),
-                newCtxSize: generalOptionsStore.getNewCtxSize(),
-                lineNumbers: generalOptionsStore.getLineNumbers(),
-                shuffle: generalOptionsStore.getShuffle(),
-                wlPageSize: generalOptionsStore.getWlPageSize(),
-                fmaxItems: generalOptionsStore.getFmaxItems(),
-                citemsPerPage: generalOptionsStore.getCitemsPerPage(),
-                showTTOverview: generalOptionsStore.getShowTTOverview(),
-                storeIsBusy: generalOptionsStore.getIsBusy(),
-                useCQLEditor: generalOptionsStore.getUseCQLEditor()
+                pageSize: generalOptionsModel.getPageSize(),
+                newCtxSize: generalOptionsModel.getNewCtxSize(),
+                lineNumbers: generalOptionsModel.getLineNumbers(),
+                shuffle: generalOptionsModel.getShuffle(),
+                wlPageSize: generalOptionsModel.getWlPageSize(),
+                fmaxItems: generalOptionsModel.getFmaxItems(),
+                citemsPerPage: generalOptionsModel.getCitemsPerPage(),
+                showTTOverview: generalOptionsModel.getShowTTOverview(),
+                modelIsBusy: generalOptionsModel.getIsBusy(),
+                useCQLEditor: generalOptionsModel.getUseCQLEditor()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            generalOptionsStore.addChangeListener(this._handleStoreChange);
+            generalOptionsModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            generalOptionsStore.removeChangeListener(this._handleStoreChange);
+            generalOptionsModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {
@@ -423,7 +423,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                         <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />
                         <FieldsetColl citemsPerPage={this.state.citemsPerPage} />
                         <div className="buttons">
-                            <SubmitButton storeIsBusy={this.state.storeIsBusy} />
+                            <SubmitButton modelIsBusy={this.state.modelIsBusy} />
                         </div>
                     </form>
                 </div>

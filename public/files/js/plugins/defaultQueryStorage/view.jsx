@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, queryStorageStore) {
+export function init(dispatcher, he, queryStorageModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -32,13 +32,13 @@ export function init(dispatcher, he, queryStorageStore) {
         constructor(props) {
             super(props);
             this.state = {
-                data: queryStorageStore.getFlatData(),
-                isBusy: queryStorageStore.getIsBusy(),
+                data: queryStorageModel.getFlatData(),
+                isBusy: queryStorageModel.getIsBusy(),
                 currentItem: 0
             };
             this._keyPressHandler = this._keyPressHandler.bind(this);
             this._handleClickSelection = this._handleClickSelection.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._globalKeyEventHandler = this._globalKeyEventHandler.bind(this);
             this._handleBlurEvent = this._handleBlurEvent.bind(this);
             this._handleFocusEvent = this._handleFocusEvent.bind(this);
@@ -49,8 +49,8 @@ export function init(dispatcher, he, queryStorageStore) {
             const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
             if (!isNaN(inc)) {
                 this.setState({
-                    data: queryStorageStore.getFlatData(),
-                    isBusy: queryStorageStore.getIsBusy(),
+                    data: queryStorageModel.getFlatData(),
+                    isBusy: queryStorageModel.getIsBusy(),
                     currentItem: (this.state.currentItem + inc) % modulo
                 });
 
@@ -98,7 +98,7 @@ export function init(dispatcher, he, queryStorageStore) {
         }
 
         componentDidMount() {
-            queryStorageStore.addChangeListener(this._handleStoreChange);
+            queryStorageModel.addChangeListener(this._handleModelChange);
             dispatcher.dispatch({
                 actionType: 'QUERY_STORAGE_LOAD_HISTORY',
                 props: {}
@@ -106,14 +106,14 @@ export function init(dispatcher, he, queryStorageStore) {
         }
 
         componentWillUnmount() {
-            queryStorageStore.removeChangeListener(this._handleStoreChange);
+            queryStorageModel.removeChangeListener(this._handleModelChange);
             he.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({
-                data: queryStorageStore.getFlatData(),
-                isBusy: queryStorageStore.getIsBusy(),
+                data: queryStorageModel.getFlatData(),
+                isBusy: queryStorageModel.getIsBusy(),
                 currentItem: this.state.currentItem
             });
         }

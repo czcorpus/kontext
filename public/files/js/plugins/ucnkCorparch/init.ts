@@ -27,8 +27,8 @@ import {CorplistPage} from './corplist';
 import {IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
-import {CorplistFormStore, CorplistTableStore} from './corplist';
-import {QueryStore} from '../../stores/query/main';
+import {CorplistFormModel, CorplistTableModel} from './corplist';
+import {QueryModel} from '../../models/query/main';
 import * as dcInit from '../defaultCorparch/init';
 
 /**
@@ -40,15 +40,15 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
     const overviewViews = overviewViewInit(
         pluginApi.dispatcher(),
         pluginApi.getComponentHelpers(),
-        pluginApi.getStores().corpusInfoStore
+        pluginApi.getModels().corpusInfoModel
     );
-    const initViews = (formStore:CorplistFormStore, listStore:CorplistTableStore) => {
+    const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
         const ans:any = viewInit(
             pluginApi.dispatcher(),
             pluginApi.getComponentHelpers(),
             overviewViews.CorpusInfoBox,
-            formStore,
-            listStore
+            formModel,
+            listModel
         );
         return ans;
     }
@@ -59,11 +59,11 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  *
  * @param targetAction
  * @param pluginApi
- * @param queryStore
+ * @param queryModel
  * @param querySetupHandler
  * @param options
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
-    return dcInit.createWidget(targetAction, pluginApi, queryStore, querySetupHandler, options);
+        queryModel:QueryModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
+    return dcInit.createWidget(targetAction, pluginApi, queryModel, querySetupHandler, options);
 }

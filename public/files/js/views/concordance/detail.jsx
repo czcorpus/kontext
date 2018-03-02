@@ -24,9 +24,9 @@ import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str} from '../../util';
 
 
-export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore) {
+export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel) {
 
-    const mediaViews = initMediaViews(dispatcher, he, lineStore);
+    const mediaViews = initMediaViews(dispatcher, he, lineModel);
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <RefValue /> ---------------------------
@@ -79,27 +79,27 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchModelState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                data: refsDetailStore.getData(),
-                isWaiting: refsDetailStore.getIsBusy()
+                data: refsDetailModel.getData(),
+                isWaiting: refsDetailModel.getIsBusy()
             }
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            refsDetailStore.addChangeListener(this._storeChangeHandler);
+            refsDetailModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            refsDetailStore.removeChangeListener(this._storeChangeHandler);
+            refsDetailModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderContents() {
@@ -211,7 +211,7 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
     const KwicDetailView = (props) => {
 
         const isWaitingExpand = (side) => {
-            return props.storeIsBusy && props.expandingSide === side;
+            return props.modelIsBusy && props.expandingSide === side;
         };
 
         const expandClickHandler = (position) => {
@@ -267,46 +267,46 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchModelState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                data: concDetailStore.getConcDetail(),
-                hasConcDetailData: concDetailStore.hasConcDetailData(),
-                hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight(),
-                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument(),
-                expandingSide: concDetailStore.getExpaningSide(),
-                storeIsBusy: concDetailStore.getIsBusy(),
-                tokenDetailIsBusy: concDetailStore.getTokenDetailIsBusy(),
-                tokenDetailData: concDetailStore.getTokenDetailData(),
-                hasTokenDetailData: concDetailStore.hasTokenDetailData()
+                data: concDetailModel.getConcDetail(),
+                hasConcDetailData: concDetailModel.hasConcDetailData(),
+                hasExpandLeft: concDetailModel.hasExpandLeft(),
+                hasExpandRight: concDetailModel.hasExpandRight(),
+                canDisplayWholeDocument: concDetailModel.canDisplayWholeDocument(),
+                expandingSide: concDetailModel.getExpaningSide(),
+                modelIsBusy: concDetailModel.getIsBusy(),
+                tokenDetailIsBusy: concDetailModel.getTokenDetailIsBusy(),
+                tokenDetailData: concDetailModel.getTokenDetailData(),
+                hasTokenDetailData: concDetailModel.hasTokenDetailData()
             };
         }
 
-        _storeChangeHandler(store, action) {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler(model, action) {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            concDetailStore.addChangeListener(this._storeChangeHandler);
+            concDetailModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            concDetailStore.removeChangeListener(this._storeChangeHandler);
+            concDetailModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _isWaitingExpand(side) {
-            return this.state.storeIsBusy && this.state.expandingSide === side;
+            return this.state.modelIsBusy && this.state.expandingSide === side;
         }
 
         render() {
             return (
                 <div className="concordance_DefaultView">
                     {this.state.hasConcDetailData ?
-                        <KwicDetailView storeIsBusy={this.state.storeIsBusy}
+                        <KwicDetailView modelIsBusy={this.state.modelIsBusy}
                                         expandingSide={this.state.expandingSide}
                                         hasExpandLeft={this.state.hasExpandLeft}
                                         hasExpandRight={this.state.hasExpandRight}
@@ -576,21 +576,21 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
             this._handlePlayClick = this._handlePlayClick.bind(this);
             this._handleStopClick = this._handleStopClick.bind(this);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
 
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                data: concDetailStore.getSpeechesDetail(),
-                hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight(),
-                playerWaitingIdx: concDetailStore.getPlayingRowIdx(),
-                storeIsBusy: concDetailStore.getIsBusy(),
-                expandingSide: concDetailStore.getExpaningSide()
+                data: concDetailModel.getSpeechesDetail(),
+                hasExpandLeft: concDetailModel.hasExpandLeft(),
+                hasExpandRight: concDetailModel.hasExpandRight(),
+                playerWaitingIdx: concDetailModel.getPlayingRowIdx(),
+                modelIsBusy: concDetailModel.getIsBusy(),
+                expandingSide: concDetailModel.getExpaningSide()
             };
         }
 
@@ -611,20 +611,20 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
             });
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         _isWaitingExpand(side) {
-            return this.state.storeIsBusy && this.state.expandingSide === side;
+            return this.state.modelIsBusy && this.state.expandingSide === side;
         }
 
         componentDidMount() {
-            concDetailStore.addChangeListener(this._storeChangeHandler);
+            concDetailModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            concDetailStore.removeChangeListener(this._storeChangeHandler);
+            concDetailModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _canStartPlayback(speechPart) {
@@ -749,27 +749,27 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchModelState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                mode: concDetailStore.getViewMode(),
-                supportsSpeechView: concDetailStore.supportsSpeechView()
+                mode: concDetailModel.getViewMode(),
+                supportsSpeechView: concDetailModel.supportsSpeechView()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            concDetailStore.addChangeListener(this._storeChangeHandler);
+            concDetailModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            concDetailStore.removeChangeListener(this._storeChangeHandler);
+            concDetailModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderContents() {

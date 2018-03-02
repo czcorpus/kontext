@@ -27,7 +27,7 @@ declare var $:any;
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
@@ -36,7 +36,7 @@ require('./style.less'); // webpack
 /**
  *
  */
-export class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
+export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
 
     private pluginApi:IPluginApi;
 

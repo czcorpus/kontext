@@ -20,7 +20,7 @@
 
 import * as React from 'vendor/react';
 
-export function init(dispatcher, he, layoutViews, concSaveStore) {
+export function init(dispatcher, he, layoutViews, concSaveModel) {
 
     /**
      *
@@ -168,7 +168,7 @@ export function init(dispatcher, he, layoutViews, concSaveStore) {
         return (
             <tr>
                 <th>
-                    {he.translate('concview__save_form_lines_to_store')}
+                    {he.translate('concview__save_form_lines_to_model')}
                     {'\u00a0'}:
                 </th>
                 <td>
@@ -191,25 +191,25 @@ export function init(dispatcher, he, layoutViews, concSaveStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                fromLine: concSaveStore.getFromLine(),
-                toLine: concSaveStore.getToLine(),
-                saveFormat: concSaveStore.getSaveFormat(),
-                alignKwic: concSaveStore.getAlignKwic(),
-                includeLineNumbers: concSaveStore.getIncludeLineNumbers(),
-                includeHeading: concSaveStore.getIncludeHeading()
+                fromLine: concSaveModel.getFromLine(),
+                toLine: concSaveModel.getToLine(),
+                saveFormat: concSaveModel.getSaveFormat(),
+                alignKwic: concSaveModel.getAlignKwic(),
+                includeLineNumbers: concSaveModel.getIncludeLineNumbers(),
+                includeHeading: concSaveModel.getIncludeHeading()
             };
         }
 
-        _handleStoreChange() {
-            if (concSaveStore.getFormIsActive()) {
-                this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            if (concSaveModel.getFormIsActive()) {
+                this.setState(this._fetchModelState());
             }
         }
 
@@ -221,11 +221,11 @@ export function init(dispatcher, he, layoutViews, concSaveStore) {
         }
 
         componentDidMount() {
-            concSaveStore.addChangeListener(this._handleStoreChange);
+            concSaveModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            concSaveStore.removeChangeListener(this._handleStoreChange);
+            concSaveModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderFormatDependentOptions() {

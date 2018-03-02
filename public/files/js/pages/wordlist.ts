@@ -24,10 +24,10 @@ import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {init as wordlistResultViewInit} from 'views/wordlist/result';
 import {init as wordlistSaveViewInit} from 'views/wordlist/save';
-import {SimplePageStore} from '../stores/base';
-import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../stores/wordlist/main';
-import {WordlistFormStore, WordlistFormProps} from '../stores/wordlist/form';
-import {WordlistSaveStore} from '../stores/wordlist/save';
+import {StatefulModel} from '../models/base';
+import {WordlistResultModel, ResultData, ResultItem, HeadingItem} from '../models/wordlist/main';
+import {WordlistFormModel, WordlistFormProps} from '../models/wordlist/form';
+import {WordlistSaveModel} from '../models/wordlist/save';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -36,7 +36,7 @@ require('styles/wordlist.less');
 /**
  *
  */
-export class WordlistPage extends SimplePageStore  {
+export class WordlistPage extends StatefulModel  {
 
     private layoutModel:PageModel;
 
@@ -48,7 +48,7 @@ export class WordlistPage extends SimplePageStore  {
 
     private lastStatus:number;
 
-    private saveStore:WordlistSaveStore;
+    private saveModel:WordlistSaveModel;
 
     static MAX_NUM_NO_CHANGE = 20;
 
@@ -147,7 +147,7 @@ export class WordlistPage extends SimplePageStore  {
                 if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
                     this.startWatching();
                 }
-                const formStore = new WordlistFormStore(
+                const formModel = new WordlistFormModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
@@ -155,19 +155,19 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
                 );
-                formStore.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
+                formModel.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
 
-                this.saveStore = new WordlistSaveStore(
+                this.saveModel = new WordlistSaveModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     url => this.setDownloadLink(url),
-                    () => formStore.createSubmitArgs()
+                    () => formModel.createSubmitArgs()
                 );
 
-                const resultStore = new WordlistResultStore(
+                const resultModel = new WordlistResultModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
-                    formStore,
+                    formModel,
                     {
                         data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
                         page: this.layoutModel.getConf<number>('PageNum'),
@@ -191,7 +191,7 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     this.layoutModel.commonViews,
-                    this.saveStore
+                    this.saveModel
                 );
 
                 const view = wordlistResultViewInit(
@@ -199,8 +199,8 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     saveViews,
-                    resultStore,
-                    this.saveStore
+                    resultModel,
+                    this.saveModel
                 );
 
                 this.layoutModel.renderReactComponent(

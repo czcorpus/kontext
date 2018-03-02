@@ -358,7 +358,7 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     /**
      * Change the current corpus used by KonText. Please note
-     * that this basically reinitializes all the page's stores
+     * that this basically reinitializes all the page's models
      * and views (both layout and page init() method are called
      * again).
      *

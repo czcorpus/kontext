@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, subcorpLinesStore) {
+export function init(dispatcher, he, subcorpLinesModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -158,28 +158,28 @@ export function init(dispatcher, he, subcorpLinesStore) {
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
-            this.state = this._fetchStoreState();
+            this._handleModelChange = this._handleModelChange.bind(this);
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                lines: subcorpLinesStore.getLines(),
-                sortKey: subcorpLinesStore.getSortKey(),
-                unfinished: subcorpLinesStore.getUnfinished()
+                lines: subcorpLinesModel.getLines(),
+                sortKey: subcorpLinesModel.getSortKey(),
+                unfinished: subcorpLinesModel.getUnfinished()
             }
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            subcorpLinesStore.addChangeListener(this._handleStoreChange);
+            subcorpLinesModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcorpLinesStore.removeChangeListener(this._handleStoreChange);
+            subcorpLinesModel.removeChangeListener(this._handleModelChange);
         }
 
         _exportSortKey(name) {
@@ -401,7 +401,7 @@ export function init(dispatcher, he, subcorpLinesStore) {
             super(props);
             this._handleActionSelect = this._handleActionSelect.bind(this);
             this.state = {
-                data: subcorpLinesStore.getRow(this.props.idx),
+                data: subcorpLinesModel.getRow(this.props.idx),
                 action: null
             };
         }
@@ -472,32 +472,32 @@ export function init(dispatcher, he, subcorpLinesStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._handleDeleteButton = this._handleDeleteButton.bind(this);
             this._handleActionButton = this._handleActionButton.bind(this);
             this._handleActionsClose = this._handleActionsClose.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                hasSelectedLines: subcorpLinesStore.hasSelectedLines(),
-                filter: subcorpLinesStore.getFilter(),
-                relatedCorpora: subcorpLinesStore.getRelatedCorpora(),
+                hasSelectedLines: subcorpLinesModel.hasSelectedLines(),
+                filter: subcorpLinesModel.getFilter(),
+                relatedCorpora: subcorpLinesModel.getRelatedCorpora(),
                 actionBoxVisible: null
             };
         }
 
-        _storeChangeListener() {
-            this.setState(this._fetchStoreState());
+        _modelChangeListener() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            subcorpLinesStore.addChangeListener(this._storeChangeListener);
+            subcorpLinesModel.addChangeListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            subcorpLinesStore.removeChangeListener(this._storeChangeListener);
+            subcorpLinesModel.removeChangeListener(this._modelChangeListener);
         }
 
         _handleDeleteButton() {
