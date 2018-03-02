@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, TextTypes} from '../types/common';
 import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
+import {Kontext, TextTypes} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
-
 
 
 /**

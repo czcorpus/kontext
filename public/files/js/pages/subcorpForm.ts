@@ -19,11 +19,10 @@
  */
 
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
 import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';

@@ -16,16 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../types/plugins.d.ts" />
-
 import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 declare var require:any;
 require('./style.less'); // webpack

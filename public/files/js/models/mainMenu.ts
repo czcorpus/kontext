@@ -23,7 +23,7 @@ import {StatefulModel} from './base';
 import {PageModel} from '../app/main';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 export interface SubmenuItem {
     ident:string;

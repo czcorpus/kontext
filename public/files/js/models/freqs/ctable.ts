@@ -18,14 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {TextTypes} from '../../types/common';
 import {PageModel} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat, Dimensions} from './ctFreqForm';

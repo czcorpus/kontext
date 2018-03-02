@@ -18,15 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import * as Immutable from 'immutable';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
-
-
 
 
 export interface SortFormProperties {

@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
+import RSVP from 'rsvp';
 import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'immutable';
 

@@ -22,12 +22,11 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../types/compat.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import * as Rx from '@reactivex/rxjs';
 
 import {PluginInterfaces, IPluginApi} from '../types/plugins';

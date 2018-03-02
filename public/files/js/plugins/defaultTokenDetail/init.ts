@@ -18,14 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="./view.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as initView, DefaultTokenDetailRenderers} from './view';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import * as Immutable from 'immutable';
 
@@ -55,7 +51,7 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
             args
 
         ).then(
-            (data) => {
+            (data:PluginInterfaces.TokenDetail.Response) => {
                 return data.items.map<PluginInterfaces.TokenDetail.DataAndRenderer>(x => ({
                     renderer: this.selectRenderer(x.renderer),
                     contents: x.contents,

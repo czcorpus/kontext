@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';

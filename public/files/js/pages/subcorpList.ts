@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginApi} from '../app/main';

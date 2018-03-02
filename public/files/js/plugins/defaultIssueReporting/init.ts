@@ -20,14 +20,13 @@
 
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 
 export class IssueReportingModel extends StatefulModel {

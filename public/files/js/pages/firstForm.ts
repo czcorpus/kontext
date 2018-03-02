@@ -20,7 +20,6 @@
 
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
@@ -37,7 +36,7 @@ import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
 import {QueryContextModel} from '../models/query/context';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {init as queryFormInit} from 'views/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
 import {init as basicOverviewViewsInit} from 'views/query/basicOverview';

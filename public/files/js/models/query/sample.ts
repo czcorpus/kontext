@@ -19,6 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {AjaxResponse} from '../../types/ajaxResponses';

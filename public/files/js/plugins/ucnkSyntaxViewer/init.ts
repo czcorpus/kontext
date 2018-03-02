@@ -18,12 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 import {createGenerator} from './ucnkTreeView';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';

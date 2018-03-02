@@ -18,14 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';

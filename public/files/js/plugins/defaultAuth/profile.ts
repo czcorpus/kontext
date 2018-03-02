@@ -18,14 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
-import * as RSVP from 'vendor/rsvp';
+import RSVP from 'rsvp';
 
 
 export class UserProfileModel extends StatefulModel {
@@ -96,7 +94,7 @@ export class UserProfileModel extends StatefulModel {
         );
     }
 
-    private validateNewPassword():RSVP.Promise<string> {
+    private validateNewPassword():RSVP.Promise<{}> {
         return new RSVP.Promise((resolve:(v:boolean)=>void, reject:(err)=>void) => {
             if (this.newPasswd !== this.newPasswd2) {
                 reject(this.pluginApi.translate('user__pwd_and_pwd2_do_not_match'))

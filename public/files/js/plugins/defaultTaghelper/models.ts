@@ -16,12 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
+import RSVP from 'rsvp';
 import {ActionDispatcher, Action, ActionPayload} from '../../app/dispatcher';
 
 
@@ -237,9 +236,6 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         return prom.then(
             (data) => {
                 return data;
-            },
-            (err) => {
-                this.pluginApi.showMessage('error', err);
             }
         );
     }
