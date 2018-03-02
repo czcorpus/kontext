@@ -38,10 +38,10 @@ corpus search engine. It builds on top of core server-side libraries from NoSket
 * result shuffling can be pre-set
 * less full page reloads 
 
-### internal changes
+### internal features
 
-* server-side rewritten as a **WSGI application** (Bonito-open is CGI-based)
-* completely **rewritten client-side code** (React+Flux architecture, TypeScript + ES6, modularized)
+* server-side written as a **WSGI application**
+* modern client-side application (event stream architecture, React components, extensible, written in TypeScript)
 * modular code design with dynamically loadable plug-ins providing custom functionality implementation (e.g. custom database
 adapters, authentication method, corpus listing widgets, HTTP session management)
 * fully **decoupled background concordance/frequency/collocation calculation** based on the 
