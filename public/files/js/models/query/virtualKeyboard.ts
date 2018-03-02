@@ -23,7 +23,8 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
-declare var kbLayouts:Array<Kontext.VirtualKeyboardLayout>; // generated on compile time
+declare var require:(ident:string)=>any; // Webpack
+const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');
 
 
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;

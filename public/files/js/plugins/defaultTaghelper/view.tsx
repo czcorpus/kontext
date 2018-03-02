@@ -49,7 +49,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             }> = (props) => {
 
 
-        const keyEventHandler = (evt) => {
+        const keyEventHandler = (evt:KeyboardEvent) => {
             evt.preventDefault();
             evt.stopPropagation();
             if (typeof props.onEscKey === 'function' && evt.keyCode === 27) {
@@ -58,7 +58,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         };
 
         return <input type="text" className="tag-display-box" value={props.displayPattern}
-                    onKeyDown={this._keyEventHandler} readOnly
+                    onKeyDown={keyEventHandler} readOnly
                     ref={item => item ? item.focus() : null} />;
     }
 

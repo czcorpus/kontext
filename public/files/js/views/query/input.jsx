@@ -558,8 +558,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
             super(props);
             this._queryInputElement = null;
             this._handleInputChange = this._handleInputChange.bind(this);
-            this._handleQueryModelChange = this._handleQueryModelChange.bind(this);
-            this._handleCQLEditorModelChange = this._handleCQLEditorModelChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this._attachInputElementRef = this._attachInputElementRef.bind(this);
@@ -580,20 +579,12 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
             });
         }
 
-        _handleQueryModelChange() {
+        _handleModelChange(state) {
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
                 historyVisible: false,
-                cqlEditorMessage: this.state.cqlEditorMessage
+                cqlEditorMessage: state ? state.message.get(this.props.sourceId) : this.state.cqlEditorMessage
             });
-        }
-
-        _handleCQLEditorModelChange(state) {
-            this.setState({
-                query: this.state.query,
-                historyVisible: this.state.historyVisible,
-                cqlEditorMessage: state.message.get(this.props.sourceId)
-            })
         }
 
         _inputKeyHandler(evt) {
@@ -619,13 +610,11 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
         }
 
         componentDidMount() {
-            cqlEditorModel.addChangeListener(this._handleCQLEditorModelChange);
-            queryModel.addChangeListener(this._handleQueryModelChange);
+            cqlEditorModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            cqlEditorModel.removeChangeListener(this._handleCQLEditorModelChange);
-            queryModel.removeChangeListener(this._handleQueryModelChange);
+            cqlEditorModel.removeChangeListener(this._handleModelChange);
         }
 
         componentDidUpdate(prevProps, prevState) {

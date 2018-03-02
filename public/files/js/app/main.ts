@@ -589,7 +589,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
     }
 
-    isInstalledPlugin(plugin:any):boolean {
+    isNotEmptyPlugin(plugin:any):boolean {
         return plugin && !(plugin instanceof EmptyPlugin);
     }
 
@@ -694,7 +694,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
         ).then(
             (authPlugin) => {
-                if (this.isInstalledPlugin(authPlugin)) {
+                if (this.isNotEmptyPlugin(authPlugin)) {
                     const mountElm = document.getElementById('user-pane-mount');
                     const userPaneView = authPlugin.getUserPaneView();
                     if (userPaneView) {
