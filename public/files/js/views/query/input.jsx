@@ -317,7 +317,6 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
     // ------------------- <HistoryWidget /> -----------------------------
 
     const HistoryWidget = (props) => {
-
         return (
             <div className="history-widget">
                 <props.queryStorageView
@@ -580,7 +579,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
         _handleModelChange(state) {
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
-                historyVisible: false,
+                historyVisible: this.state.historyVisible,
                 cqlEditorMessage: state ? state.message.get(this.props.sourceId) : this.state.cqlEditorMessage
             });
         }
