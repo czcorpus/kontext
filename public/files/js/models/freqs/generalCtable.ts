@@ -25,7 +25,7 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {availConfLevels} from './confIntervalCalc';
-import {sortAttrVals, isStructAttr, CTFreqFormStore, CTFormProperties, validateMinAbsFreqAttr,
+import {sortAttrVals, isStructAttr, Freq2DFormModel, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities, roundFloat} from './ctFreqForm';
 
 /**
@@ -55,7 +55,7 @@ export const enum FreqQuantities {
 /**
  * This is a common ancestor for both 2d and flat frequency tables.
  */
-export abstract class GeneralCTStore extends StatefulModel {
+export abstract class GeneralFreq2DModel extends StatefulModel {
 
     protected pageModel:PageModel;
 
@@ -72,13 +72,13 @@ export abstract class GeneralCTStore extends StatefulModel {
 
     /**
      * Already encoded criterion for the 1st attribute
-     * (it cannot be changed within this store).
+     * (it cannot be changed within this model).
      */
     protected ctFcrit1:string;
 
     /**
      * Already encoded criterion for the 2nd attribute
-     * (it cannot be changed within this store).
+     * (it cannot be changed within this model).
      */
     protected ctFcrit2:string;
 
@@ -259,7 +259,7 @@ export abstract class GeneralCTStore extends StatefulModel {
     }
 
     getConfIntervalLeftMinWarn():number {
-        return GeneralCTStore.CONF_INTERVAL_LEFT_MIN_WARN;
+        return GeneralFreq2DModel.CONF_INTERVAL_LEFT_MIN_WARN;
     }
 
     getUsesAdHocSubcorpus():boolean {

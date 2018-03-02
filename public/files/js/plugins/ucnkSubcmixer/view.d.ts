@@ -29,4 +29,4 @@ export interface ISubcMixerViews {
 export function init(
     dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
-    subcmixerStore:Kontext.EventEmitter):ISubcMixerViews;
+    subcmixerModel:Kontext.EventEmitter):ISubcMixerViews;

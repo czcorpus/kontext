@@ -26,7 +26,7 @@ import {StatefulModel} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {ConcLineStore} from './lines';
+import {ConcLineModel} from './lines';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
@@ -45,7 +45,7 @@ interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionStore extends StatefulModel {
+export class LineSelectionModel extends StatefulModel {
 
     static FILTER_NEGATIVE = 'n';
 
@@ -59,7 +59,7 @@ export class LineSelectionStore extends StatefulModel {
 
     private actionFinishHandlers:Array<()=>void>;
 
-    private concLineStore:ConcLineStore;
+    private concLineModel:ConcLineModel;
 
     private currentGroupIds:Array<number>;
 
@@ -67,24 +67,24 @@ export class LineSelectionStore extends StatefulModel {
 
     private _isBusy:boolean;
 
-    private userInfoStore:Kontext.IUserInfoStore;
+    private userInfoModel:Kontext.IUserInfoModel;
 
     private onLeavePage:()=>void;
 
     private emailDialogCredentials:Kontext.UserCredentials;
 
     constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
-            concLineStore:ConcLineStore, userInfoStore:Kontext.IUserInfoStore, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
+            concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.concLineStore = concLineStore;
-        this.userInfoStore = userInfoStore;
+        this.concLineModel = concLineModel;
+        this.userInfoModel = userInfoModel;
         this.clStorage = clStorage;
         this.onLeavePage = onLeavePage;
         if (clStorage.size() > 0) {
             this.mode = this.clStorage.getMode();
 
-        } else if (concLineStore.getNumItemsInLockedGroups() > 0) {
+        } else if (concLineModel.getNumItemsInLockedGroups() > 0) {
             this.mode = 'groups';
 
         } else {
@@ -116,7 +116,7 @@ export class LineSelectionStore extends StatefulModel {
                     break;
                 case 'LINE_SELECTION_RESET':
                     this.clearSelection();
-                    this.concLineStore.notifyChangeListeners();
+                    this.concLineModel.notifyChangeListeners();
                     this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_RESET_ON_SERVER':
@@ -125,7 +125,7 @@ export class LineSelectionStore extends StatefulModel {
                     this.resetServerLineGroups().then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.concLineStore.notifyChangeListeners();
+                            this.concLineModel.notifyChangeListeners();
                             this.notifyChangeListeners();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
@@ -137,11 +137,11 @@ export class LineSelectionStore extends StatefulModel {
                     )
                     break;
                 case 'LINE_SELECTION_REMOVE_LINES':
-                    this.removeLines(LineSelectionStore.FILTER_NEGATIVE);
+                    this.removeLines(LineSelectionModel.FILTER_NEGATIVE);
                     this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_REMOVE_OTHER_LINES':
-                    this.removeLines(LineSelectionStore.FILTER_POSITIVE);
+                    this.removeLines(LineSelectionModel.FILTER_POSITIVE);
                     this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_MARK_LINES':
@@ -151,7 +151,7 @@ export class LineSelectionStore extends StatefulModel {
                         (args:MultiDict) => {
                             this._isBusy = false;
                             this.notifyChangeListeners();
-                            this.concLineStore.notifyChangeListeners();
+                            this.concLineModel.notifyChangeListeners();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
@@ -170,7 +170,7 @@ export class LineSelectionStore extends StatefulModel {
                     this.reenableEdit().then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.concLineStore.notifyChangeListeners();
+                            this.concLineModel.notifyChangeListeners();
                             this.notifyChangeListeners();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
@@ -187,7 +187,7 @@ export class LineSelectionStore extends StatefulModel {
                     this.renameLineGroup(payload.props['srcGroupNum'], payload.props['dstGroupNum']).then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.concLineStore.notifyChangeListeners();
+                            this.concLineModel.notifyChangeListeners();
                             this.notifyChangeListeners();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
@@ -222,9 +222,9 @@ export class LineSelectionStore extends StatefulModel {
                     }
                     break;
                 case 'LINE_SELECTION_LOAD_USER_CREDENTIALS':
-                    this.userInfoStore.loadUserInfo(false).then(
+                    this.userInfoModel.loadUserInfo(false).then(
                         () => {
-                            this.emailDialogCredentials = this.userInfoStore.getCredentials();
+                            this.emailDialogCredentials = this.userInfoModel.getCredentials();
                             this.notifyChangeListeners();
                         },
                         (err) => {
@@ -319,7 +319,7 @@ export class LineSelectionStore extends StatefulModel {
                 (data) => {
                     this.currentGroupIds = data['lines_groups_numbers'];
                     this.updateGlobalArgs(data);
-                    return this.concLineStore.reloadPage();
+                    return this.concLineModel.reloadPage();
                 }
             );
         }
@@ -393,7 +393,7 @@ export class LineSelectionStore extends StatefulModel {
             (data) => {
                 this.clStorage.clear();
                 this.updateGlobalArgs(data);
-                return this.concLineStore.reloadPage();
+                return this.concLineModel.reloadPage();
             }
         )
     }
@@ -412,7 +412,7 @@ export class LineSelectionStore extends StatefulModel {
             (data) => {
                 this.updateGlobalArgs(data);
                 this.currentGroupIds = data['lines_groups_numbers'];
-                return this.concLineStore.reloadPage();
+                return this.concLineModel.reloadPage();
             }
         );
     }
@@ -456,7 +456,7 @@ export class LineSelectionStore extends StatefulModel {
                 this.registerQuery(data.Q);
                 this.importData(data.selection);
                 this.updateGlobalArgs(data);
-                return this.concLineStore.reloadPage();
+                return this.concLineModel.reloadPage();
             }
         );
     }

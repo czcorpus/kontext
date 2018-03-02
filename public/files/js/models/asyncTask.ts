@@ -37,7 +37,7 @@ interface AsyncTaskResponse extends Kontext.AjaxResponse {
  * Possible task statuses: PENDING, STARTED, RETRY, FAILURE, SUCCESS
  * (see Python module kontext.AsyncTaskStatus)
  */
-export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTaskStore {
+export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTaskModel {
 
     private pageModel:IPluginApi;
 

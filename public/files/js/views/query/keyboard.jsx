@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, queryStore, virtualKeyboardStore) {
+export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <Key /> ----------------------------
 
@@ -218,7 +218,7 @@ export function init(dispatcher, he, queryStore, virtualKeyboardStore) {
             this._handleCaps = this._handleCaps.bind(this);
             this._handleBackspace = this._handleBackspace.bind(this);
             this._handleLayoutChange = this._handleLayoutChange.bind(this);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._modelChangeListener = this._modelChangeListener.bind(this);
             this.state = {
                 shiftOn: false,
                 capsOn: false,
@@ -278,19 +278,19 @@ export function init(dispatcher, he, queryStore, virtualKeyboardStore) {
             });
         }
 
-        _storeChangeListener() {
+        _modelChangeListener() {
             this.setState({
                 shiftOn: this.state.shiftOn,
                 capsOn: this.state.capsOn,
-                layout: virtualKeyboardStore.getCurrentLayout(),
-                layoutNames: virtualKeyboardStore.getLayoutNames(),
-                currentLayoutIdx: virtualKeyboardStore.getCurrentLayoutIdx(),
-                triggeredKey: virtualKeyboardStore.getActiveKey()
+                layout: virtualKeyboardModel.getCurrentLayout(),
+                layoutNames: virtualKeyboardModel.getLayoutNames(),
+                currentLayoutIdx: virtualKeyboardModel.getCurrentLayoutIdx(),
+                triggeredKey: virtualKeyboardModel.getActiveKey()
             });
         }
 
         componentDidMount() {
-            virtualKeyboardStore.addChangeListener(this._storeChangeListener);
+            virtualKeyboardModel.addChangeListener(this._modelChangeListener);
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS',
                 props: {
@@ -300,7 +300,7 @@ export function init(dispatcher, he, queryStore, virtualKeyboardStore) {
         }
 
         componentWillUnmount() {
-            virtualKeyboardStore.removeChangeListener(this._storeChangeListener);
+            virtualKeyboardModel.removeChangeListener(this._modelChangeListener);
         }
 
         _renderContents() {

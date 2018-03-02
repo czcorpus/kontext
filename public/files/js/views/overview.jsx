@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, corpusInfoStore) {
+export function init(dispatcher, he, corpusInfoModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -265,21 +265,21 @@ export function init(dispatcher, he, corpusInfoStore) {
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleCloseClick = this._handleCloseClick.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                infoType: corpusInfoStore.getCurrentInfoType(),
-                data: corpusInfoStore.getCurrentInfoData(),
-                isLoading: corpusInfoStore.isLoading()
+                infoType: corpusInfoModel.getCurrentInfoType(),
+                data: corpusInfoModel.getCurrentInfoData(),
+                isLoading: corpusInfoModel.isLoading()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         _handleCloseClick() {
@@ -290,11 +290,11 @@ export function init(dispatcher, he, corpusInfoStore) {
         }
 
         componentDidMount() {
-            corpusInfoStore.addChangeListener(this._handleStoreChange);
+            corpusInfoModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            corpusInfoStore.removeChangeListener(this._handleStoreChange);
+            corpusInfoModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderInfo() {

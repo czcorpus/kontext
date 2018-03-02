@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, lineStore) {
+export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
@@ -30,9 +30,9 @@ export function init(dispatcher, he, lineStore) {
         constructor(props) {
             super(props);
             // no need to bind this._handleControlClick
-            this._handleLineStoreChange = this._handleLineStoreChange.bind(this);
+            this._handleLineModelChange = this._handleLineModelChange.bind(this);
             this.state = {
-                activeButton: lineStore.getAudioPlayerStatus()
+                activeButton: lineModel.getAudioPlayerStatus()
             };
         }
 
@@ -46,8 +46,8 @@ export function init(dispatcher, he, lineStore) {
             });
         }
 
-        _handleLineStoreChange() {
-            const playerStatus = lineStore.getAudioPlayerStatus();
+        _handleLineModelChange() {
+            const playerStatus = lineModel.getAudioPlayerStatus();
             if (playerStatus !== 'stop') {
                 this.setState({
                     activeButton: playerStatus
@@ -56,11 +56,11 @@ export function init(dispatcher, he, lineStore) {
         }
 
         componentDidMount() {
-            lineStore.addChangeListener(this._handleLineStoreChange);
+            lineModel.addChangeListener(this._handleLineModelChange);
         }
 
         componentWillUnmount() {
-            lineStore.removeChangeListener(this._handleLineStoreChange);
+            lineModel.removeChangeListener(this._handleLineModelChange);
         }
 
         _autoSetHtmlClass(buttonId) {

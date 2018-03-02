@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {ActionPayload, ActionDispatcher} from '../../app/dispatcher';
-import {TagHelperStore, PositionValue, PositionOptions, TagHelperStoreState} from './stores';
+import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';
 
@@ -39,7 +39,7 @@ export interface TagBuilderProps {
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, tagHelperStore:TagHelperStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, tagHelperModel:TagHelperModel) {
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
@@ -340,21 +340,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<TagBuilderProps, TagHelperStoreState> { // TODO type
+    class TagBuilder extends React.Component<TagBuilderProps, TagHelperModelState> { // TODO type
 
         constructor(props) {
             super(props);
-            this.state = tagHelperStore.getState();
+            this.state = tagHelperModel.getState();
             this._changeListener = this._changeListener.bind(this);
             this.checkboxHandler = this.checkboxHandler.bind(this);
         }
 
-        _changeListener(state:TagHelperStoreState) {
+        _changeListener(state:TagHelperModelState) {
             this.setState(state);
         }
 
         componentDidMount() {
-            tagHelperStore.addChangeListener(this._changeListener);
+            tagHelperModel.addChangeListener(this._changeListener);
             dispatcher.dispatch({
                 actionType: 'TAGHELPER_GET_INITIAL_DATA',
                 props: {}
@@ -362,7 +362,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         componentWillUnmount() {
-            tagHelperStore.removeChangeListener(this._changeListener);
+            tagHelperModel.removeChangeListener(this._changeListener);
         }
 
         private checkboxHandler(lineIdx:number, value:string, checked:boolean) {

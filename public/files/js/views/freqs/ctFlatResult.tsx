@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
-import {CTFlatStore, FreqDataItem} from '../../models/freqs/flatCtable';
+import {Freq2DFlatViewModel, FreqDataItem} from '../../models/freqs/flatCtable';
 import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
 import {init as ctViewOptsFactory} from './ctViewOpts';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -55,7 +55,7 @@ interface Views {
 export function init(
             dispatcher:ActionDispatcher,
             he:Kontext.ComponentHelpers,
-            ctFlatFreqDataRowsStore:CTFlatStore):Views {
+            ctFlatFreqDataRowsModel:Freq2DFlatViewModel):Views {
 
     const ctViewOpts = ctViewOptsFactory(dispatcher, he);
 
@@ -155,36 +155,36 @@ export function init(
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                data: ctFlatFreqDataRowsStore.getData(),
-                attr1: ctFlatFreqDataRowsStore.getAttr1(),
-                attr2: ctFlatFreqDataRowsStore.getAttr2(),
-                minFreq: ctFlatFreqDataRowsStore.getMinFreq(),
-                minFreqType: ctFlatFreqDataRowsStore.getMinFreqType(),
-                sortCol: ctFlatFreqDataRowsStore.getSortCol(),
-                sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
-                confIntervalLeftMinWarn: ctFlatFreqDataRowsStore.getConfIntervalLeftMinWarn(),
-                alphaLevel: ctFlatFreqDataRowsStore.getAlphaLevel(),
-                availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels(),
-                canProvideIpm: ctFlatFreqDataRowsStore.canProvideIpm()
+                data: ctFlatFreqDataRowsModel.getData(),
+                attr1: ctFlatFreqDataRowsModel.getAttr1(),
+                attr2: ctFlatFreqDataRowsModel.getAttr2(),
+                minFreq: ctFlatFreqDataRowsModel.getMinFreq(),
+                minFreqType: ctFlatFreqDataRowsModel.getMinFreqType(),
+                sortCol: ctFlatFreqDataRowsModel.getSortCol(),
+                sortColIsReversed: ctFlatFreqDataRowsModel.getSortColIsReversed(),
+                confIntervalLeftMinWarn: ctFlatFreqDataRowsModel.getConfIntervalLeftMinWarn(),
+                alphaLevel: ctFlatFreqDataRowsModel.getAlphaLevel(),
+                availAlphaLevels: ctFlatFreqDataRowsModel.getAvailAlphaLevels(),
+                canProvideIpm: ctFlatFreqDataRowsModel.canProvideIpm()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            ctFlatFreqDataRowsStore.addChangeListener(this._handleStoreChange);
+            ctFlatFreqDataRowsModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            ctFlatFreqDataRowsStore.removeChangeListener(this._handleStoreChange);
+            ctFlatFreqDataRowsModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

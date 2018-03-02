@@ -24,13 +24,13 @@ import {Kontext, TextTypes} from '../types/common';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
 import {PageModel} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../models/coll/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
-import {ContingencyTableStore} from '../models/freqs/ctable';
-import {CTFlatStore} from '../models/freqs/flatCtable';
-import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../models/freqs/ctFreqForm';
-import {QueryReplayStore, IndirectQueryReplayStore} from '../models/query/replay';
-import {QuerySaveAsFormStore} from '../models/query/save';
+import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
+import {Freq2DTableModel} from '../models/freqs/ctable';
+import {Freq2DFlatViewModel} from '../models/freqs/flatCtable';
+import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
+import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay';
+import {QuerySaveAsFormModel} from '../models/query/save';
 import {fetchQueryFormArgs} from '../models/query/main';
 import {init as freqFormFactory} from '../views/freqs/forms';
 import {init as collFormFactory, CollFormViews} from 'views/coll/forms';
@@ -38,10 +38,10 @@ import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as resultViewFactory} from '../views/freqs/main';
 import {init as ctResultViewInit} from '../views/freqs/ctResult';
-import {FreqDataRowsStore, ResultBlock} from '../models/freqs/dataRows';
-import {FreqResultsSaveStore, FreqCTResultsSaveStore} from '../models/freqs/save';
+import {FreqDataRowsModel, ResultBlock} from '../models/freqs/dataRows';
+import {FreqResultsSaveModel, FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
-import {TextTypesStore} from '../models/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/attrValues';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -54,25 +54,25 @@ class FreqPage {
 
     private layoutModel:PageModel;
 
-    private mlFreqStore:MLFreqFormStore;
+    private mlFreqModel:MLFreqFormModel;
 
-    private ttFreqStore:TTFreqFormStore;
+    private ttFreqModel:TTFreqFormModel;
 
-    private freqResultStore:FreqDataRowsStore;
+    private freqResultModel:FreqDataRowsModel;
 
-    private ctFreqStore:ContingencyTableStore;
+    private ctFreqModel:Freq2DTableModel;
 
-    private ctFlatFreqStore:CTFlatStore;
+    private ctFlatFreqModel:Freq2DFlatViewModel;
 
-    private cTFreqFormStore:CTFreqFormStore;
+    private cTFreqFormModel:Freq2DFormModel;
 
-    private ctResultSaveStore:FreqCTResultsSaveStore;
+    private ctResultSaveModel:FreqCTResultsSaveModel;
 
-    private collFormStore:CollFormStore;
+    private collFormModel:CollFormModel;
 
-    private queryReplayStore:IndirectQueryReplayStore;
+    private queryReplayModel:IndirectQueryReplayModel;
 
-    private querySaveAsFormStore:QuerySaveAsFormStore;
+    private querySaveAsFormModel:QuerySaveAsFormModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -97,14 +97,14 @@ class FreqPage {
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
 
-        this.mlFreqStore = new MLFreqFormStore(
+        this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps,
             this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
         );
 
-        this.ttFreqStore = new TTFreqFormStore(
+        this.ttFreqModel = new TTFreqFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps
@@ -123,42 +123,42 @@ class FreqPage {
             ctminfreq_type: ctFormInputs.ctminfreq_type
         };
 
-        this.cTFreqFormStore = new CTFreqFormStore(
+        this.cTFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps,
             adhocSubcDetector
         );
-        this.ctFreqStore = new ContingencyTableStore(
+        this.ctFreqModel = new Freq2DTableModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps,
             adhocSubcDetector
         );
-        this.ctFlatFreqStore = new CTFlatStore(
+        this.ctFlatFreqModel = new Freq2DFlatViewModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps,
             adhocSubcDetector
         );
-        this.ctResultSaveStore = new FreqCTResultsSaveStore(
+        this.ctResultSaveModel = new FreqCTResultsSaveModel(
             this.layoutModel.dispatcher,
-            this.ctFreqStore,
-            this.ctFlatFreqStore
+            this.ctFreqModel,
+            this.ctFlatFreqModel
         );
 
         const freqFormViews = freqFormFactory(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.mlFreqStore,
-            this.ttFreqStore,
-            this.cTFreqFormStore
+            this.mlFreqModel,
+            this.ttFreqModel,
+            this.cTFreqFormModel
         );
 
         // -------------------- coll form -------------------
 
         const collFormArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
-        this.collFormStore = new CollFormStore(
+        this.collFormModel = new CollFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
@@ -177,7 +177,7 @@ class FreqPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
-            this.collFormStore
+            this.collFormModel
         );
 
         const analysisViews = analysisFrameInit(
@@ -186,7 +186,7 @@ class FreqPage {
             this.layoutModel.layoutViews,
             collFormViews,
             freqFormViews,
-            this.layoutModel.getStores().mainMenuStore
+            this.layoutModel.getModels().mainMenuModel
         );
 
         this.layoutModel.renderReactComponent(
@@ -199,12 +199,12 @@ class FreqPage {
     }
 
     private initQueryOpNavigation():void {
-        this.queryReplayStore = new IndirectQueryReplayStore(
+        this.queryReplayModel = new IndirectQueryReplayModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || []
         );
-        this.querySaveAsFormStore = new QuerySaveAsFormStore(
+        this.querySaveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<string>('concPersistenceOpId')
@@ -223,9 +223,9 @@ class FreqPage {
                 ShuffleForm: null,
                 SwitchMainCorpForm: null
             },
-            this.queryReplayStore,
-            this.layoutModel.getStores().mainMenuStore,
-            this.querySaveAsFormStore
+            this.queryReplayModel,
+            this.layoutModel.getModels().mainMenuModel,
+            this.querySaveAsFormModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
@@ -251,14 +251,14 @@ class FreqPage {
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ml':
             case 'tt':
-                this.freqResultStore = new FreqDataRowsStore(
+                this.freqResultModel = new FreqDataRowsModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
                     this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     (s)=>this.setDownloadLink(s)
                 );
-                this.freqResultStore.importData(
+                this.freqResultModel.importData(
                     this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
                     this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     1
@@ -266,7 +266,7 @@ class FreqPage {
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.freqResultStore
+                    this.freqResultModel
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
@@ -276,20 +276,20 @@ class FreqPage {
             break;
             case 'ct':
                 const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData');
-                this.ctFreqStore.importData(data);
-                this.ctFlatFreqStore.importData(data);
-                this.ctFreqStore.addOnNewDataHandler((newData) =>
-                    this.ctFlatFreqStore.importDataAndNotify(newData)
+                this.ctFreqModel.importData(data);
+                this.ctFlatFreqModel.importData(data);
+                this.ctFreqModel.addOnNewDataHandler((newData) =>
+                    this.ctFlatFreqModel.importDataAndNotify(newData)
                 );
                 const ctFreqResultView = ctResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.ctFreqStore,
-                    this.ctFlatFreqStore
+                    this.ctFreqModel,
+                    this.ctFlatFreqModel
                 );
                 const width = 600;
-                const height = 14 * (this.ctFreqStore.getD1Labels().filter(x => x[1]).size +
-                    this.ctFreqStore.getD2Labels().filter(x => x[1]).size) / 2;
+                const height = 14 * (this.ctFreqModel.getD1Labels().filter(x => x[1]).size +
+                    this.ctFreqModel.getD2Labels().filter(x => x[1]).size) / 2;
                 this.layoutModel.renderReactComponent(
                     ctFreqResultView.CTFreqResultView,
                     window.document.getElementById('result-mount'),
@@ -314,13 +314,13 @@ class FreqPage {
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const ttStore = new TextTypesStore(
+        const ttModel = new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
             this.layoutModel.getConf<any>('textTypesData')
         );
-        ttStore.applyCheckedItems(queryFormArgs.selected_text_types, {});
-        return ttStore;
+        ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
+        return ttModel;
     }
 
     private setupBackButtonListening():void {
@@ -329,7 +329,7 @@ class FreqPage {
         });
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ct': {
-                const args = this.ctFreqStore.getSubmitArgs();
+                const args = this.ctFreqModel.getSubmitArgs();
                 args.remove('format');
                 this.layoutModel.getHistory().replaceState(
                     'freqct',
@@ -340,7 +340,7 @@ class FreqPage {
             break;
             case 'tt':
             case 'ml': {
-                const args = this.freqResultStore.getSubmitArgs();
+                const args = this.freqResultModel.getSubmitArgs();
                 args.remove('format');
                 this.layoutModel.getHistory().replaceState(
                     'freqs',
@@ -355,14 +355,14 @@ class FreqPage {
     init() {
         this.layoutModel.init().then(
             () => {
-                const mainMenuStore = this.layoutModel.getStores().mainMenuStore;
+                const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
                 // we must capture concordance-related actions which lead
                 // to specific "pop-up" forms and redirect user back to
                 // the 'view' action with additional information (encoded in
                 // the fragment part of the URL) which form should be opened
                 // once the 'view' page is loaded
-                mainMenuStore.addChangeListener(() => {
-                    const activeItem = mainMenuStore.getActiveItem() || {actionName: null, actionArgs: []};
+                mainMenuModel.addChangeListener(() => {
+                    const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
                     switch (activeItem.actionName) {
                         case 'MAIN_MENU_SHOW_FILTER':
                             const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));

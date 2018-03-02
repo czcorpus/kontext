@@ -20,7 +20,7 @@
 
 import * as React from 'vendor/react';
 
-export function init(dispatcher, utils, layoutViews, collSaveStore) {
+export function init(dispatcher, utils, layoutViews, collSaveModel) {
 
     /**
      *
@@ -129,7 +129,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
         return (
             <tr>
                 <th style={{verticalAlign: 'top'}}>
-                    {utils.translate('coll__save_form_lines_to_store')}:
+                    {utils.translate('coll__save_form_lines_to_model')}:
                 </th>
                 <td>
                     {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
@@ -166,20 +166,20 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
             this._switchLineLimitHint = this._switchLineLimitHint.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                saveformat: collSaveStore.getSaveformat(),
-                includeColHeaders: collSaveStore.getIncludeColHeaders(),
-                includeHeading: collSaveStore.getIncludeHeading(),
-                fromLine: collSaveStore.getFromLine(),
-                toLine: collSaveStore.getToLine(),
-                saveLinesLimit: collSaveStore.getMaxSaveLines(),
+                saveformat: collSaveModel.getSaveformat(),
+                includeColHeaders: collSaveModel.getIncludeColHeaders(),
+                includeHeading: collSaveModel.getIncludeHeading(),
+                fromLine: collSaveModel.getFromLine(),
+                toLine: collSaveModel.getToLine(),
+                saveLinesLimit: collSaveModel.getMaxSaveLines(),
                 lineLimitHintVisible: false
             };
         }
@@ -191,16 +191,16 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
             });
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            collSaveStore.addChangeListener(this._handleStoreChange);
+            collSaveModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            collSaveStore.removeChangeListener(this._handleStoreChange);
+            collSaveModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderFormatDependentOptions() {
@@ -216,7 +216,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
         }
 
         _switchLineLimitHint(v) {
-            const state = this._fetchStoreState();
+            const state = this._fetchModelState();
             state.lineLimitHintVisible = v;
             this.setState(state);
         }

@@ -28,7 +28,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {FreqFormInputs} from './freqForms';
-import {FreqResultsSaveStore} from './save';
+import {FreqResultsSaveModel} from './save';
 import {MultiDict} from '../../util';
 
 
@@ -60,7 +60,7 @@ export interface ResultBlock {
 }
 
 
-export class FreqDataRowsStore extends StatefulModel {
+export class FreqDataRowsModel extends StatefulModel {
 
     private pageModel:PageModel;
 
@@ -86,7 +86,7 @@ export class FreqDataRowsStore extends StatefulModel {
 
     private alignType:Array<string>;
 
-    private saveStore:FreqResultsSaveStore;
+    private saveModel:FreqResultsSaveModel;
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
             formProps:FreqFormInputs, saveLinkFn:(string)=>void) {
@@ -103,7 +103,7 @@ export class FreqDataRowsStore extends StatefulModel {
         this.mlxicase = formProps.mlxicase;
         this.mlxctx = formProps.mlxctx;
         this.alignType = formProps.alignType;
-        this.saveStore = new FreqResultsSaveStore(
+        this.saveModel = new FreqResultsSaveModel(
             dispatcher,
             pageModel,
             ()=>this.getSubmitArgs(),
@@ -292,8 +292,8 @@ export class FreqDataRowsStore extends StatefulModel {
         return Number(this.currentPage) > 1 && this.data.get(0).TotalPages > 1;
     }
 
-    getSaveStore():FreqResultsSaveStore {
-        return this.saveStore;
+    getSaveModel():FreqResultsSaveModel {
+        return this.saveModel;
     }
 
 }

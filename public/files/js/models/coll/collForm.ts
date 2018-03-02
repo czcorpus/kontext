@@ -49,7 +49,7 @@ export interface CollFormProps extends CollFormInputs {
 /**
  *
  */
-export class CollFormStore extends StatefulModel {
+export class CollFormModel extends StatefulModel {
 
     private pageModel:PageModel;
 

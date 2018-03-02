@@ -98,7 +98,7 @@ function importMenuData(data:InitialMenuData):Immutable.List<MenuEntry> {
 /**
  *
  */
-export class MainMenuStore extends StatefulModel implements Kontext.IMainMenuStore {
+export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuModel {
 
     private pageModel:PageModel;
 
@@ -218,7 +218,7 @@ export class MainMenuStore extends StatefulModel implements Kontext.IMainMenuSto
 
     /**
      * Typically, it is expected that UI components reacting to main menu changes
-     * will listen to MainMenuStore updates and update themselves accordingly.
+     * will listen to MainMenuModel updates and update themselves accordingly.
      * But sometimes it is necessary to perform an action before the actual change
      * is "published" (e.g. load fresh data from server) which is why it is possible
      * to register a custom function to a specific menu action.

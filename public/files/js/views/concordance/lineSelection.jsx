@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, lineSelectionStore) {
+export function init(dispatcher, he, lineSelectionModel) {
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
@@ -62,19 +62,19 @@ export function init(dispatcher, he, lineSelectionStore) {
             super(props);
             this._changeHandler = this._changeHandler.bind(this);
             this._actionChangeHandler = this._actionChangeHandler.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                mode: lineSelectionStore.getMode(),
-                waiting: lineSelectionStore.isBusy()
+                mode: lineSelectionModel.getMode(),
+                waiting: lineSelectionModel.isBusy()
             };
         }
 
         _changeHandler() {
             if (this.props.mode === 'simple') { // prevent unmounted component update
-                this.setState(this._fetchStoreState());
+                this.setState(this._fetchModelState());
             }
         }
 
@@ -96,7 +96,7 @@ export function init(dispatcher, he, lineSelectionStore) {
         }
 
         componentDidMount() {
-            lineSelectionStore.addChangeListener(this._changeHandler);
+            lineSelectionModel.addChangeListener(this._changeHandler);
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_STATUS_REQUEST',
                 props: {}
@@ -104,7 +104,7 @@ export function init(dispatcher, he, lineSelectionStore) {
         }
 
         componentWillUnmount() {
-            lineSelectionStore.removeChangeListener(this._changeHandler);
+            lineSelectionModel.removeChangeListener(this._changeHandler);
         }
 
         render() {
@@ -293,22 +293,22 @@ export function init(dispatcher, he, lineSelectionStore) {
             this._emailChangeHandler = this._emailChangeHandler.bind(this);
             this._handleRenameCancel = this._handleRenameCancel.bind(this);
             this._handleDialogShowClick = this._handleDialogShowClick.bind(this);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                emailDialogCredentials: lineSelectionStore.getEmailDialogCredentials(),
+                emailDialogCredentials: lineSelectionModel.getEmailDialogCredentials(),
                 renameLabelDialog: false,
                 email: null,
-                waiting: lineSelectionStore.isBusy(),
-                lastCheckpointUrl: lineSelectionStore.getLastCheckpointUrl()
+                waiting: lineSelectionModel.isBusy(),
+                lastCheckpointUrl: lineSelectionModel.getLastCheckpointUrl()
             };
         }
 
         _changeHandler() {
             if (this.props.mode === 'groups') { // prevent unmounted component update
-                this.setState(this._fetchStoreState());
+                this.setState(this._fetchModelState());
             }
         }
 
@@ -380,7 +380,7 @@ export function init(dispatcher, he, lineSelectionStore) {
         }
 
         componentDidMount() {
-            lineSelectionStore.addChangeListener(this._changeHandler);
+            lineSelectionModel.addChangeListener(this._changeHandler);
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_STATUS_REQUEST',
                 props: {
@@ -390,7 +390,7 @@ export function init(dispatcher, he, lineSelectionStore) {
         }
 
         componentWillUnmount() {
-            lineSelectionStore.removeChangeListener(this._changeHandler);
+            lineSelectionModel.removeChangeListener(this._changeHandler);
         }
 
         componentDidUpdate(prevProps, prevState) {

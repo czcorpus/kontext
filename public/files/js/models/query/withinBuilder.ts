@@ -27,7 +27,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 /**
  *
  */
-export class WithinBuilderStore extends StatefulModel {
+export class WithinBuilderModel extends StatefulModel {
 
     private pageModel:PageModel;
 

@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormStore) {
+export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormModel) {
 
 
     // ---------------- <TRCorpusField /> -----------------------
@@ -486,33 +486,33 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormSt
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleKeyPress = this._handleKeyPress.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                wltype: wordlistFormStore.getWltype(),
-                currentSubcorp: wordlistFormStore.getCurrentSubcorpus(),
-                subcorpList: wordlistFormStore.getSubcorpList(),
-                attrList: wordlistFormStore.getAttrList(),
-                structAttrList: wordlistFormStore.getStructAttrList(),
-                wlattr: wordlistFormStore.getWlattr(),
-                wlpat: wordlistFormStore.getWlpat(),
-                wlnums: wordlistFormStore.getWlnums(),
-                wposattr1: wordlistFormStore.getWposattr1(),
-                wposattr2: wordlistFormStore.getWposattr2(),
-                wposattr3: wordlistFormStore.getWposattr3(),
-                wlminfreq: wordlistFormStore.getWlminfreq(),
-                filterEditorData: wordlistFormStore.getFilterEditorData(),
-                hasWlwords: wordlistFormStore.hasWlwords(),
-                hasBlacklist: wordlistFormStore.hasBlacklist(),
-                wlFileName: wordlistFormStore.getWlFileName(),
-                blFileName: wordlistFormStore.getBlFileName(),
-                includeNonwords: wordlistFormStore.getIncludeNonwords(),
-                allowsMultilevelWltype: wordlistFormStore.getAllowsMultilevelWltype()
+                wltype: wordlistFormModel.getWltype(),
+                currentSubcorp: wordlistFormModel.getCurrentSubcorpus(),
+                subcorpList: wordlistFormModel.getSubcorpList(),
+                attrList: wordlistFormModel.getAttrList(),
+                structAttrList: wordlistFormModel.getStructAttrList(),
+                wlattr: wordlistFormModel.getWlattr(),
+                wlpat: wordlistFormModel.getWlpat(),
+                wlnums: wordlistFormModel.getWlnums(),
+                wposattr1: wordlistFormModel.getWposattr1(),
+                wposattr2: wordlistFormModel.getWposattr2(),
+                wposattr3: wordlistFormModel.getWposattr3(),
+                wlminfreq: wordlistFormModel.getWlminfreq(),
+                filterEditorData: wordlistFormModel.getFilterEditorData(),
+                hasWlwords: wordlistFormModel.hasWlwords(),
+                hasBlacklist: wordlistFormModel.hasBlacklist(),
+                wlFileName: wordlistFormModel.getWlFileName(),
+                blFileName: wordlistFormModel.getBlFileName(),
+                includeNonwords: wordlistFormModel.getIncludeNonwords(),
+                allowsMultilevelWltype: wordlistFormModel.getAllowsMultilevelWltype()
             };
         }
 
@@ -523,8 +523,8 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormSt
             });
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         _handleKeyPress(evt) {
@@ -536,11 +536,11 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormSt
         }
 
         componentDidMount() {
-            wordlistFormStore.addChangeListener(this._handleStoreChange);
+            wordlistFormModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            wordlistFormStore.removeChangeListener(this._handleStoreChange);
+            wordlistFormModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

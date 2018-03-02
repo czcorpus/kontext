@@ -27,7 +27,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
-import {GeneralCTStore, CTFreqCell, FreqQuantities} from './generalCtable';
+import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat, Dimensions} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
@@ -125,9 +125,9 @@ export const enum ColorMappings {
 
 
 /**
- * A store for 2d frequency table operations
+ * A model for 2d frequency table operations
  */
-export class ContingencyTableStore extends GeneralCTStore {
+export class Freq2DTableModel extends GeneralFreq2DModel {
 
     /**
      * Original data as imported from page initialization.
@@ -175,7 +175,7 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     /**
      * A lower freq. limit used by server when fetching data.
-     * This is allows the store to retrieve additional data
+     * This is allows the model to retrieve additional data
      * in case user requires a lower limit (which is currently
      * not on the client-side).
      */
@@ -514,7 +514,7 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     /**
      * This is intended especially for flat table data store which must
-     * be kept synchronized with this store. I.e. once something changes
+     * be kept synchronized with this model. I.e. once something changes
      * here - the flat store (which registered its listener here) will
      * update its data accordingly.
      */
@@ -615,9 +615,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         });
 
         const mappingFunc:(c:CTFreqCell)=>string = (() => {
-            const a = ContingencyTableStore.COLOR_HEATMAP.length - 1;
+            const a = Freq2DTableModel.COLOR_HEATMAP.length - 1;
             if (this.colorMapping === ColorMappings.LINEAR) {
-                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * a / (fMax - fMin))];
+                return (c:CTFreqCell) => Freq2DTableModel.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * a / (fMax - fMin))];
 
 
             } else if (this.colorMapping === ColorMappings.PERCENTILE) {
@@ -626,7 +626,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                     .sort((x1, x2) => x1[1] - x2[1])
                     .map((x, i) => [x[0], i]));
 
-                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor(ordered.get(c.origOrder) * (a + 1) / ordered.size)];
+                return (c:CTFreqCell) => Freq2DTableModel.COLOR_HEATMAP[~~Math.floor(ordered.get(c.origOrder) * (a + 1) / ordered.size)];
 
             } else {
                 throw new Error('Falied to define mapping func');

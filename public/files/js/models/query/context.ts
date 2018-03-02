@@ -23,7 +23,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 
 
-export class QueryContextStore extends StatefulModel {
+export class QueryContextModel extends StatefulModel {
 
     private formData:Immutable.Map<string, any>;
 

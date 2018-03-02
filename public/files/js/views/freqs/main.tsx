@@ -25,7 +25,7 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
-import {FreqDataRowsStore, ResultBlock} from '../../models/freqs/dataRows';
+import {FreqDataRowsModel, ResultBlock} from '../../models/freqs/dataRows';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 // --------------------------- exported types --------------------------------------
@@ -53,10 +53,10 @@ interface ExportedComponents {
 export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
-        freqDataRowsStore:FreqDataRowsStore) {
+        freqDataRowsModel:FreqDataRowsModel) {
 
-    const drViews = dataRowsInit(dispatcher, he, freqDataRowsStore);
-    const saveViews = initSaveViews(dispatcher, he, freqDataRowsStore.getSaveStore());
+    const drViews = dataRowsInit(dispatcher, he, freqDataRowsModel);
+    const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
     const layoutViews = he.getLayoutViews();
 
     // ----------------------- <ResultSizeInfo /> -------------------------
@@ -214,36 +214,36 @@ export function init(
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._setLoadingFlag = this._setLoadingFlag.bind(this);
             this.state = this._fetchState();
         }
 
         _fetchState() {
             return {
-                blocks: freqDataRowsStore.getBlocks(),
-                minFreqVal: freqDataRowsStore.getMinFreq(),
-                currentPage: freqDataRowsStore.getCurrentPage(),
-                sortColumn: freqDataRowsStore.getSortColumn(),
-                hasNextPage: freqDataRowsStore.hasNextPage(),
-                hasPrevPage: freqDataRowsStore.hasPrevPage(),
-                saveFormIsActive: freqDataRowsStore.getSaveStore().getFormIsActive(),
+                blocks: freqDataRowsModel.getBlocks(),
+                minFreqVal: freqDataRowsModel.getMinFreq(),
+                currentPage: freqDataRowsModel.getCurrentPage(),
+                sortColumn: freqDataRowsModel.getSortColumn(),
+                hasNextPage: freqDataRowsModel.hasNextPage(),
+                hasPrevPage: freqDataRowsModel.hasPrevPage(),
+                saveFormIsActive: freqDataRowsModel.getSaveModel().getFormIsActive(),
                 isLoading: false
             };
         }
 
-        _handleStoreChange(evt) {
+        _handleModelChange(evt) {
             this.setState(this._fetchState());
         }
 
         componentDidMount() {
-            freqDataRowsStore.addChangeListener(this._handleStoreChange);
-            freqDataRowsStore.getSaveStore().addChangeListener(this._handleStoreChange);
+            freqDataRowsModel.addChangeListener(this._handleModelChange);
+            freqDataRowsModel.getSaveModel().addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            freqDataRowsStore.removeChangeListener(this._handleStoreChange);
-            freqDataRowsStore.getSaveStore().removeChangeListener(this._handleStoreChange);
+            freqDataRowsModel.removeChangeListener(this._handleModelChange);
+            freqDataRowsModel.getSaveModel().removeChangeListener(this._handleModelChange);
         }
 
         _setLoadingFlag() {

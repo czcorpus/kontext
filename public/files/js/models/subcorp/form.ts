@@ -24,9 +24,9 @@ import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {TextTypesStore} from '../../models/textTypes/attrValues';
+import {TextTypesModel} from '../../models/textTypes/attrValues';
 
-export class SubcorpFormStore extends StatefulModel {
+export class SubcorpFormModel extends StatefulModel {
 
     private pageModel:PageModel;
 
@@ -36,19 +36,19 @@ export class SubcorpFormStore extends StatefulModel {
 
     private subcname:string;
 
-    private withinFormStore:SubcorpWithinFormStore;
+    private withinFormModel:SubcorpWithinFormModel;
 
-    private textTypesStore:TextTypesStore;
+    private textTypesModel:TextTypesModel;
 
     private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
-            withinFormStore:SubcorpWithinFormStore, textTypesStore:TextTypesStore, corpname:string,
+            withinFormModel:SubcorpWithinFormModel, textTypesModel:TextTypesModel, corpname:string,
             alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.withinFormStore = withinFormStore;
-        this.textTypesStore = textTypesStore;
+        this.withinFormModel = withinFormModel;
+        this.textTypesModel = textTypesModel;
         this.corpname = corpname;
         this.alignedCorporaProvider = alignedCorporaProvider;
         this.inputMode = 'gui';
@@ -79,13 +79,13 @@ export class SubcorpFormStore extends StatefulModel {
         const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
             args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
-            args.set('attrs', JSON.stringify(this.textTypesStore.exportSelections(false)));
+            args.set('attrs', JSON.stringify(this.textTypesModel.exportSelections(false)));
         }
         if (this.inputMode === 'raw') {
-            args.set('within_json', this.withinFormStore.exportJson());
+            args.set('within_json', this.withinFormModel.exportJson());
 
         } else if (this.inputMode === 'gui') {
-            const selections = this.textTypesStore.exportSelections(false);
+            const selections = this.textTypesModel.exportSelections(false);
             for (let p in selections) {
                 args.replace(`sca_${p}`, selections[p]);
             }
@@ -139,7 +139,7 @@ export class WithinLine {
 /**
  *
  */
-export class SubcorpWithinFormStore extends StatefulModel {
+export class SubcorpWithinFormModel extends StatefulModel {
 
     private lines:Immutable.List<WithinLine>;
 

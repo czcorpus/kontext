@@ -79,7 +79,7 @@ export interface Block {
  * Please note that for bib_attr, the initial
  * data is not expected to contain items IDs
  * which means that bibliography attribute box
- * store must be always an instance of
+ * model must be always an instance of
  * ./valueSelections.TextInputAttributeSelection
  * (otherwise a user would click on a label but
  * there would be no corresponding ID underneath)
@@ -103,7 +103,7 @@ export interface InitialData {
  * All the state data is based on Immutable.js except for individual data
  * items which are updated via manual copying (i.e. no Immutable.Record).
  */
-export class TextTypesStore extends StatefulModel implements TextTypes.ITextTypesStore,
+export class TextTypesModel extends StatefulModel implements TextTypes.ITextTypesModel,
         TextTypes.IAdHocSubcorpusDetector {
 
     private attributes:Immutable.List<TextTypes.AttributeSelection>;
@@ -149,7 +149,7 @@ export class TextTypesStore extends StatefulModel implements TextTypes.ITextType
 
     /**
      * Contains externally registered callbacks invoked in case
-     * user clicks to the [i] icon. The store must be set to provide
+     * user clicks to the [i] icon. The model must be set to provide
      * such a functionality.
      */
     private extendedInfoCallbacks:Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>; // TODO type
@@ -161,7 +161,7 @@ export class TextTypesStore extends StatefulModel implements TextTypes.ITextType
      */
     private textInputChangeCallback:(attrName:string, inputValue:string)=>RSVP.Promise<any>;
 
-    private selectionChangeListeners:Immutable.List<(target:TextTypes.ITextTypesStore)=>void>;
+    private selectionChangeListeners:Immutable.List<(target:TextTypes.ITextTypesModel)=>void>;
 
     /**
      *
@@ -186,7 +186,7 @@ export class TextTypesStore extends StatefulModel implements TextTypes.ITextType
         this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
         this.metaInfo = Immutable.Map<string, TextTypes.AttrSummary>();
         this.extendedInfoCallbacks = Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>();
-        this.selectionChangeListeners = Immutable.List<(target:TextTypes.ITextTypesStore)=>void>();
+        this.selectionChangeListeners = Immutable.List<(target:TextTypes.ITextTypesModel)=>void>();
         this.textInputPlaceholder = null;
         this._isBusy = false;
 
@@ -537,7 +537,7 @@ export class TextTypesStore extends StatefulModel implements TextTypes.ITextType
         return this.selectionHistory.size > 1;
     }
 
-    addSelectionChangeListener(fn:(target:TextTypes.ITextTypesStore)=>void):void {
+    addSelectionChangeListener(fn:(target:TextTypes.ITextTypesModel)=>void):void {
         this.selectionChangeListeners = this.selectionChangeListeners.push(fn);
     }
 

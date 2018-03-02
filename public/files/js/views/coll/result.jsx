@@ -21,9 +21,9 @@
 import * as React from 'vendor/react';
 import {init as initSaveViews} from './save';
 
-export function init(dispatcher, utils, layoutViews, collResultStore) {
+export function init(dispatcher, utils, layoutViews, collResultModel) {
 
-    const saveViews = initSaveViews(dispatcher, utils, layoutViews, collResultStore.getSaveStore());
+    const saveViews = initSaveViews(dispatcher, utils, layoutViews, collResultModel.getSaveModel());
 
     /**
      *
@@ -275,30 +275,30 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSaveFormClose = this._handleSaveFormClose.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                data: collResultStore.getData(),
-                heading: collResultStore.getHeading(),
-                currPageInput: collResultStore.getCurrPageInput(),
-                isWaiting: collResultStore.getIsWaiting(),
-                lineOffset: collResultStore.getLineOffset(),
-                currPage: collResultStore.getCurrPage(),
-                hasNextPage: collResultStore.getHasNextPage(),
-                sortFn: collResultStore.getSortFn(),
-                cattr: collResultStore.getCattr(),
-                saveFormVisible: collResultStore.getSaveStore().getFormIsActive(),
-                saveLinesLimit: collResultStore.getSaveLinesLimit(),
-                calcStatus: collResultStore.getCalcStatus()
+                data: collResultModel.getData(),
+                heading: collResultModel.getHeading(),
+                currPageInput: collResultModel.getCurrPageInput(),
+                isWaiting: collResultModel.getIsWaiting(),
+                lineOffset: collResultModel.getLineOffset(),
+                currPage: collResultModel.getCurrPage(),
+                hasNextPage: collResultModel.getHasNextPage(),
+                sortFn: collResultModel.getSortFn(),
+                cattr: collResultModel.getCattr(),
+                saveFormVisible: collResultModel.getSaveModel().getFormIsActive(),
+                saveLinesLimit: collResultModel.getSaveLinesLimit(),
+                calcStatus: collResultModel.getCalcStatus()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         _handleSaveFormClose() {
@@ -309,11 +309,11 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
         }
 
         componentDidMount() {
-            collResultStore.addChangeListener(this._handleStoreChange);
+            collResultModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            collResultStore.removeChangeListener(this._handleStoreChange);
+            collResultModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

@@ -20,7 +20,7 @@
 
 import * as React from 'vendor/react';
 
-export function init(dispatcher, util, widgetStore, queryStore) {
+export function init(dispatcher, util, widgetModel, queryModel) {
 
     const layoutViews = util.getLayoutViews();
 
@@ -430,29 +430,29 @@ export function init(dispatcher, util, widgetStore, queryStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
+            this.state = this._fetchModelState();
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
             this._handleChangeEditEnable = this._handleChangeEditEnable.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleOnShow = this._handleOnShow.bind(this);
             this._handleKeypress = this._handleKeypress.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                corpusIdent: widgetStore.getCorpusIdent(),
-                anonymousUser: widgetStore.getIsAnonymousUser(),
-                dataFav: widgetStore.getDataFav(),
-                dataFeat: widgetStore.getDataFeat(),
-                isWaitingToSwitch: widgetStore.getIsWaitingToSwitch(),
-                currFavitemId: widgetStore.getCurrFavitemId(),
-                currSubcorpus: queryStore.getCurrentSubcorpus(),
-                availSubcorpora: queryStore.getAvailableSubcorpora(),
-                availSearchKeywords: widgetStore.getAvailKeywords(),
-                isWaitingForSearchResults: widgetStore.getIsWaitingForSearchResults(),
-                currSearchResult: widgetStore.getcurrSearchResult(),
-                currSearchPhrase: widgetStore.getCurrSearchPhrase(),
+                corpusIdent: widgetModel.getCorpusIdent(),
+                anonymousUser: widgetModel.getIsAnonymousUser(),
+                dataFav: widgetModel.getDataFav(),
+                dataFeat: widgetModel.getDataFeat(),
+                isWaitingToSwitch: widgetModel.getIsWaitingToSwitch(),
+                currFavitemId: widgetModel.getCurrFavitemId(),
+                currSubcorpus: queryModel.getCurrentSubcorpus(),
+                availSubcorpora: queryModel.getAvailableSubcorpora(),
+                availSearchKeywords: widgetModel.getAvailKeywords(),
+                isWaitingForSearchResults: widgetModel.getIsWaitingForSearchResults(),
+                currSearchResult: widgetModel.getcurrSearchResult(),
+                currSearchPhrase: widgetModel.getCurrSearchPhrase(),
                 visible: false,
                 activeTab: 0,
                 editEnable: false
@@ -477,34 +477,34 @@ export function init(dispatcher, util, widgetStore, queryStore) {
         }
 
         _handleOnShow() {
-            const tmp = this._fetchStoreState();
+            const tmp = this._fetchModelState();
             tmp['visible'] = !this.state.visible;
             this.setState(tmp);
         }
 
         _handleCloseClick() {
-            const tmp = this._fetchStoreState();
+            const tmp = this._fetchModelState();
             tmp['visible'] = false;
             this.setState(tmp);
         }
 
         _handleTabSwitch(v) {
-            const tmp = this._fetchStoreState();
+            const tmp = this._fetchModelState();
             tmp['visible'] = this.state.visible;
             tmp['activeTab'] = v
             this.setState(tmp);
         }
 
         _handleChangeEditEnable() {
-            const tmp = this._fetchStoreState();
+            const tmp = this._fetchModelState();
             tmp['visible'] = this.state.visible;
             tmp['activeTab'] = this.state.activeTab;
             tmp['editEnable'] = !this.state.editEnable;
             this.setState(tmp);
         }
 
-        _handleStoreChange() {
-            const tmp = this._fetchStoreState();
+        _handleModelChange() {
+            const tmp = this._fetchModelState();
             tmp['visible'] = this.state.visible;
             tmp['activeTab'] = this.state.activeTab;
             tmp['editEnable'] = this.state.editEnable;
@@ -512,14 +512,14 @@ export function init(dispatcher, util, widgetStore, queryStore) {
         }
 
         componentDidMount() {
-            widgetStore.addChangeListener(this._handleStoreChange);
-            queryStore.addChangeListener(this._handleStoreChange);
+            widgetModel.addChangeListener(this._handleModelChange);
+            queryModel.addChangeListener(this._handleModelChange);
             util.addGlobalKeyEventHandler(this._handleKeypress);
         }
 
         componentWillUnmount() {
-            widgetStore.removeChangeListener(this._handleStoreChange);
-            queryStore.removeChangeListener(this._handleStoreChange);
+            widgetModel.removeChangeListener(this._handleModelChange);
+            queryModel.removeChangeListener(this._handleModelChange);
             util.removeGlobalKeyEventHandler(this._handleKeypress);
         }
 

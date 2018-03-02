@@ -27,7 +27,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
-export class QuerySaveAsFormStore extends StatefulModel {
+export class QuerySaveAsFormModel extends StatefulModel {
 
     private layoutModel:PageModel;
 

@@ -25,7 +25,7 @@ import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {CollFormStore} from '../../models/coll/collForm';
+import {CollFormModel} from '../../models/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 
@@ -49,11 +49,11 @@ export interface AjaxResponse extends Kontext.AjaxResponse {
 }
 
 
-export class CollResultsSaveStore extends StatefulModel {
+export class CollResultsSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    private mainStore:CollResultStore;
+    private mainModel:CollResultModel;
 
     private formIsActive:boolean;
 
@@ -76,10 +76,10 @@ export class CollResultsSaveStore extends StatefulModel {
     private static GLOBAL_SAVE_LINE_LIMIT = 100000;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            mainStore:CollResultStore, collArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
+            mainModel:CollResultModel, collArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.mainStore = mainStore;
+        this.mainModel = mainModel;
         this.formIsActive = false;
         this.saveformat = 'csv';
         this.fromLine = '1';
@@ -98,7 +98,7 @@ export class CollResultsSaveStore extends StatefulModel {
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = String(CollResultsSaveStore.QUICK_SAVE_LINE_LIMIT);
+                    this.toLine = String(CollResultsSaveModel.QUICK_SAVE_LINE_LIMIT);
                     this.submit();
                     this.toLine = '';
                     this.notifyChangeListeners();
@@ -178,9 +178,9 @@ export class CollResultsSaveStore extends StatefulModel {
         return this.formIsActive;
     }
 
-    // we override here the behavior to expose only the main store
+    // we override here the behavior to expose only the main model
     notifyChangeListeners():void {
-        this.mainStore.notifyChangeListeners();
+        this.mainModel.notifyChangeListeners();
         super.notifyChangeListeners();
     }
 
@@ -205,7 +205,7 @@ export class CollResultsSaveStore extends StatefulModel {
     }
 
     getMaxSaveLines():number {
-        return CollResultsSaveStore.GLOBAL_SAVE_LINE_LIMIT;
+        return CollResultsSaveModel.GLOBAL_SAVE_LINE_LIMIT;
     }
 }
 
@@ -218,7 +218,7 @@ class CalcWatchdog {
 
     private layoutModel:PageModel;
 
-    private resultStore:CollResultStore;
+    private resultModel:CollResultModel;
 
     private numNoChange:number;
 
@@ -236,9 +236,9 @@ class CalcWatchdog {
 
     static CHECK_INTERVAL_SEC = 2;
 
-    constructor(layoutModel:PageModel, resultStore:CollResultStore, onUpdate:WatchdogUpdateCallback) {
+    constructor(layoutModel:PageModel, resultModel:CollResultModel, onUpdate:WatchdogUpdateCallback) {
         this.layoutModel = layoutModel;
-        this.resultStore = resultStore;
+        this.resultModel = resultModel;
         this.onUpdate = onUpdate;
     }
 
@@ -291,7 +291,7 @@ class CalcWatchdog {
 /**
  *
  */
-export class CollResultStore extends StatefulModel {
+export class CollResultModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -301,7 +301,7 @@ export class CollResultStore extends StatefulModel {
 
     private currPage:number;
 
-    private formStore:CollFormStore;
+    private formModel:CollFormModel;
 
     private currPageInput:string; // this is transformed into a real page change once user hits enter/button
 
@@ -313,7 +313,7 @@ export class CollResultStore extends StatefulModel {
 
     private sortFn:string;
 
-    private saveStore:CollResultsSaveStore;
+    private saveModel:CollResultsSaveModel;
 
     private saveLinesLimit:number;
 
@@ -322,12 +322,12 @@ export class CollResultStore extends StatefulModel {
     private calcWatchdog:CalcWatchdog;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            formStore:CollFormStore, initialData:CollResultData, resultHeading:CollResultHeading,
+            formModel:CollFormModel, initialData:CollResultData, resultHeading:CollResultHeading,
             pageSize:number, saveLinkFn:((string)=>void), saveLinesLimit:number,
             unfinished:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.formStore = formStore;
+        this.formModel = formModel;
         this.data = Immutable.List<CollResultRow>(initialData);
         this.heading = Immutable.List<{s:string;n:string}>(resultHeading).slice(1).toList();
         this.currPageInput = '1';
@@ -336,7 +336,7 @@ export class CollResultStore extends StatefulModel {
         this.pageSize = pageSize;
         this.hasNextPage = true; // we do not know in advance in case of collocations
         this.sortFn = resultHeading.length > 1 && resultHeading[1].s ? resultHeading[1].s : 'f'; // [0] = token column
-        this.saveStore = new CollResultsSaveStore(
+        this.saveModel = new CollResultsSaveModel(
             dispatcher,
             layoutModel,
             this,
@@ -430,7 +430,7 @@ export class CollResultStore extends StatefulModel {
     }
 
     private getSubmitArgs():MultiDict {
-        const args = this.formStore.getSubmitArgs();
+        const args = this.formModel.getSubmitArgs();
         args.set('format', 'json');
         args.set('collpage', this.currPage);
         args.set('csortfn', this.sortFn);
@@ -498,11 +498,11 @@ export class CollResultStore extends StatefulModel {
     }
 
     getCattr():string {
-        return this.formStore.getCattr();
+        return this.formModel.getCattr();
     }
 
-    getSaveStore():CollResultsSaveStore {
-        return this.saveStore;
+    getSaveModel():CollResultsSaveModel {
+        return this.saveModel;
     }
 
     getSaveLinesLimit():number {

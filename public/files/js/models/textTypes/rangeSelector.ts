@@ -44,7 +44,7 @@ export class RangeSelector {
 
     private pluginApi:IPluginApi;
 
-    private textTypesStore:TextTypes.ITextTypesStore;
+    private textTypesModel:TextTypes.ITextTypesModel;
 
     /**
      * Specifies whether a specific component (given by its respective
@@ -52,10 +52,10 @@ export class RangeSelector {
      */
     private modeStatus:Immutable.Map<string, boolean>;
 
-    constructor(pluginApi:IPluginApi, textTypesStore:TextTypes.ITextTypesStore) {
+    constructor(pluginApi:IPluginApi, textTypesModel:TextTypes.ITextTypesModel) {
         this.pluginApi = pluginApi;
-        this.textTypesStore = textTypesStore;
-        this.modeStatus = Immutable.Map<string, boolean>(textTypesStore.getAttributes().map(
+        this.textTypesModel = textTypesModel;
+        this.modeStatus = Immutable.Map<string, boolean>(textTypesModel.getAttributes().map(
                 item => [item.name, item.isInterval ? true : false]));
     }
 
@@ -109,7 +109,7 @@ export class RangeSelector {
 
     private checkRange(attribName:string, fromVal:number, toVal:number, keepCurrent:boolean):number {
         let numChecked = 0;
-        this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
+        this.textTypesModel.mapItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
                 ident: item.ident,
                 value: item.value,
@@ -142,7 +142,7 @@ export class RangeSelector {
             throw new Error(this.pluginApi.translate('ucnkLA__at_least_one_required'));
         }
 
-        return this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
+        return this.textTypesModel.mapItems(attribName, (item:TextTypes.AttributeValue) => {
             const newItem = {
                 ident: item.ident,
                 value: item.value,
@@ -186,7 +186,7 @@ export class RangeSelector {
 
 
     private isEmpty(attrName:string):boolean {
-        return !this.textTypesStore.getAttribute(attrName).containsFullList();
+        return !this.textTypesModel.getAttribute(attrName).containsFullList();
     }
 
 
@@ -204,7 +204,7 @@ export class RangeSelector {
             args['aligned'] = JSON.stringify(alignedCorpnames);
         }
 
-        let attrs = this.textTypesStore.exportSelections(false);
+        let attrs = this.textTypesModel.exportSelections(false);
         for (let p in attribArgs) {
             attrs[p] = attribArgs[p];
         }
@@ -223,7 +223,7 @@ export class RangeSelector {
         return this.loadData(args).then(
             // TODO data type relies on liveattrs specific returned data
             (data:{attr_values:{[key:string]:any}}) => {
-                this.textTypesStore.setValues(attribName,
+                this.textTypesModel.setValues(attribName,
                         data.attr_values[attribName].map(item=>item[0]));
                 return data.attr_values;
             }
@@ -248,9 +248,9 @@ export class RangeSelector {
 
             return prom.then(
                 () => {
-                    const currSelection = this.textTypesStore.getAttribute(attrName);
+                    const currSelection = this.textTypesModel.getAttribute(attrName);
                     this.checkIntervalRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
-                    const ans = this.textTypesStore.getAttribute(attrName);
+                    const ans = this.textTypesModel.getAttribute(attrName);
                     if (currSelection.getNumOfSelectedItems() === ans.getNumOfSelectedItems()) {
                         this.pluginApi.showMessage('warning',
                                 this.pluginApi.translate('ucnkLA__nothing_selected'));

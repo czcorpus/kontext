@@ -24,8 +24,8 @@ import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
-import {MLFreqFormStore, TTFreqFormStore} from '../../models/freqs/freqForms';
-import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
+import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
+import {Freq2DFormModel, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -47,12 +47,12 @@ export interface FreqFormViews {
 export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
-        mlFreqFormStore:MLFreqFormStore,
-        ttFreqFormStore:TTFreqFormStore,
-        cTFreqFormStore:CTFreqFormStore):FreqFormViews {
+        mlFreqFormModel:MLFreqFormModel,
+        ttFreqFormModel:TTFreqFormModel,
+        cTFreqFormModel:Freq2DFormModel):FreqFormViews {
 
     const layoutViews = he.getLayoutViews();
-    const ctFreqForm = ctFreqFormFactory(dispatcher, he, cTFreqFormStore);
+    const ctFreqForm = ctFreqFormFactory(dispatcher, he, cTFreqFormModel);
 
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
@@ -165,29 +165,29 @@ export function init(
 
         constructor(props:TTFreqFormProps) {
             super(props);
-            this.state = this._getStoreState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._getModelState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
         }
 
-        _getStoreState():TTFreqFormState {
+        _getModelState():TTFreqFormState {
             return {
-                structAttrListSplitTypes: ttFreqFormStore.getStructAttrListSplitTypes(),
-                fttattr: ttFreqFormStore.getFttattr(),
-                fttIncludeEmpty: ttFreqFormStore.getFttIncludeEmpty(),
-                flimit: ttFreqFormStore.getFlimit()
+                structAttrListSplitTypes: ttFreqFormModel.getStructAttrListSplitTypes(),
+                fttattr: ttFreqFormModel.getFttattr(),
+                fttIncludeEmpty: ttFreqFormModel.getFttIncludeEmpty(),
+                flimit: ttFreqFormModel.getFlimit()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._getStoreState());
+        _modelChangeHandler() {
+            this.setState(this._getModelState());
         }
 
         componentDidMount() {
-            ttFreqFormStore.addChangeListener(this._storeChangeHandler);
+            ttFreqFormModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            ttFreqFormStore.removeChangeListener(this._storeChangeHandler);
+            ttFreqFormModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render():React.ReactElement {
@@ -466,27 +466,27 @@ export function init(
 
         constructor(props) {
             super(props);
-            this.state = this._getStoreState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._getModelState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleAddLevelClick = this._handleAddLevelClick.bind(this);
         }
 
-        _getStoreState() {
+        _getModelState() {
             return {
-                attrList: mlFreqFormStore.getAttrList(),
-                flimit: mlFreqFormStore.getFlimit(),
-                levels: mlFreqFormStore.getLevels(),
-                mlxattrValues: mlFreqFormStore.getMlxattrValues(),
-                mlxicaseValues: mlFreqFormStore.getMlxicaseValues(),
-                positionRangeLabels: mlFreqFormStore.getPositionRangeLabels(),
-                mlxctxIndices: mlFreqFormStore.getMlxctxIndices(),
-                alignTypes: mlFreqFormStore.getAlignTypes(),
-                maxNumLevels: mlFreqFormStore.getMaxNumLevels()
+                attrList: mlFreqFormModel.getAttrList(),
+                flimit: mlFreqFormModel.getFlimit(),
+                levels: mlFreqFormModel.getLevels(),
+                mlxattrValues: mlFreqFormModel.getMlxattrValues(),
+                mlxicaseValues: mlFreqFormModel.getMlxicaseValues(),
+                positionRangeLabels: mlFreqFormModel.getPositionRangeLabels(),
+                mlxctxIndices: mlFreqFormModel.getMlxctxIndices(),
+                alignTypes: mlFreqFormModel.getAlignTypes(),
+                maxNumLevels: mlFreqFormModel.getMaxNumLevels()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._getStoreState());
+        _modelChangeHandler() {
+            this.setState(this._getModelState());
         }
 
         _handleAddLevelClick() {
@@ -497,11 +497,11 @@ export function init(
         }
 
         componentDidMount() {
-            mlFreqFormStore.addChangeListener(this._storeChangeHandler);
+            mlFreqFormModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            mlFreqFormStore.removeChangeListener(this._storeChangeHandler);
+            mlFreqFormModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {

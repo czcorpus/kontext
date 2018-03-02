@@ -24,9 +24,9 @@ import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
-import {TextTypesStore} from '../textTypes/attrValues';
-import {QueryContextStore} from './context';
-import {GeneralQueryFormProperties, GeneralQueryStore, appendQuery} from './main';
+import {TextTypesModel} from '../textTypes/attrValues';
+import {QueryContextModel} from './context';
+import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery} from './main';
 
 
 /**
@@ -61,7 +61,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
 export type FilterWidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
 /**
- *import {GeneralViewOptionsStore} from '../options/general';
+ *import {GeneralViewOptionsModel} from '../options/general';
  */
 export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
         key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
@@ -75,12 +75,12 @@ export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 }
 
 /**
- * FilterStore handles all the filtsters applied within a query "pipeline".
+ * FilterModel handles all the filtsters applied within a query "pipeline".
  * Each filter is identified by its database ID (i.e. a key used by conc_persistence
  * plug-in to store it). Please note that it does not know the order of filters
  * in pipeline (it is up to QueryReplay store to handle this).
  */
-export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetupHandler {
+export class FilterModel extends GeneralQueryModel implements Kontext.QuerySetupHandler {
 
     private maincorps:Immutable.Map<string, string>;
 
@@ -140,10 +140,10 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
     constructor(
             dispatcher:ActionDispatcher,
             pageModel:PageModel,
-            textTypesStore:TextTypesStore,
-            queryContextStore:QueryContextStore,
+            textTypesModel:TextTypesModel,
+            queryContextModel:QueryContextModel,
             props:FilterFormProperties) {
-        super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
+        super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
 
         this.maincorps = Immutable.Map<string, string>(props.maincorps);
         this.queries = Immutable.Map<string, string>(props.currQueries);
@@ -281,7 +281,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                     return data;
 
                 } else {
-                    throw new Error('Cannot sync filter store - invalid form data type: ' + data.form_type);
+                    throw new Error('Cannot sync filter model - invalid form data type: ' + data.form_type);
                 }
             }
         );

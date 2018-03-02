@@ -20,11 +20,11 @@
 
 
 import * as React from 'vendor/react';
-import { WordlistSaveStore } from '../../models/wordlist/save';
+import { WordlistSaveModel } from '../../models/wordlist/save';
 
 /**
  */
-export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlistResultStore, wordlistSaveStore) {
+export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlistResultModel, wordlistSaveModel) {
 
     // ---------------------- <THSortableColumn /> -------------------
 
@@ -232,35 +232,35 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                data: wordlistResultStore.getData(),
-                headings: wordlistResultStore.getHeadings(),
-                currPageInput: wordlistResultStore.getCurrPageInput(),
-                storeIsBusy: wordlistResultStore.getIsBusy(),
-                usesStructAttr: wordlistResultStore.usesStructAttr(),
-                wlsort: wordlistResultStore.getWlsort(),
-                saveFormActive: wordlistSaveStore.getFormIsActive(),
-                isLastPage: wordlistResultStore.getIsLastPage()
+                data: wordlistResultModel.getData(),
+                headings: wordlistResultModel.getHeadings(),
+                currPageInput: wordlistResultModel.getCurrPageInput(),
+                storeIsBusy: wordlistResultModel.getIsBusy(),
+                usesStructAttr: wordlistResultModel.usesStructAttr(),
+                wlsort: wordlistResultModel.getWlsort(),
+                saveFormActive: wordlistSaveModel.getFormIsActive(),
+                isLastPage: wordlistResultModel.getIsLastPage()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            wordlistResultStore.addChangeListener(this._handleStoreChange);
-            wordlistSaveStore.addChangeListener(this._handleStoreChange);
+            wordlistResultModel.addChangeListener(this._handleModelChange);
+            wordlistSaveModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            wordlistResultStore.removeChangeListener(this._handleStoreChange);
-            wordlistSaveStore.removeChangeListener(this._handleStoreChange);
+            wordlistResultModel.removeChangeListener(this._handleModelChange);
+            wordlistSaveModel.removeChangeListener(this._handleModelChange);
         }
 
         render() {

@@ -31,5 +31,5 @@ export class TreeCorparchViews {
 export function init(
     dispatcher:Kontext.ActionDispatcher,
     he:Kontext.ComponentHelpers,
-    treeStore:Kontext.EventEmitter
+    treeModel:Kontext.EventEmitter
 ):TreeCorparchViews;

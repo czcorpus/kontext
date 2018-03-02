@@ -43,7 +43,7 @@ export function fetchSampleFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 }
 
 
-export class SampleStore extends StatefulModel {
+export class ConcSampleModel extends StatefulModel {
 
     private pageModel:PageModel;
 
@@ -86,7 +86,7 @@ export class SampleStore extends StatefulModel {
                     return null;
 
                 } else {
-                    throw new Error('Cannot sync sample store - invalid form data type: ' + data.form_type);
+                    throw new Error('Cannot sync sample model - invalid form data type: ' + data.form_type);
                 }
             }
         );

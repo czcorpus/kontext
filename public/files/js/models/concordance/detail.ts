@@ -27,7 +27,7 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {ConcLineStore} from './lines';
+import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
@@ -71,9 +71,9 @@ export interface SpeechOptions {
 }
 
 /**
- * A store providing access to a detailed/extended kwic information.
+ * A model providing access to a detailed/extended kwic information.
  */
-export class ConcDetailStore extends StatefulModel {
+export class ConcDetailModel extends StatefulModel {
 
     private static SPK_LABEL_OPACITY:number = 0.8;
 
@@ -85,7 +85,7 @@ export class ConcDetailStore extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    private linesStore:ConcLineStore;
+    private linesModel:ConcLineModel;
 
     private concDetail:ConcDetailText;
 
@@ -141,7 +141,7 @@ export class ConcDetailStore extends StatefulModel {
     private tokenDetailIsBusy:boolean;
 
     /**
-     * Currently expanded side. In case the store is not busy the
+     * Currently expanded side. In case the model is not busy the
      * value represent last expanded side (it is not reset after expansion).
      * Values: 'left', 'right'
      */
@@ -150,12 +150,12 @@ export class ConcDetailStore extends StatefulModel {
     private tokenDetailPlg:PluginInterfaces.TokenDetail.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesStore:ConcLineStore, structCtx:string,
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesModel:ConcLineModel, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>,
             tokenDetailPlg:PluginInterfaces.TokenDetail.IPlugin) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.linesStore = linesStore;
+        this.linesModel = linesModel;
         this.structCtx = structCtx;
         this.speechOpts = speechOpts;
         this.mode = this.speechOpts.speakerIdAttr ? 'speech' : 'default';
@@ -164,10 +164,10 @@ export class ConcDetailStore extends StatefulModel {
         this.lineIdx = null;
         this.playingRowIdx = -1;
         this.wholeDocumentLoaded = false;
-        this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => importColor(item, ConcDetailStore.SPK_LABEL_OPACITY)));
+        this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => importColor(item, ConcDetailModel.SPK_LABEL_OPACITY)));
         this.speakerColorsAttachments = Immutable.Map<string, Kontext.RGBAColor>();
         this.spkOverlapMode = (speechOpts.speechOverlapAttr || [])[1] ?
-                ConcDetailStore.SPK_OVERLAP_MODE_FULL : ConcDetailStore.SPK_OVERLAP_MODE_SIMPLE;
+                ConcDetailModel.SPK_OVERLAP_MODE_FULL : ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE;
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.tokenDetailPlg = tokenDetailPlg;
@@ -209,8 +209,8 @@ export class ConcDetailStore extends StatefulModel {
                     ).then(
                         () => {
                             this.isBusy = false;
-                            this.linesStore.setLineFocus(this.lineIdx, true);
-                            this.linesStore.notifyChangeListeners();
+                            this.linesModel.setLineFocus(this.lineIdx, true);
+                            this.linesModel.notifyChangeListeners();
                             this.notifyChangeListeners();
                         },
                         (err) => {
@@ -236,8 +236,8 @@ export class ConcDetailStore extends StatefulModel {
                     ).then(
                         () => {
                             this.isBusy = false;
-                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            this.linesStore.notifyChangeListeners();
+                            this.linesModel.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesModel.notifyChangeListeners();
                             this.notifyChangeListeners();
 
                             return this.loadTokenDetail(
@@ -310,8 +310,8 @@ export class ConcDetailStore extends StatefulModel {
                             this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null).then(
                         () => {
                             this.isBusy = false;
-                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            this.linesStore.notifyChangeListeners();
+                            this.linesModel.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesModel.notifyChangeListeners();
                             this.notifyChangeListeners();
                         },
                         (err) => {
@@ -333,8 +333,8 @@ export class ConcDetailStore extends StatefulModel {
                             payload.props['position']).then(
                         () => {
                             this.isBusy = false;
-                            this.linesStore.setLineFocus(this.lineIdx, true);
-                            this.linesStore.notifyChangeListeners();
+                            this.linesModel.setLineFocus(this.lineIdx, true);
+                            this.linesModel.notifyChangeListeners();
                             this.notifyChangeListeners();
                         },
                         (err) => {
@@ -380,7 +380,7 @@ export class ConcDetailStore extends StatefulModel {
                     this.resetKwicDetail();
                     this.resetTokenDetail();
                     this.notifyChangeListeners();
-                    this.linesStore.notifyChangeListeners();
+                    this.linesModel.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_PLAY_SPEECH':
                     if (this.playingRowIdx > -1) {
@@ -414,7 +414,7 @@ export class ConcDetailStore extends StatefulModel {
 
     private resetKwicDetail():void {
         if (this.lineIdx !== null) {
-            this.linesStore.setLineFocus(this.lineIdx, false);
+            this.linesModel.setLineFocus(this.lineIdx, false);
             this.lineIdx = null;
             this.corpusId = null;
             this.kwicTokenNum = null;
@@ -451,7 +451,7 @@ export class ConcDetailStore extends StatefulModel {
             if (srch) {
                 const ans:{[key:string]:string} = {};
                 const items = srch[1].trim()
-                    .split(new RegExp(`([${ConcDetailStore.ATTR_NAME_ALLOWED_CHARS}]+)=`)).slice(1);
+                    .split(new RegExp(`([${ConcDetailModel.ATTR_NAME_ALLOWED_CHARS}]+)=`)).slice(1);
                 for (let i = 0; i < items.length; i += 2) {
                         ans[items[i]] = (items[i+1] || '').trim();
                 }
@@ -475,7 +475,7 @@ export class ConcDetailStore extends StatefulModel {
         };
 
         const isOverlap = (s1:Speech, s2:Speech):boolean => {
-            if (s1 && s2 && this.spkOverlapMode === ConcDetailStore.SPK_OVERLAP_MODE_FULL) {
+            if (s1 && s2 && this.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_FULL) {
                 const flag1 = s1.metadata.get(this.speechOpts.speechOverlapAttr[1]);
                 const flag2 = s2.metadata.get(this.speechOpts.speechOverlapAttr[1]);
                 if (flag1 === flag2
@@ -542,7 +542,7 @@ export class ConcDetailStore extends StatefulModel {
                     }
 
                 }
-                if (this.spkOverlapMode === ConcDetailStore.SPK_OVERLAP_MODE_SIMPLE) {
+                if (this.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE) {
                     const overlapSrch = new RegExp(`</?(${this.speechOpts.speechOverlapAttr[0]})(>|[^>]+>)`, 'g');
                     let srch;
                     let i = 0;
@@ -783,24 +783,24 @@ export interface RefsColumn {
 }
 
 /**
- * Store providing structural attribute information (aka "text types") related to a specific token
+ * Model providing structural attribute information (aka "text types") related to a specific token
  */
-export class RefsDetailStore extends StatefulModel {
+export class RefsDetailModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
     private data:Immutable.List<RefsColumn>;
 
-    private linesStore:ConcLineStore;
+    private linesModel:ConcLineModel;
 
     private lineIdx:number;
 
     private isBusy:boolean;
 
-    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesStore:ConcLineStore) {
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesModel:ConcLineModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.linesStore = linesStore;
+        this.linesModel = linesModel;
         this.lineIdx = null;
         this.data = Immutable.List<RefsColumn>();
         this.isBusy = false;
@@ -812,8 +812,8 @@ export class RefsDetailStore extends StatefulModel {
                     this.notifyChangeListeners();
                     this.loadRefs(payload.props['corpusId'], payload.props['tokenNumber'], payload.props['lineIdx']).then(
                         () => {
-                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            this.linesStore.notifyChangeListeners();
+                            this.linesModel.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesModel.notifyChangeListeners();
                             this.isBusy = false;
                             this.notifyChangeListeners();
                         },
@@ -826,10 +826,10 @@ export class RefsDetailStore extends StatefulModel {
                 break;
                 case 'CONCORDANCE_REF_RESET_DETAIL':
                     if (this.lineIdx !== null) {
-                        this.linesStore.setLineFocus(this.lineIdx, false);
+                        this.linesModel.setLineFocus(this.lineIdx, false);
                         this.lineIdx = null;
                         this.notifyChangeListeners();
-                        this.linesStore.notifyChangeListeners();
+                        this.linesModel.notifyChangeListeners();
                     }
                 break;
             }

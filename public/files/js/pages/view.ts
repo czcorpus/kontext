@@ -35,28 +35,28 @@ import {ActionPayload} from '../app/dispatcher';
 import {MultiDict, updateProps} from '../util';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceViews} from 'views/concordance/main';
-import {LineSelectionStore} from '../models/concordance/lineSelection';
-import {ConcDetailStore, RefsDetailStore} from '../models/concordance/detail';
-import {ConcLineStore, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../models/concordance/lines';
-import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore, fetchQueryFormArgs} from '../models/query/main';
-import {CQLEditorStore} from '../models/query/cqleditor/store';
-import {QueryReplayStore, LocalQueryFormData} from '../models/query/replay';
-import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
-import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../models/query/sample';
-import {SwitchMainCorpStore, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs} from '../models/query/switchmc';
-import {QuerySaveAsFormStore} from '../models/query/save';
-import {TextTypesStore} from '../models/textTypes/attrValues';
-import {WithinBuilderStore} from '../models/query/withinBuilder';
-import {VirtualKeyboardStore} from '../models/query/virtualKeyboard';
-import {QueryContextStore} from '../models/query/context';
-import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../models/query/sort';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../models/coll/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
-import {ContingencyTableStore} from '../models/freqs/ctable';
-import {CTFlatStore} from '../models/freqs/flatCtable';
-import {FirstHitsStore} from '../models/query/firstHits';
-import {CTFreqFormStore, CTFormInputs, CTFormProperties} from '../models/freqs/ctFreqForm';
-import {ConcSaveStore} from '../models/concordance/save';
+import {LineSelectionModel} from '../models/concordance/lineSelection';
+import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
+import {ConcLineModel, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
+import {QueryFormProperties, QueryFormUserEntries, QueryModel, QueryHintModel, fetchQueryFormArgs} from '../models/query/main';
+import {CQLEditorModel} from '../models/query/cqleditor/model';
+import {QueryReplayModel, LocalQueryFormData} from '../models/query/replay';
+import {FilterModel, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
+import {ConcSampleModel, SampleFormProperties, fetchSampleFormArgs} from '../models/query/sample';
+import {SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs} from '../models/query/switchmc';
+import {QuerySaveAsFormModel} from '../models/query/save';
+import {TextTypesModel} from '../models/textTypes/attrValues';
+import {WithinBuilderModel} from '../models/query/withinBuilder';
+import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
+import {QueryContextModel} from '../models/query/context';
+import {ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../models/query/sort';
+import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
+import {Freq2DTableModel} from '../models/freqs/ctable';
+import {Freq2DFlatViewModel} from '../models/freqs/flatCtable';
+import {FirstHitsModel} from '../models/query/firstHits';
+import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/ctFreqForm';
+import {ConcSaveModel} from '../models/concordance/save';
 import {ConcDashboard} from '../models/concordance/dashboard';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
@@ -64,7 +64,7 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../app/userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../models/user/info';
-import {TextTypesDistStore, TextTypesDistStoreProps, TTCrit} from '../models/concordance/ttDistStore';
+import {TextTypesDistModel, TextTypesDistModelProps, TTCrit} from '../models/concordance/ttDistModel';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
@@ -80,35 +80,35 @@ declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/view.less');
 
-export class ViewPageStores {
-    lineSelectionStore:LineSelectionStore;
-    lineViewStore:ConcLineStore;
-    concDetailStore:ConcDetailStore;
-    refsDetailStore:RefsDetailStore;
-    userInfoStore:Kontext.IUserInfoStore;
-    collFormStore:CollFormStore;
-    mainMenuStore:Kontext.IMainMenuStore;
-    ttDistStore:TextTypesDistStore;
-    dashboardStore:ConcDashboard;
+export class ViewPageModels {
+    lineSelectionModel:LineSelectionModel;
+    lineViewModel:ConcLineModel;
+    concDetailModel:ConcDetailModel;
+    refsDetailModel:RefsDetailModel;
+    userInfoModel:Kontext.IUserInfoModel;
+    collFormModel:CollFormModel;
+    mainMenuModel:Kontext.IMainMenuModel;
+    ttDistModel:TextTypesDistModel;
+    dashboardModel:ConcDashboard;
 }
 
-export class QueryStores {
-    queryStore:QueryStore;
-    filterStore:FilterStore;
-    textTypesStore:TextTypesStore;
-    queryHintStore:QueryHintStore;
-    withinBuilderStore:WithinBuilderStore;
-    virtualKeyboardStore:VirtualKeyboardStore;
-    queryContextStore:QueryContextStore;
-    queryReplayStore:QueryReplayStore;
-    sortStore:SortStore;
-    multiLevelSortStore:MultiLevelSortStore;
-    sampleStore:SampleStore;
-    switchMcStore:SwitchMainCorpStore;
-    saveAsFormStore:QuerySaveAsFormStore;
-    firstHitsStore:FirstHitsStore;
-    cqlEditorStore:CQLEditorStore;
-    filterCqlEditorStore:CQLEditorStore;
+export class QueryModels {
+    queryModel:QueryModel;
+    filterModel:FilterModel;
+    textTypesModel:TextTypesModel;
+    queryHintModel:QueryHintModel;
+    withinBuilderModel:WithinBuilderModel;
+    virtualKeyboardModel:VirtualKeyboardModel;
+    queryContextModel:QueryContextModel;
+    queryReplayModel:QueryReplayModel;
+    sortModel:ConcSortModel;
+    multiLevelConcSortModel:MultiLevelConcSortModel;
+    sampleModel:ConcSampleModel;
+    switchMcModel:SwitchMainCorpModel;
+    saveAsFormModel:QuerySaveAsFormModel;
+    firstHitsModel:FirstHitsModel;
+    cqlEditorModel:CQLEditorModel;
+    filterCqlEditorModel:CQLEditorModel;
 }
 
 
@@ -127,9 +127,9 @@ export class ViewPage {
 
     private layoutModel:PageModel;
 
-    private viewStores:ViewPageStores;
+    private viewModels:ViewPageModels;
 
-    private queryStores:QueryStores;
+    private queryModels:QueryModels;
 
     private hasLockedGroups:boolean;
 
@@ -151,27 +151,26 @@ export class ViewPage {
 
     private concFormsInitialArgs:AjaxResponse.ConcFormsInitialArgs;
 
-    private collFormStore:CollFormStore;
+    private collFormModel:CollFormModel;
 
     private collFormViews:CollFormViews;
 
-    private mlFreqStore:MLFreqFormStore;
+    private mlFreqModel:MLFreqFormModel;
 
-    private ttFreqStore:TTFreqFormStore;
+    private ttFreqModel:TTFreqFormModel;
 
-    private ctFreqFormStore:CTFreqFormStore;
+    private ctFreqFormModel:Freq2DFormModel;
 
     private freqFormViews:FreqFormViews;
 
     /**
      *
      * @param layoutModel
-     * @param stores
      * @param hasLockedGroups
      */
     constructor(layoutModel:PageModel, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.queryStores = new QueryStores();
+        this.queryModels = new QueryModels();
         this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
         this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
@@ -239,7 +238,7 @@ export class ViewPage {
     }
 
     private handleBeforeUnload(event:any):void {
-        if (this.viewStores.lineSelectionStore.size() > 0) {
+        if (this.viewModels.lineSelectionModel.size() > 0) {
             event.returnValue = this.translate('global__are_you_sure_to_leave');
             return event.returnValue;
         }
@@ -367,7 +366,7 @@ export class ViewPage {
                         modalAction: {
                             actionType: 'EDIT_QUERY_OPERATION',
                             props: {
-                                operationIdx: this.queryStores.queryReplayStore.getNumOperations() - 1
+                                operationIdx: this.queryModels.queryReplayModel.getNumOperations() - 1
                             }
                         }
                     },
@@ -378,7 +377,7 @@ export class ViewPage {
                     this.layoutModel.getConcArgs(),
                     {
                         pagination: true,
-                        pageNum: this.viewStores.lineViewStore.getCurrentPage()
+                        pageNum: this.viewModels.lineViewModel.getCurrentPage()
                     },
                     window.document.title
                 );
@@ -389,7 +388,7 @@ export class ViewPage {
                     this.layoutModel.getConcArgs(),
                     {
                         pagination: true,
-                        pageNum: this.viewStores.lineViewStore.getCurrentPage()
+                        pageNum: this.viewModels.lineViewModel.getCurrentPage()
                     },
                     window.document.title
                 );
@@ -414,17 +413,17 @@ export class ViewPage {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
-        this.queryStores.queryHintStore = new QueryHintStore(
+        this.queryModels.queryHintModel = new QueryHintModel(
             this.layoutModel.dispatcher,
             ['query__tip_01', 'query__tip_02', 'query__tip_03', 'query__tip_04'],
             this.layoutModel.translate.bind(this.layoutModel)
         );
-        this.queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
+        this.queryModels.withinBuilderModel = new WithinBuilderModel(this.layoutModel.dispatcher,
                 this.layoutModel);
-        this.queryStores.virtualKeyboardStore = new VirtualKeyboardStore(this.layoutModel.dispatcher,
+        this.queryModels.virtualKeyboardModel = new VirtualKeyboardModel(this.layoutModel.dispatcher,
                 this.layoutModel);
-        this.queryStores.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
-        this.queryStores.saveAsFormStore = new QuerySaveAsFormStore(
+        this.queryModels.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
+        this.queryModels.saveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<string>('concPersistenceOpId')
@@ -458,18 +457,18 @@ export class ViewPage {
             tagAttr: this.layoutModel.getConf<string>('tagAttr')
         };
 
-        this.queryStores.queryStore = new QueryStore(
+        this.queryModels.queryModel = new QueryModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.queryStores.textTypesStore,
-            this.queryStores.queryContextStore,
+            this.queryModels.textTypesModel,
+            this.queryModels.queryContextModel,
             queryFormProps
         );
-        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
-            this.queryStores.queryStore.onSettingsChange(store);
+        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
+            this.queryModels.queryModel.onSettingsChange(model);
         });
 
-        this.queryStores.cqlEditorStore = new CQLEditorStore({
+        this.queryModels.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
@@ -482,17 +481,17 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             null, // no corpus selection widget here
-            this.queryStores.queryStore,
-            this.queryStores.textTypesStore,
-            this.queryStores.queryHintStore,
-            this.queryStores.withinBuilderStore,
-            this.queryStores.virtualKeyboardStore,
-            this.queryStores.queryContextStore,
-            this.queryStores.cqlEditorStore
+            this.queryModels.queryModel,
+            this.queryModels.textTypesModel,
+            this.queryModels.queryHintModel,
+            this.queryModels.withinBuilderModel,
+            this.queryModels.virtualKeyboardModel,
+            this.queryModels.queryContextModel,
+            this.queryModels.cqlEditorModel
         );
     }
 
-    private initFilterForm(firstHitsStore:FirstHitsStore):void {
+    private initFilterForm(firstHitsModel:FirstHitsModel):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
         const filterFormProps:FilterFormProperties = {
@@ -525,15 +524,15 @@ export class ViewPage {
             tagAttr: this.layoutModel.getConf<string>('tagAttr')
         }
 
-        this.queryStores.filterStore = new FilterStore(
+        this.queryModels.filterModel = new FilterModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.queryStores.textTypesStore,
-            this.queryStores.queryContextStore,
+            this.queryModels.textTypesModel,
+            this.queryModels.queryContextModel,
             filterFormProps
         );
 
-        this.queryStores.filterCqlEditorStore = new CQLEditorStore({
+        this.queryModels.filterCqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
@@ -542,17 +541,17 @@ export class ViewPage {
             actionPrefix: 'FILTER_'
         });
 
-        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
-            this.queryStores.filterStore.notifyChangeListeners();
+        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
+            this.queryModels.filterModel.notifyChangeListeners();
         });
 
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_FILTER',
             (args:Kontext.GeneralProps) => {
                 if (args['within'] === 1) {
                     this.layoutModel.replaceConcArg('maincorp', [args['maincorp']]);
                 }
-                return this.queryStores.filterStore.syncFrom(() => {
+                return this.queryModels.filterModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.FilterFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(updateProps(this.concFormsInitialArgs.filter, args));
                     });
@@ -563,12 +562,12 @@ export class ViewPage {
         this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.queryStores.filterStore,
-            this.queryStores.queryHintStore,
-            this.queryStores.withinBuilderStore,
-            this.queryStores.virtualKeyboardStore,
-            firstHitsStore,
-            this.queryStores.filterCqlEditorStore
+            this.queryModels.filterModel,
+            this.queryModels.queryHintModel,
+            this.queryModels.withinBuilderModel,
+            this.queryModels.virtualKeyboardModel,
+            firstHitsModel,
+            this.queryModels.filterCqlEditorModel
         );
     }
 
@@ -577,7 +576,7 @@ export class ViewPage {
         const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
         const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
 
-        const sortStoreProps:SortFormProperties = {
+        const sortModelProps:SortFormProperties = {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             sattr: fetchArgs<string>(item => item.sattr),
@@ -594,26 +593,26 @@ export class ViewPage {
             mlxpos : fetchArgs<Array<number>>(item => importMultiLevelArg<number>('mlxpos', item)),
         };
 
-        this.queryStores.sortStore = new SortStore(
+        this.queryModels.sortModel = new ConcSortModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sortStoreProps
+            sortModelProps
         );
-        this.queryStores.multiLevelSortStore = new MultiLevelSortStore(
+        this.queryModels.multiLevelConcSortModel = new MultiLevelConcSortModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sortStoreProps
+            sortModelProps
         );
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SORT',
             (args:Kontext.GeneralProps) => {
-                return this.queryStores.sortStore.syncFrom(() => {
+                return this.queryModels.sortModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(updateProps(this.concFormsInitialArgs.sort, args));
                     });
                 }).then(
                     () => {
-                        this.queryStores.multiLevelSortStore.syncFrom(() => {
+                        this.queryModels.multiLevelConcSortModel.syncFrom(() => {
                             return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(updateProps(this.concFormsInitialArgs.sort, args));
                             });
@@ -626,28 +625,28 @@ export class ViewPage {
         this.sortFormViews = sortFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.queryStores.sortStore,
-            this.queryStores.multiLevelSortStore
+            this.queryModels.sortModel,
+            this.queryModels.multiLevelConcSortModel
         );
     }
 
-    private initSampleForm(switchMcStore:SwitchMainCorpStore):void {
+    private initSampleForm(switchMcModel:SwitchMainCorpModel):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
 
-        const sampleStoreProps:SampleFormProperties = {
+        const sampleModelProps:SampleFormProperties = {
             rlines: fetchArg<string>(item => item.rlines)
         };
 
-        this.queryStores.sampleStore = new SampleStore(
+        this.queryModels.sampleModel = new ConcSampleModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sampleStoreProps
+            sampleModelProps
         );
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SAMPLE',
             (args:Kontext.GeneralProps) => {
-                return this.queryStores.sampleStore.syncFrom(() => {
+                return this.queryModels.sampleModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.SampleFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(updateProps(this.concFormsInitialArgs.sample, args));
                     });
@@ -657,8 +656,8 @@ export class ViewPage {
         this.miscQueryOpsViews = sampleFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.queryStores.sampleStore,
-            switchMcStore
+            this.queryModels.sampleModel,
+            switchMcModel
         );
     }
 
@@ -670,16 +669,16 @@ export class ViewPage {
             maincorp: fetchArg<string>(item => item.maincorp)
         };
 
-        this.queryStores.switchMcStore = new SwitchMainCorpStore(
+        this.queryModels.switchMcModel = new SwitchMainCorpModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             switchMainCorpProps
         );
 
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SWITCHMC',
             (args:Kontext.GeneralProps) => {
-                return this.queryStores.switchMcStore.syncFrom(() => {
+                return this.queryModels.switchMcModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.SwitchMainCorpArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(updateProps(this.concFormsInitialArgs.sample, args));
                     });
@@ -689,14 +688,14 @@ export class ViewPage {
     }
 
     private initFirsthitsForm():void {
-        this.queryStores.firstHitsStore = new FirstHitsStore(
+        this.queryModels.firstHitsModel = new FirstHitsModel(
             this.layoutModel.dispatcher,
             this.layoutModel
         );
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
             (args:Kontext.GeneralProps) => {
-                return this.queryStores.firstHitsStore.syncFrom(() => {
+                return this.queryModels.firstHitsModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.FirstHitsFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(updateProps(this.concFormsInitialArgs.firsthits, args));
                     });
@@ -709,18 +708,18 @@ export class ViewPage {
      *
      */
     initQueryOverviewArea(taghelperPlugin:PluginInterfaces.ITagHelper, queryStoragePlugin:PluginInterfaces.IQueryStorage):void {
-        this.queryStores.queryReplayStore = new QueryReplayStore(
+        this.queryModels.queryReplayModel = new QueryReplayModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
-                queryStore: this.queryStores.queryStore,
-                filterStore: this.queryStores.filterStore,
-                sortStore: this.queryStores.sortStore,
-                mlSortStore: this.queryStores.multiLevelSortStore,
-                sampleStore: this.queryStores.sampleStore,
-                textTypesStore: this.queryStores.textTypesStore,
-                switchMcStore: this.queryStores.switchMcStore,
-                firstHitsStore: this.queryStores.firstHitsStore
+                queryModel: this.queryModels.queryModel,
+                filterModel: this.queryModels.filterModel,
+                sortModel: this.queryModels.sortModel,
+                mlConcSortModel: this.queryModels.multiLevelConcSortModel,
+                sampleModel: this.queryModels.sampleModel,
+                textTypesModel: this.queryModels.textTypesModel,
+                switchMcModel: this.queryModels.switchMcModel,
+                firstHitsModel: this.queryModels.firstHitsModel
             },
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
@@ -740,9 +739,9 @@ export class ViewPage {
                 ShuffleForm: this.miscQueryOpsViews.ShuffleForm,
                 SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm
             },
-            this.queryStores.queryReplayStore,
-            this.layoutModel.getStores().mainMenuStore,
-            this.queryStores.saveAsFormStore
+            this.queryModels.queryReplayModel,
+            this.layoutModel.getModels().mainMenuModel,
+            this.queryModels.saveAsFormModel
         );
 
         this.layoutModel.renderReactComponent(
@@ -790,11 +789,11 @@ export class ViewPage {
         );
     }
 
-    initAnalysisViews(ttStore:TextTypesStore):void {
+    initAnalysisViews(ttModel:TextTypesModel):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
         const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
-        this.collFormStore = new CollFormStore(
+        this.collFormModel = new CollFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
@@ -812,7 +811,7 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
-            this.collFormStore
+            this.collFormModel
         );
         // ------------------ freq ------------
         const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
@@ -830,13 +829,13 @@ export class ViewPage {
             mlxctx: ['0>0'],  // = "Node'"
             alignType: ['left']
         }
-        this.mlFreqStore = new MLFreqFormStore(
+        this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps,
             this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
         );
-        this.ttFreqStore = new TTFreqFormStore(
+        this.ttFreqModel = new TTFreqFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps
@@ -856,19 +855,19 @@ export class ViewPage {
             ctminfreq_type: ctFormInputs.ctminfreq_type
         };
 
-        this.ctFreqFormStore = new CTFreqFormStore(
+        this.ctFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps,
-            ttStore
+            ttModel
         );
 
         this.freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.mlFreqStore,
-            this.ttFreqStore,
-            this.ctFreqFormStore
+            this.mlFreqModel,
+            this.ttFreqModel,
+            this.ctFreqFormModel
         );
         this.analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,
@@ -876,7 +875,7 @@ export class ViewPage {
             this.layoutModel.layoutViews,
             this.collFormViews,
             this.freqFormViews,
-            this.layoutModel.getStores().mainMenuStore
+            this.layoutModel.getModels().mainMenuModel
         );
         this.layoutModel.renderReactComponent(
             this.analysisViews.AnalysisFrame,
@@ -890,16 +889,16 @@ export class ViewPage {
     private updateMainMenu():void {
         const updateMenu = (numLinesInGroups) => {
             if (numLinesInGroups > 0) {
-                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-filter');
-                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-concordance', 'sorting');
-                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-concordance', 'shuffle');
-                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-concordance', 'sample');
+                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-filter');
+                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sorting');
+                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'shuffle');
+                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sample');
 
             } else {
-                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-filter');
-                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-concordance', 'sorting');
-                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-concordance', 'shuffle');
-                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-concordance', 'sample');
+                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-filter');
+                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sorting');
+                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'shuffle');
+                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sample');
             }
         };
         updateMenu(this.layoutModel.getConf<number>('NumLinesInGroups'));
@@ -907,7 +906,7 @@ export class ViewPage {
     }
 
     private initKeyShortcuts():void {
-        const actionMap = this.layoutModel.getStores().mainMenuStore.exportKeyShortcutActions();
+        const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
         this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
             if (document.activeElement === document.body &&
                     !evt.ctrlKey && !evt.altKey && !evt.shiftKey && !evt.metaKey) {
@@ -923,7 +922,7 @@ export class ViewPage {
     }
 
     private initUndoFunction():void {
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_UNDO_LAST_QUERY_OP',
             (args:Kontext.GeneralProps) => {
                 return new RSVP.Promise((resolve:(v)=>void, reject:(e)=>void) => {
@@ -933,8 +932,8 @@ export class ViewPage {
         )
     }
 
-    private initTextTypesStore():TextTypes.ITextTypesStore {
-        this.queryStores.textTypesStore = new TextTypesStore(
+    private initTextTypesModel():TextTypes.ITextTypesModel {
+        this.queryModels.textTypesModel = new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
             this.layoutModel.getConf<any>('textTypesData')
@@ -944,8 +943,8 @@ export class ViewPage {
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still
         // applied thanks to this).
-        this.queryStores.textTypesStore.applyCheckedItems(queryFormArgs.selected_text_types, {});
-        return this.queryStores.textTypesStore;
+        this.queryModels.textTypesModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
+        return this.queryModels.textTypesModel;
     }
 
     private initTokenDetail():RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin> {
@@ -964,7 +963,7 @@ export class ViewPage {
         }
     }
 
-    private initStores(ttStore:TextTypes.ITextTypesStore, syntaxViewer:PluginInterfaces.ISyntaxViewer,
+    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.ISyntaxViewer,
                 tokenDetail:PluginInterfaces.TokenDetail.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -1018,42 +1017,42 @@ export class ViewPage {
             }
         };
 
-        this.viewStores = new ViewPageStores();
-        this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
-        this.viewStores.mainMenuStore = this.layoutModel.getStores().mainMenuStore;
-        this.viewStores.lineViewStore = new ConcLineStore(
+        this.viewModels = new ViewPageModels();
+        this.viewModels.userInfoModel = this.layoutModel.getModels().userInfoModel;
+        this.viewModels.mainMenuModel = this.layoutModel.getModels().mainMenuModel;
+        this.viewModels.lineViewModel = new ConcLineModel(
                 this.layoutModel,
                 this.layoutModel.dispatcher,
-                new ConcSaveStore(
+                new ConcSaveModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<number>('ConcSize'),
                     s=>this.setDownloadLink(s)
                 ),
                 syntaxViewer,
-                ttStore,
+                ttModel,
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
-        this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
-            (_) => this.viewStores.lineViewStore.updateOnCorpViewOptsChange());
-        this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
-            (data) => this.viewStores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
-        this.viewStores.lineSelectionStore = new LineSelectionStore(
+        this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
+            (_) => this.viewModels.lineViewModel.updateOnCorpViewOptsChange());
+        this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
+            (data) => this.viewModels.concDetailModel.setWideCtxGlobals(data.widectx_globals));
+        this.viewModels.lineSelectionModel = new LineSelectionModel(
                 this.layoutModel,
                 this.layoutModel.dispatcher,
-                this.viewStores.lineViewStore,
-                this.layoutModel.getStores().userInfoStore,
+                this.viewModels.lineViewModel,
+                this.layoutModel.getModels().userInfoModel,
                 conclines.openStorage(()=>{}),
                 () => {
                     window.removeEventListener('beforeunload', this.handleBeforeUnload);
                 }
         );
-        this.viewStores.lineSelectionStore.registerQuery(this.layoutModel.getConf<Array<string>>('compiledQuery'));
-        this.viewStores.concDetailStore = new ConcDetailStore(
+        this.viewModels.lineSelectionModel.registerQuery(this.layoutModel.getConf<Array<string>>('compiledQuery'));
+        this.viewModels.concDetailModel = new ConcDetailModel(
             this.layoutModel,
             this.layoutModel.dispatcher,
-            this.viewStores.lineViewStore,
+            this.viewModels.lineViewModel,
             lineViewProps.StructCtx,
             {
                 speakerIdAttr: lineViewProps.SpeakerIdAttr,
@@ -1066,24 +1065,24 @@ export class ViewPage {
             lineViewProps.WideCtxGlobals,
             tokenDetail
         );
-        this.viewStores.refsDetailStore = new RefsDetailStore(
+        this.viewModels.refsDetailModel = new RefsDetailModel(
             this.layoutModel,
             this.layoutModel.dispatcher,
-            this.viewStores.lineViewStore
+            this.viewModels.lineViewModel
         );
-        this.viewStores.dashboardStore = new ConcDashboard(
+        this.viewModels.dashboardModel = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.layoutModel.getStores().generalViewOptionsStore,
+            this.layoutModel.getModels().generalViewOptionsModel,
             {
                 showTTOverview: !!this.layoutModel.getConf<number>('ShowTTOverview'),
                 hasTTCrit: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
             }
         );
-        this.viewStores.ttDistStore = new TextTypesDistStore(
+        this.viewModels.ttDistModel = new TextTypesDistModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.viewStores.lineViewStore,
+            this.viewModels.lineViewModel,
             {
                 ttCrit: this.layoutModel.getConf<TTCrit>('TTCrit')
             }
@@ -1102,13 +1101,13 @@ export class ViewPage {
     init():void {
         const ttProm = this.layoutModel.init().then(
             () => {
-                this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(
-                    (optsStore) => {
-                        this.viewStores.lineViewStore.updateOnGlobalViewOptsChange(optsStore);
-                        this.viewStores.dashboardStore.updateOnGlobalViewOptsChange(optsStore);
+                this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
+                    (optsModel) => {
+                        this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
+                        this.viewModels.dashboardModel.updateOnGlobalViewOptsChange(optsModel);
                     }
                 );
-                return this.initTextTypesStore();
+                return this.initTextTypesModel();
             }
         );
         const syntaxViewerProm = ttProm.then(
@@ -1118,7 +1117,7 @@ export class ViewPage {
                     return sv;
                 }
                 return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                    resolve(new DummySyntaxViewStore(this.layoutModel.dispatcher));
+                    resolve(new DummySyntaxViewModel(this.layoutModel.dispatcher));
                 });
             }
         );
@@ -1131,9 +1130,9 @@ export class ViewPage {
 
         const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenDetailProp]).then(
             (args) => {
-                const [ttStore, sv, tokenDetailPlg] = args;
-                const lineViewProps = this.initStores(
-                    <TextTypesStore>ttStore,
+                const [ttModel, sv, tokenDetailPlg] = args;
+                const lineViewProps = this.initModels(
+                    <TextTypesModel>ttModel,
                     <PluginInterfaces.ISyntaxViewer>sv,
                     <PluginInterfaces.TokenDetail.IPlugin>tokenDetailPlg
                 );
@@ -1149,7 +1148,7 @@ export class ViewPage {
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.viewStores
+                    this.viewModels
                 );
                 return lineViewProps;
             }
@@ -1186,15 +1185,15 @@ export class ViewPage {
 
         RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
             (args:any) => {
-                const [ttStore, lvprops, qs, tagh] = args;
+                const [ttModel, lvprops, qs, tagh] = args;
                 this.initQueryForm();
                 this.initFirsthitsForm();
-                this.initFilterForm(this.queryStores.firstHitsStore);
+                this.initFilterForm(this.queryModels.firstHitsModel);
                 this.initSortForm();
                 this.initSwitchMainCorpForm();
-                this.initSampleForm(this.queryStores.switchMcStore);
+                this.initSampleForm(this.queryModels.switchMcModel);
                 this.initQueryOverviewArea(tagh, qs);
-                this.initAnalysisViews(<TextTypesStore>ttStore);
+                this.initAnalysisViews(<TextTypesModel>ttModel);
                 this.updateMainMenu();
                 this.initKeyShortcuts();
                 this.updateHistory();

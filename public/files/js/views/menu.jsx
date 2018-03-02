@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskStore, layoutViews) {
+export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskModel, layoutViews) {
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
@@ -243,7 +243,7 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
 
         _handleViewListClick() {
             this.setState({
-                taskList: asyncTaskStore.getAsyncTasks(),
+                taskList: asyncTaskModel.getAsyncTasks(),
                 removeFinishedOnSubmit: this.state.removeFinishedOnSubmit
             });
         }
@@ -318,13 +318,13 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
         constructor(props) {
             super(props);
             this._handleHoverChange = this._handleHoverChange.bind(this);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._closeActiveSubmenu = this._closeActiveSubmenu.bind(this);
             this.state = {
                 currFocus: null,
-                numRunningTasks: asyncTaskStore.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
-                menuItems: mainMenuStore.getData()
+                numRunningTasks: asyncTaskModel.getNumRunningTasks(),
+                numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
+                menuItems: mainMenuModel.getData()
             };
         }
 
@@ -339,23 +339,23 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
             this.setState(newState);
         }
 
-        _storeChangeListener(store, action) {
+        _modelChangeListener() {
             this.setState({
                 currFocus: this.state.currFocus,
-                numRunningTasks: asyncTaskStore.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
-                menuItems: mainMenuStore.getData()
+                numRunningTasks: asyncTaskModel.getNumRunningTasks(),
+                numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
+                menuItems: mainMenuModel.getData()
             });
         }
 
         componentDidMount() {
-            asyncTaskStore.addChangeListener(this._storeChangeListener);
-            mainMenuStore.addChangeListener(this._storeChangeListener);
+            asyncTaskModel.addChangeListener(this._modelChangeListener);
+            mainMenuModel.addChangeListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            asyncTaskStore.removeChangeListener(this._storeChangeListener);
-            mainMenuStore.removeChangeListener(this._storeChangeListener);
+            asyncTaskModel.removeChangeListener(this._modelChangeListener);
+            mainMenuModel.removeChangeListener(this._modelChangeListener);
         }
 
         _closeActiveSubmenu() {

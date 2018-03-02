@@ -25,7 +25,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 
 
-export class ConcSaveStore extends StatefulModel {
+export class ConcSaveModel extends StatefulModel {
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
@@ -70,7 +70,7 @@ export class ConcSaveStore extends StatefulModel {
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveformat = payload.props['saveformat'];
                 const tmp = this.toLine;
-                this.toLine = String(Math.min(ConcSaveStore.QUICK_SAVE_LINE_LIMIT, this.concSize));
+                this.toLine = String(Math.min(ConcSaveModel.QUICK_SAVE_LINE_LIMIT, this.concSize));
                 this.submit();
                 this.toLine = tmp;
                 this.notifyChangeListeners();

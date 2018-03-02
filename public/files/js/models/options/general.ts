@@ -42,7 +42,7 @@ interface ViewOptsResponse extends Kontext.AjaxResponse {
 }
 
 
-export class GeneralViewOptionsStore extends StatefulModel implements ViewOptions.IGeneralViewOptionsStore {
+export class GeneralViewOptionsModel extends StatefulModel implements ViewOptions.IGeneralViewOptionsModel {
 
     private layoutModel:PageModel;
 
@@ -76,7 +76,7 @@ export class GeneralViewOptionsStore extends StatefulModel implements ViewOption
 
     private isBusy:boolean;
 
-    private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsStore)=>void>;
+    private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsModel)=>void>;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
@@ -164,7 +164,7 @@ export class GeneralViewOptionsStore extends StatefulModel implements ViewOption
         );
     }
 
-    addOnSubmitResponseHandler(fn:(store:ViewOptions.IGeneralViewOptionsStore)=>void):void {
+    addOnSubmitResponseHandler(fn:(model:ViewOptions.IGeneralViewOptionsModel)=>void):void {
         this.submitResponseHandlers = this.submitResponseHandlers.push(fn);
     }
 

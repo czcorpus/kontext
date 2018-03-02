@@ -57,7 +57,7 @@ function validateGzNumber(s:string):boolean {
 /**
  *
  */
-export class MLFreqFormStore extends StatefulModel {
+export class MLFreqFormModel extends StatefulModel {
 
     private pageModel:PageModel;
 
@@ -157,11 +157,11 @@ export class MLFreqFormStore extends StatefulModel {
     }
 
     private importMlxctxValue(v:string):number {
-        let srchIdx = MLFreqFormStore.POSITION_LA.indexOf(v);
+        let srchIdx = MLFreqFormModel.POSITION_LA.indexOf(v);
         if (srchIdx > -1) {
             return srchIdx;
         }
-        srchIdx = MLFreqFormStore.POSITION_RA.indexOf(v);
+        srchIdx = MLFreqFormModel.POSITION_RA.indexOf(v);
         if (srchIdx > -1) {
             return srchIdx;
         }
@@ -205,7 +205,7 @@ export class MLFreqFormStore extends StatefulModel {
         });
         this.mlxctxIndices.forEach((item, i) => {
             const val = this.alignType.get(i) === 'left' ?
-                    MLFreqFormStore.POSITION_LA[item] : MLFreqFormStore.POSITION_RA[item];
+                    MLFreqFormModel.POSITION_LA[item] : MLFreqFormModel.POSITION_RA[item];
             args.set(`ml${i+1}ctx`, val);
         });
         args.set('freqlevel', this.mlxattr.size);
@@ -214,7 +214,7 @@ export class MLFreqFormStore extends StatefulModel {
     }
 
     getPositionRangeLabels():Array<string> {
-        return MLFreqFormStore.POSITION_LABELS;
+        return MLFreqFormModel.POSITION_LABELS;
     }
 
     getFlimit():string {
@@ -253,7 +253,7 @@ export class MLFreqFormStore extends StatefulModel {
 /**
  *
  */
-export class TTFreqFormStore extends StatefulModel {
+export class TTFreqFormModel extends StatefulModel {
 
     private pageModel:PageModel;
 

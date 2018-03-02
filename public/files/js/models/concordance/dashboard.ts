@@ -36,20 +36,20 @@ export class ConcDashboard extends StatefulModel {
 
     private showTTOverview:boolean;
 
-    private globalOpts:ViewOptions.IGeneralViewOptionsStore;
+    private globalOpts:ViewOptions.IGeneralViewOptionsModel;
 
     private hasTTCrit:boolean;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-                globalOpts:ViewOptions.IGeneralViewOptionsStore, props:ConcDashboardProps) {
+                globalOpts:ViewOptions.IGeneralViewOptionsModel, props:ConcDashboardProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.showTTOverview = props.showTTOverview;
         this.hasTTCrit = props.hasTTCrit;
     }
 
-    updateOnGlobalViewOptsChange(store:ViewOptions.IGeneralViewOptionsStore):void {
-        this.showTTOverview = store.getShowTTOverview();
+    updateOnGlobalViewOptsChange(model:ViewOptions.IGeneralViewOptionsModel):void {
+        this.showTTOverview = model.getShowTTOverview();
         this.notifyChangeListeners();
     }
 

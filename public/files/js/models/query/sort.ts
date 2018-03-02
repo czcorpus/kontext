@@ -84,7 +84,7 @@ export function fetchSortFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormA
 /**
  *
  */
-export interface ISubmitableSortStore {
+export interface ISubmitableConcSortModel {
     getSubmitUrl(sortId:string):string;
     submit(sortId:string):void;
 }
@@ -102,7 +102,7 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 /**
  *
  */
-export class SortStore extends StatefulModel implements ISubmitableSortStore {
+export class ConcSortModel extends StatefulModel implements ISubmitableConcSortModel {
 
     private pageModel:PageModel;
 
@@ -121,10 +121,10 @@ export class SortStore extends StatefulModel implements ISubmitableSortStore {
     private sbwardValues:Immutable.Map<string, string>; // value 'r' means 'backward'
 
     /**
-     * Specifies whether the single-level variant (i.e. this specific sorting store)
+     * Specifies whether the single-level variant (i.e. this specific sorting model)
      * is the active one in case of known (= used or in use) sort forms. It must be
      * mutually-exclusive when compared with the same attribute and its keys
-     * in MultiLevelSortStore.
+     * in MultiLevelConcSortModel.
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
@@ -203,7 +203,7 @@ export class SortStore extends StatefulModel implements ISubmitableSortStore {
                     return null;
 
                 } else {
-                    throw new Error('Cannot sync sort store - invalid form data type: ' + data.form_type);
+                    throw new Error('Cannot sync sort model - invalid form data type: ' + data.form_type);
                 }
             }
         );
@@ -269,7 +269,7 @@ export class SortStore extends StatefulModel implements ISubmitableSortStore {
 /**
  *
  */
-export class MultiLevelSortStore extends StatefulModel implements ISubmitableSortStore {
+export class MultiLevelConcSortModel extends StatefulModel implements ISubmitableConcSortModel {
 
     private static LEFTMOST_CTX = ['-3<0', '-2<0', '-1<0', '0~0<0', '1<0', '2<0', '3<0'];
     private static RIGHTMOST_CTX = ['-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0'];
@@ -298,9 +298,9 @@ export class MultiLevelSortStore extends StatefulModel implements ISubmitableSor
     private ctxAlignValues:Immutable.Map<string, Immutable.List<string>>;
 
     /**
-     * Specifies whether the single-level variant (i.e. this specific sorting store)
+     * Specifies whether the single-level variant (i.e. this specific sorting model)
      * is the active one in case of known (= used or in use) sort forms. It must be
-     * mutually-exclusive  when compared with the same attribute and its keys in SortStore.
+     * mutually-exclusive  when compared with the same attribute and its keys in ConcSortModel.
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
@@ -411,7 +411,7 @@ export class MultiLevelSortStore extends StatefulModel implements ISubmitableSor
                     return null;
 
                 } else {
-                    throw new Error('Cannot sync mlsort store - invalid form data type: ' + data.form_type);
+                    throw new Error('Cannot sync mlsort model - invalid form data type: ' + data.form_type);
                 }
             }
         );
@@ -445,11 +445,11 @@ export class MultiLevelSortStore extends StatefulModel implements ISubmitableSor
      * index in LEFTMOST_CTX or RIGHTMOST_CTX
      */
     private decodeCtxValue(v:string):number {
-        let idx = MultiLevelSortStore.LEFTMOST_CTX.indexOf(v);
+        let idx = MultiLevelConcSortModel.LEFTMOST_CTX.indexOf(v);
         if (idx > -1) {
             return idx
         }
-        idx = MultiLevelSortStore.RIGHTMOST_CTX.indexOf(v);
+        idx = MultiLevelConcSortModel.RIGHTMOST_CTX.indexOf(v);
         if (idx > -1) {
             return idx
         }
@@ -457,11 +457,11 @@ export class MultiLevelSortStore extends StatefulModel implements ISubmitableSor
     }
 
     private decodeCtxAlignValue(v:string):string {
-        let idx = MultiLevelSortStore.LEFTMOST_CTX.indexOf(v);
+        let idx = MultiLevelConcSortModel.LEFTMOST_CTX.indexOf(v);
         if (idx > -1) {
             return 'left';
         }
-        idx = MultiLevelSortStore.RIGHTMOST_CTX.indexOf(v);
+        idx = MultiLevelConcSortModel.RIGHTMOST_CTX.indexOf(v);
         if (idx > -1) {
             return 'right';
         }
@@ -470,10 +470,10 @@ export class MultiLevelSortStore extends StatefulModel implements ISubmitableSor
 
     private encodeCtxValue(idx:number, align:string):string {
         if (align === 'left') {
-            return MultiLevelSortStore.LEFTMOST_CTX[idx];
+            return MultiLevelConcSortModel.LEFTMOST_CTX[idx];
 
         } else if (align === 'right') {
-            return MultiLevelSortStore.RIGHTMOST_CTX[idx];
+            return MultiLevelConcSortModel.RIGHTMOST_CTX[idx];
 
         } else {
             throw new Error(`Failed to encode mlxctx value. Idx: ${idx}, align: ${align}`);

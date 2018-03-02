@@ -44,7 +44,7 @@ export interface IPluginApi {
     renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
                             target:HTMLElement, props?:T):void;
     unmountReactComponent(element:HTMLElement):boolean;
-    getStores():Kontext.LayoutStores;
+    getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
     pluginIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict;
@@ -88,7 +88,7 @@ export namespace PluginInterfaces {
         getWidgetView():React.ComponentClass;
     }
 
-    export interface IQueryStorageStore extends Kontext.EventEmitter {
+    export interface IQueryStorageModel extends Kontext.EventEmitter {
 
         /**
          *
@@ -99,7 +99,7 @@ export namespace PluginInterfaces {
     export interface IQueryStorage {
 
         /**
-         * Import data to store. This is meant to be used right
+         * Import data to the model. This is meant to be used right
          * after plug-in initialization and it should never
          * notify listeners.
          */
@@ -107,14 +107,14 @@ export namespace PluginInterfaces {
 
         getWidgetView():React.ComponentClass;
 
-        getStore():IQueryStorageStore;
+        getModel():IQueryStorageModel;
     }
 
-    export interface ICorparchStore {
+    export interface ICorparchModel {
         getCurrentSubcorpus():string;
         getAvailableSubcorpora():Immutable.List<string>;
-        addChangeListener(fn:Kontext.StoreListener):void;
-        removeChangeListener(fn:Kontext.StoreListener):void;
+        addChangeListener(fn:Kontext.ModelListener):void;
+        removeChangeListener(fn:Kontext.ModelListener):void;
     }
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
@@ -127,7 +127,7 @@ export namespace PluginInterfaces {
         removeUpdateListener(fn:()=>void):void;
         addUpdateListener(fn:()=>void):void;
         getTextInputPlaceholder():string;
-        getViews(subcMixerView:React.ComponentClass, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
+        getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
         getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
         notifyChangeListeners():void;
     }
@@ -160,7 +160,7 @@ export namespace PluginInterfaces {
          * If manual mode is disabled then the list of
          * aligned corpora is synced automatically from
          * the query form (i.e. if user selects/drops an aligned
-         * corpus then the store's internal list is updated
+         * corpus then the model's internal list is updated
          * accordingly)
          */
         manualAlignCorporaMode:boolean;

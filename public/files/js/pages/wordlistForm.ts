@@ -24,7 +24,7 @@ import {createWidget as createCorparch} from 'plugins/corparch/init';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {StatefulModel} from '../models/base';
-import {WordlistFormStore} from '../models/wordlist/form';
+import {WordlistFormModel} from '../models/wordlist/form';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -41,7 +41,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
 
     private views:WordlistFormViews;
 
-    private wordlistFormStore:WordlistFormStore;
+    private wordlistFormModel:WordlistFormModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -54,7 +54,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
     }
 
     getCurrentSubcorpus():string {
-        return this.wordlistFormStore.getCurrentSubcorpus();
+        return this.wordlistFormModel.getCurrentSubcorpus();
     }
 
     getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
@@ -77,7 +77,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),
-            this.wordlistFormStore,
+            this.wordlistFormModel,
             this,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
@@ -102,7 +102,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
         this.layoutModel.init().then(
             (d) => {
-                this.wordlistFormStore = new WordlistFormStore(
+                this.wordlistFormModel = new WordlistFormModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.corpusIdent,
@@ -110,14 +110,14 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
                 );
-                this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormStore);
+                this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormModel);
                 const corparchWidget = this.initCorparchPlugin();
                 this.views = wordlistFormInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     corparchWidget,
-                    this.wordlistFormStore
+                    this.wordlistFormModel
                 );
 
                 this.layoutModel.renderReactComponent(

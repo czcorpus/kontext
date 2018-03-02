@@ -26,9 +26,9 @@ import * as RSVP from 'vendor/rsvp';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {WordlistFormStore} from './form';
+import {WordlistFormModel} from './form';
 import {MultiDict} from '../../util';
-import {WordlistSaveStore} from './save';
+import {WordlistSaveModel} from './save';
 
 
 export type ResultData = {
@@ -68,11 +68,11 @@ export interface WlSizeAjaxResponse extends Kontext.AjaxResponse {
 /**
  *
  */
-export class WordlistResultStore extends StatefulModel {
+export class WordlistResultModel extends StatefulModel {
 
     layoutModel:PageModel;
 
-    formStore:WordlistFormStore;
+    formModel:WordlistFormModel;
 
     data:Immutable.List<IndexedResultItem>;
 
@@ -96,11 +96,11 @@ export class WordlistResultStore extends StatefulModel {
 
     isBusy:boolean;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
             data:ResultData, headings:Array<HeadingItem>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.formStore = formStore;
+        this.formModel = formModel;
         this.currPage = data.page;
         this.currPageInput = String(this.currPage);
         this.pageSize = data.pageSize;
@@ -115,9 +115,9 @@ export class WordlistResultStore extends StatefulModel {
             switch (payload.actionType) {
                 case 'WORDLIST_RESULT_VIEW_CONC':
                     const args = new MultiDict();
-                    args.set('corpname', this.formStore.getCorpusIdent().id);
-                    args.set('usesubcorp', this.formStore.getCurrentSubcorpus());
-                    args.set('default_attr', this.formStore.getWlattr());
+                    args.set('corpname', this.formModel.getCorpusIdent().id);
+                    args.set('usesubcorp', this.formModel.getCurrentSubcorpus());
+                    args.set('default_attr', this.formModel.getWlattr());
                     args.set('qmcase', '1');
                     args.set('queryselector', 'cqlrow');
                     args.set('cql', this.createPQuery(payload.props['word']));
@@ -187,7 +187,7 @@ export class WordlistResultStore extends StatefulModel {
     }
 
     private fetchLastPage():RSVP.Promise<boolean> {
-        const args = this.formStore.createSubmitArgs();
+        const args = this.formModel.createSubmitArgs();
         return (() => {
             if (this.numItems === null) {
                 return this.layoutModel.ajax<WlSizeAjaxResponse>(
@@ -216,7 +216,7 @@ export class WordlistResultStore extends StatefulModel {
     }
 
     private createPQuery(s:string):string {
-        return `[${this.formStore.getWlattr()}="${s.replace(/([.?+*\[\]{}])/g, '\\$1')}"]`;
+        return `[${this.formModel.getWlattr()}="${s.replace(/([.?+*\[\]{}])/g, '\\$1')}"]`;
     }
 
     private processPageLoad():void {
@@ -247,7 +247,7 @@ export class WordlistResultStore extends StatefulModel {
     }
 
     private loadData():RSVP.Promise<DataAjaxResponse> {
-        const args = this.formStore.createSubmitArgs();
+        const args = this.formModel.createSubmitArgs();
         args.set('wlpage', this.currPage);
         args.set('format', 'json');
 
@@ -289,10 +289,10 @@ export class WordlistResultStore extends StatefulModel {
     }
 
     usesStructAttr():boolean {
-        return this.formStore.getWlattr().indexOf('.') > -1;
+        return this.formModel.getWlattr().indexOf('.') > -1;
     }
 
     getWlsort():string {
-        return this.formStore.getWlsort();
+        return this.formModel.getWlsort();
     }
 }

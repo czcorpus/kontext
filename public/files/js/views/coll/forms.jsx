@@ -22,7 +22,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, collFormStore) {
+export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <AttrSelection /> --------------------------------------------
 
@@ -191,27 +191,27 @@ export function init(dispatcher, he, layoutViews, collFormStore) {
 
         constructor(props) {
             super(props);
-            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this.state = this._getStoreState();
+            this.state = this._getModelState();
         }
 
-        _getStoreState() {
+        _getModelState() {
             return {
-                attrList: collFormStore.getAttrList(),
-                cattr: collFormStore.getCattr(),
-                cfromw: collFormStore.getCfromw(),
-                ctow: collFormStore.getCtow(),
-                cminfreq: collFormStore.getCminfreq(),
-                cminbgr: collFormStore.getCminbgr(),
-                cbgrfns: collFormStore.getCbgrfns(),
-                availCbgrfns: collFormStore.getAvailCbgrfns(),
-                csortfn: collFormStore.getCsortfn()
+                attrList: collFormModel.getAttrList(),
+                cattr: collFormModel.getCattr(),
+                cfromw: collFormModel.getCfromw(),
+                ctow: collFormModel.getCtow(),
+                cminfreq: collFormModel.getCminfreq(),
+                cminbgr: collFormModel.getCminbgr(),
+                cbgrfns: collFormModel.getCbgrfns(),
+                availCbgrfns: collFormModel.getAvailCbgrfns(),
+                csortfn: collFormModel.getCsortfn()
             };
         }
 
-        _storeChangeListener() {
-            this.setState(this._getStoreState());
+        _modelChangeListener() {
+            this.setState(this._getModelState());
         }
 
         _handleSubmitClick() {
@@ -222,11 +222,11 @@ export function init(dispatcher, he, layoutViews, collFormStore) {
         }
 
         componentDidMount() {
-            collFormStore.addChangeListener(this._storeChangeListener);
+            collFormModel.addChangeListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            collFormStore.removeChangeListener(this._storeChangeListener);
+            collFormModel.removeChangeListener(this._modelChangeListener);
         }
 
         render() {

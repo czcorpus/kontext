@@ -21,7 +21,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperStore} from './stores';
+import {TagHelperModel} from './models';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
@@ -33,18 +33,18 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 
     private pluginApi:IPluginApi;
 
-    private store:TagHelperStore;
+    private model:TagHelperModel;
 
-    constructor(pluginApi:IPluginApi, store:TagHelperStore) {
+    constructor(pluginApi:IPluginApi, model:TagHelperModel) {
         this.pluginApi = pluginApi;
-        this.store = store;
+        this.model = model;
     }
 
     getWidgetView():React.ComponentClass {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            this.store
+            this.model
         ).TagBuilder;
     }
 }
@@ -52,7 +52,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
     const plugin = new TagHelperPlugin(
         pluginApi,
-        new TagHelperStore(
+        new TagHelperModel(
             pluginApi.dispatcher(),
             pluginApi,
             pluginApi.getConf<string>('corpname')

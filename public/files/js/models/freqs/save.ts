@@ -23,13 +23,13 @@ import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
-import {ContingencyTableStore} from './ctable';
-import {CTFlatStore} from './flatCtable';
+import {Freq2DTableModel} from './ctable';
+import {Freq2DFlatViewModel} from './flatCtable';
 
 /**
  *
  */
-export class FreqResultsSaveStore extends StatefulModel {
+export class FreqResultsSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -73,7 +73,7 @@ export class FreqResultsSaveStore extends StatefulModel {
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = String(FreqResultsSaveStore.QUICK_SAVE_LINE_LIMIT);
+                    this.toLine = String(FreqResultsSaveModel.QUICK_SAVE_LINE_LIMIT);
                     this.submit();
                     this.toLine = '';
                     this.notifyChangeListeners();
@@ -176,19 +176,19 @@ export class FreqResultsSaveStore extends StatefulModel {
 
 
 
-export class FreqCTResultsSaveStore extends StatefulModel {
+export class FreqCTResultsSaveModel extends StatefulModel {
 
-    ctTableStore:ContingencyTableStore;
+    ctTableModel:Freq2DTableModel;
 
-    ctFlatStore:CTFlatStore;
+    ctFlatModel:Freq2DFlatViewModel;
 
     saveMode:string;
 
 
-    constructor(dispatcher:ActionDispatcher, ctTableStore:ContingencyTableStore, ctFlatStore:CTFlatStore) {
+    constructor(dispatcher:ActionDispatcher, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
         super(dispatcher);
-        this.ctTableStore = ctTableStore;
-        this.ctFlatStore = ctFlatStore;
+        this.ctTableModel = ctTableModel;
+        this.ctFlatModel = ctFlatModel;
 
         dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -197,10 +197,10 @@ export class FreqCTResultsSaveStore extends StatefulModel {
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     if (this.saveMode === 'table') {
-                        this.ctTableStore.submitDataConversion(payload.props['saveformat']);
+                        this.ctTableModel.submitDataConversion(payload.props['saveformat']);
 
                     } else if (this.saveMode === 'list') {
-                        this.ctFlatStore.submitDataConversion(payload.props['saveformat']);
+                        this.ctFlatModel.submitDataConversion(payload.props['saveformat']);
                     }
                 break;
             }

@@ -25,7 +25,7 @@ import {PageModel} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
-import {GeneralCTStore, CTFreqCell} from './generalCtable';
+import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {MultiDict} from '../../util';
@@ -60,9 +60,9 @@ export interface FormatConversionExportData {
 
 
 /**
- * A store for operations on a flat version of 2d frequency table
+ * A model for operations on a flat version of 2d frequency table
  */
-export class CTFlatStore extends GeneralCTStore {
+export class Freq2DFlatViewModel extends GeneralFreq2DModel {
 
     /**
      * Original data as imported from page initialization.
@@ -95,7 +95,7 @@ export class CTFlatStore extends GeneralCTStore {
                         }
 
                     } else {
-                        // we do not show error because other active store for 2d table handles this
+                        // we do not show error because other active model for 2d table handles this
                     }
                     this.notifyChangeListeners();
                 break;

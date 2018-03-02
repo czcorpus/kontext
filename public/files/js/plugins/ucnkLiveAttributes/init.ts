@@ -25,8 +25,8 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import textTypesStore = require('../../models/textTypes/attrValues');
-import liveAttrsStore = require('./store');
+import textTypesModel = require('../../models/textTypes/attrValues');
+import liveAttrsModel = require('./models');
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'immutable';
 import common = require('./common');
@@ -41,19 +41,19 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
 
     private pluginApi:IPluginApi;
 
-    private store:liveAttrsStore.LiveAttrsStore;
+    private store:liveAttrsModel.LiveAttrsModel;
 
-    constructor(pluginApi:IPluginApi, store:liveAttrsStore.LiveAttrsStore) {
+    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel) {
         this.pluginApi = pluginApi;
         this.store = store;
     }
 
-    getViews(subcMixerView:React.ComponentClass, textTypesStore:Kontext.EventEmitter):any {// TODO store types
+    getViews(subcMixerView:React.ComponentClass, textTypesModel:Kontext.EventEmitter):any {// TODO store types
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
             subcMixerView,
-            textTypesStore,
+            textTypesModel,
             this.store
         );
     }
@@ -106,20 +106,20 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
 
 /**
  * @param pluginApi KonText plugin-api provider
- * @param textTypesStore
+ * @param textTypesModel
  * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
  * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
-export default function create(pluginApi:IPluginApi, textTypesStore:TextTypes.ITextTypesStore,
+export default function create(pluginApi:IPluginApi, textTypesModel:TextTypes.ITextTypesModel,
         selectedCorporaProvider:()=>Immutable.List<string>,
         ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs):RSVP.Promise<PluginInterfaces.ILiveAttributes> {
     return new RSVP.Promise((resolve, reject) => {
         try {
-            const store = new liveAttrsStore.LiveAttrsStore(
+            const store = new liveAttrsModel.LiveAttrsModel(
                 pluginApi.dispatcher(),
                 pluginApi,
-                textTypesStore,
+                textTypesModel,
                 selectedCorporaProvider,
                 ttCheckStatusProvider,
                 args

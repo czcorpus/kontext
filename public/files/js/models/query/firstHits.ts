@@ -28,7 +28,7 @@ import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
-export class FirstHitsStore extends StatefulModel {
+export class FirstHitsModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -70,7 +70,7 @@ export class FirstHitsStore extends StatefulModel {
                     return null;
 
                 } else {
-                    throw new Error('Cannot sync FirstHitsStore - invalid form data type: ' + data.form_type);
+                    throw new Error('Cannot sync FirstHitsModel - invalid form data type: ' + data.form_type);
                 }
             }
         );

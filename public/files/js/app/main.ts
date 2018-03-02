@@ -42,15 +42,15 @@ import {init as menuViewsFactory} from 'views/menu';
 import {init as overviewAreaViewsFactory} from 'views/overview';
 import {init as viewOptionsFactory} from 'views/options/main';
 import {MultiDict} from '../util';
-import * as docStores from '../models/common/layout';
+import * as docModels from '../models/common/layout';
 import {UserInfo} from '../models/user/info';
-import {CorpusViewOptionsStore} from '../models/options/structsAttrs';
-import {GeneralViewOptionsStore} from '../models/options/general';
+import {CorpusViewOptionsModel} from '../models/options/structsAttrs';
+import {GeneralViewOptionsModel} from '../models/options/general';
 import {L10n} from './l10n';
 import * as Immutable from 'immutable';
 import {AsyncTaskChecker} from '../models/asyncTask';
 import {UserSettings} from './userSettings';
-import {MainMenuStore, InitialMenuData} from '../models/mainMenu';
+import {MainMenuModel, InitialMenuData} from '../models/mainMenu';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import {AppNavigation, AjaxArgs} from './navigation';
@@ -95,17 +95,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     commonViews:CommonViews;
 
-    private corpusInfoStore:docStores.CorpusInfoStore;
+    private corpusInfoModel:docModels.CorpusInfoModel;
 
-    private messageStore:docStores.MessageStore;
+    private messageModel:docModels.MessageModel;
 
-    private userInfoStore:UserInfo;
+    private userInfoModel:UserInfo;
 
-    private corpViewOptionsStore:CorpusViewOptionsStore;
+    private corpViewOptionsModel:CorpusViewOptionsModel;
 
-    private generalViewOptionsStore:GeneralViewOptionsStore;
+    private generalViewOptionsModel:GeneralViewOptionsModel;
 
-    private mainMenuStore:MainMenuStore;
+    private mainMenuModel:MainMenuModel;
 
     private authPlugin:PluginInterfaces.IAuth;
 
@@ -139,17 +139,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
-     * Returns layout stores (i.e. the stores used virtually on any page)
+     * Returns layout models (i.e. the models used virtually on any page)
      */
-    getStores():Kontext.LayoutStores {
+    getModels():Kontext.LayoutModel {
         return {
-            corpusInfoStore: this.corpusInfoStore,
-            messageStore: this.messageStore,
-            userInfoStore: this.userInfoStore,
-            corpusViewOptionsStore: this.corpViewOptionsStore,
-            generalViewOptionsStore: this.generalViewOptionsStore,
-            asyncTaskInfoStore: this.asyncTaskChecker,
-            mainMenuStore: this.mainMenuStore
+            corpusInfoModel: this.corpusInfoModel,
+            messageModel: this.messageModel,
+            userInfoModel: this.userInfoModel,
+            corpusViewOptionsModel: this.corpViewOptionsModel,
+            generalViewOptionsModel: this.generalViewOptionsModel,
+            asyncTaskInfoModel: this.asyncTaskChecker,
+            mainMenuModel: this.mainMenuModel
         };
     }
 
@@ -224,7 +224,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     /**
      * Change the current corpus used by KonText. Please note
-     * that this basically reinitializes all the page's stores
+     * that this basically reinitializes all the page's model
      * and views (both layout and page init() method are called
      * again).
      *
@@ -291,7 +291,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         );
 
         (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
-            this.messageStore.addMessage(msg[0], msg[1], null);
+            this.messageModel.addMessage(msg[0], msg[1], null);
         });
     }
 
@@ -346,7 +346,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         } else {
             outMsg = String(message);
         }
-        this.messageStore.addMessage(msgType, outMsg, onClose);
+        this.messageModel.addMessage(msgType, outMsg, onClose);
     }
 
     /**
@@ -499,7 +499,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     resetMenuActiveItemAndNotify():void {
-        this.mainMenuStore.resetActiveItemAndNotify();
+        this.mainMenuModel.resetActiveItemAndNotify();
     }
 
     /**
@@ -507,7 +507,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     private initMainMenu():void {
         const menuViews = menuViewsFactory(this.dispatcher, this.getComponentHelpers(), this,
-                this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
+                this.mainMenuModel, this.getModels().asyncTaskInfoModel, this.layoutViews);
         this.renderReactComponent(
             menuViews.MainMenu,
             window.document.getElementById('main-menu-mount'),
@@ -522,7 +522,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         const overviewViews = overviewAreaViewsFactory(
             this.dispatcher,
             this.getComponentHelpers(),
-            this.corpusInfoStore
+            this.corpusInfoModel
         );
         const target = window.document.getElementById('general-overview-mount');
         if (target) { // few pages do not use this
@@ -534,28 +534,28 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
     }
 
-    private initViewOptions(mainMenuStore:Kontext.IMainMenuStore,
-                generalViewOptionsStore:ViewOptions.IGeneralViewOptionsStore,
-                corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore):void {
+    private initViewOptions(mainMenuModel:Kontext.IMainMenuModel,
+                generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel,
+                corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel):void {
         const viewOptionsViews = viewOptionsFactory(
             this.dispatcher,
             this.getComponentHelpers(),
             this.layoutViews,
-            generalViewOptionsStore,
-            corpViewOptionsStore,
-            mainMenuStore
+            generalViewOptionsModel,
+            corpViewOptionsModel,
+            mainMenuModel
         );
 
-        this.mainMenuStore.addItemActionPrerequisite(
+        this.mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
             (args:Kontext.GeneralProps) => {
-                return this.corpViewOptionsStore.loadData();
+                return this.corpViewOptionsModel.loadData();
             }
         );
-        this.mainMenuStore.addItemActionPrerequisite(
+        this.mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
             (args:Kontext.GeneralProps) => {
-                return this.generalViewOptionsStore.loadData();
+                return this.generalViewOptionsModel.loadData();
             }
         );
 
@@ -631,33 +631,33 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                     this.getConf<any>('asyncTasks') || []
                 );
 
-                this.corpusInfoStore = new docStores.CorpusInfoStore(this.dispatcher, this.pluginApi());
-                this.messageStore = new docStores.MessageStore(this.dispatcher, this.pluginApi());
-                this.userInfoStore = new UserInfo(this.dispatcher, this);
-                this.corpViewOptionsStore = new CorpusViewOptionsStore(
+                this.corpusInfoModel = new docModels.CorpusInfoModel(this.dispatcher, this.pluginApi());
+                this.messageModel = new docModels.MessageModel(this.dispatcher, this.pluginApi());
+                this.userInfoModel = new UserInfo(this.dispatcher, this);
+                this.corpViewOptionsModel = new CorpusViewOptionsModel(
                     this.dispatcher,
                     this,
                     this.getConf<Kontext.FullCorpusIdent>('corpusIdent')
                 );
 
-                this.mainMenuStore = new MainMenuStore(
+                this.mainMenuModel = new MainMenuModel(
                     this.dispatcher,
                     this,
                     this.getConf<InitialMenuData>('menuData')
                 );
 
-                this.generalViewOptionsStore = new GeneralViewOptionsStore(
+                this.generalViewOptionsModel = new GeneralViewOptionsModel(
                     this.dispatcher,
                     this,
                 );
-                this.generalViewOptionsStore.addOnSubmitResponseHandler(
-                    ()=>this.mainMenuStore.resetActiveItemAndNotify()
+                this.generalViewOptionsModel.addOnSubmitResponseHandler(
+                    ()=>this.mainMenuModel.resetActiveItemAndNotify()
                 );
 
                 this.layoutViews = documentViewsFactory(
                     this.dispatcher,
                     this.getComponentHelpers(),
-                    this.getStores()
+                    this.getModels()
                 );
 
                 this.commonViews = commonViewsFactory(this.getComponentHelpers());
@@ -671,9 +671,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 this.bindLangSwitch();
                 this.initNotifications();
                 this.initViewOptions(
-                    this.mainMenuStore,
-                    this.generalViewOptionsStore,
-                    this.corpViewOptionsStore
+                    this.mainMenuModel,
+                    this.generalViewOptionsModel,
+                    this.corpViewOptionsModel
                 );
                 this.asyncTaskChecker.init();
                 resolve(null);
@@ -805,8 +805,7 @@ class ComponentTools {
  * PluginApi exports some essential functions from PageModel
  * to plug-ins while preventing them from accessing whole
  * PageModel. This is expected to be used by plug-ins'
- * stores and 'models'. For React component helpers see
- * 'ComponentTools'
+ * models. For React component helpers see 'ComponentTools'
  */
 export class PluginApi implements IPluginApi {
 
@@ -869,8 +868,8 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.unmountReactComponent(element);
     }
 
-    getStores():Kontext.LayoutStores {
-        return this.pageModel.getStores();
+    getModels():Kontext.LayoutModel {
+        return this.pageModel.getModels();
     }
 
     getViews():CoreViews.Runtime {

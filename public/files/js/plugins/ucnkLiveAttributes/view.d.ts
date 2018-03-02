@@ -32,7 +32,7 @@ export function init(
     dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
     subcMixerComponent:React.ComponentClass,
-    textTypesStore:Kontext.EventEmitter,
-    liveAttrsStore:Kontext.EventEmitter
+    textTypesModel:Kontext.EventEmitter,
+    liveAttrsModel:Kontext.EventEmitter
 ):LiveAttributesViews;
 

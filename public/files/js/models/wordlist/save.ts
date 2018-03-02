@@ -24,7 +24,7 @@ import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 
 
-export class WordlistSaveStore extends StatefulModel {
+export class WordlistSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -88,7 +88,7 @@ export class WordlistSaveStore extends StatefulModel {
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveFormat = payload.props['saveformat'];
-                this.toLine = String(WordlistSaveStore.QUICK_SAVE_LINE_LIMIT);
+                this.toLine = String(WordlistSaveModel.QUICK_SAVE_LINE_LIMIT);
                 this.submit();
                 this.toLine = '';
                 this.notifyChangeListeners();

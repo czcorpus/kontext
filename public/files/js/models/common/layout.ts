@@ -31,7 +31,7 @@ import * as Immutable from 'immutable';
 /**
  *
  */
-export class MessageStore extends StatefulModel implements Kontext.MessagePageStore {
+export class MessageModel extends StatefulModel implements Kontext.MessagePageModel {
 
     messages:Immutable.List<Kontext.UserNotification>;
 
@@ -155,7 +155,7 @@ export class MessageStore extends StatefulModel implements Kontext.MessagePageSt
 /**
  *
  */
-export class CorpusInfoStore extends StatefulModel {
+export class CorpusInfoModel extends StatefulModel {
 
     pluginApi:IPluginApi;
 

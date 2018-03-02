@@ -21,7 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, subcMixerStore) {
+export function init(dispatcher, he, subcMixerModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -281,13 +281,13 @@ export function init(dispatcher, he, subcMixerStore) {
 
         constructor(props) {
             super(props);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._setWaiting = this._setWaiting.bind(this);
             this._handleErrorToleranceChange = this._handleErrorToleranceChange.bind(this);
             this.state = {isWaiting: false};
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({isWaiting: false});
         }
 
@@ -303,7 +303,7 @@ export function init(dispatcher, he, subcMixerStore) {
         }
 
         componentDidMount() {
-            subcMixerStore.addChangeListener(this._handleStoreChange);
+            subcMixerModel.addChangeListener(this._handleModelChange);
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_FETCH_CURRENT_SUBCNAME',
                 props: {}
@@ -311,7 +311,7 @@ export function init(dispatcher, he, subcMixerStore) {
         }
 
         componentWillUnmount() {
-            subcMixerStore.removeChangeListener(this._handleStoreChange);
+            subcMixerModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderAlignedCorpInfo() {
@@ -371,28 +371,28 @@ export function init(dispatcher, he, subcMixerStore) {
             super(props);
             this._handleTrigger = this._handleTrigger.bind(this);
             this._handleCloseWidget = this._handleCloseWidget.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this.state = {
                 useWidget: false,
-                selectedValues: subcMixerStore.getShares(),
-                currentResults: subcMixerStore.getCurrentCalculationResults(),
-                numErrors: subcMixerStore.getNumOfErrors(),
-                currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance(),
-                alignedCorpora: subcMixerStore.getAlignedCorpora()
+                selectedValues: subcMixerModel.getShares(),
+                currentResults: subcMixerModel.getCurrentCalculationResults(),
+                numErrors: subcMixerModel.getNumOfErrors(),
+                currentSubcname: subcMixerModel.getCurrentSubcname(),
+                usedAttributes: subcMixerModel.getUsedAttributes(),
+                errorTolerance: subcMixerModel.getErrorTolerance(),
+                alignedCorpora: subcMixerModel.getAlignedCorpora()
             };
         }
 
         _handleTrigger() {
             this.setState({
                 useWidget: true,
-                selectedValues: subcMixerStore.getShares(),
-                currentResults: subcMixerStore.getCurrentCalculationResults(),
-                currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance(),
-                alignedCorpora: subcMixerStore.getAlignedCorpora()
+                selectedValues: subcMixerModel.getShares(),
+                currentResults: subcMixerModel.getCurrentCalculationResults(),
+                currentSubcname: subcMixerModel.getCurrentSubcname(),
+                usedAttributes: subcMixerModel.getUsedAttributes(),
+                errorTolerance: subcMixerModel.getErrorTolerance(),
+                alignedCorpora: subcMixerModel.getAlignedCorpora()
             });
         }
 
@@ -409,29 +409,29 @@ export function init(dispatcher, he, subcMixerStore) {
                 currentSubcname: null,
                 usedAttributes: null,
                 errorTolerance: null,
-                alignedCorpora: subcMixerStore.getAlignedCorpora()
+                alignedCorpora: subcMixerModel.getAlignedCorpora()
             });
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             this.setState({
                 useWidget: this.state.useWidget,
-                selectedValues: subcMixerStore.getShares(),
-                currentResults: subcMixerStore.getCurrentCalculationResults(),
-                numErrors: subcMixerStore.getNumOfErrors(),
-                currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance(),
-                alignedCorpora: subcMixerStore.getAlignedCorpora()
+                selectedValues: subcMixerModel.getShares(),
+                currentResults: subcMixerModel.getCurrentCalculationResults(),
+                numErrors: subcMixerModel.getNumOfErrors(),
+                currentSubcname: subcMixerModel.getCurrentSubcname(),
+                usedAttributes: subcMixerModel.getUsedAttributes(),
+                errorTolerance: subcMixerModel.getErrorTolerance(),
+                alignedCorpora: subcMixerModel.getAlignedCorpora()
             });
         }
 
         componentDidMount() {
-            subcMixerStore.addChangeListener(this._handleStoreChange);
+            subcMixerModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcMixerStore.removeChangeListener(this._handleStoreChange);
+            subcMixerModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderButton() {

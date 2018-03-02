@@ -122,8 +122,7 @@ export namespace Kontext {
     }
 
     /**
-     * A Flux Store. Please note that only Flux Views are expected
-     * to (un)register store's events.
+     * A stateful model's interface to interact with React components.
      */
     export interface EventEmitter {
 
@@ -135,18 +134,18 @@ export namespace Kontext {
     }
 
     /**
-     * A store managing access to a user information
+     * managing access to a user information
      */
-    export interface IUserInfoStore extends EventEmitter {
+    export interface IUserInfoModel extends EventEmitter {
         getCredentials():UserCredentials;
         loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
     }
 
     /**
-     * A store handling state of server-asynchronous
+     * handling state of server-asynchronous
      * tasks.
      */
-    export interface IAsyncTaskStore extends EventEmitter {
+    export interface IAsyncTaskModel extends EventEmitter {
 
         registerTask(task:Kontext.AsyncTaskInfo):void;
 
@@ -179,12 +178,12 @@ export namespace Kontext {
     }
 
     /**
-     * This store is watched by components which are
+     * A model watched by components which are
      * able to render user content based on a selected
      * menu item.
      *
      */
-    export interface IMainMenuStore extends EventEmitter {
+    export interface IMainMenuModel extends EventEmitter {
 
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
@@ -192,7 +191,7 @@ export namespace Kontext {
 
         /**
          * Register an action which is run before listeners
-         * are notified. This is used to allow other stores
+         * are notified. This is used to allow other models
          * to prepare themselves before their views are
          * shown.
          */
@@ -228,19 +227,19 @@ export namespace Kontext {
     }
 
     /**
-     * A store managing system messages presented to a user
+     * A model managing system messages presented to a user
      */
-    export interface MessagePageStore extends EventEmitter {
+    export interface MessagePageModel extends EventEmitter {
         addMessage(messageType:string, messageText:string, onClose:()=>void);
         getMessages():Immutable.List<UserNotification>;
         getTransitionTime():number;
     }
 
     /**
-     * A function listening for change in a store. This is
-     * used by React components to handle store updates.
+     * A function listening for change in a stateful model. This is
+     * used by React components to handle stateful model updates.
      */
-    export interface StoreListener {
+    export interface ModelListener {
         (err?:Error):void;
     }
 
@@ -310,14 +309,14 @@ export namespace Kontext {
         browserInfo:IBrowserInfo;
     }
 
-    export interface LayoutStores {
-        corpusInfoStore:EventEmitter,
-        messageStore:MessagePageStore,
-        userInfoStore:IUserInfoStore,
-        corpusViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
-        generalViewOptionsStore:ViewOptions.IGeneralViewOptionsStore;
-        asyncTaskInfoStore:IAsyncTaskStore,
-        mainMenuStore:IMainMenuStore;
+    export interface LayoutModel {
+        corpusInfoModel:EventEmitter,
+        messageModel:MessagePageModel,
+        userInfoModel:IUserInfoModel,
+        corpusViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
+        generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;
+        asyncTaskInfoModel:IAsyncTaskModel,
+        mainMenuModel:IMainMenuModel;
     }
 
     export interface AjaxOptions {
@@ -410,7 +409,7 @@ export namespace Kontext {
          * A single letter operation type ID as used by
          * the server-side (see function mapOpIdToFormType()
          * below). Do not confuse with opKey used within
-         * QueryReplayStore.
+         * QueryReplayModel.
          */
         opid:string;
 
@@ -512,7 +511,7 @@ export namespace Kontext {
      * ICorpusSwitchAware represents an object which keeps
      * some of its properties persistent even when KonText
      * switches active corpus (which deletes most of the
-     * client-side objects - typically all the stores and views).
+     * client-side objects - typically all the models and views).
      * I.e. the object stores some of the attributes and
      * its successor will use these values to set the
      * same properties.
@@ -596,7 +595,7 @@ export namespace ViewOptions {
         widectx_globals:Array<[string, string]>;
     }
 
-    export interface ICorpViewOptionsStore extends Kontext.EventEmitter {
+    export interface ICorpViewOptionsModel extends Kontext.EventEmitter {
         getCorpusIdent():Kontext.FullCorpusIdent;
         initFromPageData(data:ViewOptions.PageData):void;
         loadData():RSVP.Promise<ViewOptions.PageData>;
@@ -613,7 +612,7 @@ export namespace ViewOptions {
         getAttrsAllpos():string;
     }
 
-    export interface IGeneralViewOptionsStore extends Kontext.EventEmitter {
+    export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
         getPageSize():string;
         getNewCtxSize():string;
         getLineNumbers():boolean;
@@ -623,7 +622,7 @@ export namespace ViewOptions {
         getCitemsPerPage():string;
         getIsBusy():boolean;
         getShowTTOverview():boolean;
-        addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsStore)=>void):void;
+        addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
         getUseCQLEditor():boolean;
     }
 
@@ -829,7 +828,7 @@ export namespace TextTypes {
     /**
      *
      */
-    export interface ITextTypesStore extends Kontext.EventEmitter {
+    export interface ITextTypesModel extends Kontext.EventEmitter {
 
         applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
 
@@ -860,7 +859,7 @@ export namespace TextTypes {
         exportSelections(lockedOnesOnly:boolean):TextTypes.ServerCheckedValues;
 
         /**
-         * Reset store state
+         * Reset model state
          */
         reset():void;
 
@@ -868,7 +867,7 @@ export namespace TextTypes {
          * Filter existing values of an attribute based on provided values.
          * E.g. if the attribute "x1" contains values {value: "foo",...}, {value: "bar",...},
          *  {value:"baz",....} and the "values"" argument contains ["bar", "baz"] then
-         * the store is expected to keep {value: "bar",...}, {value: "baz", ....} for "x1".
+         * the model is expected to keep {value: "bar",...}, {value: "baz", ....} for "x1".
          */
         updateItems(attrName:string, values:Array<string>):void;
 
@@ -931,7 +930,7 @@ export namespace TextTypes {
         /**
          * Activate a support for attaching an extended information
          * for a specific attribute. The 'fn' callback is expected
-         * to update store(s) in such a way that the information becomes
+         * to update model(s) in such a way that the information becomes
          * available.
          */
         setExtendedInfoSupport<T>(attrName:string, fn:(ident:string)=>RSVP.Promise<T>):void;
@@ -963,7 +962,7 @@ export namespace TextTypes {
          * Other stores may listen for selection changes and update
          * themselves accordingly.
          */
-        addSelectionChangeListener(fn:(target:TextTypes.ITextTypesStore)=>void):void;
+        addSelectionChangeListener(fn:(target:TextTypes.ITextTypesModel)=>void):void;
 
         /**
          * Save the currect selection to object's local history.
@@ -1001,7 +1000,7 @@ export namespace TextTypes {
 
     /**
      * Represents an object which is able to provide
-     * a callback function initiated by textTypesStore
+     * a callback function initiated by textTypesModel
      * every time user enters a text into one of raw text inputs
      * (used whenever the number of items to display is too high).
      */

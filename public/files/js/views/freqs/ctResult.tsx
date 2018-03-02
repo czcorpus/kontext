@@ -26,8 +26,8 @@ import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 import {init as ctFlatResultFactory} from './ctFlatResult';
 import {init as ctViewOptsFactory} from './ctViewOpts';
-import {CTFlatStore} from '../../models/freqs/flatCtable';
-import {ContingencyTableStore, Data2DTable, ColorMappings, TableInfo} from '../../models/freqs/ctable';
+import {Freq2DFlatViewModel} from '../../models/freqs/flatCtable';
+import {Freq2DTableModel, Data2DTable, ColorMappings, TableInfo} from '../../models/freqs/ctable';
 import {Dimensions, FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
 import {FreqQuantities, CTFreqCell} from '../../models/freqs/generalCtable';
 import {DataPoint} from '../../charts/confIntervals';
@@ -56,11 +56,11 @@ interface Views {
 export function init(
             dispatcher:ActionDispatcher,
             he:Kontext.ComponentHelpers,
-            ctFreqDataRowsStore:ContingencyTableStore,
-            ctFlatFreqDataRowsStore:CTFlatStore) {
+            ctFreqDataRowsModel:Freq2DTableModel,
+            ctFlatFreqDataRowsModel:Freq2DFlatViewModel) {
 
     const layoutViews = he.getLayoutViews();
-    const flatResultViews = ctFlatResultFactory(dispatcher, he, ctFlatFreqDataRowsStore);
+    const flatResultViews = ctFlatResultFactory(dispatcher, he, ctFlatFreqDataRowsModel);
     const ctViewOpts = ctViewOptsFactory(dispatcher, he);
 
     const formatIpm = (v) => v >= 0.1 ? he.formatNumber(v, 1) : '\u2248 0';
@@ -725,8 +725,8 @@ export function init(
         constructor(props) {
             super(props);
             this.state = {
-                data: ctFreqDataRowsStore.exportGroup(this.props.highlightedGroup[0], this.props.highlightedGroup[1]),
-                label: ctFreqDataRowsStore.exportGroupLabel(this.props.highlightedGroup[0], this.props.highlightedGroup[1])
+                data: ctFreqDataRowsModel.exportGroup(this.props.highlightedGroup[0], this.props.highlightedGroup[1]),
+                label: ctFreqDataRowsModel.exportGroupLabel(this.props.highlightedGroup[0], this.props.highlightedGroup[1])
             }
         }
 
@@ -1027,7 +1027,7 @@ export function init(
         constructor(props) {
             super(props);
             this.state = this._fetchState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleModelChange = this._handleModelChange.bind(this);
             this._highlightItem = this._highlightItem.bind(this);
             this._resetHighlight = this._resetHighlight.bind(this);
             this._handleHighlightedGroupClose = this._handleHighlightedGroupClose.bind(this);
@@ -1035,35 +1035,35 @@ export function init(
 
         _fetchState() {
             return {
-                d1Labels: ctFreqDataRowsStore.getD1Labels(),
-                d2Labels: ctFreqDataRowsStore.getD2Labels(),
-                data: ctFreqDataRowsStore.getData(),
-                attr1: ctFreqDataRowsStore.getAttr1(),
-                attr2: ctFreqDataRowsStore.getAttr2(),
-                sortDim1: ctFreqDataRowsStore.getSortDim1(),
-                sortDim2: ctFreqDataRowsStore.getSortDim2(),
-                minFreq: ctFreqDataRowsStore.getMinFreq(),
-                minFreqType: ctFreqDataRowsStore.getMinFreqType(),
-                displayQuantity: ctFreqDataRowsStore.getDisplayQuantity(),
+                d1Labels: ctFreqDataRowsModel.getD1Labels(),
+                d2Labels: ctFreqDataRowsModel.getD2Labels(),
+                data: ctFreqDataRowsModel.getData(),
+                attr1: ctFreqDataRowsModel.getAttr1(),
+                attr2: ctFreqDataRowsModel.getAttr2(),
+                sortDim1: ctFreqDataRowsModel.getSortDim1(),
+                sortDim2: ctFreqDataRowsModel.getSortDim2(),
+                minFreq: ctFreqDataRowsModel.getMinFreq(),
+                minFreqType: ctFreqDataRowsModel.getMinFreqType(),
+                displayQuantity: ctFreqDataRowsModel.getDisplayQuantity(),
                 highlightedCoord: null,
-                transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
-                hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors(),
-                isWaiting: ctFreqDataRowsStore.getIsWaiting(),
-                alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
-                availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
-                confIntervalLeftMinWarn: ctFreqDataRowsStore.getConfIntervalLeftMinWarn(),
-                colorMapping: ctFreqDataRowsStore.getColorMapping(),
-                highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup(),
-                quickFreqMode: ctFreqDataRowsStore.getQuickFreqMode(),
-                canProvideIpm: ctFreqDataRowsStore.canProvideIpm(),
-                isEmpty: ctFreqDataRowsStore.isEmpty(),
-                tableInfo: ctFreqDataRowsStore.getTableInfo(),
-                usesAdHocSubcorpus: ctFreqDataRowsStore.getUsesAdHocSubcorpus(),
-                concSelectedTextTypes: ctFreqDataRowsStore.getConcSelectedTextTypes()
+                transposeIsChecked: ctFreqDataRowsModel.getIsTransposed(),
+                hideEmptyVectors: ctFreqDataRowsModel.getFilterZeroVectors(),
+                isWaiting: ctFreqDataRowsModel.getIsWaiting(),
+                alphaLevel: ctFreqDataRowsModel.getAlphaLevel(),
+                availAlphaLevels: ctFreqDataRowsModel.getAvailAlphaLevels(),
+                confIntervalLeftMinWarn: ctFreqDataRowsModel.getConfIntervalLeftMinWarn(),
+                colorMapping: ctFreqDataRowsModel.getColorMapping(),
+                highlightedGroup: ctFreqDataRowsModel.getHighlightedGroup(),
+                quickFreqMode: ctFreqDataRowsModel.getQuickFreqMode(),
+                canProvideIpm: ctFreqDataRowsModel.canProvideIpm(),
+                isEmpty: ctFreqDataRowsModel.isEmpty(),
+                tableInfo: ctFreqDataRowsModel.getTableInfo(),
+                usesAdHocSubcorpus: ctFreqDataRowsModel.getUsesAdHocSubcorpus(),
+                concSelectedTextTypes: ctFreqDataRowsModel.getConcSelectedTextTypes()
             };
         }
 
-        _handleStoreChange() {
+        _handleModelChange() {
             const newState = this._fetchState();
             newState.highlightedCoord = this.state.highlightedCoord;
             this.setState(newState);
@@ -1079,11 +1079,11 @@ export function init(
         }
 
         componentDidMount() {
-            ctFreqDataRowsStore.addChangeListener(this._handleStoreChange);
+            ctFreqDataRowsModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            ctFreqDataRowsStore.removeChangeListener(this._handleStoreChange);
+            ctFreqDataRowsModel.removeChangeListener(this._handleModelChange);
         }
 
         _resetHighlight() {

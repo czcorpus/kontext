@@ -29,12 +29,12 @@ import {PageModel, PluginName} from '../app/main';
 import liveAttributes from 'plugins/liveAttributes/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'immutable';
-import {TextTypesStore} from '../models/textTypes/attrValues';
-import {QueryFormProperties, QueryStore, QueryHintStore} from '../models/query/main';
-import {CQLEditorStore} from '../models/query/cqleditor/store';
-import {WithinBuilderStore} from '../models/query/withinBuilder';
-import {VirtualKeyboardStore} from '../models/query/virtualKeyboard';
-import {QueryContextStore} from '../models/query/context';
+import {TextTypesModel} from '../models/textTypes/attrValues';
+import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
+import {CQLEditorModel} from '../models/query/cqleditor/model';
+import {WithinBuilderModel} from '../models/query/withinBuilder';
+import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
+import {QueryContextModel} from '../models/query/context';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as RSVP from 'vendor/rsvp';
@@ -58,21 +58,21 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private layoutModel:PageModel;
 
-    private queryStore:QueryStore;
+    private queryModel:QueryModel;
 
-    private cqlEditorStore:CQLEditorStore;
+    private cqlEditorModel:CQLEditorModel;
 
-    private textTypesStore:TextTypesStore;
+    private textTypesModel:TextTypesModel;
 
-    private queryHintStore:QueryHintStore;
+    private queryHintModel:QueryHintModel;
 
-    private withinBuilderStore:WithinBuilderStore;
+    private withinBuilderModel:WithinBuilderModel;
 
-    private virtualKeyboardStore:VirtualKeyboardStore;
+    private virtualKeyboardModel:VirtualKeyboardModel;
 
-    private queryContextStore:QueryContextStore;
+    private queryContextModel:QueryContextModel;
 
-    private onQueryStoreReady:(qs:QueryStore)=>void;
+    private onQueryModelReady:(qs:QueryModel)=>void;
 
     private onAlignedCorporaChanged:(corpora:Immutable.List<string>)=>void;
 
@@ -90,23 +90,23 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     }
 
     registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
-        this.queryStore.registerCorpusSelectionListener(fn);
+        this.queryModel.registerCorpusSelectionListener(fn);
     }
 
     getCorpora():Immutable.List<string> {
-        return this.queryStore.getCorpora();
+        return this.queryModel.getCorpora();
     }
 
     getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return this.queryStore.getAvailableAlignedCorpora();
+        return this.queryModel.getAvailableAlignedCorpora();
     }
 
     getCurrentSubcorpus():string {
-        return this.queryStore.getCurrentSubcorpus();
+        return this.queryModel.getCurrentSubcorpus();
     }
 
     getAvailableSubcorpora():Immutable.List<string> {
-        return this.queryStore.getAvailableSubcorpora();
+        return this.queryModel.getAvailableSubcorpora();
     }
 
 
@@ -114,7 +114,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return corplistComponent.createWidget(
             'first_form',
             this.layoutModel.pluginApi(),
-            this.queryStore,
+            this.queryModel,
             this,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
@@ -140,21 +140,21 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesStore = new TextTypesStore(
+        this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData
         );
-        this.textTypesStore.applyCheckedItems(
+        this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
             queryFormArgs.bib_mapping
         );
 
         return liveAttributes(
             this.layoutModel.pluginApi(),
-            this.textTypesStore,
-            () => this.queryStore.getCorpora(),
-            () => this.textTypesStore.hasSelectedItems(),
+            this.textTypesModel,
+            () => this.queryModel.getCorpora(),
+            () => this.textTypesModel.hasSelectedItems(),
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
@@ -167,30 +167,30 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             (liveAttrsPlugin) => {
                 let liveAttrsViews;
                 if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
-                    // Complicated dependencies between QueryStore, TextTypesStore and LiveAttrsStore
-                    // cause that LiveAttrs store needs QueryStore data but it is not available
+                    // Complicated dependencies between QueryModel, TextTypesModel and LiveAttrsModel
+                    // cause that LiveAttrs model needs QueryModel data but it is not available
                     // here yet. That's the reason we have to define a callback here to configure
                     // required values later.
-                    this.onQueryStoreReady = (qs => {
+                    this.onQueryModelReady = (qs => {
                         liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
                     });
                     this.onAlignedCorporaChanged = (corpora => {
                         if (liveAttrsPlugin.hasSelectionSteps()) {
                             liveAttrsPlugin.reset();
                             liveAttrsPlugin.notifyChangeListeners();
-                            this.textTypesStore.notifyChangeListeners();
+                            this.textTypesModel.notifyChangeListeners();
                         }
                         liveAttrsPlugin.selectLanguages(corpora, true);
                     });
-                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-                    this.textTypesStore.addSelectionChangeListener(target => {
+                    this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
+                    this.textTypesModel.addSelectionChangeListener(target => {
                         liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
                                 liveAttrsPlugin.hasSelectedLanguages());
                     });
-                    liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesStore); // TODO 'this' reference = antipattern
+                    liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
 
                 } else {
-                    this.onQueryStoreReady = () => undefined;
+                    this.onQueryModelReady = () => undefined;
                     this.onAlignedCorporaChanged = (_) => undefined;
                     liveAttrsViews = {};
                 }
@@ -198,21 +198,21 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 return {
                     liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
                     liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                    attributes: this.textTypesStore.getAttributes()
+                    attributes: this.textTypesModel.getAttributes()
                 }
             }
         );
     }
 
-    private initQueryStore():void {
+    private initQueryModel():void {
         const formCorpora = [this.layoutModel.getConf<string>('corpname')];
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
-        this.queryStore = new QueryStore(
+        this.queryModel = new QueryModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.textTypesStore,
-            this.queryContextStore,
+            this.textTypesModel,
+            this.queryContextModel,
             {
                 corpora: [this.layoutModel.getConf<string>('corpname')].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
@@ -243,37 +243,37 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             }
         );
 
-        this.queryStore.registerCorpusSelectionListener((corpname, aligned, subcorp) =>
+        this.queryModel.registerCorpusSelectionListener((corpname, aligned, subcorp) =>
                 this.onAlignedCorporaChanged(aligned));
-        this.onQueryStoreReady(this.queryStore);
-        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
-            this.queryStore.onSettingsChange(store);
+        this.onQueryModelReady(this.queryModel);
+        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
+            this.queryModel.onSettingsChange(model);
         });
 
-        this.cqlEditorStore = new CQLEditorStore({
+        this.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryStore.getTagAttr() : null,
+            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryModel.getTagAttr() : null,
             actionPrefix: ''
         });
     }
 
     private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {
 
-        this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
+        this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             corparchWidget,
-            this.queryStore,
-            this.textTypesStore,
-            this.queryHintStore,
-            this.withinBuilderStore,
-            this.virtualKeyboardStore,
-            this.queryContextStore,
-            this.cqlEditorStore
+            this.queryModel,
+            this.textTypesModel,
+            this.queryHintModel,
+            this.withinBuilderModel,
+            this.virtualKeyboardModel,
+            this.queryContextModel,
+            this.cqlEditorModel
         );
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
@@ -286,7 +286,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         const corpInfoViews = corpnameLinkInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.getStores().corpusInfoStore
+            this.layoutModel.getModels().corpusInfoModel
         );
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
@@ -306,20 +306,20 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     init():void {
         const p1 = this.layoutModel.init().then(
             () => {
-                this.queryHintStore = new QueryHintStore(
+                this.queryHintModel = new QueryHintModel(
                     this.layoutModel.dispatcher,
                     ['query__tip_01', 'query__tip_02', 'query__tip_03', 'query__tip_04'],
                     this.layoutModel.translate.bind(this.layoutModel)
                 );
-                this.withinBuilderStore = new WithinBuilderStore(
+                this.withinBuilderModel = new WithinBuilderModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel
                 );
-                this.virtualKeyboardStore = new VirtualKeyboardStore(
+                this.virtualKeyboardModel = new VirtualKeyboardModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel
                 );
-                this.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
+                this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
             }
         ).then(
             () => {
@@ -347,7 +347,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 props['queryStorageView'] = qsplug.getWidgetView();
                 props['allowCorpusSelection'] = true;
                 props['actionPrefix'] = '';
-                this.initQueryStore();
+                this.initQueryModel();
                 const corparchWidget = this.initCorplistComponent();
                 this.attachQueryForm(props, corparchWidget);
                 this.initCorpnameLink();

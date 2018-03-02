@@ -122,7 +122,7 @@ export class ActionDispatcher {
         }
 
         /**
-         * Create a state Observable stream for a store with
+         * Create a state Observable stream for a model with
          * defined initial state and optional side effect handler.
          *
          * @param sideEffects a function which reacts to different

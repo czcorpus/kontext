@@ -28,7 +28,7 @@ import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 
 
-export class UserProfileStore extends StatefulModel {
+export class UserProfileModel extends StatefulModel {
 
     private pluginApi:IPluginApi;
 

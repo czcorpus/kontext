@@ -29,7 +29,7 @@ export class StatefulModel implements Kontext.EventEmitter {
 
     dispatcher:ActionDispatcher;
 
-    private changeListeners:Array<Kontext.StoreListener>;
+    private changeListeners:Array<Kontext.ModelListener>;
 
     public static CHANGE_EVENT:string = 'change';
 
@@ -43,20 +43,20 @@ export class StatefulModel implements Kontext.EventEmitter {
     }
 
     /**
-     * Function for React components to register store change listening.
+     * Function for React components to register model change listening.
      * (typically on 'componentDidMount()')
      * @param fn
      */
-    addChangeListener(fn:Kontext.StoreListener):void {
+    addChangeListener(fn:Kontext.ModelListener):void {
         this.changeListeners.push(fn);
     }
 
     /**
-     * Function for React components to unregister from store change listening.
+     * Function for React components to unregister from model change listening.
      * (typically on 'componentWillUnmount()')
      * @param fn
      */
-    removeChangeListener(fn:Kontext.StoreListener):void {
+    removeChangeListener(fn:Kontext.ModelListener):void {
         for (var i = 0; i < this.changeListeners.length; i += 1) {
             if (this.changeListeners[i] === fn) {
                 this.changeListeners.splice(i, 1);
@@ -67,11 +67,11 @@ export class StatefulModel implements Kontext.EventEmitter {
 
     /**
      * This method is used to notify all the registered listeners about
-     * change in stores internal state.
+     * change in models internal state.
      *
-     * Please note that using eventType and error is deprecated! I.e. stores
+     * Please note that using eventType and error is deprecated! I.e. models
      * should only notify about change in their state and it is up to
-     * a concrete React component how it will determine (via fetching store's
+     * a concrete React component how it will determine (via fetching model's
      * state using its getters) how to react.
      *
      * @param eventType
@@ -95,9 +95,9 @@ export class StatefulModel implements Kontext.EventEmitter {
 
 /**
  * Synchronized model represents a way how to synchronize
- * (as master) non-stateless legacy model with its depending
- * models (both legacy and stateless) in case we do not
- * want (or cannot) intercept master's action processing.
+ * (as master) stateful model with its depending
+ * models (both stateful and stateless) in case we do not
+ * want (or cannot) intercept master's action internals.
  *
  * If a model is expected to be a master for some
  * synchronization it is recommended to use one of
@@ -105,7 +105,7 @@ export class StatefulModel implements Kontext.EventEmitter {
  * call the function once async operations are
  * done. For an action 'SOME_ACTION' this produces
  * additional action '@SOME_ACTION' to which
- * dependent stores can respond.
+ * dependent models can respond.
  *
  * Please note that in case of StatelessModel<T>
  * this is accomplished via its side-effect handler

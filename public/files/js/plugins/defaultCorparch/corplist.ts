@@ -38,9 +38,9 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
 
 
 /**
- * A general store for processing corpus listing queries
+ * A general model for processing corpus listing queries
  */
-export class QueryProcessingStore extends StatefulModel {
+export class QueryProcessingModel extends StatefulModel {
 
     protected tagPrefix:string;
 
@@ -108,20 +108,20 @@ export class QueryProcessingStore extends StatefulModel {
 }
 
 /**
- * This store handles corplist 'filter' form
+ * This model handles corplist 'filter' form
  */
-export class CorplistFormStore extends QueryProcessingStore {
+export class CorplistFormModel extends QueryProcessingModel {
 
-    protected corplistTableStore:CorplistTableStore;
+    protected corplistTableModel:CorplistTableModel;
 
     protected offset:number;
 
     static DispatchToken:string;
 
-    constructor(pluginApi:IPluginApi, corplistTableStore:CorplistTableStore) {
+    constructor(pluginApi:IPluginApi, corplistTableModel:CorplistTableModel) {
         super(pluginApi);
         var self = this;
-        this.corplistTableStore = corplistTableStore;
+        this.corplistTableModel = corplistTableModel;
         this.offset = 0;
 
         this.dispatcher.register(
@@ -134,10 +134,10 @@ export class CorplistFormStore extends QueryProcessingStore {
                         }
                         self.selectedKeywords[payload.props['keyword']] =
                             !self.selectedKeywords[payload.props['keyword']];
-                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
                             self.offset).then(
                                 (data) => {
-                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.corplistTableModel.notifyChangeListeners();
                                     self.notifyChangeListeners();
                                 },
                                 (err) => {
@@ -148,10 +148,10 @@ export class CorplistFormStore extends QueryProcessingStore {
                     case 'KEYWORD_RESET_CLICKED':
                         self.offset = 0;
                         self.selectedKeywords = {};
-                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
                             self.offset).then(
                                 (data) => {
-                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.corplistTableModel.notifyChangeListeners();
                                     self.notifyChangeListeners();
                                 },
                                 (err) => {
@@ -164,10 +164,10 @@ export class CorplistFormStore extends QueryProcessingStore {
                         if (payload.props['offset']) {
                             self.offset = payload.props['offset'];
                         }
-                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
                             self.offset).then(
                                 (data) => {
-                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.corplistTableModel.notifyChangeListeners();
                                     self.notifyChangeListeners();
                                 },
                                 (err) => {
@@ -182,10 +182,10 @@ export class CorplistFormStore extends QueryProcessingStore {
                             delete payload.props['corpusName'];
                         }
                         self.updateFilter(payload.props);
-                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
                             self.offset).then(
                                 (data) => {
-                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.corplistTableModel.notifyChangeListeners();
                                     self.notifyChangeListeners();
                                 },
                                 (err) => {
@@ -213,9 +213,9 @@ export interface CorplistDataResponse extends Kontext.AjaxResponse, CorplistData
 
 
 /**
- * This store handles table dataset
+ * This model handles table dataset
  */
-export class CorplistTableStore extends StatefulModel {
+export class CorplistTableModel extends StatefulModel {
 
     protected pluginApi:IPluginApi;
 
@@ -427,19 +427,19 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage  {
 
     pluginApi:IPluginApi;
 
-    protected corplistFormStore:CorplistFormStore;
+    protected corplistFormModel:CorplistFormModel;
 
-    protected corplistTableStore:CorplistTableStore;
+    protected corplistTableModel:CorplistTableModel;
 
     constructor(pluginApi:IPluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corplistTableStore = new CorplistTableStore(pluginApi.dispatcher(), pluginApi);
-        this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
-        this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
+        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi);
+        this.corplistFormModel = new CorplistFormModel(pluginApi, this.corplistTableModel);
+        this.components = viewsInit(this.corplistFormModel, this.corplistTableModel);
     }
 
     setData(data:any):void { // TODO type
-        this.corplistTableStore.setData(data);
+        this.corplistTableModel.setData(data);
     }
 
     getForm():React.ComponentClass {

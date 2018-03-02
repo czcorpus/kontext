@@ -119,7 +119,7 @@ export const enum Dimensions {
 /**
  *
  */
-export class CTFreqFormStore extends StatefulModel {
+export class Freq2DFormModel extends StatefulModel {
 
     public static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
 
@@ -243,11 +243,11 @@ export class CTFreqFormStore extends StatefulModel {
     }
 
     private importCtxValue(v:string):[number, AlignTypes] {
-        let srchIdx = CTFreqFormStore.POSITION_LA.indexOf(v);
+        let srchIdx = Freq2DFormModel.POSITION_LA.indexOf(v);
         if (srchIdx > -1) {
             return [srchIdx, AlignTypes.LEFT];
         }
-        srchIdx = CTFreqFormStore.POSITION_RA.indexOf(v);
+        srchIdx = Freq2DFormModel.POSITION_RA.indexOf(v);
         if (srchIdx > -1) {
             return [srchIdx, AlignTypes.RIGHT];
         }
@@ -301,13 +301,13 @@ export class CTFreqFormStore extends StatefulModel {
     private getAttrCtx(dim:Dimensions):string {
         if (dim === 1) {
             return this.alignType1 === 'left' ?
-                CTFreqFormStore.POSITION_LA[this.ctxIndex1] :
-                CTFreqFormStore.POSITION_RA[this.ctxIndex1];
+                Freq2DFormModel.POSITION_LA[this.ctxIndex1] :
+                Freq2DFormModel.POSITION_RA[this.ctxIndex1];
 
         } else if (dim === 2) {
             return this.alignType2 === 'left' ?
-                CTFreqFormStore.POSITION_LA[this.ctxIndex2] :
-                CTFreqFormStore.POSITION_RA[this.ctxIndex2];
+                Freq2DFormModel.POSITION_LA[this.ctxIndex2] :
+                Freq2DFormModel.POSITION_RA[this.ctxIndex2];
         }
         throw new Error('Unknown dimension ' + dim);
     }
@@ -375,7 +375,7 @@ export class CTFreqFormStore extends StatefulModel {
     }
 
     getPositionRangeLabels():Array<string> {
-        return CTFreqFormStore.POSITION_LABELS;
+        return Freq2DFormModel.POSITION_LABELS;
     }
 
     getAlignType(dim:Dimensions):AlignTypes {

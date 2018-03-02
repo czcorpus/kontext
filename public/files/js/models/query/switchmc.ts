@@ -46,7 +46,7 @@ export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:AjaxResponse
 }
 
 
-export class SwitchMainCorpStore extends StatefulModel {
+export class SwitchMainCorpModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -83,7 +83,7 @@ export class SwitchMainCorpStore extends StatefulModel {
                     return null;
 
                 } else {
-                    throw new Error('Cannot sync switchmc store - invalid form data type: ' + data.form_type);
+                    throw new Error('Cannot sync switchmc model - invalid form data type: ' + data.form_type);
                 }
             }
         );

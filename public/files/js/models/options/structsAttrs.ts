@@ -29,7 +29,7 @@ import * as RSVP from 'vendor/rsvp';
 
 
 
-export class CorpusViewOptionsStore extends StatefulModel implements ViewOptions.ICorpViewOptionsStore {
+export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions.ICorpViewOptionsModel {
 
     private layoutModel:PageModel;
 

@@ -24,7 +24,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, utils, layoutViews, commonViews, saveStore) {
+export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
 
     // --------------------------- <TRColHeadingSelector /> -------------------------------
 
@@ -150,23 +150,23 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this.__handleModelChange = this.__handleModelChange.bind(this);
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                saveFormat: saveStore.getSaveFormat(),
-                toLine: saveStore.getToLine(),
-                includeHeading: saveStore.getIncludeHeading(),
-                includeColHeaders: saveStore.getIncludeColHeaders()
+                saveFormat: saveModel.getSaveFormat(),
+                toLine: saveModel.getToLine(),
+                includeHeading: saveModel.getIncludeHeading(),
+                includeColHeaders: saveModel.getIncludeColHeaders()
             };
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        __handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         _handleCloseClick() {
@@ -184,11 +184,11 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveStore) {
         }
 
         componentDidMount() {
-            saveStore.addChangeListener(this._handleStoreChange);
+            saveModel.addChangeListener(this.__handleModelChange);
         }
 
         componentWillUnmount() {
-            saveStore.removeChangeListener(this._handleStoreChange);
+            saveModel.removeChangeListener(this.__handleModelChange);
         }
 
         render() {

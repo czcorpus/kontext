@@ -61,7 +61,7 @@ export interface WordlistFormProps {
 /**
  *
  */
-export class WordlistFormStore extends StatefulModel implements Kontext.ICorpusSwitchAware<WordlistFormProps>, PluginInterfaces.ICorparchStore {
+export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusSwitchAware<WordlistFormProps>, PluginInterfaces.ICorparchModel {
 
     private layoutModel:PageModel;
 

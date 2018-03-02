@@ -60,7 +60,7 @@ export interface PositionOptions {
 }
 
 
-export interface TagHelperStoreState {
+export interface TagHelperModelState {
 
     corpname:string;
 
@@ -86,9 +86,9 @@ export interface TagHelperStoreState {
 }
 
 /**
- * This store handles a single tag-builder instance.
+ * This model handles a single tag-builder instance.
  */
-export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
+export class TagHelperModel extends StatelessModel<TagHelperModelState> {
 
     static DispatchToken:string;
 
@@ -161,7 +161,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
     }
 
 
-    reduce(state:TagHelperStoreState, action:ActionPayload):TagHelperStoreState {
+    reduce(state:TagHelperModelState, action:ActionPayload):TagHelperModelState {
         const newState = this.copyState(state);
         switch (action.actionType) {
             case 'TAGHELPER_PRESET_PATTERN':
@@ -217,7 +217,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         return newState;
     }
 
-    private loadInitialData(state:TagHelperStoreState):RSVP.Promise<TagDataResponse> {
+    private loadInitialData(state:TagHelperModelState):RSVP.Promise<TagDataResponse> {
         return this.pluginApi.ajax<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
@@ -225,7 +225,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         );
     }
 
-    private updateData(state:TagHelperStoreState, triggerRow:number):RSVP.Promise<TagDataResponse> {
+    private updateData(state:TagHelperModelState, triggerRow:number):RSVP.Promise<TagDataResponse> {
         let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
@@ -244,7 +244,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         );
     }
 
-    private resetSelections(state:TagHelperStoreState):void {
+    private resetSelections(state:TagHelperModelState):void {
         state.data = state.data.slice(0, 2).toList();
         state.positions = state.data.last();
         state.canUndo = this.canUndo(state);
@@ -252,7 +252,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         state.displayPattern = this.exportCurrentPattern(state);
     }
 
-    private undo(state:TagHelperStoreState):void {
+    private undo(state:TagHelperModelState):void {
         if (state.data.size > 2) {
             state.data = state.data.slice(0, -1).toList();
             state.positions = state.data.last();
@@ -267,7 +267,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
      * according to parsed values. This is used along with advanced
      * CQL editor.
      */
-    private applyPresetPattern(state:TagHelperStoreState):void {
+    private applyPresetPattern(state:TagHelperModelState):void {
         if (/^\||[^\\]\|/.exec(state.presetPattern)) {
             this.pluginApi.showMessage('warning', this.pluginApi.translate('taghelper__cannot_parse'));
         }
@@ -303,7 +303,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
     /**
      * Performs an initial import (i.e. any previous data is lost)
      */
-    private importData(state:TagHelperStoreState, labels:Array<string>, data:RawTagValues):void {
+    private importData(state:TagHelperModelState, labels:Array<string>, data:RawTagValues):void {
         state.data = state.data.push(Immutable.List<PositionOptions>(
             data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
                 return {
@@ -329,7 +329,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         return opt.values.some((item:PositionValue) => item.selected === true);
     }
 
-    private hasSelectedItems(state:TagHelperStoreState):boolean {
+    private hasSelectedItems(state:TagHelperModelState):boolean {
         return state.data.last()
             .flatMap(item => item.values
             .map(subitem => subitem.selected))
@@ -343,7 +343,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
      *    current one is locked
      * 2) any position option value not found in server response is made unavalilable
      */
-    private mergeData(state:TagHelperStoreState, tags:UpdateTagValues, triggerRow:number):void {
+    private mergeData(state:TagHelperModelState, tags:UpdateTagValues, triggerRow:number):void {
         const newItem = state.data.last().map((item:PositionOptions, i:number) => {
             let posOpts:PositionOptions;
             if (!item.locked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
@@ -383,7 +383,7 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
      * Changes the 'checked' status of an item specified by a position and a value
      * (.e.g. 2nd position (gender), F value (feminine))
      */
-    private updateSelectedItem(state:TagHelperStoreState, position:number, value:string, checked:boolean):void {
+    private updateSelectedItem(state:TagHelperModelState, position:number, value:string, checked:boolean):void {
         const oldPos = state.data.last().get(position);
         const newPos:PositionOptions = {
             label: oldPos.label,
@@ -402,11 +402,11 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         state.displayPattern = this.exportCurrentPattern(state);
     }
 
-    private canUndo(state:TagHelperStoreState):boolean {
+    private canUndo(state:TagHelperModelState):boolean {
         return state.data.size > 2;
     }
 
-    private getCurrentPattern(state:TagHelperStoreState):string {
+    private getCurrentPattern(state:TagHelperModelState):string {
         function exportPosition(v) {
             if (v.size > 1) {
                 return '[' + v.join('') + ']';
@@ -431,21 +431,21 @@ export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
         }
     }
 
-    private exportCurrentPattern(state:TagHelperStoreState):string {
+    private exportCurrentPattern(state:TagHelperModelState):string {
         return this.getCurrentPattern(state).replace(/\.\.+$/,  '.*');
     }
 
     /**
      * Return options for a selected position (e.g. position 2: M, I, F, N, X)
      */
-    getOptions(state:TagHelperStoreState, position:number):PositionOptions {
+    getOptions(state:TagHelperModelState, position:number):PositionOptions {
         return state.data.last().get(position);
     }
 
     /**
      * Return an unique state identifier
      */
-    private getStateId(state:TagHelperStoreState):string {
+    private getStateId(state:TagHelperModelState):string {
         return state.data.last().map<string>((item:PositionOptions) => {
             const ans = item.values.filter((s:PositionValue) => s.selected)
                     .map<string>((s:PositionValue) => s.id);

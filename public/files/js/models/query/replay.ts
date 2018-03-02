@@ -26,14 +26,14 @@ import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {QueryStore, QueryFormUserEntries} from './main';
+import {QueryModel, QueryFormUserEntries} from './main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {FilterStore} from './filter';
-import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
-import {SampleStore} from './sample';
-import {SwitchMainCorpStore} from './switchmc';
-import {TextTypesStore} from '../textTypes/attrValues';
-import {FirstHitsStore} from '../query/firstHits';
+import {FilterModel} from './filter';
+import {ConcSortModel, MultiLevelConcSortModel, fetchSortFormArgs, ISubmitableConcSortModel} from './sort';
+import {ConcSampleModel} from './sample';
+import {SwitchMainCorpModel} from './switchmc';
+import {TextTypesModel} from '../textTypes/attrValues';
+import {FirstHitsModel} from '../query/firstHits';
 
 
 /*
@@ -110,17 +110,17 @@ export type LocalQueryFormData = {[ident:string]:AjaxResponse.ConcFormArgs};
 
 
 /**
- * Stores required by QueryReplayStore to operate
+ * Models required by QueryReplayModel to operate
  */
-export interface ReplayStoreDeps {
-    queryStore:QueryStore;
-    filterStore:FilterStore;
-    sortStore:SortStore;
-    mlSortStore:MultiLevelSortStore;
-    sampleStore:SampleStore;
-    textTypesStore:TextTypesStore;
-    switchMcStore:SwitchMainCorpStore;
-    firstHitsStore:FirstHitsStore;
+export interface ReplayModelDeps {
+    queryModel:QueryModel;
+    filterModel:FilterModel;
+    sortModel:ConcSortModel;
+    mlConcSortModel:MultiLevelConcSortModel;
+    sampleModel:ConcSampleModel;
+    textTypesModel:TextTypesModel;
+    switchMcModel:SwitchMainCorpModel;
+    firstHitsModel:FirstHitsModel;
 }
 
 
@@ -145,11 +145,11 @@ function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>
  * functions. It is typically used on pages where an active
  * concordance exists but it is not visible at the moment
  * (e.g. freq. & coll. pages). In such case it is typically
- * extended further (see IndirectQueryReplayStore) to allow
+ * extended further (see IndirectQueryReplayModel) to allow
  * returning to the 'view' page in case user wants to use
  * some of its functions.
  */
-export class QueryInfoStore extends SynchronizedModel {
+export class QueryInfoModel extends SynchronizedModel {
 
     /**
      * This is a little bit independent from the rest. It just
@@ -204,34 +204,34 @@ export class QueryInfoStore extends SynchronizedModel {
 
 
 /**
- * QueryReplayStore reads operations stored in the breadcrumb-like navigation
+ * QueryReplayModel reads operations stored in the breadcrumb-like navigation
  * and query operation data stored on server (handled by conc_persistence plug-in)
  * and generates a new query "pipeline" with a single step updated by a user
  * via a respective form (query, filter, sort,...). Then it submits all the
  * server requests one-by-one (while updating query operation ID) and the final
  * request is used to redirect client to see the result.
  */
-export class QueryReplayStore extends QueryInfoStore {
+export class QueryReplayModel extends QueryInfoModel {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 
     private replayOperations:Immutable.List<string>;
 
-    private queryStore:QueryStore;
+    private queryModel:QueryModel;
 
-    private filterStore:FilterStore;
+    private filterModel:FilterModel;
 
-    private sortStore:SortStore;
+    private sortModel:ConcSortModel;
 
-    private mlSortStore:MultiLevelSortStore;
+    private mlConcSortModel:MultiLevelConcSortModel;
 
-    private sampleStore:SampleStore;
+    private sampleModel:ConcSampleModel;
 
-    private switchMcStore:SwitchMainCorpStore;
+    private switchMcModel:SwitchMainCorpModel;
 
-    private textTypesStore:TextTypesStore;
+    private textTypesModel:TextTypesModel;
 
-    private firstHitsStore:FirstHitsStore;
+    private firstHitsModel:FirstHitsModel;
 
     /**
      * Contains args used by different input forms involved in the current query operations.
@@ -258,21 +258,21 @@ export class QueryReplayStore extends QueryInfoStore {
 
     private _editIsLocked:boolean;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;
         this.currEncodedOperations = importEncodedOperations(currentOperations);
         this.replayOperations = Immutable.List<string>(currentOperations.map(item => null));
         this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(concArgsCache);
-        this.queryStore = replayStoreDeps.queryStore;
-        this.filterStore = replayStoreDeps.filterStore;
-        this.sortStore = replayStoreDeps.sortStore;
-        this.mlSortStore = replayStoreDeps.mlSortStore;
-        this.sampleStore = replayStoreDeps.sampleStore;
-        this.switchMcStore = replayStoreDeps.switchMcStore;
-        this.textTypesStore = replayStoreDeps.textTypesStore;
-        this.firstHitsStore = replayStoreDeps.firstHitsStore;
+        this.queryModel = replayModelDeps.queryModel;
+        this.filterModel = replayModelDeps.filterModel;
+        this.sortModel = replayModelDeps.sortModel;
+        this.mlConcSortModel = replayModelDeps.mlConcSortModel;
+        this.sampleModel = replayModelDeps.sampleModel;
+        this.switchMcModel = replayModelDeps.switchMcModel;
+        this.textTypesModel = replayModelDeps.textTypesModel;
+        this.firstHitsModel = replayModelDeps.firstHitsModel;
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
         this.stopAfterOpIdx = null;
@@ -402,8 +402,8 @@ export class QueryReplayStore extends QueryInfoStore {
                         // no implicit shuffle during replay as optional shuffle
                         // is already "materialized" as a separate operation here
                         // and we don't want a double shuffle
-                        this.queryStore.disableDefaultShuffling();
-                        const url = this.queryStore.getSubmitUrl();
+                        this.queryModel.disableDefaultShuffling();
+                        const url = this.queryModel.getSubmitUrl();
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax(
                                 'GET',
@@ -417,7 +417,7 @@ export class QueryReplayStore extends QueryInfoStore {
                         } else {
                             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(() => {
-                                    this.queryStore.submitQuery();
+                                    this.queryModel.submitQuery();
                                 });
                             });
                         }
@@ -429,7 +429,7 @@ export class QueryReplayStore extends QueryInfoStore {
             return () => {
                 return prepareFormData().then(
                     () => {
-                        const url = this.filterStore.getSubmitUrl(opKey);
+                        const url = this.filterModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax(
                                 'GET',
@@ -440,7 +440,7 @@ export class QueryReplayStore extends QueryInfoStore {
                         } else {
                             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(() => {
-                                    this.filterStore.submitQuery(opKey);
+                                    this.filterModel.submitQuery(opKey);
                                 });
                             });
                         }
@@ -452,25 +452,25 @@ export class QueryReplayStore extends QueryInfoStore {
             return () => {
                 return prepareFormData().then(
                     () => {
-                        let activeStore:ISubmitableSortStore;
+                        let activeModel:ISubmitableConcSortModel;
 
-                        if (this.sortStore.isActiveActionValue(opKey)) {
-                            activeStore = this.sortStore;
+                        if (this.sortModel.isActiveActionValue(opKey)) {
+                            activeModel = this.sortModel;
 
-                        } else if (this.mlSortStore.isActiveActionValue(opKey)) {
-                            activeStore = this.mlSortStore;
+                        } else if (this.mlConcSortModel.isActiveActionValue(opKey)) {
+                            activeModel = this.mlConcSortModel;
                         }
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax(
                                 'GET',
-                                activeStore.getSubmitUrl(opKey),
+                                activeModel.getSubmitUrl(opKey),
                                 {format: 'json'}
                             );
 
                         } else {
                             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(() => {
-                                    activeStore.submit(opKey);
+                                    activeModel.submit(opKey);
                                 });
                             });
                         }
@@ -482,7 +482,7 @@ export class QueryReplayStore extends QueryInfoStore {
             return () => {
                 return prepareFormData().then(
                     () => {
-                        const url = this.sampleStore.getSubmitUrl(opKey);
+                        const url = this.sampleModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax(
                                 'GET',
@@ -493,7 +493,7 @@ export class QueryReplayStore extends QueryInfoStore {
                         } else {
                             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(() => {
-                                    this.sampleStore.submitQuery(opKey);
+                                    this.sampleModel.submitQuery(opKey);
                                 });
                             });
                         }
@@ -522,7 +522,7 @@ export class QueryReplayStore extends QueryInfoStore {
 
         } else if (formType === 'switchmc') {
             return () => {
-                const url = this.switchMcStore.getSubmitUrl(opKey);
+                const url = this.switchMcModel.getSubmitUrl(opKey);
                 if (opIdx < numOps - 1) {
                     return this.pageModel.ajax(
                         'GET',
@@ -566,7 +566,7 @@ export class QueryReplayStore extends QueryInfoStore {
             return () => {
                 return prepareFormData().then(
                     () => {
-                        const targetUrl = this.firstHitsStore.getSubmitUrl(opKey);
+                        const targetUrl = this.firstHitsModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax(
                                 'GET',
@@ -577,7 +577,7 @@ export class QueryReplayStore extends QueryInfoStore {
                         } else {
                             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(() => {
-                                    this.firstHitsStore.submitForm(opKey);
+                                    this.firstHitsModel.submitForm(opKey);
                                 });
                             });
                         }
@@ -684,14 +684,14 @@ export class QueryReplayStore extends QueryInfoStore {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         return (() => {
             if (queryKey !== undefined) { // cache hit
-                return this.queryStore.syncFrom(() => {
+                return this.queryModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
                         resolve(this.concArgsCache.get(queryKey));
                     });
                 });
 
             } else {
-                return this.queryStore.syncFrom(() => {
+                return this.queryModel.syncFrom(() => {
                     return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
                         'GET',
                         this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
@@ -712,7 +712,7 @@ export class QueryReplayStore extends QueryInfoStore {
                     ).then(
                         (data) => {
                             // syncFrom
-                            return this.textTypesStore.syncFrom(() => {
+                            return this.textTypesModel.syncFrom(() => {
                                 return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
                                     (resolve:(d)=>void, reject:(err)=>void) => {
                                         resolve(data);
@@ -746,7 +746,7 @@ export class QueryReplayStore extends QueryInfoStore {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         return (() => {
             if (queryKey !== undefined) { // cache hit
-                return this.filterStore.syncFrom(() => {
+                return this.filterModel.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.FilterFormArgs>(
                         (resolve:(data)=>void, reject:(err)=>void) => {
                             resolve(this.concArgsCache.get(queryKey));
@@ -755,7 +755,7 @@ export class QueryReplayStore extends QueryInfoStore {
                 });
 
             } else {
-                return this.filterStore.syncFrom(() => {
+                return this.filterModel.syncFrom(() => {
                     return this.pageModel.ajax<AjaxResponse.FilterFormArgsResponse>(
                         'GET',
                         this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
@@ -796,7 +796,7 @@ export class QueryReplayStore extends QueryInfoStore {
     private syncSortForm(opIdx:number):RSVP.Promise<AjaxResponse.SortFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) {
-            return this.sortStore.syncFrom(() => {
+            return this.sortModel.syncFrom(() => {
                 return new RSVP.Promise<AjaxResponse.SortFormArgs>(
                     (resolve:(data)=>void, reject:(err)=>void) => {
                         resolve(this.concArgsCache.get(queryKey));
@@ -804,7 +804,7 @@ export class QueryReplayStore extends QueryInfoStore {
                 );
             }).then<AjaxResponse.SortFormArgs>(
                 (data) => {
-                    return this.mlSortStore.syncFrom(() => {
+                    return this.mlConcSortModel.syncFrom(() => {
                         return new RSVP.Promise<AjaxResponse.SortFormArgs>(
                             (resolve:(data)=>void, reject:(err)=>void) => {
                                 resolve(data);
@@ -815,7 +815,7 @@ export class QueryReplayStore extends QueryInfoStore {
             );
 
         } else {
-            return this.sortStore.syncFrom(() => {
+            return this.sortModel.syncFrom(() => {
                 return this.pageModel.ajax<AjaxResponse.SortFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
@@ -836,7 +836,7 @@ export class QueryReplayStore extends QueryInfoStore {
             }).then<AjaxResponse.SortFormArgs>(
                 (data) => {
                     const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
-                    return this.mlSortStore.syncFrom(() => {
+                    return this.mlConcSortModel.syncFrom(() => {
                         return new RSVP.Promise<AjaxResponse.SortFormArgs>(
                             (resolve:(data)=>void, reject:(err)=>void) => {
                                 resolve(this.concArgsCache.get(queryKey));
@@ -852,7 +852,7 @@ export class QueryReplayStore extends QueryInfoStore {
     private syncSampleForm(opIdx:number):RSVP.Promise<any> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) {
-            return this.sampleStore.syncFrom(() => {
+            return this.sampleModel.syncFrom(() => {
                 return new RSVP.Promise<AjaxResponse.SampleFormArgs>(
                     (resolve:(data)=>void, reject:(err)=>void) => {
                         resolve(this.concArgsCache.get(queryKey));
@@ -861,7 +861,7 @@ export class QueryReplayStore extends QueryInfoStore {
             });
 
         } else {
-            return this.sampleStore.syncFrom(() => {
+            return this.sampleModel.syncFrom(() => {
                 return this.pageModel.ajax<AjaxResponse.SampleFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
@@ -943,7 +943,7 @@ export class QueryReplayStore extends QueryInfoStore {
     private syncFirstHitsForm(opIdx:number):RSVP.Promise<any> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) {
-            return this.firstHitsStore.syncFrom(() => {
+            return this.firstHitsModel.syncFrom(() => {
                 return new RSVP.Promise<AjaxResponse.FirstHitsFormArgs>(
                     (resolve:(data)=>void, reject:(err)=>void) => {
                         resolve(this.concArgsCache.get(queryKey));
@@ -952,7 +952,7 @@ export class QueryReplayStore extends QueryInfoStore {
             });
 
         } else {
-            return this.firstHitsStore.syncFrom(() => {
+            return this.firstHitsModel.syncFrom(() => {
                 return this.pageModel.ajax<AjaxResponse.FirstHitsFormArgs>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
@@ -976,7 +976,7 @@ export class QueryReplayStore extends QueryInfoStore {
     private syncSwitchMcForm(opIdx:number):RSVP.Promise<any> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) {
-            return this.switchMcStore.syncFrom(() => {
+            return this.switchMcModel.syncFrom(() => {
                 return new RSVP.Promise<AjaxResponse.SwitchMainCorpArgs>(
                     (resolve:(data)=>void, reject:(err)=>void) => {
                         resolve(this.concArgsCache.get(queryKey));
@@ -985,7 +985,7 @@ export class QueryReplayStore extends QueryInfoStore {
             });
 
         } else {
-            return this.switchMcStore.syncFrom(() => {
+            return this.switchMcModel.syncFrom(() => {
                 return this.pageModel.ajax<AjaxResponse.SwitchMainCorpArgs>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
@@ -1069,14 +1069,14 @@ export class QueryReplayStore extends QueryInfoStore {
 
 
 /**
- * IndirectQueryReplayStore is a replacement for QueryReplayStore
+ * IndirectQueryReplayModel is a replacement for QueryReplayModel
  * on pages where query editation forms (and most of related data)
  * are not available but we still want to display operations
  * description (aka breadcrumb navigation) and redirect to the
  * 'view' page and open a respective operation form in case
  * user clicks a item.
  */
-export class IndirectQueryReplayStore extends QueryInfoStore {
+export class IndirectQueryReplayModel extends QueryInfoModel {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 

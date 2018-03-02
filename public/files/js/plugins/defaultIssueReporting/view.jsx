@@ -22,7 +22,7 @@
 
 import * as React from "vendor/react";
 
-export function init(dispatcher, he, reportingStore) {
+export function init(dispatcher, he, reportingModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -37,7 +37,7 @@ export function init(dispatcher, he, reportingStore) {
             });
         };
 
-        if (props.waitingForStore) {
+        if (props.waitingForModel) {
             return <img src={he.createStaticUrl('img/ajax-loader-bar.gif') }
                             title={he.translate('global__loading')} />;
 
@@ -70,7 +70,7 @@ export function init(dispatcher, he, reportingStore) {
                         <textarea rows="10" cols="60" onChange={handleTextareaChange}
                                 value={props.value} />
                         <p>
-                            <SubmitButton waitingForStore={props.waitingForStore} />
+                            <SubmitButton waitingForModel={props.waitingForModel} />
                         </p>
                     </form>
                 </layoutViews.CloseableFrame>
@@ -84,22 +84,22 @@ export function init(dispatcher, he, reportingStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchModelState();
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleLinkClick = this._handleLinkClick.bind(this);
             this._closeClickHandler = this._closeClickHandler.bind(this);
         }
 
-        _fetchStoreState() {
+        _fetchModelState() {
             return {
-                formVisible: reportingStore.isActive(),
-                issueBody: reportingStore.getIssueBody(),
-                waitingForStore: reportingStore.isBusy()
+                formVisible: reportingModel.isActive(),
+                issueBody: reportingModel.getIssueBody(),
+                waitingForModel: reportingModel.isBusy()
             };
         }
 
-        _storeChangeHandler() {
-            this.setState(this._fetchStoreState());
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         _handleLinkClick() {
@@ -117,11 +117,11 @@ export function init(dispatcher, he, reportingStore) {
         }
 
         componentDidMount() {
-            reportingStore.addChangeListener(this._storeChangeHandler);
+            reportingModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            reportingStore.removeChangeListener(this._storeChangeHandler);
+            reportingModel.removeChangeListener(this._modelChangeHandler);
         }
 
         render() {
@@ -133,7 +133,7 @@ export function init(dispatcher, he, reportingStore) {
                     {this.state.formVisible ?
                         <IssueReportingForm closeClickHandler={this._closeClickHandler}
                             issueBody={this.state.issueBody}
-                            waitingForStore={this.state.waitingForStore} /> :
+                            waitingForModel={this.state.waitingForModel} /> :
                         null
                     }
                 </div>

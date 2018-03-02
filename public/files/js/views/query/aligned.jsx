@@ -24,8 +24,8 @@ import * as React from 'vendor/react';
 import {init as inputInit} from './input';
 
 
-export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore) {
-    const inputViews = inputInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore);
+export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel) {
+    const inputViews = inputInit(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel);
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
 

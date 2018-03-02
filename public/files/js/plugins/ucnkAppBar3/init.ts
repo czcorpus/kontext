@@ -29,7 +29,7 @@ import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
-export class AppBarStore extends StatefulModel {
+export class AppBarModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -55,18 +55,17 @@ export class AppBarStore extends StatefulModel {
 
 export class AppBarPlugin implements PluginInterfaces.IToolbar {
 
-    private store:AppBarStore;
+    private model:AppBarModel;
 
-    constructor(store:AppBarStore) {
-        this.store = store;
+    constructor(model:AppBarModel) {
+        this.model = model;
     }
 }
 
 export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
     return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
         toolbar.init();
-        const appBarStore = new AppBarStore(pluginApi.dispatcher());
-        resolve(new AppBarPlugin(appBarStore));
+        resolve(new AppBarPlugin(new AppBarModel(pluginApi.dispatcher())));
     });
 }
 

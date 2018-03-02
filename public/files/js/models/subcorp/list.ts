@@ -59,7 +59,7 @@ export interface SortKey {
     reverse:boolean;
 }
 
-export class SubcorpListStore extends StatefulModel {
+export class SubcorpListModel extends StatefulModel {
 
     private layoutModel:PageModel;
 

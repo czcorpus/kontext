@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
-import {CQLEditorStore, CQLEditorStoreState} from '../../models/query/cqleditor/store';
+import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 
@@ -39,29 +39,29 @@ export interface CQLEditorViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, editorStore:CQLEditorStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, editorModel:CQLEditorModel) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorProps, CQLEditorStoreState> {
+    class CQLEditorFallback extends React.PureComponent<CQLEditorProps, CQLEditorModelState> {
 
         constructor(props) {
             super(props);
-            this.state = editorStore.getState();
-            this.handleStoreChange = this.handleStoreChange.bind(this);
+            this.state = editorModel.getState();
+            this.handleModelChange = this.handleModelChange.bind(this);
         }
 
-        private handleStoreChange(state:CQLEditorStoreState) {
+        private handleModelChange(state:CQLEditorModelState) {
             this.setState(state);
         }
 
         componentDidMount() {
-            editorStore.addChangeListener(this.handleStoreChange);
+            editorModel.addChangeListener(this.handleModelChange);
         }
 
         componentWillUnmount() {
-            editorStore.removeChangeListener(this.handleStoreChange);
+            editorModel.removeChangeListener(this.handleModelChange);
         }
 
         render():React.ReactElement {
@@ -75,19 +75,19 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.PureComponent<CQLEditorProps, CQLEditorStoreState> {
+    class CQLEditor extends React.PureComponent<CQLEditorProps, CQLEditorModelState> {
 
         private editorRoot:Node;
 
         constructor(props:CQLEditorProps) {
             super(props);
             this.editorRoot = null;
-            this.state = editorStore.getState();
-            this.handleStoreChange = this.handleStoreChange.bind(this);
+            this.state = editorModel.getState();
+            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
         }
 
-        private handleStoreChange(state:CQLEditorStoreState) {
+        private handleModelChange(state:CQLEditorModelState) {
             this.setState(state);
         }
 
@@ -219,7 +219,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
         }
 
         componentDidMount() {
-            editorStore.addChangeListener(this.handleStoreChange);
+            editorModel.addChangeListener(this.handleModelChange);
 
             if (he.browserInfo.isFirefox()) {
                 this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
@@ -276,7 +276,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
         }
 
         componentWillUnmount() {
-            editorStore.removeChangeListener(this.handleStoreChange);
+            editorModel.removeChangeListener(this.handleModelChange);
         }
 
         render() {

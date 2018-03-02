@@ -31,8 +31,8 @@ import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
-import {TextTypesStore} from '../textTypes/attrValues';
-import {QueryContextStore} from './context';
+import {TextTypesModel} from '../textTypes/attrValues';
+import {QueryContextModel} from './context';
 
 
 export interface GeneralQueryFormProperties {
@@ -125,7 +125,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 /**
  *
  */
-export abstract class GeneralQueryStore extends SynchronizedModel {
+export abstract class GeneralQueryModel extends SynchronizedModel {
 
     protected pageModel:PageModel;
 
@@ -143,11 +143,11 @@ export abstract class GeneralQueryStore extends SynchronizedModel {
 
     protected currentAction:string;
 
-    // ----- other stores
+    // ----- other models
 
-    protected textTypesStore:TextTypesStore;
+    protected textTypesModel:TextTypesModel;
 
-    protected queryContextStore:QueryContextStore;
+    protected queryContextModel:QueryContextModel;
 
     protected queryTracer:ITracer;
 
@@ -169,13 +169,13 @@ export abstract class GeneralQueryStore extends SynchronizedModel {
     constructor(
             dispatcher:ActionDispatcher,
             pageModel:PageModel,
-            textTypesStore:TextTypesStore,
-            queryContextStore:QueryContextStore,
+            textTypesModel:TextTypesModel,
+            queryContextModel:QueryContextModel,
             props:GeneralQueryFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.textTypesStore = textTypesStore;
-        this.queryContextStore = queryContextStore;
+        this.textTypesModel = textTypesModel;
+        this.queryContextModel = queryContextModel;
         this.forcedAttr = props.forcedAttr;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
@@ -282,8 +282,8 @@ export abstract class GeneralQueryStore extends SynchronizedModel {
     }
 
 
-    onSettingsChange(optsStore:ViewOptions.IGeneralViewOptionsStore):void {
-        this.useCQLEditor = optsStore.getUseCQLEditor();
+    onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
+        this.useCQLEditor = optsModel.getUseCQLEditor();
         this.notifyChangeListeners();
     }
 
@@ -309,7 +309,7 @@ export interface CorpusSwitchPreserved {
 /**
  *
  */
-export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupHandler, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupHandler, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
 
     private corpora:Immutable.List<string>;
 
@@ -364,10 +364,10 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
     constructor(
             dispatcher:ActionDispatcher,
             pageModel:PageModel,
-            textTypesStore:TextTypesStore,
-            queryContextStore:QueryContextStore,
+            textTypesModel:TextTypesModel,
+            queryContextModel:QueryContextModel,
             props:QueryFormProperties) {
-        super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
+        super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
         this.subcorpList = Immutable.List<string>(props.subcorpList);
@@ -634,7 +634,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         });
 
         // query context
-        const contextArgs = this.queryContextStore.exportForm();
+        const contextArgs = this.queryContextModel.exportForm();
         for (let k in contextArgs) {
             if (Object.prototype.toString.call(contextArgs[k]) === '[object Array]') {
                 args.replace(k, contextArgs[k]);
@@ -645,7 +645,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         }
 
         // text types
-        const ttData = this.textTypesStore.exportSelections(false);
+        const ttData = this.textTypesModel.exportSelections(false);
         for (let k in ttData) {
             if (ttData.hasOwnProperty(k)) {
                 args.replace('sca_' + k, ttData[k]);
@@ -784,7 +784,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 /**
  *
  */
-export class QueryHintStore extends StatefulModel {
+export class QueryHintModel extends StatefulModel {
 
     private hints:Array<string>;
 

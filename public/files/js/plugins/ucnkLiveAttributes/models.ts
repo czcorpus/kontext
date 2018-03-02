@@ -26,7 +26,7 @@ import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
-import * as textTypesStore from '../../models/textTypes/attrValues';
+import * as textTypesModel from '../../models/textTypes/attrValues';
 import * as Immutable from 'immutable';
 
 
@@ -92,13 +92,13 @@ function isArr(v) {
  * attr2: v2#3 [OK]
  * attr3: v3#1 v3#2 [WRONG]
  */
-export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValueTextInputListener {
+export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValueTextInputListener {
 
     private pluginApi:IPluginApi;
 
     private userData:Kontext.UserCredentials;
 
-    private textTypesStore:TextTypes.ITextTypesStore;
+    private textTypesModel:TextTypes.ITextTypesModel;
 
     private selectionSteps:Immutable.List<SelectionStep>;
 
@@ -129,13 +129,13 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
     /**
      * @param dispatcher an action dispatcher instance
      * @param pluginApi KonText plugin-api provider
-     * @param textTypesStore
+     * @param textTypesModel
      * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
      * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
      * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
      */
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
-            textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
+            textTypesModel:TextTypes.ITextTypesModel, selectedCorporaProvider:()=>Immutable.List<string>,
             ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
         super(dispatcher);
         this.pluginApi = pluginApi;
@@ -143,7 +143,7 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
         this.bibliographyAttribute = args.bibAttr;
         this.manualAlignCorporaMode = args.manualAlignCorporaMode;
         this.controlsEnabled = false; // it is enabled when user selects one or more items
-        this.textTypesStore = textTypesStore;
+        this.textTypesModel = textTypesModel;
         this.isBusy = false;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
         this.alignedCorpora = Immutable.List(args.availableAlignedCorpora
@@ -160,7 +160,7 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
         this.updateListeners = Immutable.List<()=>void>();
         this.selectedCorporaProvider = selectedCorporaProvider;
         this.ttCheckStatusProvider = ttCheckStatusProvider;
-        textTypesStore.setTextInputPlaceholder(this.getTextInputPlaceholder());
+        textTypesModel.setTextInputPlaceholder(this.getTextInputPlaceholder());
         // initial enabled/disabled state:
         this.setControlsEnabled(args.refineEnabled);
 
@@ -172,8 +172,8 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
                     this.processRefine().then(
                         (v) => {
                             this.updateListeners.forEach(item => item());
-                            this.textTypesStore.snapshotState();
-                            this.textTypesStore.notifyChangeListeners();
+                            this.textTypesModel.snapshotState();
+                            this.textTypesModel.notifyChangeListeners();
                             this.isBusy = false;
                             this.notifyChangeListeners();
                         },
@@ -203,19 +203,19 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
                     if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
                         this.reset();
-                        this.textTypesStore.notifyChangeListeners();
+                        this.textTypesModel.notifyChangeListeners();
                     }
                     this.notifyChangeListeners();
                 break;
                 case 'LIVE_ATTRIBUTES_UNDO_CLICKED':
                     /*
-                     * Please note that textTypesStore and selection steps are
+                     * Please note that textTypesModel and selection steps are
                      * coupled only loosely (the two lists must match for all
                      * items). Once some other function starts to call snapshotState()
-                     * on TextTypesStore, the UNDO function here gets broken.
+                     * on TextTypesModel, the UNDO function here gets broken.
                      */
-                    this.textTypesStore.undoState();
-                    this.textTypesStore.notifyChangeListeners();
+                    this.textTypesModel.undoState();
+                    this.textTypesModel.notifyChangeListeners();
                     this.selectionSteps = this.selectionSteps.pop();
                     this.notifyChangeListeners();
                 break;
@@ -239,20 +239,20 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
     }
 
     private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
-        const attrObj = this.textTypesStore.getAttribute(this.bibliographyAttribute);
+        const attrObj = this.textTypesModel.getAttribute(this.bibliographyAttribute);
         const newBibData = filterData[this.bibliographyAttribute];
 
         // set the data iff server data are full-fledget (i.e. including unique 'ident')
         if (newBibData.length > 0 && !!newBibData[0].ident) {
             this.bibliographyIds = this.bibliographyIds.union(Immutable.OrderedSet<string>(newBibData.map(v => v.ident)));
         }
-        this.textTypesStore.setExtendedInfoSupport(
+        this.textTypesModel.setExtendedInfoSupport(
             this.bibliographyAttribute,
             (ident:string) => {
                 if (this.bibliographyIds.contains(ident)) {
                     return this.loadBibInfo(ident).then(
                         (serverData:ServerBibData) => {
-                            this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
+                            this.textTypesModel.setExtendedInfo(this.bibliographyAttribute,
                                     ident, Immutable.OrderedMap<string, any>(serverData.bib_data));
 
                         }
@@ -272,8 +272,8 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
     }
 
     private processRefine():RSVP.Promise<any> {
-        this.textTypesStore.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
-            this.textTypesStore.mapItems(attrName, (item:TextTypes.AttributeValue) => {
+        this.textTypesModel.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
+            this.textTypesModel.mapItems(attrName, (item:TextTypes.AttributeValue) => {
                 return {
                     ident: item.ident,
                     value: item.value,
@@ -285,14 +285,14 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
                 }
             });
         });
-        const selections = this.textTypesStore.exportSelections(false);
+        const selections = this.textTypesModel.exportSelections(false);
         return this.loadFilteredData(selections).then(
             (data:ServerRefineResponse) => {
                 const filterData = this.importFilter(data.attr_values);
                 let k; // mut be defined here (ES5 cannot handle for(let k...) here)
                 for (k in filterData) {
-                    this.textTypesStore.updateItems(k, filterData[k].map(v => v.ident));
-                    this.textTypesStore.mapItems(k, (v, i) => {
+                    this.textTypesModel.updateItems(k, filterData[k].map(v => v.ident));
+                    this.textTypesModel.mapItems(k, (v, i) => {
                         if (filterData[k][i]) {
                             return {
                                 ident: filterData[k][i].ident,
@@ -308,7 +308,7 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
                             return null;
                         }
                     });
-                    this.textTypesStore.filter(k, (item) => item !== null);
+                    this.textTypesModel.filter(k, (item) => item !== null);
                 }
                 this.alignedCorpora = this.alignedCorpora.map((value) => {
                     let newVal:TextTypes.AlignedLanguageItem = {
@@ -331,7 +331,7 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
     }
 
     reset():void {
-        this.textTypesStore.reset();
+        this.textTypesModel.reset();
         this.selectionSteps = this.selectionSteps.clear();
         this.alignedCorpora = this.initialAlignedCorpora;
         this.bibliographyIds = this.bibliographyIds.clear();
@@ -381,15 +381,15 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
     }
 
     /**
-     * Note: be careful when wiring-up this store with TextTypes store
+     * Note: be careful when wiring-up this model with TextTypes model
      * as they listen to each other for different actions which is
      * a possible source of a infinite callback loop.
      */
-    addUpdateListener(fn:()=>void):void {
+    addUpdateListener(fn:()=>void):void { // TODO implement this via StatelessModel and side-effects
         this.updateListeners = this.updateListeners.push(fn);
     }
 
-    removeUpdateListener(fn:()=>void):void {
+    removeUpdateListener(fn:()=>void):void { // TODO (see above)
         const idx = this.updateListeners.indexOf(fn);
         if (idx > -1) {
             this.updateListeners = this.updateListeners.remove(idx);
@@ -451,10 +451,10 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
                             numGrouped: parseInt(v[3])
                         };
                     });
-                    this.textTypesStore.setAttrSummary(k, null);
+                    this.textTypesModel.setAttrSummary(k, null);
 
                 } else if (typeof data[k] === 'object' && 'length' in data[k]) {
-                    this.textTypesStore.setAttrSummary(k, {
+                    this.textTypesModel.setAttrSummary(k, {
                         text: this.pluginApi.translate('query__tt_{num}_items',
                                 {num: data[k]['length']}),
                         help: this.pluginApi.translate('ucnkLA__bib_list_warning')
@@ -508,14 +508,14 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
         return (attrName:string, value:string) => {
             if (value.length > 2) {
                 let prom = this.loadAutocompleteHint(
-                    value, attrName, this.textTypesStore.exportSelections(true));
+                    value, attrName, this.textTypesModel.exportSelections(true));
                 return prom.then(
                     (v:ServerRefineResponse) => {
                         let filterData = this.importFilter(v.attr_values);
                         if (isArr(filterData[this.bibliographyAttribute])) {
                             this.attachBibData(filterData);
                         }
-                        this.textTypesStore.setAutoComplete(
+                        this.textTypesModel.setAutoComplete(
                             attrName,
                             v.attr_values[attrName].map((v) => {
                                     return {ident: v[1], label: v[2]};
@@ -553,7 +553,7 @@ export class LiveAttrsStore extends StatefulModel implements TextTypes.AttrValue
     }
 
     canUndoRefine():boolean {
-        return this.textTypesStore.canUndoState();
+        return this.textTypesModel.canUndoState();
     }
 
     getIsBusy():boolean {

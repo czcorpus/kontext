@@ -26,12 +26,12 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {CorplistWidgetStore} from './widget';
+import {CorplistWidgetModel} from './widget';
 import {CorplistPage} from './corplist';
 import {init as viewInit} from './corplistView';
 import {init as widgetInit} from './widgetView';
 import {init as overviewViewInit} from 'views/overview';
-import {CorplistFormStore, CorplistTableStore} from './corplist';
+import {CorplistFormModel, CorplistTableModel} from './corplist';
 import * as common from './common';
 import {SearchEngine} from './search';
 
@@ -47,15 +47,15 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
     const overviewViews = overviewViewInit(
         pluginApi.dispatcher(),
         pluginApi.getComponentHelpers(),
-        pluginApi.getStores().corpusInfoStore
+        pluginApi.getModels().corpusInfoModel
     );
-    const initViews = (formStore:CorplistFormStore, listStore:CorplistTableStore) => {
+    const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
         const ans:any = viewInit(
             pluginApi.dispatcher(),
             pluginApi.getComponentHelpers(),
             overviewViews.CorpusInfoBox,
-            formStore,
-            listStore
+            formModel,
+            listModel
         );
         return ans;
     }
@@ -72,7 +72,7 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
+        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -86,7 +86,7 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
         corporaLabels
     );
 
-    const store = new CorplistWidgetStore(
+    const model = new CorplistWidgetModel(
         pluginApi.dispatcher(),
         pluginApi,
         pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
@@ -97,12 +97,12 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
         featData,
         options.itemClickAction
     );
-    store.initHandlers();
+    model.initHandlers();
     return widgetInit(
         pluginApi.dispatcher(),
         pluginApi.getComponentHelpers(),
-        store,
-        queryStore
+        model,
+        queryModel
     );
     // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
 }

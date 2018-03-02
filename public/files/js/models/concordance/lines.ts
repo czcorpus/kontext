@@ -33,7 +33,7 @@ import * as Immutable from 'immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
 import {AudioPlayer} from './media';
-import {ConcSaveStore} from './save';
+import {ConcSaveModel} from './save';
 
 export interface ServerTextChunk {
     class:string;
@@ -248,7 +248,7 @@ function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
 /**
  *
  */
-export class DummySyntaxViewStore extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
+export class DummySyntaxViewModel extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
 
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
 
@@ -265,7 +265,7 @@ export class DummySyntaxViewStore extends StatefulModel implements PluginInterfa
 /**
  *
  */
-export class ConcLineStore extends SynchronizedModel {
+export class ConcLineModel extends SynchronizedModel {
 
     private layoutModel:PageModel;
 
@@ -305,23 +305,23 @@ export class ConcLineStore extends SynchronizedModel {
 
     private useSafeFont:boolean;
 
-    private saveStore:ConcSaveStore;
+    private saveModel:ConcSaveModel;
 
-    private syntaxViewStore:PluginInterfaces.ISyntaxViewer;
+    private syntaxViewModel:PluginInterfaces.ISyntaxViewer;
 
     private supportsSyntaxView:boolean;
 
-    private ttStore:TextTypes.ITextTypesStore;
+    private ttModel:TextTypes.ITextTypesModel;
 
 
     constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
-            saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer,
-            ttStore:TextTypes.ITextTypesStore, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
+            saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.ISyntaxViewer,
+            ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.saveStore = saveStore;
-        this.syntaxViewStore = syntaxViewStore;
-        this.ttStore = ttStore;
+        this.saveModel = saveModel;
+        this.syntaxViewModel = syntaxViewModel;
+        this.ttModel = ttModel;
         this.viewMode = lineViewProps.ViewMode;
         this.showLineNumbers = lineViewProps.ShowLineNumbers;
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
@@ -453,8 +453,8 @@ export class ConcLineStore extends SynchronizedModel {
         );
     }
 
-    updateOnGlobalViewOptsChange(store:ViewOptions.IGeneralViewOptionsStore):void {
-        this.showLineNumbers = store.getLineNumbers();
+    updateOnGlobalViewOptsChange(model:ViewOptions.IGeneralViewOptionsModel):void {
+        this.showLineNumbers = model.getLineNumbers();
         this.currentPage = 1;
         this.reloadPage().then(
             (data) => {
@@ -638,7 +638,7 @@ export class ConcLineStore extends SynchronizedModel {
     }
 
     private calculateAdHocIpm():RSVP.Promise<number> {
-        const selections = this.ttStore.exportSelections(false);
+        const selections = this.ttModel.exportSelections(false);
         const args = new MultiDict();
         args.set('corpname', this.baseCorpname);
         for (let p in selections) {
@@ -714,7 +714,7 @@ export class ConcLineStore extends SynchronizedModel {
     }
 
     getProvidesAdHocIpm():boolean {
-        return this.ttStore.hasSelectedItems();
+        return this.ttModel.hasSelectedItems();
     }
 
     getAdHocIpm():number {
@@ -741,12 +741,12 @@ export class ConcLineStore extends SynchronizedModel {
         return this.useSafeFont;
     }
 
-    getSaveStore():ConcSaveStore {
-        return this.saveStore;
+    getSaveModel():ConcSaveModel {
+        return this.saveModel;
     }
 
-    getSyntaxViewStore():PluginInterfaces.ISyntaxViewer {
-        return this.syntaxViewStore;
+    getSyntaxViewModel():PluginInterfaces.ISyntaxViewer {
+        return this.syntaxViewModel;
     }
 
     getSupportsSyntaxView():boolean {

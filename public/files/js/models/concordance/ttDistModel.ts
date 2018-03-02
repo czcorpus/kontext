@@ -27,11 +27,11 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
-import {ConcLineStore} from './lines';
+import {ConcLineModel} from './lines';
 
 export type TTCrit = Array<[string, string]>;
 
-export interface TextTypesDistStoreProps {
+export interface TextTypesDistModelProps {
     ttCrit:TTCrit;
 }
 
@@ -92,7 +92,7 @@ export interface FreqBlock {
 
 
 
-export class TextTypesDistStore extends StatefulModel {
+export class TextTypesDistModel extends StatefulModel {
 
     private static SAMPLE_SIZE = 10000;
 
@@ -113,20 +113,20 @@ export class TextTypesDistStore extends StatefulModel {
 
     private isBusy:boolean;
 
-    private concLineStore:ConcLineStore;
+    private concLineModel:ConcLineModel;
 
     private blockedByAsyncConc:boolean;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineStore:ConcLineStore, props:TextTypesDistStoreProps) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.concLineStore = concLineStore;
+        this.concLineModel = concLineModel;
         this.ttCrit = props.ttCrit;
         this.blocks = Immutable.List<FreqBlock>();
         this.flimit = 100; // this is always recalculated according to data
         this.sampleSize = 0;
-        this.blockedByAsyncConc = this.concLineStore.isUnfinishedCalculation();
-        this.isBusy = this.concLineStore.isUnfinishedCalculation();
+        this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
+        this.isBusy = this.concLineModel.isUnfinishedCalculation();
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
@@ -157,7 +157,7 @@ export class TextTypesDistStore extends StatefulModel {
     }
 
     private getConcSize():number {
-        return this.concLineStore.getConcSummary().concSize;
+        return this.concLineModel.getConcSummary().concSize;
     }
 
     private calcMinFreq():number {
@@ -173,9 +173,9 @@ export class TextTypesDistStore extends StatefulModel {
     private loadData():RSVP.Promise<boolean> {
 
         return (() => {
-            if (this.getConcSize() > TextTypesDistStore.SAMPLE_SIZE) {
+            if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
                 const args = this.layoutModel.getConcArgs();
-                args.set('rlines', TextTypesDistStore.SAMPLE_SIZE);
+                args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
                 return this.layoutModel.ajax<any>(
                     'GET',
@@ -219,8 +219,8 @@ export class TextTypesDistStore extends StatefulModel {
                                     value: v.Word.map(v => v.n).join(', '),
                                     ipm: v.rel,
                                     abs: v.freq,
-                                    barWidth: ~~Math.round(v.rel / sumRes * TextTypesDistStore.IPM_BAR_WIDTH),
-                                    color: TextTypesDistStore.COLORS[i % TextTypesDistStore.COLORS.length]
+                                    barWidth: ~~Math.round(v.rel / sumRes * TextTypesDistModel.IPM_BAR_WIDTH),
+                                    color: TextTypesDistModel.COLORS[i % TextTypesDistModel.COLORS.length]
                                 };
                             })
                         };

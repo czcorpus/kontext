@@ -29,7 +29,7 @@ declare var kbLayouts:Array<Kontext.VirtualKeyboardLayout>; // generated on comp
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 
 
-export class VirtualKeyboardStore extends StatefulModel {
+export class VirtualKeyboardModel extends StatefulModel {
 
     private pageModel:PageModel;
 

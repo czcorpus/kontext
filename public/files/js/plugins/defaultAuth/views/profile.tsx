@@ -22,7 +22,7 @@
 
 import * as React from 'vendor/react';
 import {Kontext} from '../../../types/common';
-import {UserProfileStore} from '../profile';
+import {UserProfileModel} from '../profile';
 import { ReactElement } from 'vendor/react';
 import {ActionDispatcher} from '../../../app/dispatcher';
 
@@ -43,7 +43,7 @@ export interface UserProfileViewState {
     email:string;
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, profileStore:UserProfileStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, profileModel:UserProfileModel) {
 
     /**
      *
@@ -171,31 +171,31 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = this._fetchModelState();
+            this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchStoreState():UserProfileViewState {
+        _fetchModelState():UserProfileViewState {
             return {
-                currPasswd: profileStore.getCurrPasswd(),
-                newPasswd: profileStore.getNewPasswd(),
-                newPasswd2: profileStore.getNewPasswd2(),
-                firstname: profileStore.getFirstname(),
-                lastname: profileStore.getLastname(),
-                email: profileStore.getEmail()
+                currPasswd: profileModel.getCurrPasswd(),
+                newPasswd: profileModel.getNewPasswd(),
+                newPasswd2: profileModel.getNewPasswd2(),
+                firstname: profileModel.getFirstname(),
+                lastname: profileModel.getLastname(),
+                email: profileModel.getEmail()
             }
         }
 
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+        _handleModelChange() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            profileStore.addChangeListener(this._handleStoreChange);
+            profileModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            profileStore.removeChangeListener(this._handleStoreChange);
+            profileModel.removeChangeListener(this._handleModelChange);
         }
 
         render():ReactElement {

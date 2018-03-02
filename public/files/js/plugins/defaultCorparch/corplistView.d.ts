@@ -20,7 +20,7 @@
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
-export function init(dispatcher, componentHelpers, CorpusInfoBox, formStore, listStore): {
+export function init(dispatcher, componentHelpers, CorpusInfoBox, formModel, listModel): {
     CorplistTable:React.Component;
     CorplistHeader:React.Component;
     FilterForm:React.Component;

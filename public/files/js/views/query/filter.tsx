@@ -24,12 +24,12 @@ import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
-import {FilterStore} from '../../models/query/filter';
-import {QueryHintStore} from '../../models/query/main';
-import {WithinBuilderStore} from '../../models/query/withinBuilder';
-import {VirtualKeyboardStore} from '../../models/query/virtualKeyboard';
-import {FirstHitsStore} from '../../models/query/firstHits';
-import {CQLEditorStore} from '../../models/query/cqleditor/store';
+import {FilterModel} from '../../models/query/filter';
+import {QueryHintModel} from '../../models/query/main';
+import {WithinBuilderModel} from '../../models/query/withinBuilder';
+import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
+import {FirstHitsModel} from '../../models/query/firstHits';
+import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 
@@ -105,15 +105,15 @@ export interface FirstHitsFormState {
 export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
-        filterStore:FilterStore,
-        queryHintStore:QueryHintStore,
-        withinBuilderStore:WithinBuilderStore,
-        virtualKeyboardStore:VirtualKeyboardStore,
-        firstHitsStore:FirstHitsStore,
-        cqlEditorStore:CQLEditorStore):FilterFormViews {
+        filterModel:FilterModel,
+        queryHintModel:QueryHintModel,
+        withinBuilderModel:WithinBuilderModel,
+        virtualKeyboardModel:VirtualKeyboardModel,
+        firstHitsModel:FirstHitsModel,
+        cqlEditorModel:CQLEditorModel):FilterFormViews {
 
-    const inputViews = inputInit(dispatcher, he, filterStore, queryHintStore, withinBuilderStore,
-                virtualKeyboardStore, cqlEditorStore);
+    const inputViews = inputInit(dispatcher, he, filterModel, queryHintModel, withinBuilderModel,
+                virtualKeyboardModel, cqlEditorModel);
 
     const layoutViews = he.getLayoutViews();
 
@@ -124,7 +124,7 @@ export function init(
         constructor(props) {
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handlePosNegSelect = this._handlePosNegSelect.bind(this);
             this._handleSelTokenSelect = this._handleSelTokenSelect.bind(this);
             this._handleToFromRangeValChange = this._handleToFromRangeValChange.bind(this);
@@ -135,29 +135,29 @@ export function init(
 
         _fetchState() {
             return {
-                queryTypes: filterStore.getQueryTypes(),
-                supportedWidgets: filterStore.getSupportedWidgets(),
-                lposValues: filterStore.getLposValues(),
-                matchCaseValues: filterStore.getMatchCaseValues(),
-                forcedAttr: filterStore.getForcedAttr(),
-                defaultAttrValues: filterStore.getDefaultAttrValues(),
-                attrList: filterStore.getAttrList(),
-                tagsetDocUrl: filterStore.getTagsetDocUrls().get(this.props.filterId),
-                lemmaWindowSizes: filterStore.getLemmaWindowSizes(),
-                posWindowSizes: filterStore.getPosWindowSizes(),
-                hasLemmaAttr: filterStore.getHasLemmaAttr().get(this.props.filterId),
-                wPoSList: filterStore.getwPoSList(),
+                queryTypes: filterModel.getQueryTypes(),
+                supportedWidgets: filterModel.getSupportedWidgets(),
+                lposValues: filterModel.getLposValues(),
+                matchCaseValues: filterModel.getMatchCaseValues(),
+                forcedAttr: filterModel.getForcedAttr(),
+                defaultAttrValues: filterModel.getDefaultAttrValues(),
+                attrList: filterModel.getAttrList(),
+                tagsetDocUrl: filterModel.getTagsetDocUrls().get(this.props.filterId),
+                lemmaWindowSizes: filterModel.getLemmaWindowSizes(),
+                posWindowSizes: filterModel.getPosWindowSizes(),
+                hasLemmaAttr: filterModel.getHasLemmaAttr().get(this.props.filterId),
+                wPoSList: filterModel.getwPoSList(),
                 contextFormVisible: false,
-                inputLanguage: filterStore.getInputLanguage(),
-                pnFilterValue: filterStore.getPnFilterValues().get(this.props.filterId),
-                filfposValue: filterStore.getFilfposValues().get(this.props.filterId),
-                filtposValue: filterStore.getFiltposValues().get(this.props.filterId),
-                filflValue: filterStore.getFilflValues().get(this.props.filterId),
-                inclKwicValue: filterStore.getInclKwicValues().get(this.props.filterId),
-                isLocked: filterStore.getOpLocks().get(this.props.filterId),
-                withinArg: filterStore.getWithinArgs().get(this.props.filterId),
-                useCQLEditor: filterStore.getUseCQLEditor(),
-                tagAttr: filterStore.getTagAttr()
+                inputLanguage: filterModel.getInputLanguage(),
+                pnFilterValue: filterModel.getPnFilterValues().get(this.props.filterId),
+                filfposValue: filterModel.getFilfposValues().get(this.props.filterId),
+                filtposValue: filterModel.getFiltposValues().get(this.props.filterId),
+                filflValue: filterModel.getFilflValues().get(this.props.filterId),
+                inclKwicValue: filterModel.getInclKwicValues().get(this.props.filterId),
+                isLocked: filterModel.getOpLocks().get(this.props.filterId),
+                withinArg: filterModel.getWithinArgs().get(this.props.filterId),
+                useCQLEditor: filterModel.getUseCQLEditor(),
+                tagAttr: filterModel.getTagAttr()
             };
         }
 
@@ -182,18 +182,18 @@ export function init(
             }
         }
 
-        _storeChangeHandler() {
+        _modelChangeHandler() {
             const ans = this._fetchState();
             ans['contextFormVisible'] = this.state.contextFormVisible;
             this.setState(ans);
         }
 
         componentDidMount() {
-            filterStore.addChangeListener(this._storeChangeHandler);
+            filterModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            filterStore.removeChangeListener(this._storeChangeHandler);
+            filterModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _handlePosNegSelect(evt) {
@@ -473,7 +473,7 @@ export function init(
             super(props);
             this.state = {
                 isAutoSubmit: this.props.operationIdx === undefined,
-                docStructs: firstHitsStore.getDocStructValues()
+                docStructs: firstHitsModel.getDocStructValues()
             }
             this._handleSubmit = this._handleSubmit.bind(this);
         }
