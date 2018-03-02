@@ -68,6 +68,7 @@ export function init(dispatcher, he, queryStorageModel) {
                         query: historyItem.query
                     }
                 });
+                this.props.onCloseTrigger();
 
             } else if (evt.keyCode === 27) { // ESC key
                 this.props.onCloseTrigger();
