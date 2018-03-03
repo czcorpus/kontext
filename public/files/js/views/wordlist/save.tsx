@@ -19,13 +19,46 @@
  */
 
 import * as React from 'react';
+import {Kontext} from '../../types/common';
+import {ActionDispatcher} from '../../app/dispatcher';
+import { WordlistSaveModel } from '../../models/wordlist/save';
+import {CommonViews} from '../common';
 
 
-export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
+export interface WordlistSaveViews {
+    WordlistSaveForm:React.ComponentClass<{}>;
+}
+
+
+export interface WordlistSaveFormViewsArgs {
+    dispatcher:ActionDispatcher;
+    utils:Kontext.ComponentHelpers;
+    commonViews:CommonViews;
+    saveModel:WordlistSaveModel;
+}
+
+export interface WordlistSaveFormProps {
+
+}
+
+export interface WordlistSaveFormState {
+    saveFormat:string;
+    toLine:string;
+    includeHeading:boolean;
+    includeColHeaders:boolean;
+}
+
+
+export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFormViewsArgs):WordlistSaveViews {
+
+    const layoutViews = utils.getLayoutViews();
 
     // --------------------------- <TRColHeadingSelector /> -------------------------------
 
-    const TRColHeadingSelector = (props) => {
+    const TRColHeadingSelector:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
@@ -54,7 +87,10 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
 
     // --------------------------- <TRHeadingSelector /> -------------------------------
 
-    const TRHeadingSelector = (props) => {
+    const TRHeadingSelector:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
@@ -82,7 +118,12 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
 
     // ---------------------------<MaxLinesInput /> -----------------------------
 
-    const TRGeneralHeadingSelector = (props) => {
+    const TRGeneralHeadingSelector:React.SFC<{
+        saveFormat:string;
+        includeColHeaders:boolean;
+        includeHeading:boolean;
+
+    }> = (props) => {
         if (props.saveFormat === 'csv' || props.saveFormat === 'xlsx') {
             return <TRColHeadingSelector value={props.includeColHeaders} />;
 
@@ -93,7 +134,10 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
 
     // ---------------------------<MaxLinesInput /> -----------------------------
 
-    const TRToLineInput = (props) => {
+    const TRToLineInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -117,13 +161,16 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
 
     // --------------------------- <TRSaveFormatSelector /> -------------------------------
 
-    const TRSaveFormatSelector = (props) => {
+    const TRSaveFormatSelector:React.SFC<{
+        value:string;
 
-        const handleSaveFormatSelect = (evt) => {
+    }> = (props) => {
+
+        const handleSaveFormatSelect = (evt:React.ChangeEvent<{}>) => {
             dispatcher.dispatch({
                 actionType: 'WORDLIST_SAVE_FORM_SET_FORMAT',
                 props: {
-                    value: evt.target.value
+                    value: evt.target['value'] // TODO
                 }
             });
         };
@@ -143,7 +190,7 @@ export function init(dispatcher, utils, layoutViews, commonViews, saveModel) {
 
     // --------------------------- <SaveWlForm /> -------------------------------
 
-    class WordlistSaveForm extends React.Component {
+    class WordlistSaveForm extends React.Component<WordlistSaveFormProps, WordlistSaveFormState> {
 
         constructor(props) {
             super(props);

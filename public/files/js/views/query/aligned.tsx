@@ -19,15 +19,77 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {Kontext} from '../../types/common';
 import {init as inputInit} from './input';
+import {InputModuleViews} from './input';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {QueryModel, QueryHintModel} from '../../models/query/main';
+import {WithinBuilderModel} from '../../models/query/withinBuilder';
+import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
+import {CQLEditorModel} from '../../models/query/cqleditor/model';
+import {PluginInterfaces} from '../../types/plugins';
 
 
-export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel) {
-    const inputViews = inputInit(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel);
+export interface AlignedModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    inputViews:InputModuleViews;
+    queryModel:QueryModel;
+    queryHintModel:QueryHintModel;
+    withinBuilderModel:WithinBuilderModel;
+    virtualKeyboardModel:VirtualKeyboardModel;
+    cqlEditorModel:CQLEditorModel;
+    useCQLEditor:boolean;
+}
+
+export interface AlignedCorporaProps {
+    availableCorpora:Immutable.List<{n:string; label:string}>;
+    alignedCorpora:Immutable.List<string>;
+    queryTypes:Immutable.Map<string, string>;
+    supportedWidgets:Immutable.Map<string, Array<string>>;
+    wPoSList:Array<{n:string; v:string}>;
+    lposValues:Immutable.Map<string, string>;
+    matchCaseValues:Immutable.Map<string, boolean>;
+    forcedAttr:string;
+    defaultAttrValues:Immutable.Map<string, string>;
+    attrList:Array<Kontext.AttrItem>;
+    tagsetDocUrls:Immutable.Map<string, string>;
+    pcqPosNegValues:Immutable.Map<string, string>;
+    inputLanguages:Immutable.Map<string, string>;
+    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    hasLemmaAttr:Immutable.Map<string, boolean>;
+    useCQLEditor:boolean;
+}
+
+export interface AlignedViews {
+    AlignedCorpora:React.SFC<AlignedCorporaProps>;
+}
+
+export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
+        withinBuilderModel, virtualKeyboardModel, cqlEditorModel}:AlignedModuleArgs):AlignedViews {
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
 
-    const AlignedCorpBlock = (props) => {
+    const AlignedCorpBlock:React.SFC<{
+        corpname:string;
+        label:string;
+        pcqPosNegValue:string;
+        queryType:string;
+        widgets:Array<string>;
+        hasLemmaAttr:boolean;
+        wPoSList:Array<{n:string; v:string}>;
+        lposValue:string;
+        matchCaseValue:boolean;
+        forcedAttr:string;
+        defaultAttr:string;
+        attrList:Array<Kontext.AttrItem>;
+        tagsetDocUrl:string;
+        inputLanguage:string;
+        queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+        useCQLEditor:boolean;
+
+    }> = (props) => {
 
         const handleCloseClick = () => {
             dispatcher.dispatch({
@@ -93,7 +155,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------ <AlignedCorpora /> -----------------------------
 
-    const AlignedCorpora = (props) => {
+    const AlignedCorpora:React.SFC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
             dispatcher.dispatch({
@@ -120,7 +182,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
                 </legend>
                 <div id="add-searched-lang-widget">
                     <select onChange={handleAddAlignedCorpus} value="">
-                        <option value="" disabled="disabled">
+                        <option value="" disabled={true}>
                             {`-- ${he.translate('query__add_a_corpus')} --`}</option>
                         {props.availableCorpora
                             .filter(item => corpIsUnused(item.n))

@@ -110,8 +110,15 @@ export function init(
         firstHitsModel:FirstHitsModel,
         cqlEditorModel:CQLEditorModel):FilterFormViews {
 
-    const inputViews = inputInit(dispatcher, he, filterModel, queryHintModel, withinBuilderModel,
-                virtualKeyboardModel, cqlEditorModel);
+    const inputViews = inputInit({
+        dispatcher: dispatcher,
+        he: he,
+        queryModel: filterModel,
+        queryHintModel: queryHintModel,
+        withinBuilderModel: withinBuilderModel,
+        virtualKeyboardModel: virtualKeyboardModel,
+        cqlEditorModel: cqlEditorModel
+    });
 
     const layoutViews = he.getLayoutViews();
 

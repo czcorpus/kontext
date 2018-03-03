@@ -20,15 +20,54 @@
 
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {Kontext} from '../../types/common';
+import {ActionDispatcher} from '../../app/dispatcher';
 import { WordlistSaveModel } from '../../models/wordlist/save';
+import {WordlistResultModel, IndexedResultItem, HeadingItem} from '../../models/wordlist/main';
+import {WordlistSaveViews} from './save';
+
+export interface WordlistResultViewsArgs {
+    dispatcher:ActionDispatcher;
+    utils:Kontext.ComponentHelpers;
+    wordlistSaveViews:WordlistSaveViews;
+    wordlistResultModel:WordlistResultModel;
+    wordlistSaveModel:WordlistSaveModel;
+}
+
+export interface WordlistResultProps {
+
+}
+
+export interface WordlistResultState {
+    data:Immutable.List<IndexedResultItem>;
+    headings:Immutable.List<HeadingItem>;
+    currPageInput:string;
+    modelIsBusy:boolean;
+    usesStructAttr:boolean;
+    wlsort:string;
+    saveFormActive:boolean;
+    isLastPage:boolean;
+}
+
+export interface WordlistResultViews {
+    WordlistResult:React.ComponentClass<WordlistResultProps>
+}
+
 
 /**
  */
-export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlistResultModel, wordlistSaveModel) {
+export function init({dispatcher, utils, wordlistSaveViews,
+                      wordlistResultModel, wordlistSaveModel}:WordlistResultViewsArgs):WordlistResultViews {
 
     // ---------------------- <THSortableColumn /> -------------------
 
-    const THSortableColumn = (props) => {
+    const THSortableColumn:React.SFC<{
+        sortKey:string;
+        isActive:boolean;
+        str:string;
+
+    }> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch({
@@ -66,9 +105,12 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     /**
      *
-     * @param {*} props
      */
-    const ResultRowPosFilter = (props) => {
+    const ResultRowPosFilter:React.SFC<{
+        word:string;
+        usesStructAttr:boolean;
+
+    }> = (props) => {
 
         const handleViewConcClick = () => {
             dispatcher.dispatch({
@@ -90,7 +132,13 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     // ---------------------- <TRResultRow /> -------------------
 
-    const TRResultRow = (props) => {
+    const TRResultRow:React.SFC<{
+        idx:number;
+        str:string;
+        usesStructAttr:boolean;
+        freq:number;
+
+    }> = (props) => {
         return (
             <tr>
                 <td className="num">
@@ -114,7 +162,11 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     // ---------------------- <PaginatorTextInput /> -------------------
 
-    const PaginatorTextInput = (props) => {
+    const PaginatorTextInput:React.SFC<{
+        modelIsBusy:boolean;
+        value:string;
+
+     }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -139,7 +191,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     // ---------------------- <PaginatorLeftArrows /> -------------------
 
-    const PaginatorLeftArrows = (props) => {
+    const PaginatorLeftArrows:React.SFC<{}> = (props) => {
 
         const handlePrevPageClick = () => {
             dispatcher.dispatch({
@@ -169,7 +221,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     // ---------------------- <PaginatorRightArrows /> -------------------
 
-    const PaginatorRightArrows = (props) => {
+    const PaginatorRightArrows:React.SFC<{}> = (props) => {
 
         const handleNextPageClick = () => {
             dispatcher.dispatch({
@@ -200,7 +252,12 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     // ---------------------- <Paginator /> -------------------
 
-    const Paginator = (props) => {
+    const Paginator:React.SFC<{
+        currPage:string;
+        modelIsBusy:boolean;
+        isLastPage:boolean;
+
+     }> = (props) => {
 
         const handleKeyPress = (evt) => {
             if (evt.keyCode === 13) {
@@ -216,7 +273,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
         return (
             <div className="bonito-pagination">
                 <form onKeyDown={handleKeyPress}>
-                    {props.currPage > 1 ? <PaginatorLeftArrows /> : null}
+                    {parseInt(props.currPage) > 1 ? <PaginatorLeftArrows /> : null}
                     <div className="bonito-pagination-core">
                         <PaginatorTextInput value={props.currPage} modelIsBusy={props.modelIsBusy} />
                     </div>
@@ -228,7 +285,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
     // ---------------------- <WordlistResult /> -------------------
 
-    class WordlistResult extends React.Component {
+    class WordlistResult extends React.Component<WordlistResultProps, WordlistResultState> {
 
         constructor(props) {
             super(props);

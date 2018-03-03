@@ -19,15 +19,26 @@
  */
 
 import * as React from 'react';
+import {Kontext} from '../types/common';
 
 
-export function init(utils) {
+export interface CommonViews {
+    SaveFormatSelect:React.SFC<SaveFormatSelectProps>;
+}
+
+
+export interface SaveFormatSelectProps {
+    value:string;
+    onChange:(evt:React.ChangeEvent<{}>)=>void;
+}
+
+
+export function init(he:Kontext.ComponentHelpers):CommonViews {
 
     /**
      *
-     * @param {value:string; onChange:(evt)=>void; } props
      */
-    const SaveFormatSelect = (props) => {
+    const SaveFormatSelect:React.SFC<SaveFormatSelectProps> = (props) => {
 
         return (
             <select value={props.value} onChange={props.onChange}>

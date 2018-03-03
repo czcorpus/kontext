@@ -22,8 +22,8 @@ import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
-import {init as wordlistResultViewInit} from 'views/wordlist/result';
-import {init as wordlistSaveViewInit} from 'views/wordlist/save';
+import {init as wordlistResultViewInit} from '../views/wordlist/result';
+import {init as wordlistSaveViewInit} from '../views/wordlist/save';
 import {StatefulModel} from '../models/base';
 import {WordlistResultModel, ResultData, ResultItem, HeadingItem} from '../models/wordlist/main';
 import {WordlistFormModel, WordlistFormProps} from '../models/wordlist/form';
@@ -189,22 +189,20 @@ export class WordlistPage extends StatefulModel  {
                     ]
                 );
 
-                const saveViews = wordlistSaveViewInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
-                    this.layoutModel.commonViews,
-                    this.saveModel
-                );
+                const saveViews = wordlistSaveViewInit({
+                    dispatcher: this.layoutModel.dispatcher,
+                    utils: this.layoutModel.getComponentHelpers(),
+                    commonViews: this.layoutModel.commonViews,
+                    saveModel: this.saveModel
+                });
 
-                const view = wordlistResultViewInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
-                    saveViews,
-                    resultModel,
-                    this.saveModel
-                );
+                const view = wordlistResultViewInit({
+                    dispatcher: this.layoutModel.dispatcher,
+                    utils: this.layoutModel.getComponentHelpers(),
+                    wordlistSaveViews:saveViews,
+                    wordlistResultModel: resultModel,
+                    wordlistSaveModel: this.saveModel
+                });
 
                 this.layoutModel.renderReactComponent(
                     view.WordlistResult,

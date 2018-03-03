@@ -101,7 +101,7 @@ export class VirtualKeyboardModel extends StatefulModel {
         }
     }
 
-    getLayoutNames():Array<[string, string]> {
+    getLayoutNames():Kontext.ListOfPairs {
         return this.layouts.map<[string, string]>(item => [item.name, item.label]);
     }
 

@@ -244,6 +244,10 @@ export namespace Kontext {
         isFirefox():boolean;
     }
 
+    export type Mutable<T extends {[k:string]:any}> = {
+        [P in keyof T]:T[P];
+    }
+
     /**
      * Convenient functions used by KonText's React components
      */
@@ -297,7 +301,7 @@ export namespace Kontext {
          * It is best used with state objects containing
          * primitive values or Immutable.js instances.
          */
-        cloneState<T>(obj:T):T;
+        cloneState<T>(obj:Readonly<T>|T):Mutable<T>;
 
         doThingsWithDelay(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
 

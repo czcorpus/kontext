@@ -28,10 +28,26 @@ import {init as ttViewsInit} from '../textTypes';
 
 export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel, queryHintModel,
         withinBuilderModel, virtualKeyboardModel, queryContextModel, cqlEditorModel) {
-    const inputViews = inputInit(
-        dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel);
-    const alignedViews = alignedInit(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-            cqlEditorModel);
+
+    const inputViews = inputInit({
+        dispatcher: dispatcher,
+        he: he,
+        queryModel: queryModel,
+        queryHintModel: queryHintModel,
+        withinBuilderModel: withinBuilderModel,
+        virtualKeyboardModel, virtualKeyboardModel,
+        cqlEditorModel: cqlEditorModel
+    });
+    const alignedViews = alignedInit({
+            dispatcher: dispatcher,
+            he: he,
+            inputViews: inputViews,
+            queryModel: queryModel,
+            queryHintModel: queryHintModel,
+            withinBuilderModel: withinBuilderModel,
+            virtualKeyboardModel: virtualKeyboardModel,
+            cqlEditorModel: cqlEditorModel
+    });
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
     const layoutViews = he.getLayoutViews();

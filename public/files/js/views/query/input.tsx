@@ -19,19 +19,100 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {init as keyboardInit} from './keyboard';
 import {init as cqlEditoInit} from './cqlEditor';
+import {WithinBuilderModel} from '../../models/query/withinBuilder';
+import {PluginInterfaces} from '../../types/plugins';
+import {Kontext} from '../../types/common';
+import {GeneralQueryModel, QueryHintModel} from '../../models/query/main';
+import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
+import {CQLEditorModel} from '../../models/query/cqleditor/model';
 
 
-export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderModel, virtualKeyboardModel, cqlEditorModel) {
-    const keyboardViews = keyboardInit(dispatcher, he, queryModel, virtualKeyboardModel);
+export interface InputModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    queryModel:GeneralQueryModel;
+    queryHintModel:QueryHintModel;
+    withinBuilderModel:WithinBuilderModel;
+    virtualKeyboardModel:VirtualKeyboardModel;
+    cqlEditorModel:CQLEditorModel;
+}
+
+
+export interface InputModuleViews {
+    TRQueryInputField;
+    TRQueryTypeField;
+    TRPcqPosNegField;
+}
+
+
+export interface TRQueryInputFieldProps {
+    actionPrefix:string;
+    sourceId:string;
+    lposValue:string;
+    wPoSList:Array<{n:string; v:string}>;
+    queryType:string;
+    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    tagHelperView:PluginInterfaces.TagHelperView;
+    widgets:Array<string>;
+    inputLanguage:string;
+    useCQLEditor:boolean;
+    forcedAttr:string;
+    defaultAttr:string;
+    attrList:Array<Kontext.AttrItem>;
+    matchCaseValue:boolean;
+    tagsetDocUrl:string;
+    onEnterKey:()=>void;
+}
+
+
+export interface TRQueryInputFieldState {
+    query:string;
+    historyVisible:boolean;
+    cqlEditorMessage:string;
+}
+
+
+export interface TRQueryTypeFieldProps {
+    actionPrefix:string;
+    sourceId:string;
+    queryType:string; // TODO enum
+    hasLemmaAttr:boolean;
+}
+
+
+export interface TRPcqPosNegFieldProps {
+    actionPrefix:string;
+    sourceId:string;
+    value:string; // TODO enum
+}
+
+
+export function init({
+    dispatcher, he, queryModel, queryHintModel, withinBuilderModel,
+    virtualKeyboardModel, cqlEditorModel}:InputModuleArgs):InputModuleViews {
+
+    const keyboardViews = keyboardInit({
+        dispatcher: dispatcher,
+        he: he,
+        queryModel: queryModel,
+        virtualKeyboardModel: virtualKeyboardModel
+    });
     const cqlEditorViews = cqlEditoInit(dispatcher, he, cqlEditorModel);
     const layoutViews = he.getLayoutViews();
 
 
     // -------------- <QueryHints /> --------------------------------------------
 
-    class QueryHints extends React.Component {
+    class QueryHints extends React.Component<{
+        actionPrefix:string;
+    },
+    {
+        hintText:string;
+    }> {
 
         constructor(props) {
             super(props);
@@ -73,7 +154,12 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <QueryTypeHints /> -----------------------------
 
-    class QueryTypeHints extends React.Component {
+    class QueryTypeHints extends React.Component<{
+        queryType:string;
+    },
+    {
+        visible:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -129,7 +215,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <TRQueryTypeField /> -----------------------------
 
-    const TRQueryTypeField = (props) => {
+    const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
         const handleSelection = (evt) => {
             dispatcher.dispatch({
                 actionType: props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
@@ -160,7 +246,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <TRPcqPosNegField /> -----------------------------
 
-    const TRPcqPosNegField = (props) => {
+    const TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps> = (props) => {
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch({
@@ -187,7 +273,14 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <TagWidget /> --------------------------------
 
-    const TagWidget = (props) => {
+    const TagWidget:React.SFC<{
+        sourceId:string;
+        actionPrefix:string;
+        args:Kontext.GeneralProps;
+        tagHelperView:PluginInterfaces.TagHelperView
+        closeClickHandler:()=>void;
+
+    }> = (props) => {
 
         return (
             <layoutViews.PopupBox
@@ -206,7 +299,17 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <WithinWidget /> --------------------------------
 
-    class WithinWidget extends React.Component {
+    class WithinWidget extends React.Component<{
+        actionPrefix:string;
+        sourceId:string;
+        closeClickHandler:()=>void;
+
+    }, {
+        exportedQuery:string;
+        data:Immutable.List<[string, string]>;
+        attr:number;
+        query:string;
+    }> {
 
         constructor(props) {
             super(props);
@@ -294,7 +397,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
                         <div className="within-widget">
                             <select onChange={this._handleAttrChange} value={this.state.attr}>
                                 {this.state.data.map((item, i) => {
-                                    return <option key={item} value={i}>{`${item[0]}.${item[1]}`}</option>;
+                                    return <option key={item.join('-')} value={i}>{`${item[0]}.${item[1]}`}</option>;
                                 })}
                             </select>
                             {'\u00a0'}={'\u00a0'}
@@ -316,7 +419,13 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <HistoryWidget /> -----------------------------
 
-    const HistoryWidget = (props) => {
+    const HistoryWidget:React.SFC<{
+        sourceId:string;
+        actionPrefix:string;
+        onCloseTrigger:()=>void;
+        queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+
+    }> = (props) => {
         return (
             <div className="history-widget">
                 <props.queryStorageView
@@ -329,7 +438,13 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <KeyboardWidget /> --------------------------------
 
-    const KeyboardWidget = (props) => {
+    const KeyboardWidget:React.SFC<{
+        sourceId:string;
+        actionPrefix:string;
+        inputLanguage:string;
+        closeClickHandler:()=>void;
+
+    }> = (props) => {
 
         const keyHandler = (evt) => {
             dispatcher.dispatch({
@@ -355,7 +470,18 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <QueryToolbox /> -----------------------------
 
-    class QueryToolbox extends React.Component {
+    class QueryToolbox extends React.Component<{
+        sourceId:string;
+        actionPrefix:string;
+        widgets:Array<string>;
+        inputLanguage:string;
+        tagHelperView:PluginInterfaces.TagHelperView;
+        toggleHistoryWidget:()=>void;
+
+    }, {
+        activeWidget:string;
+        widgetArgs:Kontext.GeneralProps;
+    }> {
 
         constructor(props) {
             super(props);
@@ -466,7 +592,13 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <LposSelector /> -----------------------------
 
-    const LposSelector = (props) => {
+    const LposSelector:React.SFC<{
+        sourceId:string;
+        actionPrefix:string;
+        wPoSList:Array<{v:string; n:string}>;
+        lposValue:string;
+
+    }> = (props) => {
 
         const handleLposChange = (evt) => {
             dispatcher.dispatch({
@@ -493,7 +625,12 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <MatchCaseSelector /> -----------------------------
 
-    const MatchCaseSelector = (props) => {
+    const MatchCaseSelector:React.SFC<{
+        actionPrefix:string;
+        sourceId:string;
+        matchCaseValue:boolean;
+
+    }> = (props) => {
 
         const handleCheckbox = (evt) => {
             dispatcher.dispatch({
@@ -516,7 +653,14 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <DefaultAttrSelector /> -----------------------------
 
-    const DefaultAttrSelector = (props) => {
+    const DefaultAttrSelector:React.SFC<{
+        actionPrefix:string;
+        sourceId:string;
+        forcedAttr:string;
+        defaultAttr:string;
+        attrList:Array<Kontext.AttrItem>;
+
+    }> = (props) => {
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch({
@@ -530,7 +674,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
         if (props.forcedAttr) {
             return (
-                <select disabled="disabled" title={he.translate('query__implicit_attr_cannot_be_changed')}>
+                <select disabled={true} title={he.translate('query__implicit_attr_cannot_be_changed')}>
                     <option>{props.forcedAttr}</option>
                 </select>
             );
@@ -549,7 +693,9 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
 
     // ------------------- <TRQueryInputField /> -----------------------------
 
-    class TRQueryInputField extends React.Component {
+    class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
+
+        private _queryInputElement:HTMLInputElement;
 
         constructor(props) {
             super(props);
@@ -645,6 +791,7 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
                                 attachCurrInputElement={this._attachInputElementRef}
                                 inputKeyHandler={this._inputKeyHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
+                            sourceId={this.props.sourceId}
                             attachCurrInputElement={this._attachInputElementRef}
                             inputKeyHandler={this._inputKeyHandler} />;
             }
@@ -704,7 +851,6 @@ export function init(dispatcher, he, queryModel, queryHintModel, withinBuilderMo
                         <div className="query-area">
                             <QueryToolbox widgets={this.props.widgets}
                                 tagHelperView={this.props.tagHelperView}
-                                queryStorageView={this.props.queryStorageView}
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
                                 inputLanguage={this.props.inputLanguage}

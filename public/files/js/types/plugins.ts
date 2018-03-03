@@ -84,9 +84,21 @@ export namespace PluginInterfaces {
         isWaiting():boolean;
     }
 
+    // --------  tag helper ----------
+
     export interface ITagHelper {
         getWidgetView():React.ComponentClass;
     }
+
+    export type TagHelperView = React.ComponentClass<{
+        sourceId:string;
+        actionPrefix:string;
+        range:[number, number];
+        onInsert:()=>void;
+        onEscKey:()=>void;
+    }>;
+
+    // --------- query storage ------
 
     export interface IQueryStorageModel extends Kontext.EventEmitter {
 
@@ -109,6 +121,14 @@ export namespace PluginInterfaces {
 
         getModel():IQueryStorageModel;
     }
+
+    export type QueryStorageWidgetView = React.ComponentClass<{
+        sourceId:string;
+        actionPrefix:string;
+        onCloseTrigger:()=>void;
+    }>;
+
+    // ------------------------ corparch -------------------------
 
     export interface ICorparchModel {
         getCurrentSubcorpus():string;
