@@ -19,13 +19,51 @@
  */
 
 import * as React from 'react';
+import {Kontext} from '../../types/common';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {GeneralQueryModel} from '../../models/query/main';
+import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 
 
-export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
+export interface KeyboardProps {
+    actionPrefix:string;
+    sourceId:string;
+    shiftOn:boolean;
+    inputLanguage:string;
+}
+
+
+export interface KeyboardState {
+    shiftOn:boolean;
+    capsOn:boolean;
+    layout:Kontext.VirtualKeyboardLayout;
+    layoutNames:Kontext.ListOfPairs;
+    currentLayoutIdx:number;
+    triggeredKey:[number, number];
+}
+
+
+export interface KeyboardViews {
+    Keyboard:React.ComponentClass<KeyboardProps>;
+}
+
+export interface KeyboardModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    queryModel:GeneralQueryModel;
+    virtualKeyboardModel:VirtualKeyboardModel
+}
+
+export function init({dispatcher, he, queryModel, virtualKeyboardModel}:KeyboardModuleArgs):KeyboardViews {
 
     // -------------------- <Key /> ----------------------------
 
-    class Key extends React.Component {
+    class Key extends React.PureComponent<{
+        value:string;
+        triggered:boolean;
+        handleClick:(v:string)=>void;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -50,13 +88,20 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <DummyKey /> ----------------------------
 
-    const DummyKey = (props) => {
+    const DummyKey:React.SFC<{
+        value:string;
+
+    }> = (props) => {
         return <span className="dummy">{props.value}</span>;
     };
 
     // -------------------- <ShiftKey /> ----------------------------
 
-    const ShiftKey = (props) => {
+    const ShiftKey:React.SFC<{
+        shiftOn:boolean;
+        handleShift:()=>void;
+
+    }> = (props) => {
         const classes = ['spec'];
         if (props.shiftOn) {
             classes.push('active');
@@ -70,7 +115,11 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <CapsKey /> ----------------------------
 
-    class CapsKey extends React.Component {
+    class CapsKey extends React.PureComponent<{
+        triggered:boolean;
+        capsOn:boolean;
+        handleCaps:()=>void;
+    }> {
 
         componentDidUpdate(prevProps, prevState) {
             if (!prevProps.triggered && this.props.triggered) {
@@ -94,7 +143,12 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <SpaceKey /> ----------------------------
 
-    class SpaceKey extends React.Component {
+    class SpaceKey extends React.PureComponent<{
+        value:string;
+        triggered:boolean;
+        handleClick:(v:string)=>void;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -126,7 +180,11 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <BackspaceKey /> ----------------------------
 
-    class BackspaceKey extends React.Component {
+    class BackspaceKey extends React.PureComponent<{
+        triggered:boolean;
+        handleBackspace:()=>void;
+
+    }> {
 
         componentDidUpdate(prevProps, prevState) {
             if (!prevProps.triggered && this.props.triggered) {
@@ -149,7 +207,17 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <KeysRow /> ----------------------------
 
-    const KeysRow = (props) => {
+    const KeysRow:React.SFC<{
+        shiftOn:boolean;
+        capsOn:boolean;
+        passTriggerIdx:number;
+        data:Kontext.ListOfPairs;
+        handleShift:()=>void;
+        handleCaps:()=>void;
+        handleBackspace:()=>void;
+        handleClick:(v:string)=>void;
+
+    }> = (props) => {
 
         const selectValue = (v) => {
             if (props.shiftOn || props.capsOn) {
@@ -207,7 +275,7 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
 
     // -------------------- <Keyboard /> ----------------------------
 
-    class Keyboard extends React.Component {
+    class Keyboard extends React.Component<KeyboardProps, KeyboardState> {
 
         constructor(props) {
             super(props);
@@ -221,9 +289,9 @@ export function init(dispatcher, he, queryModel, virtualKeyboardModel) {
                 shiftOn: false,
                 capsOn: false,
                 layout: null,
-                layoutNamepassTriggerIdxs: null,
                 currentLayoutIdx: null,
-                triggeredKey: null
+                triggeredKey: null,
+                layoutNames: null
             };
         }
 
