@@ -35,7 +35,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
-import {init as commonViewsFactory} from 'views/common';
+import {init as commonViewsFactory, CommonViews} from '../views/common';
 import {init as menuViewsFactory} from 'views/menu';
 import {init as overviewAreaViewsFactory} from 'views/overview';
 import {init as viewOptionsFactory} from 'views/options/main';

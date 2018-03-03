@@ -16,20 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare interface CommonViews {
-    SaveFormatSelect:React.ComponentClass;
-}
-
-declare module "views/common" {
-
-    export interface CommonViews {
-        SaveFormatSelect:React.ComponentClass;
-    }
-
-    export function init(componentHelpers:Kontext.ComponentHelpers):CommonViews;
-}
-
-
 declare module "views/concordance/lineSelection" {
 
     export interface LineSelectionViews {
@@ -331,38 +317,6 @@ declare module "views/query/save" {
         layoutViews:Kontext.LayoutViews,
         saveAsFormModel:Kontext.EventEmitter
     ):QuerySaveViews;
-}
-
-
-declare module "views/wordlist/save" {
-
-    export interface WordlistSaveViews {
-        WordlistSaveForm:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        commonViews:CommonViews,
-        wordlistSaveModel:Kontext.EventEmitter
-    ):WordlistSaveViews;
-}
-
-declare module "views/wordlist/result" {
-
-    export interface WordlistResultViews {
-        WordlistResult:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        wordlistSaveViews:any, // TODO type
-        wordlistResultModel:Kontext.EventEmitter,
-        wordlistSaveModel:Kontext.EventEmitter
-    ):WordlistResultViews;
 }
 
 
