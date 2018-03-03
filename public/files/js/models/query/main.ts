@@ -211,6 +211,8 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
 
     abstract getQueries():Immutable.Map<string, string>;
 
+    abstract getQuery(sourceId:string):string;
+
     abstract getQueryTypes():Immutable.Map<string, string>;
 
     /// ---------

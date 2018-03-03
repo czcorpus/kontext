@@ -28,7 +28,6 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 export interface KeyboardProps {
     actionPrefix:string;
     sourceId:string;
-    shiftOn:boolean;
     inputLanguage:string;
 }
 
