@@ -31,7 +31,7 @@ import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as collResultViewInit} from 'views/coll/result';
 import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
-import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
+import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 
 
@@ -203,11 +203,10 @@ export class CollPage {
             this.layoutModel,
             this.layoutModel.getConf<string>('concPersistenceOpId')
         );
-        const queryOverviewViews = queryOverviewInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
-            {
+        const queryOverviewViews = queryOverviewInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            viewDeps: {
                 QueryFormView: null,
                 FilterFormView: null,
                 SubHitsForm: null,
@@ -217,10 +216,10 @@ export class CollPage {
                 ShuffleForm: null,
                 SwitchMainCorpForm: null
             },
-            this.queryReplayModel,
-            this.layoutModel.getModels().mainMenuModel,
-            this.querySaveAsFormModel
-        );
+            queryReplayModel: this.queryReplayModel,
+            mainMenuModel: this.layoutModel.getModels().mainMenuModel,
+            querySaveAsModel: this.querySaveAsFormModel
+        });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
             window.document.getElementById('query-overview-mount'),
@@ -228,10 +227,35 @@ export class CollPage {
                 corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
                 usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
-                queryFormProps: {},
-                filterFormProps: {},
-                sortFormProps: {},
-                shuffleFormProps: {}
+                queryFormProps: {
+                    formType: Kontext.ConcFormTypes.QUERY,
+                    actionPrefix: '',
+                    allowCorpusSelection: false,
+                    tagHelperView: null,
+                    queryStorageView: null,
+                    liveAttrsView: null,
+                    liveAttrsCustomTT: null,
+                    attributes: [],
+                    onEnterKey:()=>undefined
+                },
+                filterFormProps: {
+                    formType: Kontext.ConcFormTypes.FILTER,
+                    actionPrefix: '',
+                    filterId: null,
+                    tagHelperView: null,
+                    queryStorageView: null
+                },
+                sortFormProps: {
+                    formType: Kontext.ConcFormTypes.SORT,
+                    sortId: null,
+                },
+                shuffleFormProps: {
+                    formType: Kontext.ConcFormTypes.SHUFFLE,
+                    shuffleMinResultWarning: null,
+                    lastOpSize: null,
+                    operationIdx: null,
+                    shuffleSubmitFn:()=>undefined
+                }
             }
         );
     }

@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import {init as inputInit} from './input';
 import {InputModuleViews} from './input';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {QueryModel, QueryHintModel} from '../../models/query/main';
+import {QueryModel, QueryHintModel, WidgetsMap} from '../../models/query/main';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
@@ -40,26 +40,27 @@ export interface AlignedModuleArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     cqlEditorModel:CQLEditorModel;
-    useCQLEditor:boolean;
 }
 
 export interface AlignedCorporaProps {
     availableCorpora:Immutable.List<{n:string; label:string}>;
     alignedCorpora:Immutable.List<string>;
     queryTypes:Immutable.Map<string, string>;
-    supportedWidgets:Immutable.Map<string, Array<string>>;
-    wPoSList:Array<{n:string; v:string}>;
+    supportedWidgets:WidgetsMap;
+    wPoSList:Immutable.List<{n:string; v:string}>;
     lposValues:Immutable.Map<string, string>;
     matchCaseValues:Immutable.Map<string, boolean>;
     forcedAttr:string;
     defaultAttrValues:Immutable.Map<string, string>;
-    attrList:Array<Kontext.AttrItem>;
+    attrList:Immutable.List<Kontext.AttrItem>;
     tagsetDocUrls:Immutable.Map<string, string>;
     pcqPosNegValues:Immutable.Map<string, string>;
     inputLanguages:Immutable.Map<string, string>;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
     hasLemmaAttr:Immutable.Map<string, boolean>;
     useCQLEditor:boolean;
+    tagHelperView:PluginInterfaces.TagHelperView;
+    onEnterKey:()=>void;
 }
 
 export interface AlignedViews {
@@ -76,18 +77,20 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         label:string;
         pcqPosNegValue:string;
         queryType:string;
-        widgets:Array<string>;
+        widgets:Immutable.List<string>;
         hasLemmaAttr:boolean;
-        wPoSList:Array<{n:string; v:string}>;
+        wPoSList:Immutable.List<{n:string; v:string}>;
         lposValue:string;
         matchCaseValue:boolean;
         forcedAttr:string;
         defaultAttr:string;
-        attrList:Array<Kontext.AttrItem>;
+        attrList:Immutable.List<Kontext.AttrItem>;
         tagsetDocUrl:string;
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorageWidgetView;
         useCQLEditor:boolean;
+        tagHelperView:PluginInterfaces.TagHelperView;
+        onEnterKey:()=>void;
 
     }> = (props) => {
 
@@ -146,7 +149,9 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                             inputLanguage={props.inputLanguage}
                             queryStorageView={props.queryStorageView}
                             actionPrefix=""
-                            useCQLEditor={props.useCQLEditor} />
+                            useCQLEditor={props.useCQLEditor}
+                            onEnterKey={props.onEnterKey}
+                            tagHelperView={props.tagHelperView} />
                     </tbody>
                 </table>
             </div>
@@ -205,11 +210,13 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                             defaultAttr={props.defaultAttrValues.get(item)}
                             attrList={props.attrList}
                             tagsetDocUrl={props.tagsetDocUrls.get(item)}
+                            tagHelperView={props.tagHelperView}
                             pcqPosNegValue={props.pcqPosNegValues.get(item)}
                             inputLanguage={props.inputLanguages.get(item)}
                             queryStorageView={props.queryStorageView}
                             hasLemmaAttr={props.hasLemmaAttr.get(item)}
-                            useCQLEditor={props.useCQLEditor} />;
+                            useCQLEditor={props.useCQLEditor}
+                            onEnterKey={props.onEnterKey} />;
                 })}
             </fieldset>
         );

@@ -19,9 +19,37 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 
 
-export function init(dispatcher, he, layoutViews, queryHistoryModel) {
+export interface RecentQueriesPageListProps {
+
+}
+
+
+interface RecentQueriesPageListState {
+    queryType:string;
+    currentCorpusOnly:boolean;
+    offset:number;
+    data:any; // TODO
+    modelIsBusy:boolean;
+    hasMoreItems:boolean;
+    archivedOnly:boolean;
+    editingQueryId:string;
+    editingQueryName:string;
+}
+
+
+export interface HistoryViews {
+    RecentQueriesPageList:React.ComponentClass<RecentQueriesPageListProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            queryHistoryModel:PluginInterfaces.IQueryStorageModel):HistoryViews {
 
     const queryTypes = {
         'iquery': he.translate('query__qt_basic'),
@@ -34,7 +62,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <QueryTypeSelector /> ------------------------
 
-    const QueryTypeSelector = (props) => {
+    const QueryTypeSelector:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -74,7 +105,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <CurrentCorpCheckbox /> ------------------------
 
-    const CurrentCorpCheckbox = (props) => {
+    const CurrentCorpCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -90,7 +124,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <ArchivedOnlyCheckbox /> ------------------------
 
-    const ArchivedOnlyCheckbox = (props) => {
+    const ArchivedOnlyCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
         const handleChange = () => {
             dispatcher.dispatch({
                 actionType: 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
@@ -107,7 +144,12 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <FilterForm /> ------------------------
 
-    const FilterForm = (props) => {
+    const FilterForm:React.SFC<{
+        currentCorpusOnly:boolean;
+        queryType:string;
+        archivedOnly:boolean;
+
+    }> = (props) => {
         return (
             <form className="query-history-filter">
                 <fieldset>
@@ -133,7 +175,11 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <AlignedQueryInfo /> ------------------------
 
-    const AlignedQueryInfo = (props) => {
+    const AlignedQueryInfo:React.SFC<{
+        query_type:string;
+        query:string;
+
+    }> = (props) => {
         return (
             <div className="query-line">
                 <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
@@ -144,7 +190,12 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <TextTypesInfo /> ------------------------
 
-    class TextTypesInfo extends React.Component {
+    class TextTypesInfo extends React.Component<{
+        textTypes:Kontext.GeneralProps;
+    },
+    {
+        expanded:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -184,7 +235,14 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <QueryInfo /> ------------------------
 
-    const QueryInfo = (props) => {
+    const QueryInfo:React.SFC<{
+        query_type:string;
+        query_sh:string;
+        query:string;
+        textTypes:Kontext.GeneralProps;
+        aligned:Kontext.QueryHistoryItem['aligned'];
+
+    }> = (props) => {
 
         return (
             <div className="query-info">
@@ -205,7 +263,13 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <SavedNameInfo /> ------------------------
 
-    const SavedNameInfo = (props) => {
+    const SavedNameInfo:React.SFC<{
+        queryId:string;
+        hasEditor:boolean;
+        editingQueryName:string;
+        name:string;
+
+    }> = (props) => {
 
         const handleEditClick = (evt) => {
             dispatcher.dispatch({
@@ -253,7 +317,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <SaveItemForm /> ------------------------
 
-    const SaveItemForm = (props) => {
+    const SaveItemForm:React.SFC<{
+        name:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -314,7 +381,12 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <DataRow /> ------------------------
 
-    const DataRow = (props) => {
+    const DataRow:React.SFC<{
+        data:Kontext.QueryHistoryItem;
+        hasEditor:boolean;
+        editingQueryName:string;
+
+    }> = (props) => {
 
         const handleFormClick = () => {
             dispatcher.dispatch({
@@ -344,11 +416,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
                     </span>
                     {props.data.aligned.map(v => <span key={v.corpname} className="corpname"> + {v.human_corpname}</span>)}
                 </div>
-                <QueryInfo human_corpname={props.data.human_corpname}
+                <QueryInfo
                         query={props.data.query}
                         query_sh={props.data.query_sh}
                         query_type={props.data.query_type}
-                        subcorpname={props.data.subcorpname}
                         aligned={props.data.aligned}
                         textTypes={props.data.selected_text_types} />
                 <div className="footer">
@@ -369,7 +440,10 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <LoadMoreBlock /> ------------------------
 
-    const LoadMoreBlock = (props) => {
+    const LoadMoreBlock:React.SFC<{
+        modelIsBusy:boolean;
+
+    }> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch({
@@ -393,7 +467,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <NoDataBlock /> ------------------------
 
-    const NoDataBlock = (props) => {
+    const NoDataBlock:React.SFC<{}> = (props) => {
         return (
             <div className="last-row">
                 {he.translate('global__no_data_found')}
@@ -403,7 +477,12 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <DataTableFooter /> ------------------------
 
-    const DataTableFooter = (props) => {
+    const DataTableFooter:React.SFC<{
+        dataLength:number;
+        hasMoreItems:boolean;
+        modelIsBusy:boolean;
+
+    }> = (props) => {
         if (props.dataLength > 0) {
             if (props.hasMoreItems) {
                 return <LoadMoreBlock modelIsBusy={props.modelIsBusy} />
@@ -419,7 +498,17 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <DataTable /> ------------------------
 
-    const DataTable = (props) => {
+
+
+    const DataTable:React.SFC<{
+        editingQueryId:string;
+        offset:number;
+        editingQueryName:string;
+        hasMoreItems:boolean;
+        modelIsBusy:boolean;
+        data:Immutable.List<Kontext.QueryHistoryItem>;
+
+    }> = (props) => {
         return (
             <div>
                     <ul className="history-entries">
@@ -437,7 +526,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
 
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    class RecentQueriesPageList extends React.Component {
+    class RecentQueriesPageList extends React.Component<RecentQueriesPageListProps, RecentQueriesPageListState> {
 
         constructor(props) {
             super(props);
@@ -476,7 +565,6 @@ export function init(dispatcher, he, layoutViews, queryHistoryModel) {
                 <div className="RecentQueriesPageList">
                     <FilterForm queryType={this.state.queryType}
                             currentCorpusOnly={this.state.currentCorpusOnly}
-                            modelIsBusy={this.state.modelIsBusy}
                             archivedOnly={this.state.archivedOnly} />
                     <DataTable data={this.state.data} offset={this.state.offset}
                             modelIsBusy={this.state.modelIsBusy}

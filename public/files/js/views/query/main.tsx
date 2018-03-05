@@ -20,14 +20,105 @@
 
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
 import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
+import {QueryModel, QueryHintModel, WidgetsMap} from '../../models/query/main';
+import {TextTypesModel} from '../../models/textTypes/attrValues';
+import {WithinBuilderModel} from '../../models/query/withinBuilder';
+import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
+import {QueryContextModel} from '../../models/query/context';
+import {CQLEditorModel} from '../../models/query/cqleditor/model';
 
 
-export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel, queryHintModel,
-        withinBuilderModel, virtualKeyboardModel, queryContextModel, cqlEditorModel) {
+export interface MainModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    CorparchWidget:PluginInterfaces.CorparchWidgetView;
+    queryModel:QueryModel;
+    textTypesModel:TextTypesModel;
+    queryHintModel:QueryHintModel;
+    withinBuilderModel:WithinBuilderModel;
+    virtualKeyboardModel:VirtualKeyboardModel;
+    queryContextModel:QueryContextModel;
+    cqlEditorModel:CQLEditorModel;
+}
+
+
+export interface QueryFormProps {
+    formType:Kontext.ConcFormTypes.QUERY;
+    actionPrefix:string;
+    allowCorpusSelection:boolean;
+    tagHelperView:PluginInterfaces.TagHelperView;
+    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    liveAttrsView:PluginInterfaces.LiveAttributesView;
+    liveAttrsCustomTT:React.ComponentClass<{}>; // TODO type once text types JSX->TSX
+    attributes:any; // TODO type once text types JSX->TSX
+    onEnterKey:()=>void;
+}
+
+
+export interface QueryFormLiteProps {
+    formType:Kontext.ConcFormTypes.QUERY;
+    corpname:string;
+    operationIdx?:number;
+    actionPrefix:string;
+    tagHelperView:PluginInterfaces.TagHelperView;
+    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+}
+
+
+interface GeneralQueryFormState {
+    corpora:Immutable.List<string>;
+    queryTypes:Immutable.Map<string, string>;
+    supportedWidgets:WidgetsMap;
+    lposValues:Immutable.Map<string, string>;
+    matchCaseValues:Immutable.Map<string, boolean>;
+    forcedAttr:string;
+    defaultAttrValues:Immutable.Map<string, string>;
+    attrList:Immutable.List<Kontext.AttrItem>;
+    tagsetDocUrls:Immutable.Map<string, string>;
+    pcqPosNegValues:Immutable.Map<string, string>;
+    lemmaWindowSizes:Immutable.List<number>;
+    posWindowSizes:Immutable.List<number>;
+    hasLemmaAttr:Immutable.Map<string, boolean>;
+    wPoSList:Immutable.List<{v:string; n:string}>;
+    contextFormVisible:boolean;
+    inputLanguages:Immutable.Map<string, string>;
+    useCQLEditor:boolean;
+}
+
+
+interface QueryFormLiteState extends GeneralQueryFormState {
+    hasSelectedTextTypes:boolean;
+    textTypeSelections:{[attr:string]:Array<string>};
+}
+
+
+interface QueryFormState extends GeneralQueryFormState {
+    tagAttr:string;
+    textTypesFormVisible:boolean;
+    textTypesNotes:string;
+    structAttrList:Immutable.List<Kontext.AttrItem>;
+    availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
+    supportsParallelCorpora:boolean;
+}
+
+
+export interface MainViews {
+    QueryForm:React.ComponentClass<QueryFormProps>;
+    QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
+}
+
+
+export function init({dispatcher, he, CorparchWidget, queryModel,
+                      textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
+                      queryContextModel, cqlEditorModel}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
         dispatcher: dispatcher,
@@ -35,7 +126,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
         queryModel: queryModel,
         queryHintModel: queryHintModel,
         withinBuilderModel: withinBuilderModel,
-        virtualKeyboardModel, virtualKeyboardModel,
+        virtualKeyboardModel: virtualKeyboardModel,
         cqlEditorModel: cqlEditorModel
     });
     const alignedViews = alignedInit({
@@ -55,7 +146,12 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
-    const AdvancedFormLegend = (props) => {
+    const AdvancedFormLegend:React.SFC<{
+        formVisible:boolean;
+        title:string;
+        handleClick:()=>void;
+
+    }> = (props) => {
 
         const htmlClasses = ['form-extension-switch'];
         htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
@@ -71,7 +167,10 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
 
     // ------------------- <TextTypesNote /> -----------------------------
 
-    const TextTypesNotes = (props) => {
+    const TextTypesNotes:React.SFC<{
+        description:string; // raw HTML code
+
+    }> = (props) => {
 
         if (props.description) {
             return (
@@ -89,13 +188,16 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
 
     // ------------------- <TRCorpusField /> -----------------------------
 
-    const TRCorpusField = (props) => {
+    const TRCorpusField:React.SFC<{
+        corparchWidget:PluginInterfaces.CorparchWidgetView;
+
+    }> = (props) => {
 
         return (
             <tr>
                 <th>{he.translate('global__corpus')}:</th>
                 <td>
-                    <props.corparchWidget />
+                    <props.corparchWidget  />
                 </td>
             </tr>
         );
@@ -104,7 +206,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
 
     // ------------------- <QueryForm /> -----------------------------
 
-    class QueryForm extends React.Component {
+    class QueryForm extends React.Component<QueryFormProps, QueryFormState> {
 
         constructor(props) {
             super(props);
@@ -200,7 +302,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
                     <table className="form primary-language">
                         <tbody>
                             {this.props.allowCorpusSelection ?
-                                <TRCorpusField corpname={primaryCorpname} corparchWidget={CorparchWidget} />
+                                <TRCorpusField corparchWidget={CorparchWidget} />
                                 : null}
                             <inputViews.TRQueryTypeField
                                     queryType={this.state.queryTypes.get(primaryCorpname)}
@@ -231,7 +333,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
                     {this.state.supportsParallelCorpora ?
                         <alignedViews.AlignedCorpora
                                 availableCorpora={this.state.availableAlignedCorpora}
-                                alignedCorpora={this.state.corpora.rest()}
+                                alignedCorpora={this.state.corpora.rest().toList()}
                                 queryTypes={this.state.queryTypes}
                                 supportedWidgets={this.state.supportedWidgets}
                                 wPoSList={this.state.wPoSList}
@@ -244,9 +346,10 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
                                 pcqPosNegValues={this.state.pcqPosNegValues}
                                 inputLanguages={this.state.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
-                                actionPrefix={this.props.actionPrefix}
                                 hasLemmaAttr={this.state.hasLemmaAttr}
-                                useCQLEditor={this.state.useCQLEditor} />
+                                useCQLEditor={this.state.useCQLEditor}
+                                tagHelperView={this.props.tagHelperView}
+                                onEnterKey={this.props.onEnterKey} />
                         : null
                     }
                     <fieldset id="specify-context">
@@ -258,7 +361,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.state.lemmaWindowSizes}
                                     posWindowSizes={this.state.posWindowSizes}
-                                    hasLemmaAttr={this.state.hasLemmaAttr}
+                                    hasLemmaAttr={this.state.hasLemmaAttr.get(primaryCorpname)}
                                     wPoSList={this.state.wPoSList} />
                             : null}
                     </fieldset>
@@ -308,7 +411,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
 
     // -------- <QueryFormLite /> ------------------------------------
 
-    class QueryFormLite extends React.Component {
+    class QueryFormLite extends React.Component<QueryFormLiteProps, QueryFormLiteState> {
 
         constructor(props) {
             super(props);
@@ -338,7 +441,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
                 contextFormVisible: false,
                 inputLanguages: queryModel.getInputLanguages(),
                 hasSelectedTextTypes: textTypesModel.hasSelectedItems(),
-                textTypeSelections: textTypesModel.exportSelections(),
+                textTypeSelections: textTypesModel.exportSelections(false),
                 useCQLEditor: queryModel.getUseCQLEditor()
             };
         }
@@ -437,7 +540,7 @@ export function init(dispatcher, he, CorparchWidget, queryModel, textTypesModel,
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.state.lemmaWindowSizes}
                                     posWindowSizes={this.state.posWindowSizes}
-                                    hasLemmaAttr={this.state.hasLemmaAttr}
+                                    hasLemmaAttr={this.state.hasLemmaAttr.get(this.props.corpname)}
                                     wPoSList={this.state.wPoSList} />
                             : null}
                     </fieldset>

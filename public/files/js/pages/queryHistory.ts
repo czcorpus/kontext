@@ -24,10 +24,10 @@ import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import {init as initQueryHistoryViews} from 'views/query/history';
+import {init as initQueryHistoryViews} from '../views/query/history';
 import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
-import {init as basicOverviewViewsInit} from 'views/query/basicOverview';
+import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -80,7 +80,6 @@ class QueryHistoryPage {
                 const qhViews = initQueryHistoryViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
                     qsModel.getModel()
                 );
 

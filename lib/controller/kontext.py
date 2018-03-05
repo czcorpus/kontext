@@ -636,11 +636,11 @@ class Kontext(Controller):
     def _check_corpus_access(self, path, form, action_metadata):
         """
         Args:
-            path: current action path as a list 
-            form: 
-            action_metadata: 
+            path: current action path as a list
+            form:
+            action_metadata:
 
-        Returns: a 3-tuple (copus id, corpus variant, action path) 
+        Returns: a 3-tuple (copus id, corpus variant, action path)
         """
         with plugins.runtime.AUTH as auth:
             allowed_corpora = auth.permitted_corpora(self.session_get('user'))
@@ -1204,7 +1204,7 @@ class Kontext(Controller):
 
     def _get_checked_text_types(self, request):
         """
-        Collects data required to restore checked/entered values in text types form. 
+        Collects data required to restore checked/entered values in text types form.
 
         arguments:
         request -- Werkzeug request instance
@@ -1292,7 +1292,7 @@ class Kontext(Controller):
                 arg=a,
                 nicearg=nicearg(a),
                 churl=self.urlencode(u1),
-                ourl=self.urlencode(u2),
+                tourl=self.urlencode(u2),
                 size=s))
         return out
 

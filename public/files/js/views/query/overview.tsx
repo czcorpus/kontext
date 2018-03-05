@@ -19,46 +19,128 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
 import {init as saveViewInit} from './save';
 import {init as basicOverviewInit} from './basicOverview';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {IQueryReplayModel, QueryReplayModel, ExtendedQueryOperation} from '../../models/query/replay';
+import {QuerySaveAsFormModel} from '../../models/query/save';
+import {ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps} from './miscActions';
+import {QueryFormLiteProps, QueryFormProps} from './main';
+import {FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
+import { PluginInterfaces } from '../../types/plugins';
+import {SortFormProps} from './sort';
 
 /*
 Important note regarding variable naming conventions:
 
-opKey (operationKey): a hash representing stored query args or string '__new__' when appending
-                         a new operation
-opId (operationId): a general manatee operation type identifier (e.g. 's' - sample, 'q' - query)
+[opKey] (operationKey): a hash representing stored query args or string
+                        '__new__' when appending a new operation
+[opId] (operationId): a general manatee operation type identifier
+                      (e.g. 's' - sample, 'q' - query)
+[opIdx] (operationIdx): an index of an operation within query pipeline
+                        (starting from zero).
 
-opIdx (operationIdx): an index of an operation within query pipeline (starting from zero).
-
-In general, client knows by default opId and opIdx when a page is loaded. Operation key 'opKey'
-may or may not be available without additional AJAX request.
+In general, client knows by default opId and opIdx when a page is loaded.
+Operation key 'opKey' may or may not be available without additional AJAX request.
 */
 
 
-export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, mainMenuModel, querySaveAsModel) {
+export interface OverviewModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    viewDeps:{
+        QueryFormView:React.ComponentClass<QueryFormLiteProps>;
+        FilterFormView:React.ComponentClass<FilterFormProps>;
+        SubHitsForm:React.ComponentClass<SubHitsFormProps>;
+        FirstHitsForm:React.ComponentClass<FirstHitsFormProps>;
+        SortFormView:React.ComponentClass<SortFormProps>;
+        SampleForm:React.ComponentClass<SampleFormProps>;
+        ShuffleForm:React.ComponentClass<ShuffleFormProps>;
+        SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
+    };
+    queryReplayModel:IQueryReplayModel;
+    mainMenuModel:Kontext.IMainMenuModel;
+    querySaveAsModel:QuerySaveAsFormModel;
+}
 
-    const saveViews = saveViewInit(dispatcher, he, layoutViews, querySaveAsModel);
+
+export interface QueryToolbarProps {
+    corpname:string;
+    humanCorpname:string;
+    usesubcorp:string;
+    queryFormProps:QueryFormLiteProps;
+    filterFormProps:FilterFormProps;
+    shuffleFormProps:ShuffleFormProps;
+    switchMcFormProps:SwitchMainCorpFormProps;
+    filterSubHitsFormProps:SubHitsFormProps;
+    filterFirstDocHitsFormProps:FirstHitsFormProps;
+    sortFormProps:SortFormProps;
+}
+
+
+interface QueryToolbarState {
+    activeItem:{actionName:string};
+    lastOpSize:number;
+}
+
+
+export interface NonViewPageQueryToolbarProps {
+    corpname:string;
+    humanCorpname:string;
+    usesubcorp:string;
+    queryFormProps?:QueryFormProps;
+    filterFormProps?:FilterFormProps;
+    shuffleFormProps?:ShuffleFormProps;
+    switchMcFormProps?:SwitchMainCorpFormProps;
+    filterSubHitsFormProps?:SubHitsFormProps;
+    filterFirstDocHitsFormProps?:FirstHitsFormProps;
+    sortFormProps?:SortFormProps;
+}
+
+
+interface NonViewPageQueryToolbarState {
+    ops:Immutable.List<ExtendedQueryOperation>;
+    queryOverview:Immutable.List<Kontext.QueryOperation>;
+}
+
+
+export interface OverviewViews {
+    QueryToolbar:React.ComponentClass<QueryToolbarProps>;
+    NonViewPageQueryToolbar:React.ComponentClass<NonViewPageQueryToolbarProps>;
+}
+
+
+type AnyEditorProps = QueryFormLiteProps | FilterFormProps | SubHitsFormProps | ShuffleFormProps |
+        SortFormProps | SampleFormProps | ShuffleFormProps | SwitchMainCorpFormProps | FirstHitsFormProps;
+
+
+export function init({dispatcher, he, viewDeps, queryReplayModel,
+                      mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
+
+    const layoutViews = he.getLayoutViews();
+    const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
     const basicOverviewViews = basicOverviewInit(dispatcher, he);
 
 
-    const formTypeToTitle = (opFormType) => {
+    const formTypeToTitle = (opFormType:string) => {
         switch (opFormType) {
-            case 'query':
+            case Kontext.ConcFormTypes.QUERY:
                 return he.translate('query__operation_name_query');
-            case 'filter':
+            case Kontext.ConcFormTypes.FILTER:
                 return he.translate('query__operation_name_filter');
-            case 'sort':
+            case Kontext.ConcFormTypes.SORT:
                 return he.translate('query__operation_name_sort');
-            case 'sample':
+            case Kontext.ConcFormTypes.SAMPLE:
                 return he.translate('query__operation_name_sample');
-            case 'shuffle':
+            case Kontext.ConcFormTypes.SHUFFLE:
                 return he.translate('query__operation_name_shuffle');
-            case 'switchmc':
+            case Kontext.ConcFormTypes.SWITCHMC:
                 return he.translate('query__operation_name_switchmc');
-            case 'subhits':
+            case Kontext.ConcFormTypes.SUBHITS:
                 return he.translate('query__operation_name_subhits');
-            case 'firsthits':
+            case Kontext.ConcFormTypes.FIRSTHITS:
                 return he.translate('query__operation_name_firsthits');
             default:
                 return null;
@@ -68,7 +150,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
-    const QueryReplayView = (props) => {
+    const QueryReplayView:React.SFC<{}> = (props) => {
 
         return (
             <layoutViews.ModalOverlay onCloseKey={()=>undefined}>
@@ -86,7 +168,11 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <ExecutionOptions /> --------------------------------
 
-    const ExecutionOptions = (props) => {
+    const ExecutionOptions:React.SFC<{
+        operationIdx:number;
+        modeRunFullQuery:boolean;
+
+    }> = (props) => {
 
         const handleRadioInputChange = (evt) => {
             dispatcher.dispatch({
@@ -127,7 +213,22 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <QueryEditor /> --------------------------------
 
-    const QueryEditor = (props) => {
+    const QueryEditor:React.SFC<{
+        isLoading:boolean;
+        opKey:string;
+        operationId:string;
+        editIsLocked:boolean;
+        operationIdx:number;
+        opEncodedArgs:string;
+        editorProps:AnyEditorProps;
+        operationFormType:string;
+        shuffleMinResultWarning:number;
+        resultSize:number;
+        modeRunFullQuery:boolean;
+        numOps:number;
+        closeClickHandler:()=>void;
+
+    }> = (props) => {
         const renderEditorComponent = () => {
             if (props.isLoading) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
@@ -148,44 +249,48 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
                         </div>
                     </div>
                 );
+            }
+            switch (props.editorProps.formType) {
+                case Kontext.ConcFormTypes.QUERY:
+                    return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx} />;
 
-            } else if (props.operationIdx === 0) {
-                return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx} />;
+                case Kontext.ConcFormTypes.FILTER:
+                    return <viewDeps.FilterFormView {...props.editorProps}
+                                operationIdx={props.operationIdx} filterId={props.opKey} />;
 
-            } else if (props.operationFormType === 'filter') {
-                return <viewDeps.FilterFormView {...props.editorProps}
-                            operationIdx={props.operationIdx}
-                            filterId={props.opKey} />;
+                case Kontext.ConcFormTypes.SORT:
+                    return <viewDeps.SortFormView sortId={props.opKey} operationIdx={props.operationIdx}
+                                                    formType={Kontext.ConcFormTypes.SORT} />;
 
-            } else if (props.operationFormType === 'sort') {
-                return <viewDeps.SortFormView sortId={props.opKey} operationIdx={props.operationIdx} />;
+                case Kontext.ConcFormTypes.SAMPLE:
+                    return <viewDeps.SampleForm sampleId={props.opKey} operationIdx={props.operationIdx}
+                                                    formType={Kontext.ConcFormTypes.SAMPLE} />;
 
-            } else if (props.operationFormType === 'sample') {
-                return <viewDeps.SampleForm sampleId={props.opKey} operationIdx={props.operationIdx} />;
-
-            } else if (props.operationFormType === 'shuffle') {
-                return <viewDeps.ShuffleForm {...props.editorProps} shuffleId={props.opKey}
+                case Kontext.ConcFormTypes.SHUFFLE:
+                    return <viewDeps.ShuffleForm {...props.editorProps}
                             shuffleMinResultWarning={props.shuffleMinResultWarning}
                             lastOpSize={props.resultSize}
-                            operationIdx={props.operationIdx} />;
+                            operationIdx={props.operationIdx}
+                            shuffleSubmitFn={()=>undefined} />;
 
-            } else if (props.operationFormType === 'switchmc') {
-                return <viewDeps.SwitchMainCorpForm {...props.editorProps}
+                case Kontext.ConcFormTypes.SWITCHMC:
+                    return <viewDeps.SwitchMainCorpForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
                                 opKey={props.opKey} />;
 
-            } else if (props.operationFormType === 'subhits') {
-                return <viewDeps.SubHitsForm {...props.editorProps}
+                case Kontext.ConcFormTypes.SUBHITS:
+                    return <viewDeps.SubHitsForm {...props.editorProps}
+                                operationIdx={props.operationIdx}
+                                opKey={props.opKey}
+                                submitFn={()=>undefined} />;
+
+                case Kontext.ConcFormTypes.FIRSTHITS:
+                    return <viewDeps.FirstHitsForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
                                 opKey={props.opKey} />;
 
-            } else if (props.operationFormType === 'firsthits') {
-                return <viewDeps.FirstHitsForm {...props.editorProps}
-                                operationIdx={props.operationIdx}
-                                opKey={props.opKey} />;
-
-            } else {
-                return <div>???</div>;
+                default:
+                    return <div><strong>[??] Unknown component</strong></div>;
             }
         };
 
@@ -209,7 +314,21 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <QueryOpInfo /> --------------------------------
 
-    const QueryOpInfo = (props) => {
+    const QueryOpInfo:React.SFC<{
+        idx:number;
+        item:ExtendedQueryOperation;
+        editorProps:AnyEditorProps;
+        hasOpenEditor:boolean;
+        editOpKey:string;
+        editIsLocked:boolean;
+        isLoading:boolean;
+        modeRunFullQuery:boolean;
+        numOps:number;
+        shuffleMinResultWarning:number;
+        clickHandler:()=>void;
+        closeEditorHandler:()=>void;
+
+    }> = (props) => {
 
         const renderLabel = () => {
             if (props.idx === 0) {
@@ -263,7 +382,26 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <QueryOverview /> --------------------------------
 
-    class QueryOverview extends React.Component {
+    class QueryOverview extends React.Component<{
+        corpname:string;
+        humanCorpname:string;
+        usesubcorp:string;
+        queryFormProps:QueryFormLiteProps;
+        filterFormProps:FilterFormProps;
+        filterFirstDocHitsFormProps:FirstHitsFormProps;
+        switchMcFormProps:SwitchMainCorpFormProps;
+        shuffleFormProps:ShuffleFormProps;
+    },
+    {
+        replayIsRunning:boolean;
+        ops:Immutable.List<ExtendedQueryOperation>;
+        editOpIdx:number;
+        editOpKey:string;
+        isLoading:boolean;
+        queryOverview:Immutable.List<Kontext.QueryOperation>;
+        modeRunFullQuery:boolean;
+        editIsLocked:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -271,14 +409,14 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
             this._handleEditorClose = this._handleEditorClose.bind(this);
             this._modelChangeListener = this._modelChangeListener.bind(this);
             this.state = {
-                replayIsRunning: queryReplayModel.getBranchReplayIsRunning(),
+                replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
                 ops: queryReplayModel.getCurrEncodedOperations(),
                 editOpIdx: null,
                 editOpKey: null,
                 isLoading: false,
-                queryOverview: queryReplayModel.getCurrentQueryOverview(),
-                modeRunFullQuery: queryReplayModel.getRunFullQuery(),
-                editIsLocked: queryReplayModel.editIsLocked()
+                queryOverview: (queryReplayModel as QueryReplayModel).getCurrentQueryOverview(),
+                modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),
+                editIsLocked: (queryReplayModel as QueryReplayModel).editIsLocked()
             };
         }
 
@@ -291,27 +429,27 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
         _handleEditorClose() {
             this.setState({
-                replayIsRunning: queryReplayModel.getBranchReplayIsRunning(),
+                replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
                 ops: queryReplayModel.getCurrEncodedOperations(),
                 editOpIdx: null,
                 editOpKey: null,
                 isLoading: false,
                 queryOverview: null,
-                modeRunFullQuery: queryReplayModel.getRunFullQuery(),
-                editIsLocked: queryReplayModel.editIsLocked()
+                modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),
+                editIsLocked: (queryReplayModel as QueryReplayModel).editIsLocked()
             });
         }
 
         _modelChangeListener() {
             this.setState({
-                replayIsRunning: queryReplayModel.getBranchReplayIsRunning(),
+                replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
                 ops: queryReplayModel.getCurrEncodedOperations(),
-                editOpIdx: queryReplayModel.getEditedOperationIdx(),
-                editOpKey: queryReplayModel.opIdxToCachedQueryKey(this.state.editOpIdx),
+                editOpIdx: (queryReplayModel as QueryReplayModel).getEditedOperationIdx(),
+                editOpKey: (queryReplayModel as QueryReplayModel).opIdxToCachedQueryKey(this.state.editOpIdx),
                 isLoading: false,
-                queryOverview: queryReplayModel.getCurrentQueryOverview(),
-                modeRunFullQuery: queryReplayModel.getRunFullQuery(),
-                editIsLocked: queryReplayModel.editIsLocked()
+                queryOverview: (queryReplayModel as QueryReplayModel).getCurrentQueryOverview(),
+                modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),
+                editIsLocked: (queryReplayModel as QueryReplayModel).editIsLocked()
             });
         }
 
@@ -323,7 +461,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
             queryReplayModel.removeChangeListener(this._modelChangeListener);
         }
 
-        _getEditorProps(opIdx, opId) {
+        _getEditorProps(opIdx, opId):AnyEditorProps {
             if (['a', 'q'].indexOf(opId) > -1) {
                 return this.props.queryFormProps;
 
@@ -332,6 +470,10 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
             } else if (opId === 'f') {
                 return {
+                    formType: Kontext.ConcFormTypes.SHUFFLE,
+                    shuffleMinResultWarning: null,
+                    lastOpSize: null,
+                    operationIdx: opIdx,
                     shuffleSubmitFn: () => {
                         dispatcher.dispatch({
                             actionType: 'BRANCH_QUERY',
@@ -344,6 +486,9 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
             } else if (opId === 'D') {
                 return {
+                    formType: Kontext.ConcFormTypes.SUBHITS,
+                    operationIdx: opIdx,
+                    opKey: null,
                     submitFn: () => {
                         dispatcher.dispatch({
                             actionType: 'BRANCH_QUERY',
@@ -361,7 +506,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
                 return this.props.switchMcFormProps;
 
             } else {
-                return {};
+                return null;
             }
         }
 
@@ -369,8 +514,9 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
             return (
                 <div>
                     {this.state.queryOverview ?
-                            <basicOverviewViews.QueryOverivewTable data={this.state.queryOverview} onEditClick={this._handleEditClick} />
-                            : null}
+                            <basicOverviewViews.QueryOverviewTable data={this.state.queryOverview}
+                                onEditClick={this._handleEditClick} /> :
+                            null}
                     {this.state.replayIsRunning ? <QueryReplayView /> : null}
 
                     <ul id="query-overview-bar">
@@ -405,7 +551,13 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------
 
-    const RedirectingQueryOverview = (props) => {
+    const RedirectingQueryOverview:React.SFC<{
+        corpname:string;
+        humanCorpname:string;
+        usesubcorp:string;
+        ops:Immutable.List<ExtendedQueryOperation>;
+
+    }> = (props) => {
 
         const handleEditClickFn = (opIdx) => {
             return () => {
@@ -433,12 +585,13 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
                                     item={item}
                                     clickHandler={handleEditClickFn(i)}
                                     hasOpenEditor={false}
+                                    editOpKey={null}
                                     editorProps={null}
                                     closeEditorHandler={()=>undefined}
                                     isLoading={false}
                                     modeRunFullQuery={false}
                                     numOps={props.ops.size}
-                                    shuffleMinResultWarning=""
+                                    shuffleMinResultWarning={null}
                                     editIsLocked={true} />;
                     })}
             </ul>
@@ -452,7 +605,16 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
      * A component wrapping a new operation form to be
      * added to the query chain.
      */
-    const AppendOperationOverlay = (props) => {
+    const AppendOperationOverlay:React.SFC<{
+        menuActiveItem:{actionName:string};
+        filterFormProps:FilterFormProps;
+        shuffleFormProps:ShuffleFormProps;
+        switchMcFormProps:SwitchMainCorpFormProps;
+        filterSubHitsFormProps:SubHitsFormProps;
+        filterFirstDocHitsFormProps:FirstHitsFormProps;
+        lastOpSize:number;
+
+    }> = (props) => {
         const handleCloseClick = () => {
             dispatcher.dispatch({
                 actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
@@ -465,12 +627,13 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
                 case 'MAIN_MENU_SHOW_FILTER':
                     return <viewDeps.FilterFormView {...props.filterFormProps} filterId="__new__" />;
                 case 'MAIN_MENU_SHOW_SORT':
-                    return <viewDeps.SortFormView sortId="__new__" />;
+                    return <viewDeps.SortFormView sortId="__new__" formType={Kontext.ConcFormTypes.SORT} />;
                 case 'MAIN_MENU_SHOW_SAMPLE':
-                    return <viewDeps.SampleForm sampleId="__new__" />;
+                    return <viewDeps.SampleForm sampleId="__new__" formType={Kontext.ConcFormTypes.SAMPLE} />;
                 case 'MAIN_MENU_APPLY_SHUFFLE':
                     return <viewDeps.ShuffleForm {...props.shuffleFormProps}
-                                lastOpSize={props.lastOpSize} sampleId="__new__" />;
+                                lastOpSize={props.lastOpSize}
+                                formType={Kontext.ConcFormTypes.SHUFFLE} />;
                 case 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE':
                     return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
                                     opKey="__new__" />;
@@ -479,7 +642,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
                                     opKey="__new__" />;
                 case 'MAIN_MENU_SHOW_SWITCHMC':
                     return <viewDeps.SwitchMainCorpForm {...props.switchMcFormProps}
-                                lastOpSize={props.lastOpSize} sampleId="__new__" />;
+                                            formType={Kontext.ConcFormTypes.SWITCHMC} />;
                 default:
                     return <div>??</div>;
             }
@@ -487,13 +650,13 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
         const createTitle = () => {
             const m = {
-                MAIN_MENU_SHOW_FILTER: 'filter',
-                MAIN_MENU_SHOW_SORT: 'sort',
-                MAIN_MENU_SHOW_SAMPLE: 'sample',
-                MAIN_MENU_APPLY_SHUFFLE: 'shuffle',
-                MAIN_MENU_SHOW_SWITCHMC: 'switchmc',
-                MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE: 'subhits',
-                MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES: 'firsthits'
+                MAIN_MENU_SHOW_FILTER: Kontext.ConcFormTypes.FILTER,
+                MAIN_MENU_SHOW_SORT: Kontext.ConcFormTypes.SORT,
+                MAIN_MENU_SHOW_SAMPLE: Kontext.ConcFormTypes.SAMPLE,
+                MAIN_MENU_APPLY_SHUFFLE: Kontext.ConcFormTypes.SHUFFLE,
+                MAIN_MENU_SHOW_SWITCHMC: Kontext.ConcFormTypes.SWITCHMC,
+                MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE: Kontext.ConcFormTypes.SUBHITS,
+                MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES: Kontext.ConcFormTypes.FIRSTHITS
             };
             const ident = formTypeToTitle(m[props.menuActiveItem.actionName]);
             return he.translate('query__add_an_operation_title_{opname}', {opname: ident});
@@ -514,7 +677,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
-    class QueryToolbar extends React.Component {
+    class QueryToolbar extends React.Component<QueryToolbarProps, QueryToolbarState>  {
 
         constructor(props) {
             super(props);
@@ -580,7 +743,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
-    class NonViewPageQueryToolbar extends React.Component {
+    class NonViewPageQueryToolbar extends React.Component<NonViewPageQueryToolbarProps, NonViewPageQueryToolbarState> {
 
         constructor(props) {
             super(props);
@@ -611,9 +774,9 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayModel, ma
             return (
                 <div>
                     <RedirectingQueryOverview {...this.props} ops={this.state.ops} />
-                    {this.state.queryOverview ?
-                        <basicOverviewViews.QueryOverivewTable data={this.state.queryOverview}
-                                onEditClick={this._handleEditClick} /> :
+                    {this.state.queryOverview !== null ?
+                        <basicOverviewViews.QueryOverviewTable data={this.state.queryOverview}
+                                onEditClick={()=>undefined} /> :
                     null}
                 </div>
             );

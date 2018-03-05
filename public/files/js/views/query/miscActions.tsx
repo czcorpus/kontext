@@ -27,16 +27,17 @@ import {ActionDispatcher} from '../../app/dispatcher';
 
 
 export interface SampleFormViews {
-    SampleForm:React.ComponentClass;
-    ShuffleForm:React.ComponentClass;
-    SwitchMainCorpForm:React.ComponentClass;
+    SampleForm:React.ComponentClass<SampleFormProps>;
+    ShuffleForm:React.ComponentClass<ShuffleFormProps>;
+    SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
 }
 
 // ----------
 
 export interface SampleFormProps {
+    formType:Kontext.ConcFormTypes.SAMPLE;
     sampleId:string;
-    operationIdx:number;
+    operationIdx?:number;
 }
 
 export interface SampleFormState {
@@ -46,10 +47,10 @@ export interface SampleFormState {
 // -----------
 
 export interface ShuffleFormProps {
+    formType:Kontext.ConcFormTypes.SHUFFLE;
     shuffleMinResultWarning:number;
     lastOpSize:number;
-    lastOpIdx:number;
-    operationIdx:number;
+    operationIdx?:number;
     shuffleSubmitFn:()=>void;
 }
 
@@ -61,7 +62,8 @@ export interface ShuffleFormState {
 // ----------
 
 export interface SwitchMainCorpFormProps {
-    operationIdx:number;
+    formType:Kontext.ConcFormTypes.SWITCHMC;
+    operationIdx?:number;
     opKey:string;
 }
 

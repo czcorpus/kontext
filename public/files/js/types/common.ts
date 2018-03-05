@@ -547,6 +547,17 @@ export namespace Kontext {
         name:string;
         keys:VirtualKeys;
     }
+
+    export enum ConcFormTypes {
+        QUERY = 'query',
+        FILTER = 'filter',
+        SORT = 'sort',
+        SAMPLE = 'sample',
+        SHUFFLE = 'shuffle',
+        SWITCHMC = 'switchmc',
+        SUBHITS = 'subhits',
+        FIRSTHITS = 'firsthits'
+    }
 }
 
 

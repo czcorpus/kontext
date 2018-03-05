@@ -37,9 +37,9 @@ import {QueryContextModel} from '../models/query/context';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import RSVP from 'rsvp';
-import {init as queryFormInit} from 'views/query/main';
+import {init as queryFormInit} from '../views/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
-import {init as basicOverviewViewsInit} from 'views/query/basicOverview';
+import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import { CQLEditorProps } from '../views/query/cqlEditor';
 
 declare var require:any;
@@ -262,18 +262,18 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {
 
         this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
-        const queryFormComponents = queryFormInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            corparchWidget,
-            this.queryModel,
-            this.textTypesModel,
-            this.queryHintModel,
-            this.withinBuilderModel,
-            this.virtualKeyboardModel,
-            this.queryContextModel,
-            this.cqlEditorModel
-        );
+        const queryFormComponents = queryFormInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            CorparchWidget: corparchWidget,
+            queryModel: this.queryModel,
+            textTypesModel: this.textTypesModel,
+            queryHintModel: this.queryHintModel,
+            withinBuilderModel: this.withinBuilderModel,
+            virtualKeyboardModel: this.virtualKeyboardModel,
+            queryContextModel: this.queryContextModel,
+            cqlEditorModel: this.cqlEditorModel
+        });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
             window.document.getElementById('query-form-mount'),
