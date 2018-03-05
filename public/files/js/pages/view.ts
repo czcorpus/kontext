@@ -64,10 +64,10 @@ import {UserSettings} from '../app/userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../models/user/info';
 import {TextTypesDistModel, TextTypesDistModelProps, TTCrit} from '../models/concordance/ttDistModel';
-import {init as queryFormInit, QueryFormViews} from 'views/query/main';
+import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/main';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
-import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
-import {init as sortFormInit, SortFormViews} from 'views/query/sort';
+import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
+import {init as sortFormInit, SortViews} from '../views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from '../views/query/miscActions';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
@@ -138,13 +138,13 @@ export class ViewPage {
 
     private lineGroupsChart:LineSelGroupsRatiosChart;
 
-    private queryFormViews:QueryFormViews;
+    private queryFormViews:QueryMainViews;
 
-    private queryOverviewViews:QueryToolbarViews;
+    private queryOverviewViews:QueryOverviewViews;
 
     private filterFormViews:FilterFormViews;
 
-    private sortFormViews:SortFormViews;
+    private sortFormViews:SortViews;
 
     private miscQueryOpsViews:SampleFormViews;
 
@@ -476,18 +476,18 @@ export class ViewPage {
             actionPrefix: ''
         });
 
-        this.queryFormViews = queryFormInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            null, // no corpus selection widget here
-            this.queryModels.queryModel,
-            this.queryModels.textTypesModel,
-            this.queryModels.queryHintModel,
-            this.queryModels.withinBuilderModel,
-            this.queryModels.virtualKeyboardModel,
-            this.queryModels.queryContextModel,
-            this.queryModels.cqlEditorModel
-        );
+        this.queryFormViews = queryFormInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            CorparchWidget: null, // no corpus selection widget here
+            queryModel: this.queryModels.queryModel,
+            textTypesModel: this.queryModels.textTypesModel,
+            queryHintModel: this.queryModels.queryHintModel,
+            withinBuilderModel: this.queryModels.withinBuilderModel,
+            virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
+            queryContextModel: this.queryModels.queryContextModel,
+            cqlEditorModel: this.queryModels.cqlEditorModel
+        });
     }
 
     private initFilterForm(firstHitsModel:FirstHitsModel):void {
@@ -621,12 +621,12 @@ export class ViewPage {
             }
         );
 
-        this.sortFormViews = sortFormInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.queryModels.sortModel,
-            this.queryModels.multiLevelConcSortModel
-        );
+        this.sortFormViews = sortFormInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            sortModel: this.queryModels.sortModel,
+            multiLevelConcSortModel: this.queryModels.multiLevelConcSortModel
+        });
     }
 
     private initSampleForm(switchMcModel:SwitchMainCorpModel):void {
@@ -724,24 +724,23 @@ export class ViewPage {
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
         );
 
-        this.queryOverviewViews = queryOverviewInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
-            {
+        this.queryOverviewViews = queryOverviewInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            viewDeps: {
                 QueryFormView: this.queryFormViews.QueryFormLite,
                 FilterFormView: this.filterFormViews.FilterForm,
                 SubHitsForm: this.filterFormViews.SubHitsForm,
                 FirstHitsForm: this.filterFormViews.FirstHitsForm,
-                SortFormView: this.sortFormViews.SortFormView,
+                SortFormView: this.sortFormViews.SortForm,
                 SampleForm: this.miscQueryOpsViews.SampleForm,
                 ShuffleForm: this.miscQueryOpsViews.ShuffleForm,
                 SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm
             },
-            this.queryModels.queryReplayModel,
-            this.layoutModel.getModels().mainMenuModel,
-            this.queryModels.saveAsFormModel
-        );
+            queryReplayModel: this.queryModels.queryReplayModel,
+            mainMenuModel: this.layoutModel.getModels().mainMenuModel,
+            querySaveAsModel: this.queryModels.saveAsFormModel
+        });
 
         this.layoutModel.renderReactComponent(
             this.queryOverviewViews.QueryToolbar,
@@ -751,31 +750,37 @@ export class ViewPage {
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
                 usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
                 queryFormProps: {
-                    corpname: this.layoutModel.getConf<string>('corpname'),
+                    formType: Kontext.ConcFormTypes.QUERY,
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView() : null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    allowCorpusSelection: false,
-                    actionPrefix: ''
+                    actionPrefix: '',
+                    corpname: this.layoutModel.getConf<string>('corpname')
                 },
                 filterFormProps: {
+                    formType: Kontext.ConcFormTypes.FILTER,
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView() : null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    allowCorpusSelection: false,
-                    actionPrefix: 'FILTER_'
+                    actionPrefix: 'FILTER_',
+                    filterId: '__new__'
                 },
                 filterSubHitsFormProps: {
+                    formType: Kontext.ConcFormTypes.FILTER,
                     submitFn:() => {
                         const args = this.layoutModel.getConcArgs();
                         window.location.href = this.layoutModel.createActionUrl('filter_subhits', args.items());
                     }
                 },
                 filterFirstDocHitsFormProps: {
+                    formType: Kontext.ConcFormTypes.FIRSTHITS
                 },
                 sortFormProps: {
+                    formType: Kontext.ConcFormTypes.SORT
                 },
                 shuffleFormProps: {
+                    formType: Kontext.ConcFormTypes.SHUFFLE,
+                    lastOpSize: 0,
                     shuffleMinResultWarning: this.layoutModel.getConf<number>('ShuffleMinResultWarning'),
                     shuffleSubmitFn: () => {
                         const args = this.layoutModel.getConcArgs();
@@ -783,6 +788,7 @@ export class ViewPage {
                     }
                 },
                 switchMcFormProps: {
+                    formType: Kontext.ConcFormTypes.SWITCHMC
                 }
             }
         );

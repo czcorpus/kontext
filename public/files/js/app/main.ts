@@ -36,7 +36,7 @@ import footerBar from 'plugins/footerBar/init';
 import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
 import {init as commonViewsFactory, CommonViews} from '../views/common';
-import {init as menuViewsFactory} from 'views/menu';
+import {init as menuViewsFactory} from '../views/menu';
 import {init as overviewAreaViewsFactory} from 'views/overview';
 import {init as viewOptionsFactory} from 'views/options/main';
 import {MultiDict} from '../util';
@@ -103,7 +103,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     private generalViewOptionsModel:GeneralViewOptionsModel;
 
-    private mainMenuModel:MainMenuModel;
+    private mainMenuModel:Kontext.IMainMenuModel;
 
     private authPlugin:PluginInterfaces.IAuth;
 
@@ -504,8 +504,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      *
      */
     private initMainMenu():void {
-        const menuViews = menuViewsFactory(this.dispatcher, this.getComponentHelpers(), this,
-                this.mainMenuModel, this.getModels().asyncTaskInfoModel, this.layoutViews);
+        const menuViews = menuViewsFactory({
+            dispatcher: this.dispatcher,
+            he: this.getComponentHelpers(),
+            mainMenuModel: this.mainMenuModel,
+            asyncTaskModel: this.getModels().asyncTaskInfoModel
+        });
         this.renderReactComponent(
             menuViews.MainMenu,
             window.document.getElementById('main-menu-mount'),

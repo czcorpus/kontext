@@ -29,22 +29,24 @@ import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {FirstHitsModel} from '../../models/query/firstHits';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
+import {PluginInterfaces} from '../../types/plugins';
 
 
 
 export interface FilterFormViews {
-    FilterForm:React.ComponentClass;
-    SubHitsForm:React.ComponentClass;
-    FirstHitsForm:React.ComponentClass;
+    FilterForm:React.ComponentClass<FilterFormProps>;
+    SubHitsForm:React.ComponentClass<SubHitsFormProps>;
+    FirstHitsForm:React.ComponentClass<FirstHitsFormProps>;
 }
 
 // ---------
 
 export interface FilterFormProps {
+    formType:Kontext.ConcFormTypes.FILTER;
     filterId:string;
-    operationIdx:number;
-    tagHelperView:React.Component<{}, {}>; // TODO types
-    queryStorageView:React.Component<{}, {}>; // TODO types
+    operationIdx?:number;
+    tagHelperView:PluginInterfaces.TagHelperView;
+    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
     actionPrefix:string;
 }
 
@@ -77,7 +79,8 @@ export interface FilterFormState {
 // ---------
 
 export interface SubHitsFormProps {
-    operationIdx:number;
+    formType:Kontext.ConcFormTypes.SUBHITS;
+    operationIdx?:number;
     opKey:string;
     submitFn:()=>void;
 }
@@ -89,7 +92,8 @@ export interface SubHitsFormState {
 // ---------
 
 export interface FirstHitsFormProps {
-    operationIdx:number;
+    formType:Kontext.ConcFormTypes.FIRSTHITS;
+    operationIdx?:number;
     opKey:string;
 }
 
@@ -288,8 +292,8 @@ export function init(
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
-                                tagAttr={this.state.tagAttr}
-                                useCQLEditor={this.state.useCQLEditor} />
+                                useCQLEditor={this.state.useCQLEditor}
+                                onEnterKey={()=>undefined} />
                         </tbody>
                     </table>
                     <div className="buttons">
@@ -381,8 +385,8 @@ export function init(
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
-                                tagAttr={this.state.tagAttr}
-                                useCQLEditor={this.state.useCQLEditor} />
+                                useCQLEditor={this.state.useCQLEditor}
+                                onEnterKey={()=>undefined} />
                         </tbody>
                     </table>
                     <div className="buttons">

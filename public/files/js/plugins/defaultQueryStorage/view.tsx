@@ -19,13 +19,36 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { QueryStorageModel, InputBoxHistoryItem } from './models';
 
 
-export function init(dispatcher, he, queryStorageModel) {
+export interface QueryStorageProps {
+    sourceId:string;
+    actionPrefix:string;
+    onCloseTrigger:()=>void;
+}
+
+
+interface QueryStorageState {
+    data:Immutable.List<InputBoxHistoryItem>;
+    isBusy:boolean;
+    currentItem:number;
+}
+
+
+export interface Views {
+    QueryStorage:React.ComponentClass<QueryStorageProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, queryStorageModel:QueryStorageModel) {
 
     const layoutViews = he.getLayoutViews();
 
-    class QueryStorage extends React.Component {
+    class QueryStorage extends React.Component<QueryStorageProps, QueryStorageState> {
 
         constructor(props) {
             super(props);
@@ -117,16 +140,6 @@ export function init(dispatcher, he, queryStorageModel) {
             });
         }
 
-        _renderParams(qtype, params) {
-            const ans = [qtype];
-            for (let p in params || {}) {
-                if (params.hasOwnProperty(p)) {
-                    ans.push(`${p}: ${params[p]}`);
-                }
-            }
-            return ans.join(', ');
-        }
-
         _globalKeyEventHandler(evt) {
             if (evt.keyCode === 27) {
                 this.props.onCloseTrigger();
@@ -157,7 +170,7 @@ export function init(dispatcher, he, queryStorageModel) {
                                 </em>
                                 {'\u00a0'}
                                 <span className="corpname">
-                                    ({this._renderParams(item.query_type, item.params)})
+                                    (item.query_type)
                                 </span>
                             </span>
                         </li>

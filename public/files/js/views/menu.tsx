@@ -19,17 +19,57 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {Kontext} from '../types/common';
+import {ActionDispatcher} from '../app/dispatcher';
 
 
-export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskModel, layoutViews) {
+export interface MenuModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    mainMenuModel:Kontext.IMainMenuModel;
+    asyncTaskModel:Kontext.IAsyncTaskModel;
+}
+
+
+export interface MainMenuProps {
+
+}
+
+
+interface MainMenuState {
+    currFocus:string;
+    numRunningTasks:number;
+    numFinishedTasks:number;
+    menuItems:Immutable.List<Kontext.MenuEntry>;
+}
+
+
+export interface MainMenuViews {
+    MainMenu:React.ComponentClass<MainMenuProps>;
+}
+
+
+export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleArgs):MainMenuViews {
+
+
+    const layoutViews = he.getLayoutViews();
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
-    const ConcDependentItem = (props) => {
+    const ConcDependentItem:React.SFC<{
+        data: {
+            action:string;
+            args:Kontext.GeneralProps;
+            q:string;
+            label:string;
+            indirect:boolean;
+        };
+
+    }> = (props) => {
 
         const createLink = () => {
-            return he.createActionLink(props.data.action + '?' +
-                    concArgHandler.exportConcArgs(props.data.args, props.data.q));
+            return he.createActionLink(props.data.action, props.data.args);
         };
 
         return (
@@ -44,7 +84,17 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <Item /> --------------------------
 
-    const Item = (props) => {
+    const Item:React.SFC<{
+        data: {
+            action:string;
+            args:Kontext.GeneralProps;
+            label:string;
+            openInBlank:boolean;
+            indirect:boolean;
+            boundAction:()=>void;
+        };
+
+    }> = (props) => {
 
         const createLink = () => {
             if (props.data.action) {
@@ -82,7 +132,10 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <DisabledItem /> ----------------------
 
-    const DisabledItem = (props) => {
+    const DisabledItem:React.SFC<{
+        data:{label:string};
+
+    }> = (props) => {
 
         return (
             <span className="disabled">
@@ -93,7 +146,15 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <EventTriggeringItem /> -----------------
 
-    const EventTriggeringItem = (props) => {
+    const EventTriggeringItem:React.SFC<{
+        data: {
+            message:string;
+            label:string;
+            indirect:boolean;
+            args:Kontext.GeneralProps;
+        };
+        closeActiveSubmenu:()=>void;
+    }> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch({
@@ -116,7 +177,16 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <SubMenu /> --------------------------
 
-    const SubMenu = (props) => {
+    const SubMenu:React.SFC<{
+        isOpened:boolean;
+        isDisabled:boolean;
+        label:string;
+        items:Immutable.List<Kontext.SubmenuItem>;
+        closeActiveSubmenu:()=>void;
+        handleMouseOver:()=>void;
+        handleMouseOut:()=>void;
+
+    }> = (props) => {
 
         const createItem = (item, key) => {
             if (item.disabled) {
@@ -169,7 +239,14 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <AsyncTaskList /> --------------------------
 
-    const AsyncTaskList = (props) => {
+    const AsyncTaskList:React.SFC<{
+        clearOnCloseCheckboxStatus:boolean;
+        items:Immutable.List<{ident:string; category:string; label:string; created:number; status:string}>;
+        closeClickHandler:()=>void;
+        handleClearOnCloseCheckbox:()=>void;
+        handleOkButtonClick:(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         return (
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
@@ -220,7 +297,14 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <LiAsyncTaskNotificator /> --------------------------
 
-    class LiAsyncTaskNotificator extends React.Component {
+    class LiAsyncTaskNotificator extends React.Component<{
+        numRunning:number;
+        numFinished:number;
+    },
+    {
+        removeFinishedOnSubmit:boolean;
+        taskList:Immutable.List<Kontext.AsyncTaskInfo>;
+    }> {
 
         constructor(props) {
             super(props);
@@ -313,7 +397,7 @@ export function init(dispatcher, he, concArgHandler, mainMenuModel, asyncTaskMod
 
     // ----------------------------- <MainMenu /> --------------------------
 
-    class MainMenu extends React.Component {
+    class MainMenu extends React.Component<MainMenuProps, MainMenuState> {
 
         constructor(props) {
             super(props);

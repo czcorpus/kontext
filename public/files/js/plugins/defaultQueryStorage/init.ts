@@ -36,7 +36,7 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
         this.model = model;
     }
 
-    getWidgetView():React.ComponentClass<{}> {
+    getWidgetView():PluginInterfaces.QueryStorageWidgetView {
         return viewsInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),

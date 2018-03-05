@@ -18,16 +18,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import{QuerySaveAsFormModel} from '../../models/query/save';
 
 
-export function init(dispatcher, he, layoutViews, saveAsFormModel) {
+export interface QuerySaveAsFormProps {
+}
+
+
+interface QuerySaveAsFormState {
+    isWaiting:boolean;
+    name:string;
+}
+
+
+export interface SaveViews {
+    QuerySaveAsForm:React.ComponentClass<QuerySaveAsFormProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            saveAsFormModel:QuerySaveAsFormModel):SaveViews {
+
+    const layoutViews = he.getLayoutViews();
 
 
     // ------------------ <QueryNameInput /> -------------------------------
 
-    const QueryNameInput = (props) => {
+    const QueryNameInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -49,7 +72,10 @@ export function init(dispatcher, he, layoutViews, saveAsFormModel) {
 
     // ------------------ <SubmitButton /> -------------------------------
 
-    const SubmitButton = (props) => {
+    const SubmitButton:React.SFC<{
+        isWaiting:boolean;
+
+    }> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch({
@@ -79,7 +105,7 @@ export function init(dispatcher, he, layoutViews, saveAsFormModel) {
 
     // ------------------ <QuerySaveAsForm /> -------------------------------
 
-    class QuerySaveAsForm extends React.Component {
+    class QuerySaveAsForm extends React.Component<QuerySaveAsFormProps, QuerySaveAsFormState> {
 
         constructor(props) {
             super(props);

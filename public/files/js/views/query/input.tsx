@@ -43,9 +43,9 @@ export interface InputModuleArgs {
 
 
 export interface InputModuleViews {
-    TRQueryInputField;
-    TRQueryTypeField;
-    TRPcqPosNegField;
+    TRQueryInputField:React.ComponentClass<TRQueryInputFieldProps>;
+    TRQueryTypeField:React.SFC<TRQueryTypeFieldProps>;
+    TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps>;
 }
 
 
@@ -53,16 +53,16 @@ export interface TRQueryInputFieldProps {
     actionPrefix:string;
     sourceId:string;
     lposValue:string;
-    wPoSList:Array<{n:string; v:string}>;
+    wPoSList:Immutable.List<{n:string; v:string}>;
     queryType:string;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
     tagHelperView:PluginInterfaces.TagHelperView;
-    widgets:Array<string>;
+    widgets:Immutable.List<string>;
     inputLanguage:string;
     useCQLEditor:boolean;
     forcedAttr:string;
     defaultAttr:string;
-    attrList:Array<Kontext.AttrItem>;
+    attrList:Immutable.List<Kontext.AttrItem>;
     matchCaseValue:boolean;
     tagsetDocUrl:string;
     onEnterKey:()=>void;
@@ -473,7 +473,7 @@ export function init({
     class QueryToolbox extends React.Component<{
         sourceId:string;
         actionPrefix:string;
-        widgets:Array<string>;
+        widgets:Immutable.List<string>;
         inputLanguage:string;
         tagHelperView:PluginInterfaces.TagHelperView;
         toggleHistoryWidget:()=>void;
@@ -595,7 +595,7 @@ export function init({
     const LposSelector:React.SFC<{
         sourceId:string;
         actionPrefix:string;
-        wPoSList:Array<{v:string; n:string}>;
+        wPoSList:Immutable.List<{v:string; n:string}>;
         lposValue:string;
 
     }> = (props) => {
@@ -658,7 +658,7 @@ export function init({
         sourceId:string;
         forcedAttr:string;
         defaultAttr:string;
-        attrList:Array<Kontext.AttrItem>;
+        attrList:Immutable.List<Kontext.AttrItem>;
 
     }> = (props) => {
 

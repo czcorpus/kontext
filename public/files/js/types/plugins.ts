@@ -86,27 +86,42 @@ export namespace PluginInterfaces {
 
     // --------  tag helper ----------
 
-    export interface ITagHelper {
-        getWidgetView():React.ComponentClass;
-    }
-
-    export type TagHelperView = React.ComponentClass<{
+    export interface TagHelperViewProps {
         sourceId:string;
         actionPrefix:string;
         range:[number, number];
         onInsert:()=>void;
         onEscKey:()=>void;
-    }>;
+    }
+
+    export type TagHelperView = React.ComponentClass<TagHelperViewProps>;
+
+    export interface ITagHelper {
+        getWidgetView():TagHelperView;
+    }
 
     // --------- query storage ------
 
     export interface IQueryStorageModel extends Kontext.EventEmitter {
 
-        /**
-         *
-         */
+        getCurrentCorpusOnly():boolean;
         getData():Immutable.List<Kontext.QueryHistoryItem>;
+        getQueryType():string;
+        getOffset():number;
+        getIsBusy():boolean;
+        getHasMoreItems():boolean;
+        getArchivedOnly():boolean;
+        getEditingQueryId():string;
+        getEditingQueryName():string;
     }
+
+    export interface QueryStorageWidgetProps {
+        sourceId:string;
+        actionPrefix:string;
+        onCloseTrigger:()=>void;
+    }
+
+    export type QueryStorageWidgetView = React.ComponentClass<QueryStorageWidgetProps>;
 
     export interface IQueryStorage {
 
@@ -117,16 +132,10 @@ export namespace PluginInterfaces {
          */
         importData(data:Array<Kontext.QueryHistoryItem>):void;
 
-        getWidgetView():React.ComponentClass;
+        getWidgetView():QueryStorageWidgetView;
 
         getModel():IQueryStorageModel;
     }
-
-    export type QueryStorageWidgetView = React.ComponentClass<{
-        sourceId:string;
-        actionPrefix:string;
-        onCloseTrigger:()=>void;
-    }>;
 
     // ------------------------ corparch -------------------------
 
@@ -137,10 +146,9 @@ export namespace PluginInterfaces {
         removeChangeListener(fn:Kontext.ModelListener):void;
     }
 
-    export type CorparchWidgetView = React.ComponentClass<{
-        subcorpList:Immutable.List<string>;
-        currSubcorpus:string;
-    }>;
+    export type CorparchWidgetView = React.ComponentClass<{}>;
+
+    // -------------------------- live attributes --------------------------
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
         getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
@@ -190,6 +198,10 @@ export namespace PluginInterfaces {
          */
         manualAlignCorporaMode:boolean;
     }
+
+    export type LiveAttributesView = React.ComponentClass<{}>;
+
+    // ------------------------------------------------
 
     /**
      * A factory class for generating corplist page. The page is expected
