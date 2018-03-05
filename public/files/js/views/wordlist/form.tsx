@@ -87,7 +87,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             <tr>
                 <th>{he.translate('global__corpus')}:</th>
                 <td>
-                    <props.corparchWidget subcorpList={props.subcorpList} currSubcorpus={props.currentSubcorp} />
+                    <props.corparchWidget />
                 </td>
                 <td />
             </tr>

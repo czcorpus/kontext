@@ -546,7 +546,7 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
         return this.mlxbwardValues.get(sortId);
     }
 
-    getCtxIndexValues(sortId:string, level:number):Immutable.List<number> {
+    getCtxIndexValues(sortId:string):Immutable.List<number> {
         return this.ctxIndexValues.get(sortId);
     }
 

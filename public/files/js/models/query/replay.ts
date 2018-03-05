@@ -75,29 +75,44 @@ function mapOpIdToFormType(opId:string):string {
         x: Switch KWIC
     */
     if (['q', 'a'].indexOf(opId) > -1) {
-        return 'query';
+        return Kontext.ConcFormTypes.QUERY;
 
     } else if (['n', 'N', 'p', 'P'].indexOf(opId) > -1) {
-        return 'filter';
+        return Kontext.ConcFormTypes.FILTER;
 
     } else if (opId === 's') {
-        return 'sort';
+        return Kontext.ConcFormTypes.SORT;
 
     } else if (opId === 'r') {
-        return 'sample';
+        return Kontext.ConcFormTypes.SAMPLE;
 
     } else if (opId === 'f') {
-        return 'shuffle';
+        return Kontext.ConcFormTypes.SHUFFLE;
 
     } else if (opId === 'x') {
-        return 'switchmc';
+        return Kontext.ConcFormTypes.SWITCHMC;
 
     } else if (opId === 'D') {
-        return 'subhits';
+        return Kontext.ConcFormTypes.SUBHITS;
 
     } else if (opId === 'F') {
-        return 'firsthits';
+        return Kontext.ConcFormTypes.FIRSTHITS;
     }
+}
+
+
+interface QueryOverviewResponse extends Kontext.AjaxConcResponse {
+    Desc:Array<QueryOverviewResponseRow>;
+}
+
+
+interface QueryOverviewResponseRow {
+    op:string;
+    opid:string;
+    churl:string;
+    tourl:string;
+    nicearg:string;
+    size:number;
 }
 
 
@@ -153,7 +168,7 @@ export class QueryInfoModel extends SynchronizedModel {
      * This is a little bit independent from the rest. It just
      * contains data required to render tabular query overview.
      */
-    private currentQueryOverview:any;
+    private currentQueryOverview:Immutable.List<Kontext.QueryOperation>;
 
     protected pageModel:PageModel;
 
@@ -183,21 +198,29 @@ export class QueryInfoModel extends SynchronizedModel {
 
     private loadQueryOverview():RSVP.Promise<any> {
         const args = this.pageModel.getConcArgs();
-        return this.pageModel.ajax<any>(
+        return this.pageModel.ajax<QueryOverviewResponse>(
             'GET',
             this.pageModel.createActionUrl('concdesc_json'),
             args,
             {}
         ).then(
             (data) => {
-                this.currentQueryOverview = data.Desc;
+                this.currentQueryOverview = Immutable.List<Kontext.QueryOperation>(data.Desc);
             }
         );
     }
 
-    getCurrentQueryOverview():any {
+    getCurrentQueryOverview():Immutable.List<Kontext.QueryOperation> {
         return this.currentQueryOverview;
     }
+}
+
+export interface IQueryReplayModel extends Kontext.EventEmitter {
+
+    getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation>;
+
+    getCurrentQueryOverview():Immutable.List<Kontext.QueryOperation>;
+
 }
 
 
@@ -209,7 +232,7 @@ export class QueryInfoModel extends SynchronizedModel {
  * server requests one-by-one (while updating query operation ID) and the final
  * request is used to redirect client to see the result.
  */
-export class QueryReplayModel extends QueryInfoModel {
+export class QueryReplayModel extends QueryInfoModel implements IQueryReplayModel {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 
@@ -356,7 +379,7 @@ export class QueryReplayModel extends QueryInfoModel {
      * Transform query operation idx (i.e. its position in a respective
      * query pipeline) into a related key of stored form data (conc_persistence plug-in).
      */
-    private opIdxToCachedQueryKey(idx:number):string {
+    opIdxToCachedQueryKey(idx:number):string {
         if (this.replayOperations.get(idx) !== null) {
             return this.replayOperations.get(idx);
 
@@ -1039,7 +1062,7 @@ export class QueryReplayModel extends QueryInfoModel {
         }
     }
 
-    getCurrEncodedOperations():Immutable.List<Kontext.QueryOperation> {
+    getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation> {
         return this.currEncodedOperations;
     }
 
@@ -1074,15 +1097,18 @@ export class QueryReplayModel extends QueryInfoModel {
  * 'view' page and open a respective operation form in case
  * user clicks a item.
  */
-export class IndirectQueryReplayModel extends QueryInfoModel {
+export class IndirectQueryReplayModel extends QueryInfoModel implements IQueryReplayModel {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
+
+    private currQueryOverivew:Immutable.List<Kontext.QueryOperation>;
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;
         this.currEncodedOperations = importEncodedOperations(currentOperations);
+        this.currQueryOverivew = Immutable.List<Kontext.QueryOperation>(currentOperations);
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -1098,8 +1124,12 @@ export class IndirectQueryReplayModel extends QueryInfoModel {
         });
     }
 
-    getCurrEncodedOperations():Immutable.List<Kontext.QueryOperation> {
+    getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation> {
         return this.currEncodedOperations;
+    }
+
+    getCurrentQueryOverview():Immutable.List<Kontext.QueryOperation> {
+        return null;
     }
 
 }

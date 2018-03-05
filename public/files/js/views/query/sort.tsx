@@ -19,16 +19,49 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {ConcSortModel, MultiLevelConcSortModel} from '../../models/query/sort';
+
+export interface SortModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    sortModel:ConcSortModel;
+    multiLevelConcSortModel:MultiLevelConcSortModel;
+}
 
 
-export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
+export interface SortFormProps {
+    formType:Kontext.ConcFormTypes.SORT;
+    operationIdx?:number;
+    sortId:string;
+}
+
+
+interface SortFormState {
+    sortType:string;
+}
+
+
+export interface SortViews {
+    SortForm:React.ComponentClass<SortFormProps>;
+}
+
+
+export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortModuleArgs):SortViews {
 
     const layoutViews = he.getLayoutViews();
 
 
     // -------------------------- <AttributeList /> ---------------------------------
 
-    const AttributeList = (props) => {
+    const AttributeList:React.SFC<{
+        onAttrSelect:(val:string)=>void;
+        currValue:string;
+        availAttrs:Immutable.List<Kontext.AttrItem>;
+
+    }> = (props) => {
 
         const handleSelectChange = (evt) => {
             props.onAttrSelect(evt.target.value);
@@ -43,7 +76,11 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <SortKeySelector /> ---------------------------------
 
-    const SortKeySelector = (props) => {
+    const SortKeySelector:React.SFC<{
+        sortId:string;
+        currValue:string;
+
+    }> = (props) => {
 
         const handleSelectFn = (value) => {
             return () => {
@@ -84,7 +121,18 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <SimpleSortForm /> ---------------------------------
 
-    class SimpleSortForm extends React.Component {
+    class SimpleSortForm extends React.Component<{
+        sortId:string;
+    },
+    {
+        availAttrs:Immutable.List<Kontext.AttrItem>;
+        sattr:string;
+        skey:string;
+        spos:string;
+        sicase:string;
+        sbward:string;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -220,7 +268,12 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <MLCtxSelector /> ---------------------------------
 
-    const MLCtxSelector = (props) => {
+    const MLCtxSelector:React.SFC<{
+        sortId:string;
+        level:number;
+        currentValue:number;
+
+    }> = (props) => {
 
         const setValFn = (idx) => {
             return () => {
@@ -270,7 +323,19 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <MLSingleLevelFields /> ---------------------------------
 
-    class MLSingleLevelFields extends React.Component {
+    class MLSingleLevelFields extends React.PureComponent<{
+        sortId:string;
+        level:number;
+        numLevels:number;
+        mlxattr:string;
+        availAttrs:Immutable.List<Kontext.AttrItem>;
+        mlxicase:string;
+        mlxbward:string;
+        ctxIndex:number;
+        ctxAlign:string;
+        onRemoveLevel:()=>void;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -417,7 +482,19 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
 
-    class MultiLevelSortForm extends React.Component {
+    class MultiLevelSortForm extends React.Component<{
+        sortId:string;
+    },
+    {
+        availAttrs:Immutable.List<Kontext.AttrItem>;
+        levels:Immutable.List<number>;
+        maxNumLevels:number;
+        mlxattrValues:Immutable.List<string>;
+        mlxicaseValues:Immutable.List<string>;
+        mlxbwardValues:Immutable.List<string>;
+        ctxIndexValues:Immutable.List<number>;
+        ctxAlignValues:Immutable.List<string>;
+    }> {
 
         constructor(props) {
             super(props);
@@ -501,7 +578,11 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <SortFormSelector /> -------------------------
 
-    const SortFormSelector = (props) => {
+    const SortFormSelector:React.SFC<{
+        formType:string;
+        onChange:(val:string)=>void;
+
+    }> = (props) => {
 
         const onItemClick = (ident) => {
             return () => {
@@ -527,7 +608,7 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
 
     // -------------------------- <SortForm /> ---------------------------------
 
-    class SortForm extends React.Component {
+    class SortForm extends React.Component<SortFormProps, SortFormState> {
 
         constructor(props) {
             super(props);
@@ -613,6 +694,6 @@ export function init(dispatcher, he, sortModel, multiLevelConcSortModel) {
     }
 
     return {
-        SortFormView: SortForm
+        SortForm: SortForm
     };
 }

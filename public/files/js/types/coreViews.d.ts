@@ -123,8 +123,8 @@ declare namespace CoreViews {
     namespace InlineHelp {
 
         interface Props {
-            customStyle:{[key:string]:string};
             children:React.ReactNode;
+            customStyle?:{[key:string]:string};
             url?:string;
         }
 

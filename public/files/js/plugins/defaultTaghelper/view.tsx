@@ -24,15 +24,8 @@ import {ActionPayload, ActionDispatcher} from '../../app/dispatcher';
 import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';
+import { PluginInterfaces } from '../../types/plugins';
 
-
-export interface TagBuilderProps {
-    sourceId:string;
-    actionPrefix:string;
-    range:[number, number];
-    onEscKey:()=>void;
-    onInsert:()=>void;
-}
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
@@ -338,7 +331,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<TagBuilderProps, TagHelperModelState> { // TODO type
+    class TagBuilder extends React.Component<PluginInterfaces.TagHelperViewProps, TagHelperModelState> {
 
         constructor(props) {
             super(props);

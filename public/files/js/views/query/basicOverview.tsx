@@ -19,6 +19,29 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+
+
+export interface EmptyQueryOverviewBarProps {
+    corpname:string;
+    humanCorpname:string;
+    usesubcorp:string;
+}
+
+
+export interface QueryOverviewTableProps {
+    data:Immutable.List<Kontext.QueryOperation>
+    onEditClick:(idx:number)=>void;
+}
+
+
+export interface BasicOverviewViews {
+    EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps>;
+    QueryOverviewTable:React.SFC<QueryOverviewTableProps>;
+}
+
 
 /**
  * This view lib contains core query overview components used by both
@@ -28,13 +51,13 @@ import * as React from 'react';
  * @param {*} dispatcher
  * @param {*} he
  */
-export function init(dispatcher, he) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    const EmptyQueryOverviewBar = (props) => {
+    const EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps> = (props) => {
 
 
         return (
@@ -49,9 +72,9 @@ export function init(dispatcher, he) {
         );
     };
 
-    // ----------------------------- <QueryOverivewTable /> --------------------------
+    // ----------------------------- <QueryOverviewTable /> --------------------------
 
-    const QueryOverivewTable = (props) => {
+    const QueryOverviewTable:React.SFC<QueryOverviewTableProps> = (props) => {
 
         const handleCloseClick = () => {
             dispatcher.dispatch({
@@ -109,7 +132,7 @@ export function init(dispatcher, he) {
 
     return {
         EmptyQueryOverviewBar: EmptyQueryOverviewBar,
-        QueryOverivewTable: QueryOverivewTable
+        QueryOverviewTable: QueryOverviewTable
     };
 
 }

@@ -24,13 +24,35 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { QueryContextModel } from '../../models/query/context';
 
 
-export function init(dispatcher, he, queryContextModel) {
+export interface SpecifyContextFormProps {
+    hasLemmaAttr:boolean;
+    lemmaWindowSizes:Immutable.List<number>;
+    wPoSList:Immutable.List<{v:string; n:string}>;
+    posWindowSizes:Immutable.List<number>;
+}
+
+
+export interface ContextViews {
+    SpecifyContextForm:React.ComponentClass<SpecifyContextFormProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            queryContextModel:QueryContextModel):ContextViews {
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
 
-    const AllAnyNoneSelector = (props) => {
+    const AllAnyNoneSelector:React.SFC<{
+        inputName:string;
+        value:string;
+
+    }> = (props) => {
 
         const changeHandler = (evt) => {
             dispatcher.dispatch({
@@ -54,7 +76,13 @@ export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <TRWindowSelector /> ---------------------
 
-    const TRWindowSelector = (props) => {
+    const TRWindowSelector:React.SFC<{
+        namePrefix:string;
+        windowTypeSelector:string;
+        windowSizeSelector:string;
+        options:Immutable.List<number>;
+
+    }> = (props) => {
 
         const changeHandler = (evt) => {
             dispatcher.dispatch({
@@ -94,7 +122,12 @@ export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <TRLemmaWindowSelector /> ---------------------
 
-    const TRLemmaWindowSelector = (props) => {
+    const TRLemmaWindowSelector:React.SFC<{
+        options:Immutable.List<number>;
+        fc_lemword_window_type:string;
+        fc_lemword_wsize:string;
+
+    }> = (props) => {
 
         return <TRWindowSelector
                     options={props.options}
@@ -105,7 +138,12 @@ export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <TRPosWindowSelector /> ---------------------
 
-    const TRPosWindowSelector = (props) => {
+    const TRPosWindowSelector:React.SFC<{
+        options:Immutable.List<number>;
+        fc_pos_window_type:string;
+        fc_pos_wsize:string;
+
+    }> = (props) => {
 
             return <TRWindowSelector
                         options={props.options}
@@ -116,7 +154,15 @@ export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <LemmaFilter /> ---------------------
 
-    const LemmaFilter = (props) => {
+    const LemmaFilter:React.SFC<{
+        hasLemmaAttr:boolean;
+        fc_lemword_wsize:string;
+        fc_lemword_type:string;
+        fc_lemword:string;
+        fc_lemword_window_type:string;
+        lemmaWindowSizes:Immutable.List<number>;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -157,7 +203,15 @@ export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <PoSFilter /> ---------------------
 
-    const PoSFilter = (props) => {
+    const PoSFilter:React.SFC<{
+        posWindowSizes:Immutable.List<number>;
+        fc_pos_window_type:string;
+        fc_pos_wsize:string;
+        fc_pos:string;
+        wPoSList:Immutable.List<{v:string; n:string}>;
+        fc_pos_type:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -197,8 +251,8 @@ export function init(dispatcher, he, queryContextModel) {
                             </th>
                             <td>
                                 <select title={he.translate('query__select_one_or_more_pos_tags')}
-                                        multiple="multiple"
-                                        size="4"
+                                        multiple={true}
+                                        size={4}
                                         name="fc_pos" value={props.fc_pos}
                                         onChange={handleMultiSelectChange}>
                                     {props.wPoSList.map((item, i) => {
@@ -220,7 +274,7 @@ export function init(dispatcher, he, queryContextModel) {
 
     // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    class SpecifyContextForm extends React.Component {
+    class SpecifyContextForm extends React.Component<SpecifyContextFormProps, {data: Immutable.Map<string, any>}> {
 
         constructor(props) {
             super(props);
