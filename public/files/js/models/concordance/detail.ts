@@ -97,7 +97,7 @@ export class ConcDetailModel extends StatefulModel {
 
     private kwicTokenNum:number;
 
-    private tokenDetailData:Array<PluginInterfaces.TokenDetail.DataAndRenderer>;
+    private tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
 
     private kwicLength:number;
 
@@ -171,7 +171,7 @@ export class ConcDetailModel extends StatefulModel {
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.tokenDetailPlg = tokenDetailPlg;
-        this.tokenDetailData = [];
+        this.tokenDetailData = Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>();
         this.concDetail = null;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -428,7 +428,7 @@ export class ConcDetailModel extends StatefulModel {
     }
 
     private resetTokenDetail():void {
-        this.tokenDetailData = [];
+        this.tokenDetailData = this.tokenDetailData.clear();
     }
 
     getPlayingRowIdx():number {
@@ -639,7 +639,7 @@ export class ConcDetailModel extends StatefulModel {
         })().then(
             (data) => {
                 if (data) {
-                    this.tokenDetailData = data;
+                    this.tokenDetailData = Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>(data);
                     this.lineIdx = lineIdx;
                     return true;
 
@@ -747,12 +747,12 @@ export class ConcDetailModel extends StatefulModel {
         return this.mode;
     }
 
-    getTokenDetailData():Array<PluginInterfaces.TokenDetail.DataAndRenderer> {
+    getTokenDetailData():Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer> {
         return this.tokenDetailData;
     }
 
     hasTokenDetailData():boolean {
-        return this.tokenDetailData.length > 0;
+        return this.tokenDetailData.size > 0;
     }
 
     getIsBusy():boolean {

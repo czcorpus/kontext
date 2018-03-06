@@ -33,7 +33,7 @@ import {parseUrlArgs} from '../app/navigation';
 import {ActionPayload} from '../app/dispatcher';
 import {MultiDict, updateProps} from '../util';
 import * as conclines from '../conclines';
-import {init as concViewsInit, ConcordanceViews} from 'views/concordance/main';
+import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
 import {LineSelectionModel} from '../models/concordance/lineSelection';
 import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
 import {ConcLineModel, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
@@ -79,18 +79,6 @@ declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/view.less');
 
-export class ViewPageModels {
-    lineSelectionModel:LineSelectionModel;
-    lineViewModel:ConcLineModel;
-    concDetailModel:ConcDetailModel;
-    refsDetailModel:RefsDetailModel;
-    userInfoModel:Kontext.IUserInfoModel;
-    collFormModel:CollFormModel;
-    mainMenuModel:Kontext.IMainMenuModel;
-    ttDistModel:TextTypesDistModel;
-    dashboardModel:ConcDashboard;
-}
-
 export class QueryModels {
     queryModel:QueryModel;
     filterModel:FilterModel;
@@ -132,7 +120,7 @@ export class ViewPage {
 
     private hasLockedGroups:boolean;
 
-    private concViews:ConcordanceViews;
+    private concViews:ConcViews;
 
     private analysisViews:AnalysisFrameViews;
 
@@ -1019,7 +1007,8 @@ export class ViewPage {
             },
             onSyntaxPaneClose: () => {
                 syntaxViewer.close();
-            }
+            },
+            onReady: ()=>undefined
         };
 
         this.viewModels = new ViewPageModels();
@@ -1150,11 +1139,11 @@ export class ViewPage {
                 };
                 this.initUndoFunction();
 
-            	this.concViews = concViewsInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    this.viewModels
-                );
+            	this.concViews = concViewsInit({
+                    dispatcher: this.layoutModel.dispatcher,
+                    he: this.layoutModel.getComponentHelpers(),
+                    ...this.viewModels
+                });
                 return lineViewProps;
             }
         );

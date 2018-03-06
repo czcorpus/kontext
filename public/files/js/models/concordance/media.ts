@@ -24,20 +24,21 @@ import * as SoundManager from 'vendor/SoundManager';
 import * as Immutable from 'immutable';
 
 
+export enum AudioPlayerStatus {
+    STOPPED = 'stop',
+    PAUSED = 'pause',
+    PLAYING = 'play',
+    ERROR = 'error'
+}
+
 /**
  *
  */
 export class AudioPlayer {
 
-    static PLAYER_STATUS_STOPPED = 0;
-
-    static PLAYER_STATUS_PAUSED = 1;
-
-    static PLAYER_STATUS_PLAYING = 2;
-
     private soundManager:SoundManager.SoundManager;
 
-    private status:number;
+    private status:AudioPlayerStatus;
 
     private playSessionId:string = 'kontext-playback';
 
@@ -50,7 +51,7 @@ export class AudioPlayer {
     private onError:()=>void;
 
     constructor(sm2FilesURL:string, onPlay:()=>void, onStop:()=>void, onError:()=>void) {
-        this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
+        this.status = AudioPlayerStatus.STOPPED;
         this.soundManager = SoundManager.soundManager;
         this.soundManager.ontimeout = function (status) {
             console.error(status); // TODO
@@ -79,15 +80,16 @@ export class AudioPlayer {
             volume: 100,
             onload: (bSuccess) => {
                 if (!bSuccess) {
+                    this.status = AudioPlayerStatus.ERROR;
                     this.onError();
                 }
             },
             onplay: () => {
-                this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+                this.status = AudioPlayerStatus.PLAYING;
                 this.onPlay();
             },
             onfinish: () => {
-                this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
+                this.status = AudioPlayerStatus.STOPPED;
                 this.soundManager.destroySound(this.playSessionId);
                 if (this.itemsToPlay.size > 0) {
                     this.soundManager.destroySound(this.playSessionId); // TODO do we need this (again)?
@@ -103,24 +105,24 @@ export class AudioPlayer {
     }
 
     play():void {
-        if (this.status === AudioPlayer.PLAYER_STATUS_STOPPED) {
+        if (this.status === AudioPlayerStatus.STOPPED) {
             this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+            this.status = AudioPlayerStatus.PLAYING;
 
-        } else if (this.status === AudioPlayer.PLAYER_STATUS_PAUSED) {
+        } else if (this.status === AudioPlayerStatus.PAUSED) {
             this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+            this.status = AudioPlayerStatus.PLAYING;
         }
     }
 
     pause():void {
-        if (this.status === AudioPlayer.PLAYER_STATUS_PAUSED) {
+        if (this.status === AudioPlayerStatus.PAUSED) {
             this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+            this.status = AudioPlayerStatus.PLAYING;
 
-        } else if (this.status === AudioPlayer.PLAYER_STATUS_PLAYING) {
+        } else if (this.status === AudioPlayerStatus.PLAYING) {
             this.soundManager.pause(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PAUSED;
+            this.status = AudioPlayerStatus.PAUSED;
         }
     }
 
@@ -130,7 +132,7 @@ export class AudioPlayer {
         this.itemsToPlay = this.itemsToPlay.clear();
     }
 
-    getStatus():number {
+    getStatus():AudioPlayerStatus {
         return this.status;
     }
 }

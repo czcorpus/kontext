@@ -37,6 +37,8 @@ interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
     ok:boolean;
 }
 
+export type LineSelValue = [number, number];
+
 /**
  * This class handles state of selected concordance lines.
  * The selection can have one of two modes:
@@ -566,15 +568,15 @@ export class LineSelectionModel extends StatefulModel {
         return this.clStorage.containsLine(id);
     }
 
-    getLine(id:string):[number, number] {
-        return this.clStorage.getLine(id);
+    getLine(id:number):LineSelValue {
+        return this.clStorage.getLine(String(id));
     }
 
-    getAll():Array<[number, number]> {
+    getAll():Array<LineSelValue> {
         return this.clStorage.getAll();
     }
 
-    asMap():Immutable.Map<string, [number, number]> {
+    asMap():Immutable.Map<string, LineSelValue> {
         return this.clStorage.asMap();
     }
 

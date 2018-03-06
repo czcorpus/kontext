@@ -29,10 +29,9 @@ import {ActionDispatcher} from '../../app/dispatcher';
 
 
 export interface TextTypesProps {
-
 }
 
-export interface TextTypesState {
+interface TextTypesState {
     blocks:Immutable.List<FreqBlock>;
     minFreq:number;
     isBusy:boolean;
@@ -40,12 +39,12 @@ export interface TextTypesState {
     blockedByAsyncConc:boolean;
 }
 
-export interface Views {
-    TextTypesDist:React.Component<TextTypesProps, TextTypesState>
+export interface TtOverviewViews {
+    TextTypesDist:React.ComponentClass<TextTypesProps>
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, ttDistModel:TextTypesDistModel) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, ttDistModel:TextTypesDistModel):TtOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -77,7 +76,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
     /**
      *
      */
-    const FreqsView = (props:{blocks:Immutable.List<FreqBlock>, minFreq:number, sampleSize:number}) => {
+    const FreqsView:React.SFC<{
+        blocks:Immutable.List<FreqBlock>;
+        minFreq:number;
+        sampleSize:number
+
+    }> = (props) => {
         return (
             <div>
                 {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
@@ -96,7 +100,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
     /**
      *
      */
-    const CloseIcon = (props) => {
+    const CloseIcon:React.SFC<{}> = (props) => {
 
         const handleClick = () => {
             if (window.confirm(

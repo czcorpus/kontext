@@ -18,17 +18,57 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
- import * as React from 'react';
- import {init as initMediaViews} from './media';
+import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { ConcLineModel } from '../../models/concordance/lines';
+import {TextChunk} from '../../models/concordance/line';
+import {LineSelValue} from '../../models/concordance/lineSelection';
+import {init as initMediaViews} from './media';
 
- export function init(dispatcher, he, lineModel) {
+
+export interface LineExtrasViews {
+
+    AudioLink:React.SFC<{
+        lineIdx:number;
+        chunks:Array<TextChunk>;
+        t:string; // TODO enum
+    }>;
+
+    TdLineSelection:React.SFC<{
+        lockedGroupId:number;
+        mode:string; // TODO enum
+        lineNumber:number;
+        tokenNumber:number;
+        kwicLength:number;
+        selectionValue:LineSelValue;
+        catTextColor:string;
+        catBgColor:string;
+    }>;
+
+    SyntaxTreeButton:React.SFC<{
+        onSyntaxViewClick:()=>void;
+    }>;
+
+    RefInfo:React.SFC<{
+        corpusId:string;
+        tokenNumber:number;
+        lineIdx:number;
+        data:Array<string>;
+        emptyRefValPlaceholder:string;
+        refsDetailClickHandler:(corpusId:string, tokNum:number, lineIdx:number)=>void;
+    }>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineModel);
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AudioLink /> ---------------------------
 
-    const AudioLink = (props) => {
+    const AudioLink:LineExtrasViews['AudioLink'] = (props) => {
 
 
         const getChar = () => {
@@ -80,7 +120,13 @@
 
     // ------------------------- <LineSelCheckbox /> ---------------------------
 
-    const LineSelCheckbox = (props) => {
+    const LineSelCheckbox:React.SFC<{
+        lineNumber:number;
+        tokenNumber:number;
+        kwicLength:number;
+        selectionValue:LineSelValue;
+
+    }> = (props) => {
 
         const checkboxChangeHandler = (event) => {
             dispatcher.dispatch({
@@ -100,7 +146,13 @@
 
     // ------------------------- <LineSelInput /> ---------------------------
 
-    const LineSelInput = (props) => {
+    const LineSelInput:React.SFC<{
+        lineNumber:number;
+        tokenNumber:number;
+        kwicLength:number;
+        selectionValue:LineSelValue;
+
+    }> = (props) => {
 
         const textChangeHandler = (event) => {
             dispatcher.dispatch({
@@ -119,7 +171,7 @@
 
     // ------------------------- <TdLineSelection /> ---------------------------
 
-    const TdLineSelection = (props) => {
+    const TdLineSelection:LineExtrasViews['TdLineSelection'] = (props) => {
 
         const renderInput = () => {
             if (props.lockedGroupId) {
@@ -154,7 +206,7 @@
 
     // ------------------------- <SyntaxTreeButton /> ---------------------
 
-    const SyntaxTreeButton = (props) => {
+    const SyntaxTreeButton:LineExtrasViews['SyntaxTreeButton'] = (props) => {
         return (
             <a onClick={props.onSyntaxViewClick} title={he.translate('concview__click_to_see_the_tree')}>
                 <img src={he.createStaticUrl('img/syntax-tree-icon.svg')} style={{width: '1em'}}
@@ -165,11 +217,8 @@
 
     // ------------------------- <RefInfo /> ---------------------
 
-    /**
-     *
-     * @param {corpusId, tokenNumber, lineIdx, data} props
-     */
-    const RefInfo = (props) => {
+
+    const RefInfo:LineExtrasViews['RefInfo']  = (props) => {
         return (
             <a title={he.translate('concview__click_for_details')}
                     onClick={()=>props.refsDetailClickHandler(props.corpusId, props.tokenNumber, props.lineIdx)}>

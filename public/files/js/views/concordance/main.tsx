@@ -19,39 +19,112 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
-import {init as concDetailViewsInit} from 'views/concordance/detail';
-import {init as concSaveViewsInit} from 'views/concordance/save';
+import {init as concDetailViewsInit} from './detail';
+import {init as concSaveViewsInit} from './save';
 import {init as ttOverviewInit} from './ttOverview';
+import { LineSelectionModel } from '../../models/concordance/lineSelection';
+import { ConcLineModel, ConcSummary as LinesConcSummary } from '../../models/concordance/lines';
+import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/concordance/detail';
+import { CollFormModel } from '../../models/coll/collForm';
+import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
+import { ConcDashboard } from '../../models/concordance/dashboard';
 
 
-export function init(dispatcher, he, models) {
+export class ViewPageModels {
+    lineSelectionModel:LineSelectionModel;
+    lineViewModel:ConcLineModel;
+    concDetailModel:ConcDetailModel;
+    refsDetailModel:RefsDetailModel;
+    userInfoModel:Kontext.IUserInfoModel;
+    collFormModel:CollFormModel;
+    mainMenuModel:Kontext.IMainMenuModel;
+    ttDistModel:TextTypesDistModel;
+    dashboardModel:ConcDashboard;
+}
+
+
+export class MainModuleArgs extends ViewPageModels {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+}
+
+
+export interface ConcordanceDashboardProps {
+    concViewProps:{
+        baseCorpname:string;
+        mainCorp:string;
+        anonymousUser:boolean;
+        SortIdx:Array<{page:number; label:string}>;
+        NumItemsInLockedGroups:number;
+        catColors:Array<string>;
+        KWICCorps:Array<string>;
+        canSendEmail:boolean;
+        ShowConcToolbar:boolean;
+        onSyntaxPaneReady?:(tokenNumber:number, kwicLength:number)=>void;
+        onSyntaxPaneClose:()=>void;
+        onChartFrameReady?:(usePrevData?:boolean)=>void;
+        onReady:()=>void;
+    };
+}
+
+
+interface ConcordanceDashboardState {
+    showTTOverview:boolean;
+}
+
+
+export interface MainViews {
+    ConcordanceDashboard:React.ComponentClass<ConcordanceDashboardProps>;
+}
+
+
+export function init({dispatcher, he, lineSelectionModel, lineViewModel,
+    concDetailModel, refsDetailModel, userInfoModel, collFormModel, mainMenuModel,
+    ttDistModel, dashboardModel}:MainModuleArgs):MainViews
+ {
 
     const layoutViews = he.getLayoutViews();
 
-    const lineSelectionModel = models.lineSelectionModel;
-    const lineModel = models.lineViewModel;
-    const lconcSaveModel = lineModel.getSaveModel();
-    const concDetailModel = models.concDetailModel;
-    const refsDetailModel = models.refsDetailModel;
-    const userInfoModel = models.userInfoModel;
-    const mainMenuModel = models.mainMenuModel;
-    const syntaxViewModel = lineModel.getSyntaxViewModel();
-    const dashboardModel = models.dashboardModel;
+    const lconcSaveModel = lineViewModel.getSaveModel();
+    const syntaxViewModel = lineViewModel.getSyntaxViewModel();
 
-    const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionModel, userInfoModel);
-    const paginationViews = paginatorViewsInit(dispatcher, he, lineModel);
-    const linesViews = linesViewInit(dispatcher, he, lineModel, lineSelectionModel, concDetailModel);
-    const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailModel, refsDetailModel, lineModel);
-    const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, lconcSaveModel);
-    const ttDistViews = ttOverviewInit(dispatcher, he, models.ttDistModel);
+    const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionModel);
+    const paginationViews = paginatorViewsInit(dispatcher, he, lineViewModel);
+    const linesViews = linesViewInit({
+        dispatcher: dispatcher,
+        he: he,
+        lineModel: lineViewModel,
+        lineSelectionModel: lineSelectionModel,
+        concDetailModel: concDetailModel
+    });
+    const concDetailViews = concDetailViewsInit({
+        dispatcher: dispatcher,
+        he: he,
+        concDetailModel: concDetailModel,
+        refsDetailModel: refsDetailModel,
+        lineModel: lineViewModel
+    });
+    const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
+    const ttDistViews = ttOverviewInit(dispatcher, he, ttDistModel);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
-    const LineSelectionMenu = (props) => {
+    const LineSelectionMenu:React.SFC<{
+        numItemsInLockedGroups:number;
+        canSendEmail:boolean;
+        mode:string;
+        onChartFrameReady?:()=>void;
+        onCloseClick:()=>void;
+
+    }> = (props) => {
 
         const renderContents = () => {
             if (props.numItemsInLockedGroups > 0) {
@@ -61,7 +134,7 @@ export function init(dispatcher, he, models) {
                         mode={props.mode} />;
 
             } else {
-                return <lineSelViews.LineBinarySelectionMenu mode={props.mode} />;
+                return <lineSelViews.LineBinarySelectionMenu />;
             }
         };
 
@@ -76,7 +149,16 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <LineSelectionOps /> ---------------------------
 
-    class LineSelectionOps extends React.Component {
+    class LineSelectionOps extends React.Component<{
+        numItemsInLockedGroups:number;
+        numSelected:number;
+        canSendEmail:boolean;
+        onChartFrameReady?:()=>void;
+
+    },
+    {
+        menuVisible:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -117,11 +199,11 @@ export function init(dispatcher, he, models) {
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._modelChangeHandler);
+            lineViewModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._modelChangeHandler);
+            lineViewModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _getMsgStatus() {
@@ -194,7 +276,22 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <ConcSummary /> ---------------------------
 
-    class ConcSummary extends React.Component {
+    class ConcSummary extends React.Component<{
+        corpname:string;
+        isUnfinishedCalculation:boolean;
+        concSize:number;
+        fullSize:number;
+        ipm:number;
+        arf:number;
+        isShuffled:boolean;
+    },
+    {
+        canCalculateAdHocIpm:boolean;
+        fastAdHocIpm:boolean;
+        adHocIpm:number;
+        subCorpName:string;
+        isWaiting:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -205,11 +302,11 @@ export function init(dispatcher, he, models) {
 
         _fetchModelState() {
             return {
-                canCalculateAdHocIpm: lineModel.getProvidesAdHocIpm(),
-                fastAdHocIpm: lineModel.getFastAdHocIpm(),
-                adHocIpm: lineModel.getAdHocIpm(),
-                subCorpName: lineModel.getSubCorpName(),
-                isWaiting: false
+                canCalculateAdHocIpm: lineViewModel.getProvidesAdHocIpm(),
+                fastAdHocIpm: lineViewModel.getFastAdHocIpm(),
+                adHocIpm: lineViewModel.getAdHocIpm(),
+                subCorpName: lineViewModel.getSubCorpName(),
+                isWaiting: lineViewModel.getIsBusy()
             };
         }
 
@@ -222,7 +319,7 @@ export function init(dispatcher, he, models) {
                         </span>);
             }
             if (this.props.concSize === this.props.fullSize || this.props.fullSize === -1) { // TODO concSize vs. fullSize
-                ans.push(<strong key="hits:2" id="fullsize" title={this.props.concSize}>
+                ans.push(<strong key="hits:2" id="fullsize" title={String(this.props.concSize)}>
                         {he.formatNumber(this.props.concSize)}</strong>);
 
             } else {
@@ -230,24 +327,21 @@ export function init(dispatcher, he, models) {
                 ans.push(<span key="hits:2b" id="loader"></span>);
                 ans.push(<strong key="hits:3b">{he.formatNumber(this.props.concSize)}</strong>);
                 ans.push('\u00a0' + he.translate('concview__out_of_total') + '\u00a0');
-                ans.push(<span key="hits:4b" id="fullsize" title={this.props.fullSize}>{he.formatNumber(this.props.fullSize)}</span>);
+                ans.push(<span key="hits:4b" id="fullsize" title={String(this.props.fullSize)}>{he.formatNumber(this.props.fullSize)}</span>);
             }
             return ans;
         }
 
-        _modelChangeHandler(model, action) {
-            const newState = this._fetchModelState();
-            // TODO antipattern here:
-            newState.isWaiting = action === '$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC' ? false : this.state.isWaiting;
-            this.setState(newState);
+        _modelChangeHandler() {
+            this.setState(this._fetchModelState());
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._modelChangeHandler);
+            lineViewModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._modelChangeHandler);
+            lineViewModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _getIpm() {
@@ -364,26 +458,31 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <ConcOptions /> ---------------------------
 
-    class ConcOptions extends React.Component {
+    class ConcOptions extends React.Component<{
+        viewMode:string; // TODO enum
+    },
+    {
+        currViewAttrs:Array<string>;
+    }> {
 
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this.state = {
-                currViewAttrs: lineModel.getViewAttrs()
+                currViewAttrs: lineViewModel.getViewAttrs()
             };
         }
 
         _modelChangeHandler() {
-            this.setState({currViewAttrs: lineModel.getViewAttrs()});
+            this.setState({currViewAttrs: lineViewModel.getViewAttrs()});
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._modelChangeHandler);
+            lineViewModel.addChangeListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._modelChangeHandler);
+            lineViewModel.removeChangeListener(this._modelChangeHandler);
         }
 
         _renderMouseOverInfo() {
@@ -427,7 +526,16 @@ export function init(dispatcher, he, models) {
     // ------------------------- <ConcToolbarWrapper /> ---------------------------
 
 
-    class ConcToolbarWrapper extends React.Component {
+    class ConcToolbarWrapper extends React.Component<{
+        showConcToolbar:boolean;
+        canSendEmail:boolean;
+        viewMode:string; // TODO enum
+        onChartFrameReady?:()=>void;
+    },
+    {
+        numSelected:number;
+        numItemsInLockedGroups:number;
+    }> {
 
         constructor(props) {
             super(props);
@@ -438,7 +546,7 @@ export function init(dispatcher, he, models) {
         _fetchModelState() {
             return {
                 numSelected: lineSelectionModel.size(),
-                numItemsInLockedGroups: lineModel.getNumItemsInLockedGroups()
+                numItemsInLockedGroups: lineViewModel.getNumItemsInLockedGroups()
             };
         }
 
@@ -473,7 +581,10 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <AnonymousUserLoginPopup /> ---------------------------
 
-    const AnonymousUserLoginPopup = (props) => {
+    const AnonymousUserLoginPopup:React.SFC<{
+        onCloseClick:()=>void;
+
+    }> = (props) => {
 
         const handleLoginClick = (evt) => {
             dispatcher.dispatch({
@@ -505,7 +616,16 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <SyntaxViewPane /> ----------------------------
 
-    class SyntaxViewPane extends React.Component {
+    class SyntaxViewPane extends React.Component<{
+        tokenNumber:number;
+        kwicLength:number;
+        onReady:(tokNum:number, kwicLen:number)=>void;
+        onClose:()=>void;
+        onCloseClick:()=>void;
+    },
+    {
+        waiting:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -556,7 +676,22 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <ConcordanceView /> ---------------------------
 
-    class ConcordanceView extends React.Component {
+    class ConcordanceView extends React.Component<
+    ConcordanceDashboardProps['concViewProps'],
+    {
+        hasConcDetailData:boolean;
+        tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
+        tokenDetailIsBusy:boolean;
+        concDetailModelIsBusy:boolean;
+        refsDetailData:Immutable.List<[RefsColumn, RefsColumn]>;
+        viewMode:string;
+        isUnfinishedCalculation:boolean;
+        concSummary:LinesConcSummary;
+        showAnonymousUserWarn:boolean;
+        saveFormVisible:boolean;
+        supportsSyntaxView:boolean;
+        syntaxBoxData:{tokenNumber:number; kwicLength:number};
+    }> {
 
         constructor(props) {
             super(props);
@@ -577,12 +712,12 @@ export function init(dispatcher, he, models) {
                 tokenDetailIsBusy: concDetailModel.getTokenDetailIsBusy(),
                 concDetailModelIsBusy: concDetailModel.getIsBusy(),
                 refsDetailData: refsDetailModel.getData(),
-                viewMode: lineModel.getViewAttrsVmode(),
-                isUnfinishedCalculation: lineModel.isUnfinishedCalculation(),
-                concSummary: lineModel.getConcSummary(),
+                viewMode: lineViewModel.getViewAttrsVmode(),
+                isUnfinishedCalculation: lineViewModel.isUnfinishedCalculation(),
+                concSummary: lineViewModel.getConcSummary(),
                 showAnonymousUserWarn: this.props.anonymousUser,
                 saveFormVisible: lconcSaveModel.getFormIsActive(),
-                supportsSyntaxView: lineModel.getSupportsSyntaxView(),
+                supportsSyntaxView: lineViewModel.getSupportsSyntaxView(),
                 syntaxBoxData: null
             };
         }
@@ -678,21 +813,21 @@ export function init(dispatcher, he, models) {
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._handleModelChange);
+            lineViewModel.addChangeListener(this._handleModelChange);
             lconcSaveModel.addChangeListener(this._handleModelChange);
             concDetailModel.addChangeListener(this._handleModelChange);
             refsDetailModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._handleModelChange);
+            lineViewModel.removeChangeListener(this._handleModelChange);
             lconcSaveModel.removeChangeListener(this._handleModelChange);
             concDetailModel.removeChangeListener(this._handleModelChange);
             refsDetailModel.removeChangeListener(this._handleModelChange);
         }
 
         _shouldDisplayConcDetailBox() {
-            return this.state.hasConcDetailData || this.state.tokenDetailData.length > 0 ||
+            return this.state.hasConcDetailData || this.state.tokenDetailData.size > 0 ||
                     this.state.concDetailModelIsBusy || this.state.tokenDetailIsBusy;
         }
 
@@ -711,10 +846,7 @@ export function init(dispatcher, he, models) {
                     }
                     {this.state.refsDetailData ?
                         <concDetailViews.RefDetail
-                            closeClickHandler={this._handleRefsDetailCloseClick}
-                            corpusId={this.state.refsDetailData.corpusId}
-                            tokenNumber={this.state.refsDetailData.tokenNumber}
-                            lineIdx={this.state.refsDetailData.lineIdx} />
+                            closeClickHandler={this._handleRefsDetailCloseClick} />
                         : null
                     }
                     <div id="conc-top-bar">
@@ -725,7 +857,7 @@ export function init(dispatcher, he, models) {
                                 isUnfinishedCalculation={this.state.isUnfinishedCalculation}
                                 />
                         </div>
-                        <ConcToolbarWrapper numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
+                        <ConcToolbarWrapper
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
@@ -754,7 +886,7 @@ export function init(dispatcher, he, models) {
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
 
-    class ConcordanceDashboard extends React.Component {
+    class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcordanceDashboardState> {
 
         constructor(props) {
             super(props);
