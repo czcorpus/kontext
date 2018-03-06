@@ -164,23 +164,6 @@ declare module "views/textTypes" {
 }
 
 
-declare module "views/menu" {
-
-    export interface MainMenuViews {
-        MainMenu:React.ComponentClass|React.SFC;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        concArgHandler:Kontext.IConcArgsHandler,
-        mainMenuModel:Kontext.EventEmitter,
-        asyncTaskModel:Kontext.IAsyncTaskModel,
-        layoutViews:Kontext.LayoutViews
-    ):MainMenuViews;
-}
-
-
 declare module "views/options/structsAttrs" {
 
     export interface StructsAndAttrsViews {

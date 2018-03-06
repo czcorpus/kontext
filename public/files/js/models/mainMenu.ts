@@ -25,17 +25,13 @@ import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
-export interface SubmenuItem {
-    ident:string;
-    label:string;
-    disabled:boolean;
-}
 
-export interface DynamicSubmenuItem extends SubmenuItem {
+
+export interface DynamicSubmenuItem extends Kontext.SubmenuItem {
     boundAction:()=>void;
 }
 
-export interface StaticSubmenuItem extends SubmenuItem {
+export interface StaticSubmenuItem extends Kontext.SubmenuItem {
     action:string;
     args:{[key:string]:any};
     keyCode:number;
@@ -44,20 +40,11 @@ export interface StaticSubmenuItem extends SubmenuItem {
     indirect:boolean;
 }
 
-export interface MenuItem {
-    disabled:boolean;
-    fallbackAction:string;
-    label:string;
-    items:Immutable.List<SubmenuItem>;
-}
-
-export type MenuEntry = [string, MenuItem];
-
 export interface InitialMenuItem {
     disabled:boolean;
     fallback_action:string;
     label:string;
-    items:Array<SubmenuItem>;
+    items:Array<Kontext.SubmenuItem>;
 }
 
 export type InitialMenuEntry = [string, InitialMenuItem];
@@ -69,26 +56,26 @@ export interface InitialMenuData {
 /**
  * This defines a TS type guard for DynamicSubmenuItem
  */
-function isDynamicItem(item:SubmenuItem): item is DynamicSubmenuItem {
+function isDynamicItem(item:Kontext.SubmenuItem): item is DynamicSubmenuItem {
     return (<DynamicSubmenuItem>item).boundAction !== undefined;
 }
 
 /**
  * This defines a TS type guard for StaticSubmenuItem
  */
-function isStaticItem(item:SubmenuItem): item is StaticSubmenuItem {
+function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuItem {
     return (<StaticSubmenuItem>item).args !== undefined;
 }
 
-function importMenuData(data:InitialMenuData):Immutable.List<MenuEntry> {
-    return Immutable.List<InitialMenuEntry>(data.submenuItems).map<MenuEntry>(v => {
+function importMenuData(data:InitialMenuData):Immutable.List<Kontext.MenuEntry> {
+    return Immutable.List<InitialMenuEntry>(data.submenuItems).map<Kontext.MenuEntry>(v => {
         return [
             v[0],
             {
                 label: v[1].label,
                 disabled: v[1].disabled,
                 fallbackAction: v[1].fallback_action,
-                items: Immutable.List<SubmenuItem>(v[1].items)
+                items: Immutable.List<Kontext.SubmenuItem>(v[1].items)
             }
         ];
     }).toList();
@@ -106,7 +93,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     private selectionListeners:Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>;
 
-    private data:Immutable.List<MenuEntry>;
+    private data:Immutable.List<Kontext.MenuEntry>;
 
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
@@ -169,17 +156,17 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         if (srchIdx) {
             const srch = this.data.get(srchIdx);
             if (subItemId === undefined) { // no submenu specified => we disable whole menu section
-                const newItem:MenuItem = {
+                const newItem:Kontext.MenuItem = {
                     disabled: v,
                     fallbackAction: srch[1].fallbackAction,
                     items: srch[1].items, // TODO - mutability
                     label: srch[1].label
                 };
-                const newEntry:MenuEntry = [srch[0], newItem];
+                const newEntry:Kontext.MenuEntry = [srch[0], newItem];
                 this.data = this.data.set(srchIdx, newEntry);
 
             } else {
-                const newEntry:MenuEntry = [srch[0], srch[1]];
+                const newEntry:Kontext.MenuEntry = [srch[0], srch[1]];
                 newEntry[1].items = newEntry[1].items.map(item => {
                     if (isDynamicItem(item)) {
                         return {
@@ -260,7 +247,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                         disabled: false,
                         boundAction: handler
                     };
-                    const newItem:MenuItem = {
+                    const newItem:Kontext.MenuItem = {
                         disabled: item[1].disabled,
                         fallbackAction: item[1].fallbackAction,
                         label: item[1].label,
@@ -274,13 +261,13 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         });
     }
 
-    getData():Immutable.List<MenuEntry> {
+    getData():Immutable.List<Kontext.MenuEntry> {
         return this.data;
     }
 
     exportKeyShortcutActions():Immutable.Map<number, Kontext.MainMenuAtom> {
         return Immutable.Map<number, Kontext.MainMenuAtom>(this.data
-            .flatMap(v => Immutable.List<SubmenuItem>(v[1].items))
+            .flatMap(v => Immutable.List<Kontext.SubmenuItem>(v[1].items))
             .filter(v => isStaticItem(v) && !!v.keyCode && !!v.message)
             .map((v:StaticSubmenuItem) => {
                 return [v.keyCode, {

@@ -160,6 +160,8 @@ export namespace Kontext {
         addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void;
     }
 
+    // ---------------------- main menu ---------------------------------
+
     /**
      *
      */
@@ -173,6 +175,22 @@ export namespace Kontext {
         actionArgs:GeneralProps;
         keyCode:number;
     }
+
+
+    export interface SubmenuItem {
+        ident:string;
+        label:string;
+        disabled:boolean;
+    }
+
+    export interface MenuItem {
+        disabled:boolean;
+        fallbackAction:string;
+        label:string;
+        items:Immutable.List<SubmenuItem>;
+    }
+
+    export type MenuEntry = [string, MenuItem];
 
     /**
      * A model watched by components which are
@@ -214,7 +232,13 @@ export namespace Kontext {
          * included in KonText core.
          */
         bindDynamicItem(ident:string, label:string, handler:()=>void);
+
+        getData():Immutable.List<MenuEntry>;
+
+        resetActiveItemAndNotify():void;
     }
+
+    // ---------------------------------------------------------
 
     export interface UserNotification {
         messageId:string;
@@ -266,7 +290,7 @@ export namespace Kontext {
          * http://localhost/kontext/first_form depending
          * on a concrete configuration).
          */
-        createActionLink(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
+        createActionLink(path:string, args?:MultiDictSrc):string;
 
         /**
          * Create a proper static resource URL based on normalized
@@ -382,7 +406,7 @@ export namespace Kontext {
          * argument updates. Original arguments stored in model
          * are unchanged.
          */
-        exportConcArgs(args:Array<Array<string>>|GeneralProps):string;
+        exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string;
     }
 
     export interface IHistory {
