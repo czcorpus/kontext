@@ -48,7 +48,7 @@ export interface ConcLinesProps {
     KWICCorps:Array<string>;
     tokenDetailClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
     onSyntaxViewClick:(tokenNum:number, kwicLength:number)=>void;
-    refsDetailClickHandler:()=>void;
+    refsDetailClickHandler:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
     onReady:()=>void;
 }
 
@@ -455,7 +455,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         };
         tokenDetailClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
         onSyntaxViewClick:(tokenNum:number, kwicLength:number)=>void;
-        refsDetailClickHandler:()=>void;
+        refsDetailClickHandler:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
     },
     {
         selectionValue:LineSelValue;

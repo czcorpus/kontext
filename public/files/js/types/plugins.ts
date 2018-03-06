@@ -240,7 +240,7 @@ export namespace PluginInterfaces {
         }
 
         export interface DataAndRenderer {
-            renderer:React.ComponentClass;
+            renderer:React.ComponentClass<{data:any}>;
             contents:Array<[string, string]>;
             found:boolean;
             heading:string;

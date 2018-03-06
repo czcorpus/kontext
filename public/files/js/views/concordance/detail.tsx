@@ -19,19 +19,62 @@
  */
 
 import * as React from 'react';
-
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str} from '../../util';
+import { ConcDetailModel, RefsDetailModel, RefsColumn, Speech } from '../../models/concordance/detail';
+import { ConcLineModel } from '../../models/concordance/lines';
 
 
-export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel) {
+export interface RefDetailProps {
+    closeClickHandler:()=>void;
+}
+
+
+interface RefDetailState {
+    isWaiting:boolean;
+    data:Immutable.List<[RefsColumn, RefsColumn]>;
+}
+
+
+export interface TokenDetailProps {
+    closeClickHandler:()=>void;
+}
+
+interface TokenDetailState {
+    mode:string;
+    supportsSpeechView:boolean;
+}
+
+
+export interface DetailViews {
+    RefDetail:React.ComponentClass<RefDetailProps>;
+    TokenDetail:React.ComponentClass<TokenDetailProps>;
+}
+
+
+export interface DetailModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    concDetailModel:ConcDetailModel;
+    refsDetailModel:RefsDetailModel;
+    lineModel:ConcLineModel;
+}
+
+export function init({dispatcher, he, concDetailModel, refsDetailModel, lineModel}:DetailModuleArgs):DetailViews {
 
     const mediaViews = initMediaViews(dispatcher, he, lineModel);
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <RefValue /> ---------------------------
 
-    const RefValue = (props) => {
+    const RefValue:React.SFC<{
+        val:string;
+
+    }> = (props) => {
         if (props.val.indexOf('http://') === 0 || props.val.indexOf('https://') === 0) {
             return <a className="external" href={props.val} target="_blank">
                 <layoutViews.Shortener text={props.val} limit={20} />
@@ -45,7 +88,10 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <RefLine /> ---------------------------
 
-    const RefLine = (props) => {
+    const RefLine:React.SFC<{
+        colGroups:Array<{name:string; val:string}>;
+
+    }> = (props) => {
 
         const renderCols = () => {
             const ans = [];
@@ -75,7 +121,7 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <RefDetail /> ---------------------------
 
-    class RefDetail extends React.Component {
+    class RefDetail extends React.Component<RefDetailProps, RefDetailState> {
 
         constructor(props) {
             super(props);
@@ -134,7 +180,12 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <ExpandConcDetail /> ---------------------------
 
-    const ExpandConcDetail = (props) => {
+    const ExpandConcDetail:React.SFC<{
+        position:string; // TODO enum
+        isWaiting:boolean;
+        clickHandler:()=>void;
+
+    }> = (props) => {
 
         const createTitle = () => {
             if (props.position === 'left') {
@@ -182,7 +233,11 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <TokenExternalInfo /> ---------------------------
 
-    const TokenExternalInfo = (props) => {
+    const TokenExternalInfo:React.SFC<{
+        tokenDetailIsBusy:boolean;
+        tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
+
+    }> = (props) => {
         if (props.tokenDetailIsBusy) {
             return (
                 <div className="token-detail" style={{textAlign: 'center'}}>
@@ -208,7 +263,15 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <KwicDetailView /> ---------------------------
 
-    const KwicDetailView = (props) => {
+    const KwicDetailView:React.SFC<{
+        modelIsBusy:boolean;
+        hasExpandLeft:boolean;
+        hasExpandRight:boolean;
+        expandingSide:string;
+        data:Array<{class:string; str:string}>;
+        canDisplayWholeDocument:boolean;
+
+    }> = (props) => {
 
         const isWaitingExpand = (side) => {
             return props.modelIsBusy && props.expandingSide === side;
@@ -263,7 +326,20 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <DefaultView /> ---------------------------
 
-    class DefaultView extends React.Component {
+    class DefaultView extends React.Component<{
+    },
+    {
+        data:Array<{str:string; class:string}>;
+        hasConcDetailData:boolean;
+        hasExpandLeft:boolean;
+        hasExpandRight:boolean;
+        canDisplayWholeDocument:boolean;
+        expandingSide:string;
+        modelIsBusy:boolean;
+        tokenDetailIsBusy:boolean;
+        tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
+        hasTokenDetailData:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -286,7 +362,7 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
             };
         }
 
-        _modelChangeHandler(model, action) {
+        _modelChangeHandler() {
             this.setState(this._fetchModelState());
         }
 
@@ -323,7 +399,11 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <ExpandSpeechesButton /> ---------------------------
 
-    const ExpandSpeechesButton = (props) => {
+    const ExpandSpeechesButton:React.SFC<{
+        position:string;
+        isWaiting:boolean;
+
+    }> = (props) => {
 
         const handleExpandClick = (position) => {
             dispatcher.dispatch({
@@ -402,7 +482,17 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <PlaybackIcon /> ---------------------------
 
-    class PlaybackIcon extends React.Component {
+    class PlaybackIcon extends React.Component<{
+        isPlaying:boolean;
+        setFocusFn:(v:boolean)=>void;
+        handleStopClick:()=>void;
+        handleClick:()=>void;
+    },
+    {
+        img:number;
+    }> {
+
+        private _interval:number;
 
         constructor(props) {
             super(props);
@@ -473,7 +563,17 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <SpeechText /> ---------------------------
 
-    class SpeechText extends React.Component {
+    class SpeechText extends React.Component<{
+        bulletColor:string;
+        canStartPlayback:boolean;
+        isPlaying:boolean;
+        data:Array<{class:string; str:string}>;
+        handleClick:()=>void;
+        handleStopClick:()=>void;
+    },
+    {
+        hasFocus:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -505,7 +605,15 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <TRSingleSpeech /> ---------------------------
 
-    const TRSingleSpeech = (props) => {
+    const TRSingleSpeech:React.SFC<{
+        idx:number;
+        speech:Speech;
+        isPlaying:boolean;
+        canStartPlayback:boolean;
+        handlePlayClick:()=>void;
+        handleStopClick:()=>void;
+
+    }> = (props) => {
 
         const style = {
             backgroundColor: color2str(props.speech.colorCode),
@@ -533,7 +641,15 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <TROverlappingSpeeches /> ---------------------------
 
-    const TROverlappingSpeeches = (props) => {
+    const TROverlappingSpeeches:React.SFC<{
+        idx:number;
+        speeches:Array<Speech>;
+        isPlaying:boolean;
+        canStartPlayback:boolean;
+        handlePlayClick:()=>void;
+        handleStopClick:()=>void;
+
+    }> = (props) => {
 
         const renderOverlappingSpeakersLabel = () => {
             const ans = [];
@@ -555,7 +671,7 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
         return (
             <tr key={`speech-${props.idx}`} className="speech">
                 <th>
-                    {renderOverlappingSpeakersLabel(props.speeches)}
+                    {renderOverlappingSpeakersLabel()}
                 </th>
                 <td className="text overlapping-block">
                     {props.speeches.map((speech, i) => <SpeechText data={speech.text}
@@ -572,7 +688,16 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <SpeechView /> ---------------------------
 
-    class SpeechView extends React.Component {
+    class SpeechView extends React.Component<{
+    },
+    {
+        data:Array<Array<Speech>>;
+        hasExpandLeft:boolean;
+        hasExpandRight:boolean;
+        playerWaitingIdx:number;
+        modelIsBusy:boolean;
+        expandingSide:string;
+    }> {
 
         constructor(props) {
             super(props);
@@ -693,7 +818,12 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <MenuLink /> ---------------------------
 
-    const MenuLink = (props) => {
+    const MenuLink:React.SFC<{
+        active:boolean;
+        label:string;
+        clickHandler:()=>void;
+
+    }> = (props) => {
 
         if (!props.active) {
             return (
@@ -713,7 +843,10 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <ConcDetailMenu /> ---------------------------
 
-    const ConcDetailMenu = (props) => {
+    const ConcDetailMenu:React.SFC<{
+        supportsSpeechView:boolean;
+        mode:string; // TODO enum
+    }> = (props) => {
 
         const handleMenuClick = (mode) => {
             dispatcher.dispatch({
@@ -745,7 +878,7 @@ export function init(dispatcher, he, concDetailModel, refsDetailModel, lineModel
 
     // ------------------------- <TokenDetail /> ---------------------------
 
-    class TokenDetail extends React.Component {
+    class TokenDetail extends React.Component<TokenDetailProps, TokenDetailState> {
 
         constructor(props) {
             super(props);

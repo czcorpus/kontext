@@ -19,13 +19,48 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { LineSelectionModel } from '../../models/concordance/lineSelection';
 
 
-export function init(dispatcher, he, lineSelectionModel) {
+export interface LineBinarySelectionMenuProps {
+
+}
+
+
+export interface LockedLineGroupsMenuProps {
+    canSendEmail:boolean;
+    mode:string; // TODO enum
+    chartCallback:(v:boolean)=>void;
+}
+
+
+interface LockedLineGroupsMenuState {
+    emailDialogCredentials:Kontext.UserCredentials;
+    renameLabelDialog:boolean;
+    email:string;
+    waiting:boolean;
+    lastCheckpointUrl:string;
+}
+
+
+export interface LineSelectionViews {
+    LineBinarySelectionMenu:React.ComponentClass<LineBinarySelectionMenuProps>;
+    LockedLineGroupsMenu:React.ComponentClass<LockedLineGroupsMenuProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            lineSelectionModel:LineSelectionModel):LineSelectionViews {
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
-    const SimpleSelectionModeSwitch = (props) => {
+    const SimpleSelectionModeSwitch:React.SFC<{
+        initialAction:string;
+        switchHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
+
+    }> = (props) => {
 
         return (
             <select name="actions" defaultValue={props.initialAction}
@@ -40,7 +75,11 @@ export function init(dispatcher, he, lineSelectionModel) {
 
     // ----------------------------- <GroupsSelectionModelSwitch /> --------------------------
 
-    const GroupsSelectionModelSwitch = (props) => {
+    const GroupsSelectionModelSwitch:React.SFC<{
+        initialAction:string;
+        switchHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
+
+    }> = (props) => {
 
         return (
             <select name="actions" defaultValue={props.initialAction}
@@ -54,7 +93,13 @@ export function init(dispatcher, he, lineSelectionModel) {
 
     // ----------------------------- <LineBinarySelectionMenu /> --------------------------
 
-    class LineBinarySelectionMenu extends React.Component {
+    class LineBinarySelectionMenu extends React.Component<{
+        mode:string;
+    },
+    {
+        mode:string;
+        waiting:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -76,7 +121,7 @@ export function init(dispatcher, he, lineSelectionModel) {
             }
         }
 
-        _actionChangeHandler(evt) {
+        _actionChangeHandler(evt:React.ChangeEvent<{value:string}>) {
             const actionMap = {
                 clear: 'LINE_SELECTION_RESET',
                 remove: 'LINE_SELECTION_REMOVE_LINES',
@@ -142,7 +187,12 @@ export function init(dispatcher, he, lineSelectionModel) {
 
     // --------------------------- <EmailDialog /> ----------------------------
 
-    const EmailDialog = (props) => {
+    const EmailDialog:React.SFC<{
+        defaultEmail:string;
+        emailChangeHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
+        handleEmailDialogButton:(evt:React.FormEvent<{value:string}>)=>void;
+
+    }> = (props) => {
 
         return (
             <div>
@@ -163,7 +213,14 @@ export function init(dispatcher, he, lineSelectionModel) {
     // ----------------------------- <RenameLabelPanel /> ------------------------------
 
 
-    class RenameLabelPanel extends React.Component {
+    class RenameLabelPanel extends React.Component<{
+        handleCancel:()=>void;
+    },
+    {
+        srcGroupNum:string;
+        dstGroupNum:string;
+        waiting:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -172,7 +229,8 @@ export function init(dispatcher, he, lineSelectionModel) {
             this._handleDstInputChange = this._handleDstInputChange.bind(this);
             this.state = {
                 srcGroupNum: '',
-                dstGroupNum: ''
+                dstGroupNum: '',
+                waiting: false
             };
         }
 
@@ -190,13 +248,13 @@ export function init(dispatcher, he, lineSelectionModel) {
 
         _handleSrcInputChange(evt) {
             const newState = he.cloneState(this.state);
-            newState.srcGroupNum = evt.target.value ? parseInt(evt.target.value) : null;
+            newState.srcGroupNum = evt.target.value ? evt.target.value : null;
             this.setState(newState);
         }
 
         _handleDstInputChange(evt) {
             const newState = he.cloneState(this.state);
-            newState.dstGroupNum = evt.target.value ? parseInt(evt.target.value) : null;
+            newState.dstGroupNum = evt.target.value ? evt.target.value : null;
             this.setState(newState);
         }
 
@@ -226,7 +284,11 @@ export function init(dispatcher, he, lineSelectionModel) {
 
     // ----------------------------- <ActionSwitch /> ------------------------------
 
-    const ActionSwitch = (props) => {
+    const ActionSwitch:React.SFC<{
+        changeHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
+        waiting:boolean;
+
+    }> = (props) => {
         return (
             <div className="actions">
                 {he.translate('global__actions')}:{'\u00A0'}
@@ -248,7 +310,15 @@ export function init(dispatcher, he, lineSelectionModel) {
 
     // ----------------------------- <SelectionLinkAndTools /> ------------------------------
 
-    const SelectionLinkAndTools = (props) => {
+    const SelectionLinkAndTools:React.SFC<{
+        canSendEmail:boolean;
+        lastCheckpointUrl:string;
+        emailDialogCredentials:Kontext.UserCredentials;
+        handleDialogShowClick:(evt:React.MouseEvent<{}>)=>void;
+        handleEmailDialogButton:(evt:React.FormEvent<{value:string}>)=>void;
+        emailChangeHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
+
+    }> = (props) => {
 
         const renderEmailButton = () => {
             if (props.canSendEmail) {
@@ -264,8 +334,8 @@ export function init(dispatcher, he, lineSelectionModel) {
         return (
             <fieldset className="generated-link">
                 <legend>{he.translate('linesel__line_selection_link_heading')}</legend>
-                <input className="conc-link" type="text" readOnly="true"
-                        onClick={(e)=> e.target.select()}
+                <input className="conc-link" type="text" readOnly={true}
+                        onClick={(e)=> (e.target as HTMLInputElement).select()}
                         value={props.lastCheckpointUrl} />
                 {props.emailDialogCredentials ?
                     <EmailDialog
@@ -281,7 +351,7 @@ export function init(dispatcher, he, lineSelectionModel) {
 
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
-    class LockedLineGroupsMenu extends React.Component {
+    class LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps, LockedLineGroupsMenuState> {
 
         constructor(props) {
             super(props);
@@ -347,14 +417,14 @@ export function init(dispatcher, he, lineSelectionModel) {
             }
         }
 
-        _handleEmailDialogButton(evt) {
-            if (evt.target.value === 'cancel') {
+        _handleEmailDialogButton(evt:React.FormEvent<{value:string}>) {
+            if (evt.currentTarget.value === 'cancel') {
                 dispatcher.dispatch({
                     actionType: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
                     props: {}
                 });
 
-            } else if (evt.target.value === 'send') {
+            } else if (evt.currentTarget.value === 'send') {
                 dispatcher.dispatch({
                     actionType: 'LINE_SELECTION_SEND_URL_TO_EMAIL',
                     props: {
@@ -364,13 +434,13 @@ export function init(dispatcher, he, lineSelectionModel) {
             }
         }
 
-        _emailChangeHandler(evt) {
+        _emailChangeHandler(evt:React.ChangeEvent<{value:string}>) {
             const newState = he.cloneState(this.state);
             newState.email = evt.target.value;
             this.setState(newState);
         }
 
-        _handleDialogShowClick(evt) {
+        _handleDialogShowClick(evt:React.MouseEvent<{}>) {
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
                 props: {}
@@ -420,7 +490,6 @@ export function init(dispatcher, he, lineSelectionModel) {
 
                     <SelectionLinkAndTools
                             lastCheckpointUrl={this.state.lastCheckpointUrl}
-                            email={this.state.email}
                             emailDialogCredentials={this.state.emailDialogCredentials}
                             canSendEmail={this.props.canSendEmail}
                             handleEmailDialogButton={this._handleEmailDialogButton}

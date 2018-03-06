@@ -18,17 +18,48 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {ConcLineModel} from '../../models/concordance/lines';
 
 
-export function init(dispatcher, he, lineModel) {
+export interface PaginatorProps {
+    SortIdx:Array<{page:number; label:string}>;
+}
+
+
+export interface PaginatorState {
+    firstPage:number;
+    prevPage:number;
+    nextPage:number;
+    lastPage:number;
+    currentPage:number;
+    currentPageInput:string;
+    loader:boolean;
+}
+
+
+export interface PaginatorViews {
+    Paginator:React.ComponentClass<PaginatorProps>;
+}
+
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <JumpTo /> ---------------------------
     // TODO implement a proper initialization of currently selected item
-    const JumpTo = (props) => {
+
+
+    const JumpTo:React.SFC<{
+        sortIdx:Array<{page:number; label:string}>;
+        clickHandler:()=>void;
+
+    }> = (props) => {
 
         const selectChangeHandler = (event) => {
             if (typeof props.clickHandler === 'function') {
@@ -59,11 +90,17 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <FirstPgButton /> ---------------------------
 
-    const NavigButton = (props) => {
+    const NavigButton:React.SFC<{
+        action:string;
+        image:string;
+        label:string;
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
-        const clickHandler = () => {
+    }> = (props) => {
+
+        const clickHandler = (evt:React.MouseEvent<{}>) => {
             if (typeof props.clickHandler === 'function') {
-                props.clickHandler();
+                props.clickHandler(evt);
             }
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_CHANGE_PAGE',
@@ -84,7 +121,10 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <FirstPgButton /> ---------------------------
 
-    const FirstPgButton = (props) => {
+    const FirstPgButton:React.SFC<{
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         return <NavigButton image="img/first-page.svg"
                     action="firstPage" label={he.translate('concview__first_page_btn')}
@@ -93,7 +133,10 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <PrevPgButton /> ---------------------------
 
-    const PrevPgButton = (props) => {
+    const PrevPgButton:React.SFC<{
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         return <NavigButton image="img/prev-page.svg"
                     action="prevPage" label={he.translate('concview__prev_page_btn')}
@@ -102,7 +145,10 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <NextPgButton /> ---------------------------
 
-    const NextPgButton = (props) => {
+    const NextPgButton:React.SFC<{
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         return <NavigButton image="img/next-page.svg"
                     action="nextPage" label={he.translate('concview__next_page_btn')}
@@ -111,7 +157,10 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <LastPgButton /> ---------------------------
 
-    const LastPgButton = (props) => {
+    const LastPgButton:React.SFC<{
+        clickHandler:()=>void;
+
+    }> = (props) => {
 
         return <NavigButton image="img/last-page.svg"
                     action="lastPage" label={he.translate('concview__last_page_btn')}
@@ -120,7 +169,15 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <PositionInfo /> ---------------------------
 
-    const PositionInfo = (props) => {
+    const PositionInfo:React.SFC<{
+        inputHandler:(evt:React.KeyboardEvent<{}>)=>void;
+        inputKeyDownHandler:(evt:React.KeyboardEvent<{}>)=>void;
+        loader:boolean;
+        currentPageInput:string;
+        currentPage:number;
+        lastPage:number;
+
+    }> = (props) => {
 
         const inputChangeHandler = (event) => {
             props.inputHandler(event);
@@ -157,7 +214,7 @@ export function init(dispatcher, he, lineModel) {
 
     // ------------------------- <Paginator /> ---------------------------
 
-    class Paginator extends React.Component {
+    class Paginator extends React.Component<PaginatorProps, PaginatorState> {
 
         constructor(props) {
             super(props);
@@ -176,7 +233,7 @@ export function init(dispatcher, he, lineModel) {
                 nextPage: pagination.nextPage,
                 lastPage: pagination.lastPage,
                 currentPage: lineModel.getCurrentPage(),
-                currentPageInput: lineModel.getCurrentPage(),
+                currentPageInput: String(lineModel.getCurrentPage()),
                 loader: false
             };
         }
@@ -199,8 +256,8 @@ export function init(dispatcher, he, lineModel) {
             this.setState(newState);
         }
 
-        _inputKeyDownHandler(event) {
-            if (event.keyCode === 13) {
+        _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
+            if (evt.keyCode === 13) {
                this._navigActionHandler();
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_CHANGE_PAGE',
@@ -209,8 +266,8 @@ export function init(dispatcher, he, lineModel) {
                         pageNum: this.state.currentPageInput
                     }
                 });
-                event.preventDefault();
-                event.stopPropagation();
+                evt.preventDefault();
+                evt.stopPropagation();
             }
         }
 
@@ -236,7 +293,6 @@ export function init(dispatcher, he, lineModel) {
                         currentPageInput={this.state.currentPageInput}
                         lastPage={this.state.lastPage}
                         loader={this.state.loader}
-                        enterHitHandler={this._navigActionHandler}
                         inputHandler={this._pageInputHandler}
                         inputKeyDownHandler={this._inputKeyDownHandler} />
 

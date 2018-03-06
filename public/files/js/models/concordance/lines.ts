@@ -181,11 +181,11 @@ export interface ViewConfiguration {
 
     supportsSyntaxView:boolean;
 
-    onSyntaxPaneReady:(tokenId:number, kwicLength:number, confirmFn:()=>void)=>void;
+    onSyntaxPaneReady:(tokenId:number, kwicLength:number)=>void;
 
     onSyntaxPaneClose:()=>void;
 
-    onReady?:()=>void;
+    onReady:()=>void;
 
     onChartFrameReady?:(usePrevData:boolean)=>void;
 }
@@ -311,6 +311,8 @@ export class ConcLineModel extends SynchronizedModel {
 
     private ttModel:TextTypes.ITextTypesModel;
 
+    private isBusy:boolean;
+
 
     constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.ISyntaxViewer,
@@ -335,6 +337,7 @@ export class ConcLineModel extends SynchronizedModel {
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
         this.useSafeFont = lineViewProps.useSafeFont;
+        this.isBusy = false;
         this.supportsSyntaxView = lineViewProps.supportsSyntaxView;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -394,11 +397,16 @@ export class ConcLineModel extends SynchronizedModel {
                     );
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
                     this.calculateAdHocIpm().then(
                         (data) => {
-                            this.notifyChangeListeners('$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC');
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
                         },
                         (err) => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
                             console.error(err);
                             this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
                         }
@@ -771,5 +779,8 @@ export class ConcLineModel extends SynchronizedModel {
         return this.showLineNumbers;
     }
 
+    getIsBusy():boolean {
+        return this.isBusy;
+    }
 }
 

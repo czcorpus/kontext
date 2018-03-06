@@ -19,14 +19,40 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { ConcSaveModel } from '../../models/concordance/save';
 
-export function init(dispatcher, he, layoutViews, concSaveModel) {
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRFormatSelect = (props) => {
+export interface ConcSaveFormProps {
+}
+
+
+interface ConcSaveFormState {
+    fromLine:string;
+    toLine:string;
+    saveFormat:string; // TODO enum
+    alignKwic:boolean;
+    includeLineNumbers:boolean;
+    includeHeading:boolean;
+}
+
+
+export interface SaveViews {
+    ConcSaveForm:React.ComponentClass<ConcSaveFormProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, concSaveModel:ConcSaveModel) {
+
+    const layoutViews = he.getLayoutViews();
+
+    // ------------------ <TRFormatSelect /> --------------------
+
+    const TRFormatSelect:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
@@ -54,11 +80,12 @@ export function init(dispatcher, he, layoutViews, concSaveModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRIncludeHeadingCheckbox = (props) => {
+    // ---------- <TRIncludeHeadingCheckbox /> ----------
+
+    const TRIncludeHeadingCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -83,11 +110,12 @@ export function init(dispatcher, he, layoutViews, concSaveModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRIncludeLineNumbersCheckbox = (props) => {
+    // ------------------- <TRIncludeLineNumbersCheckbox /> -------
+
+    const TRIncludeLineNumbersCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -112,11 +140,12 @@ export function init(dispatcher, he, layoutViews, concSaveModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRAlignKwicCheckbox = (props) => {
+    // ------------------- <TRAlignKwicCheckbox /> -------
+
+    const TRAlignKwicCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -141,11 +170,13 @@ export function init(dispatcher, he, layoutViews, concSaveModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRLineRangeInput = (props) => {
+    // ------------------- <TRLineRangeInput /> -------
+
+    const TRLineRangeInput:React.SFC<{
+        fromLine:string;
+        toLine:string;
+
+    }> = (props) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
@@ -184,10 +215,10 @@ export function init(dispatcher, he, layoutViews, concSaveModel) {
         );
     };
 
-    /**
-     *
-     */
-    class ConcSaveForm extends React.Component {
+    // ------------------- <ConcSaveForm /> -------
+
+
+    class ConcSaveForm extends React.Component<ConcSaveFormProps, ConcSaveFormState> {
 
         constructor(props) {
             super(props);
