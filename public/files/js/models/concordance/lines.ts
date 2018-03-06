@@ -30,7 +30,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import RSVP from 'rsvp';
-import {AudioPlayer} from './media';
+import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 
 export interface ServerTextChunk {
@@ -731,8 +731,8 @@ export class ConcLineModel extends SynchronizedModel {
         return !!this.playerAttachedChunk;
     }
 
-    getAudioPlayerStatus():string {
-        return ['stop', 'pause', 'play'][this.audioPlayer.getStatus()];
+    getAudioPlayerStatus():AudioPlayerStatus {
+        return this.audioPlayer.getStatus();
     }
 
     getUseSafeFont():boolean {

@@ -19,25 +19,39 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { ConcLineModel } from '../../models/concordance/lines';
+import { AudioPlayerStatus } from '../../models/concordance/media';
 
 
-export function init(dispatcher, he, lineModel) {
+export interface AudioPlayerProps {
+}
+
+
+export interface MediaViews {
+    AudioPlayer:React.ComponentClass<AudioPlayerProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            lineModel:ConcLineModel):MediaViews {
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
-    class AudioPlayer extends React.Component {
+    class AudioPlayer extends React.Component<AudioPlayerProps, {playerStatus:AudioPlayerStatus}> {
 
         constructor(props) {
             super(props);
             // no need to bind this._handleControlClick
             this._handleLineModelChange = this._handleLineModelChange.bind(this);
             this.state = {
-                activeButton: lineModel.getAudioPlayerStatus()
+                playerStatus: lineModel.getAudioPlayerStatus()
             };
         }
 
         _handleControlClick(action) {
-            this.setState({activeButton: action});
+            this.setState({playerStatus: action});
             dispatcher.dispatch({
                 actionType: 'AUDIO_PLAYER_CLICK_CONTROL',
                 props: {
@@ -48,9 +62,9 @@ export function init(dispatcher, he, lineModel) {
 
         _handleLineModelChange() {
             const playerStatus = lineModel.getAudioPlayerStatus();
-            if (playerStatus !== 'stop') {
+            if (playerStatus !== AudioPlayerStatus.STOPPED && playerStatus !== AudioPlayerStatus.ERROR) {
                 this.setState({
-                    activeButton: playerStatus
+                    playerStatus: playerStatus
                 });
             }
         }
@@ -68,13 +82,13 @@ export function init(dispatcher, he, lineModel) {
             switch (buttonId) {
                 case 'play':
                     ans.push('img-button-play');
-                    if (this.state.activeButton === 'play') {
+                    if (this.state.playerStatus === 'play') {
                         ans.push('img-button-play-active');
                     }
                 break;
                 case 'pause':
                     ans.push('img-button-pause');
-                    if (this.state.activeButton === 'pause') {
+                    if (this.state.playerStatus === 'pause') {
                         ans.push('img-button-pause-active');
                     }
                 break;

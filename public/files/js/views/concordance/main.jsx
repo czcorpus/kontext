@@ -43,7 +43,13 @@ export function init(dispatcher, he, models) {
 
     const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionModel, userInfoModel);
     const paginationViews = paginatorViewsInit(dispatcher, he, lineModel);
-    const linesViews = linesViewInit(dispatcher, he, lineModel, lineSelectionModel, concDetailModel);
+    const linesViews = linesViewInit({
+        dispatcher: dispatcher,
+        he: he,
+        lineModel: lineModel,
+        lineSelectionModel: lineSelectionModel,
+        concDetailModel: concDetailModel
+    });
     const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailModel, refsDetailModel, lineModel);
     const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, lconcSaveModel);
     const ttDistViews = ttOverviewInit(dispatcher, he, models.ttDistModel);

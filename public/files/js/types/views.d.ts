@@ -30,38 +30,6 @@ declare module "views/concordance/lineSelection" {
     ):LineSelectionViews;
 }
 
-declare module "views/concordance/lineExtras" {
-
-    export interface LineExtrasViews {
-        AudioLink:React.ComponentClass;
-        TdLineSelection:React.ComponentClass;
-        SyntaxTreeButton:React.ComponentClass;
-        RefInfo:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        lineModel:Kontext.EventEmitter
-    );
-}
-
-
-declare module "views/concordance/lines" {
-
-    export interface ConcLinesViews {
-        ConcLines:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        lineModel:Kontext.EventEmitter,
-        lineSelectionModel:Kontext.EventEmitter,
-        concDetailModel:Kontext.EventEmitter
-    ):ConcLinesViews;
-}
-
 
 declare module "views/concordance/paginator" {
 
