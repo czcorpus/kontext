@@ -163,6 +163,7 @@ declare module "views/textTypes" {
 
 }
 
+
 declare module "views/options/structsAttrs" {
 
     export interface StructsAndAttrsViews {
