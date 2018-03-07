@@ -19,15 +19,47 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../app/dispatcher';
+import {Kontext} from '../types/common';
+import { CorpusInfoModel, CorpusInfoType, AnyOverviewInfo, CorpusInfoResponse, SubcorpusInfo, CorpusInfo, CitationInfo } from '../models/common/layout';
 
 
-export function init(dispatcher, he, corpusInfoModel) {
+export interface OverviewAreaProps {
+
+}
+
+
+interface OverviewAreaState {
+    isLoading:boolean;
+    data:AnyOverviewInfo;
+}
+
+
+export interface CorpusInfoBoxProps {
+    data:CorpusInfo;
+    isWaiting:boolean;
+}
+
+
+export interface OverviewViews {
+    OverviewArea:React.ComponentClass<OverviewAreaProps>;
+    CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            corpusInfoModel:Kontext.ICorpusInfoModel):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ---------------------------- <ItemAndNumRow /> -----------------------------
 
-    const ItemAndNumRow = (props) => {
+    const ItemAndNumRow:React.SFC<{
+        brackets:boolean;
+        label:string;
+        value:string;
+
+    }> = (props) => {
 
         if (props.brackets) {
             return (
@@ -49,13 +81,16 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // ---------------------------- <AttributeList /> -----------------------------
 
-    const AttributeList = (props) => {
+    const AttributeList:React.SFC<{
+        rows:Array<{name:string; size:string}>|{error:boolean};
+
+    }> = (props) => {
 
         let values;
 
-        if (!props.rows.error) {
+        if (Array.isArray(props.rows) && !props.rows['error']) {
             values = props.rows.map((row, i) =>
-                    <ItemAndNumRow key={i} label={row.name} value={row.size} />);
+                    <ItemAndNumRow key={i} label={row.name} value={row.size} brackets={false} />);
 
         } else {
             values = <tr><td colSpan={2}>{he.translate('failed to load')}</td></tr>;
@@ -77,7 +112,10 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // ---------------------------- <StructureList /> -----------------------------
 
-    const StructureList = (props) => {
+    const StructureList:React.SFC<{
+        rows:Array<{name:string; size:string}>;
+
+    }> = (props) => {
 
         return (
             <table className="struct-list">
@@ -94,7 +132,7 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // ---------------------- <CorpusInfoBox /> ------------------------------------
 
-    const CorpusInfoBox = (props) => {
+    const CorpusInfoBox:React.SFC<CorpusInfoBoxProps> = (props) => {
 
         const renderWebLink = () => {
             if (props.data.web_url) {
@@ -145,8 +183,7 @@ export function init(dispatcher, he, corpusInfoModel) {
                     <p className="note">
                         {he.translate('global__remark_figures_denote_different_attributes')}
                     </p>
-                    <CorpusReference corpname={props.data.corpname}
-                            data={props.data.citation_info} />
+                    <CorpusReference data={props.data.citation_info} />
                 </div>
             );
         }
@@ -154,7 +191,9 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // --------------------- <SubcorpusInfo /> -------------------------------------
 
-    const SubcorpusInfo = (props) => {
+    const SubcorpusInfo:React.SFC<{
+        data:SubcorpusInfo;
+    }> = (props) => {
 
         return (
             <div id="subcorpus-info-box">
@@ -172,7 +211,7 @@ export function init(dispatcher, he, corpusInfoModel) {
                     <h3>{he.translate('global__subc_query')}:</h3>
                     {
                         props.data.extended_info.cql ?
-                        <textarea readOnly="true" value={props.data.extended_info.cql} style={{width: '100%'}} />
+                        <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
                         : <span>{he.translate('global__subc_def_not_avail')}</span>
                     }
                 </div>
@@ -182,7 +221,10 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // ---------------------- <CorpusReference /> ------------------------------------
 
-    const CorpusReference = (props) => {
+    const CorpusReference:React.SFC<{
+        data:CitationInfo;
+
+    }> = (props) => {
 
         if (props.data['article_ref'] || props.data['default_ref']
                 || props.data['other_bibliography']) {
@@ -190,7 +232,7 @@ export function init(dispatcher, he, corpusInfoModel) {
                 <div>
                     <h3>{he.translate('global__how_to_cite_corpus')}</h3>
                     <h4>
-                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.corpname})}
+                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}
                     </h4>
                     <div dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
                     {props.data.article_ref ?
@@ -219,7 +261,7 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // ----------------------------- <KeyboardShortcuts /> --------------------------
 
-    const KeyboardShortcuts = (props) => {
+    const KeyboardShortcuts:React.SFC<{}> = (props) => {
         return (
             <div className="KeyboardShortcuts">
                 <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
@@ -261,7 +303,7 @@ export function init(dispatcher, he, corpusInfoModel) {
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component {
+    class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
 
         constructor(props) {
             super(props);
@@ -272,7 +314,6 @@ export function init(dispatcher, he, corpusInfoModel) {
 
         _fetchModelState() {
             return {
-                infoType: corpusInfoModel.getCurrentInfoType(),
                 data: corpusInfoModel.getCurrentInfoData(),
                 isLoading: corpusInfoModel.isLoading()
             };
@@ -298,18 +339,19 @@ export function init(dispatcher, he, corpusInfoModel) {
         }
 
         _renderInfo() {
-            switch (this.state.infoType) {
-                case 'corpus-info':
-                    return <CorpusInfoBox data={this.state.data} />;
-                case 'citation-info':
-                    return <CorpusReference data={this.state.data} />;
-                case 'subcorpus-info':
-                    return <SubcorpusInfo data={this.state.data} />;
-                case 'keyboard-shortcuts':
-                    return <KeyboardShortcuts />;
-                default:
-                    return null;
+            if (this.state.data) {
+                switch (this.state.data.type) {
+                    case CorpusInfoType.CORPUS:
+                        return <CorpusInfoBox data={this.state.data} isWaiting={this.state.isLoading} />;
+                    case CorpusInfoType.CITATION:
+                        return <CorpusReference data={this.state.data} />;
+                    case CorpusInfoType.SUBCORPUS:
+                        return <SubcorpusInfo data={this.state.data} />;
+                    case CorpusInfoType.KEY_SHORTCUTS:
+                        return <KeyboardShortcuts />;
+                }
             }
+            return null;
         }
 
         render() {

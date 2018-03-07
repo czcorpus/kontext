@@ -46,69 +46,6 @@ declare module "views/subcorp/list" {
     ):SubcorpListViews;
 }
 
-
-declare module "views/options/structsAttrs" {
-
-    export interface StructsAndAttrsViews {
-        StructAttrsViewOptions:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
-        mainMenuModel:Kontext.EventEmitter
-    ):StructsAndAttrsViews;
-}
-
-
-declare module "views/options/general" {
-
-    export interface GeneralOptionsViews {
-        GeneralOptions:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        generalOptionsModel:ViewOptions.IGeneralViewOptionsModel
-    ):GeneralOptionsViews;
-}
-
-
-declare module "views/options/main" {
-
-    export interface OptionsContainerViews {
-        OptionsContainer:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        generalOptionsModel:ViewOptions.IGeneralViewOptionsModel,
-        corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
-        mainMenuModel:Kontext.EventEmitter
-    ):OptionsContainerViews;
-}
-
-
-declare module "views/overview" {
-
-    export interface OverviewViews {
-        OverviewArea:React.ComponentClass;
-        CorpusInfoBox:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        corpusInfoModel:Kontext.EventEmitter
-    ):OverviewViews;
-}
-
-
 declare module "views/analysis" {
 
     export interface AnalysisFrameViews {

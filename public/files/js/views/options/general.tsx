@@ -19,13 +19,28 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext, ViewOptions} from '../../types/common';
 
 
-export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
+export interface GeneralOptionsProps {
+
+}
+
+export interface GeneralViews {
+    GeneralOptions:React.ComponentClass<GeneralOptionsProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpers,
+        generalOptionsModel:ViewOptions.IGeneralViewOptionsModel):GeneralViews {
 
     // ------------- <TRConcPageSizeInput /> ---------------------
 
-    const TRConcPageSizeInput = (props) => {
+    const TRConcPageSizeInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -51,7 +66,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <FieldsetConcordance /> ---------------------
 
-    const TRKwicContextSize = (props) => {
+    const TRKwicContextSize:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -77,7 +95,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRShowLineNumbers /> ---------------------
 
-    const TRShowLineNumbersCheckbox = (props) => {
+    const TRShowLineNumbersCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleInputChange = () => {
             dispatcher.dispatch({
@@ -105,7 +126,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRAlwaysShuffleCheckbox /> ---------------------
 
-    const TRAlwaysShuffleCheckbox = (props) => {
+    const TRAlwaysShuffleCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleInputChange = () => {
             dispatcher.dispatch({
@@ -138,7 +162,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------ <TRShowTextTypesOverview /> ----------------------------
 
-    const TRShowTextTypesOverview = (props) => {
+    const TRShowTextTypesOverview:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleCheckbox = () => {
             dispatcher.dispatch({
@@ -165,7 +192,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRUseCQLEditor /> ---------------------
 
-    const TRUseCQLEditor = (props) => {
+    const TRUseCQLEditor:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleCheckbox = () => {
             dispatcher.dispatch({
@@ -192,7 +222,15 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <FieldsetConcordance /> ---------------------
 
-    const FieldsetConcordance = (props) => {
+    const FieldsetConcordance:React.SFC<{
+        pageSize:string;
+        newCtxSize:string;
+        lineNumbers:boolean;
+        shuffle:boolean;
+        showTTOverview:boolean;
+        useCQLEditor:boolean;
+
+    }> = (props) => {
         return (
             <fieldset className="FieldsetConcordance">
                 <legend>
@@ -214,7 +252,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRWordlistNumPagesInput /> ---------------------
 
-    const TRWordlistNumPagesInput = (props) => {
+    const TRWordlistNumPagesInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -240,7 +281,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <FieldsetWordlist /> ---------------------
 
-    const FieldsetWordlist = (props) => {
+    const FieldsetWordlist:React.SFC<{
+        wlPageSize:string;
+
+    }> = (props) => {
         return (
             <fieldset className="FieldsetWordlist">
                 <legend>
@@ -257,7 +301,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRFmaxitemsInput /> ---------------------
 
-    const TRFmaxitemsInput = (props) => {
+    const TRFmaxitemsInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -283,7 +330,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <FieldsetFreqDistrib /> ---------------------
 
-    const FieldsetFreqDistrib = (props) => {
+    const FieldsetFreqDistrib:React.SFC<{
+        fmaxItems:string;
+
+    }> = (props) => {
         return (
             <fieldset className="FieldsetFreqDistrib">
                 <legend>
@@ -300,7 +350,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <TRCitemsPerPageInput /> ---------------------
 
-    const TRCitemsPerPageInput = (props) => {
+    const TRCitemsPerPageInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -326,7 +379,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // ------------- <FieldsetColl /> ---------------------
 
-    const FieldsetColl = (props) => {
+    const FieldsetColl:React.SFC<{
+        citemsPerPage:string;
+
+    }> = (props) => {
         return (
             <fieldset className="FieldsetColl">
                 <legend>
@@ -343,7 +399,10 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // --------------------- <SubmitButton /> -------------------------
 
-    const SubmitButton = (props) => {
+    const SubmitButton:React.SFC<{
+        modelIsBusy:boolean;
+
+    }> = (props) => {
 
         const handleSubmitClick = () => {
             dispatcher.dispatch({
@@ -369,7 +428,19 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel) {
 
     // --------------------- <GeneralOptions /> -------------------------
 
-    class GeneralOptions extends React.Component {
+    class GeneralOptions extends React.Component<GeneralOptionsProps,
+    {
+        pageSize:string;
+        newCtxSize:string;
+        lineNumbers:boolean;
+        shuffle:boolean;
+        wlPageSize:string;
+        fmaxItems:string;
+        citemsPerPage:string;
+        showTTOverview:boolean;
+        modelIsBusy:boolean;
+        useCQLEditor:boolean;
+    }> {
 
         constructor(props) {
             super(props);

@@ -26,6 +26,7 @@ import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import * as common from './common';
+import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -221,7 +222,7 @@ export class CorplistTableModel extends StatefulModel {
 
     protected data:CorplistData;
 
-    protected detailData:AjaxResponse.CorpusInfo;
+    protected detailData:CorpusInfo;
 
     static DispatchToken:string;
 
@@ -255,7 +256,7 @@ export class CorplistTableModel extends StatefulModel {
                         this.notifyChangeListeners();
                         this.loadCorpusInfo(payload.props['corpusId']).then(
                             (data) => {
-                                this.detailData = data;
+                                this.detailData = {...data, type: CorpusInfoType.CORPUS};
                                 this._isBusy = false;
                                 this.notifyChangeListeners();
                             },
@@ -276,11 +277,14 @@ export class CorplistTableModel extends StatefulModel {
         );
     }
 
-    private createEmptyDetail():AjaxResponse.CorpusInfo {
+    private createEmptyDetail():CorpusInfo {
         return {
+            type: CorpusInfoType.CORPUS,
             attrlist: [],
             structlist: [],
             citation_info: {
+                type: CorpusInfoType.CITATION,
+                corpname: null,
                 article_ref: [],
                 default_ref: null,
                 other_bibliography: null
@@ -288,8 +292,7 @@ export class CorplistTableModel extends StatefulModel {
             corpname: null,
             description: null,
             size: null,
-            web_url: null,
-            messages: []
+            web_url: null
         };
     }
 
@@ -327,8 +330,8 @@ export class CorplistTableModel extends StatefulModel {
         }
     }
 
-    private loadCorpusInfo(corpusId:string):RSVP.Promise<AjaxResponse.CorpusInfo> {
-        return this.pluginApi.ajax<AjaxResponse.CorpusInfo>(
+    private loadCorpusInfo(corpusId:string):RSVP.Promise<CorpusInfoResponse> {
+        return this.pluginApi.ajax<CorpusInfoResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
             {
@@ -405,11 +408,11 @@ export class CorplistTableModel extends StatefulModel {
         }
     }
 
-    getData():any {
+    getData():CorplistData {
         return this.data;
     }
 
-    getDetail():AjaxResponse.CorpusInfo {
+    getDetail():CorpusInfo {
         return this.detailData;
     }
 

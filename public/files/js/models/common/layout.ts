@@ -150,22 +150,74 @@ export class MessageModel extends StatefulModel implements Kontext.MessagePageMo
     }
 }
 
+
+export interface CitationInfoResponse {
+    default_ref:string;
+    article_ref:Array<string>;
+    other_bibliography:string;
+}
+
+export interface CitationInfo extends CitationInfoResponse {
+    corpname:string;
+    type:CorpusInfoType.CITATION;
+}
+
+export interface KeyShortcutsInfo {
+    type:CorpusInfoType.KEY_SHORTCUTS;
+}
+
+export interface CorpusInfoResponse {
+    corpname:string;
+    description:string;
+    size:number;
+    attrlist:Array<{name:string; size:string}>;
+    structlist:Array<{name:string; size:string}>;
+    web_url:string;
+    citation_info:CitationInfo;
+}
+
+export interface CorpusInfo extends CorpusInfoResponse {
+    type:CorpusInfoType.CORPUS;
+}
+
+export interface SubcorpusInfoResponse {
+    corpusName:string;
+    corpusSize:string; // formatted num
+    created:string;
+    extended_info:{[key:string]:string};
+    subCorpusName:string;
+    subCorpusSize:string; // formatted num
+}
+
+export interface SubcorpusInfo extends SubcorpusInfoResponse {
+    type:CorpusInfoType.SUBCORPUS;
+}
+
+export enum CorpusInfoType {
+    CORPUS = 'corpus-info',
+    CITATION = 'citation-info',
+    SUBCORPUS = 'subcorpus-info',
+    KEY_SHORTCUTS = 'keyboard-shortcuts'
+}
+
+export type AnyOverviewInfo = CorpusInfo|SubcorpusInfo|CitationInfo|KeyShortcutsInfo;
+
 /**
  *
  */
-export class CorpusInfoModel extends StatefulModel {
+export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInfoModel {
 
     pluginApi:IPluginApi;
 
-    corpusData:any;
+    corpusData:CorpusInfoResponse;
 
-    subcorpusData:any;
+    subcorpusData:SubcorpusInfoResponse;
 
     currentCorpus:string;
 
     currentSubcorpus:string;
 
-    currentInfoType:string;
+    currentInfoType:CorpusInfoType;
 
     isWaiting:boolean = false;
 
@@ -187,7 +239,7 @@ export class CorpusInfoModel extends StatefulModel {
                     this.loadCorpusInfo(payload.props['corpusId']).then(
                         (data) => {
                             this.currentCorpus = payload.props['corpusId'];
-                            this.currentInfoType = 'corpus-info';
+                            this.currentInfoType = CorpusInfoType.CORPUS;
                             this.isWaiting = false;
                             this.notifyChangeListeners();
                         },
@@ -203,7 +255,7 @@ export class CorpusInfoModel extends StatefulModel {
                         this.loadCorpusInfo(payload.props['corpusId']).then(
                             (data) => {
                                 this.currentCorpus = payload.props['corpusId'];
-                                this.currentInfoType = 'citation-info';
+                                this.currentInfoType = CorpusInfoType.CITATION;
                                 this.isWaiting = false;
                                 this.notifyChangeListeners();
                             },
@@ -220,7 +272,7 @@ export class CorpusInfoModel extends StatefulModel {
                             (data) => {
                                 this.currentCorpus = payload.props['corpusId'];
                                 this.currentSubcorpus = payload.props['subcorpusId'];
-                                this.currentInfoType = 'subcorpus-info';
+                                this.currentInfoType = CorpusInfoType.SUBCORPUS;
                                 this.isWaiting = false;
                                 this.notifyChangeListeners();
                             },
@@ -231,7 +283,7 @@ export class CorpusInfoModel extends StatefulModel {
                         )
                     break;
                     case 'OVERVIEW_SHOW_KEY_SHORTCUTS':
-                        this.currentInfoType = 'keyboard-shortcuts';
+                        this.currentInfoType = CorpusInfoType.KEY_SHORTCUTS;
                         this.notifyChangeListeners();
                     break;
             }
@@ -245,14 +297,11 @@ export class CorpusInfoModel extends StatefulModel {
             });
 
         } else {
-            return this.pluginApi.ajax<any>(
+            return this.pluginApi.ajax<CorpusInfoResponse>(
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
                 {
                     corpname: this.pluginApi.getConf<string>('corpname')
-                },
-                {
-                    contentType : 'application/x-www-form-urlencoded'
                 }
             ).then(
                 (data) => {
@@ -288,15 +337,12 @@ export class CorpusInfoModel extends StatefulModel {
         } else {
             return prom.then(
                 (data) => {
-                    return this.pluginApi.ajax<any>(
+                    return this.pluginApi.ajax<SubcorpusInfoResponse>(
                         'GET',
                         this.pluginApi.createActionUrl('subcorpus/ajax_subcorp_info'),
                         {
                             'corpname': corpusId,
                             'subcname': subcorpusId
-                        },
-                        {
-                            contentType : 'application/x-www-form-urlencoded'
                         }
                     ).then(
                         (data) => {
@@ -312,20 +358,22 @@ export class CorpusInfoModel extends StatefulModel {
         }
     }
 
-    getCurrentInfoType():string {
+    getCurrentInfoType():CorpusInfoType {
         return this.currentInfoType;
     }
 
-    getCurrentInfoData():any {
+    getCurrentInfoData():AnyOverviewInfo {
         switch (this.currentInfoType) {
-            case 'corpus-info':
-                return this.corpusData;
-            case 'citation-info':
-                return this.corpusData['citation_info'];
-            case 'subcorpus-info':
-                return this.subcorpusData;
+            case CorpusInfoType.CORPUS:
+                return {...this.corpusData, type:CorpusInfoType.CORPUS};
+            case CorpusInfoType.CITATION:
+                return {...this.corpusData['citation_info'], corpname: this.currentCorpus, type:CorpusInfoType.CITATION};
+            case CorpusInfoType.SUBCORPUS:
+                return {...this.subcorpusData, type:CorpusInfoType.SUBCORPUS};
+            case CorpusInfoType.KEY_SHORTCUTS:
+                return {type:CorpusInfoType.KEY_SHORTCUTS};
             default:
-                return {};
+                return null;
         }
     }
 

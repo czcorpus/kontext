@@ -19,15 +19,40 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext, ViewOptions} from '../../types/common';
+
+export interface StructsAttrsModuleArgs {
+    dispatcher:ActionDispatcher;
+    helpers:Kontext.ComponentHelpers;
+    viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
+    mainMenuModel:Kontext.IMainMenuModel;
+}
+
+export interface StructAttrsViewOptionsProps {
+
+}
+
+export interface StructsAttrsViews {
+    StructAttrsViewOptions:React.ComponentClass<StructAttrsViewOptionsProps>;
+}
 
 
-export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
+export function init({dispatcher, helpers, viewOptionsModel,
+            mainMenuModel}:StructsAttrsModuleArgs):StructsAttrsViews {
 
     const layoutViews = helpers.getLayoutViews();
 
     // ---------------------------- <LiAttributeItem /> ----------------------
 
-    const LiAttributeItem = (props) => {
+    const LiAttributeItem:React.SFC<{
+        idx:number;
+        label:string;
+        n:string;
+        isSelected:boolean;
+
+    }> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch({
@@ -53,7 +78,11 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <LiFixedAttributeItem /> ----------------------
 
-    const LiFixedAttributeItem = (props) => {
+    const LiFixedAttributeItem:React.SFC<{
+        n:string;
+        label:string;
+
+    }> = (props) => {
 
         return (
             <li>
@@ -68,7 +97,11 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <SelectAll /> ----------------------
 
-    const SelectAll = (props) => {
+    const SelectAll:React.SFC<{
+        isSelected:boolean;
+        onChange:(evt:React.ChangeEvent<{}>)=>void;
+
+    }> = (props) => {
 
         return (
             <label className="select-all">
@@ -81,7 +114,12 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <AttributesTweaks /> ----------------------
 
-    const AttributesTweaks = (props) => {
+    const AttributesTweaks:React.SFC<{
+        attrsVmode:string; // TODO enum
+        showConcToolbar:boolean;
+        attrsAllpos:string;
+
+    }> = (props) => {
 
         const handleSelectChangeFn = (name) => {
             return (event) => {
@@ -147,7 +185,14 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <FieldsetAttributes /> ----------------------
 
-    const FieldsetAttributes = (props) => {
+    const FieldsetAttributes:React.SFC<{
+        attrList:Immutable.List<ViewOptions.AttrDesc>;
+        hasSelectAll:boolean;
+        attrsVmode:string;
+        attrsAllpos:string;
+        showConcToolbar:boolean;
+
+    }> = (props) => {
 
         const handleSelectAll = () => {
             dispatcher.dispatch({
@@ -180,7 +225,12 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <StructAttrList /> ----------------------
 
-    const StructAttrList = (props) => {
+    const StructAttrList:React.SFC<{
+        struct:string;
+        items:Immutable.List<ViewOptions.StructAttrDesc>;
+        handleClick:(v:string)=>void;
+
+    }> = (props) => {
 
         const checkboxHandlerFn = (value) => {
             return () => props.handleClick(value);
@@ -205,7 +255,11 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <FieldsetStructures /> ----------------------
 
-    const FieldsetStructures = (props) => {
+    const FieldsetStructures:React.SFC<{
+        availStructs:Immutable.List<ViewOptions.AttrDesc>;
+        structAttrs:ViewOptions.AvailStructAttrs;
+
+    }> = (props) => {
 
         const handleStructClick = (event) => {
             dispatcher.dispatch({
@@ -242,7 +296,7 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
                                     {'<' + item.n + '>'}
                                 </label>
                                 <StructAttrList struct={item.n}
-                                        items={props.structAttrs.get(item.n) || []}
+                                        items={props.structAttrs.get(item.n) || Immutable.List()}
                                         handleClick={handleStructAttrClickFn(item.n)} />
                             </li>
                         );
@@ -255,7 +309,13 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <LiReferenceItem /> ----------------------
 
-    const LiReferenceItem = (props) => {
+    const LiReferenceItem:React.SFC<{
+        n:string;
+        label:string;
+        isSelected:boolean;
+        onChange:(evt:React.ChangeEvent<{}>)=>void;
+
+    }> = (props) => {
         return (
             <li>
                 <label>
@@ -270,10 +330,14 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <FieldsetMetainformation /> ----------------------
 
-    const FieldsetMetainformation = (props) => {
+    const FieldsetMetainformation:React.SFC<{
+        availRefs:Immutable.List<ViewOptions.RefsDesc>;
+        hasSelectAll:boolean;
+
+    }> = (props) => {
 
         const handleCheckboxChangeFn = (idx) => {
-            return (evt) => {
+            return (evt:React.ChangeEvent<{}>) => {
                 dispatcher.dispatch({
                     actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
                     props: {
@@ -297,7 +361,6 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
                     {props.availRefs.map((item, i) => {
                         return <LiReferenceItem
                                     key={item.n}
-                                    idx={i}
                                     n={item.n}
                                     label={item.label}
                                     isSelected={item.selected}
@@ -312,7 +375,10 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <SubmitButtons /> ----------------------
 
-    const SubmitButtons = (props) => {
+    const SubmitButtons:React.SFC<{
+        isWaiting:boolean;
+
+    }> = (props) => {
 
         const handleSaveClick = () => {
             dispatcher.dispatch({
@@ -348,18 +414,32 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <StructsAndAttrsForm /> ----------------------
 
-    const StructsAndAttrsForm = (props) => {
+    const StructsAndAttrsForm:React.SFC<{
+        hasLoadedData:boolean;
+        fixedAttr:string;
+        attrList:Immutable.List<ViewOptions.AttrDesc>;
+        availStructs: Immutable.List<ViewOptions.StructDesc>;
+        hasSelectAllAttrs:boolean;
+        attrsAllpos:string;
+        showConcToolbar:boolean;
+        attrsVmode:string;
+        structAttrs:ViewOptions.AvailStructAttrs;
+        availRefs:Immutable.List<ViewOptions.RefsDesc>;
+        TehasSelectAllRefs:boolean;
+        isWaiting:boolean;
+
+    }> = (props) => {
 
         if (props.hasLoadedData) {
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <FieldsetAttributes fixedAttr={props.fixedAttr} attrList={props.attrList}
+                        <FieldsetAttributes  attrList={props.attrList}
                                 hasSelectAll={props.hasSelectAllAttrs} attrsAllpos={props.attrsAllpos}
                                 attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
                         <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
                         <FieldsetMetainformation availRefs={props.availRefs}
-                                hasSelectAll={props.hasSellectAllRefs} />
+                                hasSelectAll={props.TehasSelectAllRefs} />
                         <SubmitButtons isWaiting={props.isWaiting} />
                     </div>
                 </form>
@@ -378,7 +458,22 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
 
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
-    class StructAttrsViewOptions extends React.Component {
+    class StructAttrsViewOptions extends React.Component<StructAttrsViewOptionsProps, {
+        corpusIdent:Kontext.FullCorpusIdent;
+        fixedAttr:string;
+        attrList:Immutable.List<ViewOptions.AttrDesc>;
+        availStructs:Immutable.List<ViewOptions.StructDesc>;
+        structAttrs:ViewOptions.AvailStructAttrs;
+        availRefs:Immutable.List<ViewOptions.RefsDesc>;
+        hasSelectAllAttrs:boolean;
+        TehasSelectAllRefs:boolean;
+        hasLoadedData:boolean;
+        attrsVmode:string;
+        attrsAllpos:string;
+        showConcToolbar:boolean;
+        isWaiting:boolean;
+        isVisible:boolean;
+    }> {
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
 
@@ -398,7 +493,7 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
                 structAttrs: viewOptionsModel.getStructAttrs(),
                 availRefs: viewOptionsModel.getReferences(),
                 hasSelectAllAttrs: viewOptionsModel.getSelectAllAttributes(),
-                hasSellectAllRefs: viewOptionsModel.getSelectAllReferences(),
+                TehasSelectAllRefs: viewOptionsModel.getSelectAllReferences(),
                 hasLoadedData: viewOptionsModel.isLoaded(),
                 attrsVmode: viewOptionsModel.getAttrsVmode(),
                 attrsAllpos: viewOptionsModel.getAttrsAllpos(),
@@ -456,7 +551,7 @@ export function init(dispatcher, helpers, viewOptionsModel, mainMenuModel) {
                             structAttrs={this.state.structAttrs}
                             availRefs={this.state.availRefs}
                             hasSelectAllAttrs={this.state.hasSelectAllAttrs}
-                            hasSellectAllRefs={this.state.hasSellectAllRefs}
+                            TehasSelectAllRefs={this.state.TehasSelectAllRefs}
                             hasLoadedData={this.state.hasLoadedData}
                             attrsVmode={this.state.attrsVmode}
                             attrsAllpos={this.state.attrsAllpos}
