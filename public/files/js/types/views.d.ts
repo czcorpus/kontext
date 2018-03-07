@@ -16,36 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare module "views/subcorp/forms" {
-
-    export interface SubcorpFormViews {
-        SubcorpForm:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        corparchComponent:React.ComponentClass,
-        subcorpFormModel:Kontext.EventEmitter,
-        subcorpWithinFormModel:Kontext.EventEmitter
-    ):SubcorpFormViews;
-}
-
-
-declare module "views/subcorp/list" {
-
-    export interface SubcorpListViews {
-        SubcorpList:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        subcorpListModel:Kontext.EventEmitter
-    ):SubcorpListViews;
-}
-
 declare module "views/analysis" {
 
     export interface AnalysisFrameViews {

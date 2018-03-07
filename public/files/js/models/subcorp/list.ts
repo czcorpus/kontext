@@ -389,7 +389,7 @@ export class SubcorpListModel extends StatefulModel {
         return this.lines.find(item => item.selected) !== undefined;
     }
 
-    getFilter():any {
+    getFilter():SubcListFilter {
         return this.filter;
     }
 
