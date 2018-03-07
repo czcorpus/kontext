@@ -201,6 +201,9 @@ export namespace PluginInterfaces {
 
     export type LiveAttributesView = React.ComponentClass<{}>;
 
+    export type LiveAttributesCustomAttribute = React.ComponentClass<{}>;
+
+
     // ------------------------------------------------
 
     /**

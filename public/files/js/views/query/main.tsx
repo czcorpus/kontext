@@ -57,7 +57,7 @@ export interface QueryFormProps {
     tagHelperView:PluginInterfaces.TagHelperView;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
     liveAttrsView:PluginInterfaces.LiveAttributesView;
-    liveAttrsCustomTT:React.ComponentClass<{}>; // TODO type once text types JSX->TSX
+    liveAttrsCustomTT:PluginInterfaces.LiveAttributesCustomAttribute;
     attributes:any; // TODO type once text types JSX->TSX
     onEnterKey:()=>void;
 }
@@ -374,7 +374,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
                                         liveAttrsCustomTT={this.props.liveAttrsCustomTT}
-                                        attributes={this.props.attributes} />
+                                        onReady={()=>undefined} />
                                 : <TextTypesNotes description={this.state.textTypesNotes} />
                         }
                     </fieldset>

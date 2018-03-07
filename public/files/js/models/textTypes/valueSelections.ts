@@ -21,6 +21,8 @@
 import {TextTypes} from '../../types/common';
 import * as Immutable from 'immutable';
 
+export type ExtendedInfo = Immutable.Map<string, any>;
+
 /**
  * This class represents a text input-based selection of values for a specific structural
  * attribute. Although it is expected that a respective view contains a text input field,
@@ -252,7 +254,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
         return !!this.values.find(item=>item.locked);
     }
 
-    setExtendedInfo(ident:string, data:Immutable.Map<string, any>):TextTypes.AttributeSelection {
+    setExtendedInfo(ident:string, data:ExtendedInfo):TextTypes.AttributeSelection {
         const srchIdx = this.values.findIndex(v => v.ident === ident);
         if (srchIdx > -1) {
             const currVal = this.values.get(srchIdx);

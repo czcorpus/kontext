@@ -30,7 +30,7 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import {UserSettings} from '../app/userSettings';
 import {TextTypesModel} from '../models/textTypes/attrValues';
-import {init as ttViewsInit} from 'views/textTypes';
+import {init as ttViewsInit} from '../views/textTypes';
 import * as corplistComponent from 'plugins/corparch/init'
 import * as Immutable from 'immutable';
 import * as React from 'react';

@@ -47,21 +47,6 @@ declare module "views/subcorp/list" {
 }
 
 
-declare module "views/textTypes" {
-
-    export interface TextTypesViews {
-        TextTypesPanel:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        textTypesModel:Kontext.EventEmitter
-    ):TextTypesViews;
-
-}
-
-
 declare module "views/options/structsAttrs" {
 
     export interface StructsAndAttrsViews {
