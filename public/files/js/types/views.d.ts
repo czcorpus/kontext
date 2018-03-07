@@ -140,32 +140,3 @@ declare module "views/analysis" {
     ):AnalysisFrameViews;
 }
 
-
-declare module "views/coll/forms" {
-
-    export interface CollFormViews {
-        CollForm:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        collFormModel:Kontext.EventEmitter
-    ):CollFormViews;
-}
-
-
-declare module "views/coll/result" {
-
-    export interface CollResultView {
-        CollResultView:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        collFormModel:Kontext.EventEmitter
-    ):CollResultView;
-}
