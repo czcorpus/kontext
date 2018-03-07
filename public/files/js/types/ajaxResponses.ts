@@ -31,23 +31,6 @@ export namespace AjaxResponse {
         other_bibliography:string;
     }
 
-    export interface CorpusInfo extends Kontext.AjaxResponse {
-
-        attrlist:Array<{name:string; size:string}>;
-
-        structlist:Array<{name:string; size:string}>;
-
-        citation_info:CitationInfo;
-
-        corpname:string;
-
-        description:string;
-
-        size:string; // formatted number
-
-        web_url:string;
-    }
-
     export interface WithinMaxHits extends Kontext.AjaxResponse {
         total:number;
     }

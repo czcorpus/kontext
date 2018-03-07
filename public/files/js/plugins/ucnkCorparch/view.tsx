@@ -16,18 +16,56 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'react';
+import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
+import { CorplistItemUcnk } from './common';
+import { CorpusInfo } from '../../models/common/layout';
 
+export interface ViewModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    CorpusInfoBox;
+    formModel;
+    listModel;
+}
 
-export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
+export interface CorplistTableProps {
+    anonymousUser:boolean;
+}
 
-    const defaultComponents = defaultViewInit(dispatcher, he, CorpusInfoBox, formModel, listModel);
+export interface FilterFormProps {
+
+}
+
+export interface Views {
+    CorplistTable:React.ComponentClass<CorplistTableProps>;
+    FilterForm:React.ComponentClass<FilterFormProps>;
+}
+
+export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:ViewModuleArgs):Views {
+
+    const defaultComponents = defaultViewInit({
+        dispatcher: dispatcher,
+        he: he,
+        CorpusInfoBox: CorpusInfoBox,
+        formModel: formModel,
+        listModel: listModel
+    });
     const layoutViews = he.getLayoutViews();
 
     // --------------- <RequestForm /> ---------------------------------
 
-    class RequestForm extends React.Component {
+    class RequestForm extends React.Component<{
+        corpusId:string;
+        corpusName:string;
+        submitHandler:()=>void;
+
+    },
+    {
+        customMessage:string;
+    }> {
 
         constructor(props) {
             super(props);
@@ -55,21 +93,21 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
         render() {
             return (
                 <form>
-                    <img className="message-icon" src={this.createStaticUrl('img/message-icon.png')}
-                            alt={this.translate('ucnkCorparch__message_icon')} />
-                    <p>{this.translate('ucnkCorparch__please_give_me_access_{corpname}',
+                    <img className="message-icon" src={he.createStaticUrl('img/message-icon.png')}
+                            alt={he.translate('ucnkCorparch__message_icon')} />
+                    <p>{he.translate('ucnkCorparch__please_give_me_access_{corpname}',
                         {corpname: this.props.corpusName})}</p>
                     <label className="hint">
-                        {this.translate('ucnkCorparch__custom_message')}:
+                        {he.translate('ucnkCorparch__custom_message')}:
                     </label>
                     <div>
-                        <textarea rows="3" cols="50"
+                        <textarea rows={3} cols={50}
                                 onChange={this._textareaChangeHandler}
                                 value={this.state.customMessage} />
                     </div>
                     <div>
                         <button className="submit" type="button"
-                                onClick={this._submitHandler}>{this.translate('ucnkCorparch__send')}</button>
+                                onClick={this._submitHandler}>{he.translate('ucnkCorparch__send')}</button>
                     </div>
                 </form>
             );
@@ -78,7 +116,16 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
     // --------------- <LockIcon /> ---------------------------------
 
-    class LockIcon extends React.Component {
+    class LockIcon extends React.Component<{
+        corpusId:string;
+        corpusName:string;
+        isUnlockable:boolean;
+    },
+    {
+        isUnlockable:boolean;
+        hasFocus:boolean;
+        hasDialog:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -152,13 +199,13 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
         render() {
             if (this.state.isUnlockable) {
-                const img = this.state.hasFocus ? <img src={this.createStaticUrl('img/unlocked.svg')} /> :
-                        <img src={this.createStaticUrl('img/locked.svg')} />;
+                const img = this.state.hasFocus ? <img src={he.createStaticUrl('img/unlocked.svg')} /> :
+                        <img src={he.createStaticUrl('img/locked.svg')} />;
 
                 return (
                     <div>
                         <div className="lock-status"
-                                title={this.translate('ucnkCorparch__click_to_ask_access')}
+                                title={he.translate('ucnkCorparch__click_to_ask_access')}
                                 onMouseOver={this._mouseOverHandler}
                                 onMouseOut={this._mouseOutHandler}
                                 onClick={this._clickHandler}>
@@ -179,7 +226,12 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * A single dataset row
      */
-    const CorplistRow = (props) => {
+    const CorplistRow:React.SFC<{
+        row:CorplistItemUcnk;
+        enableUserActions:boolean;
+        detailClickHandler:(corpusId:string)=>void;
+
+    }> = (props) => {
 
         const handleDetailClick = (corpusId, evt) => {
             props.detailClickHandler(corpusId);
@@ -235,7 +287,12 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * dataset table
      */
-    class CorplistTable extends React.Component {
+    class CorplistTable extends React.Component<CorplistTableProps, {
+        rows:Array<CorplistItemUcnk>;
+        nextOffset:number;
+        detail:CorpusInfo;
+        isWaiting:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -326,11 +383,16 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
         }
     }
 
+    // --------------------- <ListExpansion /> ----------------------------
+
     /**
      * Provides a link allowing to load more items with current
      * query and filter settings.
      */
-    const ListExpansion = (props) => {
+    const ListExpansion:React.SFC<{
+        offset:number;
+
+    }> = (props) => {
 
         const linkClickHandler = () => {
             dispatcher.dispatch({

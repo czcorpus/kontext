@@ -18,15 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="./view.d.ts" />
-/// <reference path="../../types/views.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {CorplistItemUcnk} from './common';
 import {CorplistPage} from './corplist';
 import {IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
-import {init as overviewViewInit} from 'views/overview';
+import {init as overviewViewInit} from '../../views/overview';
 import {CorplistFormModel, CorplistTableModel} from './corplist';
 import {QueryModel} from '../../models/query/main';
 import * as dcInit from '../defaultCorparch/init';
@@ -43,13 +40,13 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
         pluginApi.getModels().corpusInfoModel
     );
     const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
-        const ans:any = viewInit(
-            pluginApi.dispatcher(),
-            pluginApi.getComponentHelpers(),
-            overviewViews.CorpusInfoBox,
+        const ans = viewInit({
+            dispatcher: pluginApi.dispatcher(),
+            he: pluginApi.getComponentHelpers(),
+            CorpusInfoBox: overviewViews.CorpusInfoBox,
             formModel,
             listModel
-        );
+        });
         return ans;
     }
     return new CorplistPage(pluginApi, initViews);

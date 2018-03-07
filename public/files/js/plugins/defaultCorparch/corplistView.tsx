@@ -17,9 +17,67 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {CorplistTableModel, CorplistFormModel, CorplistData} from './corplist';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { CorplistItem } from './common';
+import { CorpusInfoBoxProps } from '../../views/overview';
+import { CorpusInfoType, CorpusInfo } from '../../models/common/layout';
 
 
-export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
+export interface CorplistTableProps {
+    anonymousUser:boolean;
+}
+
+interface CorplistTableState {
+    rows:Array<CorplistItem>;
+    nextOffset:number;
+    detail:CorpusInfo;
+    isWaiting:boolean;
+}
+
+export interface FilterFormProps {
+    keywords:Array<[string, string, boolean, string]>;
+    filters:{
+        name:Array<string>;
+        minSize:Array<string>;
+        maxSize:Array<string>;
+    };
+}
+
+export interface CorplistViews {
+
+    CorplistTable:React.ComponentClass<CorplistTableProps>;
+
+    CorplistHeader:React.SFC<{
+
+    }>;
+
+    FilterForm:React.ComponentClass<FilterFormProps>;
+
+    FavStar:React.SFC<{
+        corpusId:string;
+        corpusName:string;
+        favId:string;
+    }>;
+
+    CorpKeywordLink:React.SFC<{
+        keyword:string;
+        label:string;
+    }>;
+}
+
+export interface CorplistViewModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
+    formModel:CorplistFormModel;
+    listModel:CorplistTableModel;
+}
+
+
+export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:CorplistViewModuleArgs):CorplistViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -30,7 +88,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     // -------------------------------- <CorplistHeader /> -----------------
 
 
-    const CorplistHeader = (props) => {
+    const CorplistHeader:React.SFC<{}> = (props) => {
 
         return (
             <tr>
@@ -45,7 +103,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
     // -------------------------------- <FavStar /> -----------------
 
-    const FavStar = (props) => {
+    const FavStar:CorplistViews['FavStar'] = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch({
@@ -69,7 +127,12 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * A single dataset row
      */
-    const CorplistRow = (props) => {
+    const CorplistRow:React.SFC<{
+        enableUserActions:boolean;
+        row:CorplistItem;
+        detailClickHandler:(corpId:string)=>void;
+
+    }> = (props) => {
         const renderFavStar = () => {
             if (props.enableUserActions) {
                 return <FavStar corpusId={props.row.id}
@@ -123,7 +186,10 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
      * Provides a link allowing to load more items with current
      * query and filter settings.
      */
-    const ListExpansion = (props) => {
+    const ListExpansion:React.SFC<{
+        offset:number;
+
+    }> = (props) => {
 
         const linkClickHandler = () => {
             dispatcher.dispatch({
@@ -144,7 +210,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
     // -------------------------------- <CorplistTable /> -----------------
 
-    class CorplistTable extends React.Component {
+    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableState> {
 
         constructor(props) {
             super(props);
@@ -199,7 +265,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
                     <layoutViews.PopupBox
                         onCloseClick={this._detailCloseHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                        <CorpusInfoBox data={this.state.detail} isWaiting={this.state.isWaiting} />
+                        <CorpusInfoBox data={{...this.state.detail, type:CorpusInfoType.CORPUS}} isWaiting={this.state.isWaiting} />
                     </layoutViews.PopupBox>
                 );
 
@@ -239,7 +305,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * a single keyword link shown within a dataset table row
      */
-    const CorpKeywordLink = (props) => {
+    const CorpKeywordLink:CorplistViews['CorpKeywordLink'] = (props) => {
 
         const handleClick = (e) => {
             e.preventDefault();
@@ -269,15 +335,25 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * A keyword link from the filter form
      */
-    class KeywordLink extends React.Component {
+    class KeywordLink extends React.Component<{
+        keyword:string;
+        label:string;
+        overlayColor:string;
+        isActive:boolean;
+        initWaitingFn:()=>void;
+
+    },
+    {
+        active:boolean;
+    }> {
 
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = {active: Boolean(this.props.isActive)};
+            this.state = {active: this.props.isActive};
         }
 
-        _modelChangeHandler(model, action) {
+        _modelChangeHandler() {
             this.setState({active: formModel.getKeywordState(this.props.keyword)});
         }
 
@@ -334,7 +410,10 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * A keyword-like link to reset currently set keywords
      */
-    const ResetLink = (props) => {
+    const ResetLink:React.SFC<{
+        initWaitingFn:()=>void;
+
+    }> = (props) => {
 
         const handleClick = (e) => {
             e.preventDefault();
@@ -359,7 +438,12 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * A form fieldset containing all the available keywords
      */
-    const KeywordsField = (props) => {
+    const KeywordsField:React.SFC<{
+        label:string;
+        keywords:Array<[string, string, boolean, string]>;
+        initWaitingFn:()=>void;
+
+    }> = (props) => {
 
         const links = props.keywords.map((keyword, i) => {
             return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
@@ -384,7 +468,11 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * An input to specify minimum corpus size
      */
-    const MinSizeInput = (props) => {
+    const MinSizeInput:React.SFC<{
+        minSize:string;
+        initWaitingFn:()=>void;
+
+    }> = (props) => {
 
         const changeHandler = (e) => {
             props.initWaitingFn();
@@ -404,7 +492,11 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * An input to specify maximum corpus size
      */
-    const MaxSizeInput = (props) => {
+    const MaxSizeInput:React.SFC<{
+        maxSize:string;
+        initWaitingFn:()=>void;
+
+    }> = (props) => {
 
         const changeHandler = (e) => {
             props.initWaitingFn();
@@ -421,7 +513,13 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
     // -------------------------------- <NameSearchInput /> -----------------
 
-    class NameSearchInput extends React.Component {
+    class NameSearchInput extends React.PureComponent<{
+        initialValue:string;
+        initWaitingFn:()=>void;
+
+    }> {
+
+        private _timer:number;
 
         constructor(props) {
             super(props);
@@ -431,15 +529,15 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
 
         _changeHandler(e) {
             if (this._timer) {
-                clearTimeout(this._timer);
+                window.clearTimeout(this._timer);
             }
-            this._timer = setTimeout(((value) => () => {
+            this._timer = window.setTimeout(((value) => () => {
                 this.props.initWaitingFn();
                 dispatcher.dispatch({
                     actionType: 'FILTER_CHANGED',
                     props: {corpusName: value}
                 });
-                clearTimeout(this._timer);
+                window.clearTimeout(this._timer);
             })(e.target.value), 300);
         }
 
@@ -453,7 +551,17 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * A fieldset containing non-keyword filter inputs.
      */
-    class FilterInputFieldset extends React.Component {
+    class FilterInputFieldset extends React.Component<{
+        filters:{
+            name:Array<string>;
+            minSize:Array<string>;
+            maxSize:Array<string>;
+        };
+        initWaitingFn:()=>void;
+    },
+    {
+        expanded:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -509,7 +617,7 @@ export function init(dispatcher, he, CorpusInfoBox, formModel, listModel) {
     /**
      * Filter form root component
      */
-    class FilterForm extends React.Component {
+    class FilterForm extends React.Component<FilterFormProps, {isWaiting: boolean}> {
 
         constructor(props) {
             super(props);

@@ -138,6 +138,11 @@ export namespace Kontext {
         loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
     }
 
+    export interface ICorpusInfoModel extends EventEmitter {
+        getCurrentInfoData():any; // TODO
+        isLoading():boolean;
+    }
+
     /**
      * handling state of server-asynchronous
      * tasks.
@@ -335,7 +340,7 @@ export namespace Kontext {
     }
 
     export interface LayoutModel {
-        corpusInfoModel:EventEmitter,
+        corpusInfoModel:ICorpusInfoModel,
         messageModel:MessagePageModel,
         userInfoModel:IUserInfoModel,
         corpusViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
@@ -646,6 +651,8 @@ export namespace ViewOptions {
         getFixedAttr():string;
         getAttrsVmode():string;
         getAttrsAllpos():string;
+        getShowConcToolbar():boolean;
+        getIsWaiting():boolean;
     }
 
     export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {

@@ -20,7 +20,6 @@
 
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/views.d.ts" />
-/// <reference path="./corplistView.d.ts" />
 /// <reference path="./widgetView.d.ts" />
 
 import {Kontext} from '../../types/common';
@@ -29,7 +28,7 @@ import {CorplistWidgetModel} from './widget';
 import {CorplistPage} from './corplist';
 import {init as viewInit} from './corplistView';
 import {init as widgetInit} from './widgetView';
-import {init as overviewViewInit} from 'views/overview';
+import {init as overviewViewInit} from '../../views/overview';
 import {CorplistFormModel, CorplistTableModel} from './corplist';
 import * as common from './common';
 import {SearchEngine} from './search';
@@ -49,13 +48,13 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
         pluginApi.getModels().corpusInfoModel
     );
     const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
-        const ans:any = viewInit(
-            pluginApi.dispatcher(),
-            pluginApi.getComponentHelpers(),
-            overviewViews.CorpusInfoBox,
-            formModel,
-            listModel
-        );
+        const ans:any = viewInit({
+            dispatcher: pluginApi.dispatcher(),
+            he: pluginApi.getComponentHelpers(),
+            CorpusInfoBox: overviewViews.CorpusInfoBox,
+            formModel: formModel,
+            listModel: listModel
+        });
         return ans;
     }
     return new CorplistPage(pluginApi, initViews);

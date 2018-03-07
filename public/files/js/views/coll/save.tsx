@@ -19,14 +19,50 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { CollResultsSaveModel } from '../../models/coll/result';
 
-export function init(dispatcher, utils, layoutViews, collSaveModel) {
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRSaveFormatSelect = (props) => {
+export interface SaveModuleArgs {
+    dispatcher:ActionDispatcher;
+    utils:Kontext.ComponentHelpers;
+    collSaveModel:CollResultsSaveModel;
+}
+
+
+export interface SaveCollFormProps {
+    saveLinesLimit:number;
+    onClose:()=>void;
+}
+
+
+interface SaveCollFormState {
+    saveformat:string;
+    includeColHeaders:boolean;
+    includeHeading:boolean;
+    fromLine:string;
+    toLine:string;
+    saveLinesLimit:number;
+    lineLimitHintVisible:boolean;
+}
+
+
+export interface SaveCollFormViews {
+    SaveCollForm:React.ComponentClass<SaveCollFormProps>;
+}
+
+
+export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveCollFormViews {
+
+    const layoutViews = utils.getLayoutViews();
+
+    // --------------- <TRSaveFormatSelect /> ------------------------
+
+    const TRSaveFormatSelect:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
@@ -52,11 +88,12 @@ export function init(dispatcher, utils, layoutViews, collSaveModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRIncludeHeadingCheckbox = (props) => {
+    // --------------- <TRIncludeHeadingCheckbox /> ------------------------
+
+    const TRIncludeHeadingCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -77,11 +114,12 @@ export function init(dispatcher, utils, layoutViews, collSaveModel) {
         );
     }
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRColHeadersCheckbox = (props) => {
+    // --------------- <TRColHeadersCheckbox /> ------------------------
+
+    const TRColHeadersCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -102,11 +140,16 @@ export function init(dispatcher, utils, layoutViews, collSaveModel) {
         );
     }
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRSelLineRangeInputs = (props) => {
+    // --------------- <TRSelLineRangeInputs /> ------------------------
+
+    const TRSelLineRangeInputs:React.SFC<{
+        fromValue:string;
+        toValue:string;
+        lineLimitHintVisible:boolean;
+        saveLinesLimit:number;
+        onLineLimitHintShow:(v:boolean)=>void;
+
+    }> = (props) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
@@ -159,10 +202,9 @@ export function init(dispatcher, utils, layoutViews, collSaveModel) {
         )
     };
 
-    /**
-     *
-     */
-    class SaveCollForm extends React.Component {
+    // --------------- <SaveCollForm /> ------------------------
+
+    class SaveCollForm extends React.Component<SaveCollFormProps, SaveCollFormState> {
 
         constructor(props) {
             super(props);

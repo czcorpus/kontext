@@ -19,17 +19,54 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
 import {init as initSaveViews} from './save';
+import { CollResultModel, CollResultRow, CollResultHeading, CollResultHeadingCell, CollResultData } from '../../models/coll/result';
 
-export function init(dispatcher, utils, layoutViews, collResultModel) {
 
-    const saveViews = initSaveViews(dispatcher, utils, layoutViews, collResultModel.getSaveModel());
+export interface CollResultViewProps {
+    onClose:()=>void;
+}
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TDPosNegFilterLink = (props) => {
+
+interface CollResultViewState {
+    data:Immutable.List<CollResultRow>;
+    heading:Immutable.List<CollResultHeadingCell>;
+    currPageInput:string;
+    isWaiting:boolean;
+    lineOffset:number;
+    currPage:number;
+    hasNextPage:boolean;
+    sortFn:string;
+    cattr:string;
+    saveFormVisible:boolean;
+    saveLinesLimit:number;
+    calcStatus:number;
+}
+
+
+export interface ResultViews {
+    CollResultView:React.ComponentClass<CollResultViewProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers, collResultModel:CollResultModel):ResultViews {
+
+    const saveViews = initSaveViews({
+        dispatcher:dispatcher,
+        utils: utils,
+        collSaveModel: collResultModel.getSaveModel()
+    });
+
+    // ---------------- <TDPosNegFilterLink /> ------------------------
+
+    const TDPosNegFilterLink:React.SFC<{
+        pfilter:Array<[string, string]>;
+        nfilter:Array<[string, string]>;
+
+    }> = (props) => {
 
         const handleClick = (args) => {
             return () => {
@@ -53,11 +90,12 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const DataRow = (props) => {
+    // ---------------- <DataRow /> ------------------------
+
+    const DataRow:React.SFC<{
+        idx:number;
+        data:CollResultRow;
+    }> = (props) => {
         return (
             <tr>
                 <td className="num">
@@ -75,11 +113,14 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     }
 
-    /**
-     *
-     * @param {*} props
-     */
-    const THSortable = (props) => {
+    // ---------------- <THSortable /> ------------------------
+
+    const THSortable:React.SFC<{
+        sortFn:string;
+        isActive:boolean;
+        label:string;
+
+    }> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch({
@@ -111,11 +152,14 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         return <th>{renderSortingIcon()}</th>;
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRDataHeading = (props) => {
+    // ---------------- <TRDataHeading /> ------------------------
+
+    const TRDataHeading:React.SFC<{
+        cattr:string;
+        sortFn:string;
+        data:Immutable.List<CollResultHeadingCell>;
+
+    }> = (props) => {
         return (
             <tr>
                 <th />
@@ -127,11 +171,16 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const DataTable = (props) => {
+    // ---------------- <DataTable /> ------------------------
+
+    const DataTable:React.SFC<{
+        heading:Immutable.List<CollResultHeadingCell>;
+        sortFn:string;
+        cattr:string;
+        lineOffset:number;
+        rows:Immutable.List<CollResultRow>;
+
+    }> = (props) => {
         return (
             <table className="data">
                 <tbody>
@@ -142,11 +191,13 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const PageInput = (props) => {
+    // ---------------- <PageInput /> ------------------------
+
+    const PageInput:React.SFC<{
+        isWaiting:boolean;
+        currPageInput:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -170,11 +221,9 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     }
 
-    /**
-     *
-     * @param {*} props
-     */
-    const PrevPageLink = (props) => {
+    // ---------------- <PrevPageLink /> ------------------------
+
+    const PrevPageLink:React.SFC<{}> = (props) => {
 
         const handleClick = (props) => {
             dispatcher.dispatch({
@@ -193,11 +242,9 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const NextPageLink = (props) => {
+    // ---------------- <NextPageLink /> ------------------------
+
+    const NextPageLink:React.SFC<{}> = (props) => {
 
         const handleClick = (props) => {
             dispatcher.dispatch({
@@ -216,11 +263,15 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const Pagination = (props) => {
+    // ---------------- <Pagination /> ------------------------
+
+    const Pagination:React.SFC<{
+        isWaiting:boolean;
+        currPage:number;
+        hasNextPage:boolean;
+        currPageInput:string;
+
+    }> = (props) => {
 
         const handleKeyPress = (evt) => {
             if (evt.keyCode === 13) {
@@ -246,11 +297,12 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     }
 
-    /**
-     *
-     * @param {*} props
-     */
-    const CalcStatusBar = (props) => {
+    // ---------------- <CalcStatusBar /> ------------------------
+
+    const CalcStatusBar:React.SFC<{
+        status:number;
+
+    }> = (props) => {
         return (
             <div id="progress_message">
                 <div className="progress-info">
@@ -268,10 +320,9 @@ export function init(dispatcher, utils, layoutViews, collResultModel) {
         );
     };
 
-    /**
-     *
-     */
-    class CollResultView extends React.Component {
+    // ---------------- <CollResultView /> ------------------------
+
+    class CollResultView extends React.Component<CollResultViewProps, CollResultViewState> {
 
         constructor(props) {
             super(props);

@@ -18,15 +18,45 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {CollFormModel} from '../../models/coll/collForm';
 
 
-export function init(dispatcher, he, layoutViews, collFormModel) {
+export interface CollFormProps {
+
+}
+
+
+interface CollFormState {
+    attrList:Immutable.List<Kontext.AttrItem>;
+    cattr:string;
+    cfromw:string;
+    ctow:string;
+    cminfreq:string;
+    cminbgr:string;
+    cbgrfns:Immutable.Set<string>;
+    availCbgrfns:Immutable.OrderedMap<string, string>;
+    csortfn:string;
+}
+
+
+export interface FormsViews {
+    CollForm:React.ComponentClass<CollFormProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, collFormModel:CollFormModel):FormsViews {
 
     // -------------------- <AttrSelection /> --------------------------------------------
 
-    const AttrSelection = (props) => {
+    const AttrSelection:React.SFC<{
+        cattr:string;
+        attrList:Immutable.List<Kontext.AttrItem>;
+
+    }> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -48,7 +78,11 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <WindowSpanInput /> --------------------------------------------
 
-    const WindowSpanInput = (props) => {
+    const WindowSpanInput:React.SFC<{
+        cfromw:string;
+        ctow:string;
+
+    }> = (props) => {
 
         const handleFromValChange = (evt) => {
             dispatcher.dispatch({
@@ -81,7 +115,10 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <MinCollFreqCorpInput /> --------------------------------------------
 
-    const MinCollFreqCorpInput = (props) => {
+    const MinCollFreqCorpInput:React.SFC<{
+        cminfreq:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -99,7 +136,10 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <MinCollFreqSpanInput /> --------------------------------------------
 
-    const MinCollFreqSpanInput = (props) => {
+    const MinCollFreqSpanInput:React.SFC<{
+        cminbgr:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -117,7 +157,11 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <CollMetricsSelection /> --------------------------------------------
 
-    const CollMetricsSelection = (props) => {
+    const CollMetricsSelection:React.SFC<{
+        availCbgrfns:Immutable.OrderedMap<string, string>;
+        cbgrfns:Immutable.Set<string>;
+
+    }> = (props) => {
 
         const handleCheckboxClick = (evt) => {
             dispatcher.dispatch({
@@ -152,7 +196,11 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <CollSortBySelection /> --------------------------------------------
 
-    const CollSortBySelection = (props) => {
+    const CollSortBySelection:React.SFC<{
+        csortfn:string;
+        availCbgrfns:Immutable.OrderedMap<string, string>;
+
+    }> = (props) => {
 
         const handleCheckboxClick = (evt) => {
             dispatcher.dispatch({
@@ -187,7 +235,7 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
 
     // -------------------- <CollocationsForm /> --------------------------------------------
 
-    class CollocationsForm extends React.Component {
+    class CollForm extends React.Component<CollFormProps, CollFormState> {
 
         constructor(props) {
             super(props);
@@ -290,7 +338,7 @@ export function init(dispatcher, he, layoutViews, collFormModel) {
     }
 
     return {
-        CollForm: CollocationsForm
+        CollForm: CollForm
     };
 
 }

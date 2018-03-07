@@ -28,8 +28,8 @@ import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay
 import {QuerySaveAsFormModel} from '../models/query/save';
 import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
-import {init as collFormInit, CollFormViews} from 'views/coll/forms';
-import {init as collResultViewInit} from 'views/coll/result';
+import {init as collFormInit} from '../views/coll/forms';
+import {init as collResultViewInit} from '../views/coll/result';
 import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
@@ -144,7 +144,6 @@ export class CollPage {
         const collFormViews = collFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.collFormModel
         );
         // TODO: init freq form
@@ -181,7 +180,6 @@ export class CollPage {
         const collResultViews = collResultViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.collResultModel
         );
 

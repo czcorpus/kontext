@@ -63,6 +63,7 @@ export interface CorplistItem {
     size_info:string;
     fav_id:string;
     featured:boolean;
+    keywords:Array<[string, string]>;
 }
 
 

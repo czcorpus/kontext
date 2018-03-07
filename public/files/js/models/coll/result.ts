@@ -38,7 +38,9 @@ export interface CollResultRow {
 
 export type CollResultData = Array<CollResultRow>;
 
-export type CollResultHeading = Array<{s:string;n:string;}>;
+export type CollResultHeadingCell = {s:string; n:string};
+
+export type CollResultHeading = Array<CollResultHeadingCell>;
 
 export interface AjaxResponse extends Kontext.AjaxResponse {
     Head:CollResultHeading;
@@ -295,7 +297,7 @@ export class CollResultModel extends StatefulModel {
 
     private data:Immutable.List<CollResultRow>;
 
-    private heading:Immutable.List<{s:string;n:string}>;
+    private heading:Immutable.List<CollResultHeadingCell>;
 
     private currPage:number;
 
@@ -327,7 +329,7 @@ export class CollResultModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.formModel = formModel;
         this.data = Immutable.List<CollResultRow>(initialData);
-        this.heading = Immutable.List<{s:string;n:string}>(resultHeading).slice(1).toList();
+        this.heading = Immutable.List<CollResultHeadingCell>(resultHeading).slice(1).toList();
         this.currPageInput = '1';
         this.currPage = 1;
         this.isWaiting = false;
@@ -455,7 +457,7 @@ export class CollResultModel extends StatefulModel {
                     this.data = Immutable.List<CollResultRow>(data.Items);
 
                 } else {
-                    this.heading = Immutable.List<{s:string;n:string}>(data.Head).slice(1).toList();
+                    this.heading = Immutable.List<CollResultHeadingCell>(data.Head).slice(1).toList();
                     this.data = Immutable.List<CollResultRow>(data.Items);
                 }
                 return true;
@@ -467,7 +469,7 @@ export class CollResultModel extends StatefulModel {
         return this.data;
     }
 
-    getHeading():Immutable.List<{s:string;n:string}> {
+    getHeading():Immutable.List<CollResultHeadingCell> {
         return this.heading;
     }
 

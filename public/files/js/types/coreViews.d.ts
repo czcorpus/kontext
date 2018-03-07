@@ -93,6 +93,7 @@ declare namespace CoreViews {
             htmlClass?:string;
             clickHandler?:()=>void;
             alt:string;
+            title?:string;
         }
 
         interface State {

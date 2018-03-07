@@ -37,8 +37,8 @@ import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
 import {init as commonViewsFactory, CommonViews} from '../views/common';
 import {init as menuViewsFactory} from '../views/menu';
-import {init as overviewAreaViewsFactory} from 'views/overview';
-import {init as viewOptionsFactory} from 'views/options/main';
+import {init as overviewAreaViewsFactory} from '../views/overview';
+import {init as viewOptionsFactory} from '../views/options/main';
 import {MultiDict} from '../util';
 import * as docModels from '../models/common/layout';
 import {UserInfo} from '../models/user/info';
@@ -99,7 +99,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     private userInfoModel:UserInfo;
 
-    private corpViewOptionsModel:CorpusViewOptionsModel;
+    private corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel;
 
     private generalViewOptionsModel:GeneralViewOptionsModel;
 
@@ -539,14 +539,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     private initViewOptions(mainMenuModel:Kontext.IMainMenuModel,
                 generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel,
                 corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel):void {
-        const viewOptionsViews = viewOptionsFactory(
-            this.dispatcher,
-            this.getComponentHelpers(),
-            this.layoutViews,
-            generalViewOptionsModel,
-            corpViewOptionsModel,
-            mainMenuModel
-        );
+        const viewOptionsViews = viewOptionsFactory({
+            dispatcher: this.dispatcher,
+            helpers: this.getComponentHelpers(),
+            generalOptionsModel: generalViewOptionsModel,
+            viewOptionsModel: corpViewOptionsModel,
+            mainMenuModel: mainMenuModel
+        });
 
         this.mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',

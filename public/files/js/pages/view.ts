@@ -70,7 +70,7 @@ import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '..
 import {init as sortFormInit, SortViews} from '../views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from '../views/query/miscActions';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
-import {init as collFormInit, CollFormViews} from 'views/coll/forms';
+import {init as collFormInit, FormsViews as CollFormsViews} from '../views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
 import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
 import tokenDetailInit from 'plugins/tokenDetail/init';
@@ -140,7 +140,7 @@ export class ViewPage {
 
     private collFormModel:CollFormModel;
 
-    private collFormViews:CollFormViews;
+    private collFormViews:CollFormsViews;
 
     private mlFreqModel:MLFreqFormModel;
 
@@ -803,7 +803,6 @@ export class ViewPage {
         this.collFormViews = collFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.collFormModel
         );
         // ------------------ freq ------------

@@ -24,13 +24,13 @@ import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import RSVP from 'rsvp';
 import {PageModel} from '../app/main';
-import {init as subcorpViewsInit} from 'views/subcorp/forms';
+import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import {UserSettings} from '../app/userSettings';
 import {TextTypesModel} from '../models/textTypes/attrValues';
-import {init as ttViewsInit} from 'views/textTypes';
+import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import * as corplistComponent from 'plugins/corparch/init'
 import * as Immutable from 'immutable';
 import * as React from 'react';
@@ -41,11 +41,14 @@ require('styles/subcorpForm.less');
 
 
 export interface TTInitData {
-    component:React.ComponentClass;
+    component:React.ComponentClass<TextTypesPanelProps>;
     props:{[p:string]:any};
     ttModel:TextTypesModel;
     attachedAlignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 }
+
+
+export type StructsAndAttrs = {[struct:string]:Array<string>};
 
 
 /**
@@ -86,12 +89,12 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<Kontext.AttrItem>();
     }
 
-    initSubcorpForm(ttComponent:React.ComponentClass, ttProps:{[p:string]:any}):void {
+    initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:{[p:string]:any}):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
             {
-                structsAndAttrs: this.layoutModel.getConf('structsAndAttrs'),
+                structsAndAttrs: this.layoutModel.getConf<StructsAndAttrs>('structsAndAttrs'),
                 ttComponent: ttComponent,
                 ttProps: ttProps
             }
@@ -230,15 +233,14 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         );
 
         RSVP.all([p1, p2]).then(
-            (items:[TTInitData, React.ComponentClass]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
-                this.viewComponents = subcorpViewsInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
-                    items[1],
-                    this.subcorpFormModel,
-                    this.subcorpWithinFormModel
-                );
+            (items:[TTInitData, React.ComponentClass<TextTypesPanelProps>]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
+                this.viewComponents = subcorpViewsInit({
+                    dispatcher: this.layoutModel.dispatcher,
+                    he: this.layoutModel.getComponentHelpers(),
+                    CorparchComponent: items[1],
+                    subcorpFormModel: this.subcorpFormModel,
+                    subcorpWithinFormModel: this.subcorpWithinFormModel
+                });
                 this.initSubcorpForm(items[0].component, items[0].props);
             }
 

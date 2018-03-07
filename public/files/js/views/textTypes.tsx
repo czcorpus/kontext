@@ -19,15 +19,49 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../app/dispatcher';
+import {PluginInterfaces} from '../types/plugins';
+import {Kontext, TextTypes} from '../types/common';
+import { TextTypesModel } from '../models/textTypes/attrValues';
+import { ExtendedInfo } from '../models/textTypes/valueSelections';
 
 
-export function init(dispatcher, he, textTypesModel) {
+export interface TextTypesPanelProps {
+    liveAttrsView:PluginInterfaces.LiveAttributesView;
+    liveAttrsCustomTT:PluginInterfaces.LiveAttributesCustomAttribute;
+    onReady:()=>void;
+}
+
+
+interface TextTypesPanelState {
+    attributes:Array<TextTypes.AttributeSelection>;
+    rangeModes:Immutable.Map<string, boolean>;
+}
+
+
+export interface TextTypesViews {
+    TextTypesPanel:React.ComponentClass<TextTypesPanelProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, textTypesModel:TextTypesModel):TextTypesViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ----------------------------- <RangeSelector /> --------------------------
 
-    class RangeSelector extends React.Component {
+    class RangeSelector extends React.Component<{
+        attrName:string;
+    },
+    {
+        fromValue:string;
+        toValue:string;
+        keepCurrent:boolean;
+        intervalBehavior:string;
+        hasSelectedValues:boolean;
+        showHelp:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -74,7 +108,7 @@ export function init(dispatcher, he, textTypesModel) {
 
         _keyboardHandler(evt) {
             if (evt.keyCode === 13) {
-                this._confirmClickHandler(evt);
+                this._confirmClickHandler();
                 evt.preventDefault();
             }
         }
@@ -136,6 +170,7 @@ export function init(dispatcher, he, textTypesModel) {
                                 <layoutViews.ImgWithMouseover
                                      src={he.createStaticUrl('img/question-mark.svg')}
                                      htmlClass="over-img"
+                                     alt="question-mark.svg"
                                      clickHandler={this._helpClickHandler} />
                             </a>
                             {this.state.showHelp
@@ -156,7 +191,13 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <CheckboxItem /> --------------------------
 
-    class CheckBoxItem extends React.Component {
+    class CheckBoxItem extends React.Component<{
+        itemName:string;
+        itemValue:string;
+        itemIdx:number;
+        itemIsSelected:boolean;
+        itemIsLocked:boolean;
+    }, {}> {
 
         constructor(props) {
             super(props);
@@ -202,7 +243,12 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <ExtendedInfoBox /> --------------------------
 
-    const ExtendedInfoBox = (props) => {
+    const ExtendedInfoBox:React.SFC<{
+        attrName:string;
+        ident:string;
+        data:ExtendedInfo;
+
+    }> = (props) => {
 
         const clickCloseHandler = () => {
             dispatcher.dispatch({
@@ -240,25 +286,33 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <ExtendedInfoButton /> ------------------------------
 
-    class ExtendedInfoButton extends React.Component {
+    class ExtendedInfoButton extends React.Component<{
+        attrName:string;
+        ident:string;
+        containsExtendedInfo:boolean;
+        numGrouped:number;
+
+    },
+    {
+        isWaiting:boolean;
+    }> {
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this.state = {isWaiting: false};
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
+            this._handleClick = this._handleClick.bind(this);
         }
 
-        _mkHandleClick(idx) {
-            return (evt) => {
-                this.setState({isWaiting: true});
-                dispatcher.dispatch({
-                    actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
-                    props: {
-                        attrName: this.props.attrName,
-                        ident: this.props.ident
-                    }
-                });
-            }
+        _handleClick(evt) {
+            this.setState({isWaiting: true});
+            dispatcher.dispatch({
+                actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
+                props: {
+                    attrName: this.props.attrName,
+                    ident: this.props.ident
+                }
+            });
         }
 
         _modelChangeHandler() {
@@ -281,10 +335,10 @@ export function init(dispatcher, he, textTypesModel) {
                             alt={he.translate('global__loading')} />;
 
             } else if (this.props.numGrouped < 2) {
-                return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
+                return <a onClick={this._handleClick} className="bib-info">i</a>;
 
             } else {
-                return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-warn">!</a>
+                return <a onClick={this._handleClick} className="bib-warn">!</a>
             }
 
         }
@@ -292,7 +346,12 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <FullListContainer /> --------------------------
 
-    const FullListContainer = (props) => {
+    const FullListContainer:React.SFC<{
+        attrObj:TextTypes.AttributeSelection; // TODO maybe something more serializable here
+        hasExtendedInfo:boolean;
+        rangeIsOn:boolean;
+
+    }> = (props) => {
 
         const renderListOfCheckBoxes = () => {
             return (
@@ -336,7 +395,15 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <AutoCompleteBox /> --------------------------
 
-    class AutoCompleteBox extends React.Component {
+    class AutoCompleteBox extends React.Component<{
+        attrObj:TextTypes.ITextInputAttributeSelection;
+        customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;
+    },
+    {
+
+    }> {
+
+        private _outsideClick:boolean;
 
         constructor(props) {
             super(props);
@@ -415,7 +482,16 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <RawInputContainer /> --------------------------
 
-    class RawInputContainer extends React.Component {
+    class RawInputContainer extends React.PureComponent<{
+        attrObj:TextTypes.ITextInputAttributeSelection;
+        customInputName:string;
+        customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;
+
+    }> {
+
+        private throttlingTimer:number;
+
+        private _throttlingIntervalMs:number;
 
         constructor(props) {
             super(props);
@@ -486,7 +562,12 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <RawInputMultiValueContainer /> --------------------------
 
-    const RawInputMultiValueContainer = (props) => {
+    const RawInputMultiValueContainer:React.SFC<{
+        attrObj:TextTypes.ITextInputAttributeSelection;
+        hasExtendedInfo:boolean;
+        isLocked:boolean;
+
+    }> = (props) => {
 
         const handleAutoCompleteHintClick = (item) => { // typeof item = TextTypes.AutoCompleteItem
             dispatcher.dispatch({
@@ -534,8 +615,6 @@ export function init(dispatcher, he, textTypesModel) {
                     </tbody>
                 </table>
                 <RawInputContainer attrObj={props.attrObj}
-                                    isLocked={props.isLocked}
-                                    inputTextOnChange={props.inputTextOnChange}
                                     customInputName={null}
                                     customAutoCompleteHintClickHandler={handleAutoCompleteHintClick} />
             </div>
@@ -544,18 +623,22 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <ValueSelector /> --------------------------
 
-    const ValueSelector = (props) => {
+    const ValueSelector:React.SFC<{
+        attrObj:TextTypes.AttributeSelection;
+        rangeIsOn:boolean;
+        isLocked:boolean;
+        hasExtendedInfo:boolean;
+
+    }> = (props) => {
 
         return (
             <div className="scrollable">
             {props.attrObj.containsFullList() || props.rangeIsOn
                 ? <FullListContainer attrObj={props.attrObj} rangeIsOn={props.rangeIsOn}
-                        isLocked={props.isLocked}
                         hasExtendedInfo={props.hasExtendedInfo} />
                 : <RawInputMultiValueContainer
-                        attrObj={props.attrObj}
+                        attrObj={(props.attrObj as TextTypes.ITextInputAttributeSelection)}
                         isLocked={props.isLocked}
-                        inputTextOnChange={props.inputTextOnChange}
                         hasExtendedInfo={props.hasExtendedInfo} />
             }
             </div>
@@ -564,7 +647,15 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
-    class TableTextTypeAttribute extends React.Component {
+    class TableTextTypeAttribute extends React.Component<{
+        attrObj:TextTypes.AttributeSelection;
+        rangeIsOn:boolean;
+    },
+    {
+        metaInfoHelpVisible:boolean;
+        hasExtendedInfo:boolean;
+        metaInfo:TextTypes.AttrSummary;
+    }> {
 
         constructor(props) {
             super(props);
@@ -579,7 +670,7 @@ export function init(dispatcher, he, textTypesModel) {
             };
         }
 
-        _renderModeSwitch(obj) {
+        _renderModeSwitch() {
             if (this.props.attrObj.isInterval) {
                 const label = this.props.rangeIsOn
                     ? he.translate('query__tt_select_individual')
@@ -647,7 +738,8 @@ export function init(dispatcher, he, textTypesModel) {
                             <layoutViews.ImgWithMouseover
                                 src={he.createStaticUrl('img/question-mark.svg')}
                                 htmlClass="over-img"
-                                src={he.translate('global__alt_hint')} />
+                                alt="question-mark.svg"
+                                title={he.translate('global__alt_hint')} />
                         </a>
                         {this.state.metaInfoHelpVisible
                             ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoSize={true}>
@@ -742,7 +834,7 @@ export function init(dispatcher, he, textTypesModel) {
 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
-    class TextTypesPanel extends React.Component {
+    class TextTypesPanel extends React.Component<TextTypesPanelProps, TextTypesPanelState> {
 
         constructor(props) {
             super(props);

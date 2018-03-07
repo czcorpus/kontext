@@ -33,7 +33,7 @@ import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay
 import {QuerySaveAsFormModel} from '../models/query/save';
 import {fetchQueryFormArgs} from '../models/query/main';
 import {init as freqFormFactory} from '../views/freqs/forms';
-import {init as collFormFactory, CollFormViews} from 'views/coll/forms';
+import {init as collFormFactory} from '../views/coll/forms';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {init as resultViewFactory} from '../views/freqs/main';
@@ -176,7 +176,6 @@ class FreqPage {
         const collFormViews = collFormFactory(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.collFormModel
         );
 

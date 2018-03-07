@@ -17,13 +17,44 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
+import { SubcorpFormModel, SubcorpWithinFormModel, WithinLine } from '../../models/subcorp/form';
+import { TextTypesPanelProps } from '../textTypes';
+import { StructsAndAttrs } from '../../pages/subcorpForm';
 
+export interface FormsModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    CorparchComponent:PluginInterfaces.CorparchWidgetView;
+    subcorpFormModel:SubcorpFormModel;
+    subcorpWithinFormModel:SubcorpWithinFormModel;
+}
 
-export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpFormModel, subcorpWithinFormModel) {
+export interface SubcorpFormProps {
+    structsAndAttrs:StructsAndAttrs;
+    ttProps:TextTypesPanelProps;
+    ttComponent:React.ComponentClass<TextTypesPanelProps>;
+}
+
+export interface FormViews {
+    SubcorpForm:React.ComponentClass<SubcorpFormProps>;
+}
+
+export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
+            subcorpWithinFormModel}:FormsModuleArgs):FormViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------------------------------------- <WithinSwitch /> ----------------------------
 
-    const WithinSwitch = (props) => {
+    const WithinSwitch:React.SFC<{
+        rowIdx:number;
+        withinType:string;
+
+    }> = (props) => {
 
         const changeHandler = (evt) => {
             dispatcher.dispatch({
@@ -45,7 +76,12 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
     // ------------------------------------------- <CloseImg /> ----------------------------
 
-    class CloseImg extends React.Component {
+    class CloseImg extends React.Component<{
+        onClick:()=>void;
+    },
+    {
+        img:string;
+    }> {
 
         constructor(props) {
             super(props);
@@ -74,7 +110,10 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
     // ------------------------------------------- <ExpressionDescLine /> ----------------------------
 
-    const ExpressionDescLine = (props) => {
+    const ExpressionDescLine:React.SFC<{
+        viewIdx:number;
+
+    }> = (props) => {
 
         const createPrevLinkRef = (i) => {
             if (props.viewIdx > 0) {
@@ -87,7 +126,7 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
         return (
             <tr className="within-rel">
-                <td className="line-id" rowSpan="2">{props.viewIdx + 1})</td>
+                <td className="line-id" rowSpan={2}>{props.viewIdx + 1})</td>
                     <td colSpan={3}>
                     <span className="set-desc">{createPrevLinkRef(props.viewIdx)}</span>
                 </td>
@@ -97,7 +136,12 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
     // ------------------------------------------- <StructLine /> ----------------------------
 
-    const StructLine = (props) => {
+    const StructLine:React.SFC<{
+        rowIdx:number;
+        structsAndAttrs:StructsAndAttrs;
+        lineData:WithinLine;
+
+    }> = (props) => {
 
         const removeHandler = () => {
             dispatcher.dispatch({
@@ -161,7 +205,12 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
     // ------------------------------------------- <WithinBuilder /> ----------------------------
 
-    class WithinBuilder extends React.Component {
+    class WithinBuilder extends React.Component<{
+        structsAndAttrs:StructsAndAttrs;
+    },
+    {
+        lines:Immutable.List<WithinLine>;
+    }> {
 
         constructor(props) {
             super(props);
@@ -196,12 +245,11 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
         }
 
         _renderStructLine(line, viewIdx) {
-            return [
-                <ExpressionDescLine key ={'wl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
-                    lineData={line} structsAndAttrs={this.props.structsAndAttrs} />,
-                <StructLine key={'sl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
-                    lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
-            ];
+            return <>
+                <ExpressionDescLine key ={'wl' + line.rowIdx} viewIdx={viewIdx} />
+                <StructLine key={'sl' + line.rowIdx} rowIdx={line.rowIdx}
+                        lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
+            </>;
         }
 
         render() {
@@ -226,9 +274,10 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
     /**
      *
-     * @param {*} props
      */
-    const SubcNameInput = (props) => {
+    const SubcNameInput:React.SFC<{
+        value:string;
+    }> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -244,9 +293,12 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
 
     /**
      *
-     * @param {*} props
      */
-    const TDInputModeSelection = (props) => {
+    const TDInputModeSelection:React.SFC<{
+        inputMode:string;
+        onModeChange:(mode:string)=>void;
+
+     }> = (props) => {
         return (
             <td>
                 <select value={props.inputMode} onChange={(e)=>props.onModeChange(e.target.value)}>
@@ -262,10 +314,12 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
     };
 
     /**
-     *
-     * @param {*} props
      */
-    const StructsHint = (props) => {
+    const StructsHint:React.SFC<{
+        structsAndAttrs:StructsAndAttrs;
+        onCloseClick:()=>void;
+
+    }> = (props) => {
 
         const renderAttrs = () => {
             const ans = [];
@@ -298,7 +352,12 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
     /**
      *
      */
-    class TRWithinBuilderWrapper extends React.Component {
+    class TRWithinBuilderWrapper extends React.Component<{
+        structsAndAttrs:StructsAndAttrs;
+    },
+    {
+        hintsVisible:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -341,7 +400,11 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
     /**
      *
      */
-    class SubcorpForm extends React.Component {
+    class SubcorpForm extends React.Component<SubcorpFormProps, {
+        subcname:string;
+        inputMode:string;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -422,7 +485,7 @@ export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpForm
                                     {he.translate('global__new_subcorpus_name_lab')}:
                                 </th>
                                 <td style={{width: '80%'}}>
-                                    <SubcNameInput value={this.state.subcName} />
+                                    <SubcNameInput value={this.state.subcname} />
                                 </td>
                             </tr>
                             <tr>

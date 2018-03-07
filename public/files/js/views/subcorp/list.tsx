@@ -19,15 +19,31 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem} from '../../models/subcorp/list';
 
 
-export function init(dispatcher, he, subcorpLinesModel) {
+export interface SubcorpListProps {
+
+}
+
+export interface ListViews {
+    SubcorpList:React.ComponentClass<SubcorpListProps>;
+}
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            subcorpLinesModel:SubcorpListModel) {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
 
-    const TrUnfinishedLine = (props) => {
+    const TrUnfinishedLine:React.SFC<{
+        item:UnfinishedSubcorp;
+
+    }> = (props) => {
 
         return (
             <tr>
@@ -47,7 +63,12 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <TrDataLine /> --------------------------
 
-    const TrDataLine = (props) => {
+    const TrDataLine:React.SFC<{
+        idx:number;
+        item:SubcorpListItem;
+        actionButtonHandle:(idx:number, evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         const handleCheckbox = () => {
             dispatcher.dispatch({
@@ -109,7 +130,12 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <ThSortable /> --------------------------
 
-    const ThSortable = (props) => {
+    const ThSortable:React.SFC<{
+        ident:string;
+        sortKey:SortKey;
+        label:string;
+
+    }> = (props) => {
 
         const renderSortFlag = () => {
             if (props.sortKey) {
@@ -154,7 +180,14 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <DataTable /> --------------------------
 
-    class DataTable extends React.Component {
+    class DataTable extends React.Component<{
+        actionButtonHandle:(idx:number, evt)=>void;
+    },
+    {
+        lines:Immutable.List<SubcorpListItem>;
+        sortKey:SortKey;
+        unfinished:Immutable.List<UnfinishedSubcorp>;
+    }> {
 
         constructor(props) {
             super(props);
@@ -212,7 +245,11 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <FilterForm /> --------------------------
 
-    const FilterForm = (props) => {
+    const FilterForm:React.SFC<{
+        filter:SubcListFilter;
+        relatedCorpora:Immutable.List<string>;
+
+    }> = (props) => {
 
         const handleShowDeleted = () => {
             dispatcher.dispatch({
@@ -260,7 +297,7 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <FormActionTemplate /> --------------------------
 
-    const FormActionTemplate = (props) => {
+    const FormActionTemplate:React.SFC<{}> = (props) => {
 
         return (
             <form className="subc-action">
@@ -276,7 +313,14 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <FormActionReuse /> --------------------------
 
-    class FormActionReuse extends React.Component {
+    class FormActionReuse extends React.Component<{
+        idx:number;
+        data:SubcorpListItem;
+    },
+    {
+        newName:string;
+        newCql:string;
+    }> {
 
         constructor(props) {
             super(props);
@@ -325,7 +369,7 @@ export function init(dispatcher, he, subcorpLinesModel) {
                     <div>
                         <label>{he.translate('global__cql_query')}:{'\u00A0'}
                             <textarea defaultValue={this.props.data.cql}
-                                onChange={this._handleCqlChange} rows="4" />
+                                onChange={this._handleCqlChange} rows={4} />
                         </label>
                     </div>
                     <div>
@@ -345,7 +389,10 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <FormActionWipe /> --------------------------
 
-    const FormActionWipe = (props) => {
+    const FormActionWipe:React.SFC<{
+        idx:number;
+
+    }> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch({
@@ -370,7 +417,10 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <FormActionRestore /> --------------------------
 
-    const FormActionRestore = (props) => {
+    const FormActionRestore:React.SFC<{
+        idx:number;
+
+    }> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch({
@@ -395,7 +445,14 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <ActionBox /> --------------------------
 
-    class ActionBox extends React.Component {
+    class ActionBox extends React.Component<{
+        idx:number;
+        onCloseClick:()=>void;
+    },
+    {
+        action:string;
+        data:SubcorpListItem;
+    }> {
 
         constructor(props) {
             super(props);
@@ -415,11 +472,11 @@ export function init(dispatcher, he, subcorpLinesModel) {
         _renderActionForm() {
             switch (this.state.action) {
                 case 'restore':
-                    return <FormActionRestore idx={this.props.idx} data={this.state.data} />;
+                    return <FormActionRestore idx={this.props.idx}  />;
                 case 'reuse':
                     return <FormActionReuse idx={this.props.idx} data={this.state.data} />;
                 case 'wipe':
-                    return <FormActionWipe idx={this.props.idx} data={this.state.data} />;
+                    return <FormActionWipe idx={this.props.idx} />;
             }
         }
 
@@ -468,7 +525,13 @@ export function init(dispatcher, he, subcorpLinesModel) {
 
     // ------------------------ <SubcorpList /> --------------------------
 
-    class SubcorpList extends React.Component {
+    class SubcorpList extends React.Component<SubcorpListProps, {
+        hasSelectedLines:boolean;
+        filter:SubcListFilter;
+        relatedCorpora:Immutable.List<string>;
+        actionBoxVisible:number;
+
+    }> {
 
         constructor(props) {
             super(props);

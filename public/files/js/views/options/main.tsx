@@ -19,16 +19,44 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext, ViewOptions} from '../../types/common';
 import {init as generalViewsInit} from './general';
 import {init as structsAttrsViewsInit} from './structsAttrs';
 
+export interface MainModuleArgs {
+    dispatcher:ActionDispatcher;
+    helpers:Kontext.ComponentHelpers;
+    generalOptionsModel:ViewOptions.IGeneralViewOptionsModel;
+    viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
+    mainMenuModel:Kontext.IMainMenuModel;
+}
 
-export function init(dispatcher, helpers, layoutViews, generalOptionsModel, viewOptionsModel, mainMenuModel) {
+export interface OptionsContainerProps {
 
-    const generalOptionsViews = generalViewsInit(dispatcher, helpers, layoutViews, generalOptionsModel);
-    const structsAttrsOptionsViews = structsAttrsViewsInit(dispatcher, helpers, viewOptionsModel, mainMenuModel);
+}
 
-    class OptionsContainer extends React.Component {
+export interface MainViews {
+    OptionsContainer:React.ComponentClass<OptionsContainerProps>;
+}
+
+
+export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel, mainMenuModel}:MainModuleArgs):MainViews {
+
+    const layoutViews = helpers.getLayoutViews();
+    const generalOptionsViews = generalViewsInit(dispatcher, helpers, generalOptionsModel);
+    const structsAttrsOptionsViews = structsAttrsViewsInit({
+        dispatcher: dispatcher,
+        helpers: helpers,
+        viewOptionsModel: viewOptionsModel,
+        mainMenuModel: mainMenuModel
+    });
+
+    class OptionsContainer extends React.Component<OptionsContainerProps, {
+        activeItem:Kontext.MainMenuActiveItem;
+        corpusIdent: Kontext.FullCorpusIdent;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -92,7 +120,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsModel, view
                 return helpers.translate('options__general_options_heading');
 
             } else {
-                return <div></div>;
+                return '--';
             }
         }
 

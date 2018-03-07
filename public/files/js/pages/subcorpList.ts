@@ -21,7 +21,7 @@ import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginApi} from '../app/main';
 import * as corplist from 'plugins/corparch/init';
 import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
-import {init as listViewInit} from 'views/subcorp/list';
+import {init as listViewInit} from '../views/subcorp/list';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
