@@ -181,7 +181,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                         }
                     );
                 break;
-                case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED':
+                case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED': {
                     const item = this.alignedCorpora.get(payload.props['idx']);
                     if (item) {
                         const idx = this.alignedCorpora.indexOf(item);
@@ -196,6 +196,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
                     this.updateListeners.forEach(fn => fn());
                     this.notifyChangeListeners();
+                }
                 break;
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
                     if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
@@ -216,8 +217,39 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     this.selectionSteps = this.selectionSteps.pop();
                     this.notifyChangeListeners();
                 break;
+                case '@QUERY_INPUT_ADD_ALIGNED_CORPUS':
+                    this.reset();
+                    this.updateAlignedItem(payload.props['corpname'], orig => ({
+                        value: orig.value,
+                        label: orig.label,
+                        locked: true,
+                        selected: true}));
+                    this.textTypesModel.notifyChangeListeners();
+                    this.notifyChangeListeners();
+                break;
+                case '@QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
+                    this.reset();
+                    this.updateAlignedItem(payload.props['corpname'], orig => ({
+                        value: orig.value,
+                        label: orig.label,
+                        locked: false,
+                        selected: false}));
+                    this.textTypesModel.notifyChangeListeners();
+                    this.notifyChangeListeners();
+                break;
             }
         });
+    }
+
+    private updateAlignedItem(corpname:string,
+                upd:(orig:TextTypes.AlignedLanguageItem)=>TextTypes.AlignedLanguageItem):boolean {
+        const srchIdx = this.alignedCorpora.findIndex(v => v.value === corpname);
+        if (srchIdx > -1) {
+            const item = this.alignedCorpora.get(srchIdx);
+            this.alignedCorpora = this.alignedCorpora.set(srchIdx, upd(item));
+            return true;
+        }
+        return false;
     }
 
     selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean) {
