@@ -18,10 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../types/views.d.ts" />
-/// <reference path="./widgetView.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {CorplistWidgetModel} from './widget';
@@ -70,7 +66,7 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
+        corpSel:PluginInterfaces.ICorparchCorpSelection, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -88,19 +84,19 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
         pluginApi.dispatcher(),
         pluginApi,
         pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+        corpSel,
         pluginApi.getConf<boolean>('anonymousUser'),
-        querySetupHandler,
         searchEngine,
         favData,
         featData,
         options.itemClickAction
     );
     model.initHandlers();
-    return widgetInit(
-        pluginApi.dispatcher(),
-        pluginApi.getComponentHelpers(),
-        model,
-        queryModel
-    );
+    return widgetInit({
+        dispatcher: pluginApi.dispatcher(),
+        util: pluginApi.getComponentHelpers(),
+        widgetModel: model,
+        corpusSelection: corpSel
+    });
     // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
 }

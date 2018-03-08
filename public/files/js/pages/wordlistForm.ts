@@ -34,7 +34,7 @@ require('styles/wordlistForm.less');
 /**
  *
  */
-class WordlistFormPage implements Kontext.QuerySetupHandler {
+class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
 
     private layoutModel:PageModel;
 
@@ -44,22 +44,31 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
 
     private wordlistFormModel:WordlistFormModel;
 
+    private subcorpList:Immutable.List<{n:string; v:string}>;
+
+    private currSubcorp:string;
+
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-    }
-
-    registerCorpusSelectionListener(fn:(corpname:string, aligned:Immutable.List<string>, subcorp:string)=>void) {}
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>([this.corpusIdent.id]);
+        this.subcorpList = Immutable.List<{n:string; v:string}>(this.layoutModel.getConf<Array<{n:string; v:string}>>('SubcorpList'));
+        this.currSubcorp = this.layoutModel.getConf<string>('usesubcorp');
     }
 
     getCurrentSubcorpus():string {
-        return this.wordlistFormModel.getCurrentSubcorpus();
+        return this.currSubcorp;
+    }
+
+    getAvailableSubcorpora():Immutable.List<{n:string; v:string}> {
+        return this.subcorpList;
     }
 
     getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
         return Immutable.List<Kontext.AttrItem>();
+    }
+
+    getCorpora():Immutable.List<string> {
+        return Immutable.List<string>([this.corpusIdent.id]);
     }
 
     private initCorpInfoToolbar():void {
@@ -78,7 +87,6 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),
-            this.wordlistFormModel,
             this,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {

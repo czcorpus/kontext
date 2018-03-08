@@ -321,31 +321,34 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
 
         render() {
-            return (
-                <div className="WordlistResult">
-                    <Paginator currPage={this.state.currPageInput} modelIsBusy={this.state.modelIsBusy}
-                                isLastPage={this.state.isLastPage} />
-                    <table className="data">
-                        <thead>
-                            <tr>
-                                <th />
-                                <th>
-                                    {utils.translate('wordlist__filter_th')}
-                                </th>
-                                {this.state.headings.map(item =>
-                                    <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
-                                            isActive={this.state.wlsort === item.sortKey} />)}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {this.state.data.map((item, i) =>
-                                <TRResultRow key={item.idx} idx={item.idx} str={item.str} freq={item.freq}
-                                        usesStructAttr={this.state.usesStructAttr} />)}
-                        </tbody>
-                    </table>
-                    {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
-                </div>
-            );
+            if (this.state.data.size > 0) {
+                return (
+                    <div className="WordlistResult">
+                        <Paginator currPage={this.state.currPageInput} modelIsBusy={this.state.modelIsBusy}
+                                    isLastPage={this.state.isLastPage} />
+                        <table className="data">
+                            <thead>
+                                <tr>
+                                    <th />
+                                    <th>
+                                        {utils.translate('wordlist__filter_th')}
+                                    </th>
+                                    {this.state.headings.map(item =>
+                                        <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
+                                                isActive={this.state.wlsort === item.sortKey} />)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {this.state.data.map((item, i) =>
+                                    <TRResultRow key={item.idx} idx={item.idx} str={item.str} freq={item.freq}
+                                            usesStructAttr={this.state.usesStructAttr} />)}
+                            </tbody>
+                        </table>
+                        {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
+                    </div>
+                );
+            }
+            return <div />;
         }
     }
 

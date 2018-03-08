@@ -19,13 +19,40 @@
  */
 
 import * as React from 'react';
+import {ActionDispatcher} from '../app/dispatcher';
+import {CoreViews} from '../types/coreViews';
+import {Kontext} from '../types/common';
+import {FormsViews as CollFormsViews} from './coll/forms';
+import {FormsViews as FreqFormsViews} from './freqs/forms';
 
 
-export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenuModel) {
+export interface AnalysisModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    collViews:CollFormsViews;
+    freqViews:FreqFormsViews;
+    mainMenuModel:Kontext.IMainMenuModel;
+}
+
+export interface AnalysisFrameProps {
+    initialFreqFormVariant:string;
+}
+
+export interface FormsViews {
+    AnalysisFrame:React.ComponentClass<AnalysisFrameProps>;
+}
+
+
+export function init({dispatcher, he, collViews, freqViews,
+            mainMenuModel}:AnalysisModuleArgs):FormsViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AnalysisFrame /> ---------------------------
 
-    class AnalysisFrame extends React.Component {
+    class AnalysisFrame extends React.Component<AnalysisFrameProps, {
+        activeItem:Kontext.MainMenuActiveItem;
+    }> {
 
         constructor(props) {
             super(props);
@@ -35,7 +62,7 @@ export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenu
         }
 
         _renderContents() {
-            switch ((this.state.activeItem || {}).actionName) {
+            switch ((this.state.activeItem || {actionName: null}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
                     return <collViews.CollForm />;
                 case 'MAIN_MENU_SHOW_FREQ_FORM':
@@ -44,7 +71,7 @@ export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenu
         }
 
         _getTitle() {
-            switch ((this.state.activeItem || {}).actionName) {
+            switch ((this.state.activeItem || {actionName: null}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
                     return he.translate('coll__form_heading');
                 case 'MAIN_MENU_SHOW_FREQ_FORM':

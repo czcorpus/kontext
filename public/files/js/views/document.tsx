@@ -16,9 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/coreViews.d.ts" />
-
 import {Kontext} from '../types/common';
+import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {ActionDispatcher} from '../app/dispatcher';

@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/views.d.ts" />
-/// <reference path="../types/plugins.d.ts" />
-
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import * as corplistComponent from 'plugins/corparch/init';
@@ -37,8 +34,8 @@ import {QueryContextModel} from '../models/query/context';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import RSVP from 'rsvp';
-import {init as queryFormInit} from '../views/query/main';
-import {init as corpnameLinkInit} from 'views/overview';
+import {init as queryFormInit, QueryFormProps} from '../views/query/main';
+import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import { CQLEditorProps } from '../views/query/cqlEditor';
 
@@ -49,7 +46,7 @@ require('styles/firstForm.less');
 /**
  *
  */
-export class FirstFormPage implements Kontext.QuerySetupHandler {
+export class FirstFormPage {
 
     private clStorage:ConcLinesStorage;
 
@@ -88,10 +85,6 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return this.layoutModel.translate(msg, values);
     }
 
-    registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
-        this.queryModel.registerCorpusSelectionListener(fn);
-    }
-
     getCorpora():Immutable.List<string> {
         return this.queryModel.getCorpora();
     }
@@ -104,7 +97,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return this.queryModel.getCurrentSubcorpus();
     }
 
-    getAvailableSubcorpora():Immutable.List<string> {
+    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
         return this.queryModel.getAvailableSubcorpora();
     }
 
@@ -114,7 +107,6 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             'first_form',
             this.layoutModel.pluginApi(),
             this.queryModel,
-            this,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                     return this.layoutModel.switchCorpus(corpora, subcorpId).then(
@@ -193,7 +185,6 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                     this.onAlignedCorporaChanged = (_) => undefined;
                     liveAttrsViews = {};
                 }
-
                 return {
                     liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
                     liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
@@ -222,7 +213,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 currLposValues: queryFormArgs.curr_lpos_values,
                 currQmcaseValues: queryFormArgs.curr_qmcase_values,
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                subcorpList: this.layoutModel.getConf<Array<{v:string; n:string}>>('SubcorpList'),
                 currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
                 tagBuilderSupport: queryFormArgs.tag_builder_support,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
@@ -242,8 +233,6 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             }
         );
 
-        this.queryModel.registerCorpusSelectionListener((corpname, aligned, subcorp) =>
-                this.onAlignedCorporaChanged(aligned));
         this.onQueryModelReady(this.queryModel);
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
             this.queryModel.onSettingsChange(model);
@@ -259,7 +248,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         });
     }
 
-    private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {
+    private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
 
         this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
         const queryFormComponents = queryFormInit({

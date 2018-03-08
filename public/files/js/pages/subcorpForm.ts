@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/views.d.ts" />
-
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import RSVP from 'rsvp';
@@ -54,7 +52,7 @@ export type StructsAndAttrs = {[struct:string]:Array<string>};
 /**
  * A page model for the 'create new subcorpus' page.
  */
-export class SubcorpForm implements Kontext.QuerySetupHandler {
+export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
@@ -75,8 +73,6 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         this.corpusIdent = corpusIdent;
     }
 
-    registerCorpusSelectionListener(fn:(corpname:string, aligned:Immutable.List<string>, subcorp:string)=>void) {}
-
     getCurrentSubcorpus():string {
         return this.subcorpFormModel.getSubcname();
     }
@@ -87,6 +83,10 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
         return Immutable.List<Kontext.AttrItem>();
+    }
+
+    getAvailableSubcorpora():Immutable.List<{n:string; v:string}> {
+        return Immutable.List<{n:string; v:string}>();
     }
 
     initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:{[p:string]:any}):void {
@@ -215,12 +215,6 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 return corplistComponent.createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
                     this.layoutModel.pluginApi(),
-                    {
-                        getCurrentSubcorpus: () => null,
-                        getAvailableSubcorpora: () => Immutable.List<string>(),
-                        addChangeListener: (fn:Kontext.ModelListener) => undefined,
-                        removeChangeListener:(fn:Kontext.ModelListener) => undefined
-                    },
                     this,
                     {
                         itemClickAction: (corpora:Array<string>, subcorpId:string) => {

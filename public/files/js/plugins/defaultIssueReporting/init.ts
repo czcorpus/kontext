@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="./view.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
@@ -107,7 +104,7 @@ export class IssueReportingModel extends StatefulModel {
 }
 
 
-export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
+export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
 
     private model:IssueReportingModel;
 
@@ -125,7 +122,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
 
 
-export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
+export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IssueReporting> {
     const model = new IssueReportingModel(pluginApi);
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), model);
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {

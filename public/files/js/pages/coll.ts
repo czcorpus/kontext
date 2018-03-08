@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/views.d.ts" />
-
 import {Kontext, TextTypes} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
@@ -27,10 +25,10 @@ import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/c
 import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay';
 import {QuerySaveAsFormModel} from '../models/query/save';
 import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
-import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
+import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../views/analysis';
 import {init as collFormInit} from '../views/coll/forms';
 import {init as collResultViewInit} from '../views/coll/result';
-import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
+import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 
@@ -147,14 +145,13 @@ export class CollPage {
             this.collFormModel
         );
         // TODO: init freq form
-        const analysisViews = analysisFrameInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
-            collFormViews,
-            freqFormViews,
-            this.layoutModel.getModels().mainMenuModel
-        );
+        const analysisViews = analysisFrameInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            collViews: collFormViews,
+            freqViews: freqFormViews,
+            mainMenuModel: this.layoutModel.getModels().mainMenuModel
+        });
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),

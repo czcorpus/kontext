@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/views.d.ts" />
-
 import {Kontext, TextTypes} from '../types/common';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
 import {PageModel} from '../app/main';
@@ -34,7 +32,7 @@ import {QuerySaveAsFormModel} from '../models/query/save';
 import {fetchQueryFormArgs} from '../models/query/main';
 import {init as freqFormFactory} from '../views/freqs/forms';
 import {init as collFormFactory} from '../views/coll/forms';
-import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
+import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../views/analysis';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {init as resultViewFactory} from '../views/freqs/main';
 import {init as ctResultViewInit} from '../views/freqs/ctResult';
@@ -139,7 +137,7 @@ class FreqPage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps,
-            adhocSubcDetector
+            adhocSubcDetector,
         );
         this.ctResultSaveModel = new FreqCTResultsSaveModel(
             this.layoutModel.dispatcher,
@@ -179,14 +177,13 @@ class FreqPage {
             this.collFormModel
         );
 
-        const analysisViews = analysisFrameInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
-            collFormViews,
-            freqFormViews,
-            this.layoutModel.getModels().mainMenuModel
-        );
+        const analysisViews = analysisFrameInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            collViews: collFormViews,
+            freqViews: freqFormViews,
+            mainMenuModel: this.layoutModel.getModels().mainMenuModel
+        });
 
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,

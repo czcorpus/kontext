@@ -21,11 +21,10 @@
 import {Kontext} from '../../types/common';
 import {CorplistItemUcnk} from './common';
 import {CorplistPage} from './corplist';
-import {IPluginApi} from '../../types/plugins';
+import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from '../../views/overview';
 import {CorplistFormModel, CorplistTableModel} from './corplist';
-import {QueryModel} from '../../models/query/main';
 import * as dcInit from '../defaultCorparch/init';
 
 /**
@@ -57,10 +56,9 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param targetAction
  * @param pluginApi
  * @param queryModel
- * @param querySetupHandler
  * @param options
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:QueryModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
-    return dcInit.createWidget(targetAction, pluginApi, queryModel, querySetupHandler, options);
+        queryModel:PluginInterfaces.ICorparchCorpSelection, options:any):React.ComponentClass {
+    return dcInit.createWidget(targetAction, pluginApi, queryModel, options);
 }

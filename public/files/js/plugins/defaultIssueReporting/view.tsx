@@ -18,15 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as React from "react";
+import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { IssueReportingModel } from './init';
 
-export function init(dispatcher, he, reportingModel) {
+
+export interface IssueReportingWidgetProps {
+
+}
+
+
+export interface Views {
+    IssueReportingWidget:React.ComponentClass<IssueReportingWidgetProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            reportingModel:IssueReportingModel):Views {
 
     const layoutViews = he.getLayoutViews();
 
     // -------------- <SubmitButton /> -------------------------------------
 
-    const SubmitButton = (props) => {
+    const SubmitButton:React.SFC<{
+        waitingForModel:boolean;
+
+    }> = (props) => {
 
         const handleSubmitClick = () => {
             dispatcher.dispatch({
@@ -51,7 +69,12 @@ export function init(dispatcher, he, reportingModel) {
 
     // -------------- <IssueReportingForm /> -------------------------------------
 
-    const IssueReportingForm = (props) => {
+    const IssueReportingForm:React.SFC<{
+        value:string;
+        waitingForModel:boolean;
+        closeClickHandler:()=>void;
+
+    }> = (props) => {
 
         const handleTextareaChange = (evt) => {
             dispatcher.dispatch({
@@ -65,7 +88,7 @@ export function init(dispatcher, he, reportingModel) {
                 <layoutViews.CloseableFrame onCloseClick={props.closeClickHandler}
                         label={he.translate('defaultIR__report_issue_heading')}>
                     <form>
-                        <textarea rows="10" cols="60" onChange={handleTextareaChange}
+                        <textarea rows={10} cols={60} onChange={handleTextareaChange}
                                 value={props.value} />
                         <p>
                             <SubmitButton waitingForModel={props.waitingForModel} />
@@ -78,7 +101,11 @@ export function init(dispatcher, he, reportingModel) {
 
     // -------------- <IssueReportingWidget /> -------------------------------------
 
-    class IssueReportingWidget extends React.Component {
+    class IssueReportingWidget extends React.Component<IssueReportingWidgetProps, {
+        formVisible:boolean;
+        issueBody:string;
+        waitingForModel:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -130,7 +157,7 @@ export function init(dispatcher, he, reportingModel) {
                     </a>
                     {this.state.formVisible ?
                         <IssueReportingForm closeClickHandler={this._closeClickHandler}
-                            issueBody={this.state.issueBody}
+                            value={this.state.issueBody}
                             waitingForModel={this.state.waitingForModel} /> :
                         null
                     }

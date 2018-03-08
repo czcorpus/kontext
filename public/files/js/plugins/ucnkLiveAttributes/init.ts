@@ -20,12 +20,12 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import textTypesModel = require('../../models/textTypes/attrValues');
+import {TextTypesModel} from '../../models/textTypes/attrValues';
 import liveAttrsModel = require('./models');
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import common = require('./common');
-import {init as viewInit} from './view';
+import {init as viewInit, Views} from './view';
 import createSubcMixer from 'plugins/subcmixer/init';
 
 declare var require:any;
@@ -43,14 +43,14 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
         this.store = store;
     }
 
-    getViews(subcMixerView:React.ComponentClass, textTypesModel:Kontext.EventEmitter):any {// TODO store types
-        return viewInit(
-            this.pluginApi.dispatcher(),
-            this.pluginApi.getComponentHelpers(),
-            subcMixerView,
-            textTypesModel,
-            this.store
-        );
+    getViews(subcMixerView:PluginInterfaces.SubcMixerView, textTypesModel:TextTypesModel):Views {
+        return viewInit({
+            dispatcher: this.pluginApi.dispatcher(),
+            he: this.pluginApi.getComponentHelpers(),
+            SubcmixerComponent: subcMixerView,
+            textTypesModel: textTypesModel,
+            liveAttrsModel: this.store
+        });
     }
 
     getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {

@@ -37,6 +37,7 @@ export interface ServerFavlistItem {
     size:number;
     size_info:string;
     corpora:Array<{id:string; name:string}>;
+    description:string;
 }
 
 export interface GeneratedFavListItem {

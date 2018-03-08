@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/plugins.d.ts" />
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
-/// <reference path="../types/views.d.ts" />
 
 import * as SoundManager from 'vendor/SoundManager';
 import RSVP from 'rsvp';
@@ -69,9 +67,9 @@ import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {init as sortFormInit, SortViews} from '../views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from '../views/query/miscActions';
-import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
+import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../views/analysis';
 import {init as collFormInit, FormsViews as CollFormsViews} from '../views/coll/forms';
-import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
+import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
 import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
 import tokenDetailInit from 'plugins/tokenDetail/init';
 
@@ -425,7 +423,7 @@ export class ViewPage {
             currLposValues: queryFormArgs.curr_lpos_values,
             currQmcaseValues: queryFormArgs.curr_qmcase_values,
             currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-            subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+            subcorpList: this.layoutModel.getConf<Array<{v:string; n:string}>>('SubcorpList'),
             currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
             tagBuilderSupport: queryFormArgs.tag_builder_support,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
@@ -861,14 +859,13 @@ export class ViewPage {
             this.ttFreqModel,
             this.ctFreqFormModel
         );
-        this.analysisViews = analysisFrameInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
-            this.collFormViews,
-            this.freqFormViews,
-            this.layoutModel.getModels().mainMenuModel
-        );
+        this.analysisViews = analysisFrameInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            collViews: this.collFormViews,
+            freqViews: this.freqFormViews,
+            mainMenuModel: this.layoutModel.getModels().mainMenuModel
+        });
         this.layoutModel.renderReactComponent(
             this.analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),

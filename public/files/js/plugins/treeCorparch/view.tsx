@@ -17,13 +17,39 @@
  */
 
 import * as React from 'react';
+import {Kontext} from '../../types/common';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {TreeWidgetModel, Node} from './init';
+
+export interface CorptreeWidgetProps {
+
+}
 
 
-export function init(dispatcher, he, treeModel) {
+export interface CorptreePageComponentProps {
+
+}
+
+
+export interface Views {
+    CorptreeWidget:React.ComponentClass<CorptreeWidgetProps>;
+    CorptreePageComponent:React.ComponentClass<CorptreePageComponentProps>;
+    FilterPageComponent:React.SFC<{}>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+        treeModel:TreeWidgetModel):Views {
 
     // --------------------------------- <TreeNode /> --------------------------
 
-    const TreeNode = (props) => {
+    const TreeNode:React.SFC<{
+        name:string;
+        ident:string;
+        active:boolean;
+        corplist:Node;
+
+    }> = (props) => {
 
         const clickHandler = () => {
             dispatcher.dispatch({
@@ -98,7 +124,11 @@ export function init(dispatcher, he, treeModel) {
 
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
-    class CorptreeWidget extends React.Component {
+    class CorptreeWidget extends React.Component<CorptreeWidget, {
+        active:boolean;
+        data:Node;
+        currentCorpusIdent:Kontext.FullCorpusIdent;
+    }> {
 
         constructor(props) {
             super(props);
@@ -127,10 +157,10 @@ export function init(dispatcher, he, treeModel) {
             }
         }
 
-        _changeListener(model, action) {
+        _changeListener() {
             this.setState({
                 active: true,
-                data: model.getData(),
+                data: treeModel.getData(),
                 currentCorpusIdent: treeModel.getCurrentCorpusIdent()
             });
         }
@@ -159,7 +189,11 @@ export function init(dispatcher, he, treeModel) {
 
     // ----------------------- <CorptreePageComponent /> -----------------
 
-    class CorptreePageComponent extends React.Component {
+    class CorptreePageComponent extends React.Component<CorptreePageComponentProps, {
+        data:Node;
+        currentCorpusIdent:Kontext.FullCorpusIdent;
+
+    }> {
 
         constructor(props) {
             super(props);
@@ -170,9 +204,9 @@ export function init(dispatcher, he, treeModel) {
             };
         }
 
-        _changeListener(model, action) {
+        _changeListener() {
             this.setState({
-                data: model.getData(),
+                data: treeModel.getData(),
                 currentCorpusIdent: treeModel.getCurrentCorpusIdent()
             });
         }

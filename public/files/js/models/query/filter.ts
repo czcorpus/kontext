@@ -81,7 +81,7 @@ export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
  * plug-in to store it). Please note that it does not know the order of filters
  * in pipeline (it is up to QueryReplay store to handle this).
  */
-export class FilterModel extends GeneralQueryModel implements Kontext.QuerySetupHandler {
+export class FilterModel extends GeneralQueryModel {
 
     private maincorps:Immutable.Map<string, string>;
 
@@ -248,6 +248,10 @@ export class FilterModel extends GeneralQueryModel implements Kontext.QuerySetup
 
     getCurrentSubcorpus():string {
         return undefined;
+    }
+
+    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
+        return Immutable.List<{v:string; n:string}>();
     }
 
     /**

@@ -22,6 +22,8 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
+import {CoreViews} from './coreViews';
+import { EventEmitter } from 'events';
 
 
 /**
@@ -72,10 +74,16 @@ export namespace PluginInterfaces {
     export interface IFooterBar {
     }
 
+    // --------------------------- subcmixer -------------------------------
+
     export interface ISubcMixer {
         refreshData():void;
         getWidgetView():React.ComponentClass;
     }
+
+    export type SubcMixerView = React.ComponentClass<{isActive:boolean}>;
+
+    // ---------------------------------- syntax viewer ---------------------
 
     export interface ISyntaxViewer extends Kontext.EventEmitter {
         render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
@@ -139,14 +147,16 @@ export namespace PluginInterfaces {
 
     // ------------------------ corparch -------------------------
 
-    export interface ICorparchModel {
-        getCurrentSubcorpus():string;
-        getAvailableSubcorpora():Immutable.List<string>;
-        addChangeListener(fn:Kontext.ModelListener):void;
-        removeChangeListener(fn:Kontext.ModelListener):void;
-    }
 
     export type CorparchWidgetView = React.ComponentClass<{}>;
+
+
+    export interface ICorparchCorpSelection {
+        getCurrentSubcorpus():string;
+        getAvailableSubcorpora():Immutable.List<{n:string; v:string}>;
+        getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
+        getCorpora():Immutable.List<string>;
+    }
 
     // -------------------------- live attributes --------------------------
 
@@ -217,15 +227,15 @@ export namespace PluginInterfaces {
 
         setData(data:any):void; // TODO type
 
-        getForm():React.ComponentClass;
+        getForm():React.ComponentClass|React.SFC<{}>;
 
-        getList():React.ComponentClass;
+        getList():React.ComponentClass|React.SFC<{}>;
     }
 
 
-    export interface IIssueReporting {
+    export interface IssueReporting {
 
-        getWidgetView():React.ComponentClass;
+        getWidgetView():React.ComponentClass|React.SFC<{}>;
 
     }
 
@@ -242,19 +252,24 @@ export namespace PluginInterfaces {
             }>;
         }
 
+        export interface RendererData {
+            data: Array<[string, string]>;
+        }
+
+        export type Renderer = React.ComponentClass<RendererData>|React.SFC<RendererData>;
+
         export interface DataAndRenderer {
-            renderer:React.ComponentClass<{data:any}>;
+            renderer:Renderer;
             contents:Array<[string, string]>;
             found:boolean;
             heading:string;
         }
 
-
         export interface IPlugin {
 
             fetchTokenDetail(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
 
-            selectRenderer(typeId:string):React.ComponentClass;
+            selectRenderer(typeId:string):Renderer;
         }
     }
 }

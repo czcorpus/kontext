@@ -18,28 +18,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as React from 'react';
 
-declare namespace CoreViews {
 
-    namespace ModalOverlay {
+export namespace CoreViews {
 
-        interface Props {
+    export namespace ModalOverlay {
+
+        export interface Props {
             onCloseKey:()=>void;
             isScrollable?:boolean;
             children:React.ReactNode;
         }
 
-        interface State {
+        export interface State {
         }
 
-        type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<Props>;
     }
 
     // ---------------------------
 
-    namespace PopupBox {
+    export namespace PopupBox {
 
-        interface Props {
+        export interface Props {
 
             /**
              * a custom action to be performed once the component is mounted
@@ -77,17 +79,17 @@ declare namespace CoreViews {
             children:React.ReactNode;
         }
 
-        interface State {}
+        export interface State {}
 
-        type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<Props>;
 
     }
 
     // -------------------------------
 
-    namespace ImgWithMouseover {
+    export namespace ImgWithMouseover {
 
-        interface Props {
+        export interface Props {
             src:string;
             src2?:string;
             htmlClass?:string;
@@ -96,18 +98,18 @@ declare namespace CoreViews {
             title?:string;
         }
 
-        interface State {
+        export interface State {
             isMouseover:boolean;
         }
 
-        type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<Props>;
     }
 
     // -------------------------------
 
-    namespace CloseableFrame {
+    export namespace CloseableFrame {
 
-        interface Props {
+        export interface Props {
             onCloseClick:()=>void;
             customClass?:string;
             scrollable?:boolean;
@@ -115,33 +117,33 @@ declare namespace CoreViews {
             children:React.ReactNode;
         }
 
-        type Component = React.SFC<Props>;
+        export type Component = React.SFC<Props>;
 
     }
 
     // -------------------------------
 
-    namespace InlineHelp {
+    export namespace InlineHelp {
 
-        interface Props {
+        export interface Props {
             children:React.ReactNode;
             customStyle?:{[key:string]:string};
             url?:string;
         }
 
-        interface State {
+        export interface State {
             helpVisible:boolean;
         }
 
-        type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<Props>;
 
     }
 
     // -------------------------------
 
-    namespace Message {
+    export namespace Message {
 
-        interface Props {
+        export interface Props {
             messageId:string;
             fadingOut:boolean;
             transitionTime:number;
@@ -149,7 +151,7 @@ declare namespace CoreViews {
             messageText:string;
         }
 
-        interface Props {
+        export interface Props {
             mode:string;
             transitionTime:number;
             children:React.ReactNode;
@@ -158,40 +160,40 @@ declare namespace CoreViews {
 
     // -------------------------------
 
-    namespace Messages {
+    export namespace Messages {
 
-        interface Props {}
+        export interface Props {}
 
-        interface State {
+        export interface State {
             messages:any; // TODO type
             transitionTime:number;
         }
 
-        type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<Props>;
     }
 
     // -------------------------------
 
-    namespace FadeInFrame {
+    export namespace FadeInFrame {
 
-        interface State {
+        export interface State {
             opacity:number;
         }
 
-        interface Props {
+        export interface Props {
             transitionTime:number;
             mode:string;
             children:React.ReactNode;
         }
 
-        type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<Props>;
     }
 
     // -------------------------------
 
-    namespace IssueReportingLink {
+    export namespace IssueReportingLink {
 
-        interface Props {
+        export interface Props {
             url:string;
             blank_window:boolean;
             type:string;
@@ -199,51 +201,51 @@ declare namespace CoreViews {
             onClick:()=>void;
         }
 
-        type Component = React.SFC<Props>;
+        export type Component = React.SFC<Props>;
     }
 
     // -------------------------------
 
-    namespace AjaxLoaderImage {
-        interface Props {}
-        type Component = React.SFC<Props>;
+    export namespace AjaxLoaderImage {
+        export interface Props {}
+        export type Component = React.SFC<Props>;
     }
 
     // -------------------------------
 
-    namespace AjaxLoaderBarImage {
-        interface Props {}
-        type Component = React.SFC<Props>;
+    export namespace AjaxLoaderBarImage {
+        export interface Props {}
+        export type Component = React.SFC<Props>;
     }
 
     // -------------------------------
 
-    namespace CorpnameInfoTrigger {
+    export namespace CorpnameInfoTrigger {
 
-        interface Props {
+        export interface Props {
             corpname:string;
             usesubcorp:string;
             humanCorpname:string;
         }
 
-        type Component = React.SFC<Props>;
+        export type Component = React.SFC<Props>;
 
     }
 
-    namespace Shortener {
+    export namespace Shortener {
 
-        interface Props {
+        export interface Props {
             text:string;
             limit?:number;
             className?:string;
         }
 
-        type Component = React.SFC<Props>;
+        export type Component = React.SFC<Props>;
     }
 
     // -------------------------------
 
-    interface Runtime {
+    export interface Runtime {
         ModalOverlay: ModalOverlay.Component;
         PopupBox:PopupBox.Component;
         ImgWithMouseover:ImgWithMouseover.Component;

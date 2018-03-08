@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Charles University, Faculty of Arts,
+ * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -18,11 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-export interface DefaultTokenDetailRenderers {
-    RawHtmlRenderer:React.ComponentClass<{data:any}>;
-    SimpleTabularRenderer:React.ComponentClass<{data:any}>;
-    DescriptionListRenderer:React.ComponentClass<{data:any}>;
-    UnsupportedRenderer:React.ComponentClass<{data:any}>;
-}
 
-export function init(dispatcher, he):DefaultTokenDetailRenderers;
+import * as React from 'react';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):{IssueReportingWidget:React.SFC<{}>} {
+
+    const layoutViews = he.getLayoutViews();
+
+
+    const IssueReportingWidget = (props) => {
+        return <span><layoutViews.IssueReportingLink {...props} /></span>;
+    };
+
+    return {
+        IssueReportingWidget: IssueReportingWidget
+    };
+}

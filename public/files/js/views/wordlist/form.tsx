@@ -47,7 +47,6 @@ export interface WordlistFormExportViews {
 export interface WordListFormState {
     wltype:string;
     currentSubcorp:string;
-    subcorpList:Immutable.List<string>;
     attrList:Immutable.List<Kontext.AttrItem>;
     structAttrList:Immutable.List<Kontext.AttrItem>;
     wlattr:string;
@@ -79,7 +78,6 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
      */
     const TRCorpusField:React.SFC<{
         corparchWidget:PluginInterfaces.CorparchWidgetView;
-        subcorpList:Immutable.List<string>;
         currentSubcorp:string;
 
     }> = (props) => {
@@ -627,7 +625,6 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             return {
                 wltype: wordlistFormModel.getWltype(),
                 currentSubcorp: wordlistFormModel.getCurrentSubcorpus(),
-                subcorpList: wordlistFormModel.getSubcorpList(),
                 attrList: wordlistFormModel.getAttrList(),
                 structAttrList: wordlistFormModel.getStructAttrList(),
                 wlattr: wordlistFormModel.getWlattr(),
@@ -685,8 +682,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                     <table>
                                         <tbody>
                                             <TRCorpusField corparchWidget={CorparchWidget}
-                                                    currentSubcorp={this.state.currentSubcorp}
-                                                    subcorpList={this.state.subcorpList} />
+                                                    currentSubcorp={this.state.currentSubcorp} />
                                         </tbody>
                                     </table>
                                 </td>

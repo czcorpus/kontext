@@ -1488,6 +1488,7 @@ class Actions(Querying):
             self._add_flux_save_menu_item(_('Custom'))
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
+            result['SubcorpList'] = []
             self._export_subcorpora_list(self.args.corpname, result)
             return result
 
@@ -1501,7 +1502,13 @@ class Actions(Querying):
                 processing = out
             else:
                 processing = 0
+            result['wlattr'] = None
+            result['wlattr_label'] = ''
             result['processing'] = processing
+            result['SubcorpList'] = []
+            result['freq_figure'] = ''
+            result['lastpage'] = None
+            result['form_args'] = {}
             return result
 
     def _make_wl_query(self):
