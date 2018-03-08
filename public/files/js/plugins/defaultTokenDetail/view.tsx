@@ -19,13 +19,25 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 
 
-export function init(dispatcher, he) {
+export interface Views {
+    RawHtmlRenderer:PluginInterfaces.TokenDetail.Renderer;
+    SimpleTabularRenderer:PluginInterfaces.TokenDetail.Renderer;
+    DescriptionListRenderer:PluginInterfaces.TokenDetail.Renderer;
+    UnsupportedRenderer:PluginInterfaces.TokenDetail.Renderer;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     // ------------- <RawHtmlRenderer /> -------------------------------
 
-    const RawHtmlRenderer = (props) => {
+    const RawHtmlRenderer:Views['RawHtmlRenderer'] = (props) => {
         return (
             <div>
                 {props.data.map((v, i) => <div key={`block:${i}`} dangerouslySetInnerHTML={{__html: v[1]}} />)}
@@ -35,7 +47,7 @@ export function init(dispatcher, he) {
 
     // ------------- <SimpleTabularRenderer /> -------------------------------
 
-    const SimpleTabularRenderer = (props) => {
+    const SimpleTabularRenderer:Views['SimpleTabularRenderer'] = (props) => {
         return (
             <table>
                 <tbody>
@@ -52,7 +64,7 @@ export function init(dispatcher, he) {
 
     // ------------- <DescriptionListRenderer /> -------------------------------
 
-    const DescriptionListRenderer = (props) => {
+    const DescriptionListRenderer:Views['DescriptionListRenderer'] = (props) => {
         return (
             <dl>
                 {props.data.map(item => [
@@ -65,10 +77,10 @@ export function init(dispatcher, he) {
 
     // ------------- <UnsupportedRenderer /> -------------------------------
 
-    const UnsupportedRenderer = (props) => {
+    const UnsupportedRenderer:Views['UnsupportedRenderer'] = (props) => {
         return (
             <p>Unsupported renderer {props.data}</p>
-        );d
+        );
     };
 
     return {

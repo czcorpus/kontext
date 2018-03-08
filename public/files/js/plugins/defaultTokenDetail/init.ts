@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as initView, DefaultTokenDetailRenderers} from './view';
+import {init as initView, Views as DefaultTokenDetailRenderers} from './view';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import * as Immutable from 'immutable';
@@ -62,7 +62,7 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
         );
     }
 
-    selectRenderer(typeId:string):React.ComponentClass<{data:any}> {
+    selectRenderer(typeId:string):PluginInterfaces.TokenDetail.Renderer {
         switch (typeId) {
             case 'raw-html':
                 return this.views.RawHtmlRenderer;

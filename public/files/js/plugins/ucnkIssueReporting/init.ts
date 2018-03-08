@@ -19,7 +19,6 @@
  */
 
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="./view.d.ts" />
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
@@ -27,22 +26,22 @@ import {init as viewInit} from './view';
 import RSVP from 'rsvp';
 
 
-export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
+export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
 
 
-    private view:React.ComponentClass;
+    private view:React.SFC<{}>;
 
-    constructor(view:React.ComponentClass) {
+    constructor(view:React.SFC<{}>) {
         this.view = view;
     }
 
-    getWidgetView():React.ComponentClass {
+    getWidgetView():React.SFC<{}> {
         return this.view;
     }
 }
 
 
-export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
+export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IssueReporting> {
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers());
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {
         resolve(new IssueReportingPlugin(view.IssueReportingWidget));

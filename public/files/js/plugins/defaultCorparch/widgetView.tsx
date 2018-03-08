@@ -17,16 +17,43 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import { CorplistWidgetModel } from './widget';
+import {QueryModel} from '../../models/query/main';
+import { ServerFavlistItem, CorplistItem } from './common';
+import { SearchKeyword, SearchResultRow } from './search';
 
-export function init(dispatcher, util, widgetModel, queryModel) {
+
+export interface WidgetViewModuleArgs {
+    dispatcher:ActionDispatcher;
+    util:Kontext.ComponentHelpers;
+    widgetModel:CorplistWidgetModel;
+    queryModel:QueryModel;
+}
+
+export interface CorplistWidgetProps {
+
+}
+
+export interface WidgetViews {
+
+}
+
+
+export function init({dispatcher, util, widgetModel, queryModel}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
 
     const layoutViews = util.getLayoutViews();
 
     /**
      *
-     * @param {*} props
      */
-    const TRFavoriteItem = (props) => {
+    const TRFavoriteItem:React.SFC<{
+        data:ServerFavlistItem;
+        editEnable:boolean;
+
+    }> = (props) => {
 
         const handleItemClick = () => {
             dispatcher.dispatch({
@@ -76,7 +103,13 @@ export function init(dispatcher, util, widgetModel, queryModel) {
      *
      * @param {*} props
      */
-    const FavoritesBox = (props) => {
+    const FavoritesBox:React.SFC<{
+        data:Immutable.List<ServerFavlistItem>;
+        editEnable:boolean;
+        anonymousUser:boolean;
+        onChangeEditEnable:()=>void;
+
+    }> = (props) => {
         return (
             <table className="favorite-list">
                 <tbody>
@@ -105,9 +138,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const TRFeaturedItem = (props) => {
+    const TRFeaturedItem:React.SFC<{
+        data:CorplistItem;
+
+    }> = (props) => {
 
         const handleItemClick = () => {
             dispatcher.dispatch({
@@ -136,9 +171,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const FeaturedBox = (props) => {
+    const FeaturedBox:React.SFC<{
+        data:Immutable.List<CorplistItem>;
+
+    }> = (props) => {
         return (
             <table className="featured-list">
                 <tbody>
@@ -155,9 +192,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const StarComponent = (props) => {
+    const StarComponent:React.SFC<{
+        currFavitemId:string;
+
+    }> = (props) => {
 
         const renderIcon = () => {
             const style = {width: '2em'};
@@ -195,7 +234,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
     /**
      *
      */
-    const TabMenu = (props) => {
+    const TabMenu:React.SFC<{
+        activeTab:number;
+        onItemClick:(v:number)=>void;
+
+    }> = (props) => {
         return (
             <div className="menu">
                 <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
@@ -211,11 +254,17 @@ export function init(dispatcher, util, widgetModel, queryModel) {
         );
     };
 
-    /**
+    /**CorplistItem
      *
-     * @param {*} props
      */
-    const ListsTab = (props) => {
+    const ListsTab:React.SFC<{
+        dataFav:Immutable.List<ServerFavlistItem>;
+        dataFeat:Immutable.List<CorplistItem>;
+        editEnable:boolean;
+        anonymousUser:boolean;
+        onChangeEditEnable:()=>void;
+
+    }> = (props) => {
         return (
             <div className="tables">
                 <FavoritesBox data={props.dataFav} editEnable={props.editEnable}
@@ -228,9 +277,15 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const SearchKeyword = (props) => {
+    const SearchKeyword:React.SFC<{
+        key:string;
+        id:string;
+        label:string;
+        color:string;
+        selected:boolean;
+
+    }> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
@@ -265,7 +320,7 @@ export function init(dispatcher, util, widgetModel, queryModel) {
      *
      * @param {*} props
      */
-    const ResetKeyword = (props) => {
+    const ResetKeyword:React.SFC<{}> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
@@ -285,9 +340,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const SearchInput = (props) => {
+    const SearchInput:React.SFC<{
+        value:string;
+
+    }> = (props) => {
 
         const handleInput = (evt) => {
             dispatcher.dispatch({
@@ -306,9 +363,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const SearchResultRow = (props) => {
+    const SearchResultRow:React.SFC<{
+        data:SearchResultRow;
+
+    }> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
@@ -336,9 +395,11 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const SearchLoaderBar = (props) => {
+    const SearchLoaderBar:React.SFC<{
+        isActive:boolean;
+
+    }> = (props) => {
         if (props.isActive) {
             return (
                 <div className="ajax-loader">
@@ -354,9 +415,14 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const SearchTab = (props) => {
+    const SearchTab:React.SFC<{
+        availSearchKeywords:Immutable.List<SearchKeyword>;
+        isWaitingForSearchResults:boolean;
+        currSearchResult:Immutable.List<SearchResultRow>;
+        currSearchPhrase:string;
+
+    }> = (props) => {
         return (
             <div>
                 <div className="labels">
@@ -380,9 +446,13 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const CorpusButton = (props) => {
+    const CorpusButton:React.SFC<{
+        isWaitingToSwitch:boolean;
+        corpusIdent:Kontext.FullCorpusIdent;
+        onClick:()=>void;
+
+    }> = (props) => {
         return (
             <button type="button" className="util-button" onClick={props.onClick}>
                 {props.isWaitingToSwitch ?
@@ -396,9 +466,12 @@ export function init(dispatcher, util, widgetModel, queryModel) {
 
     /**
      *
-     * @param {*} props
      */
-    const SubcorpSelection = (props) => {
+    const SubcorpSelection:React.SFC<{
+        currSubcorpus:string;
+        availSubcorpora:Immutable.List<{v:string; n:string}>;
+
+    }> = (props) => {
 
         const handleSubcorpChange = (evt) => {
             dispatcher.dispatch({
@@ -424,7 +497,23 @@ export function init(dispatcher, util, widgetModel, queryModel) {
     /**
      *
      */
-    class CorplistWidget extends React.Component {
+    class CorplistWidget extends React.Component<CorplistWidgetProps, {
+        corpusIdent:Kontext.FullCorpusIdent;
+        anonymousUser:boolean;
+        dataFav:Immutable.List<ServerFavlistItem>;
+        dataFeat:Immutable.List<CorplistItem>;
+        isWaitingToSwitch:boolean;
+        currFavitemId:string;
+        currSubcorpus:string;
+        availSubcorpora:Immutable.List<{v:string; n:string}>;
+        availSearchKeywords:Immutable.List<SearchKeyword>;
+        isWaitingForSearchResults:boolean;
+        currSearchResult:Immutable.List<SearchResultRow>;
+        currSearchPhrase:string;
+        visible:boolean;
+        activeTab:number;
+        editEnable:boolean;
+    }> {
 
         constructor(props) {
             super(props);

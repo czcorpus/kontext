@@ -19,13 +19,41 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext, TextTypes} from '../../types/common';
+import {LiveAttrsModel, SelectionStep} from './models';
+import { PluginInterfaces } from '../../types/plugins';
 
 
-export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel) {
+export interface ViewModuleArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    SubcmixerComponent:PluginInterfaces.SubcMixerView;
+    textTypesModel:TextTypes.ITextTypesModel;
+    liveAttrsModel:LiveAttrsModel;
+}
+
+export interface LiveAttrsViewProps {
+}
+
+export interface LiveAttrsCustomTTProps {
+}
+
+export interface Views {
+    LiveAttrsView:React.ComponentClass<LiveAttrsViewProps>;
+    LiveAttrsCustomTT:React.ComponentClass<LiveAttrsCustomTTProps>;
+}
+
+
+export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel}:ViewModuleArgs):Views {
 
     // ----------------------------- <StepLoader /> --------------------------
 
-    const StepLoader = (props) => {
+    const StepLoader:React.SFC<{
+        idx:number;
+
+    }> = (props) => {
         return (
             <div className="step-block">
                 <table className="step">
@@ -44,7 +72,11 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <SelectionSteps /> --------------------------
 
-    const SelectionSteps = (props) => {
+    const SelectionSteps:React.SFC<{
+        items:Array<SelectionStep>;
+        isLoading:boolean;
+
+    }> = (props) => {
 
         const shortenValues = (values, joinChar) => {
             let ans;
@@ -119,11 +151,15 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <RefineButton /> --------------------------
 
-    const RefineButton = (props) => {
+    const RefineButton:React.SFC<{
+        enabled:boolean;
+        mkClickHandler:(action:string)=>(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         if (props.enabled) {
             return (
-                <a className="util-button" onClick={props.clickHandler('refine')}>
+                <a className="util-button" onClick={props.mkClickHandler('refine')}>
                     {he.translate('ucnkLA__refine_selection_btn')}
                 </a>
             );
@@ -135,10 +171,14 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <UndoButton /> --------------------------
 
-    const UndoButton = (props) => {
+    const UndoButton:React.SFC<{
+        enabled:boolean;
+        mkClickHandler:(action:string)=>(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
         if (props.enabled) {
             return (
-                <a className="util-button cancel" onClick={props.clickHandler('undo')}>
+                <a className="util-button cancel" onClick={props.mkClickHandler('undo')}>
                     {he.translate('ucnkLA__undo_selection_btn')}
                 </a>
             );
@@ -150,11 +190,15 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <ResetButton /> --------------------------
 
-    const ResetButton = (props) => {
+    const ResetButton:React.SFC<{
+        enabled:boolean;
+        mkClickHandler:(action:string)=>(evt:React.MouseEvent<{}>)=>void;
+
+    }> = (props) => {
 
         if (props.enabled) {
             return (
-                <a className="util-button cancel" onClick={props.clickHandler('reset')}>
+                <a className="util-button cancel" onClick={props.mkClickHandler('reset')}>
                     {he.translate('ucnkLA__reset_selection_btn')}
                 </a>
             );
@@ -166,7 +210,13 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <LiveAttrsView /> --------------------------
 
-    class LiveAttrsView extends React.Component {
+    class LiveAttrsView extends React.Component<LiveAttrsViewProps, {
+        selectionSteps:Array<SelectionStep>;
+        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+        isLoading:boolean;
+        controlsEnabled:boolean;
+        canUndoRefine:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -226,13 +276,13 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
                 <div className="live-attributes">
                     <ul className="controls">
                         <li>
-                            <RefineButton enabled={this.state.controlsEnabled} clickHandler={this._mkClickHandler} />
+                            <RefineButton enabled={this.state.controlsEnabled} mkClickHandler={this._mkClickHandler} />
                         </li>
                         <li>
-                            <UndoButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} clickHandler={this._mkClickHandler} />
+                            <UndoButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} mkClickHandler={this._mkClickHandler} />
                         </li>
                         <li>
-                            <ResetButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} clickHandler={this._mkClickHandler} />
+                            <ResetButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} mkClickHandler={this._mkClickHandler} />
                         </li>
                         {SubcmixerComponent ?
                             (<li>
@@ -248,7 +298,11 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <AlignedLangItem /> --------------------------
 
-    const AlignedLangItem = (props) => {
+    const AlignedLangItem:React.SFC<{
+        itemIdx:number;
+        item:TextTypes.AlignedLanguageItem;
+
+    }> = (props) => {
 
         const clickHandler = () => {
             dispatcher.dispatch({
@@ -271,7 +325,13 @@ export function init(dispatcher, he, SubcmixerComponent, textTypesModel, liveAtt
 
     // ----------------------------- <LiveAttrsCustomTT /> --------------------------
 
-    class LiveAttrsCustomTT extends React.Component {
+    class LiveAttrsCustomTT extends React.Component<LiveAttrsCustomTTProps, {
+        hasAvailableAlignedCorpora:boolean;
+        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+        isLocked:boolean;
+        manualAlignCorporaMode:boolean;
+
+    }> {
 
         constructor(props) {
             super(props);

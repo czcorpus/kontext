@@ -16,16 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="./view.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {init as viewInit, TreeCorparchViews} from './view';
+import {init as viewInit, Views as TreeCorparchViews} from './view';
 import {QueryModel} from '../../models/query/main';
 
 declare var require:any;
@@ -207,7 +204,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
     setData(data:any):void {
     }
 
-    getForm():React.ComponentClass {
+    getForm():React.SFC<{}> {
         return this.viewsLib.FilterPageComponent;
     }
 

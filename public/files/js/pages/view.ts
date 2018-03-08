@@ -425,7 +425,7 @@ export class ViewPage {
             currLposValues: queryFormArgs.curr_lpos_values,
             currQmcaseValues: queryFormArgs.curr_qmcase_values,
             currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-            subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+            subcorpList: this.layoutModel.getConf<Array<{v:string; n:string}>>('SubcorpList'),
             currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
             tagBuilderSupport: queryFormArgs.tag_builder_support,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),

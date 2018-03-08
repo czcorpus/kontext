@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import * as common from './common';
-import {IPluginApi} from '../../types/plugins';
+import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';

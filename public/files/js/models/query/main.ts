@@ -60,7 +60,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     corpora:Array<string>;
     availableAlignedCorpora:Array<Kontext.AttrItem>;
     textTypesNotes:string;
-    subcorpList:Array<string>;
+    subcorpList:Array<{v:string; n:string}>;
     currentSubcorp:string;
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
@@ -316,7 +316,7 @@ export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupH
 
     private availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
 
-    private subcorpList:Immutable.List<string>;
+    private subcorpList:Immutable.List<{v:string; n:string}>;
 
     private currentSubcorp:string;
 
@@ -371,7 +371,7 @@ export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupH
         super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
-        this.subcorpList = Immutable.List<string>(props.subcorpList);
+        this.subcorpList = Immutable.List<{v:string; n:string}>(props.subcorpList);
         this.currentSubcorp = props.currentSubcorp;
         this.shuffleConcByDefault = props.shuffleConcByDefault;
         this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
@@ -752,7 +752,7 @@ export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupH
     }
 
 
-    getAvailableSubcorpora():Immutable.List<string> {
+    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
         return this.subcorpList;
     }
 

@@ -17,15 +17,39 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext, TextTypes} from '../../types/common';
+import {SubcMixerModel, SubcMixerExpression, CalculationResults} from './init';
 
 
-export function init(dispatcher, he, subcMixerModel) {
+export interface WidgetProps {
+    isActive:boolean;
+}
+
+
+export interface Views {
+    Widget:React.ComponentClass<WidgetProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            subcMixerModel:SubcMixerModel):Views {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------ <ValueShare /> -------------------------------------
 
-    const ValueShare = (props) => {
+    const ValueShare:React.SFC<{
+        rowId:number;
+        hasResults:boolean;
+        attrName:string;
+        attrValue:string;
+        baseRatio:string;
+        ratio:string;
+        result:[string, number, boolean];
+
+    }> = (props) => {
 
         const handleRatioValueChange = (evt) => {
             dispatcher.dispatch({
@@ -77,7 +101,7 @@ export function init(dispatcher, he, subcMixerModel) {
                                 style={{width: '3em'}} value={props.ratio}
                                 disabled={props.hasResults ? true : false}
                                 onChange={handleRatioValueChange} />
-                        <strong>%</strong>
+                        {'\u00a0'}<strong>%</strong>
                     </span>
                 </td>
                 <td className="num">
@@ -92,7 +116,12 @@ export function init(dispatcher, he, subcMixerModel) {
 
     // ------------ <ValuesTable /> -------------------------------------
 
-    const ValuesTable = (props) => {
+    const ValuesTable:React.SFC<{
+        currentResults:CalculationResults;
+        hasResults:boolean;
+        items:Immutable.List<SubcMixerExpression>;
+
+    }> = (props) => {
 
         return (
             <table className="data subcmixer-ratios">
@@ -121,7 +150,10 @@ export function init(dispatcher, he, subcMixerModel) {
 
     // ------------ <ReenterArgsButton /> -------------------------------------
 
-    const ReenterArgsButton = (props) => {
+    const ReenterArgsButton:React.SFC<{
+        css:{[key:string]:string};
+
+    }> = (props) => {
 
         const handleUpdateParamsButton = () => {
             dispatcher.dispatch({
@@ -141,7 +173,13 @@ export function init(dispatcher, he, subcMixerModel) {
 
     // ------------ <ResultsControls /> -------------------------------------
 
-    const ResultsControls = (props) => {
+    const ResultsControls:React.SFC<{
+        numErrors:number;
+        totalSize:number;
+        numConditions:number;
+        currentSubcname:string;
+
+    }> = (props) => {
 
         const handleCreateSubcorpClick = () => {
             dispatcher.dispatch({
@@ -208,7 +246,7 @@ export function init(dispatcher, he, subcMixerModel) {
                 );
 
             } else {
-                return <div><ReenterArgsButton /></div>;
+                return <div><ReenterArgsButton css={{}} /></div>;
             }
         };
 
@@ -224,7 +262,17 @@ export function init(dispatcher, he, subcMixerModel) {
 
     // ------------ <Controls /> -------------------------------------
 
-    const Controls = (props) => {
+    const Controls:React.SFC<{
+        isWaiting:boolean;
+        hasResults:boolean;
+        totalSize:number;
+        numErrors:number;
+        numConditions:number;
+        currentSubcname:string;
+        usedAttributes:Immutable.Set<string>;
+        setWaitingFn:()=>void;
+
+    }> = (props) => {
 
         const handleCalculateCategoriesClick = () => {
             props.setWaitingFn();
@@ -275,7 +323,19 @@ export function init(dispatcher, he, subcMixerModel) {
 
     // ------------ <SubcMixer /> -------------------------------------
 
-    class SubcMixer extends React.Component {
+    class SubcMixer extends React.Component<{
+        selectedValues:Immutable.List<SubcMixerExpression>;
+        currentResults:CalculationResults;
+        numErrors:number;
+        currentSubcname:string;
+        usedAttributes:Immutable.Set<string>;
+        errorTolerance:number;
+        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+        closeClickHandler:()=>void;
+    },
+    {
+        isWaiting: boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -363,7 +423,16 @@ export function init(dispatcher, he, subcMixerModel) {
 
     // ------------ <Widget /> -------------------------------------
 
-    class Widget extends React.Component {
+    class Widget extends React.Component<WidgetProps, {
+        useWidget:boolean;
+        selectedValues:Immutable.List<SubcMixerExpression>;
+        currentResults:CalculationResults;
+        numErrors:number;
+        currentSubcname:string;
+        usedAttributes:Immutable.Set<string>;
+        errorTolerance:number;
+        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+    }> {
 
         constructor(props) {
             super(props);

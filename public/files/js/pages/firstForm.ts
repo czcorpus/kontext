@@ -38,7 +38,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import RSVP from 'rsvp';
 import {init as queryFormInit} from '../views/query/main';
-import {init as corpnameLinkInit} from 'views/overview';
+import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import { CQLEditorProps } from '../views/query/cqlEditor';
 
@@ -104,7 +104,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return this.queryModel.getCurrentSubcorpus();
     }
 
-    getAvailableSubcorpora():Immutable.List<string> {
+    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
         return this.queryModel.getAvailableSubcorpora();
     }
 
@@ -222,7 +222,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 currLposValues: queryFormArgs.curr_lpos_values,
                 currQmcaseValues: queryFormArgs.curr_qmcase_values,
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                subcorpList: this.layoutModel.getConf<Array<{v:string; n:string}>>('SubcorpList'),
                 currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
                 tagBuilderSupport: queryFormArgs.tag_builder_support,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),

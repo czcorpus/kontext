@@ -20,7 +20,6 @@
 
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/views.d.ts" />
-/// <reference path="./widgetView.d.ts" />
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
@@ -32,6 +31,7 @@ import {init as overviewViewInit} from '../../views/overview';
 import {CorplistFormModel, CorplistTableModel} from './corplist';
 import * as common from './common';
 import {SearchEngine} from './search';
+import { QueryModel } from '../../models/query/main';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -70,7 +70,7 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
+        queryModel:QueryModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -96,11 +96,11 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
         options.itemClickAction
     );
     model.initHandlers();
-    return widgetInit(
-        pluginApi.dispatcher(),
-        pluginApi.getComponentHelpers(),
-        model,
-        queryModel
-    );
+    return widgetInit({
+        dispatcher: pluginApi.dispatcher(),
+        util: pluginApi.getComponentHelpers(),
+        widgetModel: model,
+        queryModel: queryModel
+    });
     // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
 }

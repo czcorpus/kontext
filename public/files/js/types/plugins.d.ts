@@ -58,7 +58,7 @@ declare module 'plugins/footerBar/init' {
 declare module "plugins/corparch/init" {
 
     export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):PluginInterfaces.CorparchWidgetView;
+        queryModel:any, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):PluginInterfaces.CorparchWidgetView;
 
     export function initCorplistPageComponents(pluginApi:IPluginApi):PluginInterfaces.ICorplistPage;
 }
@@ -102,7 +102,7 @@ declare module "plugins/subcmixer/init" {
 
 
 declare module "plugins/issueReporting/init" {
-    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IssueReporting>;
 }
 
 
