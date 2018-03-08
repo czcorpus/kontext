@@ -437,10 +437,18 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.IC
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
                     this.addAlignedCorpus(payload.props['corpname']);
                     this.notifyChangeListeners();
+                    this.synchronize(
+                        'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+                        payload.props
+                    );
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
                     this.removeAlignedCorpus(payload.props['corpname']);
                     this.notifyChangeListeners();
+                    this.synchronize(
+                        'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+                        payload.props
+                    );
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     this.pcqPosNegValues = this.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
