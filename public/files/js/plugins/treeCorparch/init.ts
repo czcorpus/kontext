@@ -24,6 +24,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {init as viewInit, Views as TreeCorparchViews} from './view';
 import {QueryModel} from '../../models/query/main';
+import { QuerySaveAsFormModel } from '../../models/query/save';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -55,15 +56,13 @@ export class TreeWidgetModel extends StatefulModel {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    private querySetupHandler:Kontext.QuerySetupHandler
+    private queryModel:QueryModel;
 
     constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                querySetupHandler:Kontext.QuerySetupHandler,
-                corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
+                queryModel:QueryModel, corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;
-        this.querySetupHandler = querySetupHandler;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
         this.dispatcher.register((payload:ActionPayload) => {
@@ -84,7 +83,7 @@ export class TreeWidgetModel extends StatefulModel {
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
                         this.corpusClickHandler(
                             [payload.props['ident']],
-                            this.querySetupHandler.getCurrentSubcorpus()
+                            this.queryModel.getCurrentSubcorpus()
                         );
                     break;
                 }
@@ -153,17 +152,16 @@ export class TreeWidgetModel extends StatefulModel {
  * @param targetElm - an element the component will mount to
  * @param targetAction - ignored here
  * @param pluginApi
- * @param querySetupHandler - query form functions
  * @param options A configuration of the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-            queryModel:QueryModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
+            queryModel:QueryModel, options:any):React.ComponentClass {
     const widgetWrapper = window.document.createElement('div');
 
     const treeModel = new TreeWidgetModel(
         pluginApi,
         pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-        querySetupHandler,
+        queryModel,
         options.itemClickAction
     );
     return viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), treeModel).CorptreeWidget;
@@ -178,17 +176,15 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     private viewsLib:TreeCorparchViews;
 
-    constructor(pluginApi:IPluginApi) {
+    private queryModel:QueryModel;
+
+    constructor(pluginApi:IPluginApi, queryModel:QueryModel) {
         this.pluginApi = pluginApi;
+        this.queryModel = queryModel;
         this.treeModel = new TreeWidgetModel(
             pluginApi,
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            {
-                registerCorpusSelectionListener: (fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void) => {},
-                getCorpora: () => Immutable.List<string>(pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id),
-                getAvailableAlignedCorpora: () => Immutable.List<Kontext.AttrItem>(),
-                getCurrentSubcorpus: () => null
-            },
+            queryModel,
             (corpora:Array<string>, subcorpId:string) => {
                 window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpora[0]);
                 return null; // just to keep the type check cool
@@ -214,6 +210,6 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 }
 
 
-export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
-    return new CorplistPage(pluginApi);
+export function initCorplistPageComponents(pluginApi:IPluginApi, queryModel:QueryModel):CorplistPage {
+    return new CorplistPage(pluginApi, queryModel);
 }

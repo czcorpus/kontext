@@ -1,4 +1,5 @@
 import RSVP from 'rsvp';
+import {IPluginApi} from '../../types/plugins';
 
 export class EmptyPlugin {
 
@@ -14,7 +15,7 @@ export class EmptyPlugin {
 }
 
 
-export default function create():RSVP.Promise<any> {
+export default function create(...args:Array<any>):RSVP.Promise<any> {
     return new RSVP.Promise((resolve:(d)=>void, reject:(err)=>void) => {
         resolve(new EmptyPlugin());
     });

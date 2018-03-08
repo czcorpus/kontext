@@ -18,15 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/plugins.d.ts" />
-
 import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import {init as initQueryHistoryViews} from '../views/query/history';
 import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
-import {init as corpnameLinkInit} from 'views/overview';
+import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 
 declare var require:any;

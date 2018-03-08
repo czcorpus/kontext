@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
@@ -68,7 +66,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     private currentSubcorpus:string;
 
-    private subcorpList:Immutable.List<string>;
+    private subcorpList:Immutable.List<{n:string; v:string}>;
 
     private attrList:Immutable.List<Kontext.AttrItem>;
 
@@ -113,7 +111,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.corpusIdent = corpusIdent;
         this.currentSubcorpus = '';
         this.layoutModel = layoutModel;
-        this.subcorpList = Immutable.List<string>(subcorpList);
+        this.subcorpList = Immutable.List<{n:string; v:string}>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
         this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
         this.wlpat = '';
@@ -363,11 +361,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         return 'wordlist-form';
     }
 
-    getSubcorpList():Immutable.List<string> {
-        return this.subcorpList;
-    }
-
-    getAvailableSubcorpora():Immutable.List<string> {
+    getAvailableSubcorpora():Immutable.List<{n:string; v:string}> {
         return this.subcorpList;
     }
 

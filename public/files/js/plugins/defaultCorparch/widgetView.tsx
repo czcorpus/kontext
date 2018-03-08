@@ -21,16 +21,16 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import { CorplistWidgetModel } from './widget';
-import {QueryModel} from '../../models/query/main';
 import { ServerFavlistItem, CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export interface WidgetViewModuleArgs {
     dispatcher:ActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
-    queryModel:QueryModel;
+    corpusSelection:PluginInterfaces.ICorparchCorpSelection;
 }
 
 export interface CorplistWidgetProps {
@@ -42,7 +42,7 @@ export interface WidgetViews {
 }
 
 
-export function init({dispatcher, util, widgetModel, queryModel}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
+export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -534,8 +534,8 @@ export function init({dispatcher, util, widgetModel, queryModel}:WidgetViewModul
                 dataFeat: widgetModel.getDataFeat(),
                 isWaitingToSwitch: widgetModel.getIsWaitingToSwitch(),
                 currFavitemId: widgetModel.getCurrFavitemId(),
-                currSubcorpus: queryModel.getCurrentSubcorpus(),
-                availSubcorpora: queryModel.getAvailableSubcorpora(),
+                currSubcorpus: widgetModel.getCurrentSubcorp(),
+                availSubcorpora: corpusSelection.getAvailableSubcorpora(),
                 availSearchKeywords: widgetModel.getAvailKeywords(),
                 isWaitingForSearchResults: widgetModel.getIsWaitingForSearchResults(),
                 currSearchResult: widgetModel.getcurrSearchResult(),
@@ -600,13 +600,11 @@ export function init({dispatcher, util, widgetModel, queryModel}:WidgetViewModul
 
         componentDidMount() {
             widgetModel.addChangeListener(this._handleModelChange);
-            queryModel.addChangeListener(this._handleModelChange);
             util.addGlobalKeyEventHandler(this._handleKeypress);
         }
 
         componentWillUnmount() {
             widgetModel.removeChangeListener(this._handleModelChange);
-            queryModel.removeChangeListener(this._handleModelChange);
             util.removeGlobalKeyEventHandler(this._handleKeypress);
         }
 

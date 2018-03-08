@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../types/views.d.ts" />
-
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {CorplistWidgetModel} from './widget';
@@ -31,7 +28,6 @@ import {init as overviewViewInit} from '../../views/overview';
 import {CorplistFormModel, CorplistTableModel} from './corplist';
 import * as common from './common';
 import {SearchEngine} from './search';
-import { QueryModel } from '../../models/query/main';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -70,7 +66,7 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:QueryModel, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
+        corpSel:PluginInterfaces.ICorparchCorpSelection, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -88,8 +84,8 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
         pluginApi.dispatcher(),
         pluginApi,
         pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+        corpSel,
         pluginApi.getConf<boolean>('anonymousUser'),
-        querySetupHandler,
         searchEngine,
         favData,
         featData,
@@ -100,7 +96,7 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
         dispatcher: pluginApi.dispatcher(),
         util: pluginApi.getComponentHelpers(),
         widgetModel: model,
-        queryModel: queryModel
+        corpusSelection: corpSel
     });
     // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
 }

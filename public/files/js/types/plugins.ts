@@ -150,6 +150,14 @@ export namespace PluginInterfaces {
 
     export type CorparchWidgetView = React.ComponentClass<{}>;
 
+
+    export interface ICorparchCorpSelection {
+        getCurrentSubcorpus():string;
+        getAvailableSubcorpora():Immutable.List<{n:string; v:string}>;
+        getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
+        getCorpora():Immutable.List<string>;
+    }
+
     // -------------------------- live attributes --------------------------
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {

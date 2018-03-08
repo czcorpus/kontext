@@ -32,6 +32,7 @@ import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesModel} from '../textTypes/attrValues';
 import {QueryContextModel} from './context';
+import {PluginInterfaces} from '../../types/plugins';
 
 
 export interface GeneralQueryFormProperties {
@@ -150,10 +151,6 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
 
     protected queryTracer:ITracer;
 
-    // -----
-
-    protected onCorpusSelectionChangeActions:Immutable.List<(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void>;
-
     // ----
 
     protected useCQLEditor:boolean;
@@ -185,7 +182,6 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
         this.queryTracer = {trace:(_)=>undefined};
         this.useCQLEditor = props.useCQLEditor;
 
-        this.onCorpusSelectionChangeActions = Immutable.List<(subcname:string)=>void>();
         this.dispatcher.register(payload => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
@@ -219,10 +215,6 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
 
     getWidgetArgs():Kontext.GeneralProps {
         return this.widgetArgs;
-    }
-
-    registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
-        this.onCorpusSelectionChangeActions = this.onCorpusSelectionChangeActions.push(fn);
     }
 
     getForcedAttr():string {
@@ -310,7 +302,7 @@ export interface CorpusSwitchPreserved {
 /**
  *
  */
-export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupHandler, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+export class QueryModel extends GeneralQueryModel implements PluginInterfaces.ICorparchCorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
 
     private corpora:Immutable.List<string>;
 
@@ -403,9 +395,6 @@ export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupH
                 case 'QUERY_INPUT_SELECT_SUBCORP':
                     this.currentSubcorp = payload.props['subcorp'];
                     this.notifyChangeListeners();
-                    this.onCorpusSelectionChangeActions.forEach(fn =>
-                        fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
-                    );
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
                 case '@QUERY_INPUT_SET_QUERY':
@@ -448,16 +437,10 @@ export class QueryModel extends GeneralQueryModel implements Kontext.QuerySetupH
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
                     this.addAlignedCorpus(payload.props['corpname']);
                     this.notifyChangeListeners();
-                    this.onCorpusSelectionChangeActions.forEach(fn =>
-                        fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
-                    );
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
                     this.removeAlignedCorpus(payload.props['corpname']);
                     this.notifyChangeListeners();
-                    this.onCorpusSelectionChangeActions.forEach(fn =>
-                        fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
-                    );
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     this.pcqPosNegValues = this.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);

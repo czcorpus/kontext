@@ -97,22 +97,6 @@ export namespace Kontext {
     }
 
     /**
-     * This interface is used by legacy non-React code in corparch plug-ins.
-     * It attaches miscellaneous events which may happen in the query form
-     * and to which these plug-ins must react to.
-     */
-    export interface QuerySetupHandler {
-
-        registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void;
-
-        getCorpora():Immutable.List<string>;
-
-        getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
-
-        getCurrentSubcorpus():string;
-    }
-
-    /**
      * A general click action performed on featured/favorite/searched item
      */
     export interface CorplistItemClick {

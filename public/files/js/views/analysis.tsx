@@ -29,7 +29,6 @@ import {FormsViews as FreqFormsViews} from './freqs/forms';
 export interface AnalysisModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
-    layoutViews:CoreViews.Runtime,
     collViews:CollFormsViews;
     freqViews:FreqFormsViews;
     mainMenuModel:Kontext.IMainMenuModel;
@@ -44,8 +43,10 @@ export interface FormsViews {
 }
 
 
-export function init({dispatcher, he, layoutViews, collViews, freqViews,
+export function init({dispatcher, he, collViews, freqViews,
             mainMenuModel}:AnalysisModuleArgs):FormsViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AnalysisFrame /> ---------------------------
 

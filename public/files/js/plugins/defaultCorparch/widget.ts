@@ -60,11 +60,11 @@ export class CorplistWidgetModel extends StatefulModel {
 
     private isWaitingToSwitch:boolean;
 
-    private querySetupHandler:Kontext.QuerySetupHandler;
-
     private currFavitemId:string;
 
     private anonymousUser:boolean;
+
+    private corpSelection:PluginInterfaces.ICorparchCorpSelection;
 
     private searchEngine:SearchEngine;
 
@@ -76,18 +76,25 @@ export class CorplistWidgetModel extends StatefulModel {
 
     private currSearchPhrase:string;
 
+    private currentSubcorp:string;
+
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-            anonymousUser:boolean, querySetupHandler:Kontext.QuerySetupHandler,
-            searchEngine:SearchEngine,
-            dataFav:Array<common.ServerFavlistItem>, dataFeat:Array<common.CorplistItem>,
+    constructor(
+            dispatcher:ActionDispatcher,
+            pluginApi:IPluginApi,
+            corpusIdent:Kontext.FullCorpusIdent,
+            corpSelection:PluginInterfaces.ICorparchCorpSelection,
+            anonymousUser:boolean,
+            searchEngine:SearchEngine, dataFav:Array<common.ServerFavlistItem>,
+            dataFeat:Array<common.CorplistItem>,
             onItemClick:Kontext.CorplistItemClick) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;
+        this.corpSelection = corpSelection;
+        this.currentSubcorp = corpSelection.getCurrentSubcorpus();
         this.anonymousUser = anonymousUser;
-        this.querySetupHandler = querySetupHandler;
         this.dataFav = Immutable.List<common.ServerFavlistItem>(dataFav);
         this.dataFeat = Immutable.List<common.CorplistItem>(dataFeat);
         this.isWaitingToSwitch = false;
@@ -192,16 +199,15 @@ export class CorplistWidgetModel extends StatefulModel {
                     this.notifyChangeListeners();
                     this.searchDelayed();
                 break;
+                case 'QUERY_INPUT_SELECT_SUBCORP':
+                    this.currentSubcorp = payload.props['subcorp'];
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
 
     initHandlers():void {
-        this.querySetupHandler.registerCorpusSelectionListener((corpusId, aligned, subcorpusId) => {
-            this.currFavitemId = this.findCurrFavitemId(this.extractItemFromPage());
-            this.notifyChangeListeners();
-        });
-
         this.searchEngine.addOnDone(() => {
             this.isWaitingForSearchResults = false;
             this.notifyChangeListeners();
@@ -292,7 +298,7 @@ export class CorplistWidgetModel extends StatefulModel {
     }
 
     private getAlignedCorpusName(corpusId:string):string {
-        const srch = this.querySetupHandler.getAvailableAlignedCorpora()
+        const srch = this.corpSelection.getAvailableAlignedCorpora()
                 .find(item => item.n === corpusId);
         return srch ? srch.label : corpusId;
     }
@@ -303,8 +309,8 @@ export class CorplistWidgetModel extends StatefulModel {
      */
     private extractItemFromPage():common.GeneratedFavListItem {
         return {
-            subcorpus_id: this.querySetupHandler.getCurrentSubcorpus(),
-            corpora: this.querySetupHandler.getCorpora().toArray()
+            subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
+            corpora: this.corpSelection.getCorpora().toArray()
         };
     }
 
@@ -371,6 +377,10 @@ export class CorplistWidgetModel extends StatefulModel {
 
     getCorpusIdent():Kontext.FullCorpusIdent {
         return this.corpusIdent;
+    }
+
+    getCurrentSubcorp():string {
+        return this.currentSubcorp;
     }
 
     getDataFav():Immutable.List<common.ServerFavlistItem> {
