@@ -486,29 +486,27 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
                 corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
             );
-            return [
-                <td key="par" className={this._exportTextElmClass(corpname, 'par')}>
-                    <span onClick={handleTokenClick}>
-                        {corpusOutput.left.map((item, i, itemList) =>
-                                <LeftChunk i={i} itemList={itemList} item={item}
-                                        chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
-                                        lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
-                    </span>
-                    <span onClick={this._handleKwicClick.bind(this, corpname,
-                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
-                        {corpusOutput.kwic.map((item, i, itemList) =>
-                                <KwicChunk i={i} itemList={itemList} item={item}
-                                        prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic} />)
-                        }
-                    </span>
-                    <span onClick={handleTokenClick}>
-                        {corpusOutput.right.map((item, i, itemList) =>
-                            <RightChunk i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
-                                    kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
+            return <td className={this._exportTextElmClass(corpname, 'par')}>
+                <span onClick={handleTokenClick}>
+                    {corpusOutput.left.map((item, i, itemList) =>
+                            <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item}
+                                    chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
                                     lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
-                    </span>
-                </td>
-            ]
+                </span>
+                <span onClick={this._handleKwicClick.bind(this, corpname,
+                                corpusOutput.tokenNumber, this.props.lineIdx)}>
+                    {corpusOutput.kwic.map((item, i, itemList) =>
+                            <KwicChunk key={`kc-${i}`} i={i} itemList={itemList} item={item}
+                                    prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic} />)
+                    }
+                </span>
+                <span onClick={handleTokenClick}>
+                    {corpusOutput.right.map((item, i, itemList) =>
+                        <RightChunk key={`rc-${i}`} i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
+                                kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
+                                lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
+                </span>
+            </td>;
         }
 
         _renderText(corpusOutput, corpusIdx) {
@@ -606,27 +604,27 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     </td>
                     {this.props.cols.get(0).visible ?
                             this._renderText(primaryLang, 0) :
-                            <td key="par" title={this._renderTextSimple(primaryLang, 0)}>{'\u2026'}</td>
+                            <td title={this._renderTextSimple(primaryLang, 0)}>{'\u2026'}</td>
                     }
                     {alignedCorpora.map((alCorp, i) => {
                         if (this.props.cols.get(i + 1).visible) {
-                            return [
-                                (<td key={`alref:${i}`} className="ref">
-                                    <extras.RefInfo corpusId={this.props.cols.get(i + 1).n}
+                            return <React.Fragment key={`al-${i}`}>
+                                <td className="ref">
+                                <extras.RefInfo corpusId={this.props.cols.get(i + 1).n}
                                         tokenNumber={alCorp.tokenNumber}
                                         lineIdx={this.props.lineIdx}
                                         data={alCorp.ref}
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                                         refsDetailClickHandler={this.props.refsDetailClickHandler} />
-                                </td>),
-                                this._renderText(alCorp, i + 1)
-                            ];
+                                </td>
+                                {this._renderText(alCorp, i + 1)}
+                            </React.Fragment>;
 
                         } else {
-                            return [
-                                <td className="ref" />,
+                            return <React.Fragment key={`al-${i}`}>
+                                <td className="ref" />
                                 <td key="par" title={this._renderTextSimple(alCorp, i + 1)}>{'\u2026'}</td>
-                            ];
+                            </React.Fragment>;
                         }
                     })}
                 </tr>
