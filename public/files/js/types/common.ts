@@ -21,6 +21,7 @@
 import * as Immutable from 'immutable';
 import * as Rx from '@reactivex/rxjs';
 import RSVP from 'rsvp';
+import {CoreViews} from './coreViews';
 
 /**
  *

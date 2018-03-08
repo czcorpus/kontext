@@ -30,7 +30,7 @@ import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit} from '../views/coll/forms';
 import {init as collResultViewInit} from '../views/coll/result';
-import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
+import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 

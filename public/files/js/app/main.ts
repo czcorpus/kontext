@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/coreViews.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../types/compat.d.ts" />
@@ -31,6 +30,7 @@ import * as Rx from '@reactivex/rxjs';
 
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
+import {CoreViews} from '../types/coreViews';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import {ActionDispatcher} from './dispatcher';

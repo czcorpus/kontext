@@ -37,7 +37,7 @@ interface FrequencyFormState {
     formType:string;
 }
 
-export interface FreqFormViews {
+export interface FormsViews {
     FrequencyForm:React.ComponentClass<FrequencyFormProps>;
 }
 
@@ -47,7 +47,7 @@ export function init(
         he:Kontext.ComponentHelpers,
         mlFreqFormModel:MLFreqFormModel,
         ttFreqFormModel:TTFreqFormModel,
-        cTFreqFormModel:Freq2DFormModel):FreqFormViews {
+        cTFreqFormModel:Freq2DFormModel):FormsViews {
 
     const layoutViews = he.getLayoutViews();
     const ctFreqForm = ctFreqFormFactory(dispatcher, he, cTFreqFormModel);

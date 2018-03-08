@@ -22,6 +22,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
+import {CoreViews} from './coreViews';
 
 
 /**
