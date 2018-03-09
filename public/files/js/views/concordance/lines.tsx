@@ -269,7 +269,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             if (props.supportsTokenDetail) {
                 const tokenId = evt.target.getAttribute('data-tokenid');
                 if (tokenId !== null) {
-                    this._handleNonKwicTokenClick(
+                    handleNonKwicTokenClick(
                         props.corpname, props.lineIdx, Number(evt.target.getAttribute('data-tokenid')));
                 }
             }
@@ -374,9 +374,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
-                <span className={props.item.className === 'strc' ? 'strc' : null}>{props.item.text.join(' ')} </span>;
+                return <span className={props.item.className === 'strc' ? 'strc' : null}>{props.item.text.join(' ')} </span>;
             }
-            return null;
         }
 
         return <>
@@ -486,27 +485,29 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
                 corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
             );
-            return <td className={this._exportTextElmClass(corpname, 'par')}>
-                <span onClick={handleTokenClick}>
-                    {corpusOutput.left.map((item, i, itemList) =>
-                            <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item}
-                                    chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
+            return (
+                <td className={this._exportTextElmClass(corpname, 'par')}>
+                    <span onClick={handleTokenClick}>
+                        {corpusOutput.left.map((item, i, itemList) =>
+                                <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item}
+                                        chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
+                                        lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
+                    </span>
+                    <span onClick={this._handleKwicClick.bind(this, corpname,
+                                    corpusOutput.tokenNumber, this.props.lineIdx)}>
+                        {corpusOutput.kwic.map((item, i, itemList) =>
+                                <KwicChunk key={`kc-${i}`} i={i} itemList={itemList} item={item}
+                                        prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic} />)
+                        }
+                    </span>
+                    <span onClick={handleTokenClick}>
+                        {corpusOutput.right.map((item, i, itemList) =>
+                            <RightChunk key={`rc-${i}`} i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
+                                    kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
                                     lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
-                </span>
-                <span onClick={this._handleKwicClick.bind(this, corpname,
-                                corpusOutput.tokenNumber, this.props.lineIdx)}>
-                    {corpusOutput.kwic.map((item, i, itemList) =>
-                            <KwicChunk key={`kc-${i}`} i={i} itemList={itemList} item={item}
-                                    prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic} />)
-                    }
-                </span>
-                <span onClick={handleTokenClick}>
-                    {corpusOutput.right.map((item, i, itemList) =>
-                        <RightChunk key={`rc-${i}`} i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
-                                kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
-                                lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
-                </span>
-            </td>;
+                    </span>
+                </td>
+            );
         }
 
         _renderText(corpusOutput, corpusIdx) {
