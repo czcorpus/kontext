@@ -59,7 +59,7 @@ class Response(object):
 class AbstractBackend(object):
     _cache_path = None
 
-    def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
+    def fetch_data(self, word, lemma, pos, aligned_corpora, lang):
         raise NotImplementedError()
 
     def set_cache_path(self, path):
@@ -90,6 +90,7 @@ class AbstractFrontend(object):
 
 
 class AbstractTokenDetail(CorpusDependentPlugin):
+
     def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
         """
         Obtain (in a synchronous way) data from all the backends

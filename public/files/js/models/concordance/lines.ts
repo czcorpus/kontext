@@ -179,6 +179,8 @@ export interface ViewConfiguration {
 
     supportsSyntaxView:boolean;
 
+    kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
+
     onSyntaxPaneReady:(tokenId:number, kwicLength:number)=>void;
 
     onSyntaxPaneClose:()=>void;

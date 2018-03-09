@@ -226,6 +226,8 @@ export namespace Kontext {
         getData():Immutable.List<MenuEntry>;
 
         resetActiveItemAndNotify():void;
+
+        getConcArgs():IMultiDict;
     }
 
     // ---------------------------------------------------------
@@ -375,7 +377,7 @@ export namespace Kontext {
         replace(key:string, values:Array<string>):void;
         remove(key:string):void;
         add(key:string, value:any):void;
-        items():Array<Array<string>>;
+        items():Array<[string, string]>;
         toDict():{[key:string]:string};
         has(key:string):boolean;
         size():number;

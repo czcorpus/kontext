@@ -3,7 +3,7 @@
 #conc-dashboard-mount {
 
     .ConcordanceView,
-    .TextTypesDist {
+    .ConcExtendedInfo {
         overflow: hidden;
         border-radius: 9px;
         margin-bottom: 1em;
@@ -62,7 +62,7 @@
         }
     }
 
-    .TextTypesDist {
+    .ConcExtendedInfo {
 
         background-color: #FFFFFF;
 
@@ -76,6 +76,32 @@
         p.note {
             font-size: 0.8em;
             text-align: center;
+        }
+
+        .Menu {
+            text-align: center;
+
+            ul {
+                display: inline;
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+
+                li {
+                    padding: 0;
+                    padding: 0;
+                    display: inline-block;
+                }
+
+                li:not(:first-child) {
+                    margin-left: 0.7em;
+                }
+
+                li.active a {
+                    text-decoration: none;
+
+                }
+            }
         }
     }
 

@@ -107,13 +107,14 @@ class _Names(object):
     CHART_EXPORT = _ID('chart_export')
     ISSUE_REPORTING = _ID('issue_reporting')
     TOKEN_DETAIL = _ID('token_detail')
+    KWIC_CONNECT = _ID('kwic_connect')
 
     def __iter__(self):
         return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
                      self.CONC_CACHE, self.EXPORT, self.USER_ITEMS, self.MENU_ITEMS, self.GETLANG, self.CORPARCH,
                      self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES,
                      self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT,
-                     self.ISSUE_REPORTING, self.TOKEN_DETAIL])
+                     self.ISSUE_REPORTING, self.TOKEN_DETAIL, self.KWIC_CONNECT])
 
 
 runtime = _Names()

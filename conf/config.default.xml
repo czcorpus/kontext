@@ -153,5 +153,6 @@
         </chart_export>
         <issue_reporting/>
         <token_detail/>
+        <kwic_connect />
     </plugins>
 </kontext>
