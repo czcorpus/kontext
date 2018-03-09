@@ -645,11 +645,15 @@ class Kontext(Controller):
         with plugins.runtime.AUTH as auth:
             allowed_corpora = auth.permitted_corpora(self.session_get('user'))
             if not action_metadata.get('skip_corpus_init', False):
-                corpname, corpus_variant, fallback_url = self._determine_curr_corpus(
+                corpname, corpus_variant = self._determine_curr_corpus(
                     form, allowed_corpora)
-                if fallback_url:
-                    path = [Controller.NO_OPERATION]
-                    self.redirect(fallback_url)
+                if corpname is None:
+                    corpname = ''
+                    corpus_variant = ''
+                    path = ['message']
+                    self.add_system_message('error', _('Corpus not available'))
+                    self.set_not_found()
+
             else:
                 corpname = ''
                 corpus_variant = ''
@@ -820,12 +824,10 @@ class Kontext(Controller):
         with plugins.runtime.AUTH as auth:
             if cn in corp_list:
                 variant = corp_list[cn]
-                fallback = None
             else:
-                cn = ''
+                cn = None
                 variant = None
-                fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
-        return cn, variant, fallback
+        return cn, variant
 
     @property
     def corp_encoding(self):

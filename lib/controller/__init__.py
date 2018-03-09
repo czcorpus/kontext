@@ -579,8 +579,14 @@ class Controller(object):
         """
         Sets Controller to output HTTP 404 Not Found response
         """
-        self._headers.clear()
+        if 'Location' in self._headers:
+            del self._headers['Location']
         self._status = 404
+
+    def set_forbidden(self):
+        if 'Location' in self._headers:
+            del self._headers['Location']
+        self._status = 403
 
     def get_http_method(self):
         return self.environ.get('REQUEST_METHOD', '')

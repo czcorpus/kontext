@@ -160,7 +160,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
      */
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
+    renderReactComponent<T>(reactClass:React.ComponentClass<T>|React.SFC<T>,
             target:HTMLElement, props?:T):void {
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
