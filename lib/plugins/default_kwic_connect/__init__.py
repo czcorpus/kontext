@@ -25,7 +25,8 @@ from controller import exposed
 
 @exposed(return_type='json')
 def fetch_external_kwic_info(self, request):
-    return {'data': {'words': ['bar', 'baz'], 'note': 'testing stuff'}}  # TODO
+    items = request.args.getlist('w')
+    return {'data': {'words': [(item, item + '-xx') for item in items], 'note': 'testing stuff'}}  # TODO
 
 
 class DefaultKwicConnect(AbstractKwicConnect):
@@ -34,8 +35,6 @@ class DefaultKwicConnect(AbstractKwicConnect):
         self._corparch = corparch
 
     def is_enabled_for(self, plugin_api, corpname):
-        import logging
-        logging.getLogger(__name__).warning('foo and bar %s' % (corpname,))
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
         return len(corpus_info.token_detail.providers) > 0
 

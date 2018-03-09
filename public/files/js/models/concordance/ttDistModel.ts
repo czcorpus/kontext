@@ -34,7 +34,7 @@ export interface TextTypesDistModelProps {
 }
 
 
-namespace Response {
+export namespace Response {
 
     interface FreqItem {
         Word:Array<{n:string}>;
