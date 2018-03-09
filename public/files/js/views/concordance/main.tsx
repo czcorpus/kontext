@@ -28,7 +28,7 @@ import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
 import {init as concDetailViewsInit} from './detail';
 import {init as concSaveViewsInit} from './save';
-import {init as ttOverviewInit} from './ttOverview';
+import {init as extendedInfoViewsInit} from './extendedInfo';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';
 import { ConcLineModel, ConcSummary as LinesConcSummary } from '../../models/concordance/lines';
 import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/concordance/detail';
@@ -67,6 +67,7 @@ export interface ConcordanceDashboardProps {
         KWICCorps:Array<string>;
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
+        kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
         onSyntaxPaneReady?:(tokenNumber:number, kwicLength:number)=>void;
         onSyntaxPaneClose:()=>void;
         onChartFrameReady?:(usePrevData?:boolean)=>void;
@@ -112,7 +113,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         lineModel: lineViewModel
     });
     const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
-    const ttDistViews = ttOverviewInit(dispatcher, he, ttDistModel);
+    const extendedInfoViews = extendedInfoViewsInit(dispatcher, he, ttDistModel);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -915,7 +916,10 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         render() {
             return (
                 <div>
-                    {this.state.showTTOverview ? <ttDistViews.TextTypesDist /> : null}
+                    {this.state.showTTOverview ?
+                        <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.concViewProps.kwicConnectView} /> :
+                        null
+                    }
                     <ConcordanceView {...this.props.concViewProps} />
                 </div>
             );

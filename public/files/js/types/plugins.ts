@@ -240,6 +240,20 @@ export namespace PluginInterfaces {
     }
 
 
+    export namespace KwicConnect {
+
+        export type WidgetWiew = React.ComponentClass<{}>|React.SFC<{}>;
+
+        export interface IPlugin {
+            getView():WidgetWiew;
+        }
+
+        export enum Actions {
+            FETCH_INFO = 'KWIC_CONNECT_FETCH_INFO'
+        }
+    }
+
+
     export namespace TokenDetail {
 
 

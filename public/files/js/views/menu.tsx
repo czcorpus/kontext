@@ -22,6 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
+import { MultiDict } from '../util';
 
 
 export interface MenuModuleArgs {
@@ -42,6 +43,7 @@ interface MainMenuState {
     numRunningTasks:number;
     numFinishedTasks:number;
     menuItems:Immutable.List<Kontext.MenuEntry>;
+    concArgs:Kontext.IMultiDict;
 }
 
 
@@ -58,9 +60,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     // ----------------------------- <ConcDependentItem /> --------------------------
 
     const ConcDependentItem:React.SFC<{
+        concArgs:Kontext.IMultiDict;
         data: {
             action:string;
-            args:Kontext.GeneralProps;
+            args:Array<[string, string]>;
             q:string;
             label:string;
             indirect:boolean;
@@ -69,7 +72,11 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     }> = (props) => {
 
         const createLink = () => {
-            return he.createActionLink(props.data.action, props.data.args);
+            const args = new MultiDict(props.concArgs.items());
+            props.data.args.forEach(([k, v]) => {
+                args.add(k, v);
+            });
+            return he.createActionLink(props.data.action, args);
         };
 
         return (
@@ -182,6 +189,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         isDisabled:boolean;
         label:string;
         items:Immutable.List<Kontext.SubmenuItem>;
+        concArgs:Kontext.IMultiDict;
         closeActiveSubmenu:()=>void;
         handleMouseOver:()=>void;
         handleMouseOut:()=>void;
@@ -197,7 +205,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                             closeActiveSubmenu={props.closeActiveSubmenu} />;
 
             } else if (item.currConc) {
-                return <ConcDependentItem key={key} data={item} />;
+                return <ConcDependentItem key={key} data={item} concArgs={props.concArgs} />;
 
             } else if (typeof item.boundAction === 'function' || item.boundAction === undefined) {
                 return <Item key={key} data={item} />;
@@ -408,7 +416,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                 currFocus: null,
                 numRunningTasks: asyncTaskModel.getNumRunningTasks(),
                 numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
-                menuItems: mainMenuModel.getData()
+                menuItems: mainMenuModel.getData(),
+                concArgs: mainMenuModel.getConcArgs()
             };
         }
 
@@ -460,7 +469,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                     isOpened={this.state.currFocus === item[0]}
                                     handleMouseOver={mouseOverHandler}
                                     handleMouseOut={mouseOutHandler}
-                                    closeActiveSubmenu={this._closeActiveSubmenu} />;
+                                    closeActiveSubmenu={this._closeActiveSubmenu}
+                                    concArgs={this.state.concArgs} />;
                     })}
                     <LiAsyncTaskNotificator numRunning={this.state.numRunningTasks}
                         numFinished={this.state.numFinishedTasks} />

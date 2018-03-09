@@ -100,28 +100,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
     /**
      *
      */
-    const CloseIcon:React.SFC<{}> = (props) => {
-
-        const handleClick = () => {
-            if (window.confirm(
-                    he.translate('concview__close_tt_overview_confirm_msg'))) {
-                dispatcher.dispatch({
-                    actionType: 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY',
-                    props: {
-                        value: false
-                    }
-                });
-            }
-        };
-
-        return <a className="CloseIcon" onClick={handleClick} title={he.translate('global__close')}>
-            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')} />
-        </a>;
-    };
-
-    /**
-     *
-     */
     class TextTypesDist extends React.Component<TextTypesProps, TextTypesState> {
 
         constructor(props:TextTypesProps) {
@@ -161,8 +139,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         render() {
             return (
                 <div className="TextTypesDist">
-                    <CloseIcon />
-                    <h2>{he.translate('concview__text_types_ratios_head')}</h2>
                     <div className="contents">
                         {this.state.isBusy ?
                             <div className="loader"><layoutViews.AjaxLoaderImage /></div> :

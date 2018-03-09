@@ -24,6 +24,7 @@ import {PageModel} from '../app/main';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
+import { MultiDict } from '../util';
 
 
 
@@ -276,6 +277,10 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                     keyCode: v.keyCode
                 }];
             }));
+    }
+
+    getConcArgs():MultiDict {
+        return this.pageModel.getConcArgs();
     }
 
 }

@@ -55,11 +55,7 @@ import {FirstHitsModel} from '../models/query/firstHits';
 import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/ctFreqForm';
 import {ConcSaveModel} from '../models/concordance/save';
 import {ConcDashboard} from '../models/concordance/dashboard';
-import tagHelperPlugin from 'plugins/taghelper/init';
-import queryStoragePlugin from 'plugins/queryStorage/init';
-import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../app/userSettings';
-import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../models/user/info';
 import {TextTypesDistModel, TextTypesDistModelProps, TTCrit} from '../models/concordance/ttDistModel';
 import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/main';
@@ -71,7 +67,12 @@ import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../vi
 import {init as collFormInit, FormsViews as CollFormsViews} from '../views/coll/forms';
 import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
 import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
+import tagHelperPlugin from 'plugins/taghelper/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
+import syntaxViewerInit from 'plugins/syntaxViewer/init';
+import * as applicationBar from 'plugins/applicationBar/init';
 import tokenDetailInit from 'plugins/tokenDetail/init';
+import kwicConnectInit from 'plugins/kwicConnect/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -944,16 +945,25 @@ export class ViewPage {
             );
 
         } else {
-            return new RSVP.Promise<any>(
-                (resolve:(d)=>void, reject:(err)=>void) => {
-                    resolve(null); // TODO is 'null' enough?
-                }
+            return RSVP.Promise.resolve(null);
+        }
+    }
+
+    private initKwicConnect():RSVP.Promise<PluginInterfaces.KwicConnect.IPlugin> {
+        if (this.layoutModel.pluginIsActive('kwic_connect')) {
+            return kwicConnectInit(
+                this.layoutModel.pluginApi(),
+                this.layoutModel.getConf<Array<string>>('alignedCorpora')
             );
+
+        } else {
+            return RSVP.Promise.resolve(null);
         }
     }
 
     private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.ISyntaxViewer,
-                tokenDetail:PluginInterfaces.TokenDetail.IPlugin):ViewConfiguration {
+                tokenDetail:PluginInterfaces.TokenDetail.IPlugin,
+                kwicConnect:PluginInterfaces.KwicConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
@@ -994,6 +1004,7 @@ export class ViewPage {
             catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
+            kwicConnectView: kwicConnect !== null ? kwicConnect.getView() : null,
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
                 syntaxViewer.render(
                     document.getElementById('syntax-view-pane'),
@@ -1118,13 +1129,20 @@ export class ViewPage {
             }
         );
 
-        const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenDetailProp]).then(
+        const kwicConnectProm = ttProm.then(
+            () => {
+                return this.initKwicConnect();
+            }
+        )
+
+        const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenDetailProp, kwicConnectProm]).then(
             (args) => {
-                const [ttModel, sv, tokenDetailPlg] = args;
+                const [ttModel, sv, tokenDetailPlg, kwicConnectPlg] = args;
                 const lineViewProps = this.initModels(
                     <TextTypesModel>ttModel,
                     <PluginInterfaces.ISyntaxViewer>sv,
-                    <PluginInterfaces.TokenDetail.IPlugin>tokenDetailPlg
+                    <PluginInterfaces.TokenDetail.IPlugin>tokenDetailPlg,
+                    <PluginInterfaces.KwicConnect.IPlugin>kwicConnectPlg
                 );
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {

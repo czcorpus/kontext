@@ -95,3 +95,4 @@ def setup_plugins():
     init_plugin('chart_export', optional=True)
     init_plugin('issue_reporting', optional=True)
     init_plugin('token_detail', optional=True)
+    init_plugin('kwic_connect', optional=True)

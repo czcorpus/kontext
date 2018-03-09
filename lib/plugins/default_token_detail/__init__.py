@@ -28,7 +28,7 @@ a set of providers where a provider always contains a backend, frontend and iden
 
 
 The JSON config file defines a template of an abstract path identifying a resource. It can be a URL path, SQL
-or a filesystem path. Such a template can use the following values: word, lemma, tag, ui_lang, other_lang.
+or a filesystem path. Such a template can use the following values: word, lemma, pos, ui_lang, other_lang.
 
 Required XML configuration:
 
@@ -89,15 +89,15 @@ def fetch_token_detail(self, request):
         lemma = ''
 
     try:
-        ta = self.corp.get_attr('tag')
-        tag = ta.pos2str(int(token_id))
+        ta = self.corp.get_attr('pos')
+        pos = ta.pos2str(int(token_id))
     except manatee.AttrNotFound:
-        tag = ''
+        pos = ''
 
     with plugins.runtime.TOKEN_DETAIL as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
         resp_data = td.fetch_data(corpus_info.token_detail.providers,
-                                  word, lemma, tag, self.args.align, self.ui_lang)
+                                  word, lemma, pos, self.args.align, self.ui_lang)
     return dict(items=[item for item in resp_data])
 
 
@@ -143,11 +143,11 @@ class DefaultTokenDetail(AbstractTokenDetail):
         self._providers = providers
         self._corparch = corparch
 
-    def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
+    def fetch_data(self, provider_ids, word, lemma, pos, aligned_corpora, lang):
         ans = []
         for backend, frontend in self._map_providers(provider_ids):
             try:
-                data, status = backend.fetch_data(word, lemma, tag, aligned_corpora, lang)
+                data, status = backend.fetch_data(word, lemma, pos, aligned_corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))

@@ -165,6 +165,11 @@
             <cache_ttl_days extension-by="default">7</cache_ttl_days>
             <cache_rows_limit extension-by="default">100000</cache_rows_limit>
         </token_detail>
+        <kwic_connect>
+            <module>default_kwic_connect</module>
+            <js_module>defaultKwicConnect</js_module>
+            <providers_conf extension-by="default">path/to/providers/conf.json</providers_conf>
+        </kwic_connect>
     </plugins>
 </kontext>
 

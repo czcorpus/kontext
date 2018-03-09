@@ -115,6 +115,8 @@ export class TextTypesDistModel extends StatefulModel {
 
     private blockedByAsyncConc:boolean;
 
+    private lastArgs:string;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -139,19 +141,22 @@ export class TextTypesDistModel extends StatefulModel {
     }
 
     private performDataLoad():void {
-        this.isBusy = true;
-        this.notifyChangeListeners();
-        this.loadData().then(
-            (ans) => {
-                this.isBusy = false;
-                this.notifyChangeListeners();
-            },
-            (err) => {
-                this.isBusy = false;
-                this.layoutModel.showMessage('error', err);
-                this.notifyChangeListeners();
-            }
-        );
+        const args = this.layoutModel.getConcArgs();
+        if (this.lastArgs !== args.getFirst('q')) {
+            this.isBusy = true;
+            this.notifyChangeListeners();
+            this.loadData(args).then(
+                (ans) => {
+                    this.isBusy = false;
+                    this.notifyChangeListeners();
+                },
+                (err) => {
+                    this.isBusy = false;
+                    this.layoutModel.showMessage('error', err);
+                    this.notifyChangeListeners();
+                }
+            );
+        }
     }
 
     private getConcSize():number {
@@ -168,13 +173,13 @@ export class TextTypesDistModel extends StatefulModel {
         return 1;
     }
 
-    private loadData():RSVP.Promise<boolean> {
+    private loadData(args:MultiDict):RSVP.Promise<boolean> {
 
         return (() => {
             if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
-                const args = this.layoutModel.getConcArgs();
                 args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
+                this.lastArgs = args.getFirst('q');
                 return this.layoutModel.ajax<any>(
                     'GET',
                     this.layoutModel.createActionUrl('reduce'),
@@ -182,9 +187,7 @@ export class TextTypesDistModel extends StatefulModel {
                 );
 
             } else {
-                return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
-                    resolve({});
-                });
+                return RSVP.Promise.resolve({});
             }
         })().then(
             (reduceAns:Response.Reduce) => {

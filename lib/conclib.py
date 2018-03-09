@@ -240,7 +240,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
     samplesize -- ?
     """
     if not q:
-        return None
+        raise Exception('No query provided')
     q = tuple(q)
     if not minsize:
         if len(q) > 1:  # subsequent concordance processing by its methods
