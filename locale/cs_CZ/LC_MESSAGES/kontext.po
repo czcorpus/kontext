@@ -437,3 +437,6 @@ msgstr "Otevřít přihlašovací formulář"
 
 msgid "Continue as anonymous user"
 msgstr "Pokračovat jako anonymní uživatel"
+
+msgid "Corpus not available"
+msgstr "Korpus není k dispozici"
