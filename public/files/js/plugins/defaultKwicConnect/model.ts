@@ -18,15 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import RSVP from 'rsvp';
+import * as Immutable from 'immutable';
 import { StatelessModel } from "../../models/base";
-import { ActionPayload, ActionDispatcher } from "../../app/dispatcher";
+import { ActionPayload, ActionDispatcher, typedProps } from "../../app/dispatcher";
 import { IPluginApi, PluginInterfaces } from "../../types/plugins";
 import { Kontext } from "../../types/common";
+import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
+import { MultiDict } from '../../util';
 
 
 export interface KwicConnectState {
     isBusy:boolean;
-    data:Kontext.GeneralProps; // TODO
+    words:Immutable.List<[string, string]>;
 }
 
 export enum Actions {
@@ -34,25 +38,35 @@ export enum Actions {
 }
 
 interface AjaxResponse extends Kontext.AjaxResponse {
-    data:any;
+    data:{
+        words:Array<[string, string]>;
+    };
+}
+
+enum FreqDistType {
+    WORD = 'word',
+    LEMMA = 'lemma'
 }
 
 export class KwicConnectModel extends StatelessModel<KwicConnectState> {
+
+    private pluginApi:IPluginApi;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(
             dispatcher,
             {
                 isBusy: false,
-                data: {}
+                words: Immutable.List<[string, string]>()
             },
             (state, action, dispatch) => {
                 switch (action.actionType) {
                     case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
-                        pluginApi.ajax<AjaxResponse>(
-                            'GET',
-                            pluginApi.createActionUrl('fetch_external_kwic_info'),
-                            {}
+                        this.fetchUniqValues(FreqDistType.WORD).then(
+                            (data) => {
+                                return this.fetchKwicInfo(data);
+                            }
+
                         ).then(
                             (data) => {
                                 dispatch({
@@ -73,7 +87,37 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     break;
                 }
             }
-        )
+        );
+        this.pluginApi = pluginApi;
+    }
+
+    private fetchKwicInfo(items:Array<string>):RSVP.Promise<AjaxResponse> {
+        const args = new MultiDict();
+        items.slice(0, 10).forEach(v => args.add('w', v));
+        return this.pluginApi.ajax<AjaxResponse>(
+            'GET',
+            this.pluginApi.createActionUrl('fetch_external_kwic_info'),
+            args
+        );
+    }
+
+    private fetchUniqValues(fDistType:FreqDistType):RSVP.Promise<Array<string>> {
+        const args = this.pluginApi.getConcArgs();
+        args.set('fcrit', `${fDistType}/e 0~0>0`);
+        args.set('ml', 0);
+        args.set('flimit', 10);
+        args.set('format', 'json');
+        return this.pluginApi.ajax<TTDistResponse.FreqData>(
+            'GET',
+            this.pluginApi.createActionUrl('freqs'),
+            args
+        ).then(
+            (data) => {
+                return data.Blocks[0].Items.map(item => {
+                    return item.Word.map(w => w.n).join(' ');
+                });
+            }
+        );
     }
 
     reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
@@ -84,7 +128,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             break;
             case Actions.FETCH_INFO_DONE:
                 newState.isBusy = false;
-                newState.data = action.props['data'];
+                newState.words = Immutable.List<[string, string]>(typedProps<AjaxResponse>(action.props).data.words);
             break;
         }
         return newState;

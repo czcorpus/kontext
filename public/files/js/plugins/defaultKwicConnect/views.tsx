@@ -64,8 +64,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
 
         renderWidget() {
             return (
-                <div>
-                    <pre>{JSON.stringify(this.state.data)}</pre>
+                <div className="KwicConnectWidget">
+                    <table className="word-table">
+                        <tbody>
+                        {this.state.words.map(([w1, w2], i) =>
+                            <tr key={`w${i}`}>
+                                <th>{w1}</th><td>{w2}</td>
+                            </tr>)
+                        }
+                        </tbody>
+                    </table>
                 </div>
             );
         }
