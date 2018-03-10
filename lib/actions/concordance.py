@@ -1658,7 +1658,7 @@ class Actions(Querying):
             kwic = Kwic(self.corp, self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)
-            to_line = int(to_line)
+            to_line = min(int(to_line), conc.size())
 
             output = {'from_line': from_line, 'to_line': to_line}
 
