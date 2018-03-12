@@ -21,7 +21,8 @@
 import RSVP from 'rsvp';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit, View} from './views';
-import {KwicConnectModel} from './model';
+import {init as renderersInit, Views as RenderersView} from './renderers';
+import {KwicConnectModel, RendererMap} from './model';
 
 export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IPlugin {
 
@@ -31,13 +32,30 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
     private views:View;
 
+    private renderers:RenderersView;
+
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
-        this.model = new KwicConnectModel(pluginApi.dispatcher(), pluginApi);
+        this.model = new KwicConnectModel(
+            pluginApi.dispatcher(),
+            pluginApi,
+            this.selectRenderer.bind(this)
+        );
     }
 
     getView():React.ComponentClass<{}>|React.SFC<{}> {
         return this.views.KwicConnectWidget;
+    }
+
+    selectRenderer(typeId:string):PluginInterfaces.TokenDetail.Renderer {
+        switch (typeId) {
+            case 'raw-html':
+                return this.renderers.RawHtmlRenderer;
+            case 'datamuse-json':
+                return this.renderers.DataMuseSimilarWords;
+            default:
+                return this.renderers.UnsupportedRenderer;
+        }
     }
 
     init():void {
@@ -45,6 +63,10 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
             this.model
+        );
+        this.renderers = renderersInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.getComponentHelpers()
         );
     }
 }

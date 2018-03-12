@@ -119,6 +119,11 @@ class TokenDetail(DictLike):
         self.providers = []
 
 
+class KwicConnect(DictLike):
+    def __init__(self):
+        self.providers = []
+
+
 class CorpusInfo(DictLike):
     """
     Genereal corpus information and metadata.
@@ -145,6 +150,7 @@ class CorpusInfo(DictLike):
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
         self.token_detail = TokenDetail()
+        self.kwic_connect = KwicConnect()
         self.manatee = ManateeCorpusInfo()
 
 

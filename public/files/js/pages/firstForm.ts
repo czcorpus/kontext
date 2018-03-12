@@ -20,9 +20,7 @@
 
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import * as corplistComponent from 'plugins/corparch/init';
 import {PageModel, PluginName} from '../app/main';
-import liveAttributes from 'plugins/liveAttributes/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'immutable';
 import {TextTypesModel} from '../models/textTypes/attrValues';
@@ -31,6 +29,8 @@ import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
 import {QueryContextModel} from '../models/query/context';
+import * as corplistComponent from 'plugins/corparch/init';
+import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import RSVP from 'rsvp';

@@ -27,13 +27,11 @@ from hashlib import md5
 from plugins.abstract.token_detail import AbstractBackend
 
 
-def mk_token_detail_cache_key(pth, cls, word, lemma, pos, aligned_corpora, lang):
+def mk_token_detail_cache_key(word, lemma, pos, aligned_corpora, lang, backend_cls):
     """
     Returns a hashed cache key based on the passed parameters.
     """
-    if pth.endswith(".pyc"):
-        pth = pth[:-1]
-    return md5('%r%r%r%r%r%r%r' % (pth, cls, word, lemma, pos, aligned_corpora, lang)).hexdigest()
+    return md5('%r%r%r%r%r%r' % (word, lemma, pos, aligned_corpora, lang, backend_cls)).hexdigest()
 
 
 def cached(f):
@@ -52,9 +50,8 @@ def cached(f):
         """
         cache_path = self.get_cache_path()
         if cache_path:
-            pth = __file__
-            cls = self.__class__.__name__
-            key = mk_token_detail_cache_key(pth, cls, word, lemma, pos, aligned_corpora, lang)
+            key = mk_token_detail_cache_key(
+                word, lemma, pos, aligned_corpora, lang, self.get_provider_id())
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()
             res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
@@ -77,13 +74,14 @@ def cached(f):
             conn.close()
         else:
             res = f(self, word, lemma, pos, aligned_corpora, lang)
-        return res if res else '', False
+        return res if res else ('', False)
 
     return wrapper
 
 
 class SQLite3Backend(AbstractBackend):
-    def __init__(self, conf):
+    def __init__(self, conf, ident):
+        super(SQLite3Backend, self).__init__(ident)
         self._db = sqlite3.connect(conf['path'])
         self._query_tpl = conf['query']
 
@@ -99,7 +97,8 @@ class SQLite3Backend(AbstractBackend):
 
 
 class HTTPBackend(AbstractBackend):
-    def __init__(self, conf):
+    def __init__(self, conf, ident):
+        super(HTTPBackend, self).__init__(ident)
         self._conf = conf
 
     @staticmethod
@@ -111,7 +110,7 @@ class HTTPBackend(AbstractBackend):
         return 200 <= response.status < 300
 
     @cached
-    def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
+    def fetch_data(self, word, lemma, pos, aligned_corpora, lang):
         if self._conf['ssl']:
             connection = httplib.HTTPSConnection(
                 self._conf['server'], port=self._conf['port'], timeout=15)
@@ -120,7 +119,7 @@ class HTTPBackend(AbstractBackend):
                 self._conf['server'], port=self._conf['port'], timeout=15)
         try:
             al_corpus = aligned_corpora[0] if len(aligned_corpora) > 0 else ''
-            args = dict(word=word, lemma=lemma, tag=tag, ui_lang=lang, other_lang=al_corpus)
+            args = dict(word=word, lemma=lemma, pos=pos, ui_lang=lang, other_lang=al_corpus)
             connection.request('GET', self._conf['path'].encode('utf-8').format(**args))
             response = connection.getresponse()
             if self._is_valid_response(response):

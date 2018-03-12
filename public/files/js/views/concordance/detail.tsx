@@ -251,7 +251,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                     {props.tokenDetailData.map((v, i) => {
                         return (
                             <div key={`resource:${i}`}>
-                                {v.heading ? <h3>{v.heading}</h3> : null}
+                                {v.heading ? <h2 className="inhouse">{v.heading}</h2> : null}
                                 <v.renderer data={v.contents} />
                             </div>
                         );

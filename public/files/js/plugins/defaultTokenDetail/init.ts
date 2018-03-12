@@ -26,6 +26,9 @@ import {MultiDict} from '../../util';
 import * as Immutable from 'immutable';
 
 
+/**
+ *
+ */
 export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.IPlugin {
 
     private pluginApi:IPluginApi;
@@ -51,14 +54,15 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
             args
 
         ).then(
-            (data:PluginInterfaces.TokenDetail.Response) => {
-                return data.items.map<PluginInterfaces.TokenDetail.DataAndRenderer>(x => ({
-                    renderer: this.selectRenderer(x.renderer),
-                    contents: x.contents,
-                    found: x.found,
-                    heading: x.heading
-                }));
-            }
+            (data:PluginInterfaces.TokenDetail.Response) =>
+                data.items.map<PluginInterfaces.TokenDetail.DataAndRenderer>(x => {
+                    return {
+                        renderer: this.selectRenderer(x.renderer),
+                        contents: x.contents,
+                        found: x.found,
+                        heading: x.heading
+                    };
+                })
         );
     }
 
@@ -70,6 +74,8 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
                 return this.views.SimpleTabularRenderer;
             case 'simple-description-list':
                 return this.views.DescriptionListRenderer;
+            case 'datamuse-json':
+                return this.views.DataMuseSimilarWords;
             default:
                 return this.views.UnsupportedRenderer;
         }

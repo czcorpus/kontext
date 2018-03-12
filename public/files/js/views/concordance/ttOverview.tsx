@@ -59,8 +59,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     {props.items.map((item, i) =>
                         <span key={`${i}:${item.value}`} className="item" title={mkTitle(item)}>
                             <span className="color-box" style={{color: item.color}}>{'\u25A0'}</span>
-                            {item.value ? item.value : '\u2014'}
-                        </span>)
+                            {item.value ? item.value : '\u2014'} </span>)
                     }
                 </div>
                 <div className="data">

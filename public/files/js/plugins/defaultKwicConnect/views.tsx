@@ -22,7 +22,6 @@ import { ActionDispatcher } from '../../app/dispatcher';
 import { Kontext } from '../../types/common';
 import { KwicConnectModel, KwicConnectState } from './model';
 import { Component } from 'react';
-import { layout } from 'vendor/d3';
 import {PluginInterfaces} from '../../types/plugins';
 
 export interface KwicConnectWidgetProps {
@@ -37,6 +36,10 @@ export interface View {
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, model:KwicConnectModel):View {
 
     const layoutViews = he.getLayoutViews();
+
+
+
+    // ---------------------------------------------------------------
 
     class KwicConnectWidget extends React.Component<KwicConnectWidgetProps, KwicConnectState> {
 
@@ -65,15 +68,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
         renderWidget() {
             return (
                 <div className="KwicConnectWidget">
-                    <table className="word-table">
-                        <tbody>
-                        {this.state.words.map(([w1, w2], i) =>
-                            <tr key={`w${i}`}>
-                                <th>{w1}</th><td>{w2}</td>
-                            </tr>)
-                        }
-                        </tbody>
-                    </table>
+                    {this.state.data.map((providerOutput, i) => {
+                        return (
+                            <div key={`provider-${i}`}>
+                                <h3>{providerOutput.heading}</h3>
+                                {providerOutput.data.map((item, j) => <providerOutput.renderer key={`render-${i}:${j}`} data={item} />)}
+                            </div>
+                        );
+                    })}
                 </div>
             );
         }

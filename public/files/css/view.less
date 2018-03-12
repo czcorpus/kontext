@@ -20,7 +20,7 @@
             }
         }
 
-        .contents {
+        > .contents {
 
             margin: 1em;
 
@@ -45,6 +45,8 @@
             }
 
             .legend {
+                white-space: normal;
+                display: inline-block;
                 font-size: 0.9em;
 
                 strong {
@@ -100,6 +102,24 @@
                 li.active a {
                     text-decoration: none;
 
+                }
+            }
+        }
+
+
+        > .contents {
+            display: grid;
+            grid-template-columns: 70% 30%;
+
+            > div.box {
+                align-self: start;
+                overflow: hidden;
+
+
+                .KwicConnectWidget {
+                    h3 {
+                        margin-top: 0;
+                    }
                 }
             }
         }

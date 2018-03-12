@@ -57,14 +57,12 @@ element token_detail {
 """
 
 import json
-import importlib
 import logging
-
-import manatee
 import os
 
+import manatee
 import plugins
-from plugins.abstract.token_detail import AbstractTokenDetail
+from plugins.abstract.token_detail import AbstractTokenDetail, find_implementation
 from actions import concordance
 from controller import exposed
 from plugins.default_token_detail.cache_man import CacheMan
@@ -101,51 +99,28 @@ def fetch_token_detail(self, request):
     return dict(items=[item for item in resp_data])
 
 
-def _find_implementation(path):
-    """
-    Find a class identified by a string.
-    This is used to decode frontends and backends
-    defined in a respective JSON configuration file.
+class ProviderWrapper(AbstractTokenDetail):
 
-    arguments:
-    path -- a full identifier of a class, e.g. plugins.default_token_detail.backends.Foo
+    def __init__(self, providers):
+        self._providers = providers
 
-    returns:
-    a class matching the path
-    """
-    try:
-        md, cl = path.rsplit('.', 1)
-    except ValueError:
-        raise ValueError(
-            'Frontend path must contain both package and class name. Found: {0}'.format(path))
-    the_module = importlib.import_module(md)
-    return getattr(the_module, cl)
+    def map_providers(self, provider_ids):
+        return [self._providers[ident] for ident in provider_ids]
+
+    def set_cache_path(self, path):
+        for backend, frontend in self.map_providers(self._providers):
+            backend.set_cache_path(path)
 
 
-def init_provider(conf):
-    """
-    Create and return both backend and frontend.
-
-    arguments:
-    conf -- a dict representing plug-in detailed configuration
-
-    returns:
-    a 2-tuple (backend instance, frontend instance)
-    """
-    backend_class = _find_implementation(conf['backend'])
-    frontend_class = _find_implementation(conf['frontend'])
-    return backend_class(conf['conf']), frontend_class(conf)
-
-
-class DefaultTokenDetail(AbstractTokenDetail):
+class DefaultTokenDetail(ProviderWrapper):
 
     def __init__(self, providers, corparch):
-        self._providers = providers
+        super(DefaultTokenDetail, self).__init__(providers)
         self._corparch = corparch
 
     def fetch_data(self, provider_ids, word, lemma, pos, aligned_corpora, lang):
         ans = []
-        for backend, frontend in self._map_providers(provider_ids):
+        for backend, frontend in self.map_providers(provider_ids):
             try:
                 data, status = backend.fetch_data(word, lemma, pos, aligned_corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
@@ -154,9 +129,6 @@ class DefaultTokenDetail(AbstractTokenDetail):
                 raise ex
         return ans
 
-    def _map_providers(self, provider_ids):
-        return [self._providers[ident] for ident in provider_ids]
-
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
         return len(corpus_info.token_detail.providers) > 0
@@ -164,24 +136,40 @@ class DefaultTokenDetail(AbstractTokenDetail):
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
 
-    def set_cache_path(self, path):
-        for backend, frontend in self._map_providers(self._providers):
-            backend.set_cache_path(path)
+
+def setup_providers(plg_conf):
+
+    def init_provider(conf, ident):
+        """
+        Create and return both backend and frontend.
+
+        arguments:
+        conf -- a dict representing plug-in detailed configuration
+
+        returns:
+        a 2-tuple (backend instance, frontend instance)
+        """
+        backend_class = find_implementation(conf['backend'])
+        frontend_class = find_implementation(conf['frontend'])
+        return backend_class(conf['conf'], ident), frontend_class(conf)
+
+    with open(plg_conf['default:providers_conf'], 'rb') as fr:
+        providers_conf = json.load(fr)
+    cache_path = plg_conf.get('default:cache_db_path')
+    providers = dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf)
+
+    if cache_path and not os.path.isfile(cache_path):
+        cache_rows_limit = plg_conf.get('default:cache_rows_limit')
+        cache_ttl_days = plg_conf.get('default:cache_ttl_days')
+        cache_manager = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+        cache_manager.prepare_cache()
+    return providers, cache_path
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
-    conf = settings.get('plugins', 'token_detail')
-    with open(conf['default:providers_conf'], 'rb') as fr:
-        providers_conf = json.load(fr)
-    cache_path = conf.get('default:cache_db_path')
-    if cache_path and not os.path.isfile(cache_path):
-        cache_rows_limit = conf.get('default:cache_rows_limit')
-        cache_ttl_days = conf.get('default:cache_ttl_days')
-        cache_manager = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
-        cache_manager.prepare_cache()
-    tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b))
-                                      for b in providers_conf), corparch)
+    providers, cache_path = setup_providers(settings.get('plugins', 'token_detail'))
+    tok_det = DefaultTokenDetail(providers, corparch)
     if cache_path:
         tok_det.set_cache_path(cache_path)
     return tok_det

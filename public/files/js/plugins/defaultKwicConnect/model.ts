@@ -28,19 +28,44 @@ import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
 import { MultiDict } from '../../util';
 
 
+export interface RendererMap {
+    (id:string):PluginInterfaces.TokenDetail.Renderer;
+}
+
+
+export interface ProviderOutputResponse {
+    heading:string;
+    renderer:string;
+    data:Array<{
+        status:boolean;
+        kwic:string;
+        contents:any; // <-- this is up to a concrete renderer/backend
+    }>;
+}
+
+interface AjaxResponse extends Kontext.AjaxResponse {
+    data:Array<ProviderOutputResponse>;
+}
+
+export interface ProviderOutput {
+    found:boolean;
+    kwic:string;
+    contents:any; // <-- this is up to a concrete renderer/backend
+}
+
+export interface ProviderWordMatch {
+    heading:string;
+    renderer:string;
+    data:Immutable.List<ProviderOutput>;
+}
+
 export interface KwicConnectState {
     isBusy:boolean;
-    words:Immutable.List<[string, string]>;
+    data:Immutable.List<ProviderWordMatch>;
 }
 
 export enum Actions {
     FETCH_INFO_DONE = 'KWIC_CONNECT_FETCH_INFO_DONE'
-}
-
-interface AjaxResponse extends Kontext.AjaxResponse {
-    data:{
-        words:Array<[string, string]>;
-    };
 }
 
 enum FreqDistType {
@@ -52,12 +77,14 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     private pluginApi:IPluginApi;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    private rendererMap:RendererMap;
+
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, rendererMap:RendererMap) {
         super(
             dispatcher,
             {
                 isBusy: false,
-                words: Immutable.List<[string, string]>()
+                data: Immutable.List<ProviderWordMatch>()
             },
             (state, action, dispatch) => {
                 switch (action.actionType) {
@@ -72,7 +99,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                                 dispatch({
                                     actionType: Actions.FETCH_INFO_DONE,
                                     props: {
-                                        data: data.data
+                                        data: data
                                     }
                                 });
                             },
@@ -89,15 +116,33 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             }
         );
         this.pluginApi = pluginApi;
+        this.rendererMap = rendererMap;
     }
 
-    private fetchKwicInfo(items:Array<string>):RSVP.Promise<AjaxResponse> {
+    private fetchKwicInfo(items:Array<string>):RSVP.Promise<Immutable.List<ProviderWordMatch>> {
         const args = new MultiDict();
         items.slice(0, 10).forEach(v => args.add('w', v));
         return this.pluginApi.ajax<AjaxResponse>(
             'GET',
             this.pluginApi.createActionUrl('fetch_external_kwic_info'),
             args
+
+        ).then(
+            (responseData) => {
+                return Immutable.List<ProviderWordMatch>(responseData.data.map(provider => {
+                    return {
+                        data: Immutable.List<ProviderOutput>(provider.data.map(item => {
+                            return {
+                                contents: item.contents,
+                                found: item.status,
+                                kwic: item.kwic
+                            };
+                        })),
+                        heading: provider.heading,
+                        renderer: this.rendererMap(provider.renderer)
+                    };
+                }));
+            }
         );
     }
 
@@ -128,7 +173,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             break;
             case Actions.FETCH_INFO_DONE:
                 newState.isBusy = false;
-                newState.words = Immutable.List<[string, string]>(typedProps<AjaxResponse>(action.props).data.words);
+                newState.data = action.props['data'];
             break;
         }
         return newState;

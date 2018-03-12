@@ -23,13 +23,22 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
+import {MultiDict} from '../../util';
 
 
 export interface Views {
-    RawHtmlRenderer:PluginInterfaces.TokenDetail.Renderer;
-    SimpleTabularRenderer:PluginInterfaces.TokenDetail.Renderer;
-    DescriptionListRenderer:PluginInterfaces.TokenDetail.Renderer;
-    UnsupportedRenderer:PluginInterfaces.TokenDetail.Renderer;
+    RawHtmlRenderer:React.SFC<{data: Array<[string, string]>}>;
+    SimpleTabularRenderer:React.SFC<{data: Array<Array<[string, string]>>}>;
+    DescriptionListRenderer:React.SFC<{data: Array<[string, string]>}>;
+    UnsupportedRenderer:React.SFC<{data: any}>;
+    DataMuseSimilarWords:React.SFC<{
+        corpname:string;
+        data:Array<{
+            word:string;
+            score:number;
+            tags:Array<string>;
+        }>;
+    }>;
 }
 
 
@@ -83,11 +92,35 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         );
     };
 
+    // ------------- <DataMuseSimilarWords /> -------------------------------
+
+    const DataMuseSimilarWords:Views['DataMuseSimilarWords'] = (props) => {
+        return (
+            <p className="keywords">
+                {props.data.map((value, i) => {
+                    const args = new MultiDict();
+                    args.set('corpname', props.corpname);
+                    args.set('queryselector', 'phraserow');
+                    args.set('phrase', value.word);
+
+                    return <React.Fragment key={value.word}>
+                        <a className="keyword" href={he.createActionLink('first', args)}
+                                target="_blank" title={he.translate('global__search_link')}>
+                            {value.word}
+                        </a>
+                        {i < props.data.length - 1 ? ', ' : null}
+                    </React.Fragment>
+                })}
+            </p>
+        );
+    };
+
     return {
         RawHtmlRenderer: RawHtmlRenderer,
         SimpleTabularRenderer: SimpleTabularRenderer,
         DescriptionListRenderer: DescriptionListRenderer,
-        UnsupportedRenderer: UnsupportedRenderer
+        UnsupportedRenderer: UnsupportedRenderer,
+        DataMuseSimilarWords: DataMuseSimilarWords
     };
 
 }

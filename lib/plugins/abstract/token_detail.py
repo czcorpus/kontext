@@ -39,9 +39,11 @@ backend producing raw HTML output.
 
 Please note that in case of this plug-in the key to customization lies in
 frontends and backends. It means that in case you need a special functionality,
-it will be probably enough to extend this plug-in by an empty class and 
+it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
+import importlib
+
 from plugins.abstract import CorpusDependentPlugin
 
 
@@ -57,7 +59,10 @@ class Response(object):
 
 
 class AbstractBackend(object):
-    _cache_path = None
+
+    def __init__(self, provider_id):
+        self._cache_path = None
+        self._provider_id = provider_id
 
     def fetch_data(self, word, lemma, pos, aligned_corpora, lang):
         raise NotImplementedError()
@@ -67,6 +72,9 @@ class AbstractBackend(object):
 
     def get_cache_path(self):
         return self._cache_path
+
+    def get_provider_id(self):
+        return self._provider_id
 
 
 class AbstractFrontend(object):
@@ -87,6 +95,27 @@ class AbstractFrontend(object):
             if not heading:
                 heading = self._headings.get('en_US', '')
         return Response(contents='', renderer='', status=status, heading=heading)
+
+
+def find_implementation(path):
+    """
+    Find a class identified by a string.
+    This is used to decode frontends and backends
+    defined in a respective JSON configuration file.
+
+    arguments:
+    path -- a full identifier of a class, e.g. plugins.default_token_detail.backends.Foo
+
+    returns:
+    a class matching the path
+    """
+    try:
+        md, cl = path.rsplit('.', 1)
+    except ValueError:
+        raise ValueError(
+            'Frontend path must contain both package and class name. Found: {0}'.format(path))
+    the_module = importlib.import_module(md)
+    return getattr(the_module, cl)
 
 
 class AbstractTokenDetail(CorpusDependentPlugin):
