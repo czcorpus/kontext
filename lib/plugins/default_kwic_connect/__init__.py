@@ -18,20 +18,47 @@
 
 
 from plugins.abstract.kwic_connect import AbstractKwicConnect
+from plugins.default_token_detail import setup_providers, ProviderWrapper
 import plugins
+import logging
 from actions import concordance
 from controller import exposed
 
 
+def merge_results(curr, new, word):
+    for item in new:
+        item['kwic'] = word
+    if curr is None:
+        return [[x] for x in new]
+    else:
+        for i in range(len(curr)):
+            curr[i] += [new[i]]
+        return curr
+
+
 @exposed(return_type='json')
 def fetch_external_kwic_info(self, request):
-    items = request.args.getlist('w')
-    return {'data': {'words': [(item, item + '-xx') for item in items], 'note': 'testing stuff'}}  # TODO
+    words = request.args.getlist('w')
+    with plugins.runtime.KWIC_CONNECT as kc, plugins.runtime.CORPARCH as ca:
+        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        provider_all = None
+        for word in words:
+            resp_data = kc.fetch_data(corpus_info.kwic_connect.providers,
+                                      word, word, '', self.args.align, self.ui_lang)
+            provider_all = merge_results(provider_all, resp_data, word)
+        ans = []
+        for provider in provider_all:
+            ans.append(dict(
+                renderer=provider[0]['renderer'],
+                heading=provider[0]['heading'],
+                data=[dict(kwic=item['kwic'], status=item['status'], contents=item['contents']) for item in provider]))
+    return dict(data=ans)
 
 
-class DefaultKwicConnect(AbstractKwicConnect):
+class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
 
-    def __init__(self, corparch):
+    def __init__(self, providers, corparch):
+        super(DefaultKwicConnect, self).__init__(providers)
         self._corparch = corparch
 
     def is_enabled_for(self, plugin_api, corpname):
@@ -41,7 +68,22 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def export_actions(self):
         return {concordance.Actions: [fetch_external_kwic_info]}
 
+    def fetch_data(self, provider_ids, word, lemma, pos, aligned_corpora, lang):
+        ans = []
+        for backend, frontend in self.map_providers(provider_ids):
+            try:
+                data, status = backend.fetch_data(word, lemma, pos, aligned_corpora, lang)
+                ans.append(frontend.export_data(data, status, lang).to_dict())
+            except Exception as ex:
+                logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
+                raise ex
+        return ans
+
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
-    return DefaultKwicConnect(corparch)
+    providers, cache_path = setup_providers(settings.get('plugins', 'token_detail'))
+    kwic_conn = DefaultKwicConnect(providers, corparch)
+    if cache_path:
+        kwic_conn.set_cache_path(cache_path)
+    return kwic_conn

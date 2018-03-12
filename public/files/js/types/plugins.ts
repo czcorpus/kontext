@@ -270,11 +270,11 @@ export namespace PluginInterfaces {
             data: Array<[string, string]>;
         }
 
-        export type Renderer = React.ComponentClass<RendererData>|React.SFC<RendererData>;
+        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|React.SFC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer {
             renderer:Renderer;
-            contents:Array<[string, string]>;
+            contents:Kontext.GeneralProps;
             found:boolean;
             heading:string;
         }

@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, ClassVar
 
 from plugins.abstract import CorpusDependentPlugin
 import kontext
@@ -55,3 +55,6 @@ class AbstractTokenDetail(CorpusDependentPlugin):
     def get_required_structattrs(self) -> List[str]: ...
 
     def is_enabled_for(self, plugin_api:kontext.PluginApi, corpname:basestring) -> bool: ...
+
+
+def find_implementation(path:str) -> ClassVar: ...

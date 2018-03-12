@@ -66,6 +66,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     const Menu:React.SFC<{
         activeTab:string;
+        hasKwicConnectView:boolean;
         clickHandler:(v:string)=>void;
 
     }> = (props) => {
@@ -75,9 +76,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     <li className={props.activeTab === 'tt-overview' ? 'active' : ''}>
                         <a onClick={() => props.clickHandler('tt-overview')}>{he.translate('concview__text_types_ratios_head')}</a>
                     </li>
-                    <li className={props.activeTab === 'kwic-connect' ? 'active' : ''}>
-                        <a onClick={() => props.clickHandler('kwic-connect')}>Extended kwic info</a>
-                    </li>
+                    {props.hasKwicConnectView ?
+                        <li className={props.activeTab === 'kwic-connect' ? 'active' : ''}>
+                            <a onClick={() => props.clickHandler('kwic-connect')}>Extended kwic info</a>
+                        </li> :
+                        null
+                    }
                 </ul>
             </div>
         );
@@ -102,6 +106,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             this.setState({activeTab: v});
         }
 
+        private hasKwicConnectView() {
+            return this.props.kwicConnectView !== null;
+        }
+
         private renderTab() {
             switch (this.state.activeTab) {
                 case 'tt-overview':
@@ -115,9 +123,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             return (
                 <div className="ConcExtendedInfo">
                     <CloseIcon />
-                    <h2>Concordance summary</h2>
-                    <Menu activeTab={this.state.activeTab} clickHandler={this.handleActiveTabChange} />
-                    {this.renderTab()}
+                    <h2>Extended information</h2>
+
+                    <div className="contents">
+                        <div className="box">
+                            <ttDistViews.TextTypesDist />
+                        </div>
+                        <div className="box">
+                            {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
+                        </div>
+                    </div>
                 </div>
             );
         }

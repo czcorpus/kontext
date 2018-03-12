@@ -22,6 +22,7 @@ Please note that each of the frontends is paired with a concrete React component
 on the client-side (see plugins/defaultTokenDetail/init.py method selectRenderer()).
 """
 
+import json
 from plugins.abstract.token_detail import AbstractFrontend
 
 
@@ -34,4 +35,16 @@ class RawHtmlFrontend(AbstractFrontend):
         response = super(RawHtmlFrontend, self).export_data(data, status, lang)
         response.renderer = 'raw-html'
         response.contents = [('__html', data)]
+        return response
+
+
+class DatamuseFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super(DatamuseFrontend, self).__init__(conf)
+
+    def export_data(self, data, status, lang):
+        response = super(DatamuseFrontend, self).export_data(data, status, lang)
+        response.renderer = 'datamuse-json'
+        response.contents = json.loads(data)
         return response

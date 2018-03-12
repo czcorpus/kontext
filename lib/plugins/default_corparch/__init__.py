@@ -578,6 +578,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         token_detail_elm = node.find('token_detail')
         if token_detail_elm is not None:
             ans.token_detail.providers = [p.text for p in token_detail_elm.findall('provider')]
+
+        kwic_connect_elm = node.find('kwic_connect')
+        if kwic_connect_elm is not None:
+            ans.kwic_connect.providers = [p.text for p in kwic_connect_elm.findall('provider')]
         data.append(ans)
 
     def _parse_corplist_node(self, root, path, lang, data):
