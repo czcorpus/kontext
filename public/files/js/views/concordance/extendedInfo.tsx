@@ -123,14 +123,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             return (
                 <div className="ConcExtendedInfo">
                     <CloseIcon />
-                    <h2>Extended information</h2>
+                    <h2>{he.translate('concview__extended_info')}</h2>
 
                     <div className="contents">
                         <div className="box">
                             <ttDistViews.TextTypesDist />
                         </div>
                         <div className="box">
-                            {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
+                            {this.hasKwicConnectView() ?
+                                <layoutViews.ErrorBoundary>
+                                    <this.props.kwicConnectView />
+                                </layoutViews.ErrorBoundary> : null
+                            }
                         </div>
                     </div>
                 </div>

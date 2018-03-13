@@ -51,6 +51,7 @@ def fetch_external_kwic_info(self, request):
             ans.append(dict(
                 renderer=provider[0]['renderer'],
                 heading=provider[0]['heading'],
+                note=provider[0]['note'],
                 data=[dict(kwic=item['kwic'], status=item['status'], contents=item['contents']) for item in provider]))
     return dict(data=ans)
 

@@ -28,8 +28,9 @@ class Response(object):
     renderer:str
     status:int
     heading:unicode
+    note:unicode
 
-    def __init__(self, contents:basestring, renderer:str, status:int, heading:unicode): ...
+    def __init__(self, contents:basestring, renderer:str, status:int, heading:unicode, note:unicode): ...
 
     def to_dict(self) -> Dict[str, Any]: ...
 
@@ -43,6 +44,9 @@ class AbstractBackend(object):
 class AbstractFrontend(object):
 
     _headings:Dict[str, basestring]
+    _notes:Dict[str, basestring]
+
+    def _fetch_localized_prop(self, prop:str, lang:str) -> unicode: ...
 
     def export_data(self, data:Any, status:int, lang:str) -> Response: ...
 

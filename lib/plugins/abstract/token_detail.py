@@ -48,11 +48,12 @@ from plugins.abstract import CorpusDependentPlugin
 
 
 class Response(object):
-    def __init__(self, contents, renderer, status, heading):
+    def __init__(self, contents, renderer, status, heading, note):
         self.contents = contents
         self.renderer = renderer
         self.status = status
         self.heading = heading
+        self.note = note
 
     def to_dict(self):
         return self.__dict__
@@ -78,23 +79,30 @@ class AbstractBackend(object):
 
 
 class AbstractFrontend(object):
+
     def __init__(self, conf):
         self._headings = conf.get('heading', {})
+        self._notes = conf.get('note', {})
 
-    def export_data(self, data, status, lang):
-        heading = ''
-        if lang in self._headings:
-            heading = self._headings[lang]
+    def _fetch_localized_prop(self, prop, lang):
+        value = ''
+        if lang in getattr(self, prop):
+            value = getattr(self, prop)[lang]
         else:
             srch_lang = lang.split('_')[0]
-            for k, v in self._headings.items():
-                hd_lang = k.split('_')[0]
-                if hd_lang == srch_lang:
-                    heading = v
+            for k, v in getattr(self, prop).items():
+                v_lang = k.split('_')[0]
+                if v_lang == srch_lang:
+                    value = v
                     break
-            if not heading:
-                heading = self._headings.get('en_US', '')
-        return Response(contents='', renderer='', status=status, heading=heading)
+            if not value:
+                value = getattr(self, prop).get('en_US', '')
+        return value
+
+    def export_data(self, data, status, lang):
+        return Response(contents='', renderer='', status=status,
+                        heading=self._fetch_localized_prop('_headings', lang),
+                        note=self._fetch_localized_prop('_notes', lang))
 
 
 def find_implementation(path):
