@@ -41,7 +41,7 @@ def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
     with plugins.runtime.KWIC_CONNECT as kc, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
-        provider_all = None
+        provider_all = []
         for word in words:
             resp_data = kc.fetch_data(corpus_info.kwic_connect.providers,
                                       word, word, '', [self.corp.corpname] + self.args.align, self.ui_lang)
