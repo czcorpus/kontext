@@ -157,8 +157,6 @@
      */
     module.exports.loadModulePathMap = function (confDoc, jsPath, cssPath, themesPath, isProduction) {
         const pluginsPath = path.resolve(jsPath, 'plugins');
-        const reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
-        const reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
         mergeTranslations(jsPath, path.resolve(jsPath, '.compiled/translations.js'));
         const cqlParserPath = parseCqlGrammar(jsPath);
         const moduleMap = {

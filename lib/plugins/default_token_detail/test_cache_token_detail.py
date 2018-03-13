@@ -24,7 +24,7 @@ import unittest
 
 from mock_http_backend import HTTPBackend
 from plugins.default_token_detail import DefaultTokenDetail, init_provider
-from plugins.default_token_detail.backends import mk_token_detail_cache_key
+from plugins.default_token_detail.backends.cache import mk_token_detail_cache_key
 from plugins.default_token_detail.cache_man import CacheMan
 
 logging.basicConfig()
@@ -42,8 +42,8 @@ class CacheTest(unittest.TestCase):
                                  "ssl": True, "port": 443}}]
 
         providers_conf = mocked_json
-
-        self.tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
+        self.tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf),
+                                          corparch)
         self.cache_path = '/tmp/token_cache/token_detail_cache.db'
         cache_rows_limit = 10
         cache_ttl_days = 7
@@ -57,11 +57,8 @@ class CacheTest(unittest.TestCase):
         self.cacheMan.prepare_cache()
 
     def raise_exc(self):
-        try:
-            self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "exception", "pos",
-                                    "aligned_corpora", "lang")
-        except Exception as ex:
-            raise ex
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "exception", "pos",
+                                "corpora", "lang")
 
     def test_get_path(self):
         """
@@ -73,8 +70,10 @@ class CacheTest(unittest.TestCase):
         """
         fetch two items from http backend, check whether they get stored in cache by checking number of rows
         """
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora", "lang")
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", "aligned_corpora", "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
+                                "lemma", "pos", ["corpora"], "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
+                                "position", "pos", ["corpora"], "lang")
         self.assertEqual(self.cacheMan.get_numrows(), 2)
 
     def test_retrieve_cached_item(self):
@@ -83,12 +82,14 @@ class CacheTest(unittest.TestCase):
         then fetch the same two items again and check whether they are retrieved correctly from cache
         and that the cache contains only two items
         """
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora", "lang")
-        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", "aligned_corpora",
+        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'],
+                                        "word", "lemma", "pos", ["corpora"], "lang")
+        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", ["corpora"],
                                         "lang")
 
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora", "lang")
-        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", "aligned_corpora",
+        cached1 = self.tok_det.fetch_data(
+            ['wiktionary_for_ic_9_en'], "word", "lemma", "pos", ["corpora"], "lang")
+        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", ["corpora"],
                                           "lang")
         self.assertEqual(self.cacheMan.get_numrows(), 2)
         self.assertEqual(orig1, cached1)
@@ -99,19 +100,21 @@ class CacheTest(unittest.TestCase):
         fetch two items from http backend to cache them, get their last access value from cache
         then fetch the same two items again after a time interval and check whether the last access values changed
         """
-        mocked = HTTPBackend(None)
-        pth = mocked.get_path()
-        cls = "HTTPBackend"
-        key1 = mk_token_detail_cache_key(pth, cls, "word", "lemma", "pos", "aligned_corpora", "lang")
-        key2 = mk_token_detail_cache_key(pth, cls, "word", "position", "pos", "aligned_corpora", "lang")
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora", "lang")
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", "aligned_corpora", "lang")
+        key1 = mk_token_detail_cache_key("word", "lemma", "pos", [
+                                         "corpora"], "lang", "wiktionary_for_ic_9_en")
+        key2 = mk_token_detail_cache_key("word", "position", "pos", [
+                                         "corpora"], "lang", "wiktionary_for_ic_9_en")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
+                                "lemma", "pos", ["corpora"], "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
+                                "position", "pos", ["corpora"], "lang")
         la1bef = self.get_last_access(key1)
         la2bef = self.get_last_access(key2)
         time.sleep(1)
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora", "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
+                                "lemma", "pos", ["corpora"], "lang")
         time.sleep(1)
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", "aligned_corpora",
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", ["corpora"],
                                 "lang")
         la1aft = self.get_last_access(key1)
         la2aft = self.get_last_access(key2)
@@ -133,10 +136,10 @@ class CacheTest(unittest.TestCase):
         cache a unicode encoded string, check whether it gets returned correctly
         the unicode-encoded result is returned from the mocked backend when searching for lemma "unicode"
         """
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "unicode", "pos", "aligned_corpora",
+        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "unicode", "pos", ["corpora"],
                                         "lang")
 
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "unicode", "pos", "aligned_corpora",
+        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "unicode", "pos", ["corpora"],
                                           "lang")
         self.assertEqual(orig1, cached1)
 
@@ -145,16 +148,18 @@ class CacheTest(unittest.TestCase):
         cache a "found" and a "not-found" result returned by the mocked backend, check whether
         the "found" / "not-found" information gets cached and retrieved correctly
         """
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "false", "pos", "aligned_corpora",
+        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "false", "pos", ["corpora"],
                                         "lang")
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "false", "pos", "aligned_corpora",
+        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "false", "pos", ["corpora"],
                                           "lang")
-        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora",
+        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", ["corpora"],
                                         "lang")
-        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", "aligned_corpora",
+        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", ["corpora"],
                                           "lang")
-        self.assertEqual(orig1[0].get('contents')[0][1][1], cached1[0].get('contents')[0][1][1], False)
-        self.assertEqual(orig2[0].get('contents')[0][1][1], cached2[0].get('contents')[0][1][1], True)
+        self.assertEqual(orig1[0].get('contents')[0][1][1],
+                         cached1[0].get('contents')[0][1][1], False)
+        self.assertEqual(orig2[0].get('contents')[0][1][1],
+                         cached2[0].get('contents')[0][1][1], True)
 
     def test_backend_exception(self):
         self.assertRaises(Exception, self.raise_exc)

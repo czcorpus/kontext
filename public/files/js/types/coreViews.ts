@@ -23,6 +23,12 @@ import * as React from 'react';
 
 export namespace CoreViews {
 
+    export namespace ErrorBoundary {
+        export type Component = React.ComponentClass<{}>;
+    }
+
+    // ---------------------------
+
     export namespace ModalOverlay {
 
         export interface Props {
@@ -246,6 +252,7 @@ export namespace CoreViews {
     // -------------------------------
 
     export interface Runtime {
+        ErrorBoundary: ErrorBoundary.Component;
         ModalOverlay: ModalOverlay.Component;
         PopupBox:PopupBox.Component;
         ImgWithMouseover:ImgWithMouseover.Component;

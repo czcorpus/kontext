@@ -30,6 +30,39 @@ export function init(
         he:Kontext.ComponentHelpers,
         modelProvider:Kontext.LayoutModel):CoreViews.Runtime {
 
+    // ------------------------------ <ErrorBoundary /> -----------------------------
+
+    class ErrorBoundary extends React.Component<{}, {hasError:boolean}> {
+
+        constructor(props) {
+            super(props);
+            this.state = {hasError: false};
+        }
+
+        componentDidCatch(err, info) {
+            console.error(err);
+            this.setState({hasError: true});
+        }
+
+        render() {
+            if (this.state.hasError) {
+                return (
+                    <div>
+                        <p style={{textAlign: 'center'}}>
+                            <img src={he.createStaticUrl('img/error-icon.svg')}
+                                    alt={he.translate('global__error_icon')}
+                                    style={{width: '2em'}} />
+                        </p>
+                        <p style={{textAlign: 'center', fontSize: '1.3em'}}>
+                            {he.translate('global__failed_to_render_component')}
+                        </p>
+                    </div>
+                );
+            }
+            return this.props.children;
+        }
+    }
+
     // ------------------------------ <ModalOverlay /> -----------------------------
 
     class ModalOverlay extends React.Component<CoreViews.ModalOverlay.Props, CoreViews.ModalOverlay.State> {
@@ -514,6 +547,7 @@ export function init(
     // ------------------------------------------------------------------------------------
 
     return {
+        ErrorBoundary: ErrorBoundary,
         ModalOverlay: ModalOverlay,
         PopupBox: PopupBox,
         CloseableFrame: CloseableFrame,

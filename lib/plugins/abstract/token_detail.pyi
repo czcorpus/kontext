@@ -28,21 +28,25 @@ class Response(object):
     renderer:str
     status:int
     heading:unicode
+    note:unicode
 
-    def __init__(self, contents:basestring, renderer:str, status:int, heading:unicode): ...
+    def __init__(self, contents:basestring, renderer:str, status:int, heading:unicode, note:unicode): ...
 
     def to_dict(self) -> Dict[str, Any]: ...
 
 
 class AbstractBackend(object):
 
-    def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, aligned_corpora:List[str],
+    def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, corpora:List[str],
                    lang:str) -> Tuple[Any, int]: ...
 
 
 class AbstractFrontend(object):
 
     _headings:Dict[str, basestring]
+    _notes:Dict[str, basestring]
+
+    def _fetch_localized_prop(self, prop:str, lang:str) -> unicode: ...
 
     def export_data(self, data:Any, status:int, lang:str) -> Response: ...
 
@@ -50,7 +54,7 @@ class AbstractFrontend(object):
 class AbstractTokenDetail(CorpusDependentPlugin):
 
     def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, tag:basestring,
-                   aligned_corpora:List[str], lang:str) -> List[[Any, int]]: ...
+                   corpora:List[str], lang:str) -> List[[Any, int]]: ...
 
     def get_required_structattrs(self) -> List[str]: ...
 

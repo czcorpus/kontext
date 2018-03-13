@@ -35,6 +35,7 @@ export interface RendererMap {
 
 export interface ProviderOutputResponse {
     heading:string;
+    note:string;
     renderer:string;
     data:Array<{
         status:boolean;
@@ -55,12 +56,14 @@ export interface ProviderOutput {
 
 export interface ProviderWordMatch {
     heading:string;
+    note:string;
     renderer:string;
     data:Immutable.List<ProviderOutput>;
 }
 
 export interface KwicConnectState {
     isBusy:boolean;
+    corpora:Immutable.List<string>;
     data:Immutable.List<ProviderWordMatch>;
 }
 
@@ -79,19 +82,20 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     private rendererMap:RendererMap;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, rendererMap:RendererMap) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpora:Array<string>, rendererMap:RendererMap) {
         super(
             dispatcher,
             {
                 isBusy: false,
-                data: Immutable.List<ProviderWordMatch>()
+                data: Immutable.List<ProviderWordMatch>(),
+                corpora: Immutable.List<string>(corpora)
             },
             (state, action, dispatch) => {
                 switch (action.actionType) {
                     case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
                         this.fetchUniqValues(FreqDistType.WORD).then(
                             (data) => {
-                                return this.fetchKwicInfo(data);
+                                return this.fetchKwicInfo(state, data);
                             }
 
                         ).then(
@@ -119,8 +123,10 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         this.rendererMap = rendererMap;
     }
 
-    private fetchKwicInfo(items:Array<string>):RSVP.Promise<Immutable.List<ProviderWordMatch>> {
+    private fetchKwicInfo(state:KwicConnectState, items:Array<string>):RSVP.Promise<Immutable.List<ProviderWordMatch>> {
         const args = new MultiDict();
+        args.set('corpname', state.corpora.get(0));
+        args.replace('align', state.corpora.slice(1).toArray());
         items.slice(0, 10).forEach(v => args.add('w', v));
         return this.pluginApi.ajax<AjaxResponse>(
             'GET',
@@ -139,6 +145,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                             };
                         })),
                         heading: provider.heading,
+                        note: provider.note,
                         renderer: this.rendererMap(provider.renderer)
                     };
                 }));
@@ -148,9 +155,11 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     private fetchUniqValues(fDistType:FreqDistType):RSVP.Promise<Array<string>> {
         const args = this.pluginApi.getConcArgs();
-        args.set('fcrit', `${fDistType}/e 0~0>0`);
+        args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
         args.set('flimit', 10);
+        args.set('freq_sort', 'freq');
+        args.set('pagesize', 10);
         args.set('format', 'json');
         return this.pluginApi.ajax<TTDistResponse.FreqData>(
             'GET',

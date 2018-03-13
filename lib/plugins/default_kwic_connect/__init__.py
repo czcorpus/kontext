@@ -44,13 +44,14 @@ def fetch_external_kwic_info(self, request):
         provider_all = None
         for word in words:
             resp_data = kc.fetch_data(corpus_info.kwic_connect.providers,
-                                      word, word, '', self.args.align, self.ui_lang)
+                                      word, word, '', [self.corp.corpname] + self.args.align, self.ui_lang)
             provider_all = merge_results(provider_all, resp_data, word)
         ans = []
         for provider in provider_all:
             ans.append(dict(
                 renderer=provider[0]['renderer'],
                 heading=provider[0]['heading'],
+                note=provider[0]['note'],
                 data=[dict(kwic=item['kwic'], status=item['status'], contents=item['contents']) for item in provider]))
     return dict(data=ans)
 
@@ -68,11 +69,11 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
     def export_actions(self):
         return {concordance.Actions: [fetch_external_kwic_info]}
 
-    def fetch_data(self, provider_ids, word, lemma, pos, aligned_corpora, lang):
+    def fetch_data(self, provider_ids, word, lemma, pos, corpora, lang):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
-                data, status = backend.fetch_data(word, lemma, pos, aligned_corpora, lang)
+                data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))

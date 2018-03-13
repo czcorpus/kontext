@@ -19,10 +19,14 @@
  */
 
 import RSVP from 'rsvp';
+import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit, View} from './views';
 import {init as renderersInit, Views as RenderersView} from './renderers';
 import {KwicConnectModel, RendererMap} from './model';
+
+declare var require:any;
+require('./style.less'); // webpack
 
 export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IPlugin {
 
@@ -39,6 +43,8 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         this.model = new KwicConnectModel(
             pluginApi.dispatcher(),
             pluginApi,
+            [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
+                    .concat(...pluginApi.getConf<Array<string>>('alignedCorpora')),
             this.selectRenderer.bind(this)
         );
     }
@@ -53,6 +59,8 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
                 return this.renderers.RawHtmlRenderer;
             case 'datamuse-json':
                 return this.renderers.DataMuseSimilarWords;
+            case 'treq-json':
+                return this.renderers.TreqRenderer;
             default:
                 return this.renderers.UnsupportedRenderer;
         }

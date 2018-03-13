@@ -26,12 +26,12 @@ from plugins.default_token_detail.backends import cached
 
 
 class HTTPBackend(AbstractBackend):
-    def __init__(self, conf):
-        super(HTTPBackend, self).__init__()
+    def __init__(self, conf, ident):
+        super(HTTPBackend, self).__init__(ident)
         self._conf = conf
 
     @cached
-    def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
+    def fetch_data(self, word, lemma, pos, corpora, lang):
         if lemma == 'unicode':
             return [u"mocked HTTP backend output - unicode characters: ěščřžýáíé", True]
         if lemma == 'false':

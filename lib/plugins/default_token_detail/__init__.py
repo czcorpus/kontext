@@ -95,7 +95,7 @@ def fetch_token_detail(self, request):
     with plugins.runtime.TOKEN_DETAIL as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
         resp_data = td.fetch_data(corpus_info.token_detail.providers,
-                                  word, lemma, pos, self.args.align, self.ui_lang)
+                                  word, lemma, pos, [self.corp.corpname] + self.args.align, self.ui_lang)
     return dict(items=[item for item in resp_data])
 
 
@@ -118,11 +118,11 @@ class DefaultTokenDetail(ProviderWrapper):
         super(DefaultTokenDetail, self).__init__(providers)
         self._corparch = corparch
 
-    def fetch_data(self, provider_ids, word, lemma, pos, aligned_corpora, lang):
+    def fetch_data(self, provider_ids, word, lemma, pos, corpora, lang):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
-                data, status = backend.fetch_data(word, lemma, pos, aligned_corpora, lang)
+                data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
@@ -137,21 +137,22 @@ class DefaultTokenDetail(ProviderWrapper):
         return {concordance.Actions: [fetch_token_detail]}
 
 
+def init_provider(conf, ident):
+    """
+    Create and return both backend and frontend.
+
+    arguments:
+    conf -- a dict representing plug-in detailed configuration
+
+    returns:
+    a 2-tuple (backend instance, frontend instance)
+    """
+    backend_class = find_implementation(conf['backend'])
+    frontend_class = find_implementation(conf['frontend'])
+    return backend_class(conf['conf'], ident), frontend_class(conf)
+
+
 def setup_providers(plg_conf):
-
-    def init_provider(conf, ident):
-        """
-        Create and return both backend and frontend.
-
-        arguments:
-        conf -- a dict representing plug-in detailed configuration
-
-        returns:
-        a 2-tuple (backend instance, frontend instance)
-        """
-        backend_class = find_implementation(conf['backend'])
-        frontend_class = find_implementation(conf['frontend'])
-        return backend_class(conf['conf'], ident), frontend_class(conf)
 
     with open(plg_conf['default:providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
