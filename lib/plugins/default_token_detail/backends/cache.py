@@ -24,11 +24,11 @@ from functools import wraps
 from hashlib import md5
 
 
-def mk_token_detail_cache_key(word, lemma, pos, aligned_corpora, lang, backend_cls):
+def mk_token_detail_cache_key(word, lemma, pos, corpora, lang, backend_cls):
     """
     Returns a hashed cache key based on the passed parameters.
     """
-    return md5('%r%r%r%r%r%r' % (word, lemma, pos, aligned_corpora, lang, backend_cls)).hexdigest()
+    return md5('%r%r%r%r%r%r' % (word, lemma, pos, corpora, lang, backend_cls)).hexdigest()
 
 
 def cached(f):
@@ -40,7 +40,7 @@ def cached(f):
     """
 
     @wraps(f)
-    def wrapper(self, word, lemma, pos, aligned_corpora, lang):
+    def wrapper(self, word, lemma, pos, corpora, lang):
         """
         get full path to the cache_db_file using a method defined in the abstract class that reads the value from
         kontext's config.xml; if the cache path is not defined, do not use caching:
@@ -48,13 +48,13 @@ def cached(f):
         cache_path = self.get_cache_path()
         if cache_path:
             key = mk_token_detail_cache_key(
-                word, lemma, pos, aligned_corpora, lang, self.get_provider_id())
+                word, lemma, pos, corpora, lang, self.get_provider_id())
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()
             res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
             # if no result is found in the cache, call the backend function
             if res is None:
-                res = f(self, word, lemma, pos, aligned_corpora, lang)
+                res = f(self, word, lemma, pos, corpora, lang)
                 # if a result is returned by the backend function, encode and zip its data part and store it in
                 # the cache along with the "found" parameter
                 if res:
@@ -70,7 +70,7 @@ def cached(f):
             conn.commit()
             conn.close()
         else:
-            res = f(self, word, lemma, pos, aligned_corpora, lang)
+            res = f(self, word, lemma, pos, corpora, lang)
         return res if res else ('', False)
 
     return wrapper

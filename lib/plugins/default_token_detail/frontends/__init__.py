@@ -48,3 +48,15 @@ class DatamuseFrontend(AbstractFrontend):
         response.renderer = 'datamuse-json'
         response.contents = json.loads(data)
         return response
+
+
+class TreqFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super(TreqFrontend, self).__init__(conf)
+
+    def export_data(self, data, status, lang):
+        response = super(TreqFrontend, self).export_data(data, status, lang)
+        response.renderer = 'treq-json'
+        response.contents = json.loads(data)
+        return response

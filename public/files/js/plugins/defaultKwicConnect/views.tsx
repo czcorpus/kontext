@@ -72,7 +72,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                         return (
                             <div key={`provider-${i}`}>
                                 <h3>{providerOutput.heading}</h3>
-                                {providerOutput.data.map((item, j) => <providerOutput.renderer key={`render-${i}:${j}`} data={item} />)}
+                                {providerOutput.data.map((item, j) =>
+                                    <providerOutput.renderer key={`render-${i}:${j}`} data={item}
+                                            corpora={this.state.corpora} />)}
                                 {providerOutput.note ?
                                     <p className="note">{providerOutput.note}</p> : null}
                             </div>

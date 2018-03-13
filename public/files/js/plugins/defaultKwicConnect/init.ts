@@ -25,6 +25,9 @@ import {init as viewInit, View} from './views';
 import {init as renderersInit, Views as RenderersView} from './renderers';
 import {KwicConnectModel, RendererMap} from './model';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IPlugin {
 
     private pluginApi:IPluginApi;
@@ -56,6 +59,8 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
                 return this.renderers.RawHtmlRenderer;
             case 'datamuse-json':
                 return this.renderers.DataMuseSimilarWords;
+            case 'treq-json':
+                return this.renderers.TreqRenderer;
             default:
                 return this.renderers.UnsupportedRenderer;
         }

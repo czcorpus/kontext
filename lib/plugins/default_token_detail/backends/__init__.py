@@ -31,7 +31,7 @@ class SQLite3Backend(AbstractBackend):
         self._query_tpl = conf['query']
 
     @cached
-    def fetch_data(self, word, lemma, pos, aligned_corpora, lang):
+    def fetch_data(self, word, lemma, pos, corpora, lang):
         cur = self._db.cursor()
         cur.execute(self._query_tpl, (word, lemma, pos))
         ans = cur.fetchone()
@@ -55,7 +55,7 @@ class HTTPBackend(AbstractBackend):
         return 200 <= response.status < 300
 
     @cached
-    def fetch_data(self, word, lemma, pos, aligned_corpora, lang):
+    def fetch_data(self, word, lemma, pos, corpora, lang):
         if self._conf['ssl']:
             connection = httplib.HTTPSConnection(
                 self._conf['server'], port=self._conf['port'], timeout=15)
@@ -63,8 +63,7 @@ class HTTPBackend(AbstractBackend):
             connection = httplib.HTTPConnection(
                 self._conf['server'], port=self._conf['port'], timeout=15)
         try:
-            al_corpus = aligned_corpora[0] if len(aligned_corpora) > 0 else ''
-            args = dict(word=word, lemma=lemma, pos=pos, ui_lang=lang, other_lang=al_corpus)
+            args = dict(word=word, lemma=lemma, pos=pos, ui_lang=lang, corpus=corpora[0])
             connection.request('GET', self._conf['path'].encode('utf-8').format(**args))
             response = connection.getresponse()
             if self._is_valid_response(response):

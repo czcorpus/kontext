@@ -65,7 +65,7 @@ class AbstractBackend(object):
         self._cache_path = None
         self._provider_id = provider_id
 
-    def fetch_data(self, word, lemma, pos, aligned_corpora, lang):
+    def fetch_data(self, word, lemma, pos, corpora, lang):
         raise NotImplementedError()
 
     def set_cache_path(self, path):
@@ -128,7 +128,7 @@ def find_implementation(path):
 
 class AbstractTokenDetail(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
+    def fetch_data(self, provider_ids, word, lemma, tag, corpora, lang):
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.

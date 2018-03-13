@@ -37,7 +37,7 @@ class Response(object):
 
 class AbstractBackend(object):
 
-    def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, aligned_corpora:List[str],
+    def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, corpora:List[str],
                    lang:str) -> Tuple[Any, int]: ...
 
 
@@ -54,7 +54,7 @@ class AbstractFrontend(object):
 class AbstractTokenDetail(CorpusDependentPlugin):
 
     def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, tag:basestring,
-                   aligned_corpora:List[str], lang:str) -> List[[Any, int]]: ...
+                   corpora:List[str], lang:str) -> List[[Any, int]]: ...
 
     def get_required_structattrs(self) -> List[str]: ...
 
