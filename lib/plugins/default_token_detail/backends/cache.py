@@ -63,7 +63,7 @@ def cached(f):
                     curs.execute("INSERT INTO cache (key, data, found, last_access) VALUES (?,?,?,?)",
                                  (key, zipped, 1 if res[1] else 0, int(round(time.time()))))
             else:
-                logging.getLogger(__name__).debug('token/kwic_connect cache hit {0} for ({1}, {2}, {3})'.format(
+                logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for ({1}, {2}, {3})'.format(
                     key[:6], word, lemma, pos))
                 # unzip and decode the cached result, convert the "found" parameter value back to boolean
                 res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]

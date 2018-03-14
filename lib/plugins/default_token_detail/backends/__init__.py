@@ -54,21 +54,28 @@ class HTTPBackend(AbstractBackend):
     def _is_found(response):
         return 200 <= response.status < 300
 
-    @cached
-    def fetch_data(self, word, lemma, pos, corpora, lang):
+    def create_connection(self):
         if self._conf['ssl']:
-            connection = httplib.HTTPSConnection(
+            return httplib.HTTPSConnection(
                 self._conf['server'], port=self._conf['port'], timeout=15)
         else:
-            connection = httplib.HTTPConnection(
+            return httplib.HTTPConnection(
                 self._conf['server'], port=self._conf['port'], timeout=15)
+
+    def process_response(self, connection):
+        response = connection.getresponse()
+        if self._is_valid_response(response):
+            return response.read().decode('utf-8'), self._is_found(response)
+        else:
+            raise Exception('Failed to load the data - error {0}'.format(response.status))
+
+    @cached
+    def fetch_data(self, word, lemma, pos, corpora, lang):
+        connection = self.create_connection()
         try:
-            args = dict(word=word, lemma=lemma, pos=pos, ui_lang=lang, corpus=corpora[0])
-            connection.request('GET', self._conf['path'].encode('utf-8').format(**args))
-            response = connection.getresponse()
-            if self._is_valid_response(response):
-                return response.read().decode('utf-8'), self._is_found(response)
-            else:
-                raise Exception('Failed to load the data - error {0}'.format(response.status))
+            args = dict(word=word, lemma=lemma, pos=pos, ui_lang=lang, corpus=corpora[0],
+                        corpus2=corpora[1] if len(corpora) > 1 else '')
+            connection.request('GET', self._conf['path'].format(**args).encode('utf-8', 'replace'))
+            return self.process_response(connection)
         finally:
             connection.close()
