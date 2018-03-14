@@ -25,7 +25,7 @@ import RSVP from 'rsvp';
 
 import {Kontext, TextTypes} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel} from '../app/main';
+import {PageModel, DownloadType} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
 import {ActionPayload} from '../app/dispatcher';
@@ -1028,7 +1028,7 @@ export class ViewPage {
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<number>('ConcSize'),
-                    s=>this.setDownloadLink(s)
+                    this.setDownloadLink.bind(this)
                 ),
                 syntaxViewer,
                 ttModel,
@@ -1091,9 +1091,8 @@ export class ViewPage {
         return lineViewProps;
     }
 
-    setDownloadLink(url:string):void {
-        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
-        iframe.src = url;
+    setDownloadLink(filename:string, url:string) {
+        this.layoutModel.bgDownload(filename, DownloadType.CONCORDANCE, url);
     }
 
     /**

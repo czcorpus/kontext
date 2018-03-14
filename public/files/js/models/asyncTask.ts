@@ -30,6 +30,13 @@ interface AsyncTaskResponse extends Kontext.AjaxResponse {
     data:Array<Kontext.AsyncTaskInfo>;
 }
 
+export enum AsyncTaskStatus {
+    PENDING = 'PENDING',
+    STARTED = 'STARTED',
+    SUCCESS = 'SUCCESS',
+    FAILURE = 'FAILURE'
+}
+
 /**
  * This class handles checking for the state
  * of currently active bacground tasks triggered
@@ -69,19 +76,48 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         this.asyncTaskCheckerInterval = null;
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
 
-        this.dispatcher.register(function (payload:ActionPayload) {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
-                    self.deleteFinishedTaskInfo().then(
+                    this.deleteFinishedTaskInfo().then(
                         (data) => {
-                            self.updateMessageList(data.data);
-                            self.notifyChangeListeners();
+                            this.updateMessageList(data.data);
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.notifyChangeListeners();
-                            self.pageModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                            this.pageModel.showMessage('error', err);
                         }
                     );
+                break;
+                case 'INBOX_ADD_ASYNC_TASK':
+                    this.asyncTasks = this.asyncTasks.push({
+                        status: AsyncTaskStatus.PENDING,
+                        ident: payload.props['ident'],
+                        created: new Date().getTime() / 1000,
+                        label: payload.props['label'],
+                        category: payload.props['category'],
+                        error: null,
+                        args: {}
+                    });
+                    this.notifyChangeListeners();
+                break;
+                case 'INBOX_UPDATE_ASYNC_TASK':
+                    const srchIdx = this.asyncTasks.findIndex(v => v.ident === payload.props['ident']);
+                    if (srchIdx > -1) {
+                        const old = this.asyncTasks.get(srchIdx);
+                        this.asyncTasks = this.asyncTasks.set(srchIdx, {
+                            status: payload.props['status'],
+                            ident: payload.props['ident'],
+                            created: old.created,
+                            label: old.label,
+                            category: old.category,
+                            error: old.error,
+                            args: old.args
+                        });
+                        this.notifyChangeListeners();
+                    }
+
                 break;
             }
         });

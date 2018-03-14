@@ -38,14 +38,14 @@ export class WordlistSaveModel extends StatefulModel {
 
     private includeColHeaders:boolean;
 
-    private saveLinkFn:(string)=>void;
+    private saveLinkFn:(file:string, url:string)=>void;
 
     private wordlistArgsProviderFn:()=>MultiDict;
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, saveLinkFn:(string)=>void,
-            wordlistArgsProviderFn:()=>MultiDict) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
+            saveLinkFn:(file:string, url:string)=>void, wordlistArgsProviderFn:()=>MultiDict) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
@@ -111,7 +111,10 @@ export class WordlistSaveModel extends StatefulModel {
             args.set('heading', this.includeHeading ? '1' : '0');
             args.remove('colheaders');
         }
-        this.saveLinkFn(this.layoutModel.createActionUrl('savewl', args.items()));
+        this.saveLinkFn(
+            `word-list.${this.saveFormat}`,
+            this.layoutModel.createActionUrl('savewl', args.items())
+        );
     }
 
     getFormIsActive():boolean {

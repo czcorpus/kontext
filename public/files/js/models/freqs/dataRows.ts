@@ -87,7 +87,7 @@ export class FreqDataRowsModel extends StatefulModel {
     private saveModel:FreqResultsSaveModel;
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
-            formProps:FreqFormInputs, saveLinkFn:(string)=>void) {
+            formProps:FreqFormInputs, saveLinkFn:(file:string, url:string)=>void) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<ResultBlock>();

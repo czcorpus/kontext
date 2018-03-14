@@ -47,9 +47,10 @@ export class ConcSaveModel extends StatefulModel {
 
     private concSize:number;
 
-    private saveLinkFn:(string)=>void;validateNumber
+    private saveLinkFn:(filename:string, url:string)=>Promise<boolean>;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concSize:number, saveLinkFn:(string)=>void) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concSize:number,
+                saveLinkFn:(filename:string, url:string)=>Promise<boolean>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveformat = 'csv';
@@ -135,7 +136,10 @@ export class ConcSaveModel extends StatefulModel {
         args.set('heading', this.includeHeading ? '1' : '0');
         args.set('numbering', this.includeLineNumbers ? '1' : '0');
         args.set('align_kwic', this.alignKwic ? '1' : '0');
-        this.saveLinkFn(this.layoutModel.createActionUrl('saveconc', args.items()));
+        const x = this.saveLinkFn(
+            `concordance.${this.getSaveFormat()}`,
+            this.layoutModel.createActionUrl('saveconc', args.items())
+        );
     }
 
 

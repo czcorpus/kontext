@@ -39,11 +39,11 @@ export interface MainMenuProps {
 
 
 interface MainMenuState {
-    currFocus:string;
     numRunningTasks:number;
     numFinishedTasks:number;
     menuItems:Immutable.List<Kontext.MenuEntry>;
     concArgs:Kontext.IMultiDict;
+    visibleSubmenu:string;
 }
 
 
@@ -360,7 +360,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         _renderHourglass() {
             if (this.props.numRunning > 0) {
                 const title = he.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning});
-                return <a title={title}>{'\u231B'}</a>;
+                return <a className="hourglass" title={title}>{'\u231B'}</a>;
 
             } else {
                 return null;
@@ -413,7 +413,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             this._modelChangeListener = this._modelChangeListener.bind(this);
             this._closeActiveSubmenu = this._closeActiveSubmenu.bind(this);
             this.state = {
-                currFocus: null,
+                visibleSubmenu: mainMenuModel.getVisibleSubmenu(),
                 numRunningTasks: asyncTaskModel.getNumRunningTasks(),
                 numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
                 menuItems: mainMenuModel.getData(),
@@ -422,22 +422,27 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleHoverChange(ident, enable) {
-            const newState = he.cloneState(this.state);
             if (!enable) {
-                newState.currFocus = null;
+                dispatcher.dispatch({
+                    actionType: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
+                    props: {value: ident}
+                });
 
             } else {
-                newState.currFocus = ident;
+                dispatcher.dispatch({
+                    actionType: 'MAIN_MENU_SET_VISIBLE_SUBMENU',
+                    props: {value: ident}
+                });
             }
-            this.setState(newState);
         }
 
         _modelChangeListener() {
             this.setState({
-                currFocus: this.state.currFocus,
+                visibleSubmenu: mainMenuModel.getVisibleSubmenu(),
                 numRunningTasks: asyncTaskModel.getNumRunningTasks(),
                 numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
-                menuItems: mainMenuModel.getData()
+                menuItems: mainMenuModel.getData(),
+                concArgs: mainMenuModel.getConcArgs()
             });
         }
 
@@ -452,9 +457,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _closeActiveSubmenu() {
-            const newState = he.cloneState(this.state);
-            newState.currFocus = null;
-            this.setState(newState);
+            dispatcher.dispatch({
+                actionType: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
+                props: {}
+            });
         }
 
         render() {
@@ -466,7 +472,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                         return <SubMenu key={item[0]} label={item[1].label}
                                     items={item[1].items}
                                     isDisabled={item[1].disabled}
-                                    isOpened={this.state.currFocus === item[0]}
+                                    isOpened={this.state.visibleSubmenu === item[0]}
                                     handleMouseOver={mouseOverHandler}
                                     handleMouseOut={mouseOutHandler}
                                     closeActiveSubmenu={this._closeActiveSubmenu}

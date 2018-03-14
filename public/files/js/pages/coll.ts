@@ -17,7 +17,7 @@
  */
 
 import {Kontext, TextTypes} from '../types/common';
-import {PageModel} from '../app/main';
+import {PageModel, DownloadType} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
@@ -169,7 +169,7 @@ export class CollPage {
             this.layoutModel.getConf<CollResultData>('CollResultData'),
             this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
             this.layoutModel.getConf<number>('CollPageSize'),
-            (s)=>this.setDownloadLink(s),
+            this.setDownloadLink.bind(this),
             this.layoutModel.getConf<number>('CollSaveLinesLimit'),
             !!this.layoutModel.getConf<number>('CollUnfinished')
         );
@@ -255,9 +255,8 @@ export class CollPage {
         );
     }
 
-    setDownloadLink(url:string):void {
-        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
-        iframe.src = url;
+    setDownloadLink(filename:string, url:string) {
+        this.layoutModel.bgDownload(filename, DownloadType.COLL, url);
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {

@@ -67,7 +67,7 @@ export class CollResultsSaveModel extends StatefulModel {
 
     private toLine:string;
 
-    private saveLinkFn:(string)=>void;
+    private saveLinkFn:(file:string, url:string)=>void;
 
     private collArgsProviderFn:()=>MultiDict;
 
@@ -76,7 +76,8 @@ export class CollResultsSaveModel extends StatefulModel {
     private static GLOBAL_SAVE_LINE_LIMIT = 100000;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            mainModel:CollResultModel, collArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
+            mainModel:CollResultModel, collArgsProviderFn:()=>MultiDict,
+            saveLinkFn:(file:string, url:string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.mainModel = mainModel;
@@ -171,7 +172,10 @@ export class CollResultsSaveModel extends StatefulModel {
         args.set('heading', this.includeHeading ? '1' : '0');
         args.set('from_line', this.fromLine);
         args.set('to_line', this.toLine);
-        this.saveLinkFn(this.layoutModel.createActionUrl('savecoll', args.items()));
+        this.saveLinkFn(
+            `collocation.${this.saveformat}`,
+            this.layoutModel.createActionUrl('savecoll', args.items())
+        );
     }
 
     getFormIsActive():boolean {
@@ -323,7 +327,7 @@ export class CollResultModel extends StatefulModel {
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             formModel:CollFormModel, initialData:CollResultData, resultHeading:CollResultHeading,
-            pageSize:number, saveLinkFn:((string)=>void), saveLinesLimit:number,
+            pageSize:number, saveLinkFn:((file:string, url:string)=>void), saveLinesLimit:number,
             unfinished:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;

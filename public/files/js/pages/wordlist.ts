@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import {PageModel, DownloadType} from '../app/main';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as wordlistResultViewInit} from '../views/wordlist/result';
@@ -138,9 +138,12 @@ export class WordlistPage extends StatefulModel  {
         );
     }
 
-    setDownloadLink(url:string):void {
-        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
-        iframe.src = url;
+    setDownloadLink(file:string, url:string):void {
+        this.layoutModel.bgDownload(
+            file,
+            DownloadType.WORDLIST,
+            url
+        );
     }
 
     init():void {
@@ -163,7 +166,7 @@ export class WordlistPage extends StatefulModel  {
                 this.saveModel = new WordlistSaveModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
-                    url => this.setDownloadLink(url),
+                    this.setDownloadLink.bind(this),
                     () => formModel.createSubmitArgs()
                 );
 

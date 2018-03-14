@@ -19,7 +19,7 @@
  */
 
 import {TextTypes} from '../../types/common';
-import {PageModel} from '../../app/main';
+import {PageModel, DownloadType} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -310,15 +310,15 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
     }
 
     submitDataConversion(format:string):void {
-        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
-        const form = <HTMLFormElement>document.getElementById('iframe-submit-form');
         const args = new MultiDict();
         args.set('saveformat', format);
         args.set('savemode', 'table');
-        form.setAttribute('action', this.pageModel.createActionUrl('export_freqct', args));
-        const dataElm = document.getElementById('iframe-submit-data');
-        dataElm.setAttribute('value', JSON.stringify(this.exportData()));
-        form.submit();
+        this.pageModel.bgDownload(
+            `2d-frequency.${format}`,
+            DownloadType.FREQ2D,
+            this.pageModel.createActionUrl('export_freqct', args),
+            {data: JSON.stringify(this.exportData())}
+        );
     }
 
     private sortByDimension(dim:number, sortAttr:string):void {
