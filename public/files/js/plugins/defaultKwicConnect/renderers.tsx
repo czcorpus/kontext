@@ -91,9 +91,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
             if (translations.length > 0) {
                 return (
                     <span>
-                        {translations.map((v, i) => (
-                            <React.Fragment key={`${v}:${i}`}>
-                                <a href={generateLink(props.data.kwic, v)}>{v}</a>
+                        {translations.map((translation, i) => (
+                            <React.Fragment key={`${translation['righ']}:${i}`}>
+                                <a href={generateLink(props.data.kwic, translation['righ'])}>{translation['righ']}</a>
+                                {'\u00a0'}<span className="note">({translation['perc']})</span>
                                 {i < props.data.contents.translations.length - 1 ? ', ' : null}
                             </React.Fragment>
                         ))}

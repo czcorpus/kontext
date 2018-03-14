@@ -28,7 +28,7 @@ from controller import exposed
 def merge_results(curr, new, word):
     for item in new:
         item['kwic'] = word
-    if curr is None:
+    if len(curr) == 0:
         return [[x] for x in new]
     else:
         for i in range(len(curr)):
@@ -64,7 +64,7 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
 
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
-        return len(corpus_info.token_detail.providers) > 0
+        return len(corpus_info.kwic_connect.providers) > 0
 
     def export_actions(self):
         return {concordance.Actions: [fetch_external_kwic_info]}
@@ -76,7 +76,7 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
                 data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
-                logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
+                logging.getLogger(__name__).error(u'TokenDetail backend error: {0}'.format(ex))
                 raise ex
         return ans
 

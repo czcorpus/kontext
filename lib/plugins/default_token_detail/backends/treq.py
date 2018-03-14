@@ -17,19 +17,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json
+import logging
 
 from plugins.default_token_detail.backends import HTTPBackend
 
 
-AVAIL_LANG_MAPPINGS = {
-    'en': ['cs'],
-    'cs': ['en']
-}
-
-TMP = {
-    'obnova': ['recovery', 'restoration', 'reconstruction', 'renewal', 'rehabilitation'],
-    'obrana': ['defense', 'defence', 'defending', 'defenses', 'defences', 'defend', 'protection'],
-    'obava': ['concern', 'fear', 'apprehension', 'worry', 'anxiety']
+AVAIL_LANG_MAPPINGS = {   # TODO
+    'en': ['cs', 'pl', 'de', 'mk'],
+    'cs': ['en', 'mk', 'pl', 'de']
 }
 
 
@@ -70,15 +65,20 @@ class TreqBackend(HTTPBackend):
         return None, None
 
     def fetch_data(self, word, lemma, pos, corpora, lang):
+        primary_lang = self._lang_from_corpname(corpora[0])
         translat_corp, translat_lang = self._find_second_lang(corpora)
         if translat_corp and translat_lang:
-            # TODO return super(TreqBackend, self).fetch_data(word, lemma, pos, corpora, lang)
-            if lemma in TMP:
-                return json.dumps(dict(treq_link='https://treq.korpus.cz',
-                                       translations=TMP[lemma],
-                                       primary_corp=corpora[0],
-                                       translat_corp=translat_corp)), True
-        return json.dumps(dict(treq_link='https://treq.korpus.cz',
-                               translations=[],
-                               primary_corp=None,
-                               translat_corp=None)), False
+            connection = self.create_connection()
+            try:
+                args = dict(word=word, lemma=lemma, pos=pos, lang1=primary_lang, lang2=translat_lang)
+                connection.request('GET', self._conf['path'].format(**args).encode('utf-8'))
+                logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))
+                data, status = self.process_response(connection)
+                data = json.loads(data)
+            finally:
+                connection.close()
+            return json.dumps(dict(treq_link='https://treq.korpus.cz',
+                                   sum=data.get('sum', 0),
+                                   translations=data.get('lines', []),
+                                   primary_corp=corpora[0],
+                                   translat_corp=translat_corp)), True
