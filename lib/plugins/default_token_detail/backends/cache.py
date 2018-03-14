@@ -19,16 +19,17 @@
 
 import time
 import zlib
+import logging
 import sqlite3
 from functools import wraps
 from hashlib import md5
 
 
-def mk_token_detail_cache_key(word, lemma, pos, corpora, lang, backend_cls):
+def mk_token_detail_cache_key(word, lemma, pos, corpora, lang, provider_id):
     """
     Returns a hashed cache key based on the passed parameters.
     """
-    return md5('%r%r%r%r%r%r' % (word, lemma, pos, corpora, lang, backend_cls)).hexdigest()
+    return md5('%r%r%r%r%r%r' % (word, lemma, pos, corpora, lang, provider_id)).hexdigest()
 
 
 def cached(f):
@@ -62,6 +63,8 @@ def cached(f):
                     curs.execute("INSERT INTO cache (key, data, found, last_access) VALUES (?,?,?,?)",
                                  (key, zipped, 1 if res[1] else 0, int(round(time.time()))))
             else:
+                logging.getLogger(__name__).debug('token/kwic_connect cache hit {0} for ({1}, {2}, {3})'.format(
+                    key[:6], word, lemma, pos))
                 # unzip and decode the cached result, convert the "found" parameter value back to boolean
                 res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
                 # update last access
