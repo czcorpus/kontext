@@ -250,6 +250,9 @@ export class AppNavigation implements Kontext.IURLHandler {
         if (!options.contentType) {
             options.contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
         }
+        if (!options.responseType) {
+            options.responseType = 'json';
+        }
 
         function exportValue(v) {
             return v === null || v === undefined ? '' : encodeURIComponent(v);
@@ -315,20 +318,29 @@ export class AppNavigation implements Kontext.IURLHandler {
         return rsvpAjax.requestObject<string>({
             accept: options.accept,
             contentType: options.contentType,
+            responseType: options.responseType,
             method: method,
             requestBody: body,
             url: url
-        }).then<T>(
-            (data:string) => {
-                switch (options.accept) {
-                    case 'application/json':
-                    case 'text/x-json':
-                        return JSON.parse(data);
-                    case 'application/x-www-form-urlencoded':
-                        return decodeArgs(data);
-                    default:
-                        return data;
-                }
+        });
+    }
+
+
+    bgDownload(filename:string, url:string, method:string, args?:AjaxArgs):RSVP.Promise<boolean> {
+        return this.ajax<Blob>(
+            method,
+            url,
+            args || {},
+            {responseType: 'blob'}
+        ).then(
+            (data) => {
+                const objectURL = window.URL.createObjectURL(data);
+                const link = <HTMLAnchorElement>document.getElementById('download-link');
+                link.href = objectURL;
+                link.download = filename;
+                link.click();
+                window.setTimeout(() => window.URL.revokeObjectURL(objectURL), 2000);
+                return true;
             }
         );
     }

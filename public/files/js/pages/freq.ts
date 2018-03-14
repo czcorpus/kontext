@@ -20,7 +20,7 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
-import {PageModel} from '../app/main';
+import {PageModel, DownloadType} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
@@ -262,9 +262,8 @@ class FreqPage {
         );
     }
 
-    private setDownloadLink(url:string):void {
-        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
-        iframe.src = url;
+    setDownloadLink(filename:string, url:string) {
+        this.layoutModel.bgDownload(filename, DownloadType.FREQ, url);
     }
 
     private initFreqResult():void {
@@ -276,7 +275,7 @@ class FreqPage {
                     this.layoutModel,
                     this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
                     this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
-                    (s)=>this.setDownloadLink(s)
+                    this.setDownloadLink.bind(this)
                 );
                 this.freqResultModel.importData(
                     this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),

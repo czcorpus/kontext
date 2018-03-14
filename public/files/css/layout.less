@@ -691,6 +691,10 @@ form.query-form {
             font-size: 1.2em;
             vertical-align: middle;
         }
+
+        .hourglass {
+            animation: color-change 1s infinite;
+        }
     }
 
     > a:hover {
@@ -2196,28 +2200,6 @@ section#my-subcorpora {
     padding-left: 0.5em;
 }
 
-@keyframes fadein {
-
-    // transition: opacity .3s ease-in;
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeout {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
-}
-
 
 .hint {
     color: @color-light-text;
@@ -2383,4 +2365,32 @@ p.boxed-par {
 .sh-value-clickable {
     text-decoration: none;
     background-color: rgb(236, 243, 250);
+}
+
+@keyframes fadein {
+
+    // transition: opacity .3s ease-in;
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes color-change {
+    0% { color: @color-default-text; }
+    50% { color: @color-default-text; }
+    70% { color: @color-light-text; }
 }

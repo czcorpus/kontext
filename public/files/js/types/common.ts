@@ -193,6 +193,7 @@ export namespace Kontext {
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
         enableMenuItem(itemId:string, subItemId?:string):void;
+        getVisibleSubmenu():string;
 
         /**
          * Register an action which is run before listeners
@@ -338,6 +339,7 @@ export namespace Kontext {
 
     export interface AjaxOptions {
         contentType?:string;
+        responseType?:string;
         accept?:string;
     }
 

@@ -23,6 +23,7 @@ declare module RsvpAjax {
         url:string;
         requestBody:string;
         contentType:string;
+        responseType:string;
         accept: string;
     }
 

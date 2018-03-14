@@ -23,7 +23,7 @@
 
 import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
-import {PageModel} from '../app/main';
+import {PageModel, DownloadType} from '../app/main';
 import {MultiDict} from '../util';
 import RSVP from 'rsvp';
 
@@ -181,8 +181,11 @@ export class LineSelGroupsRatiosChart {
                     args.set('data', JSON.stringify(this.lastGroupStats));
                     args.set('cformat', ef);
                     args.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
-                    const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
-                    iframe.src = this.layoutModel.createActionUrl('export_line_groups_chart', args);
+                    this.layoutModel.bgDownload(
+                        'line-selection-overview.xlsx',
+                        DownloadType.LINE_SELECTION,
+                        this.layoutModel.createActionUrl('export_line_groups_chart', args)
+                    );
                 });
             });
         }

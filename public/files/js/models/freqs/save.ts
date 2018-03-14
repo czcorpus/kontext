@@ -45,14 +45,14 @@ export class FreqResultsSaveModel extends StatefulModel {
 
     private toLine:string;
 
-    private saveLinkFn:(string)=>void;
+    private saveLinkFn:(file:string, url:string)=>void;
 
     private freqArgsProviderFn:()=>MultiDict;
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            freqArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
+            freqArgsProviderFn:()=>MultiDict, saveLinkFn:(file:string, url:string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formIsActive = false;
@@ -146,7 +146,10 @@ export class FreqResultsSaveModel extends StatefulModel {
         args.set('from_line', this.fromLine);
         args.set('to_line', this.toLine);
         args.remove('format'); // cannot risk 'json' here
-        this.saveLinkFn(this.layoutModel.createActionUrl('savefreq', args.items()));
+        this.saveLinkFn(
+            `frequencies.${this.saveformat}`,
+            this.layoutModel.createActionUrl('savefreq', args.items())
+        );
     }
 
     getFormIsActive():boolean {

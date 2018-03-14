@@ -29,8 +29,6 @@ import * as Rx from '@reactivex/rxjs';
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
 import {CoreViews} from '../types/coreViews';
-import applicationBar from 'plugins/applicationBar/init';
-import footerBar from 'plugins/footerBar/init';
 import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
 import {init as commonViewsFactory, CommonViews} from '../views/common';
@@ -44,16 +42,28 @@ import {CorpusViewOptionsModel} from '../models/options/structsAttrs';
 import {GeneralViewOptionsModel} from '../models/options/general';
 import {L10n} from './l10n';
 import * as Immutable from 'immutable';
-import {AsyncTaskChecker} from '../models/asyncTask';
+import {AsyncTaskChecker, AsyncTaskStatus} from '../models/asyncTask';
 import {UserSettings} from './userSettings';
 import {MainMenuModel, InitialMenuData} from '../models/mainMenu';
-import authPlugin from 'plugins/auth/init';
-import issueReportingPlugin from 'plugins/issueReporting/init';
 import {AppNavigation, AjaxArgs} from './navigation';
 import {EmptyPlugin} from '../plugins/empty/init';
+import applicationBar from 'plugins/applicationBar/init';
+import footerBar from 'plugins/footerBar/init';
+import authPlugin from 'plugins/auth/init';
+import issueReportingPlugin from 'plugins/issueReporting/init';
 
 declare var require:any; // webpack's require
 require('styles/kontext.less');
+
+
+export enum DownloadType {
+    CONCORDANCE = 'conc_download',
+    FREQ = 'freq_download',
+    FREQ2D = 'freq2d_download',
+    COLL = 'coll_download',
+    WORDLIST = 'wordlist_download',
+    LINE_SELECTION = 'line_selection_download'
+}
 
 
 /**
@@ -255,6 +265,51 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
         return this.appNavig.ajax(method, url, args, options);
+    }
+
+    /**
+     *
+     * @param filename
+     * @param url
+     * @param args
+     */
+    bgDownload(filename:string, type:DownloadType, url:string, args?:AjaxArgs):void {
+        const taskId = `${new Date().getTime()}:${url}`;
+        const method = () => {
+            if (type === DownloadType.FREQ2D) {
+                return 'POST';
+            }
+            return 'GET';
+        };
+
+        this.dispatcher.dispatch({
+            actionType: 'INBOX_ADD_ASYNC_TASK',
+            props: {
+                ident: taskId,
+                label: filename,
+                category: type
+            }
+        });
+        this.appNavig.bgDownload(filename, url, method(), args).then(
+            () => {
+                this.dispatcher.dispatch({
+                    actionType: 'INBOX_UPDATE_ASYNC_TASK',
+                    props: {
+                        ident: taskId,
+                        status: AsyncTaskStatus.SUCCESS
+                    }
+                });
+            },
+            (err) => {
+                this.dispatcher.dispatch({
+                    actionType: 'INBOX_UPDATE_ASYNC_TASK',
+                    props: {
+                        ident: taskId,
+                        status: AsyncTaskStatus.FAILURE
+                    }
+                });
+            }
+        );
     }
 
     /**

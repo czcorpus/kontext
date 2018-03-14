@@ -92,6 +92,8 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     private activeItem:Kontext.MainMenuActiveItem;
 
+    private visibleSubmenu:string;
+
     private selectionListeners:Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>;
 
     private data:Immutable.List<Kontext.MenuEntry>;
@@ -101,11 +103,20 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;
+        this.visibleSubmenu = null;
         this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
         this.data = importMenuData(initialData);
 
         this.dispatcher.register((payload:ActionPayload) => {
-            if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
+            if (payload.actionType === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
+                this.visibleSubmenu = payload.props['value'];
+                this.notifyChangeListeners();
+
+            } else if (payload.actionType === 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU') {
+                this.visibleSubmenu = null;
+                this.notifyChangeListeners();
+
+            } else if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
                 this.activeItem = null;
                 this.notifyChangeListeners();
 
@@ -113,7 +124,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                 this.activeItem = {
                     actionName: payload.actionType,
                     actionArgs: payload.props
-                }
+                };
                 if (this.selectionListeners.has(payload.actionType)) {
                     this.selectionListeners.get(payload.actionType).reduce<RSVP.Promise<any>>(
                         (red, curr) => {
@@ -281,6 +292,10 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     getConcArgs():MultiDict {
         return this.pageModel.getConcArgs();
+    }
+
+    getVisibleSubmenu():string {
+        return this.visibleSubmenu;
     }
 
 }
