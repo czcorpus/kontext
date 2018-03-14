@@ -121,10 +121,6 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                 this.notifyChangeListeners();
 
             } else if (payload.actionType.indexOf('MAIN_MENU_') === 0) {
-                this.activeItem = {
-                    actionName: payload.actionType,
-                    actionArgs: payload.props
-                };
                 if (this.selectionListeners.has(payload.actionType)) {
                     this.selectionListeners.get(payload.actionType).reduce<RSVP.Promise<any>>(
                         (red, curr) => {
@@ -134,10 +130,14 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                                 }
                             );
                         },
-                        new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => { resolve(null); })
+                        RSVP.Promise.resolve(null)
 
                     ).then(
                         () => {
+                            this.activeItem = {
+                                actionName: payload.actionType,
+                                actionArgs: payload.props
+                            };
                             this.notifyChangeListeners();
                         }
                     ).catch(
@@ -147,6 +147,10 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                     )
 
                 } else {
+                    this.activeItem = {
+                        actionName: payload.actionType,
+                        actionArgs: payload.props
+                    };
                     this.notifyChangeListeners();
                 }
             }
