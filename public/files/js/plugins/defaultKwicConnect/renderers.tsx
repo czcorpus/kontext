@@ -83,6 +83,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
             args.set('viewmode', 'align');
             args.set('queryselector_' + props.data.contents.translat_corp, 'phraserow');
             args.set('phrase_' + props.data.contents.translat_corp, word2);
+            args.set('pcq_pos_neg_' + props.data.contents.translat_corp, 'pos');
             return he.createActionLink('first', args);
         };
 

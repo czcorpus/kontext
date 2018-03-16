@@ -60,8 +60,8 @@ def cached(f):
                 # the cache along with the "found" parameter
                 if res:
                     zipped = buffer(zlib.compress(res[0].encode('utf-8')))
-                    curs.execute("INSERT INTO cache (key, data, found, last_access) VALUES (?,?,?,?)",
-                                 (key, zipped, 1 if res[1] else 0, int(round(time.time()))))
+                    curs.execute("INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
+                                 (key, self.get_provider_id(), zipped, 1 if res[1] else 0, int(round(time.time()))))
             else:
                 logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for ({1}, {2}, {3})'.format(
                     key[:6], word, lemma, pos))
