@@ -73,8 +73,9 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
-                data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
-                ans.append(frontend.export_data(data, status, lang).to_dict())
+                if backend.enabled_for_corpora(corpora):
+                    data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
+                    ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error(u'TokenDetail backend error: {0}'.format(ex))
                 raise ex

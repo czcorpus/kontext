@@ -42,6 +42,7 @@ class CacheMan(object):
         c = conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS cache ("
                   "key text, "
+                  "provider text, "
                   "data blob, "
                   "found integer, "
                   "last_access integer NOT NULL, "

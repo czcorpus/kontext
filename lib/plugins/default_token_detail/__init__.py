@@ -63,6 +63,7 @@ import os
 import manatee
 import plugins
 from plugins.abstract.token_detail import AbstractTokenDetail, find_implementation
+from l10n import import_string
 from actions import concordance
 from controller import exposed
 from plugins.default_token_detail.cache_man import CacheMan
@@ -75,14 +76,17 @@ def fetch_token_detail(self, request):
     data for a token. Token is identified by its position id
     (i.e. the one translated via attr.pos2str(...)).
     """
+    def import_str(s):
+        return import_string(s, self.corp.get_conf('ENCODING'))
+
     token_id = request.args['token_id']
 
     wa = self.corp.get_attr('word')
-    word = wa.pos2str(int(token_id))
+    word = import_str(wa.pos2str(int(token_id)))
 
     try:
         la = self.corp.get_attr('lemma')
-        lemma = la.pos2str(int(token_id))
+        lemma = import_str(la.pos2str(int(token_id)))
     except manatee.AttrNotFound:
         lemma = ''
 

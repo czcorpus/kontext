@@ -19,6 +19,7 @@
 import json
 import logging
 
+from plugins.default_token_detail.backends.cache import cached
 from plugins.default_token_detail.backends import HTTPBackend
 
 
@@ -43,6 +44,8 @@ class TreqBackend(HTTPBackend):
         searchGo:
     """
 
+    DEFAULT_MAX_RESULT_LINES = 20
+
     def __init__(self, conf, ident):
         super(TreqBackend, self).__init__(conf, ident)
         self._conf = conf
@@ -64,6 +67,16 @@ class TreqBackend(HTTPBackend):
                 return cn, lang
         return None, None
 
+    def enabled_for_corpora(self, corpora):
+        corp1 = corpora[0]
+        corp2 = corpora[1] if len(corpora) > 1 else None
+        if corp2 is None:
+            return False
+        lang1 = self._lang_from_corpname(corp1)
+        lang2 = self._lang_from_corpname(corp2)
+        return lang1 in AVAIL_LANG_MAPPINGS and lang2 in AVAIL_LANG_MAPPINGS[lang1]
+
+    @cached
     def fetch_data(self, word, lemma, pos, corpora, lang):
         primary_lang = self._lang_from_corpname(corpora[0])
         translat_corp, translat_lang = self._find_second_lang(corpora)
@@ -71,14 +84,18 @@ class TreqBackend(HTTPBackend):
             connection = self.create_connection()
             try:
                 args = dict(word=word, lemma=lemma, pos=pos, lang1=primary_lang, lang2=translat_lang)
-                connection.request('GET', self._conf['path'].format(**args).encode('utf-8'))
                 logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))
+                connection.request('GET', self._conf['path'].format(**args).encode('utf-8'))
                 data, status = self.process_response(connection)
                 data = json.loads(data)
+                max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
+                data['lines'] = data['lines'][:max_items]
             finally:
                 connection.close()
-            return json.dumps(dict(treq_link='https://treq.korpus.cz',
-                                   sum=data.get('sum', 0),
-                                   translations=data.get('lines', []),
-                                   primary_corp=corpora[0],
-                                   translat_corp=translat_corp)), True
+        else:
+            data = dict(sum=0, lines=[])
+        return json.dumps(dict(treq_link='https://treq.korpus.cz',
+                               sum=data.get('sum', 0),
+                               translations=data.get('lines', []),
+                               primary_corp=corpora[0],
+                               translat_corp=translat_corp)), True

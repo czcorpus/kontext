@@ -77,6 +77,9 @@ class AbstractBackend(object):
     def get_provider_id(self):
         return self._provider_id
 
+    def enabled_for_corpora(self, corpora):
+        return True
+
 
 class AbstractFrontend(object):
 
