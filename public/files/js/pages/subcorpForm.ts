@@ -164,7 +164,8 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                 const liveAttrsViews = liveAttrs ? liveAttrs.getViews(subcMixerComponent,this.textTypesModel) : {};
 
                 const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
-                    () => liveAttrs.getAlignedCorpora() : () => Immutable.List<TextTypes.AlignedLanguageItem>();
+                    () => liveAttrs.getAlignedCorpora().filter(v => v.selected).toList() :
+                    () => Immutable.List<TextTypes.AlignedLanguageItem>();
 
                 return {
                     component: ttViewComponents.TextTypesPanel,
