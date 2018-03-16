@@ -364,27 +364,28 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 console.error(message);
             }
             if (message instanceof XMLHttpRequest) {
-                const respText = (<XMLHttpRequest>message).responseText;
-                try {
-                    const respObj = JSON.parse(respText);
-                    if (respObj['error_code']) {
-                        outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
+                switch (message.responseType) {
+                    case 'json': {
+                        const respObj = message.response || {};
+                        if (message.response['error_code']) {
+                            outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
 
-                    } else if (respObj['messages']) {
-                        outMsg = respObj['messages'].join(', ');
+                        } else if (respObj['messages']) {
+                            outMsg = respObj['messages'].join(', ');
 
-                    } else {
-                        outMsg = `${message.status}: ${message.statusText}`;
+                        } else {
+                            outMsg = `${message.status}: ${message.statusText}`;
+                        }
                     }
+                    break;
+                    case 'text':
+                    case '':
+                        outMsg = `${message.status}: ${message.statusText} (${String(message.responseText).substr(0, 100)}...)`;
+                    break;
+                    default:
+                        outMsg = `${message.status}: ${message.statusText}`
+                    break;
 
-                } catch (e) {
-                    console.error(e);
-                    if (message.statusText && message.status >= 400) {
-                        outMsg = `${message.status}: ${message.statusText} (${String(respText).substr(0, 100)}...)`;
-
-                    } else {
-                        outMsg = `${message.status}: ${message.statusText}`;
-                    }
                 }
 
             } else if (message instanceof Error) {

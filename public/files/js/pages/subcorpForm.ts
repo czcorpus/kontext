@@ -182,7 +182,7 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
         );
     }
 
-    init(conf:Kontext.Conf):void {
+    init():void {
         const getModeldAlignedCorp = () => {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
         };
@@ -218,8 +218,20 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                     this,
                     {
                         itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                            window.location.href = this.layoutModel.createActionUrl('subcorpus/subcorp_form',
-                                    [['corpname', corpora[0]]]);
+                            return this.layoutModel.switchCorpus(corpora, subcorpId).then(
+                                () => {
+                                    // all the components must be deleted to prevent memory leaks
+                                    // and unwanted action handlers from previous instance
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                                    this.init();
+                                },
+                                (err) => {
+                                    this.layoutModel.showMessage('error', err);
+                                }
+                            )
                         }
                     }
                 );
@@ -254,5 +266,5 @@ export function init(conf:Kontext.Conf):void {
         layoutModel,
         layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')
     );
-    pageModel.init(conf);
+    pageModel.init();
 }
