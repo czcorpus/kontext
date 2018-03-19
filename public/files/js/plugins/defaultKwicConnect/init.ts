@@ -38,14 +38,19 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
     private renderers:RenderersView;
 
-    constructor(pluginApi:IPluginApi) {
+
+    constructor(pluginApi:IPluginApi, maxKwicWords:number, loadChunkSize:number) {
         this.pluginApi = pluginApi;
         this.model = new KwicConnectModel(
             pluginApi.dispatcher(),
             pluginApi,
             [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
                     .concat(...pluginApi.getConf<Array<string>>('alignedCorpora')),
-            this.selectRenderer.bind(this)
+            this.selectRenderer.bind(this),
+            {
+                loadChunkSize: loadChunkSize,
+                maxKwicWords: maxKwicWords
+            }
         );
     }
 
@@ -81,7 +86,12 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
 
 export default function create(pluginApi:IPluginApi, alignedCorpora:Array<string>):RSVP.Promise<PluginInterfaces.KwicConnect.IPlugin> {
-    const plg = new DefaultKwicConnectPlugin(pluginApi);
+    const conf = pluginApi.getConf<{kwic_connect: {load_chunk_size:number; max_kwic_words:number}}>('pluginData');
+    const plg = new DefaultKwicConnectPlugin(
+        pluginApi,
+        conf.kwic_connect.max_kwic_words,
+        conf.kwic_connect.load_chunk_size
+    );
     plg.init();
     return RSVP.resolve(plg);
 }

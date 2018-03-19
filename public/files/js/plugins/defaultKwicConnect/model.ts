@@ -63,17 +63,25 @@ export interface ProviderWordMatch {
 
 export interface KwicConnectState {
     isBusy:boolean;
+
     corpora:Immutable.List<string>;
     data:Immutable.List<ProviderWordMatch>;
 }
 
 export enum Actions {
-    FETCH_INFO_DONE = 'KWIC_CONNECT_FETCH_INFO_DONE'
+    FETCH_INFO_DONE = 'KWIC_CONNECT_FETCH_INFO_DONE',
+    FETCH_PARTIAL_INFO_DONE = 'KWIC_CONNECT_FETCH_PARTIAL_INFO_DONE'
 }
 
 enum FreqDistType {
     WORD = 'word',
     LEMMA = 'lemma'
+}
+
+
+export interface KwicConnectModelOpts {
+    loadChunkSize:number;
+    maxKwicWords:number;
 }
 
 export class KwicConnectModel extends StatelessModel<KwicConnectState> {
@@ -82,7 +90,10 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     private rendererMap:RendererMap;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpora:Array<string>, rendererMap:RendererMap) {
+    private options:KwicConnectModelOpts;
+
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpora:Array<string>, rendererMap:RendererMap,
+                    options:KwicConnectModelOpts) {
         super(
             dispatcher,
             {
@@ -95,9 +106,27 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
                         this.fetchUniqValues(FreqDistType.WORD).then(
                             (data) => {
-                                return this.fetchKwicInfo(state, data);
+                                const procData = this.makeStringGroups(data.slice(0, this.options.maxKwicWords),
+                                        this.options.loadChunkSize);
+                                return procData.reduce(
+                                    (prev, curr) => {
+                                        return prev.then(
+                                            (data) => {
+                                                if (data !== null) {
+                                                    dispatch({
+                                                        actionType: Actions.FETCH_PARTIAL_INFO_DONE,
+                                                        props: {
+                                                            data: data
+                                                        }
+                                                    });
+                                                }
+                                                return this.fetchKwicInfo(state, curr);
+                                            }
+                                        );
+                                    },
+                                    RSVP.Promise.resolve(null)
+                                );
                             }
-
                         ).then(
                             (data) => {
                                 dispatch({
@@ -121,7 +150,69 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         );
         this.pluginApi = pluginApi;
         this.rendererMap = rendererMap;
+        this.options = options;
     }
+
+    reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
+        const newState = this.copyState(state);
+        switch (action.actionType) {
+            case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
+                newState.data = Immutable.List<ProviderWordMatch>();
+                newState.isBusy = true;
+            break;
+            case Actions.FETCH_PARTIAL_INFO_DONE:
+                this.mergeDataOfProviders(newState, action.props['data']);
+            break;
+            case Actions.FETCH_INFO_DONE:
+                newState.isBusy = false;
+                this.mergeDataOfProviders(newState, action.props['data']);
+            break;
+        }
+        return newState;
+    }
+
+    /**
+     * This for merging data loaded chunk by chunk. KonText asks all the providers
+     * for part of kwic words. Each response contains also some global information
+     * (e.g. headers). The function ensures that only actual chunked data are
+     * concatenated.
+     *
+     * @param state
+     * @param newData
+     */
+    private mergeDataOfProviders(state:KwicConnectState, newData: Immutable.List<ProviderWordMatch>):void {
+        if (state.data.size > 0) {
+            state.data = state.data.map((providerData, i) => {
+                return {
+                    heading: providerData.heading,
+                    note: providerData.note,
+                    renderer: providerData.renderer,
+                    data: providerData.data.concat(newData.get(i).data).toList()
+                }
+            }).toList();
+
+        } else {
+            state.data = newData;
+        }
+    }
+
+    private makeStringGroups(s:Array<string>, chunkSize:number):Array<Array<string>> {
+        const ans:Array<Array<string>> = [];
+        let chunk:Array<string>;
+        s.forEach((v, i) => {
+            if (i % chunkSize === 0) {
+                if (chunk) {
+                    ans.push(chunk);
+                }
+                chunk = [];
+            }
+            chunk.push(v);
+        });
+        if (chunk && chunk.length > 0) {
+            ans.push(chunk);
+        }
+        return ans;
+    };
 
     private fetchKwicInfo(state:KwicConnectState, items:Array<string>):RSVP.Promise<Immutable.List<ProviderWordMatch>> {
         const args = new MultiDict();
@@ -172,20 +263,6 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 });
             }
         );
-    }
-
-    reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
-        const newState = this.copyState(state);
-        switch (action.actionType) {
-            case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
-                newState.isBusy = true;
-            break;
-            case Actions.FETCH_INFO_DONE:
-                newState.isBusy = false;
-                newState.data = action.props['data'];
-            break;
-        }
-        return newState;
     }
 
 }

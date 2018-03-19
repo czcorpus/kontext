@@ -87,7 +87,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
         render() {
             return (
                 <div>
-                    {this.state.isBusy ? <layoutViews.AjaxLoaderImage /> : this.renderWidget()}
+                    {this.renderWidget()}
+                    {this.state.isBusy ? <layoutViews.AjaxLoaderImage /> : null}
                 </div>
             );
         }
