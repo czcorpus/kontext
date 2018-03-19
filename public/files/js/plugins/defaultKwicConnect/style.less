@@ -1,3 +1,5 @@
+@import "../../../css/shared.less";
+
 .KwicConnectWidget {
     table {
         th {
@@ -7,5 +9,24 @@
 
     .not-found {
         color: #cccccc;
+    }
+
+    .treq-translation:not(:first-child) {
+        margin-top: 1em;
+
+
+        .view-in-treq {
+            display: block;
+            text-align: right;
+
+            a {
+                color: @color-default-text;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+        }
     }
 }

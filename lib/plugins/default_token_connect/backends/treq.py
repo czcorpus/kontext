@@ -23,6 +23,13 @@ from plugins.default_token_connect.backends.cache import cached
 from plugins.default_token_connect.backends import HTTPBackend
 
 
+AVAIL_GROUPS = {
+    'cs': ('ACQUIS', 'CORE', 'EUROPARL', 'PRESSEUROP', 'SUBTITLES', 'SYNDICATE'),
+    'en': ('ACQUIS', 'CORE', 'EUROPARL', 'PRESSEUROP', 'SUBTITLES', 'SYNDICATE'),
+    'pl': ('ACQUIS', 'CORE', 'EUROPARL', 'PRESSEUROP', 'SUBTITLES'),
+    'mk': ('CORE', 'SUBTITLES')
+}
+
 AVAIL_LANG_MAPPINGS = {   # TODO
     'en': ['cs', 'pl', 'de', 'mk'],
     'cs': ['en', 'mk', 'pl', 'de']
@@ -76,17 +83,44 @@ class TreqBackend(HTTPBackend):
         lang2 = self._lang_from_corpname(corp2)
         return lang1 in AVAIL_LANG_MAPPINGS and lang2 in AVAIL_LANG_MAPPINGS[lang1]
 
+    @staticmethod
+    def mk_uri_args(lang1, lang2, groups, word, lemma, pos):
+        return (u'left={lang1}&right={lang2}&viceslovne=false&regularni=true&lemma=true&aJeA=true&hledejKde={groups}'
+                u'&hledejCo={word}&order=percDesc').format(lang1=lang1, lang2=lang2, groups=groups, word=word).encode('utf-8')
+
+    def mk_api_path(self, lang1, lang2, groups, word, lemma, pos):
+        return '/api.php?api=true&' + self.mk_uri_args(lang1, lang2, groups, word, lemma, pos)
+
+    def mk_page_path(self, lang1, lang2, groups, word, lemma, pos):
+        return '/index.php?' + self.mk_uri_args(lang1, lang2, groups, word, lemma, pos)
+
+    def find_lang_common_groups(self, lang1, lang2):
+        g1 = set(AVAIL_GROUPS.get(lang1, []))
+        g2 = set(AVAIL_GROUPS.get(lang2, []))
+        return g1.intersection(g2)
+
+    def mk_server_addr(self):
+        if self._conf.get('ssl', False):
+            return ('https://' + self._conf['server']).encode('utf-8')
+        return ('http://' + self._conf['server']).encode('utf-8')
+
     @cached
     def fetch_data(self, word, lemma, pos, corpora, lang):
+        """
+        """
         primary_lang = self._lang_from_corpname(corpora[0])
         translat_corp, translat_lang = self._find_second_lang(corpora)
+        treq_link = None
         if translat_corp and translat_lang:
+            common_groups = ','.join(self.find_lang_common_groups(primary_lang, translat_lang))
+            args = dict(word=word, lemma=lemma, pos=pos, lang1=primary_lang, lang2=translat_lang,
+                        groups=common_groups)
+            tmp = self.mk_page_path(**args)
+            treq_link = self.mk_server_addr() + tmp
             connection = self.create_connection()
             try:
-                args = dict(word=word, lemma=lemma, pos=pos,
-                            lang1=primary_lang, lang2=translat_lang)
                 logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))
-                connection.request('GET', self._conf['path'].format(**args).encode('utf-8'))
+                connection.request('GET', self.mk_api_path(**args))
                 data, status = self.process_response(connection)
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
@@ -95,7 +129,7 @@ class TreqBackend(HTTPBackend):
                 connection.close()
         else:
             data = dict(sum=0, lines=[])
-        return json.dumps(dict(treq_link='https://treq.korpus.cz',
+        return json.dumps(dict(treq_link=treq_link,
                                sum=data.get('sum', 0),
                                translations=data.get('lines', []),
                                primary_corp=corpora[0],

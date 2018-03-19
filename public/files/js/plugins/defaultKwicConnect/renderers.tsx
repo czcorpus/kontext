@@ -99,9 +99,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
                                 {i < props.data.contents.translations.length - 1 ? ', ' : null}
                             </React.Fragment>
                         ))}
-                        {'\u00a0'}(<a href={props.data['contents']['treq_link']} target="_blank">
-                            {he.translate('default_kwic_connect__view_in_treq')}
-                        </a>)
                     </span>
                 );
 
@@ -111,11 +108,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
         };
 
         return (
-            <div>
-                <dl>
+            <div className="treq-translation">
                 <strong>{props.data.kwic}</strong>:{'\u00a0'}
                 {renderWords()}
-                </dl>
+                <div className="view-in-treq">(<a className="external" href={props.data['contents']['treq_link']} target="_blank">
+                            {he.translate('default_kwic_connect__view_in_treq')}
+                        </a>)</div>
             </div>
         );
     };
