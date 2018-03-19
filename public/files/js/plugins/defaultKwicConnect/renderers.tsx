@@ -56,20 +56,40 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
 
     const DataMuseSimilarWords:Views['DataMuseSimilarWords'] = (props) => {
         return (
-            <p className="keywords">
-                <strong>{props.data.kwic}</strong>:{'\u00a0'}
-                {props.data.contents.map((value, i) => {
-                    return <React.Fragment key={value.word}>
-                        <a className="keyword" href={he.createActionLink('first')}
-                                target="_blank" title={he.translate('global__search_link')}>
-                            {value.word}
-                        </a>
-                        {i < props.data.contents.length - 1 ? ', ' : null}
-                    </React.Fragment>
-                })}
-            </p>
+            <div className="provider-block">
+                <strong className="base-word">{props.data.kwic}:</strong>
+                <span className="words">
+                    {props.data.contents.length > 0 ? '' : '\u2014'}
+                    {props.data.contents.map((value, i) => {
+                        return <React.Fragment key={value.word}>
+                            <a className="word" href={he.createActionLink('first')}
+                                    target="_blank" title={he.translate('global__search_link')}>
+                                {value.word}
+                            </a>
+                            {i < props.data.contents.length - 1 ? ', ' : null}
+                        </React.Fragment>
+                    })}
+                </span>
+            </div>
         );
     };
+
+    // --------------------------- TREQ -------------------------------------------------------
+
+    const TreqBacklinkForm:React.SFC<{
+        action:string;
+        args:Array<[string, string]>;
+
+    }> = (props) => {
+        return <form className="view-in-treq" action={props.action} method="post" target="_blank">
+            {props.args.map(([k, v], i) =>
+                <input key={`arg:${i}:${k}`} type="hidden" name={k} value={v} />
+            )}
+            <button type="submit" className="util-button">
+                {he.translate('default_kwic_connect__view_in_treq')}
+            </button>
+        </form>;
+    }
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
 
@@ -91,10 +111,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
             const translations = props.data.contents['translations'];
             if (translations.length > 0) {
                 return (
-                    <span>
+                    <span className="words">
+                        {translations.length > 0 ? '' : '\u2014'}
                         {translations.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
-                                <a href={generateLink(props.data.kwic, translation['righ'])}>{translation['righ']}</a>
+                                <a className="word" href={generateLink(props.data.kwic, translation['righ'])}>{translation['righ']}</a>
                                 {'\u00a0'}<span className="note">({translation['perc']})</span>
                                 {i < props.data.contents.translations.length - 1 ? ', ' : null}
                             </React.Fragment>
@@ -107,13 +128,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
             }
         };
 
+        const backLink:[string, Array<[string, string]>] = props.data['contents']['treq_link'];
+
         return (
-            <div className="treq-translation">
-                <strong>{props.data.kwic}</strong>:{'\u00a0'}
+            <div className="provider-block">
+                <strong className="base-word">{props.data.kwic}:</strong>
                 {renderWords()}
-                <div className="view-in-treq">(<a className="external" href={props.data['contents']['treq_link']} target="_blank">
-                            {he.translate('default_kwic_connect__view_in_treq')}
-                        </a>)</div>
+                <TreqBacklinkForm action={backLink[0]} args={backLink[1]} />
             </div>
         );
     };
