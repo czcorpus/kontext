@@ -106,7 +106,7 @@ class _Names(object):
     SUBCMIXER = _ID('subcmixer')
     CHART_EXPORT = _ID('chart_export')
     ISSUE_REPORTING = _ID('issue_reporting')
-    TOKEN_DETAIL = _ID('token_detail')
+    TOKEN_CONNECT = _ID('token_connect')
     KWIC_CONNECT = _ID('kwic_connect')
 
     def __iter__(self):
@@ -114,7 +114,7 @@ class _Names(object):
                      self.CONC_CACHE, self.EXPORT, self.USER_ITEMS, self.MENU_ITEMS, self.GETLANG, self.CORPARCH,
                      self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES,
                      self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT,
-                     self.ISSUE_REPORTING, self.TOKEN_DETAIL, self.KWIC_CONNECT])
+                     self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT])
 
 
 runtime = _Names()

@@ -152,7 +152,7 @@
             <module>default_chart_export</module>
         </chart_export>
         <issue_reporting/>
-        <token_detail/>
+        <token_connect />
         <kwic_connect />
     </plugins>
 </kontext>

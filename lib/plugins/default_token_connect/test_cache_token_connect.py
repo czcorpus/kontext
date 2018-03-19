@@ -23,9 +23,9 @@ import time
 import unittest
 
 from mock_http_backend import HTTPBackend
-from plugins.default_token_detail import DefaultTokenDetail, init_provider
-from plugins.default_token_detail.backends.cache import mk_token_detail_cache_key
-from plugins.default_token_detail.cache_man import CacheMan
+from plugins.default_token_connect import DefaultTokenConnect, init_provider
+from plugins.default_token_connect.backends.cache import mk_token_connect_cache_key
+from plugins.default_token_connect.cache_man import CacheMan
 
 logging.basicConfig()
 
@@ -36,15 +36,15 @@ class CacheTest(unittest.TestCase):
         corparch = None
 
         mocked_json = [{"ident": "wiktionary_for_ic_9_en", "heading": {"en_US": "Wiktionary", "cs_CZ": "Wiktionary"},
-                        "backend": "plugins.default_token_detail.mock_http_backend.HTTPBackend",
-                        "frontend": "plugins.default_token_detail.frontends.RawHtmlFrontend",
+                        "backend": "plugins.default_token_connect.mock_http_backend.HTTPBackend",
+                        "frontend": "plugins.default_token_connect.frontends.RawHtmlFrontend",
                         "conf": {"server": "en.wiktionary.org", "path": "/w/index.php?title={lemma}&action=render",
                                  "ssl": True, "port": 443}}]
 
         providers_conf = mocked_json
-        self.tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf),
-                                          corparch)
-        self.cache_path = '/tmp/token_cache/token_detail_cache.db'
+        self.tok_det = DefaultTokenConnect(dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf),
+                                           corparch)
+        self.cache_path = '/tmp/token_cache/token_connect_cache.db'
         cache_rows_limit = 10
         cache_ttl_days = 7
         self.cacheMan = CacheMan(self.cache_path, cache_rows_limit, cache_ttl_days)
@@ -100,10 +100,10 @@ class CacheTest(unittest.TestCase):
         fetch two items from http backend to cache them, get their last access value from cache
         then fetch the same two items again after a time interval and check whether the last access values changed
         """
-        key1 = mk_token_detail_cache_key("word", "lemma", "pos", [
-                                         "corpora"], "lang", "wiktionary_for_ic_9_en")
-        key2 = mk_token_detail_cache_key("word", "position", "pos", [
-                                         "corpora"], "lang", "wiktionary_for_ic_9_en")
+        key1 = mk_token_connect_cache_key("word", "lemma", "pos", [
+            "corpora"], "lang", "wiktionary_for_ic_9_en")
+        key2 = mk_token_connect_cache_key("word", "position", "pos", [
+            "corpora"], "lang", "wiktionary_for_ic_9_en")
         self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
                                 "lemma", "pos", ["corpora"], "lang")
         self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
@@ -180,7 +180,7 @@ class CacheTest(unittest.TestCase):
         conn = sqlite3.connect(self.cacheMan.get_cache_path())
         c = conn.cursor()
         for i in range(0, numrows):
-            c.execute("INSERT INTO cache VALUES (?, ?, ?, ?)", (i, i, True, i))
+            c.execute("INSERT INTO cache VALUES (?, ?, ?, ?, ?)", (i, 'some-provider', i, True, i))
         conn.commit()
         conn.close()
 

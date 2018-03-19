@@ -19,8 +19,8 @@
 import json
 import logging
 
-from plugins.default_token_detail.backends.cache import cached
-from plugins.default_token_detail.backends import HTTPBackend
+from plugins.default_token_connect.backends.cache import cached
+from plugins.default_token_connect.backends import HTTPBackend
 
 
 AVAIL_LANG_MAPPINGS = {   # TODO
@@ -83,7 +83,8 @@ class TreqBackend(HTTPBackend):
         if translat_corp and translat_lang:
             connection = self.create_connection()
             try:
-                args = dict(word=word, lemma=lemma, pos=pos, lang1=primary_lang, lang2=translat_lang)
+                args = dict(word=word, lemma=lemma, pos=pos,
+                            lang1=primary_lang, lang2=translat_lang)
                 logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))
                 connection.request('GET', self._conf['path'].format(**args).encode('utf-8'))
                 data, status = self.process_response(connection)

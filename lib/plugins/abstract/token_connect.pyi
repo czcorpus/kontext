@@ -51,7 +51,7 @@ class AbstractFrontend(object):
     def export_data(self, data:Any, status:int, lang:str) -> Response: ...
 
 
-class AbstractTokenDetail(CorpusDependentPlugin):
+class AbstractTokenConnect(CorpusDependentPlugin):
 
     def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, tag:basestring,
                    corpora:List[str], lang:str) -> List[[Any, int]]: ...

@@ -586,7 +586,7 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
-                    <element name="token_detail">
+                    <element name="token_connect">
                         <optional>
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />

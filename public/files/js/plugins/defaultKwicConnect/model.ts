@@ -29,7 +29,7 @@ import { MultiDict } from '../../util';
 
 
 export interface RendererMap {
-    (id:string):PluginInterfaces.TokenDetail.Renderer;
+    (id:string):PluginInterfaces.TokenConnect.Renderer;
 }
 
 

@@ -575,9 +575,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if ans.metadata.avg_label_attr_len is not None:
                 ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
 
-        token_detail_elm = node.find('token_detail')
-        if token_detail_elm is not None:
-            ans.token_detail.providers = [p.text for p in token_detail_elm.findall('provider')]
+        token_connect_elm = node.find('token_connect')
+        if token_connect_elm is not None:
+            ans.token_connect.providers = [p.text for p in token_connect_elm.findall('provider')]
 
         kwic_connect_elm = node.find('kwic_connect')
         if kwic_connect_elm is not None:

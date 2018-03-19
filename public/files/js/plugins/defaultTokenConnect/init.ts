@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as initView, Views as DefaultTokenDetailRenderers} from './view';
+import {init as initView, Views as DefaultTokenConnectRenderers} from './view';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import * as Immutable from 'immutable';
@@ -29,33 +29,33 @@ import * as Immutable from 'immutable';
 /**
  *
  */
-export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.IPlugin {
+export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect.IPlugin {
 
     private pluginApi:IPluginApi;
 
-    private views:DefaultTokenDetailRenderers;
+    private views:DefaultTokenConnectRenderers;
 
     alignedCorpora:Immutable.List<string>;
 
-    constructor(pluginApi:IPluginApi, views:DefaultTokenDetailRenderers, alignedCorpora:Array<string>) {
+    constructor(pluginApi:IPluginApi, views:DefaultTokenConnectRenderers, alignedCorpora:Array<string>) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
     }
 
-    fetchTokenDetail(corpusId:string, tokenId:number):RSVP.Promise<Array<PluginInterfaces.TokenDetail.DataAndRenderer>> {
+    fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<Array<PluginInterfaces.TokenConnect.DataAndRenderer>> {
         const args = new MultiDict();
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
         args.replace('align', this.alignedCorpora.toArray());
-        return this.pluginApi.ajax<PluginInterfaces.TokenDetail.Response>(
+        return this.pluginApi.ajax<PluginInterfaces.TokenConnect.Response>(
             'GET',
             this.pluginApi.createActionUrl('fetch_token_detail'),
             args
 
         ).then(
-            (data:PluginInterfaces.TokenDetail.Response) =>
-                data.items.map<PluginInterfaces.TokenDetail.DataAndRenderer>(x => {
+            (data:PluginInterfaces.TokenConnect.Response) =>
+                data.items.map<PluginInterfaces.TokenConnect.DataAndRenderer>(x => {
                     return {
                         renderer: this.selectRenderer(x.renderer),
                         contents: x.contents,
@@ -66,7 +66,7 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
         );
     }
 
-    selectRenderer(typeId:string):PluginInterfaces.TokenDetail.Renderer {
+    selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
         switch (typeId) {
             case 'raw-html':
                 return this.views.RawHtmlRenderer;
@@ -85,10 +85,10 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
 
 
 export default function create(pluginApi:IPluginApi,
-        alignedCorpora:Array<string>):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin> {
-    return new RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>(
+        alignedCorpora:Array<string>):RSVP.Promise<PluginInterfaces.TokenConnect.IPlugin> {
+    return new RSVP.Promise<PluginInterfaces.TokenConnect.IPlugin>(
         (resolve:(d)=>void, reject:(err)=>void) => {
-            resolve(new DefaultTokenDetailBackend(
+            resolve(new DefaultTokenConnectBackend(
                 pluginApi,
                 initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
                 alignedCorpora

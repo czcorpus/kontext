@@ -53,7 +53,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         return this.views.KwicConnectWidget;
     }
 
-    selectRenderer(typeId:string):PluginInterfaces.TokenDetail.Renderer {
+    selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
         switch (typeId) {
             case 'raw-html':
                 return this.renderers.RawHtmlRenderer;

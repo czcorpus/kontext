@@ -16,13 +16,13 @@
 # GNU General Public License for more details.
 
 """
-HTTPBackend mock to be used in the default_token_detail plugin unittests
+HTTPBackend mock to be used in the default_token_connect plugin unittests
 """
 
 import os
 
-from plugins.abstract.token_detail import AbstractBackend
-from plugins.default_token_detail.backends import cached
+from plugins.abstract.token_connect import AbstractBackend
+from plugins.default_token_connect.backends import cached
 
 
 class HTTPBackend(AbstractBackend):

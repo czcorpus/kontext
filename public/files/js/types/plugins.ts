@@ -253,7 +253,7 @@ export namespace PluginInterfaces {
     }
 
 
-    export namespace TokenDetail {
+    export namespace TokenConnect {
 
 
         export interface Response {
@@ -280,7 +280,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
 
-            fetchTokenDetail(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
+            fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
 
             selectRenderer(typeId:string):Renderer;
         }

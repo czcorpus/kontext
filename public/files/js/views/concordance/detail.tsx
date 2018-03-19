@@ -40,11 +40,11 @@ interface RefDetailState {
 }
 
 
-export interface TokenDetailProps {
+export interface TokenConnectProps {
     closeClickHandler:()=>void;
 }
 
-interface TokenDetailState {
+interface TokenConnectState {
     mode:string;
     supportsSpeechView:boolean;
 }
@@ -52,7 +52,7 @@ interface TokenDetailState {
 
 export interface DetailViews {
     RefDetail:React.ComponentClass<RefDetailProps>;
-    TokenDetail:React.ComponentClass<TokenDetailProps>;
+    TokenConnect:React.ComponentClass<TokenConnectProps>;
 }
 
 
@@ -234,11 +234,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
     // ------------------------- <TokenExternalInfo /> ---------------------------
 
     const TokenExternalInfo:React.SFC<{
-        tokenDetailIsBusy:boolean;
-        tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
+        tokenConnectIsBusy:boolean;
+        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
 
     }> = (props) => {
-        if (props.tokenDetailIsBusy) {
+        if (props.tokenConnectIsBusy) {
             return (
                 <div className="token-detail" style={{textAlign: 'center'}}>
                     <layoutViews.AjaxLoaderImage />
@@ -248,7 +248,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         } else {
             return (
                 <div className="token-detail">
-                    {props.tokenDetailData.map((v, i) => {
+                    {props.tokenConnectData.map((v, i) => {
                         return (
                             <div key={`resource:${i}`}>
                                 {v.heading ? <h2 className="inhouse">{v.heading}</h2> : null}
@@ -336,9 +336,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         canDisplayWholeDocument:boolean;
         expandingSide:string;
         modelIsBusy:boolean;
-        tokenDetailIsBusy:boolean;
-        tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
-        hasTokenDetailData:boolean;
+        tokenConnectIsBusy:boolean;
+        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        hasTokenConnectData:boolean;
     }> {
 
         constructor(props) {
@@ -356,9 +356,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                 canDisplayWholeDocument: concDetailModel.canDisplayWholeDocument(),
                 expandingSide: concDetailModel.getExpaningSide(),
                 modelIsBusy: concDetailModel.getIsBusy(),
-                tokenDetailIsBusy: concDetailModel.getTokenDetailIsBusy(),
-                tokenDetailData: concDetailModel.getTokenDetailData(),
-                hasTokenDetailData: concDetailModel.hasTokenDetailData()
+                tokenConnectIsBusy: concDetailModel.getTokenConnectIsBusy(),
+                tokenConnectData: concDetailModel.getTokenConnectData(),
+                hasTokenConnectData: concDetailModel.hasTokenConnectData()
             };
         }
 
@@ -390,8 +390,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                                         canDisplayWholeDocument={this.state.canDisplayWholeDocument} /> :
                         null}
                     {this.state.hasConcDetailData && this.state.hasConcDetailData ? <hr /> : null}
-                    <TokenExternalInfo tokenDetailData={this.state.tokenDetailData}
-                            tokenDetailIsBusy={this.state.tokenDetailIsBusy} />
+                    <TokenExternalInfo tokenConnectData={this.state.tokenConnectData}
+                            tokenConnectIsBusy={this.state.tokenConnectIsBusy} />
                 </div>
             );
         }
@@ -876,9 +876,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         }
     };
 
-    // ------------------------- <TokenDetail /> ---------------------------
+    // ------------------------- <TokenConnect /> ---------------------------
 
-    class TokenDetail extends React.Component<TokenDetailProps, TokenDetailState> {
+    class TokenConnect extends React.Component<TokenConnectProps, TokenConnectState> {
 
         constructor(props) {
             super(props);
@@ -932,6 +932,6 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     return {
         RefDetail: RefDetail,
-        TokenDetail: TokenDetail
+        TokenConnect: TokenConnect
     };
 }

@@ -965,7 +965,7 @@ export enum PluginName {
     AUTH = 'auth',
     SETTINGS_STORAGE = 'settings_storage',
     TAGHELPER = 'taghelper',
-    TOKEN_DETAIL = 'token_detail',
+    TOKEN_CONNECT = 'token_connect',
     APP_BAR = 'app_bar',
     FOOTER_BAR = 'footer_bar',
     CORPARCH = 'corparch',

@@ -113,7 +113,7 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
         self.tagset_doc = import_string(corpus.get_conf('TAGSETDOC'))
 
 
-class TokenDetail(DictLike):
+class TokenConnect(DictLike):
 
     def __init__(self):
         self.providers = []
@@ -149,7 +149,7 @@ class CorpusInfo(DictLike):
         self.use_safe_font = False
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
-        self.token_detail = TokenDetail()
+        self.token_connect = TokenConnect()
         self.kwic_connect = KwicConnect()
         self.manatee = ManateeCorpusInfo()
 

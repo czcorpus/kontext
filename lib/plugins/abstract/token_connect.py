@@ -115,7 +115,7 @@ def find_implementation(path):
     defined in a respective JSON configuration file.
 
     arguments:
-    path -- a full identifier of a class, e.g. plugins.default_token_detail.backends.Foo
+    path -- a full identifier of a class, e.g. plugins.default_token_connect.backends.Foo
 
     returns:
     a class matching the path
@@ -129,7 +129,7 @@ def find_implementation(path):
     return getattr(the_module, cl)
 
 
-class AbstractTokenDetail(CorpusDependentPlugin):
+class AbstractTokenConnect(CorpusDependentPlugin):
 
     def fetch_data(self, provider_ids, word, lemma, tag, corpora, lang):
         """
