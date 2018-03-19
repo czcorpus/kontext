@@ -25,7 +25,7 @@ from functools import wraps
 from hashlib import md5
 
 
-def mk_token_detail_cache_key(word, lemma, pos, corpora, lang, provider_id):
+def mk_token_connect_cache_key(word, lemma, pos, corpora, lang, provider_id):
     """
     Returns a hashed cache key based on the passed parameters.
     """
@@ -48,7 +48,7 @@ def cached(f):
         """
         cache_path = self.get_cache_path()
         if cache_path:
-            key = mk_token_detail_cache_key(
+            key = mk_token_connect_cache_key(
                 word, lemma, pos, corpora, lang, self.get_provider_id())
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()

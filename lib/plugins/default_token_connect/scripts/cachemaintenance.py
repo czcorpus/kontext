@@ -22,12 +22,12 @@ import sys
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../lib')))
 import settings
-from plugins.default_token_detail.cache_man import CacheMan
+from plugins.default_token_connect.cache_man import CacheMan
 
 conf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../conf/config.xml'))
 settings.load(conf_path)
 
-conf = settings.get('plugins', 'token_detail')
+conf = settings.get('plugins', 'token_connect')
 cache_path = conf.get('default:cache_db_path')
 if cache_path:
     cache_rows_limit = conf.get('default:cache_rows_limit')

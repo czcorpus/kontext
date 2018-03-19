@@ -18,7 +18,7 @@
 
 
 from plugins.abstract.kwic_connect import AbstractKwicConnect
-from plugins.default_token_detail import setup_providers, ProviderWrapper
+from plugins.default_token_connect import setup_providers, ProviderWrapper
 import plugins
 import logging
 from actions import concordance
@@ -77,14 +77,14 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
                     data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
                     ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
-                logging.getLogger(__name__).error(u'TokenDetail backend error: {0}'.format(ex))
+                logging.getLogger(__name__).error(u'KwicConnect backend error: {0}'.format(ex))
                 raise ex
         return ans
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
-    providers, cache_path = setup_providers(settings.get('plugins', 'token_detail'))
+    providers, cache_path = setup_providers(settings.get('plugins', 'token_connect'))
     kwic_conn = DefaultKwicConnect(providers, corparch)
     if cache_path:
         kwic_conn.set_cache_path(cache_path)

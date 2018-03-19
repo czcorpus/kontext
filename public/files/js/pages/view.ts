@@ -71,7 +71,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import * as applicationBar from 'plugins/applicationBar/init';
-import tokenDetailInit from 'plugins/tokenDetail/init';
+import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 
 declare var require:any;
@@ -937,9 +937,9 @@ export class ViewPage {
         return this.queryModels.textTypesModel;
     }
 
-    private initTokenDetail():RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin> {
-        if (this.layoutModel.pluginIsActive('token_detail')) {
-            return tokenDetailInit(
+    private initTokenConnect():RSVP.Promise<PluginInterfaces.TokenConnect.IPlugin> {
+        if (this.layoutModel.pluginIsActive('token_connect')) {
+            return tokenConnectInit(
                 this.layoutModel.pluginApi(),
                 this.layoutModel.getConf<Array<string>>('alignedCorpora')
             );
@@ -962,7 +962,7 @@ export class ViewPage {
     }
 
     private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.ISyntaxViewer,
-                tokenDetail:PluginInterfaces.TokenDetail.IPlugin,
+                tokenConnect:PluginInterfaces.TokenConnect.IPlugin,
                 kwicConnect:PluginInterfaces.KwicConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -1064,7 +1064,7 @@ export class ViewPage {
             },
             lineViewProps.SpeakerColors,
             lineViewProps.WideCtxGlobals,
-            tokenDetail
+            tokenConnect
         );
         this.viewModels.refsDetailModel = new RefsDetailModel(
             this.layoutModel,
@@ -1122,9 +1122,9 @@ export class ViewPage {
             }
         );
 
-        const tokenDetailProp = ttProm.then(
+        const tokenConnectProp = ttProm.then(
             () => {
-                return this.initTokenDetail()
+                return this.initTokenConnect()
             }
         );
 
@@ -1134,13 +1134,13 @@ export class ViewPage {
             }
         )
 
-        const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenDetailProp, kwicConnectProm]).then(
+        const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenConnectProp, kwicConnectProm]).then(
             (args) => {
-                const [ttModel, sv, tokenDetailPlg, kwicConnectPlg] = args;
+                const [ttModel, sv, tokenConnectPlg, kwicConnectPlg] = args;
                 const lineViewProps = this.initModels(
                     <TextTypesModel>ttModel,
                     <PluginInterfaces.ISyntaxViewer>sv,
-                    <PluginInterfaces.TokenDetail.IPlugin>tokenDetailPlg,
+                    <PluginInterfaces.TokenConnect.IPlugin>tokenConnectPlg,
                     <PluginInterfaces.KwicConnect.IPlugin>kwicConnectPlg
                 );
                 // we must handle non-React widgets:

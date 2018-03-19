@@ -5,8 +5,8 @@
       "en_US": "Wiktionary",
       "cs_CZ": "Wiktionary"
     },
-    "backend": "plugins.default_token_detail.backends.HTTPBackend",
-    "frontend": "plugins.default_token_detail.frontends.RawHtmlFrontend",
+    "backend": "plugins.default_token_connect.backends.HTTPBackend",
+    "frontend": "plugins.default_token_connect.frontends.RawHtmlFrontend",
     "conf": {
       "server": "en.wiktionary.org",
       "path": "/w/index.php?title={lemma}&action=render",

@@ -46,7 +46,7 @@ export interface ConcLinesProps {
     supportsSyntaxView:boolean;
     catColors:Array<string>;
     KWICCorps:Array<string>;
-    tokenDetailClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
+    tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
     onSyntaxViewClick:(tokenNum:number, kwicLength:number)=>void;
     refsDetailClickHandler:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
     onReady:()=>void;
@@ -63,7 +63,7 @@ interface ConcLinesState {
     emptyRefValPlaceholder:string;
     corporaColumns:Immutable.List<CorpColumn>;
     viewMode:string;
-    supportsTokenDetail:boolean;
+    supportsTokenConnect:boolean;
     showLineNumbers:boolean;
 }
 
@@ -173,7 +173,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         kwicTokenNum:number;
         chunkOffset:number;
         idx:number;
-        supportsTokenDetail:boolean;
+        supportsTokenConnect:boolean;
         data: {
             className:string;
             mouseover:Array<string>;
@@ -198,19 +198,19 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             const ans = [];
             props.data.text.forEach((s, i) => {
                 ans.push(' ');
-                ans.push(<mark className={props.supportsTokenDetail ? 'active' : null}
+                ans.push(<mark className={props.supportsTokenConnect ? 'active' : null}
                                key={`${props.position}:${props.idx}:${i}`} data-tokenid={mkTokenId(i)}>{s}</mark>);
             });
             ans.push(' ');
             return ans;
         };
 
-        const tokenDetailInfo1 = props.supportsTokenDetail ?
+        const tokenConnectInfo1 = props.supportsTokenConnect ?
                 he.translate('concview__click_to_see_external_token_info') : '';
-        const tokenDetailInfo2 = props.supportsTokenDetail ?
+        const tokenConnectInfo2 = props.supportsTokenConnect ?
                 `(${he.translate('concview__click_to_see_external_token_info')})` : '';
         const metadata = (props.data.mouseover || []);
-        const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenDetailInfo2}` : tokenDetailInfo1;
+        const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenConnectInfo2}` : tokenConnectInfo1;
 
         if (props.data.className && props.data.text) {
             if (hasClass('coll') && !hasClass('col0')) {
@@ -243,11 +243,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         corpname:string;
         mainCorp:string;
         corpsWithKwic:Array<string>;
-        supportsTokenDetail:boolean;
+        supportsTokenConnect:boolean;
         lineIdx:number;
         output:KWICSection;
         kwicLength:number;
-        tokenDetailClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
+        tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
 
     }> = (props) => {
 
@@ -262,11 +262,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         };
 
         const handleNonKwicTokenClick = (corpusId, lineIdx, tokenNumber) => {
-            props.tokenDetailClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            props.tokenConnectClickHandler(corpusId, tokenNumber, -1, lineIdx);
         };
 
         const handleTokenClick = (evt) => {
-            if (props.supportsTokenDetail) {
+            if (props.supportsTokenConnect) {
                 const tokenId = evt.target.getAttribute('data-tokenid');
                 if (tokenId !== null) {
                     handleNonKwicTokenClick(
@@ -276,7 +276,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         };
 
         const handleKwicClick = (corpusId, tokenNumber, lineIdx) => {
-            props.tokenDetailClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
+            props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
         };
 
         return <>
@@ -285,7 +285,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 {props.output.left.map((item, i, itemList) =>
                         <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item} chunkOffsets={props.output.leftOffsets}
                                     kwicTokenNum={props.output.tokenNumber} lineIdx={props.lineIdx}
-                                    supportsTokenDetail={props.supportsTokenDetail} />)}
+                                    supportsTokenConnect={props.supportsTokenConnect} />)}
             </td>
             <td className={exportTextElmClass(props.corpname, 'kw')}
                     onClick={handleKwicClick.bind(null, props.corpname,
@@ -302,7 +302,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 {props.output.right.map((item, i, itemList) =>
                     <RightChunk key={`rc-${i}`} item={item} i={i} itemList={itemList} chunkOffsets={props.output.rightOffsets}
                             kwicTokenNum={props.output.tokenNumber} prevBlockClosed={props.output.kwic.get(-1)}
-                            lineIdx={props.lineIdx} supportsTokenDetail={props.supportsTokenDetail} />)}
+                            lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect} />)}
                 </>
             </td>
         </>
@@ -317,7 +317,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         item:TextChunk;
         chunkOffsets:Immutable.List<number>;
         kwicTokenNum:number;
-        supportsTokenDetail:boolean;
+        supportsTokenConnect:boolean;
 
     }> = (props) => {
 
@@ -332,7 +332,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 null
             }
             <NonKwicText data={props.item} idx={props.i} position="l" chunkOffset={-1 * props.chunkOffsets.get(props.i)}
-                            kwicTokenNum={props.kwicTokenNum} supportsTokenDetail={props.supportsTokenDetail} />
+                            kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect} />
             {props.item.closeLink ?
                 <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
@@ -394,7 +394,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         kwicTokenNum:number;
         prevBlockClosed:TextChunk;
         lineIdx:number;
-        supportsTokenDetail:boolean;
+        supportsTokenConnect:boolean;
 
     }> = (props) => {
 
@@ -419,7 +419,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 null
             }
             <NonKwicText data={props.item} idx={props.i} position="r" chunkOffset={props.chunkOffsets.get(props.i)}
-                        kwicTokenNum={props.kwicTokenNum} supportsTokenDetail={props.supportsTokenDetail} />
+                        kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect} />
             {props.item.closeLink ?
                 <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
@@ -433,7 +433,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         lineIdx:number;
         baseCorpname:string;
         mainCorp:string;
-        supportsTokenDetail:boolean;
+        supportsTokenConnect:boolean;
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
         lineSelMode:string; // TODO enum
@@ -452,7 +452,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             languages:Immutable.List<KWICSection>;
             lineGroup:number;
         };
-        tokenDetailClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
+        tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
         onSyntaxViewClick:(tokenNum:number, kwicLength:number)=>void;
         refsDetailClickHandler:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
     },
@@ -491,7 +491,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         {corpusOutput.left.map((item, i, itemList) =>
                                 <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item}
                                         chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
-                                        lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
+                                        lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />)}
                     </span>
                     <span onClick={this._handleKwicClick.bind(this, corpname,
                                     corpusOutput.tokenNumber, this.props.lineIdx)}>
@@ -504,7 +504,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         {corpusOutput.right.map((item, i, itemList) =>
                             <RightChunk key={`rc-${i}`} i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
                                     kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
-                                    lineIdx={this.props.lineIdx} supportsTokenDetail={this.props.supportsTokenDetail} />)}
+                                    lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />)}
                     </span>
                 </td>
             );
@@ -516,11 +516,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 return <TextKwicMode corpname={corpname}
                             mainCorp={this.props.mainCorp}
                             corpsWithKwic={this.props.corpsWithKwic}
-                            supportsTokenDetail={this.props.supportsTokenDetail}
+                            supportsTokenConnect={this.props.supportsTokenConnect}
                             lineIdx={this.props.lineIdx}
                             output={corpusOutput}
                             kwicLength={this.props.data.kwicLength}
-                            tokenDetailClickHandler={this.props.tokenDetailClickHandler} />;
+                            tokenConnectClickHandler={this.props.tokenConnectClickHandler} />;
 
             } else {
                 return this._renderTextParMode(corpname, corpusOutput);
@@ -536,11 +536,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
-            this.props.tokenDetailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+            this.props.tokenConnectClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
-            this.props.tokenDetailClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            this.props.tokenConnectClickHandler(corpusId, tokenNumber, -1, lineIdx);
         }
 
         _handleModelChange() {
@@ -663,7 +663,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 emptyRefValPlaceholder: lineModel.getEmptyRefValPlaceholder(),
                 corporaColumns: lineModel.getCorporaColumns(),
                 viewMode: lineModel.getViewMode(),
-                supportsTokenDetail: concDetailModel.supportsTokenDetail(),
+                supportsTokenConnect: concDetailModel.supportsTokenConnect(),
                 showLineNumbers: lineModel.getShowLineNumbers()
             };
         }
@@ -712,14 +712,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}
-                         tokenDetailClickHandler={this.props.tokenDetailClickHandler}
+                         tokenConnectClickHandler={this.props.tokenConnectClickHandler}
                          refsDetailClickHandler={this.props.refsDetailClickHandler}
                          emptyRefValPlaceholder={this.state.emptyRefValPlaceholder}
                          catBgColor={catColor[0]}
                          catTextColor={catColor[1]}
                          supportsSyntaxView={this.props.supportsSyntaxView}
                          onSyntaxViewClick={this.props.onSyntaxViewClick}
-                         supportsTokenDetail={this.state.supportsTokenDetail} />;
+                         supportsTokenConnect={this.state.supportsTokenConnect} />;
         }
 
         render() {

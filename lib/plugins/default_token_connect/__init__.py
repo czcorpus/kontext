@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-Default token_detail plug-in allows attaching external services (dictionaries, encyclopediae)
+Default token_connect plug-in allows attaching external services (dictionaries, encyclopediae)
 to concordance tokens. A special JSON file (see token-detail-providers.sample.json) defines
 a set of providers where a provider always contains a backend, frontend and identifier.
 
@@ -32,9 +32,9 @@ or a filesystem path. Such a template can use the following values: word, lemma,
 
 Required XML configuration:
 
-element token_detail {
-  element module { "default_token_detail" }
-  element js_module { "defaultTokenDetail" }
+element token_connect {
+  element module { "default_token_connect" }
+  element js_module { "defaultTokenConnect" }
   element providers_conf {
     attribute extension-by { "default" }
     { text } # a path to a JSON configuration file containing all available backends and frontends
@@ -62,11 +62,11 @@ import os
 
 import manatee
 import plugins
-from plugins.abstract.token_detail import AbstractTokenDetail, find_implementation
+from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
 from l10n import import_string
 from actions import concordance
 from controller import exposed
-from plugins.default_token_detail.cache_man import CacheMan
+from plugins.default_token_connect.cache_man import CacheMan
 
 
 @exposed(return_type='json')
@@ -96,14 +96,14 @@ def fetch_token_detail(self, request):
     except manatee.AttrNotFound:
         pos = ''
 
-    with plugins.runtime.TOKEN_DETAIL as td, plugins.runtime.CORPARCH as ca:
+    with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
-        resp_data = td.fetch_data(corpus_info.token_detail.providers,
+        resp_data = td.fetch_data(corpus_info.token_connect.providers,
                                   word, lemma, pos, [self.corp.corpname] + self.args.align, self.ui_lang)
     return dict(items=[item for item in resp_data])
 
 
-class ProviderWrapper(AbstractTokenDetail):
+class ProviderWrapper(AbstractTokenConnect):
 
     def __init__(self, providers):
         self._providers = providers
@@ -116,10 +116,10 @@ class ProviderWrapper(AbstractTokenDetail):
             backend.set_cache_path(path)
 
 
-class DefaultTokenDetail(ProviderWrapper):
+class DefaultTokenConnect(ProviderWrapper):
 
     def __init__(self, providers, corparch):
-        super(DefaultTokenDetail, self).__init__(providers)
+        super(DefaultTokenConnect, self).__init__(providers)
         self._corparch = corparch
 
     def fetch_data(self, provider_ids, word, lemma, pos, corpora, lang):
@@ -129,13 +129,13 @@ class DefaultTokenDetail(ProviderWrapper):
                 data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
-                logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
+                logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
                 raise ex
         return ans
 
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
-        return len(corpus_info.token_detail.providers) > 0
+        return len(corpus_info.token_connect.providers) > 0
 
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
@@ -173,8 +173,8 @@ def setup_providers(plg_conf):
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
-    providers, cache_path = setup_providers(settings.get('plugins', 'token_detail'))
-    tok_det = DefaultTokenDetail(providers, corparch)
+    providers, cache_path = setup_providers(settings.get('plugins', 'token_connect'))
+    tok_det = DefaultTokenConnect(providers, corparch)
     if cache_path:
         tok_det.set_cache_path(cache_path)
     return tok_det

@@ -95,7 +95,7 @@ export class ConcDetailModel extends StatefulModel {
 
     private kwicTokenNum:number;
 
-    private tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
+    private tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
 
     private kwicLength:number;
 
@@ -136,7 +136,7 @@ export class ConcDetailModel extends StatefulModel {
 
     private isBusy:boolean;
 
-    private tokenDetailIsBusy:boolean;
+    private tokenConnectIsBusy:boolean;
 
     /**
      * Currently expanded side. In case the model is not busy the
@@ -145,12 +145,12 @@ export class ConcDetailModel extends StatefulModel {
      */
     private expaningSide:string;
 
-    private tokenDetailPlg:PluginInterfaces.TokenDetail.IPlugin;
+    private tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin;
 
 
     constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesModel:ConcLineModel, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>,
-            tokenDetailPlg:PluginInterfaces.TokenDetail.IPlugin) {
+            tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.linesModel = linesModel;
@@ -168,8 +168,8 @@ export class ConcDetailModel extends StatefulModel {
                 ConcDetailModel.SPK_OVERLAP_MODE_FULL : ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE;
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
-        this.tokenDetailPlg = tokenDetailPlg;
-        this.tokenDetailData = Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>();
+        this.tokenConnectPlg = tokenConnectPlg;
+        this.tokenConnectData = Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>();
         this.concDetail = null;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -189,7 +189,7 @@ export class ConcDetailModel extends StatefulModel {
             }
         );
         this.isBusy = false;
-        this.tokenDetailIsBusy = false;
+        this.tokenConnectIsBusy = false;
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -220,7 +220,7 @@ export class ConcDetailModel extends StatefulModel {
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
                     this.isBusy = true;
-                    this.tokenDetailIsBusy = true;
+                    this.tokenConnectIsBusy = true;
                     this.mode = 'default';
                     this.expandLeftArgs = Immutable.List<ExpandArgs>();
                     this.expandRightArgs = Immutable.List<ExpandArgs>();
@@ -238,7 +238,7 @@ export class ConcDetailModel extends StatefulModel {
                             this.linesModel.notifyChangeListeners();
                             this.notifyChangeListeners();
 
-                            return this.loadTokenDetail(
+                            return this.loadTokenConnect(
                                 payload.props['corpusId'],
                                 payload.props['tokenNumber'],
                                 payload.props['lineIdx']
@@ -247,13 +247,13 @@ export class ConcDetailModel extends StatefulModel {
 
                     ).then(
                         () => {
-                            this.tokenDetailIsBusy = false;
+                            this.tokenConnectIsBusy = false;
                             this.notifyChangeListeners();
                         }
                     ).catch(
                         (err) => {
                             this.isBusy = false;
-                            this.tokenDetailIsBusy = false;
+                            this.tokenConnectIsBusy = false;
                             this.notifyChangeListeners();
                             this.layoutModel.showMessage('error', err);
                         }
@@ -261,22 +261,22 @@ export class ConcDetailModel extends StatefulModel {
                 break;
                 case 'CONCORDANCE_SHOW_TOKEN_DETAIL':
                     this.resetKwicDetail();
-                    this.tokenDetailIsBusy = true;
+                    this.tokenConnectIsBusy = true;
                     this.notifyChangeListeners();
-                    this.loadTokenDetail(
+                    this.loadTokenConnect(
                         payload.props['corpusId'],
                         payload.props['tokenNumber'],
                         payload.props['lineIdx']
 
                     ).then(
                         () => {
-                            this.tokenDetailIsBusy = false;
+                            this.tokenConnectIsBusy = false;
                             this.notifyChangeListeners();
                         }
 
                     ).catch(
                         (err) => {
-                            this.tokenDetailIsBusy = false;
+                            this.tokenConnectIsBusy = false;
                             this.layoutModel.showMessage('error', err);
                             this.notifyChangeListeners();
                         }
@@ -376,7 +376,7 @@ export class ConcDetailModel extends StatefulModel {
                 break;
                 case 'CONCORDANCE_RESET_DETAIL':
                     this.resetKwicDetail();
-                    this.resetTokenDetail();
+                    this.resetTokenConnect();
                     this.notifyChangeListeners();
                     this.linesModel.notifyChangeListeners();
                 break;
@@ -425,8 +425,8 @@ export class ConcDetailModel extends StatefulModel {
         }
     }
 
-    private resetTokenDetail():void {
-        this.tokenDetailData = this.tokenDetailData.clear();
+    private resetTokenConnect():void {
+        this.tokenConnectData = this.tokenConnectData.clear();
     }
 
     getPlayingRowIdx():number {
@@ -624,20 +624,20 @@ export class ConcDetailModel extends StatefulModel {
         return this.loadSpeechDetail(this.corpusId, this.kwicTokenNum, this.kwicLength, this.lineIdx);
     }
 
-    private loadTokenDetail(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<boolean> {
+    private loadTokenConnect(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<boolean> {
         return (() => {
-            if (this.tokenDetailPlg) {
-                return this.tokenDetailPlg.fetchTokenDetail(corpusId, tokenNum);
+            if (this.tokenConnectPlg) {
+                return this.tokenConnectPlg.fetchTokenConnect(corpusId, tokenNum);
 
             } else {
-                return new RSVP.Promise<Array<PluginInterfaces.TokenDetail.DataAndRenderer>>((resolve:(data)=>void, reject:(err)=>void) => {
+                return new RSVP.Promise<Array<PluginInterfaces.TokenConnect.DataAndRenderer>>((resolve:(data)=>void, reject:(err)=>void) => {
                     resolve(null);
                 });
             }
         })().then(
             (data) => {
                 if (data) {
-                    this.tokenDetailData = Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>(data);
+                    this.tokenConnectData = Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(data);
                     this.lineIdx = lineIdx;
                     return true;
 
@@ -745,28 +745,28 @@ export class ConcDetailModel extends StatefulModel {
         return this.mode;
     }
 
-    getTokenDetailData():Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer> {
-        return this.tokenDetailData;
+    getTokenConnectData():Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer> {
+        return this.tokenConnectData;
     }
 
-    hasTokenDetailData():boolean {
-        return this.tokenDetailData.size > 0;
+    hasTokenConnectData():boolean {
+        return this.tokenConnectData.size > 0;
     }
 
     getIsBusy():boolean {
         return this.isBusy;
     }
 
-    getTokenDetailIsBusy():boolean {
-        return this.tokenDetailIsBusy;
+    getTokenConnectIsBusy():boolean {
+        return this.tokenConnectIsBusy;
     }
 
     getExpaningSide():string {
         return this.expaningSide;
     }
 
-    supportsTokenDetail():boolean {
-        return !!this.tokenDetailPlg;
+    supportsTokenConnect():boolean {
+        return !!this.tokenConnectPlg;
     }
 
     supportsSpeechView():boolean {

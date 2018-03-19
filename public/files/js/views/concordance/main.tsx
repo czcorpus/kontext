@@ -681,8 +681,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     ConcordanceDashboardProps['concViewProps'],
     {
         hasConcDetailData:boolean;
-        tokenDetailData:Immutable.List<PluginInterfaces.TokenDetail.DataAndRenderer>;
-        tokenDetailIsBusy:boolean;
+        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        tokenConnectIsBusy:boolean;
         concDetailModelIsBusy:boolean;
         refsDetailData:Immutable.List<[RefsColumn, RefsColumn]>;
         viewMode:string;
@@ -709,8 +709,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         _fetchModelState() {
             return {
                 hasConcDetailData: concDetailModel.hasConcDetailData(),
-                tokenDetailData: concDetailModel.getTokenDetailData(),
-                tokenDetailIsBusy: concDetailModel.getTokenDetailIsBusy(),
+                tokenConnectData: concDetailModel.getTokenConnectData(),
+                tokenConnectIsBusy: concDetailModel.getTokenConnectIsBusy(),
                 concDetailModelIsBusy: concDetailModel.getIsBusy(),
                 refsDetailData: refsDetailModel.getData(),
                 viewMode: lineViewModel.getViewAttrsVmode(),
@@ -828,8 +828,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _shouldDisplayConcDetailBox() {
-            return this.state.hasConcDetailData || this.state.tokenDetailData.size > 0 ||
-                    this.state.concDetailModelIsBusy || this.state.tokenDetailIsBusy;
+            return this.state.hasConcDetailData || this.state.tokenConnectData.size > 0 ||
+                    this.state.concDetailModelIsBusy || this.state.tokenConnectIsBusy;
         }
 
         render() {
@@ -842,7 +842,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onReady={this.props.onSyntaxPaneReady}
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
                     {this._shouldDisplayConcDetailBox() ?
-                        <concDetailViews.TokenDetail closeClickHandler={this._handleDetailCloseClick} />
+                        <concDetailViews.TokenConnect closeClickHandler={this._handleDetailCloseClick} />
                         : null
                     }
                     {this.state.refsDetailData ?
@@ -870,7 +870,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         <linesViews.ConcLines {...this.props}
                             supportsSyntaxView={this.state.supportsSyntaxView}
                             onSyntaxViewClick={this._handleSyntaxBoxClick}
-                            tokenDetailClickHandler={this._detailClickHandler}
+                            tokenConnectClickHandler={this._detailClickHandler}
                             refsDetailClickHandler={this._refsDetailClickHandler} />
                     </div>
                     <div id="conc-bottom-bar">

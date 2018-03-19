@@ -19,9 +19,9 @@
 
 import httplib
 import sqlite3
-from plugins.default_token_detail.backends.cache import cached
+from plugins.default_token_connect.backends.cache import cached
 
-from plugins.abstract.token_detail import AbstractBackend
+from plugins.abstract.token_connect import AbstractBackend
 
 
 class SQLite3Backend(AbstractBackend):
