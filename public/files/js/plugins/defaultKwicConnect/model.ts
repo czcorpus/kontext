@@ -63,12 +63,13 @@ export interface ProviderWordMatch {
 
 export interface KwicConnectState {
     isBusy:boolean;
-
+    visibleProviderIdx:number;
     corpora:Immutable.List<string>;
     data:Immutable.List<ProviderWordMatch>;
 }
 
 export enum Actions {
+    SET_VISIBLE_PROVIDER = 'KWIC_CONNECT_SET_VISIBLE_PROVIDER',
     FETCH_INFO_DONE = 'KWIC_CONNECT_FETCH_INFO_DONE',
     FETCH_PARTIAL_INFO_DONE = 'KWIC_CONNECT_FETCH_PARTIAL_INFO_DONE'
 }
@@ -98,6 +99,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             dispatcher,
             {
                 isBusy: false,
+                visibleProviderIdx: 0,
                 data: Immutable.List<ProviderWordMatch>(),
                 corpora: Immutable.List<string>(corpora)
             },
@@ -156,6 +158,9 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
         const newState = this.copyState(state);
         switch (action.actionType) {
+            case Actions.SET_VISIBLE_PROVIDER:
+                newState.visibleProviderIdx = action.props['value'];
+            break;
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
                 newState.data = Immutable.List<ProviderWordMatch>();
                 newState.isBusy = true;

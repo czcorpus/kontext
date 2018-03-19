@@ -51,7 +51,7 @@ class TreqBackend(HTTPBackend):
         searchGo:
     """
 
-    DEFAULT_MAX_RESULT_LINES = 20
+    DEFAULT_MAX_RESULT_LINES = 10
 
     def __init__(self, conf, ident):
         super(TreqBackend, self).__init__(conf, ident)
@@ -84,15 +84,21 @@ class TreqBackend(HTTPBackend):
         return lang1 in AVAIL_LANG_MAPPINGS and lang2 in AVAIL_LANG_MAPPINGS[lang1]
 
     @staticmethod
-    def mk_uri_args(lang1, lang2, groups, word, lemma, pos):
-        return (u'left={lang1}&right={lang2}&viceslovne=false&regularni=true&lemma=true&aJeA=true&hledejKde={groups}'
-                u'&hledejCo={word}&order=percDesc').format(lang1=lang1, lang2=lang2, groups=groups, word=word).encode('utf-8')
+    def mk_api_args(lang1, lang2, groups, word, lemma, pos):
+        return [('left', lang1), ('right', lang2), ('viceslovne', 'false'), ('regularni', 'true'),
+                ('lemma', 'true'), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', word),
+                ('order', 'percDesc')]
+
+    @staticmethod
+    def mk_page_args(lang1, lang2, groups, word, lemma, pos):
+        return [('jazyk1', lang1), ('jazyk2', lang2), ('lemma', 'true'), ('aJeA', 'true'),
+                ('hledejCo', word)] + [('hledejKde[]', g) for g in groups]
 
     def mk_api_path(self, lang1, lang2, groups, word, lemma, pos):
-        return '/api.php?api=true&' + self.mk_uri_args(lang1, lang2, groups, word, lemma, pos)
-
-    def mk_page_path(self, lang1, lang2, groups, word, lemma, pos):
-        return '/index.php?' + self.mk_uri_args(lang1, lang2, groups, word, lemma, pos)
+        groups = ','.join(groups)
+        args = [u'{0}={1}'.format(k, v) for k, v in self.mk_api_args(
+            lang1, lang2, groups, word, lemma, pos)]
+        return '/api.php?api=true&' + (u'&'.join(args)).encode('utf-8')
 
     def find_lang_common_groups(self, lang1, lang2):
         g1 = set(AVAIL_GROUPS.get(lang1, []))
@@ -112,11 +118,10 @@ class TreqBackend(HTTPBackend):
         translat_corp, translat_lang = self._find_second_lang(corpora)
         treq_link = None
         if translat_corp and translat_lang:
-            common_groups = ','.join(self.find_lang_common_groups(primary_lang, translat_lang))
+            common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
             args = dict(word=word, lemma=lemma, pos=pos, lang1=primary_lang, lang2=translat_lang,
                         groups=common_groups)
-            tmp = self.mk_page_path(**args)
-            treq_link = self.mk_server_addr() + tmp
+            treq_link = (self.mk_server_addr() + '/index.php', self.mk_page_args(**args))
             connection = self.create_connection()
             try:
                 logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))

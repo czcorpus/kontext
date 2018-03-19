@@ -11,21 +11,37 @@
         color: #cccccc;
     }
 
-    .treq-translation:not(:first-child) {
+    .provider-block {
         margin-top: 1em;
 
+        .base-word {
+            font-size: 1.3em;
+            font-weight: normal;
+            padding-right: 0.3em;
+        }
 
-        .view-in-treq {
-            display: block;
-            text-align: right;
+        .words {
 
-            a {
-                color: @color-default-text;
+            padding-right: 0.7em;
+
+            a.word {
                 text-decoration: none;
             }
 
-            a:hover {
+            a.word:hover {
                 text-decoration: underline;
+                color: @color-logo-pink;
+            }
+        }
+
+
+        .view-in-treq {
+            line-height: 1.5em;
+            display: inline;
+            text-align: center;
+
+            .util-button {
+                font-size: 0.8em;
             }
         }
     }

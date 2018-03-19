@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
+import * as Immutable from 'immutable';
 import { ActionDispatcher } from '../../app/dispatcher';
 import { Kontext } from '../../types/common';
-import { KwicConnectModel, KwicConnectState } from './model';
+import { KwicConnectModel, KwicConnectState, Actions } from './model';
 import { Component } from 'react';
 import {PluginInterfaces} from '../../types/plugins';
 
@@ -37,9 +38,29 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
 
     const layoutViews = he.getLayoutViews();
 
+    // --------------------- <ProviderSwitch /> ------------------------------------
 
+    const ProviderSwitch:React.SFC<{
+        visibleIdx:number;
+        providers:Immutable.Iterable<number, string>;
 
-    // ---------------------------------------------------------------
+    }> = (props) => {
+
+        const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch({
+                actionType: Actions.SET_VISIBLE_PROVIDER,
+                props: {value: evt.target.value}
+            });
+        };
+
+        return <select onChange={handleChange}>
+                {props.providers.map((provider, i) => {
+                    return <option key={`opt${i}`} value={i}>{provider}</option>
+                })}
+            </select>;
+    };
+
+    // --------------------- <KwicConnectWidget /> ------------------------------------
 
     class KwicConnectWidget extends React.Component<KwicConnectWidgetProps, KwicConnectState> {
 
@@ -66,22 +87,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
         }
 
         renderWidget() {
-            return (
-                <div className="KwicConnectWidget">
-                    {this.state.data.map((providerOutput, i) => {
-                        return (
-                            <div key={`provider-${i}`}>
-                                <h3>{providerOutput.heading}</h3>
-                                {providerOutput.data.map((item, j) =>
-                                    <providerOutput.renderer key={`render-${i}:${j}`} data={item}
-                                            corpora={this.state.corpora} />)}
-                                {providerOutput.note ?
-                                    <p className="note">{providerOutput.note}</p> : null}
-                            </div>
-                        );
-                    })}
-                </div>
-            );
+            const providerOutput = this.state.data.get(this.state.visibleProviderIdx);
+            if (providerOutput) {
+                return (
+                    <div className="KwicConnectWidget">
+                        <ProviderSwitch visibleIdx={0} providers={this.state.data.map(p => p.heading)} />
+                        <div>
+                            {providerOutput.data.map((item, j) =>
+                                <providerOutput.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
+                            {providerOutput.note ?
+                                <p className="note">{providerOutput.note}</p> : null}
+                        </div>
+                    </div>
+                );
+
+            } else {
+                return null;
+            }
         }
 
         render() {
