@@ -90,6 +90,7 @@ __conf.alignedCorpora = $to_json($aligned_corpora);
 __conf.availableAlignedCorpora = $to_json($getVar('Aligned', []));
 __conf.pluginData = $to_json($plugin_data);
 __conf.notifications = $to_json($messages);
+__conf.popupServerMessages = $to_json($popup_server_messages);
 __conf.queryTypesHints = {
     iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
 };

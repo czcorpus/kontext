@@ -24,12 +24,13 @@ KonText - error
 #end def
 
 #def bodyonload
+__conf.LastUsedCorp = $to_json($last_used_corp);
 messagePage.init(__conf);
 #end def
 
 #def main
 <section class="exclusive">
-<h2>$unicode(u'\uD83D\uDE31')</h2>
+<h2 class="panic">$unicode(u'\uD83D\uDE31')</h2>
 <div id="root-mount"></div>
 </section>
 #end def
