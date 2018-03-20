@@ -170,7 +170,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
                                 </em>
                                 {'\u00a0'}
                                 <span className="corpname">
-                                    (item.query_type)
+                                    ({item.query_type})
                                 </span>
                             </span>
                         </li>
