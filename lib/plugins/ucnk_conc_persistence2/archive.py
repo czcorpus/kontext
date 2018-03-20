@@ -104,7 +104,7 @@ class Archiver(object):
                     break
                 qitem = json.loads(qitem)
                 data = self._from_db.get(qitem['key'])
-                inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
+                inserts.append((qitem['key'][len(conc_prefix):], data, curr_time, 0))
                 i += 1
 
             if not dry_run:
@@ -113,10 +113,12 @@ class Archiver(object):
                 self._to_db.commit()
             else:
                 for ins in reversed(inserts):
-                    self._from_db.lpush(self._archive_queue_key, json.dumps(dict(key=conc_prefix + ins[0])))
+                    self._from_db.lpush(self._archive_queue_key,
+                                        json.dumps(dict(key=conc_prefix + ins[0])))
         except Exception as ex:
             for item in inserts:
-                self._from_db.rpush(self._archive_queue_key, json.dumps(dict(key=conc_prefix + item[0])))
+                self._from_db.rpush(self._archive_queue_key, json.dumps(
+                    dict(key=conc_prefix + item[0])))
             return dict(
                 num_processed=i,
                 error=ex,
@@ -142,7 +144,8 @@ def run(conf, num_proc, dry_run):
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
-    sys.path.insert(0, os.path.realpath('%s/../../../scripts/' % os.path.dirname(os.path.realpath(__file__))))
+    sys.path.insert(0, os.path.realpath('%s/../../../scripts/' %
+                                        os.path.dirname(os.path.realpath(__file__))))
     import autoconf
     import initializer
     settings = autoconf.settings
@@ -152,7 +155,8 @@ if __name__ == '__main__':
     initializer.init_plugin('sessions')
     initializer.init_plugin('auth')
 
-    parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
+    parser = argparse.ArgumentParser(
+        description='Archive old records from Synchronize data from mysql db to redis')
     parser.add_argument('num_proc', metavar='NUM_PROC', type=int)
     parser.add_argument('-d', '--dry-run', action='store_true',
                         help='allows running without affecting storage data (not 100% error prone as it reads/writes to Redis)')
