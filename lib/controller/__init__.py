@@ -925,4 +925,12 @@ class Controller(object):
 
     @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message')
     def message(self, *args, **kwargs):
+        with plugins.runtime.QUERY_STORAGE as qs:
+            queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
+            if len(queries) > 0:
+                kwargs['last_used_corp'] = dict(corpname=queries[0].get('corpname', None),
+                                                human_corpname=queries[0].get('human_corpname', None))
+            else:
+                kwargs['last_used_corp'] = dict(corpname=None, human_corpname=None)
+        kwargs['popup_server_messages'] = False
         return kwargs

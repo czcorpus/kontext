@@ -249,6 +249,15 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace StatusIcon {
+
+        export interface Props {
+            status:string;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -264,6 +273,7 @@ export namespace CoreViews {
         AjaxLoaderBarImage:AjaxLoaderBarImage.Component;
         CorpnameInfoTrigger:CorpnameInfoTrigger.Component;
         Shortener:Shortener.Component;
+        StatusIcon:StatusIcon.Component;
     }
 }
 

@@ -29,19 +29,22 @@ import * as Immutable from 'immutable';
 /**
  *
  */
-export class MessageModel extends StatefulModel implements Kontext.MessagePageModel {
+export class MessageModel extends StatefulModel implements Kontext.IMessagePageModel {
 
-    messages:Immutable.List<Kontext.UserNotification>;
+    private messages:Immutable.List<Kontext.UserNotification>;
 
-    onClose:{[id:string]:()=>void};
+    private onClose:{[id:string]:()=>void};
 
-    pluginApi:IPluginApi;
+    private pluginApi:IPluginApi;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    private autoRemoveMessages:boolean;
+
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, autoRemoveMessages:boolean) {
         super(dispatcher);
         this.messages = Immutable.List<Kontext.UserNotification>();
         this.onClose = {};
         this.pluginApi = pluginApi;
+        this.autoRemoveMessages = autoRemoveMessages;
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -86,7 +89,7 @@ export class MessageModel extends StatefulModel implements Kontext.MessagePageMo
             this.onClose[msgId] = onClose;
         }
 
-        if (viewTime > 0) {
+        if (viewTime > 0 && this.autoRemoveMessages) {
             window.setTimeout(() => {
                 if (this.messages.find(v => v.messageId === msgId)) {
                     this.fadeOutAndRemoveMessage(msgId);

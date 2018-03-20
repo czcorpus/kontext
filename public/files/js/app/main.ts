@@ -336,12 +336,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      *
      */
     initNotifications() {
-        this.renderReactComponent(
-            this.layoutViews.Messages,
-            <HTMLElement>document.querySelector('#content .messages-mount')
-        );
-
-        (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
+        if (this.getConf<boolean>('popupServerMessages')) {
+            this.renderReactComponent(
+                this.layoutViews.Messages,
+                <HTMLElement>document.querySelector('#content .messages-mount')
+            );
+        }
+        (this.getConf<Array<[string, string]>>('notifications') || []).forEach((msg) => {
             this.messageModel.addMessage(msg[0], msg[1], null);
         });
     }
@@ -687,7 +688,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 );
 
                 this.corpusInfoModel = new docModels.CorpusInfoModel(this.dispatcher, this.pluginApi());
-                this.messageModel = new docModels.MessageModel(this.dispatcher, this.pluginApi());
+                this.messageModel = new docModels.MessageModel(
+                    this.dispatcher,
+                    this.pluginApi(),
+                    this.getConf<boolean>('popupServerMessages')
+                );
                 this.userInfoModel = new UserInfo(this.dispatcher, this);
                 this.corpViewOptionsModel = new CorpusViewOptionsModel(
                     this.dispatcher,

@@ -23,6 +23,7 @@ import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import {init as messageViewsInit, MessageViewProps} from '../views/message';
+import { MessageModel } from '../models/common/layout';
 
 
 declare var require:any;
@@ -51,14 +52,16 @@ class MessagePage {
             (plugin) => {
                 const views = messageViewsInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers()
+                    this.layoutModel.getComponentHelpers(),
+                    this.layoutModel.getModels().messageModel
                 );
                 this.layoutModel.renderReactComponent<MessageViewProps>(
                     views.MessagePageHelp,
                     document.getElementById('root-mount'),
                     {
                         ...(this.layoutModel.getConf<Kontext.GeneralProps>('issueReportingAction') || {}),
-                        issueReportingView: <React.SFC<{}>>plugin.getWidgetView()
+                        issueReportingView: <React.SFC<{}>>plugin.getWidgetView(),
+                        lastUsedCorpus: this.layoutModel.getConf<{corpname:string; human_corpname:string}>('LastUsedCorp')
                     }
                 );
 

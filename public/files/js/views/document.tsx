@@ -104,6 +104,30 @@ export function init(
         }
     }
 
+    // ------------------------------ <StatusIcon /> -----------------------------
+
+    const StatusIcon:CoreViews.StatusIcon.Component = (props) => {
+        const m = {
+            info: 'img/info-icon.svg',
+            message: 'img/message-icon.png',
+            warning: 'img/warning-icon.svg',
+            error: 'img/error-icon.svg'
+        };
+
+
+        if (!props.status || !m[props.status]) {
+            return <div className="icon-box" />;
+
+        } else {
+            return (
+                <div className="icon-box">
+                    <img className="info-icon" src={he.createStaticUrl(m[props.status])}
+                            alt={props.status} />
+                </div>
+            );
+        }
+    };
+
 
     // ------------------------------ <PopupBox /> -----------------------------
 
@@ -129,26 +153,6 @@ export function init(
         _closeClickHandler() {
             if (typeof this.props.onCloseClick === 'function') {
                 this.props.onCloseClick.call(this);
-            }
-        }
-
-        _renderStatusIcon() {
-            const m = {
-                info: 'img/info-icon.svg',
-                message: 'img/message-icon.png',
-                warning: 'img/warning-icon.svg',
-                error: 'img/error-icon.svg'
-            };
-            if (!this.props.status || !m[this.props.status]) {
-                return null;
-
-            } else {
-                return (
-                    <div>
-                        <img className="info-icon" src={he.createStaticUrl(m[this.props.status])}
-                                alt={this.props.status} />
-                    </div>
-                );
             }
         }
 
@@ -201,7 +205,7 @@ export function init(
                 <div className={classes.join(' ')} style={css}>
                     <div className="header">
                         {this._renderCloseButton()}
-                        {this._renderStatusIcon()}
+                        <StatusIcon status={this.props.status} />
                     </div>
                     {this.props.children}
                 </div>
@@ -563,6 +567,7 @@ export function init(
         IssueReportingLink: IssueReportingLink,
         AjaxLoaderImage: AjaxLoaderImage,
         AjaxLoaderBarImage: AjaxLoaderBarImage,
-        Shortener:Shortener
+        Shortener: Shortener,
+        StatusIcon: StatusIcon
     };
 }

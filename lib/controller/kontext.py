@@ -721,6 +721,8 @@ class Kontext(Controller):
         # we do not know final corpus name yet
         self._apply_general_user_settings(options, self._init_default_settings)
 
+        self.cm = corplib.CorpusManager(self.subcpath)
+
         # corpus access check and modify path in case user cannot access currently requested corp.
         corpname, corpus_variant, path = self._check_corpus_access(path, form, action_metadata)
 
@@ -731,7 +733,6 @@ class Kontext(Controller):
         self._map_args_to_attrs(form, named_args)
         self.args.corpname = corpname  # always prefer corpname returned by _check_corpus_access()
         self._corpus_variant = corpus_variant
-        self.cm = corplib.CorpusManager(self.subcpath)
 
         # return url (for 3rd party pages etc.)
         args = {}
@@ -802,10 +803,8 @@ class Kontext(Controller):
         cn = ''
 
         # 1st option: fetch required corpus name from html form or from URL params
-        if not cn and 'corpname' in form:
+        if 'corpname' in form:
             cn = form.getvalue('corpname')
-        if isinstance(cn, ListType) and len(cn) > 0:
-            cn = cn[-1]
 
         # 2nd option: try currently initialized corpname (e.g. from restored semi-persistent args)
         if not cn:
@@ -1147,7 +1146,8 @@ class Kontext(Controller):
         result['ui_testing_flag'] = settings.get_bool('global', 'ui_testing_flag', '0')
         result['use_phantom_polyfills'] = 'phantomjs' in self._request.environ.get(
             'HTTP_USER_AGENT').lower()
-
+        if 'popup_server_messages' not in result:
+            result['popup_server_messages'] = True
         return result
 
     def _human_readable_corpname(self):

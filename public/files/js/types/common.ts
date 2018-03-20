@@ -243,7 +243,7 @@ export namespace Kontext {
     /**
      * A model managing system messages presented to a user
      */
-    export interface MessagePageModel extends EventEmitter {
+    export interface IMessagePageModel extends EventEmitter {
         addMessage(messageType:string, messageText:string, onClose:()=>void);
         getMessages():Immutable.List<UserNotification>;
         getTransitionTime():number;
@@ -329,7 +329,7 @@ export namespace Kontext {
 
     export interface LayoutModel {
         corpusInfoModel:ICorpusInfoModel,
-        messageModel:MessagePageModel,
+        messageModel:IMessagePageModel,
         userInfoModel:IUserInfoModel,
         corpusViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
         generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;
