@@ -252,7 +252,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                         return (
                             <div key={`resource:${i}`}>
                                 {v.heading ? <h2 className="inhouse">{v.heading}</h2> : null}
-                                <v.renderer data={v.contents} />
+                                <layoutViews.ErrorBoundary>
+                                    <v.renderer data={v.contents} />
+                                </layoutViews.ErrorBoundary>
                             </div>
                         );
                     })}

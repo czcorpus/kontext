@@ -88,7 +88,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     const UnsupportedRenderer:Views['UnsupportedRenderer'] = (props) => {
         return (
-            <p>Unsupported renderer {props.data}</p>
+            <div className="UnsupportedRenderer">
+                <p><strong>{he.translate('defaultTD__unsupported_renderer')}</strong></p>
+                <p>{he.translate('defaultTD__original_data')}:</p>
+                <pre>{JSON.stringify(window)}</pre>
+            </div>
         );
     };
 

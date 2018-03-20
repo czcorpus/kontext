@@ -124,7 +124,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
                 );
 
             } else {
-                return <span className="not-found">{he.translate('default_kwic_connect__translation_not_found')}</span>;
+                return (
+                    <span className="words">
+                        <span className="word not-found">&lt;{he.translate('default_kwic_connect__translation_not_found')}&gt;</span>
+                    </span>
+                );
             }
         };
 

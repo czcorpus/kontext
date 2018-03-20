@@ -47,14 +47,19 @@ export function init(
         render() {
             if (this.state.hasError) {
                 return (
-                    <div>
-                        <p style={{textAlign: 'center'}}>
+                    <div className="ErrorBoundary">
+                        <p className="message">
                             <img src={he.createStaticUrl('img/error-icon.svg')}
                                     alt={he.translate('global__error_icon')}
-                                    style={{width: '2em'}} />
-                        </p>
-                        <p style={{textAlign: 'center', fontSize: '1.3em'}}>
+                                    style={{width: '1.5em'}} />
                             {he.translate('global__failed_to_render_component')}
+                        </p>
+                        <p className="symbol">
+                            <img src={he.createStaticUrl('img/gear.svg')}
+                                    style={{width: '4em'}} />
+                        </p>
+                        <p className="note">
+                            {he.translate('global__failed_to_render_component_expl')}
                         </p>
                     </div>
                 );
