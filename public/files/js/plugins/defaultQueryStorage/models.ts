@@ -307,7 +307,9 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         return this.data.flatMap(v => {
             return Immutable.List<InputBoxHistoryItem>()
                 .push({query: v.query, query_type: v.query_type, created: v.created})
-                .concat(v.aligned.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created})));
+                .concat(v.aligned
+                        .filter(v2 => !!v2.query)
+                        .map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created})));
         }).toList();
     }
 
