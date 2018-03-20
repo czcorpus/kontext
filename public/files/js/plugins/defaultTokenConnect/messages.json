@@ -1,0 +1,10 @@
+{
+    "en-US": {
+       "defaultTD__unsupported_renderer": "Required renderer module not found",
+       "defaultTD__original_data": "Data"
+    },
+    "cs-CZ": {
+        "defaultTD__unsupported_renderer": "Požadovaný zobrazovací modul nebyl nalezen",
+        "defaultTD__original_data": "Data"
+    }
+}
