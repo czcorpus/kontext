@@ -49,10 +49,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     const QueryNameInput:React.SFC<{
         value:string;
+        onKeyDown:(evt:React.KeyboardEvent<{}>)=>void;
 
     }> = (props) => {
 
-        const handleInputChange = (evt) => {
+        const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
                 actionType: 'QUERY_SAVE_AS_FORM_SET_NAME',
                 props: {
@@ -65,7 +66,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             <label>
                 {he.translate('query__save_as_query_name_label')}:{'\u00a0'}
                 <input type="text" style={{width: '15em'}}
-                        value={props.value} onChange={handleInputChange} />
+                        value={props.value} onChange={handleInputChange}
+                        onKeyDown={props.onKeyDown}
+                        ref={item => item ? item.focus() : null} />
             </label>
         );
     };
@@ -74,15 +77,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     const SubmitButton:React.SFC<{
         isWaiting:boolean;
+        onClick:(evt:React.MouseEvent<{}>)=>void;
+        onKeyDown:(evt:React.KeyboardEvent<{}>)=>void;
 
     }> = (props) => {
 
-        const handleSubmit = () => {
-            dispatcher.dispatch({
-                actionType: 'QUERY_SAVE_AS_FORM_SUBMIT',
-                props: {}
-            });
-        };
+
 
         if (props.isWaiting) {
             return (
@@ -95,7 +95,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         } else {
             return (
                 <button type="button" className="default-button"
-                        onClick={handleSubmit}>
+                        onClick={props.onClick}
+                        onKeyDown={props.onKeyDown}>
                     {he.translate('query__save_as_save')}
                 </button>
             );
@@ -111,24 +112,40 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             super(props);
             this._handleCloseEvent = this._handleCloseEvent.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
+            this._handleKeyDown = this._handleKeyDown.bind(this);
             this.state = this._fetchModelState();
         }
 
-        _fetchModelState() {
+        private _fetchModelState() {
             return {
                 name: saveAsFormModel.getName(),
                 isWaiting: saveAsFormModel.getIsBusy()
             };
         }
 
-        _handleCloseEvent() {
+        private _handleCloseEvent() {
             dispatcher.dispatch({
                 actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
                 props: {}
             });
         }
 
-        _handleModelChange() {
+        private _handleKeyDown(evt:React.KeyboardEvent<{}>):void {
+            if (evt.keyCode === 13) {
+                this.submit();
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+        }
+
+        private submit() {
+            dispatcher.dispatch({
+                actionType: 'QUERY_SAVE_AS_FORM_SUBMIT',
+                props: {}
+            });
+        }
+
+        private _handleModelChange() {
             this.setState(this._fetchModelState());
         }
 
@@ -147,10 +164,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 label={he.translate('query__save_as_box_hd')}>
                         <form>
                             <p>
-                                <QueryNameInput value={this.state.name} />
+                                <QueryNameInput value={this.state.name} onKeyDown={this._handleKeyDown} />
                             </p>
                             <p>
-                                <SubmitButton isWaiting={this.state.isWaiting} />
+                                <SubmitButton isWaiting={this.state.isWaiting} onKeyDown={this._handleKeyDown}
+                                        onClick={(evt)=>this.submit()} />
                             </p>
                         </form>
                     </layoutViews.CloseableFrame>
