@@ -127,7 +127,7 @@ export class FirstFormPage {
         );
     }
 
-    createTTViews():RSVP.Promise<{[key:string]:any}> {
+    createTTViews():QueryFormProps {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
@@ -141,7 +141,7 @@ export class FirstFormPage {
             queryFormArgs.bib_mapping
         );
 
-        return liveAttributes(
+        const liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             () => this.queryModel.getCorpora(),
@@ -153,45 +153,48 @@ export class FirstFormPage {
                                     Object.keys(queryFormArgs.selected_text_types).length > 0,
                 manualAlignCorporaMode: false
             }
-
-        ).then(
-            (liveAttrsPlugin) => {
-                let liveAttrsViews;
-                if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
-                    // Complicated dependencies between QueryModel, TextTypesModel and LiveAttrsModel
-                    // cause that LiveAttrs model needs QueryModel data but it is not available
-                    // here yet. That's the reason we have to define a callback here to configure
-                    // required values later.
-                    this.onQueryModelReady = (qs => {
-                        liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
-                    });
-                    this.onAlignedCorporaChanged = (corpora => {
-                        if (liveAttrsPlugin.hasSelectionSteps()) {
-                            liveAttrsPlugin.reset();
-                            liveAttrsPlugin.notifyChangeListeners();
-                            this.textTypesModel.notifyChangeListeners();
-                        }
-                        liveAttrsPlugin.selectLanguages(corpora, true);
-                    });
-                    this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-                    this.textTypesModel.addSelectionChangeListener(target => {
-                        liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
-                                liveAttrsPlugin.hasSelectedLanguages());
-                    });
-                    liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
-
-                } else {
-                    this.onQueryModelReady = () => undefined;
-                    this.onAlignedCorporaChanged = (_) => undefined;
-                    liveAttrsViews = {};
-                }
-                return {
-                    liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-                    liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                    attributes: this.textTypesModel.getAttributes()
-                }
-            }
         );
+
+        let liveAttrsViews;
+        if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+            // Complicated dependencies between QueryModel, TextTypesModel and LiveAttrsModel
+            // cause that LiveAttrs model needs QueryModel data but it is not available
+            // here yet. That's the reason we have to define a callback here to configure
+            // required values later.
+            this.onQueryModelReady = (qs => {
+                liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
+            });
+            this.onAlignedCorporaChanged = (corpora => {
+                if (liveAttrsPlugin.hasSelectionSteps()) {
+                    liveAttrsPlugin.reset();
+                    liveAttrsPlugin.notifyChangeListeners();
+                    this.textTypesModel.notifyChangeListeners();
+                }
+                liveAttrsPlugin.selectLanguages(corpora, true);
+            });
+            this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
+            this.textTypesModel.addSelectionChangeListener(target => {
+                liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
+                        liveAttrsPlugin.hasSelectedLanguages());
+            });
+            liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
+
+        } else {
+            this.onQueryModelReady = () => undefined;
+            this.onAlignedCorporaChanged = (_) => undefined;
+            liveAttrsViews = {};
+        }
+        return {
+            formType:Kontext.ConcFormTypes.QUERY,
+            liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
+            liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+            attributes: this.textTypesModel.getAttributes(),
+            tagHelperView: null,
+            queryStorageView: null,
+            allowCorpusSelection: null,
+            actionPrefix: null,
+            onEnterKey: null
+        };
     }
 
     private initQueryModel():void {
@@ -292,7 +295,7 @@ export class FirstFormPage {
     }
 
     init():void {
-        const p1 = this.layoutModel.init().then(
+        this.layoutModel.init().then(
             () => {
                 this.queryHintModel = new QueryHintModel(
                     this.layoutModel.dispatcher,
@@ -308,36 +311,19 @@ export class FirstFormPage {
                     this.layoutModel
                 );
                 this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
-            }
-        ).then(
-            () => {
-                return tagHelperPlugin(this.layoutModel.pluginApi());
-            }
-        );
 
-        const p2 = p1.then(
-            () => {
+                const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
                 const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
-                return queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
-            }
-        );
-
-        const p3 = p2.then(
-            () => {
-                return this.createTTViews();
-            }
-        );
-
-        RSVP.all([p1, p2, p3]).then(
-            (args:any) => {
-                const [taghelper, qsplug, props] = args;
-                props['tagHelperView'] = this.layoutModel.isNotEmptyPlugin(taghelper) ? taghelper.getWidgetView() : null;
-                props['queryStorageView'] = qsplug.getWidgetView();
-                props['allowCorpusSelection'] = true;
-                props['actionPrefix'] = '';
+                const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
+                const ttAns = this.createTTViews();
+                console.log(ttAns);
+                ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagHelperPlg.getWidgetView() : null;
+                ttAns.queryStorageView = qsPlugin.getWidgetView();
+                ttAns.allowCorpusSelection = true;
+                ttAns.actionPrefix = '';
                 this.initQueryModel();
                 const corparchWidget = this.initCorplistComponent();
-                this.attachQueryForm(props, corparchWidget);
+                this.attachQueryForm(ttAns, corparchWidget);
                 this.initCorpnameLink();
             }
 

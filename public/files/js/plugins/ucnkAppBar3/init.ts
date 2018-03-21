@@ -22,7 +22,6 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import RSVP from 'rsvp';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
@@ -61,11 +60,9 @@ export class AppBarPlugin implements PluginInterfaces.IToolbar {
     }
 }
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
-    return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
-        toolbar.init();
-        resolve(new AppBarPlugin(new AppBarModel(pluginApi.dispatcher())));
-    });
+export default function create(pluginApi:IPluginApi):PluginInterfaces.IToolbar {
+    toolbar.init();
+    return new AppBarPlugin(new AppBarModel(pluginApi.dispatcher()));
 }
 
 

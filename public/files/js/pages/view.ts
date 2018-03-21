@@ -97,6 +97,12 @@ export class QueryModels {
     filterCqlEditorModel:CQLEditorModel;
 }
 
+interface RenderLinesDeps {
+    ttModel:TextTypes.ITextTypesModel;
+    lvprops:ViewConfiguration;
+    qs:PluginInterfaces.IQueryStorage;
+    tagh:PluginInterfaces.ITagHelper;
+}
 
 /**
  * This is the concordance viewing and operating model with
@@ -262,15 +268,15 @@ export class ViewPage {
         });
     }
 
-    renderLines(props:ViewConfiguration):RSVP.Promise<any> {
-        let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-            props.onReady = () => resolve(null);
+    renderLines(renderDeps:RenderLinesDeps):RSVP.Promise<RenderLinesDeps> {
+        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            renderDeps.lvprops.onReady = () => resolve(renderDeps);
             try {
                 this.layoutModel.renderReactComponent(
                     this.concViews.ConcordanceDashboard,
                     window.document.getElementById('conc-dashboard-mount'),
                     {
-                        concViewProps: props
+                        concViewProps: renderDeps.lvprops
                     }
                 );
 
@@ -279,7 +285,6 @@ export class ViewPage {
                 throw e;
             }
         });
-        return ans;
     }
 
     reloadHits():void {
@@ -937,7 +942,7 @@ export class ViewPage {
         return this.queryModels.textTypesModel;
     }
 
-    private initTokenConnect():RSVP.Promise<PluginInterfaces.TokenConnect.IPlugin> {
+    private initTokenConnect():PluginInterfaces.TokenConnect.IPlugin {
         if (this.layoutModel.pluginIsActive('token_connect')) {
             return tokenConnectInit(
                 this.layoutModel.pluginApi(),
@@ -945,11 +950,11 @@ export class ViewPage {
             );
 
         } else {
-            return RSVP.Promise.resolve(null);
+            return null;
         }
     }
 
-    private initKwicConnect():RSVP.Promise<PluginInterfaces.KwicConnect.IPlugin> {
+    private initKwicConnect():PluginInterfaces.KwicConnect.IPlugin {
         if (this.layoutModel.pluginIsActive('kwic_connect')) {
             return kwicConnectInit(
                 this.layoutModel.pluginApi(),
@@ -957,7 +962,7 @@ export class ViewPage {
             );
 
         } else {
-            return RSVP.Promise.resolve(null);
+            return null;
         }
     }
 
@@ -1099,7 +1104,7 @@ export class ViewPage {
      *
      */
     init():void {
-        const ttProm = this.layoutModel.init().then(
+        const ttProm = this.layoutModel.init().then<RenderLinesDeps>(
             () => {
                 this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
                     (optsModel) => {
@@ -1107,39 +1112,17 @@ export class ViewPage {
                         this.viewModels.dashboardModel.updateOnGlobalViewOptsChange(optsModel);
                     }
                 );
-                return this.initTextTypesModel();
-            }
-        );
-        const syntaxViewerProm = ttProm.then(
-            () => {
-                const sv = syntaxViewerInit(this.layoutModel.pluginApi());
-                if (sv) {
-                    return sv;
+                const ttModel = this.initTextTypesModel();
+                let syntaxViewerModel = syntaxViewerInit(this.layoutModel.pluginApi());
+                if (!syntaxViewerModel) {
+                    syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
                 }
-                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                    resolve(new DummySyntaxViewModel(this.layoutModel.dispatcher));
-                });
-            }
-        );
-
-        const tokenConnectProp = ttProm.then(
-            () => {
-                return this.initTokenConnect()
-            }
-        );
-
-        const kwicConnectProm = ttProm.then(
-            () => {
-                return this.initKwicConnect();
-            }
-        )
-
-        const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenConnectProp, kwicConnectProm]).then(
-            (args) => {
-                const [ttModel, sv, tokenConnectPlg, kwicConnectPlg] = args;
+                const tokenConnectPlg = this.initTokenConnect();
+                const kwicConnectPlg = this.initKwicConnect();
+                // TODO const [ttModel, sv, tokenConnectPlg, kwicConnectPlg] = args;
                 const lineViewProps = this.initModels(
                     <TextTypesModel>ttModel,
-                    <PluginInterfaces.ISyntaxViewer>sv,
+                    <PluginInterfaces.ISyntaxViewer>syntaxViewerModel,
                     <PluginInterfaces.TokenConnect.IPlugin>tokenConnectPlg,
                     <PluginInterfaces.KwicConnect.IPlugin>kwicConnectPlg
                 );
@@ -1157,50 +1140,41 @@ export class ViewPage {
                     he: this.layoutModel.getComponentHelpers(),
                     ...this.viewModels
                 });
-                return lineViewProps;
-            }
-        );
 
-        const p3 = p2.then(
-            (lineViewProps) => {
-                return this.renderLines(
-                    lineViewProps
+                const queryStoragePlg = queryStoragePlugin(
+                    this.layoutModel.pluginApi(),
+                    0,
+                    this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
+                    this.layoutModel.getConf<number>('QueryHistoryPageNumRecords')
                 );
-            }
-        );
 
-        const p4 = p3.then(
-            () => {
+                const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
+
+                return {
+                    ttModel: ttModel,
+                    lvprops: lineViewProps,
+                    qs: queryStoragePlg,
+                    tagh: tagHelperPlg
+                };
+            }
+        ).then(
+            (deps) => {
+                return this.renderLines(deps);
+            }
+
+        ).then(
+            (deps) => {
                 this.setupHistoryOnPopState();
                 this.onBeforeUnloadAsk();
                 this.updateLocalAlignedCorpora();
-            }
-        );
-
-        const queryStorageProm = p4.then(
-            () => {
-                const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
-                return queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
-            }
-        );
-
-        const tagHelperProm = p4.then(
-            () => {
-                return tagHelperPlugin(this.layoutModel.pluginApi());
-            }
-        );
-
-        RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
-            (args:any) => {
-                const [ttModel, lvprops, qs, tagh] = args;
                 this.initQueryForm();
                 this.initFirsthitsForm();
                 this.initFilterForm(this.queryModels.firstHitsModel);
                 this.initSortForm();
                 this.initSwitchMainCorpForm();
                 this.initSampleForm(this.queryModels.switchMcModel);
-                this.initQueryOverviewArea(tagh, qs);
-                this.initAnalysisViews(<TextTypesModel>ttModel);
+                this.initQueryOverviewArea(deps.tagh, deps.qs);
+                this.initAnalysisViews(<TextTypesModel>deps.ttModel);
                 this.updateMainMenu();
                 this.initKeyShortcuts();
                 this.updateHistory();

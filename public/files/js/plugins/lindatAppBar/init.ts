@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import * as aai from './aai-config';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
@@ -27,11 +26,9 @@ require('./style.less'); // webpack
 export class LindatAppBar implements PluginInterfaces.IToolbar {
 }
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
-    return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
-        aai.init();
-        resolve(new LindatAppBar());
-    });
+export default function create(pluginApi:IPluginApi):PluginInterfaces.IToolbar {
+    aai.init();
+    return new LindatAppBar();
 }
 
 

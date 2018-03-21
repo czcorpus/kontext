@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit, View} from './views';
@@ -85,7 +84,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 }
 
 
-export default function create(pluginApi:IPluginApi, alignedCorpora:Array<string>):RSVP.Promise<PluginInterfaces.KwicConnect.IPlugin> {
+export default function create(pluginApi:IPluginApi, alignedCorpora:Array<string>):PluginInterfaces.KwicConnect.IPlugin {
     const conf = pluginApi.getConf<{kwic_connect: {load_chunk_size:number; max_kwic_words:number}}>('pluginData');
     const plg = new DefaultKwicConnectPlugin(
         pluginApi,
@@ -93,5 +92,5 @@ export default function create(pluginApi:IPluginApi, alignedCorpora:Array<string
         conf.kwic_connect.load_chunk_size
     );
     plg.init();
-    return RSVP.resolve(plg);
+    return plg;
 }

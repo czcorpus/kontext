@@ -625,23 +625,18 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     /**
      * @return true if the plug-in has been installed else false
      */
-    private initIssueReporting():RSVP.Promise<boolean> {
+    private initIssueReporting():boolean {
         if (this.pluginIsActive('issue_reporting')) {
-            return issueReportingPlugin(this.pluginApi()).then(
-                (plugin) => {
-                    this.renderReactComponent(
-                        plugin.getWidgetView(),
-                        document.getElementById('error-reporting-mount'),
-                        this.getConf<Kontext.GeneralProps>('issueReportingAction')
-                    );
-                    return true;
-                }
+            const plugin = issueReportingPlugin(this.pluginApi())
+            this.renderReactComponent(
+                plugin.getWidgetView(),
+                document.getElementById('error-reporting-mount'),
+                this.getConf<Kontext.GeneralProps>('issueReportingAction')
             );
+            return true;
 
         } else {
-            return new RSVP.Promise<boolean>((resolve:(d)=>void, reject:(err)=>void) => {
-                resolve(false);
-            });
+            return false;
         }
     }
 

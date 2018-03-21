@@ -101,7 +101,7 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
         );
     }
 
-    createTextTypesComponents():RSVP.Promise<TTInitData> {
+    createTextTypesComponents():TTInitData {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
@@ -114,7 +114,7 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
             this.textTypesModel
         );
 
-        const p1 = liveAttributes(
+        const liveAttrsPlugin:PluginInterfaces.ILiveAttributes = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             null, // no corplist provider => manual aligned corp. selection mode
@@ -126,61 +126,52 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                 manualAlignCorporaMode: true
             }
         );
-        const p2 = p1.then(
-            (liveAttrsPlugin:TextTypes.AttrValueTextInputListener) => {
-                if (this.layoutModel.pluginIsActive('live_attributes')) {
-                    this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-                    this.textTypesModel.addSelectionChangeListener(target => {
-                        liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
-                                liveAttrsPlugin.hasSelectedLanguages());
-                    });
-                }
-                return subcMixer(
-                    this.layoutModel.pluginApi(),
-                    this.textTypesModel,
-                    () => this.subcorpFormModel.getSubcname(),
-                    () => liveAttrsPlugin.getAlignedCorpora(),
-                    this.layoutModel.getConf<string>('CorpusIdAttr')
-                );
-            }
+        if (this.layoutModel.pluginIsActive('live_attributes')) {
+            this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
+            this.textTypesModel.addSelectionChangeListener(target => {
+                liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
+                        liveAttrsPlugin.hasSelectedLanguages());
+            });
+        }
+        const subcmixerPlg = subcMixer(
+            this.layoutModel.pluginApi(),
+            this.textTypesModel,
+            () => this.subcorpFormModel.getSubcname(),
+            () => liveAttrsPlugin.getAlignedCorpora(),
+            this.layoutModel.getConf<string>('CorpusIdAttr')
         );
 
-        return RSVP.all([p1, p2]).then(
-            (args:[PluginInterfaces.ILiveAttributes, PluginInterfaces.ISubcMixer]) => {
-                const [liveAttrs, subcmixerPlugin] = args;
-                let subcMixerComponent:React.ComponentClass;
-                if (this.layoutModel.pluginIsActive('subcmixer')) {
-                    if (liveAttrs) {
-                        liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
-                        subcMixerComponent = subcmixerPlugin.getWidgetView();
+        let subcMixerComponent:React.ComponentClass;
+        if (this.layoutModel.pluginIsActive('subcmixer')) {
+            if (liveAttrsPlugin) {
+                liveAttrsPlugin.addUpdateListener(subcmixerPlg.refreshData.bind(subcmixerPlg));
+                subcMixerComponent = subcmixerPlg.getWidgetView();
 
-                    } else {
-                        throw new Error('Subcmixer plug-in requires live_attributes plug-in to be operational');
-                    }
-
-                } else {
-                    subcMixerComponent = null;
-                }
-                const liveAttrsViews = liveAttrs ? liveAttrs.getViews(subcMixerComponent,this.textTypesModel) : {};
-
-                const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
-                    () => liveAttrs.getAlignedCorpora().filter(v => v.selected).toList() :
-                    () => Immutable.List<TextTypes.AlignedLanguageItem>();
-
-                return {
-                    component: ttViewComponents.TextTypesPanel,
-                    props: {
-                        liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-                        liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                        attributes: this.textTypesModel.getAttributes(),
-                        alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
-                        manualAlignCorporaMode: true
-                    },
-                    ttModel: this.textTypesModel,
-                    attachedAlignedCorporaProvider: attachedAlignedCorporaProvider
-                };
+            } else {
+                throw new Error('Subcmixer plug-in requires live_attributes plug-in to be operational');
             }
-        );
+
+        } else {
+            subcMixerComponent = null;
+        }
+        const liveAttrsViews = liveAttrsPlugin ? liveAttrsPlugin.getViews(subcMixerComponent,this.textTypesModel) : {};
+
+        const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
+            () => liveAttrsPlugin.getAlignedCorpora().filter(v => v.selected).toList() :
+            () => Immutable.List<TextTypes.AlignedLanguageItem>();
+
+        return {
+            component: ttViewComponents.TextTypesPanel,
+            props: {
+                liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
+                liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+                attributes: this.textTypesModel.getAttributes(),
+                alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
+                manualAlignCorporaMode: true
+            },
+            ttModel: this.textTypesModel,
+            attachedAlignedCorporaProvider: attachedAlignedCorporaProvider
+        };
     }
 
     init():void {
@@ -188,13 +179,10 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
         };
 
-        const p1 = this.layoutModel.init().then(
+        this.layoutModel.init().then(
             () => {
-                return this.createTextTypesComponents()
-            }
-        ).then(
-            (ttComponent) => {
-                 this.subcorpWithinFormModel = new SubcorpWithinFormModel(
+                const ttComponent = this.createTextTypesComponents();
+                    this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
@@ -207,13 +195,8 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                     this.layoutModel.getConf<string>('corpname'),
                     ttComponent.attachedAlignedCorporaProvider
                 );
-                return ttComponent;
-            }
-        );
 
-        const p2 = p1.then(
-            (ttComponent) => {
-                return corplistComponent.createWidget(
+                const corplistWidget = corplistComponent.createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
                     this.layoutModel.pluginApi(),
                     this,
@@ -236,19 +219,14 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                         }
                     }
                 );
-            }
-        );
-
-        RSVP.all([p1, p2]).then(
-            (items:[TTInitData, React.ComponentClass<TextTypesPanelProps>]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
                 this.viewComponents = subcorpViewsInit({
                     dispatcher: this.layoutModel.dispatcher,
                     he: this.layoutModel.getComponentHelpers(),
-                    CorparchComponent: items[1],
+                    CorparchComponent: corplistWidget,
                     subcorpFormModel: this.subcorpFormModel,
                     subcorpWithinFormModel: this.subcorpWithinFormModel
                 });
-                this.initSubcorpForm(items[0].component, items[0].props);
+                this.initSubcorpForm(ttComponent.component, ttComponent.props);
             }
 
         ).then(

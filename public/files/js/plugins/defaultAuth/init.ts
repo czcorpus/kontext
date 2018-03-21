@@ -23,7 +23,6 @@ import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import RSVP from 'rsvp';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
@@ -114,7 +113,7 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 }
 
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
+export default function create(pluginApi:IPluginApi):PluginInterfaces.IAuth {
     const plugin = new AuthPlugin(
         new UserProfileModel(
             pluginApi.dispatcher(),
@@ -127,7 +126,5 @@ export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfac
         ),
         pluginApi
     );
-    return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-        resolve(plugin);
-    });
+    return plugin;
 };
