@@ -31,7 +31,7 @@ from translation import ugettext as _
 import l10n
 
 
-@exposed(return_type='json', http_method='POST')
+@exposed(return_type='json', http_method='POST', skip_corpus_init=True)
 def submit_issue(self, request):
     with plugins.runtime.ISSUE_REPORTING as p:
         p.submit(self._plugin_api, request.form)

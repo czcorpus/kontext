@@ -59,7 +59,8 @@ class MessagePage {
                     views.MessagePageHelp,
                     document.getElementById('root-mount'),
                     {
-                        ...(this.layoutModel.getConf<Kontext.GeneralProps>('issueReportingAction') || {}),
+                        widgetProps: this.layoutModel.getConf<Kontext.GeneralProps>('issueReportingAction') || null,
+                        anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
                         issueReportingView: <React.SFC<{}>>plugin.getWidgetView(),
                         lastUsedCorpus: this.layoutModel.getConf<{corpname:string; human_corpname:string}>('LastUsedCorp')
                     }

@@ -27,6 +27,8 @@ import { MessageModel } from '../models/common/layout';
 
 export interface MessageViewProps {
     issueReportingView:React.SFC<{}>|React.ComponentClass<{}>;
+    widgetProps:any;
+    anonymousUser:boolean;
     lastUsedCorpus:{corpname:string; human_corpname:string};
 }
 
@@ -109,8 +111,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                         <li>
                             <a onClick={this.handleCorporaClick}>{he.translate('global__view_avail_corpora')}</a>
                         </li>
-                        {this.props.issueReportingView ?
-                            <li><this.props.issueReportingView /></li> :
+                        {this.props.issueReportingView && !this.props.anonymousUser ?
+                            <li><this.props.issueReportingView {...this.props.widgetProps} /></li> :
                             null
                         }
                     </ul>
