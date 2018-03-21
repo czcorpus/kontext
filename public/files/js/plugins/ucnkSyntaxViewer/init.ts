@@ -133,8 +133,6 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntax
     }
 }
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer> {
-    return new RSVP.Promise<PluginInterfaces.ISyntaxViewer>((resolve:(val:PluginInterfaces.ISyntaxViewer)=>void, reject:(e:any)=>void) => {
-        resolve(new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi));
-    });
+export default function create(pluginApi:IPluginApi):PluginInterfaces.ISyntaxViewer {
+    return new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi);
 }

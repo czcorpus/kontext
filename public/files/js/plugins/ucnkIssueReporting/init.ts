@@ -21,11 +21,9 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
-import RSVP from 'rsvp';
 
 
 export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
-
 
     private view:React.SFC<{}>;
 
@@ -39,9 +37,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
 }
 
 
-export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IssueReporting> {
+export default function init(pluginApi:IPluginApi):PluginInterfaces.IssueReporting {
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers());
-    return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {
-        resolve(new IssueReportingPlugin(view.IssueReportingWidget));
-    });
+    return new IssueReportingPlugin(view.IssueReportingWidget);
 }

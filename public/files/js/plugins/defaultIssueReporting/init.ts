@@ -23,7 +23,6 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
-import RSVP from 'rsvp';
 
 
 export class IssueReportingModel extends StatefulModel {
@@ -122,10 +121,8 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
 
 
 
-export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IssueReporting> {
+export default function init(pluginApi:IPluginApi):PluginInterfaces.IssueReporting {
     const model = new IssueReportingModel(pluginApi);
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), model);
-    return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {
-        resolve(new IssueReportingPlugin(model, view.IssueReportingWidget));
-    });
+    return new IssueReportingPlugin(model, view.IssueReportingWidget);
 }

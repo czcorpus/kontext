@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,7 +26,6 @@ declare var $:any;
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import RSVP from 'rsvp';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -111,8 +112,6 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
 
 }
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<SyntaxTreeViewer> {
-    return new RSVP.Promise<SyntaxTreeViewer>((resolve:(val:SyntaxTreeViewer)=>void, reject:(e:any)=>void) => {
-        resolve(new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi));
-    });
+export default function create(pluginApi:IPluginApi):SyntaxTreeViewer {
+    return new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi);
 }

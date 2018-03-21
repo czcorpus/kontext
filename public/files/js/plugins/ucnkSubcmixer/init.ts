@@ -405,7 +405,7 @@ export default function create(
         textTypesModel:TextTypes.ITextTypesModel,
         getCurrentSubcnameFn:()=>string,
         getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
-        corpusIdAttr:string):RSVP.Promise<PluginInterfaces.ISubcMixer> {
+        corpusIdAttr:string):PluginInterfaces.ISubcMixer {
     const model = new SubcMixerModel(
         pluginApi.dispatcher(),
         pluginApi,
@@ -414,7 +414,5 @@ export default function create(
         getAlignedCorporaFn,
         corpusIdAttr
     );
-    return new RSVP.Promise<PluginInterfaces.ISubcMixer>((resolve:(v)=>void, reject:(err)=>void) => {
-        resolve(new SubcmixerPlugin(pluginApi, model));
-    });
+    return new SubcmixerPlugin(pluginApi, model);
 }

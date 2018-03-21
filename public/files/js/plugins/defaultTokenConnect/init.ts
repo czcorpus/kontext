@@ -85,14 +85,10 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
 
 
 export default function create(pluginApi:IPluginApi,
-        alignedCorpora:Array<string>):RSVP.Promise<PluginInterfaces.TokenConnect.IPlugin> {
-    return new RSVP.Promise<PluginInterfaces.TokenConnect.IPlugin>(
-        (resolve:(d)=>void, reject:(err)=>void) => {
-            resolve(new DefaultTokenConnectBackend(
-                pluginApi,
-                initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
-                alignedCorpora
-            ));
-        }
+        alignedCorpora:Array<string>):PluginInterfaces.TokenConnect.IPlugin {
+    return new DefaultTokenConnectBackend(
+        pluginApi,
+        initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
+        alignedCorpora
     );
 }

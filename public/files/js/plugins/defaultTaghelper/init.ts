@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,7 +22,6 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperModel} from './models';
 import {init as viewInit} from './view';
-import RSVP from 'rsvp';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -46,8 +47,8 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
     }
 }
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
-    const plugin = new TagHelperPlugin(
+export default function create(pluginApi:IPluginApi):PluginInterfaces.ITagHelper {
+    return new TagHelperPlugin(
         pluginApi,
         new TagHelperModel(
             pluginApi.dispatcher(),
@@ -55,7 +56,4 @@ export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfac
             pluginApi.getConf<string>('corpname')
         )
     );
-    return new RSVP.Promise<PluginInterfaces.ITagHelper>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        resolve(plugin);
-    });
 }

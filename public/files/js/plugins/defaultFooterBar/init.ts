@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import {IPluginApi} from '../../types/plugins';
 import {Kontext} from '../../types/common';
 
@@ -28,8 +27,6 @@ require('./style.less'); // webpack
 export class FooterPlugin {
 }
 
-export default function create(pluginApi:IPluginApi):RSVP.Promise<FooterPlugin> {
-    return new RSVP.Promise<FooterPlugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        resolve(new FooterPlugin());
-    });
+export default function create(pluginApi:IPluginApi):FooterPlugin {
+    return new FooterPlugin();
 }

@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2014 Institute of the Czech National Corpus
+ * Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,7 +20,6 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import RSVP from 'rsvp';
 import {QueryStorageModel} from './models';
 import {init as viewsInit} from './view';
 
@@ -54,8 +55,6 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
 }
 
-export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage> {
-    return new RSVP.Promise<PluginInterfaces.IQueryStorage>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        resolve(new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize)));
-    });
+export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):PluginInterfaces.IQueryStorage {
+    return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize));
 }
