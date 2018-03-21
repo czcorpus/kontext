@@ -887,6 +887,8 @@ class Actions(Querying):
             attr_list = set(self.corp.get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
 
+        self.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch'), )
+
         result = {}
         fcrit_is_all_nonstruct = True
         for fcrit_item in fcrit:
@@ -1187,6 +1189,7 @@ class Actions(Querying):
         """
         list collocations
         """
+        self.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch'),)
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
         if self.args.csortfn == '':
             self.args.csortfn = 'f'
