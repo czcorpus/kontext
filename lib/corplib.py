@@ -23,6 +23,7 @@ import glob
 from hashlib import md5
 from datetime import datetime
 import logging
+import time
 
 import l10n
 from l10n import import_string, export_string
@@ -108,6 +109,23 @@ def conf_bool(v):
     return v in ('y', 'yes', 'true', 't', '1')
 
 
+def find_subcorpus(subcpath, subcfile):
+    ans = []
+
+    def find_in_dir(root):
+        for item in os.listdir(root):
+            item_path = os.path.join(root, item)
+            if os.path.isdir(item_path):
+                find_in_dir(item_path)
+            elif subcfile == item:
+                ans.append(item_path)
+
+    t = time.time()
+    find_in_dir(subcpath)
+    logging.getLogger(__name__).warning('Looked for unbound subcfile: {0}, time: {1:0.2f}'.format(subcfile, time.time() - t))
+    return ans
+
+
 class CorpusManager(object):
 
     def __init__(self, subcpath=()):
@@ -116,6 +134,7 @@ class CorpusManager(object):
             subcpath: a list of paths where user corpora are located
         """
         self.subcpath = list(subcpath)
+        self._cache = {}
 
     def default_subcpath(self, corp):
         if type(corp) is not manatee.Corpus:
@@ -135,6 +154,10 @@ class CorpusManager(object):
         """
         if ':' in corpname:
             corpname, subcname = corpname.split(':', 1)
+
+        cache_key = (corpname, corp_variant, subcname)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
         registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
         corp = manatee.Corpus(registry_file)
         corp.corpname = str(corpname)  # never unicode (paths)
@@ -148,6 +171,10 @@ class CorpusManager(object):
                     spath = os.path.join(sp, corpname, subcname + '.subc')
                 if type(spath) == unicode:
                     spath = spath.encode("utf-8")
+                if not os.path.isfile(spath):
+                    subc_srch = find_subcorpus(os.path.dirname(self.subcpath[0]), subcname + '.subc')
+                    if len(subc_srch) == 1:
+                        spath = subc_srch[0]
                 if os.path.isfile(spath):
                     subc = manatee.SubCorpus(corp, spath)
                     subc.corp = corp
@@ -161,9 +188,11 @@ class CorpusManager(object):
                     subc.cm = self
                     subc.subchash = md5(open(spath).read()).hexdigest()
                     subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
+                    self._cache[cache_key] = subc
                     return subc
             raise RuntimeError(_('Subcorpus "%s" not found') % subcname)
         else:
+            self._cache[cache_key] = corp
             return corp
 
     def findPosAttr(self, corpname, attrname):
