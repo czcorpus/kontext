@@ -36,6 +36,8 @@ export class SubcorpFormModel extends StatefulModel {
 
     private subcname:string;
 
+    private isPublic:boolean;
+
     private withinFormModel:SubcorpWithinFormModel;
 
     private textTypesModel:TextTypesModel;
@@ -53,6 +55,7 @@ export class SubcorpFormModel extends StatefulModel {
         this.alignedCorporaProvider = alignedCorporaProvider;
         this.inputMode = 'gui';
         this.subcname = '';
+        this.isPublic = false;
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -62,6 +65,10 @@ export class SubcorpFormModel extends StatefulModel {
                 break;
                 case 'SUBCORP_FORM_SET_SUBCNAME':
                     this.subcname = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC':
+                    this.isPublic = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SUBMIT':
@@ -114,6 +121,10 @@ export class SubcorpFormModel extends StatefulModel {
 
     getInputMode():string {
         return this.inputMode;
+    }
+
+    getIsPublic():boolean {
+        return this.isPublic;
     }
 
 }

@@ -170,7 +170,7 @@ class CorpusManager(object):
                 else:
                     spath = os.path.join(sp, corpname, subcname + '.subc')
                 if type(spath) == unicode:
-                    spath = spath.encode("utf-8")
+                    spath = spath.encode('utf-8')
                 if not os.path.isfile(spath):
                     subc_srch = find_subcorpus(os.path.dirname(self.subcpath[0]), subcname + '.subc')
                     if len(subc_srch) == 1:
