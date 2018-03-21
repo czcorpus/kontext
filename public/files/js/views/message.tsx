@@ -98,7 +98,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                     </div>
                     <h2>{he.translate('global__where_to_continue')}:</h2>
                     <ul className="links">
-                        {this.props.lastUsedCorpus ?
+                        {this.props.lastUsedCorpus.corpname ?
                             <li>
                                 <a href={he.createActionLink('first_form', [['corpname', this.props.lastUsedCorpus.corpname]])}>
                                     {he.translate('global__select_last_used_corpus_{corpname}', {corpname: this.props.lastUsedCorpus.human_corpname})}
