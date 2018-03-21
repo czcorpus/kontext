@@ -129,7 +129,7 @@ class Options(Kontext):
         else:
             self.redirect('/first_form')
 
-    @exposed(access_level=1, return_type='json', http_method='GET')
+    @exposed(access_level=1, return_type='json', http_method='GET', skip_corpus_init=True)
     def viewopts(self, _):
         return dict(
             pagesize=self.args.pagesize,
@@ -144,7 +144,7 @@ class Options(Kontext):
             cql_editor=self.args.cql_editor
         )
 
-    @exposed(access_level=1, return_type='json', http_method='POST', legacy=True)
+    @exposed(access_level=1, return_type='json', http_method='POST', legacy=True, skip_corpus_init=True)
     def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0, cql_editor=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
                                tt_overview=tt_overview, cql_editor=cql_editor)
