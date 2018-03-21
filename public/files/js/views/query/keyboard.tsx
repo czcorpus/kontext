@@ -228,7 +228,7 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
         };
 
         const selectKeyType = (item, i) => {
-            if (item[0].length > 1) {
+            if (/^[A-Z][a-z]{2,}$/.exec(item[0])) {
                 switch (item[0]) {
                     case 'Shift':
                         return <ShiftKey
