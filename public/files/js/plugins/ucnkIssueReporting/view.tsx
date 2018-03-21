@@ -22,6 +22,7 @@
 import * as React from 'react';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
+import {CoreViews} from '../../types/coreViews';
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):{IssueReportingWidget:React.SFC<{}>} {
@@ -29,7 +30,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):{
     const layoutViews = he.getLayoutViews();
 
 
-    const IssueReportingWidget = (props) => {
+    const IssueReportingWidget:React.SFC<CoreViews.IssueReportingLink.Props> = (props) => {
         return <span><layoutViews.IssueReportingLink {...props} /></span>;
     };
 
