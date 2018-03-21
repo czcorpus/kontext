@@ -343,3 +343,25 @@ class Subcorpus(Querying):
         else:
             self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
         return {}
+
+    def _public_name_is_avail(self, filename):
+        found = False
+        for filename2 in os.listdir(self.subcpath[1]):
+            if filename + '.subc' == filename2:
+                found = True
+                break
+        return not found
+
+    @exposed(access_level=1, skip_corpus_init=True, return_type='json')
+    def validate_public_name(self, request):
+        return dict(available=self._public_name_is_avail(request.args['subcname']))
+
+    @exposed(access_level=1, skip_corpus_init=True, return_type='json', http_method='POST')
+    def publish_public_name(self, request):
+        subcname = request.args['subcname']
+        curr_subc = os.path.join(self.subcpath[0], self.session_get('user', 'id'), subcname + '.subc')
+        public_subc = os.path.join(self.subcpath[1], subcname + '.subc')
+        if self._public_name_is_avail(subcname) and os.path.isfile(curr_subc):
+            os.link(curr_subc, public_subc)
+        else:
+            raise UserActionException('Name not available')

@@ -300,7 +300,8 @@ class Kontext(Controller):
     def _setup_user_paths(self):
         user_id = self.session_get('user', 'id')
         if not self.user_is_anonymous():
-            self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))]
+            self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id)),
+                             os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
     def _user_has_persistent_settings(self):
@@ -470,6 +471,7 @@ class Kontext(Controller):
         return dict(
             # we don't want to store all the items from self.args.q in case auto generated
             # operations are present (we will store them individually later).
+            user_id=self.session_get('user', 'id'),
             q=self.args.q[:q_limit],
             corpora=self.get_current_aligned_corpora(),
             usesubcorp=self.args.usesubcorp,

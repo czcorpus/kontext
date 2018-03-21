@@ -44,7 +44,7 @@ import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
-from controller.errors import UserActionException, NotFoundException, get_traceback, fetch_exception_msg
+from controller.errors import UserActionException, NotFoundException, get_traceback, fetch_exception_msg, ActionValidationException
 from templating import CheetahResponseFile
 
 
@@ -443,7 +443,7 @@ class Controller(object):
         for validator in self._validators:
             err = validator()
             if isinstance(err, Exception):
-                raise err
+                raise ActionValidationException(err, validator)
 
     @staticmethod
     def _invoke_legacy_action(action, args, named_args):

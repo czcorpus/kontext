@@ -76,6 +76,8 @@ class CorpusManager(object):
 
     subcpath:List[str]
 
+    _cache:Dict[Tuple[str, str, str], str]
+
     def default_subcpath(self, corp:Corpus) -> str: ...
 
     def get_Corpus(self, corpname:str, corp_variant:Optional[str], subcname:Optional[str]) -> Corpus: ...

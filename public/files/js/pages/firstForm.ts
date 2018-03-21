@@ -316,7 +316,6 @@ export class FirstFormPage {
                 const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
                 const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
                 const ttAns = this.createTTViews();
-                console.log(ttAns);
                 ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagHelperPlg.getWidgetView() : null;
                 ttAns.queryStorageView = qsPlugin.getWidgetView();
                 ttAns.allowCorpusSelection = true;

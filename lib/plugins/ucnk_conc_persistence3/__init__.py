@@ -71,7 +71,7 @@ KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x i
 PERSIST_LEVEL_KEY = 'persist_level'
 ID_KEY = 'id'
 QUERY_KEY = 'q'
-DEFAULT_CONC_ID_LENGTH = 10
+DEFAULT_CONC_ID_LENGTH = 12
 
 
 def id_exists(id):

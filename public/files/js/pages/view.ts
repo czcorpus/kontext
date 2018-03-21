@@ -786,7 +786,7 @@ export class ViewPage {
         );
     }
 
-    initAnalysisViews(ttModel:TextTypesModel):void {
+    initAnalysisViews(ttModel:TextTypes.ITextTypesModel):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
         const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
@@ -1104,7 +1104,7 @@ export class ViewPage {
      *
      */
     init():void {
-        const ttProm = this.layoutModel.init().then<RenderLinesDeps>(
+        this.layoutModel.init().then<RenderLinesDeps>(
             () => {
                 this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
                     (optsModel) => {
@@ -1113,18 +1113,17 @@ export class ViewPage {
                     }
                 );
                 const ttModel = this.initTextTypesModel();
-                let syntaxViewerModel = syntaxViewerInit(this.layoutModel.pluginApi());
+                let syntaxViewerModel:PluginInterfaces.ISyntaxViewer = syntaxViewerInit(this.layoutModel.pluginApi());
                 if (!syntaxViewerModel) {
                     syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
                 }
                 const tokenConnectPlg = this.initTokenConnect();
                 const kwicConnectPlg = this.initKwicConnect();
-                // TODO const [ttModel, sv, tokenConnectPlg, kwicConnectPlg] = args;
                 const lineViewProps = this.initModels(
-                    <TextTypesModel>ttModel,
-                    <PluginInterfaces.ISyntaxViewer>syntaxViewerModel,
-                    <PluginInterfaces.TokenConnect.IPlugin>tokenConnectPlg,
-                    <PluginInterfaces.KwicConnect.IPlugin>kwicConnectPlg
+                    ttModel,
+                    syntaxViewerModel,
+                    tokenConnectPlg,
+                    kwicConnectPlg
                 );
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
@@ -1174,7 +1173,7 @@ export class ViewPage {
                 this.initSwitchMainCorpForm();
                 this.initSampleForm(this.queryModels.switchMcModel);
                 this.initQueryOverviewArea(deps.tagh, deps.qs);
-                this.initAnalysisViews(<TextTypesModel>deps.ttModel);
+                this.initAnalysisViews(deps.ttModel);
                 this.updateMainMenu();
                 this.initKeyShortcuts();
                 this.updateHistory();

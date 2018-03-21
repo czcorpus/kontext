@@ -11,13 +11,13 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
-import os
 import sys
+import os
 import redis
-import hashlib
 import argparse
 import json
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.default_auth import mk_pwd_hash_default
 
 

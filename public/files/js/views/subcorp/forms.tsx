@@ -288,7 +288,26 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         };
 
-        return <input type="text" value={props.value} onChange={handleChange} />
+        return <input type="text" value={props.value} onChange={handleChange} />;
+    };
+
+    // ------------------------ <SubcNamePublicCheckbox /> --------------------------
+
+    const SubcNamePublicCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
+
+        const handleCheckbox = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+                props: {
+                    value: !props.value
+                }
+            });
+        };
+
+        return <input type="checkbox" onChange={handleCheckbox} checked={props.value} />;
     };
 
     /**
@@ -402,6 +421,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
      */
     class SubcorpForm extends React.Component<SubcorpFormProps, {
         subcname:string;
+        isPublic:boolean;
         inputMode:string;
 
     }> {
@@ -417,7 +437,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         _fetchModelState() {
             return {
                 subcname: subcorpFormModel.getSubcname(),
-                inputMode: subcorpFormModel.getInputMode()
+                inputMode: subcorpFormModel.getInputMode(),
+                isPublic: subcorpFormModel.getIsPublic()
             };
         }
 
@@ -486,6 +507,18 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 </th>
                                 <td style={{width: '80%'}}>
                                     <SubcNameInput value={this.state.subcname} />
+                                    {this.state.isPublic ?
+                                        <span className="note"> {he.translate('subcform__public_must_be_unique')}</span> :
+                                        null
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>
+                                    {he.translate('subcform__set_as_public')}:
+                                </th>
+                                <td>
+                                    <SubcNamePublicCheckbox value={this.state.isPublic} />
                                 </td>
                             </tr>
                             <tr>

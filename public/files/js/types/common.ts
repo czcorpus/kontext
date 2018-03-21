@@ -860,7 +860,15 @@ export namespace TextTypes {
     /**
      *
      */
-    export interface ITextTypesModel extends Kontext.EventEmitter {
+    export interface IAdHocSubcorpusDetector {
+        usesAdHocSubcorpus():boolean;
+        exportSelections(lockedOnesOnly:boolean):ExportedSelection;
+    }
+
+    /**
+     *
+     */
+    export interface ITextTypesModel extends Kontext.EventEmitter, IAdHocSubcorpusDetector {
 
         applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
 
@@ -1052,13 +1060,7 @@ export namespace TextTypes {
 
     export type ExportedSelection = {[attr:string]:Array<string>};
 
-    /**
-     *
-     */
-    export interface IAdHocSubcorpusDetector {
-        usesAdHocSubcorpus():boolean;
-        exportSelections(lockedOnesOnly:boolean):ExportedSelection;
-    }
+
 }
 
 declare module Legacy {

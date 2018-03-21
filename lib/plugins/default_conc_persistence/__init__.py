@@ -39,7 +39,7 @@ from plugins import inject
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
                ['%d' % i for i in range(10)]
 
-DEFAULT_CONC_ID_LENGTH = 10
+DEFAULT_CONC_ID_LENGTH = 12
 
 
 def id_exists(id):
