@@ -438,5 +438,8 @@ msgstr "Otevřít přihlašovací formulář"
 msgid "Continue as anonymous user"
 msgstr "Pokračovat jako anonymní uživatel"
 
-msgid "Corpus not available"
-msgstr "Korpus není k dispozici"
+msgid "Corpus \"{0}\" not available"
+msgstr "Korpus \"{0}\" není k dispozici"
+
+msgid "No corpus selected"
+msgstr "Nebyl vybrán žádný korpus"

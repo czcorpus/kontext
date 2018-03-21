@@ -642,22 +642,33 @@ class Kontext(Controller):
 
         Returns: a 3-tuple (copus id, corpus variant, action path)
         """
+        def validate_access(cn, allowed):
+            if cn in allowed:
+                return True, allowed[cn]
+            else:
+                return False, ''
+
         with plugins.runtime.AUTH as auth:
             allowed_corpora = auth.permitted_corpora(self.session_get('user'))
             if not action_metadata.get('skip_corpus_init', False):
-                corpname, corpus_variant = self._determine_curr_corpus(
-                    form, allowed_corpora)
-                if corpname is None:
-                    corpname = ''
-                    corpus_variant = ''
+                corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
+                has_access, variant = validate_access(corpname, allowed_corpora)
+                if not has_access and callable(getattr(auth, 'refresh_user_permissions', None)):
+                    auth.refresh_user_permissions(self._plugin_api)
+                    has_access, variant = validate_access(corpname, auth.permitted_corpora(self.session_get('user')))
+                if has_access and redirect:
+                    self.redirect(self.create_url('first_form', dict(corpname=corpname)))
+                elif not has_access:
                     path = ['message']
-                    self.add_system_message('error', _('Corpus not available'))
+                    if corpname:
+                        self.add_system_message('error', _('Corpus "{0}" not available').format(corpname))
+                    else:
+                        self.add_system_message('error', _('No corpus selected'))
                     self.set_not_found()
-
             else:
                 corpname = ''
-                corpus_variant = ''
-            return corpname, corpus_variant, path
+                variant = ''
+            return corpname, variant, path
 
     def _apply_semi_persistent_args(self, form_proxy):
         """
@@ -797,10 +808,10 @@ class Kontext(Controller):
         corp_list -- a dict (corpus_id => corpus_variant) representing all the corpora user can access
 
         Return:
-        3-tuple containing a corpus name, corpus variant prefix and a fallback URL where application
-        may be redirected in case no other option is available
+        2-tuple with (current corpus, whether we should reload to the main page)
         """
         cn = ''
+        redirect = False
 
         # 1st option: fetch required corpus name from html form or from URL params
         if 'corpname' in form:
@@ -810,23 +821,21 @@ class Kontext(Controller):
         if not cn:
             cn = self.args.corpname
 
-        # 3rd option (fallback): if no current corpus is set then we try previous user's corpus
+        # 3rd option: try user's last
+        if not cn and not self.user_is_anonymous():
+            with plugins.runtime.QUERY_STORAGE as qs:
+                queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
+                if len(queries) > 0:
+                    cn = queries[0].get('corpname', '')
+                    redirect = True
+
+        # 4th option (fallback): if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured
         # in settings.xml
         if not cn:
             cn = settings.get_default_corpus(corp_list)
-
-        # in this phase we should have some non-empty corpus selected
-        # but we do not know whether user has access to it
-
-        # 1) reload permissions in case of no access and if available
-        with plugins.runtime.AUTH as auth:
-            if cn in corp_list:
-                variant = corp_list[cn]
-            else:
-                cn = None
-                variant = None
-        return cn, variant
+            redirect = True
+        return cn, redirect
 
     @property
     def corp_encoding(self):
