@@ -307,8 +307,35 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         };
 
-        return <input type="checkbox" onChange={handleCheckbox} checked={props.value} />;
+        return <div>
+            <input type="checkbox" onChange={handleCheckbox} checked={props.value}
+                    style={{verticalAlign: 'middle'}} />
+            <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
+                {he.translate('subcform__public_must_be_unique')})
+            </layoutViews.InlineHelp>
+        </div>;
     };
+
+    // ------------------------ <SubcDescription /> --------------------------
+
+    const SubcDescription:React.SFC<{
+        value:string;
+
+    }> = (props) => {
+
+        const handleChange = (evt:React.ChangeEvent<HTMLTextAreaElement>) => {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_FORM_SET_DESCRIPTION',
+                props: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return <textarea rows={5} cols={60} value={props.value} onChange={handleChange} />;
+    };
+
+    // ------------------------ <TDInputModeSelection /> --------------------------
 
     /**
      *
@@ -423,6 +450,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         subcname:string;
         isPublic:boolean;
         inputMode:string;
+        description:string;
 
     }> {
 
@@ -438,7 +466,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             return {
                 subcname: subcorpFormModel.getSubcname(),
                 inputMode: subcorpFormModel.getInputMode(),
-                isPublic: subcorpFormModel.getIsPublic()
+                isPublic: subcorpFormModel.getIsPublic(),
+                description: subcorpFormModel.getDescription()
             };
         }
 
@@ -507,10 +536,6 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 </th>
                                 <td style={{width: '80%'}}>
                                     <SubcNameInput value={this.state.subcname} />
-                                    {this.state.isPublic ?
-                                        <span className="note"> {he.translate('subcform__public_must_be_unique')}</span> :
-                                        null
-                                    }
                                 </td>
                             </tr>
                             <tr>
@@ -521,6 +546,14 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     <SubcNamePublicCheckbox value={this.state.isPublic} />
                                 </td>
                             </tr>
+                            {this.state.isPublic ?
+                                (<tr>
+                                    <th>{he.translate('subcform__public_description')}:</th>
+                                    <td>
+                                        <SubcDescription value={this.state.description} />
+                                    </td>
+                                </tr>) : null
+                            }
                             <tr>
                                 <th>
                                     {he.translate('subcform__specify_subc_using')}:

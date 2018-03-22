@@ -26,6 +26,7 @@ import RSVP from 'rsvp';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import { MultiDict } from '../../util';
 
 
 
@@ -44,6 +45,7 @@ export interface SubcorpListItem {
     cql:string;
     size:number;
     selected:boolean;
+    published:boolean;
 }
 
 export interface UnfinishedSubcorp {
@@ -70,6 +72,8 @@ export class SubcorpListModel extends StatefulModel {
     private sortKey:SortKey;
 
     private filter:SubcListFilter;
+
+    private isBusy:boolean;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
@@ -180,8 +184,42 @@ export class SubcorpListModel extends StatefulModel {
                         }
                     );
                 break;
+                case 'SUBCORP_LIST_PUBLISH_ITEM':
+                // TODO description !!!
+                    this.isBusy = true;
+                    this.publishSubcorpus(
+                                payload.props['corpname'],
+                                payload.props['subcname'],
+                                payload.props['description']).then(
+                        (_) => {
+                            this.isBusy = false;
+                            this.layoutModel.showMessage(
+                                'info',
+                                this.layoutModel.translate('subclist__subc_published')
+                            );
+                            this.notifyChangeListeners();
+                        },
+                        (err) => {
+                            this.isBusy = false;
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                        }
+                    );
+                break;
             }
         });
+    }
+
+    private publishSubcorpus(corpname:string, subcname:string, description:string):RSVP.Promise<any> {
+        const args = new MultiDict();
+        args.set('subcname', subcname);
+        args.set('corpname', corpname);
+        args.set('description', description);
+        return this.layoutModel.ajax(
+            'POST',
+            this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
+            args
+        );
     }
 
     private createSubcorpus(idx:number, subcname?:string, cql?:string):RSVP.Promise<any> {
@@ -194,8 +232,7 @@ export class SubcorpListModel extends StatefulModel {
         return this.layoutModel.ajax<AjaxResponse.CreateSubcorpus>(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
-            params,
-            {contentType : 'application/x-www-form-urlencoded'}
+            params
 
         ).then(
             (data) => {
@@ -257,7 +294,8 @@ export class SubcorpListModel extends StatefulModel {
                 size: item.size,
                 cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
                 created: new Date(item.created * 1000),
-                selected: false
+                selected: false,
+                published: item.published
             }
         }));
     }
@@ -373,7 +411,8 @@ export class SubcorpListModel extends StatefulModel {
             name: line.name,
             selected: !line.selected,
             size: line.size,
-            usesubcorp: line.usesubcorp
+            usesubcorp: line.usesubcorp,
+            published: line.published
         });
     }
 

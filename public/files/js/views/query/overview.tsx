@@ -70,6 +70,7 @@ export interface QueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
+    origSubcname:string;
     queryFormProps:QueryFormLiteProps;
     filterFormProps:FilterFormProps;
     shuffleFormProps:ShuffleFormProps;
@@ -90,6 +91,7 @@ export interface NonViewPageQueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
+    origSubcname:string;
     queryFormProps?:QueryFormProps;
     filterFormProps?:FilterFormProps;
     shuffleFormProps?:ShuffleFormProps;
@@ -386,6 +388,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
+        origSubcname:string;
         queryFormProps:QueryFormLiteProps;
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
@@ -524,7 +527,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 <layoutViews.CorpnameInfoTrigger
                                         corpname={this.props.corpname}
                                         humanCorpname={this.props.humanCorpname}
-                                        usesubcorp={this.props.usesubcorp} />
+                                        usesubcorp={this.props.usesubcorp}
+                                        origSubcname={this.props.origSubcname} />
                                 : null}
                         {this.state.ops.map((item, i) => {
                             return <QueryOpInfo
@@ -555,6 +559,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
+        origSubcname:string;
         ops:Immutable.List<ExtendedQueryOperation>;
 
     }> = (props) => {
@@ -576,7 +581,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             <layoutViews.CorpnameInfoTrigger
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
-                                    usesubcorp={props.usesubcorp} />
+                                    usesubcorp={props.usesubcorp}
+                                    origSubcname={props.origSubcname} />
                             : null}
                     {props.ops.map((item, i) => {
                         return <QueryOpInfo

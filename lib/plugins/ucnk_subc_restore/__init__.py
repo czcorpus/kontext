@@ -156,7 +156,8 @@ class UCNKSubcRestore(AbstractSubcRestore):
                         'corpname': subc_queries_map[dk]['corpname'],
                         'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
                         'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
-                        'deleted': True})
+                        'deleted': True,
+                        'published': False})
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
 

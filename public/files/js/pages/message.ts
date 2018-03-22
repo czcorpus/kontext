@@ -61,7 +61,7 @@ class MessagePage {
                     {
                         widgetProps: this.layoutModel.getConf<Kontext.GeneralProps>('issueReportingAction') || null,
                         anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-                        issueReportingView: <React.SFC<{}>>plugin.getWidgetView(),
+                        issueReportingView: plugin ? <React.SFC<{}>>plugin.getWidgetView() : null,
                         lastUsedCorpus: this.layoutModel.getConf<{corpname:string; human_corpname:string}>('LastUsedCorp')
                     }
                 );

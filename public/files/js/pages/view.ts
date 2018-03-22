@@ -741,6 +741,7 @@ export class ViewPage {
                 corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
                 usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
+                origSubcname: this.layoutModel.getConf<string>('origSubcorpname'),
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
@@ -990,6 +991,7 @@ export class ViewPage {
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
             baseCorpname: corpIdent.id,
             subCorpName: this.layoutModel.getConf<string>('subcorpname'),
+            origSubCorpName: this.layoutModel.getConf<string>('origSubcorpname'),
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
             mainCorp: this.layoutModel.getConcArgs()['maincorp'],

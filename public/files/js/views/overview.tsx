@@ -195,10 +195,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:SubcorpusInfo;
     }> = (props) => {
 
+        const getName = () => {
+            if (props.data.subCorpusName !== props.data.origSubCorpusName) {
+                return `${props.data.origSubCorpusName}(${props.data.subCorpusName})`;
+            }
+            return props.data.subCorpusName;
+        };
+
         return (
             <div id="subcorpus-info-box">
                 <h2 className="subcorpus-name">
-                {props.data.corpusName}:<strong>{props.data.subCorpusName}</strong></h2>
+                {props.data.corpusName}:<strong>{getName()}</strong></h2>
                 <div className="item">
                     <strong>{he.translate('global__size_in_tokens')}:</strong>
                     {'\u00A0'}{props.data.subCorpusSize}
@@ -215,6 +222,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         : <span>{he.translate('global__subc_def_not_avail')}</span>
                     }
                 </div>
+                {props.data.description ?
+                    <div className="description">
+                        <h3>{he.translate('global__description')}:</h3>
+                        <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
+                    </div> : null
+                }
             </div>
         );
     };

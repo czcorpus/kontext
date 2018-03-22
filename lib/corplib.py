@@ -23,7 +23,10 @@ import glob
 from hashlib import md5
 from datetime import datetime
 import logging
-import time
+try:
+    from markdown import markdown
+except ImportError:
+    def markdown(s): return s
 
 import l10n
 from l10n import import_string, export_string
@@ -103,27 +106,27 @@ def create_str_vector():
 
 def conf_bool(v):
     """
-    Tests whether the provided string 
-    represents an encoded 'true' value ('1', 't', ...) 
+    Tests whether the provided string
+    represents an encoded 'true' value ('1', 't', ...)
     """
     return v in ('y', 'yes', 'true', 't', '1')
 
 
-def find_subcorpus(subcpath, subcfile):
-    ans = []
+def subcorpus_is_published(subcpath):
+    stat = os.lstat(subcpath)
+    return stat.st_nlink > 1
 
-    def find_in_dir(root):
-        for item in os.listdir(root):
-            item_path = os.path.join(root, item)
-            if os.path.isdir(item_path):
-                find_in_dir(item_path)
-            elif subcfile == item:
-                ans.append(item_path)
 
-    t = time.time()
-    find_in_dir(subcpath)
-    logging.getLogger(__name__).warning('Looked for unbound subcfile: {0}, time: {1:0.2f}'.format(subcfile, time.time() - t))
-    return ans
+def mk_publish_links(subcpath, publicpath, desc):
+    tmp = os.getcwd()
+    os.chdir(os.path.dirname(subcpath))
+    os.link(subcpath, publicpath)
+    os.symlink(os.path.join('..', '..', 'published', os.path.basename(
+        publicpath)), os.path.splitext(subcpath)[0] + '.pub')
+    with open(os.path.splitext(publicpath)[0] + '.name', 'w') as namefile:
+        namefile.write(subcpath + '\n\n')
+        namefile.write(desc)
+    os.chdir(tmp)
 
 
 class CorpusManager(object):
@@ -144,6 +147,39 @@ class CorpusManager(object):
         cpath = corp.get_conf('PATH')
         return os.path.join(cpath, 'subcorp')
 
+    def get_subc_uri_name(self, corpname, subcname):
+        if len(self.subcpath) > 0:
+            test = os.path.join(self.subcpath[0], corpname, subcname + '.pub')
+            if os.path.islink(test):
+                return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
+        return subcname
+
+    def _open_subcorpus(self, corpname, subcname, corp, spath):
+        subc = manatee.SubCorpus(corp, spath)
+        subc.corp = corp
+        subc.spath = spath
+        try:
+            open(spath[:-4] + 'used', 'w')
+        except IOError:
+            pass
+        subc.corpname = str(corpname)  # never unicode (paths)
+        subc.subcname = subcname
+        subc.cm = self
+        subc.subchash = md5(open(spath).read()).hexdigest()
+        subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
+        namepath = os.path.splitext(spath)[0] + '.name'
+        if os.path.isfile(namepath):
+            with open(namepath, 'r') as nf:
+                desc = ''
+                for i, line in enumerate(nf):
+                    if i == 0:
+                        subc.orig_spath = line.strip()
+                        subc.orig_subcname = os.path.splitext(os.path.basename(line.strip()))[0]
+                    elif i > 1:
+                        desc += line
+                subc.description = markdown(desc)
+        return subc
+
     def get_Corpus(self, corpname, corp_variant='', subcname=''):
         """
         args:
@@ -155,7 +191,8 @@ class CorpusManager(object):
         if ':' in corpname:
             corpname, subcname = corpname.split(':', 1)
 
-        cache_key = (corpname, corp_variant, subcname)
+        public_subcname = self.get_subc_uri_name(corpname, subcname)
+        cache_key = (corpname, corp_variant, public_subcname)
         if cache_key in self._cache:
             return self._cache[cache_key]
         registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
@@ -164,30 +201,20 @@ class CorpusManager(object):
         corp.cm = self
         dsubcpath = self.default_subcpath(corp)
         if subcname:
-            for sp in self.subcpath + [dsubcpath]:
-                if sp == dsubcpath:
-                    spath = os.path.join(sp, subcname + '.subc')
-                else:
+            # 0: user dir, 1: published dir, 2: SUBCBASE dir
+            for i, sp in enumerate(self.subcpath + [dsubcpath]):
+                if i == 0:
+                    if public_subcname != subcname:
+                        subcname = public_subcname
+                        continue
+                if i == 0:
                     spath = os.path.join(sp, corpname, subcname + '.subc')
+                else:
+                    spath = os.path.join(sp, subcname + '.subc')
                 if type(spath) == unicode:
                     spath = spath.encode('utf-8')
-                if not os.path.isfile(spath):
-                    subc_srch = find_subcorpus(os.path.dirname(self.subcpath[0]), subcname + '.subc')
-                    if len(subc_srch) == 1:
-                        spath = subc_srch[0]
                 if os.path.isfile(spath):
-                    subc = manatee.SubCorpus(corp, spath)
-                    subc.corp = corp
-                    subc.spath = spath
-                    try:
-                        open(spath[:-4] + 'used', 'w')
-                    except IOError:
-                        pass
-                    subc.corpname = str(corpname)  # never unicode (paths)
-                    subc.subcname = subcname
-                    subc.cm = self
-                    subc.subchash = md5(open(spath).read()).hexdigest()
-                    subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
+                    subc = self._open_subcorpus(corpname, subcname, corp, spath)
                     self._cache[cache_key] = subc
                     return subc
             raise RuntimeError(_('Subcorpus "%s" not found') % subcname)

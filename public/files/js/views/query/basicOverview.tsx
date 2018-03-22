@@ -28,6 +28,7 @@ export interface EmptyQueryOverviewBarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
+    origSubcname:string;
 }
 
 
@@ -66,7 +67,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):B
                     <layoutViews.CorpnameInfoTrigger
                             corpname={props.corpname}
                             humanCorpname={props.humanCorpname}
-                            usesubcorp={props.usesubcorp} />
+                            usesubcorp={props.usesubcorp}
+                            origSubcname={props.origSubcname} />
                 </ul>
             </div>
         );

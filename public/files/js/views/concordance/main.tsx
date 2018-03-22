@@ -291,6 +291,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         fastAdHocIpm:boolean;
         adHocIpm:number;
         subCorpName:string;
+        origSubcorpName:string;
         isWaiting:boolean;
     }> {
 
@@ -307,6 +308,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 fastAdHocIpm: lineViewModel.getFastAdHocIpm(),
                 adHocIpm: lineViewModel.getAdHocIpm(),
                 subCorpName: lineViewModel.getSubCorpName(),
+                origSubcorpName: lineViewModel.getOrigSubCorpName(),
                 isWaiting: lineViewModel.getIsBusy()
             };
         }

@@ -14,6 +14,7 @@ import os
 import logging
 import json
 import time
+import hashlib
 
 import werkzeug.urls
 
@@ -44,11 +45,17 @@ class Subcorpus(Querying):
     def get_mapping_url_prefix(self):
         return '/subcorpus/'
 
-    def prepare_subc_path(self, corpname, subcname):
-        path = os.path.join(self.subcpath[-1], corpname)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        return os.path.join(path, subcname) + '.subc'
+    def prepare_subc_path(self, corpname, subcname, publish):
+        if publish:
+            code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
+                'user', 'id'), corpname, subcname)).hexdigest()[:10]
+            return os.path.join(self.subcpath[1], code) + '.subc'
+
+        else:
+            path = os.path.join(self.subcpath[0], corpname)
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            return os.path.join(path, subcname) + '.subc'
 
     def _deserialize_custom_within(self, data):
         """
@@ -73,9 +80,10 @@ class Subcorpus(Querying):
         subcname = request.form['subcname']
         within_json = request.form.get('within_json')
         raw_cql = request.form.get('cql')
-        corp_encoding = self.corp.get_conf('ENCODING')
         aligned_corpora = request.form.getlist('aligned_corpora')
+        publish = bool(int(request.form.get('publish')))
         corpus_info = self.get_corpus_info(self.args.corpname)
+        description = request.form.get('description')
 
         if raw_cql:
             aligned_corpora = []
@@ -123,20 +131,25 @@ class Subcorpus(Querying):
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
             raise UserActionException(_('No subcorpus name specified!'))
-        path = self.prepare_subc_path(basecorpname, subcname)
+        path = self.prepare_subc_path(basecorpname, subcname, publish=False)
+        publish_path = self.prepare_subc_path(
+            basecorpname, subcname, publish=True) if publish else None
 
         if type(path) == unicode:
             path = path.encode('utf-8')
 
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
+            if result and publish_path:
+                corplib.mk_publish_links(path, publish_path, description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
             backend, conf = settings.get_full('global', 'calc_backend')
             if backend == 'celery':
                 import task
                 app = task.get_celery_app(conf['conf'])
                 res = app.send_task('worker.create_subcorpus',
-                                    (self.session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
+                                    (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
+                                     tt_query, imp_cql, description))
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                                                        label=u'%s:%s' % (basecorpname, subcname),
@@ -149,7 +162,7 @@ class Subcorpus(Querying):
                 worker = subc_calc.CreateSubcorpusTask(user_id=self.session_get('user', 'id'),
                                                        corpus_id=self.args.corpname)
                 multiprocessing.Process(target=functools.partial(
-                    worker.run, tt_query, imp_cql, path)).start()
+                    worker.run, tt_query, imp_cql, path, publish_path, description)).start()
                 result = {}
         else:
             raise UserActionException(_('Nothing specified!'))
@@ -269,7 +282,9 @@ class Subcorpus(Querying):
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': item['n'],
-                        'deleted': False})
+                        'deleted': False,
+                        'published': corplib.subcorpus_is_published(sc.spath)
+                    })
                     related_corpora.add(corp)
             except Exception as e:
                 for d in data:
@@ -319,9 +334,11 @@ class Subcorpus(Querying):
         ans = {
             'corpusName': self.args.corpname,
             'subCorpusName': subcname,
+            'origSubCorpusName': getattr(sc, 'orig_subcname', subcname),
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size()),
             'created': time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
+            'description': getattr(sc, 'description', None),
             'extended_info': {}
         }
         if plugins.runtime.SUBC_RESTORE.exists:
@@ -344,24 +361,15 @@ class Subcorpus(Querying):
             self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
         return {}
 
-    def _public_name_is_avail(self, filename):
-        found = False
-        for filename2 in os.listdir(self.subcpath[1]):
-            if filename + '.subc' == filename2:
-                found = True
-                break
-        return not found
-
-    @exposed(access_level=1, skip_corpus_init=True, return_type='json')
-    def validate_public_name(self, request):
-        return dict(available=self._public_name_is_avail(request.args['subcname']))
-
-    @exposed(access_level=1, skip_corpus_init=True, return_type='json', http_method='POST')
-    def publish_public_name(self, request):
-        subcname = request.args['subcname']
-        curr_subc = os.path.join(self.subcpath[0], self.session_get('user', 'id'), subcname + '.subc')
-        public_subc = os.path.join(self.subcpath[1], subcname + '.subc')
-        if self._public_name_is_avail(subcname) and os.path.isfile(curr_subc):
-            os.link(curr_subc, public_subc)
+    @exposed(access_level=1, return_type='json', http_method='POST')
+    def publish_subcorpus(self, request):
+        subcname = request.form['subcname']
+        corpname = request.form['corpname']
+        description = request.form['description']
+        curr_subc = os.path.join(self.subcpath[0], corpname, subcname + '.subc')
+        public_subc = self.prepare_subc_path(corpname, subcname, True)
+        if os.path.isfile(curr_subc):
+            corplib.mk_publish_links(curr_subc, public_subc, description)
+            return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
         else:
-            raise UserActionException('Name not available')
+            raise UserActionException('Subcorpus {0} not found'.format(subcname))

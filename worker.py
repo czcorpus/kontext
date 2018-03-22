@@ -355,8 +355,9 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 # ----------------------------- SUBCORPORA ------------------------------------
 
 @app.task
-def create_subcorpus(user_id, corp_id, path, tt_query, cql):
-    worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
+def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, description):
+    worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id, publish_path=publish_path,
+                                           description=description)
     return worker.run(tt_query, cql, path)
 
 

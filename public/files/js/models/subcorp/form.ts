@@ -38,6 +38,8 @@ export class SubcorpFormModel extends StatefulModel {
 
     private isPublic:boolean;
 
+    private description:string;
+
     private withinFormModel:SubcorpWithinFormModel;
 
     private textTypesModel:TextTypesModel;
@@ -56,6 +58,7 @@ export class SubcorpFormModel extends StatefulModel {
         this.inputMode = 'gui';
         this.subcname = '';
         this.isPublic = false;
+        this.description = '';
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -71,6 +74,10 @@ export class SubcorpFormModel extends StatefulModel {
                     this.isPublic = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
+                case 'SUBCORP_FORM_SET_DESCRIPTION':
+                    this.description = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
                 case 'SUBCORP_FORM_SUBMIT':
                     this.submit();
                     // leaves the page here
@@ -83,6 +90,8 @@ export class SubcorpFormModel extends StatefulModel {
         const args = new MultiDict();
         args.set('corpname', this.corpname);
         args.set('subcname', this.subcname);
+        args.set('publish', this.isPublic ? '1' : '0');
+        args.set('description', this.description);
         const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
             args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
@@ -127,6 +136,9 @@ export class SubcorpFormModel extends StatefulModel {
         return this.isPublic;
     }
 
+    getDescription():string {
+        return this.description;
+    }
 }
 
 /**

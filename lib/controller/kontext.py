@@ -657,13 +657,15 @@ class Kontext(Controller):
                 has_access, variant = validate_access(corpname, allowed_corpora)
                 if not has_access and callable(getattr(auth, 'refresh_user_permissions', None)):
                     auth.refresh_user_permissions(self._plugin_api)
-                    has_access, variant = validate_access(corpname, auth.permitted_corpora(self.session_get('user')))
+                    has_access, variant = validate_access(
+                        corpname, auth.permitted_corpora(self.session_get('user')))
                 if has_access and redirect:
                     self.redirect(self.create_url('first_form', dict(corpname=corpname)))
                 elif not has_access:
                     path = ['message']
                     if corpname:
-                        self.add_system_message('error', _('Corpus "{0}" not available').format(corpname))
+                        self.add_system_message('error', _(
+                            'Corpus "{0}" not available').format(corpname))
                     else:
                         self.add_system_message('error', _('No corpus selected'))
                     self.set_not_found()
@@ -782,6 +784,15 @@ class Kontext(Controller):
         if type(result) is DictType:
             new_query_key = self._store_conc_params()
             self._update_output_with_conc_params(new_query_key, result)
+        # update subcorp identifier if subc is published
+        if hasattr(self.corp, 'subcname'):
+            self.args.usesubcorp = self.corp.subcname
+
+        if hasattr(self.corp, 'orig_subcname'):
+            result['orig_subcname'] = self.corp.orig_subcname
+        else:
+            result['orig_subcname'] = self.args.usesubcorp
+
         # log user request
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
@@ -1127,7 +1138,6 @@ class Kontext(Controller):
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
             result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
                 self.args.corpname)
-
         result['corpus_ident'] = dict(id=self.args.corpname,
                                       variant=self._corpus_variant,
                                       name=self._human_readable_corpname())
@@ -1334,3 +1344,15 @@ class Kontext(Controller):
         task_ids = request.form.getlist('tasks')
         self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
         return self.check_tasks_status(request)
+
+    @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message')
+    def message(self, *args, **kwargs):
+        kwargs['last_used_corp'] = dict(corpname=None, human_corpname=None)
+        if self.cm:
+            with plugins.runtime.QUERY_STORAGE as qs:
+                queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
+                if len(queries) > 0:
+                    kwargs['last_used_corp'] = dict(corpname=queries[0].get('corpname', None),
+                                                    human_corpname=queries[0].get('human_corpname', None))
+        kwargs['popup_server_messages'] = False
+        return kwargs
