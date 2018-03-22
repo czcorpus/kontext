@@ -189,7 +189,9 @@ export interface SubcorpusInfoResponse {
     created:string;
     extended_info:{[key:string]:string};
     subCorpusName:string;
+    origSubCorpusName:string;
     subCorpusSize:string; // formatted num
+    description:string; // a desc. for public corpora
 }
 
 export interface SubcorpusInfo extends SubcorpusInfoResponse {

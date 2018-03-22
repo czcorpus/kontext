@@ -133,6 +133,7 @@ export namespace CoreViews {
 
         export interface Props {
             children:React.ReactNode;
+            noSuperscript?:boolean;
             customStyle?:{[key:string]:string};
             url?:string;
         }
@@ -231,6 +232,7 @@ export namespace CoreViews {
         export interface Props {
             corpname:string;
             usesubcorp:string;
+            origSubcname:string;
             humanCorpname:string;
         }
 

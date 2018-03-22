@@ -107,6 +107,8 @@ export interface ViewConfiguration {
 
     subCorpName:string;
 
+    origSubCorpName:string;
+
     pagination:ServerPagination;
 
     currentPage:number;
@@ -281,6 +283,8 @@ export class ConcLineModel extends SynchronizedModel {
 
     private subCorpName:string;
 
+    private origSubcorpName:string;
+
     private mainCorp:string;
 
     private audioPlayer:AudioPlayer;
@@ -328,6 +332,7 @@ export class ConcLineModel extends SynchronizedModel {
         this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
         this.baseCorpname = lineViewProps.baseCorpname;
         this.subCorpName = lineViewProps.subCorpName;
+        this.origSubcorpName = lineViewProps.origSubCorpName;
         this.mainCorp = lineViewProps.mainCorp;
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
@@ -733,6 +738,10 @@ export class ConcLineModel extends SynchronizedModel {
 
     getSubCorpName():string {
         return this.subCorpName;
+    }
+
+    getOrigSubCorpName():string {
+        return this.origSubcorpName;
     }
 
     audioPlayerIsVisible():boolean {

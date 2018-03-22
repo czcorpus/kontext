@@ -60,12 +60,25 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ------------------------
+
+    const PublishCheckbox:React.SFC<{
+        value:boolean;
+        onChange:()=>void;
+
+    }> = (props) => {
+
+        return <input type="checkbox" checked={props.value} onChange={props.onChange}
+                    disabled={props.value} />;
+    };
+
 
     // ------------------------ <TrDataLine /> --------------------------
 
     const TrDataLine:React.SFC<{
         idx:number;
         item:SubcorpListItem;
+        publishCheckboxHandle:(corpname:string, subcname:string)=>void;
         actionButtonHandle:(idx:number, evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
@@ -116,6 +129,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 </td>
                 <td>
                     {he.formatDate(props.item.created, 1)}
+                </td>
+                <td>
+                    <PublishCheckbox value={props.item.published}
+                            onChange={props.publishCheckboxHandle.bind(null, props.item.corpname,
+                                        props.item.usesubcorp)} />
                 </td>
                 <td className="action-link">
                     {props.item.cql ?
@@ -192,6 +210,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
+            this._handlePublishCheckbox = this._handlePublishCheckbox.bind(this);
             this.state = this._fetchModelState();
         }
 
@@ -222,6 +241,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return null;
         }
 
+        _handlePublishCheckbox(corpname:string, subcname:string):void {
+            if (window.confirm(he.translate('subclist__publish_warning'))) {
+                dispatcher.dispatch({
+                    actionType: 'SUBCORP_LIST_PUBLISH_ITEM',
+                    props: {
+                        corpname: corpname,
+                        subcname: subcname
+                    }
+                });
+            }
+        }
+
         render() {
             return (
                 <table className="data">
@@ -231,11 +262,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
+                            <th>{he.translate('subclist__col_published')}</th>
                             <th>{he.translate('subclist__col_backed_up')}</th>
                         </tr>
                         {this.state.unfinished.map(item => <TrUnfinishedLine key={item.name} item={item} /> )}
                         {this.state.lines.map((item, i) => (
-                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} actionButtonHandle={this.props.actionButtonHandle} />
+                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
+                                    actionButtonHandle={this.props.actionButtonHandle}
+                                    publishCheckboxHandle={this._handlePublishCheckbox} />
                         ))}
                     </tbody>
                 </table>

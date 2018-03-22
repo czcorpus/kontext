@@ -299,17 +299,22 @@ export function init(
             this.setState({helpVisible: !this.state.helpVisible});
         }
 
+        _renderLink() {
+            return <a className="context-help" onClick={this._clickHandler}>
+                <ImgWithMouseover
+                        htmlClass="over-img"
+                        src={he.createStaticUrl('img/question-mark.svg')}
+                        alt="question-mark.svg" />
+            </a>;
+        }
+
         render() {
             return (
                 <span className="InlineHelp">
-                    <sup style={{display: 'inline-block'}}>
-                        <a className="context-help" onClick={this._clickHandler}>
-                            <ImgWithMouseover
-                                    htmlClass="over-img"
-                                    src={he.createStaticUrl('img/question-mark.svg')}
-                                    alt="question-mark.svg" />
-                        </a>
-                    </sup>
+                    {this.props.noSuperscript ?
+                        <span style={{display: 'inline-block', verticalAlign: 'middle'}}>{this._renderLink()}</span> :
+                        <sup style={{display: 'inline-block'}}>{this._renderLink()}</sup>
+                    }
                     {this.state.helpVisible ?
                             <PopupBox onCloseClick={this._clickHandler}
                                     customStyle={this.props.customStyle}>
@@ -483,6 +488,18 @@ export function init(
             });
         };
 
+        const getSubcName = () => {
+            if (props.origSubcname !== props.usesubcorp) {
+                return <>
+                    {props.origSubcname}
+                    <span title={he.translate('global__public_subc_id')}>
+                        ({props.usesubcorp})
+                    </span>
+                </>;
+            }
+            return props.usesubcorp;
+        };
+
         const renderSubcorp = () => {
             if (props.usesubcorp) {
                 return (
@@ -490,7 +507,7 @@ export function init(
                         <strong>:</strong>
                         <a className="subcorpus" title={he.translate('global__subcorpus')}
                                     onClick={handleSubcnameClick}>
-                            {props.usesubcorp}
+                            {getSubcName()}
                         </a>
                     </span>
                 );

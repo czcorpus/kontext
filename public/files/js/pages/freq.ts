@@ -229,6 +229,7 @@ class FreqPage {
                 corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
                 usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
+                origSubcname: this.layoutModel.getConf<string>('origSubcorpname'),
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     actionPrefix: '',

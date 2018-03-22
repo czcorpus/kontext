@@ -25,7 +25,7 @@ class CreateSubcorpusTask(object):
         self._cm = corplib.CorpusManager()
         self._corp = self._cm.get_Corpus(corpus_id)
 
-    def run(self, tt_query, cql, path):
+    def run(self, tt_query, cql, path, publish_path):
         """
         returns:
         True in case of success
@@ -35,4 +35,6 @@ class CreateSubcorpusTask(object):
         ans = corplib.subcorpus_from_conc(path, conc)
         if ans is False:
             raise EmptySubcorpusException('Empty subcorpus')
+        if publish_path:
+            corplib.mk_publish_links(path, publish_path)
         return ans

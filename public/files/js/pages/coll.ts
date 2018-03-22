@@ -222,6 +222,7 @@ export class CollPage {
                 corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
                 usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
+                origSubcname: this.layoutModel.getConf<string>('origSubcorpname'),
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     actionPrefix: '',
