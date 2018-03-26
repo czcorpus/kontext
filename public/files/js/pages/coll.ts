@@ -32,7 +32,7 @@ import {init as collResultViewInit} from '../views/coll/result';
 import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
-import {SubcorpOnlySelectionModel} from '../models/corparch';
+import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 
 
 declare var require:any;
@@ -276,7 +276,7 @@ export class CollPage {
     init():void {
         this.layoutModel.init().then(
             () => {
-                this.subcorpSel = new SubcorpOnlySelectionModel({
+                this.subcorpSel = new NonQueryCorpusSelectionModel({
                     layoutModel: this.layoutModel,
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,

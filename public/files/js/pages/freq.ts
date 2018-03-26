@@ -41,7 +41,7 @@ import {FreqDataRowsModel, ResultBlock} from '../models/freqs/dataRows';
 import {FreqResultsSaveModel, FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 import {TextTypesModel} from '../models/textTypes/attrValues';
-import {SubcorpOnlySelectionModel} from '../models/corparch';
+import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -380,7 +380,7 @@ class FreqPage {
     init() {
         this.layoutModel.init().then(
             () => {
-                this.subcorpSel = new SubcorpOnlySelectionModel({
+                this.subcorpSel = new NonQueryCorpusSelectionModel({
                     layoutModel: this.layoutModel,
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,

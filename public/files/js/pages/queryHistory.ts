@@ -27,7 +27,7 @@ import {init as initQueryHistoryViews} from '../views/query/history';
 import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {SubcorpOnlySelectionModel} from '../models/corparch';
+import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 
 declare var require:any;
@@ -70,7 +70,7 @@ class QueryHistoryPage {
     init():void {
         this.layoutModel.init().then(
             (data) => {
-                this.subcorpSel = new SubcorpOnlySelectionModel({
+                this.subcorpSel = new NonQueryCorpusSelectionModel({
                     layoutModel: this.layoutModel,
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,

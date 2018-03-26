@@ -26,7 +26,7 @@ import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordli
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {StatefulModel} from '../models/base';
 import {WordlistFormModel} from '../models/wordlist/form';
-import {SubcorpOnlySelectionModel} from '../models/corparch';
+import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
 
 declare var require:any;
@@ -97,7 +97,7 @@ class WordlistFormPage {
         this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
         this.layoutModel.init().then(
             (d) => {
-                this.subcorpSel = new SubcorpOnlySelectionModel({
+                this.subcorpSel = new NonQueryCorpusSelectionModel({
                     layoutModel: this.layoutModel,
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,

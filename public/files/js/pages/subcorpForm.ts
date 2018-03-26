@@ -28,7 +28,7 @@ import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
 import {UserSettings} from '../app/userSettings';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
-import {SubcorpOnlySelectionModel} from '../models/corparch';
+import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import * as corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
@@ -210,7 +210,7 @@ export class SubcorpForm {
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
                 );
-                this.subcorpSel = new SubcorpOnlySelectionModel({
+                this.subcorpSel = new NonQueryCorpusSelectionModel({
                     layoutModel: this.layoutModel,
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.corpusIdent.usesubcorp,
