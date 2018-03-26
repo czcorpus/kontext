@@ -492,25 +492,30 @@ export function init(
         const getSubcName = () => {
             if (props.origSubcorpName !== props.usesubcorp) {
                 return <>
-                    {props.origSubcorpName}
-                    <span title={he.translate('global__public_subc_id')}>
-                        ({props.usesubcorp})
+                    <a className="subcorpus" title={he.translate('global__subcorpus')}
+                                        onClick={handleSubcnameClick}>
+                        <strong>{props.origSubcorpName}</strong>
+                    </a>
+                    <span title={he.translate('global__public_subc_id_{id}', {id: props.usesubcorp})}>
+                        {'\u00a0'}({he.translate('global__published_subcorp')})
                     </span>
                 </>;
+
+            } else {
+                return <a className="subcorpus" title={he.translate('global__subcorpus')}
+                                        onClick={handleSubcnameClick}>
+                        <strong>{props.usesubcorp}</strong>
+                    </a>;
             }
-            return props.usesubcorp;
         };
 
         const renderSubcorp = () => {
             if (props.usesubcorp) {
                 return (
-                    <span>
+                    <>
                         <strong>:</strong>
-                        <a className="subcorpus" title={he.translate('global__subcorpus')}
-                                    onClick={handleSubcnameClick}>
-                            {getSubcName()}
-                        </a>
-                    </span>
+                        {getSubcName()}
+                    </>
                 );
 
             } else {
