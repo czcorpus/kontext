@@ -78,14 +78,6 @@ class FreqPage {
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.subcorpSel = new SubcorpOnlySelectionModel({
-            layoutModel: this.layoutModel,
-            dispatcher: this.layoutModel.dispatcher,
-            usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-            corpora: [this.layoutModel.getCorpusIdent().id],
-            availSubcorpora: []
-        });
     }
 
     private initAnalysisViews(adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector):void {
@@ -388,6 +380,14 @@ class FreqPage {
     init() {
         this.layoutModel.init().then(
             () => {
+                this.subcorpSel = new SubcorpOnlySelectionModel({
+                    layoutModel: this.layoutModel,
+                    dispatcher: this.layoutModel.dispatcher,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    corpora: [this.layoutModel.getCorpusIdent().id],
+                    availSubcorpora: []
+                });
                 const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
                 // we must capture concordance-related actions which lead
                 // to specific "pop-up" forms and redirect user back to

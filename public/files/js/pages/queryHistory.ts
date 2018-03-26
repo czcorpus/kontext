@@ -44,14 +44,6 @@ class QueryHistoryPage {
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.subcorpSel = new SubcorpOnlySelectionModel({
-            layoutModel: this.layoutModel,
-            dispatcher: this.layoutModel.dispatcher,
-            usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-            corpora: [this.layoutModel.getCorpusIdent().id],
-            availSubcorpora: []
-        });
     }
 
     private initCorpnameLink():void {
@@ -78,16 +70,20 @@ class QueryHistoryPage {
     init():void {
         this.layoutModel.init().then(
             (data) => {
-                return queryStoragePlugin(
+                this.subcorpSel = new SubcorpOnlySelectionModel({
+                    layoutModel: this.layoutModel,
+                    dispatcher: this.layoutModel.dispatcher,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    corpora: [this.layoutModel.getCorpusIdent().id],
+                    availSubcorpora: []
+                });
+                const qsModel = queryStoragePlugin(
                     this.layoutModel.pluginApi(),
                     this.layoutModel.getConf<number>('Offset'),
                     this.layoutModel.getConf<number>('Limit'),
                     this.layoutModel.getConf<number>('PageSize')
                 );
-            }
-
-        ).then(
-            (qsModel) => {
                 qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
                 const qhViews = initQueryHistoryViews(
                     this.layoutModel.dispatcher,
