@@ -66,7 +66,9 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     private currentSubcorpus:string;
 
-    private subcorpList:Immutable.List<{n:string; v:string}>;
+    private origSubcorpName:string;
+
+    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
     private attrList:Immutable.List<Kontext.AttrItem>;
 
@@ -110,8 +112,9 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         super(dispatcher);
         this.corpusIdent = corpusIdent;
         this.currentSubcorpus = '';
+        this.origSubcorpName = '';
         this.layoutModel = layoutModel;
-        this.subcorpList = Immutable.List<{n:string; v:string}>(subcorpList);
+        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
         this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
         this.wlpat = '';
@@ -134,7 +137,14 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
-                this.currentSubcorpus = payload.props['subcorp'];
+                if (payload.props['pubName']) {
+                    this.currentSubcorpus = payload.props['pubName'];
+                    this.origSubcorpName = payload.props['subcorp'];
+
+                } else {
+                    this.currentSubcorpus = payload.props['subcorp'];
+                    this.origSubcorpName = payload.props['subcorp'];
+                }
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SELECT_ATTR':

@@ -393,7 +393,7 @@ export class ViewPage {
     }
 
     private getActiveCorpora():Array<string> {
-        return [this.layoutModel.getConf<string>('corpname')].concat(
+        return [this.layoutModel.getCorpusIdent().id].concat(
                 this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
     }
 
@@ -429,8 +429,9 @@ export class ViewPage {
             currLposValues: queryFormArgs.curr_lpos_values,
             currQmcaseValues: queryFormArgs.curr_qmcase_values,
             currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-            subcorpList: this.layoutModel.getConf<Array<{v:string; n:string}>>('SubcorpList'),
-            currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
+            subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
+            currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
             tagBuilderSupport: queryFormArgs.tag_builder_support,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
@@ -509,7 +510,7 @@ export class ViewPage {
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
             tagsetDoc: fetchArgs<string>(item => item.tagset_doc),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
+            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr')
@@ -731,24 +732,26 @@ export class ViewPage {
             },
             queryReplayModel: this.queryModels.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.queryModels.saveAsFormModel
+            querySaveAsModel: this.queryModels.saveAsFormModel,
+            corparchModel: this.queryModels.queryModel
+
         });
 
         this.layoutModel.renderReactComponent(
             this.queryOverviewViews.QueryToolbar,
             window.document.getElementById('query-overview-mount'),
             {
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
-                origSubcname: this.layoutModel.getConf<string>('origSubcorpname'),
+                corpname: this.layoutModel.getCorpusIdent().id,
+                humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView() : null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
                     actionPrefix: '',
-                    corpname: this.layoutModel.getConf<string>('corpname')
+                    corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
@@ -979,7 +982,6 @@ export class ViewPage {
             arf: this.layoutModel.getConf<number>('ResultArf'),
             isShuffled: this.layoutModel.getConf<boolean>('ResultShuffled')
         };
-        const corpIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
         const lineViewProps:ViewConfiguration = {
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
@@ -989,9 +991,9 @@ export class ViewPage {
                         ({n: v.n, label: v.label, visible: true})),
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
-            baseCorpname: corpIdent.id,
-            subCorpName: this.layoutModel.getConf<string>('subcorpname'),
-            origSubCorpName: this.layoutModel.getConf<string>('origSubcorpname'),
+            baseCorpname: this.layoutModel.getCorpusIdent().id,
+            subCorpName: this.layoutModel.getCorpusIdent().usesubcorp,
+            origSubCorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
             mainCorp: this.layoutModel.getConcArgs()['maincorp'],

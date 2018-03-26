@@ -22,13 +22,12 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 
 
 export interface EmptyQueryOverviewBarProps {
     corpname:string;
     humanCorpname:string;
-    usesubcorp:string;
-    origSubcname:string;
 }
 
 
@@ -39,7 +38,7 @@ export interface QueryOverviewTableProps {
 
 
 export interface BasicOverviewViews {
-    EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps>;
+    EmptyQueryOverviewBar:React.ComponentClass<EmptyQueryOverviewBarProps>;
     QueryOverviewTable:React.SFC<QueryOverviewTableProps>;
 }
 
@@ -52,27 +51,58 @@ export interface BasicOverviewViews {
  * @param {*} dispatcher
  * @param {*} he
  */
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):BasicOverviewViews {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+        model:PluginInterfaces.ICorparchCorpSelection):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    const EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps> = (props) => {
+    class EmptyQueryOverviewBar extends React.Component<EmptyQueryOverviewBarProps,
+    {
+        usesubcorp:string;
+        origSubcorpName:string;
 
+    }> {
 
-        return (
-            <div>
-                <ul id="query-overview-bar">
-                    <layoutViews.CorpnameInfoTrigger
-                            corpname={props.corpname}
-                            humanCorpname={props.humanCorpname}
-                            usesubcorp={props.usesubcorp}
-                            origSubcname={props.origSubcname} />
-                </ul>
-            </div>
-        );
-    };
+        constructor(props) {
+            super(props);
+            this.state = {
+                usesubcorp: model.getCurrentSubcorpus(),
+                origSubcorpName: model.getOrigSubcorpName()
+            };
+            this.handleStoreChange = this.handleStoreChange.bind(this);
+        }
+
+        private handleStoreChange() {
+            this.setState({
+                usesubcorp: model.getCurrentSubcorpus(),
+                origSubcorpName: model.getOrigSubcorpName()
+            })
+        }
+
+        componentDidMount() {
+            model.addChangeListener(this.handleStoreChange);
+        }
+
+        componentWillUnmount() {
+            model.removeChangeListener(this.handleStoreChange);
+        }
+
+        render() {
+            return (
+                <div>
+                    <ul id="query-overview-bar">
+                        <layoutViews.CorpnameInfoTrigger
+                                corpname={this.props.corpname}
+                                humanCorpname={this.props.humanCorpname}
+                                usesubcorp={this.state.usesubcorp}
+                                origSubcorpName={this.state.origSubcorpName} />
+                    </ul>
+                </div>
+            );
+        }
+    }
 
     // ----------------------------- <QueryOverviewTable /> --------------------------
 

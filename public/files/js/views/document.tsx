@@ -490,9 +490,9 @@ export function init(
         };
 
         const getSubcName = () => {
-            if (props.origSubcname !== props.usesubcorp) {
+            if (props.origSubcorpName !== props.usesubcorp) {
                 return <>
-                    {props.origSubcname}
+                    {props.origSubcorpName}
                     <span title={he.translate('global__public_subc_id')}>
                         ({props.usesubcorp})
                     </span>

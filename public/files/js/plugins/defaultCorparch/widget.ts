@@ -78,6 +78,8 @@ export class CorplistWidgetModel extends StatefulModel {
 
     private currentSubcorp:string;
 
+    private origSubcorpName:string;
+
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
 
     constructor(
@@ -94,6 +96,7 @@ export class CorplistWidgetModel extends StatefulModel {
         this.corpusIdent = corpusIdent;
         this.corpSelection = corpSelection;
         this.currentSubcorp = corpSelection.getCurrentSubcorpus();
+        this.origSubcorpName = corpSelection.getOrigSubcorpName();
         this.anonymousUser = anonymousUser;
         this.dataFav = Immutable.List<common.ServerFavlistItem>(dataFav);
         this.dataFeat = Immutable.List<common.CorplistItem>(dataFeat);
@@ -200,7 +203,14 @@ export class CorplistWidgetModel extends StatefulModel {
                     this.searchDelayed();
                 break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    this.currentSubcorp = payload.props['subcorp'];
+                    if (payload.props['pubName']) {
+                        this.currentSubcorp = payload.props['pubName'];
+                        this.origSubcorpName = payload.props['subcorp'];
+
+                    } else {
+                        this.currentSubcorp = payload.props['subcorp'];
+                        this.origSubcorpName = payload.props['subcorp'];
+                    }
                     this.notifyChangeListeners();
                 break;
             }
@@ -381,6 +391,10 @@ export class CorplistWidgetModel extends StatefulModel {
 
     getCurrentSubcorp():string {
         return this.currentSubcorp;
+    }
+
+    getOrigSubcorpName():string {
+        return this.origSubcorpName;
     }
 
     getDataFav():Immutable.List<common.ServerFavlistItem> {

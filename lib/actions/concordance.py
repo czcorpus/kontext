@@ -1958,13 +1958,17 @@ class Actions(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
+        subcorp = self.args.usesubcorp if self.args.usesubcorp else None
 
         ans = dict(
             corpname=self.args.corpname,
             subcorpname=self.args.usesubcorp,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
-            corpusIdent=dict(id=self.args.corpname, name=self._human_readable_corpname()),
+            corpusIdent=dict(id=self.args.corpname, name=self._human_readable_corpname(),
+                             variant=self._corpus_variant,
+                             usesubcorp=self.args.usesubcorp if self.args.usesubcorp else None,
+                             origSubcorpName=getattr(self.corp, 'orig_subcname', subcorp)),
             currentArgs=[['corpname', self.args.corpname]],
             compiledQuery=[],
             concPersistenceOpId=None,

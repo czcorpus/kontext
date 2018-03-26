@@ -61,8 +61,9 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     corpora:Array<string>;
     availableAlignedCorpora:Array<Kontext.AttrItem>;
     textTypesNotes:string;
-    subcorpList:Array<{v:string; n:string}>;
+    subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
+    origSubcorpName:string;
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
@@ -308,9 +309,11 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.IC
 
     private availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
 
-    private subcorpList:Immutable.List<{v:string; n:string}>;
+    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
     private currentSubcorp:string;
+
+    private origSubcorpName:string;
 
     private shuffleConcByDefault:boolean;
 
@@ -363,8 +366,9 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.IC
         super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
-        this.subcorpList = Immutable.List<{v:string; n:string}>(props.subcorpList);
-        this.currentSubcorp = props.currentSubcorp;
+        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(props.subcorpList);
+        this.currentSubcorp = props.currentSubcorp || '';
+        this.origSubcorpName = props.origSubcorpName || '';
         this.shuffleConcByDefault = props.shuffleConcByDefault;
         this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
         this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
@@ -393,7 +397,14 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.IC
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    this.currentSubcorp = payload.props['subcorp'];
+                    if (payload.props['pubName']) {
+                        this.currentSubcorp = payload.props['pubName'];
+                        this.origSubcorpName = payload.props['subcorp'];
+
+                    } else {
+                        this.currentSubcorp = payload.props['subcorp'];
+                        this.origSubcorpName = payload.props['subcorp'];
+                    }
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
@@ -743,12 +754,16 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.IC
     }
 
 
-    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
+    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
         return this.subcorpList;
     }
 
     getCurrentSubcorpus():string {
         return this.currentSubcorp;
+    }
+
+    getOrigSubcorpName():string {
+        return this.origSubcorpName;
     }
 
     getInputLanguages():Immutable.Map<string, string> {

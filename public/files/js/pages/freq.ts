@@ -19,6 +19,7 @@
  */
 
 import {Kontext, TextTypes} from '../types/common';
+import {PluginInterfaces} from '../types/plugins';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
 import {PageModel, DownloadType} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
@@ -40,6 +41,7 @@ import {FreqDataRowsModel, ResultBlock} from '../models/freqs/dataRows';
 import {FreqResultsSaveModel, FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 import {TextTypesModel} from '../models/textTypes/attrValues';
+import {SubcorpOnlySelectionModel} from '../models/corparch';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -72,8 +74,18 @@ class FreqPage {
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
+    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
+        this.subcorpSel = new SubcorpOnlySelectionModel({
+            layoutModel: this.layoutModel,
+            dispatcher: this.layoutModel.dispatcher,
+            usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+            corpora: [this.layoutModel.getCorpusIdent().id],
+            availSubcorpora: []
+        });
     }
 
     private initAnalysisViews(adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector):void {
@@ -220,16 +232,17 @@ class FreqPage {
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.querySaveAsFormModel
+            querySaveAsModel: this.querySaveAsFormModel,
+            corparchModel: null
         });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
             window.document.getElementById('query-overview-mount'),
             {
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
-                origSubcname: this.layoutModel.getConf<string>('origSubcorpname'),
+                corpname: this.layoutModel.getCorpusIdent().id,
+                humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     actionPrefix: '',

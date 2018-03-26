@@ -186,8 +186,9 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
     reg_fn = concworker.TaskRegistration(task_id=self.request.id)
-    subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
-    initial_args = reg_fn(corpus_id, subc_name, subchash, subc_path, query, samplesize)
+    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
+    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
+    initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
         conc_calculate.delay(initial_args, user_id, corpus_id,
                              subc_name, subchash, query, samplesize)
@@ -210,8 +211,9 @@ def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
     """
     task = concworker.ConcCalculation(task_id=self.request.id)
-    subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
-    return task(initial_args, subc_path, corpus_name, subc_name, subchash, query, samplesize)
+    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
+    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
+    return task(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------

@@ -17,6 +17,7 @@
  */
 
 import {Kontext, TextTypes} from '../types/common';
+import {PluginInterfaces} from '../types/plugins';
 import {PageModel, DownloadType} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
@@ -31,6 +32,7 @@ import {init as collResultViewInit} from '../views/coll/result';
 import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
+import {SubcorpOnlySelectionModel} from '../models/corparch';
 
 
 declare var require:any;
@@ -58,8 +60,18 @@ export class CollPage {
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
+    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
+        this.subcorpSel = new SubcorpOnlySelectionModel({
+            layoutModel: this.layoutModel,
+            dispatcher: this.layoutModel.dispatcher,
+            usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+            corpora: [this.layoutModel.getCorpusIdent().id],
+            availSubcorpora: []
+        });
     }
 
     initAnalysisViews():void {
@@ -213,16 +225,17 @@ export class CollPage {
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.querySaveAsFormModel
+            querySaveAsModel: this.querySaveAsFormModel,
+            corparchModel: this.subcorpSel
         });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
             window.document.getElementById('query-overview-mount'),
             {
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
-                origSubcname: this.layoutModel.getConf<string>('origSubcorpname'),
+                corpname: this.layoutModel.getCorpusIdent().id,
+                humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     actionPrefix: '',

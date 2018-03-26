@@ -35,6 +35,8 @@ export namespace Kontext {
 
     export type ListOfPairs = Array<[string, string]>;
 
+    export type SubcorpListItem = {v:string; n:string; pub:string};
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
@@ -94,6 +96,8 @@ export namespace Kontext {
         id:string;
         variant:string;
         name:string;
+        usesubcorp?:string;
+        origSubcorpName?:string;
     }
 
     /**

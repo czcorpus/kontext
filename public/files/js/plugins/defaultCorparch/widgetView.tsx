@@ -469,7 +469,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
      */
     const SubcorpSelection:React.SFC<{
         currSubcorpus:string;
-        availSubcorpora:Immutable.List<{v:string; n:string}>;
+        origSubcorpName:string;
+        availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
 
     }> = (props) => {
 
@@ -477,17 +478,24 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SELECT_SUBCORP',
                 props: {
-                    subcorp: evt.target.value
+                    subcorp: props.availSubcorpora.get(evt.target.value).v,
+                    pubName: props.availSubcorpora.get(evt.target.value).pub,
                 }
             });
         };
 
+        const selItemIdx = () => {
+            const orig = props.currSubcorpus !== props.origSubcorpName ?
+                props.origSubcorpName :
+                props.currSubcorpus;
+            return props.availSubcorpora.findIndex(v => v.v === orig);
+        };
         return (
             <span id="subcorp-selector-wrapper">
-                <select id="subcorp-selector" name="usesubcorp" value={props.currSubcorpus}
+                <select id="subcorp-selector" name="usesubcorp" value={selItemIdx()}
                         onChange={handleSubcorpChange}>
-                    {props.availSubcorpora.map(item => {
-                        return <option key={item.v} value={item.v}>{item.n}</option>;
+                    {props.availSubcorpora.map((item, i) => {
+                        return <option key={item.v} value={i}>{item.n}</option>;
                     })}
                 </select>
             </span>
@@ -505,7 +513,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         isWaitingToSwitch:boolean;
         currFavitemId:string;
         currSubcorpus:string;
-        availSubcorpora:Immutable.List<{v:string; n:string}>;
+        origSubcorpName:string;
+        availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
         availSearchKeywords:Immutable.List<SearchKeyword>;
         isWaitingForSearchResults:boolean;
         currSearchResult:Immutable.List<SearchResultRow>;
@@ -535,6 +544,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 isWaitingToSwitch: widgetModel.getIsWaitingToSwitch(),
                 currFavitemId: widgetModel.getCurrFavitemId(),
                 currSubcorpus: widgetModel.getCurrentSubcorp(),
+                origSubcorpName: widgetModel.getOrigSubcorpName(),
                 availSubcorpora: corpusSelection.getAvailableSubcorpora(),
                 availSearchKeywords: widgetModel.getAvailKeywords(),
                 isWaitingForSearchResults: widgetModel.getIsWaitingForSearchResults(),
@@ -644,6 +654,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                             (<span>
                                 <strong>{'\u00a0:\u00a0'}</strong>
                                 <SubcorpSelection currSubcorpus={this.state.currSubcorpus}
+                                    origSubcorpName={this.state.origSubcorpName}
                                     availSubcorpora={this.state.availSubcorpora} />
                             </span>) :
                             null

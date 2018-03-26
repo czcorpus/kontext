@@ -21,11 +21,13 @@
 import {Kontext} from '../types/common';
 import {PageModel, PluginApi} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
-import {createWidget as createCorparch} from 'plugins/corparch/init';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
+import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {StatefulModel} from '../models/base';
 import {WordlistFormModel} from '../models/wordlist/form';
+import {SubcorpOnlySelectionModel} from '../models/corparch';
+import {createWidget as createCorparch} from 'plugins/corparch/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -34,7 +36,7 @@ require('styles/wordlistForm.less');
 /**
  *
  */
-class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
+class WordlistFormPage {
 
     private layoutModel:PageModel;
 
@@ -44,31 +46,15 @@ class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
 
     private wordlistFormModel:WordlistFormModel;
 
-    private subcorpList:Immutable.List<{n:string; v:string}>;
+    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
-    private currSubcorp:string;
+    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
 
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.subcorpList = Immutable.List<{n:string; v:string}>(this.layoutModel.getConf<Array<{n:string; v:string}>>('SubcorpList'));
-        this.currSubcorp = this.layoutModel.getConf<string>('usesubcorp');
-    }
-
-    getCurrentSubcorpus():string {
-        return this.currSubcorp;
-    }
-
-    getAvailableSubcorpora():Immutable.List<{n:string; v:string}> {
-        return this.subcorpList;
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>([this.corpusIdent.id]);
+        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(
+                this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'));
     }
 
     private initCorpInfoToolbar():void {
@@ -76,9 +62,9 @@ class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
             this.views.CorpInfoToolbar,
             window.document.getElementById('query-overview-mount'),
             {
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('subcorpname')
+                corpname: this.corpusIdent.id,
+                humanCorpname: this.corpusIdent.name,
+                usesubcorp: this.corpusIdent.usesubcorp
             }
         );
     }
@@ -87,7 +73,7 @@ class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),
-            this,
+            this.subcorpSel,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                     return this.layoutModel.switchCorpus(corpora, subcorpId).then(
@@ -111,6 +97,14 @@ class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
         this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
         this.layoutModel.init().then(
             (d) => {
+                this.subcorpSel = new SubcorpOnlySelectionModel({
+                    layoutModel: this.layoutModel,
+                    dispatcher: this.layoutModel.dispatcher,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    corpora: [this.layoutModel.getCorpusIdent().id],
+                    availSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList')
+                });
                 this.wordlistFormModel = new WordlistFormModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
@@ -127,6 +121,20 @@ class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
                     CorparchWidget: corparchWidget,
                     wordlistFormModel: this.wordlistFormModel
                 });
+
+                const queryOverviewViews = basicOverviewViewsInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.getComponentHelpers(),
+                    this.subcorpSel
+                );
+                this.layoutModel.renderReactComponent(
+                    queryOverviewViews.EmptyQueryOverviewBar,
+                    window.document.getElementById('query-overview-mount'),
+                    {
+                        corpname: this.layoutModel.getCorpusIdent().id,
+                        humanCorpname: this.layoutModel.getCorpusIdent().name,
+                    }
+                );
 
                 this.layoutModel.renderReactComponent(
                     this.views.WordListForm,
@@ -146,6 +154,5 @@ class WordlistFormPage implements PluginInterfaces.ICorparchCorpSelection {
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
-    new WordlistFormPage(layoutModel).init();
+    new WordlistFormPage(new PageModel(conf)).init();
 }

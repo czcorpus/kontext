@@ -349,7 +349,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
     }
 
     private getActualCorpname():string {
-        return this.pageModel.getConf<string>('corpname');
+        return this.pageModel.getCorpusIdent().id;
     }
 
     private getCurrentQueryKey():string {

@@ -76,7 +76,7 @@ export class WithinBuilderModel extends StatefulModel {
             'GET',
             this.pageModel.createActionUrl('corpora/ajax_get_structattrs_details'),
             {
-                corpname: this.pageModel.getConf<string>('corpname')
+                corpname: this.pageModel.getCorpusIdent().id
             },
             {contentType : 'application/x-www-form-urlencoded'}
 

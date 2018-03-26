@@ -49,8 +49,10 @@ class Subcorpus(Querying):
         if publish:
             code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
                 'user', 'id'), corpname, subcname)).hexdigest()[:10]
-            return os.path.join(self.subcpath[1], code) + '.subc'
-
+            path = os.path.join(self.subcpath[1], corpname)
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            return os.path.join(path, code) + '.subc'
         else:
             path = os.path.join(self.subcpath[0], corpname)
             if not os.path.isdir(path):

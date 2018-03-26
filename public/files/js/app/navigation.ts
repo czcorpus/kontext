@@ -401,13 +401,10 @@ export class AppNavigation implements Kontext.IURLHandler {
         ).then(
             (data) => {
                 const args = new MultiDict();
-                args.set('corpname', data.corpname);
-                args.set('usesubcorp', data.subcorpname);
+                args.set('corpname', data.corpusIdent.id);
+                args.set('usesubcorp', data.corpusIdent.usesubcorp);
                 this.history.pushState(this.conf.getConf<string>('currentAction'), args);
 
-                this.conf.setConf<string>('corpname', data.corpname);
-                this.conf.setConf<string>('subcorpname', data.subcorpname);
-                this.conf.setConf<string>('humanCorpname', data.humanCorpname);
                 this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
                 this.conf.setConf<string>('baseAttr', data.baseAttr);
                 this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
