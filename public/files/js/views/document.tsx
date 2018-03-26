@@ -300,11 +300,12 @@ export function init(
         }
 
         _renderLink() {
-            return <a className="context-help" onClick={this._clickHandler}>
+            return <a className="context-help" onClick={this._clickHandler}
+                        title={he.translate('global__click_to_see_help')}>
                 <ImgWithMouseover
                         htmlClass="over-img"
                         src={he.createStaticUrl('img/question-mark.svg')}
-                        alt="question-mark.svg" />
+                        alt={he.translate('global__click_to_see_help')} />
             </a>;
         }
 
