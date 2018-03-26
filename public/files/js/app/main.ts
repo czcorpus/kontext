@@ -488,6 +488,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
     }
 
+    getCorpusIdent():Kontext.FullCorpusIdent {
+        return this.conf['corpusIdent'] || {};
+    }
+
     /**
      * Register a handler triggered when configuration is
      * changed via setConf(), replaceConcArg() functions.
@@ -941,6 +945,10 @@ export class PluginApi implements IPluginApi {
 
     getConcArgs():MultiDict {
         return this.pageModel.getConcArgs();
+    }
+
+    getCorpusIdent():Kontext.FullCorpusIdent {
+        return this.pageModel.getCorpusIdent();
     }
 
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {

@@ -138,7 +138,7 @@ class User(Kontext):
             page_num_records=num_records
         )
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def ajax_query_history(self, request):
         offset = int(request.args.get('offset', '0'))
         limit = int(request.args.get('limit'))

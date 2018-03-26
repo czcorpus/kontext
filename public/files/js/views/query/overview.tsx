@@ -63,6 +63,7 @@ export interface OverviewModuleArgs {
     queryReplayModel:IQueryReplayModel;
     mainMenuModel:Kontext.IMainMenuModel;
     querySaveAsModel:QuerySaveAsFormModel;
+    corparchModel:PluginInterfaces.ICorparchCorpSelection;
 }
 
 
@@ -70,7 +71,7 @@ export interface QueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcname:string;
+    origSubcorpName:string;
     queryFormProps:QueryFormLiteProps;
     filterFormProps:FilterFormProps;
     shuffleFormProps:ShuffleFormProps;
@@ -91,7 +92,7 @@ export interface NonViewPageQueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcname:string;
+    origSubcorpName:string;
     queryFormProps?:QueryFormProps;
     filterFormProps?:FilterFormProps;
     shuffleFormProps?:ShuffleFormProps;
@@ -119,11 +120,11 @@ type AnyEditorProps = QueryFormLiteProps | FilterFormProps | SubHitsFormProps | 
 
 
 export function init({dispatcher, he, viewDeps, queryReplayModel,
-                      mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
+                      mainMenuModel, querySaveAsModel, corparchModel}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
     const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
-    const basicOverviewViews = basicOverviewInit(dispatcher, he);
+    const basicOverviewViews = basicOverviewInit(dispatcher, he, corparchModel);
 
 
     const formTypeToTitle = (opFormType:string) => {
@@ -388,7 +389,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
-        origSubcname:string;
+        origSubcorpName:string;
         queryFormProps:QueryFormLiteProps;
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
@@ -528,7 +529,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                         corpname={this.props.corpname}
                                         humanCorpname={this.props.humanCorpname}
                                         usesubcorp={this.props.usesubcorp}
-                                        origSubcname={this.props.origSubcname} />
+                                        origSubcorpName={this.props.origSubcorpName} />
                                 : null}
                         {this.state.ops.map((item, i) => {
                             return <QueryOpInfo
@@ -559,7 +560,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
-        origSubcname:string;
+        origSubcorpName:string;
         ops:Immutable.List<ExtendedQueryOperation>;
 
     }> = (props) => {
@@ -582,7 +583,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
                                     usesubcorp={props.usesubcorp}
-                                    origSubcname={props.origSubcname} />
+                                    origSubcorpName={props.origSubcorpName} />
                             : null}
                     {props.ops.map((item, i) => {
                         return <QueryOpInfo

@@ -379,7 +379,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         const selectedAligned = this.alignedCorpora.filter(item=>item.selected);
 
         if (this.selectionSteps.size === 0 && selectedAligned.size > 0) {
-            const mainLang = this.pluginApi.getConf<string>('corpname');
+            const mainLang = this.pluginApi.getCorpusIdent().id;
             const newStep:AlignedLangSelectionStep = {
                 num: 1,
                 numPosInfo: newAttrs.length > 0 ? 0 : data.poscount,
@@ -499,7 +499,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
             'GET',
             this.pluginApi.createActionUrl('corpora/bibliography'),
             {
-                corpname: this.pluginApi.getConf<string>('corpname'),
+                corpname: this.pluginApi.getCorpusIdent().id,
                 id: bibId
             }
         );
@@ -511,7 +511,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
             'POST',
             this.pluginApi.createActionUrl('filter_attributes'),
             {
-                corpname: this.pluginApi.getConf<string>('corpname'),
+                corpname: this.pluginApi.getCorpusIdent().id,
                 attrs: JSON.stringify(selections),
                 aligned: JSON.stringify(aligned)
             }
@@ -524,7 +524,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
             'POST',
             this.pluginApi.createActionUrl('attr_val_autocomplete'),
             {
-                corpname: this.pluginApi.getConf<string>('corpname'),
+                corpname: this.pluginApi.getCorpusIdent().id,
                 pattern: pattern,
                 patternAttr: patternAttr,
                 attrs: JSON.stringify(selections),

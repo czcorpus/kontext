@@ -49,6 +49,7 @@ export interface IPluginApi {
     getViews():CoreViews.Runtime;
     pluginIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict;
+    getCorpusIdent():Kontext.FullCorpusIdent;
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
@@ -150,9 +151,10 @@ export namespace PluginInterfaces {
     export type CorparchWidgetView = React.ComponentClass<{}>;
 
 
-    export interface ICorparchCorpSelection {
+    export interface ICorparchCorpSelection extends Kontext.EventEmitter {
         getCurrentSubcorpus():string;
-        getAvailableSubcorpora():Immutable.List<{n:string; v:string}>;
+        getOrigSubcorpName():string;
+        getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
         getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
         getCorpora():Immutable.List<string>;
     }

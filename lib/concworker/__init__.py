@@ -111,8 +111,8 @@ class TaskRegistration(GeneralWorker):
     def __init__(self, task_id):
         super(TaskRegistration, self).__init__(task_id=task_id)
 
-    def __call__(self, corpus_name, subc_name, subchash, subcpath, query, samplesize):
-        corpus_manager = CorpusManager(subcpath=(subcpath,))
+    def __call__(self, corpus_name, subc_name, subchash, subcpaths, query, samplesize):
+        corpus_manager = CorpusManager(subcpath=subcpaths)
         corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         new_status = self.create_new_calc_status()
@@ -129,10 +129,10 @@ class ConcCalculation(GeneralWorker):
         """
         super(ConcCalculation, self).__init__(task_id=task_id, cache_factory=cache_factory)
 
-    def __call__(self, initial_args, subc_dir, corpus_name, subc_name, subchash, query, samplesize):
+    def __call__(self, initial_args, subc_dirs, corpus_name, subc_name, subchash, query, samplesize):
         """
         initial_args -- a dict(cachefile=..., already_running=...)
-        subc_dir -- a directory where user's subcorpora are stored
+        subc_dirs -- a list of directories where to look for subcorpora
         corpus -- a corpus identifier
         subc_name -- subcorpus name (should be None if not present)
         subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
@@ -142,7 +142,7 @@ class ConcCalculation(GeneralWorker):
         sleeptime = None
         cache_map = None
         try:
-            corpus_manager = CorpusManager(subcpath=(subc_dir,))
+            corpus_manager = CorpusManager(subcpath=subc_dirs)
             corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
 

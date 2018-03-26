@@ -36,7 +36,7 @@ export interface CorpInfoToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcname:string;
+    origSubcorpName:string;
 }
 
 export interface WordlistFormExportViews {
@@ -139,7 +139,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 <layoutViews.CorpnameInfoTrigger corpname={props.corpname}
                         humanCorpname={props.humanCorpname}
                         usesubcorp={props.usesubcorp}
-                        origSubcname={props.origSubcname} />
+                        origSubcorpName={props.origSubcorpName} />
             </ul>
         );
     };

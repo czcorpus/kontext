@@ -53,7 +53,7 @@ export default function create(pluginApi:IPluginApi):PluginInterfaces.ITagHelper
         new TagHelperModel(
             pluginApi.dispatcher(),
             pluginApi,
-            pluginApi.getConf<string>('corpname')
+            pluginApi.getCorpusIdent().id
         )
     );
 }

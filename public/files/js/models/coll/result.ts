@@ -248,8 +248,8 @@ class CalcWatchdog {
 
     private checkStatus():void {
         const args = new MultiDict([
-            ['corpname', this.layoutModel.getConf<string>('corpname')],
-            ['usesubcorp', this.layoutModel.getConf<string>('subcorpname')],
+            ['corpname', this.layoutModel.getCorpusIdent().id],
+            ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
             ['attrname', this.layoutModel.getConf<string>('attrname')]
         ]);
         this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {

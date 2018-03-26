@@ -784,14 +784,6 @@ class Kontext(Controller):
         if type(result) is DictType:
             new_query_key = self._store_conc_params()
             self._update_output_with_conc_params(new_query_key, result)
-        # update subcorp identifier if subc is published
-        if hasattr(self.corp, 'subcname'):
-            self.args.usesubcorp = self.corp.subcname
-
-        if hasattr(self.corp, 'orig_subcname'):
-            result['orig_subcname'] = self.corp.orig_subcname
-        else:
-            result['orig_subcname'] = self.args.usesubcorp
 
         # log user request
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
@@ -914,6 +906,17 @@ class Kontext(Controller):
 
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self.corp.size()
+
+        if hasattr(self.corp, 'subcname'):
+            self.args.usesubcorp = self.corp.subcname
+
+        usesubcorp = self.args.usesubcorp if self.args.usesubcorp else None
+        result['corpus_ident'] = dict(id=self.args.corpname,
+                                      variant=self._corpus_variant,
+                                      name=self._human_readable_corpname(),
+                                      usesubcorp=usesubcorp,
+                                      origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp))
+
         if self.args.usesubcorp:
             result['subcorp_size'] = self.corp.search_size()
         else:
@@ -1050,6 +1053,7 @@ class Kontext(Controller):
         It is called after an action is processed but before any output starts
         """
         Controller.add_globals(self, result, methodname, action_metadata)
+        result['corpus_ident'] = {}
         result['base_attr'] = Kontext.BASE_ATTR
         result['root_url'] = self.get_root_url()
         result['files_path'] = self._files_path
@@ -1060,7 +1064,6 @@ class Kontext(Controller):
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = templating.StateGlobals(global_var_val)
         result['Globals'].set('q', [q for q in result.get('Q')])
-        result['human_corpname'] = None
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this
@@ -1138,10 +1141,6 @@ class Kontext(Controller):
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
             result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
                 self.args.corpname)
-        result['corpus_ident'] = dict(id=self.args.corpname,
-                                      variant=self._corpus_variant,
-                                      name=self._human_readable_corpname())
-
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}

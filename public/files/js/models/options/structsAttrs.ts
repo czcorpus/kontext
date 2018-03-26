@@ -24,6 +24,7 @@ import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import RSVP from 'rsvp';
+import { MultiDict } from '../../util';
 
 
 
@@ -170,12 +171,12 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
     }
 
     private saveSettings():RSVP.Promise<ViewOptions.SaveViewAttrsOptionsResponse> {
-        const corpname = this.layoutModel.getConf<string>('corpname');
-        const urlArgs = `corpname=${corpname}&format=json`;
+        const corpname = this.layoutModel.getCorpusIdent().id;
+        const urlArgs = new MultiDict([['corpname', corpname], ['format', 'json']]);
         const formArgs = this.serialize();
         return this.layoutModel.ajax<ViewOptions.SaveViewAttrsOptionsResponse>(
             'POST',
-            this.layoutModel.createActionUrl('options/viewattrsx') + '?' + urlArgs,
+            this.layoutModel.createActionUrl('options/viewattrsx', urlArgs),
             formArgs
 
         ).then((data) => {

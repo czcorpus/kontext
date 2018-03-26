@@ -18,26 +18,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import RSVP from 'rsvp';
+import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginName} from '../app/main';
 import {ConcLinesStorage, openStorage} from '../conclines';
-import * as Immutable from 'immutable';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
 import {QueryContextModel} from '../models/query/context';
-import * as corplistComponent from 'plugins/corparch/init';
-import liveAttributes from 'plugins/liveAttributes/init';
-import tagHelperPlugin from 'plugins/taghelper/init';
-import queryStoragePlugin from 'plugins/queryStorage/init';
-import RSVP from 'rsvp';
 import {init as queryFormInit, QueryFormProps} from '../views/query/main';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import { CQLEditorProps } from '../views/query/cqlEditor';
+import * as corplistComponent from 'plugins/corparch/init';
+import liveAttributes from 'plugins/liveAttributes/init';
+import tagHelperPlugin from 'plugins/taghelper/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -198,7 +198,7 @@ export class FirstFormPage {
     }
 
     private initQueryModel():void {
-        const formCorpora = [this.layoutModel.getConf<string>('corpname')];
+        const formCorpora = [this.layoutModel.getCorpusIdent().id];
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         this.queryModel = new QueryModel(
@@ -207,7 +207,7 @@ export class FirstFormPage {
             this.textTypesModel,
             this.queryContextModel,
             {
-                corpora: [this.layoutModel.getConf<string>('corpname')].concat(
+                corpora: [this.layoutModel.getCorpusIdent().id].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
                 currQueryTypes: queryFormArgs.curr_query_types,
@@ -216,8 +216,9 @@ export class FirstFormPage {
                 currLposValues: queryFormArgs.curr_lpos_values,
                 currQmcaseValues: queryFormArgs.curr_qmcase_values,
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-                subcorpList: this.layoutModel.getConf<Array<{v:string; n:string}>>('SubcorpList'),
-                currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
+                subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
+                currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 tagBuilderSupport: queryFormArgs.tag_builder_support,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
@@ -282,15 +283,14 @@ export class FirstFormPage {
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
+            this.queryModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
             window.document.getElementById('query-overview-mount'),
             {
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
-                origSubcname: this.layoutModel.getConf<string>('origSubcorpname')
+                corpname: this.layoutModel.getCorpusIdent().id,
+                humanCorpname: this.layoutModel.getCorpusIdent().name,
             }
         );
     }

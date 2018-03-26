@@ -17,21 +17,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+import * as Immutable from 'immutable';
+import * as React from 'react';
+import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import RSVP from 'rsvp';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
-import liveAttributes from 'plugins/liveAttributes/init';
-import subcMixer from 'plugins/subcmixer/init';
 import {UserSettings} from '../app/userSettings';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
-import * as corplistComponent from 'plugins/corparch/init'
-import * as Immutable from 'immutable';
-import * as React from 'react';
+import {NonQueryCorpusSelectionModel} from '../models/corpsel';
+import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
+import * as corplistComponent from 'plugins/corparch/init';
+import liveAttributes from 'plugins/liveAttributes/init';
+import subcMixer from 'plugins/subcmixer/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -52,7 +53,7 @@ export type StructsAndAttrs = {[struct:string]:Array<string>};
 /**
  * A page model for the 'create new subcorpus' page.
  */
-export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
+export class SubcorpForm {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
@@ -68,12 +69,18 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
 
     private textTypesModel:TextTypesModel;
 
+    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
         this.corpusIdent = corpusIdent;
     }
 
     getCurrentSubcorpus():string {
+        return this.subcorpFormModel.getSubcname();
+    }
+
+    getOrigSubcorpName():string {
         return this.subcorpFormModel.getSubcname();
     }
 
@@ -85,8 +92,8 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
         return Immutable.List<Kontext.AttrItem>();
     }
 
-    getAvailableSubcorpora():Immutable.List<{n:string; v:string}> {
-        return Immutable.List<{n:string; v:string}>();
+    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
+        return Immutable.List<{n:string; v:string; pub:string}>();
     }
 
     initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:{[p:string]:any}):void {
@@ -174,6 +181,22 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
         };
     }
 
+    private initCorpusInfo():void {
+        const queryOverviewViews = basicOverviewViewsInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getComponentHelpers(),
+            this.subcorpSel
+        );
+        this.layoutModel.renderReactComponent(
+            queryOverviewViews.EmptyQueryOverviewBar,
+            window.document.getElementById('query-overview-mount'),
+            {
+                corpname: this.layoutModel.getCorpusIdent().id,
+                humanCorpname: this.layoutModel.getCorpusIdent().name,
+            }
+        );
+    }
+
     init():void {
         const getModeldAlignedCorp = () => {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
@@ -187,19 +210,27 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
                 );
+                this.subcorpSel = new NonQueryCorpusSelectionModel({
+                    layoutModel: this.layoutModel,
+                    dispatcher: this.layoutModel.dispatcher,
+                    usesubcorp: this.corpusIdent.usesubcorp,
+                    origSubcorpName: this.corpusIdent.origSubcorpName,
+                    corpora: [this.corpusIdent.id],
+                    availSubcorpora: []
+                });
                 this.subcorpFormModel = new SubcorpFormModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.subcorpWithinFormModel,
                     ttComponent.ttModel,
-                    this.layoutModel.getConf<string>('corpname'),
+                    this.layoutModel.getCorpusIdent().id,
                     ttComponent.attachedAlignedCorporaProvider
                 );
 
                 const corplistWidget = corplistComponent.createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
                     this.layoutModel.pluginApi(),
-                    this,
+                    this.subcorpSel,
                     {
                         itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                             return this.layoutModel.switchCorpus(corpora, subcorpId).then(
@@ -219,6 +250,9 @@ export class SubcorpForm implements PluginInterfaces.ICorparchCorpSelection {
                         }
                     }
                 );
+
+                this.initCorpusInfo();
+
                 this.viewComponents = subcorpViewsInit({
                     dispatcher: this.layoutModel.dispatcher,
                     he: this.layoutModel.getComponentHelpers(),

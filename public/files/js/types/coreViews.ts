@@ -232,7 +232,7 @@ export namespace CoreViews {
         export interface Props {
             corpname:string;
             usesubcorp:string;
-            origSubcname:string;
+            origSubcorpName:string;
             humanCorpname:string;
         }
 

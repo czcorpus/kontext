@@ -300,11 +300,12 @@ export function init(
         }
 
         _renderLink() {
-            return <a className="context-help" onClick={this._clickHandler}>
+            return <a className="context-help" onClick={this._clickHandler}
+                        title={he.translate('global__click_to_see_help')}>
                 <ImgWithMouseover
                         htmlClass="over-img"
                         src={he.createStaticUrl('img/question-mark.svg')}
-                        alt="question-mark.svg" />
+                        alt={he.translate('global__click_to_see_help')} />
             </a>;
         }
 
@@ -489,27 +490,32 @@ export function init(
         };
 
         const getSubcName = () => {
-            if (props.origSubcname !== props.usesubcorp) {
+            if (props.origSubcorpName !== props.usesubcorp) {
                 return <>
-                    {props.origSubcname}
-                    <span title={he.translate('global__public_subc_id')}>
-                        ({props.usesubcorp})
+                    <a className="subcorpus" title={he.translate('global__subcorpus')}
+                                        onClick={handleSubcnameClick}>
+                        <strong>{props.origSubcorpName}</strong>
+                    </a>
+                    <span title={he.translate('global__public_subc_id_{id}', {id: props.usesubcorp})}>
+                        {'\u00a0'}({he.translate('global__published_subcorp')})
                     </span>
                 </>;
+
+            } else {
+                return <a className="subcorpus" title={he.translate('global__subcorpus')}
+                                        onClick={handleSubcnameClick}>
+                        <strong>{props.usesubcorp}</strong>
+                    </a>;
             }
-            return props.usesubcorp;
         };
 
         const renderSubcorp = () => {
             if (props.usesubcorp) {
                 return (
-                    <span>
+                    <>
                         <strong>:</strong>
-                        <a className="subcorpus" title={he.translate('global__subcorpus')}
-                                    onClick={handleSubcnameClick}>
-                            {getSubcName()}
-                        </a>
-                    </span>
+                        {getSubcName()}
+                    </>
                 );
 
             } else {

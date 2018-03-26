@@ -209,7 +209,7 @@ export class SubcMixerModel extends StatefulModel {
             });
         }
         const args = {};
-        args['corpname'] = this.pluginApi.getConf<string>('corpname');
+        args['corpname'] = this.pluginApi.getCorpusIdent().id;
         args['subcname'] = this.currentSubcname;
         args['idAttr'] = this.corpusIdAttr;
         args['ids'] = this.currentCalculationResult.ids.toArray().join(',');
@@ -241,7 +241,7 @@ export class SubcMixerModel extends StatefulModel {
             }
         }
         const args = {};
-        args['corpname'] = this.pluginApi.getConf<string>('corpname');
+        args['corpname'] = this.pluginApi.getCorpusIdent().id;
         args['subcname'] = this.currentSubcname;
         args['aligned_corpora'] = this.getAlignedCorporaFn().map(item => item.value).toArray();
         args['expression'] = JSON.stringify(

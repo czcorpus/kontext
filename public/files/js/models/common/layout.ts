@@ -306,7 +306,7 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
                 {
-                    corpname: this.pluginApi.getConf<string>('corpname')
+                    corpname: this.pluginApi.getCorpusIdent().id
                 }
             ).then(
                 (data) => {
