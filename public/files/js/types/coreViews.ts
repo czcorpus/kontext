@@ -80,7 +80,7 @@ export namespace CoreViews {
 
             customClass?:string;
 
-            autoSize?:boolean;
+            autoWidth?:boolean;
 
             children:React.ReactNode;
         }
@@ -119,11 +119,12 @@ export namespace CoreViews {
             onCloseClick:()=>void;
             customClass?:string;
             scrollable?:boolean;
+            autoWidth?:boolean;
             label:string;
             children:React.ReactNode;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.ComponentClass<Props>;
 
     }
 

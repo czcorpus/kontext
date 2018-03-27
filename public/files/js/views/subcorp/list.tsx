@@ -60,37 +60,57 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------------------
+    // ------------------------ <PublishCheckbox /> -----------------------------
 
     const PublishCheckbox:React.SFC<{
         value:boolean;
         onChange:()=>void;
 
     }> = (props) => {
-
-        return <input type="checkbox" checked={props.value} onChange={props.onChange}
-                    disabled={props.value} />;
+        return <input type="checkbox" checked={props.value} onChange={props.onChange} />;
     };
 
+    // ------------------------ <DeleteButton /> -----------------------------
+
+    const DeleteButton:React.SFC<{
+        rowIdx:number;
+        subcname:string;
+        deleteLocked:boolean;
+
+    }> = (props) => {
+
+        const handleSubmit = () => {
+            if (!props.deleteLocked &&
+                        window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
+                dispatcher.dispatch({
+                    actionType: 'SUBCORP_LIST_DELETE_SUBCORPUS',
+                    props: {
+                        rowIdx: props.rowIdx
+                    }
+                });
+            }
+        };
+
+        const title = props.deleteLocked ?
+                he.translate('subclist__delete_subcorp_locked') :
+                he.translate('subclist__delete_subcorp');
+
+        return <a className={`delete-subc${props.deleteLocked ? ' locked': ''}`} onClick={handleSubmit}
+                    title={title}>
+            {'\u274C'}
+        </a>;
+    }
 
     // ------------------------ <TrDataLine /> --------------------------
 
     const TrDataLine:React.SFC<{
         idx:number;
         item:SubcorpListItem;
-        publishCheckboxHandle:(corpname:string, subcname:string)=>void;
-        actionButtonHandle:(idx:number, evt:React.MouseEvent<{}>)=>void;
+        deleteLocked:boolean;
+        publishCheckboxHandle:(idx:number)=>void;
+        actionButtonHandle:(idx:number)=>void;
 
     }> = (props) => {
-
-        const handleCheckbox = () => {
-            dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_SELECT_LINE',
-                props: {
-                    idx: props.idx
-                }
-            });
-        };
 
         const renderLabel = () => {
             const item = props.item;
@@ -110,17 +130,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
 
-        const handleActionClick = (evt) => {
-            props.actionButtonHandle(props.idx, evt);
-        };
-
         return (
             <tr>
-                <td>
-                    {!props.item.deleted
-                        ? <input type="checkbox" checked={props.item.selected} onChange={handleCheckbox} />
-                        : null}
-                </td>
                 <td>
                     {renderLabel()}
                 </td>
@@ -131,16 +142,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     {he.formatDate(props.item.created, 1)}
                 </td>
                 <td>
-                    <PublishCheckbox value={props.item.published}
-                            onChange={props.publishCheckboxHandle.bind(null, props.item.corpname,
-                                        props.item.usesubcorp)} />
+                    {props.item.deleted ?
+                        null :
+                        <PublishCheckbox value={props.item.published}
+                                onChange={()=>props.publishCheckboxHandle(props.idx)} />
+                    }
                 </td>
                 <td className="action-link">
                     {props.item.cql ?
-                        <a onClick={handleActionClick}
+                        <a onClick={()=>props.actionButtonHandle(props.idx)}
                                 title={he.translate('subclist__click_to_access_the_backup')}>{'\u2713'}</a> :
                         null
                     }
+                </td>
+                <td>
+                    {!props.item.deleted ? <DeleteButton rowIdx={props.idx} subcname={props.item.usesubcorp}
+                                                        deleteLocked={props.deleteLocked} /> : null}
                 </td>
             </tr>
         );
@@ -196,15 +213,37 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ---------------------- <DeleteUnlockButton /> -----------------
+
+    const DeleteUnlockButton:React.SFC<{
+        deleteLocked:boolean;
+
+    }> = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch({
+                actionType: props.deleteLocked ?
+                    'SUBCORP_LIST_UNLOCK_DELETE_FUNC' :
+                    'SUBCORP_LIST_LOCK_DELETE_FUNC',
+                props: {}
+            });
+        };
+
+        return <a onClick={handleClick} title={he.translate('subclist__click_to_unlock_for_del')}>
+            <img src={he.createStaticUrl('img/config-icon.svg')} style={{width: '1em'}} />
+            </a>
+    };
+
     // ------------------------ <DataTable /> --------------------------
 
     class DataTable extends React.Component<{
-        actionButtonHandle:(idx:number, evt)=>void;
+        actionButtonHandle:(action:string, idx:number)=>void;
     },
     {
         lines:Immutable.List<SubcorpListItem>;
         sortKey:SortKey;
         unfinished:Immutable.List<UnfinishedSubcorp>;
+        deleteLocked:boolean;
     }> {
 
         constructor(props) {
@@ -218,7 +257,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return {
                 lines: subcorpLinesModel.getLines(),
                 sortKey: subcorpLinesModel.getSortKey(),
-                unfinished: subcorpLinesModel.getUnfinished()
+                unfinished: subcorpLinesModel.getUnfinished(),
+                deleteLocked: subcorpLinesModel.getDeleteLocked()
             }
         }
 
@@ -258,18 +298,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 <table className="data">
                     <tbody>
                         <tr>
-                            <th />
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th>{he.translate('subclist__col_published')}</th>
                             <th>{he.translate('subclist__col_backed_up')}</th>
+                            <th>
+                                <DeleteUnlockButton deleteLocked={this.state.deleteLocked} />
+                            </th>
                         </tr>
                         {this.state.unfinished.map(item => <TrUnfinishedLine key={item.name} item={item} /> )}
                         {this.state.lines.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
-                                    actionButtonHandle={this.props.actionButtonHandle}
-                                    publishCheckboxHandle={this._handlePublishCheckbox} />
+                                    actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')}
+                                    publishCheckboxHandle={this.props.actionButtonHandle.bind(null, 'pub')}
+                                    deleteLocked={this.state.deleteLocked} />
                         ))}
                     </tbody>
                 </table>
@@ -310,19 +353,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 <fieldset>
                     <legend>{he.translate('subclist__filter_heading')}</legend>
                     <div>
-                        <label>{he.translate('global__corpus')}:{'\u00A0'}
-                            <select value={props.filter.corpname}
+                        <label htmlFor="inp_YT2rx">{he.translate('global__corpus')}: </label>
+                        <select id="inp_YT2rx" value={props.filter.corpname}
                                     onChange={handleCorpusSelection}>
                                 <option value="">--</option>
                                 {props.relatedCorpora.map(item => <option key={item} value={item}>{item}</option>)}
                             </select>
-                        </label>
                     </div>
                     <div>
-                        <label>
-                            {he.translate('subclist__show_deleted')}:{'\u00A0'}
-                            <input type="checkbox" onChange={handleShowDeleted} checked={props.filter['show_deleted']} />
-                        </label>
+                        <label htmlFor="inp_EDPtb">{he.translate('subclist__show_deleted')}:</label>
+                        <input id="inp_EDPtb" type="checkbox" onChange={handleShowDeleted} checked={props.filter['show_deleted']} />
                     </div>
                 </fieldset>
             </form>
@@ -394,17 +434,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <FormActionTemplate>
                     <div>
-                        <label>{he.translate('global__name')}:{'\u00A0'}
-                            <input type="text" style={{width: '20em'}}
-                                    defaultValue={this.state.newName}
-                                    onChange={this._handleNameChange} />
-                        </label>
+                        <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
+                        <input id="inp_0sAoz" type="text" style={{width: '20em'}}
+                                defaultValue={this.state.newName}
+                                onChange={this._handleNameChange} />
+
                     </div>
                     <div>
-                        <label>{he.translate('global__cql_query')}:{'\u00A0'}
-                            <textarea defaultValue={this.props.data.cql}
+                        <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
+                        <textarea id="inp_zBuJi" defaultValue={this.props.data.cql}
                                 onChange={this._handleCqlChange} rows={4} />
-                        </label>
                     </div>
                     <div>
                         <button type="button" className="default-button"
@@ -476,81 +515,197 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ------------------------ <ActionMenu /> --------------------------
 
-    // ------------------------ <ActionBox /> --------------------------
+    const ActionMenu:React.SFC<{
+        hasCQLBackup:boolean;
+        isDeletedCorp:boolean;
+        activeTab:string;
+        onSelect:(action:string)=>()=>void;
 
-    class ActionBox extends React.Component<{
-        idx:number;
-        onCloseClick:()=>void;
-    },
-    {
-        action:string;
-        data:SubcorpListItem;
+    }> = (props) => {
+
+        const mkClass = (action) => `util-button${action === props.activeTab ? ' active' : ''}`;
+
+        return (
+            <ul className="ActionMenu">
+                {!props.isDeletedCorp ?
+                    <li>
+                        <a className={mkClass('pub')} onClick={props.onSelect('pub')}>
+                            {he.translate('subclist__public_access_btn')}
+                        </a>
+                    </li> : null
+                }
+                {props.hasCQLBackup ?
+                    <li>
+                        <a className={mkClass('reuse')} onClick={props.onSelect('reuse')}>
+                            {he.translate('subclist__action_reuse')}
+                        </a>
+                    </li> : null
+                }
+                {props.hasCQLBackup && props.isDeletedCorp ?
+                <>
+                    <li>
+                        <a className={mkClass('restore')} onClick={props.onSelect('restore')}>
+                            {he.translate('subclist__action_restore')}
+                        </a>
+                    </li>
+                    <li>
+                        <a className={mkClass('wipe')} onClick={props.onSelect('wipe')}>
+                            {he.translate('subclist__action_wipe')}
+                        </a>
+                    </li>
+                </> : null}
+            </ul>
+        );
+
+    };
+
+    // ------------------------ <PublishSubmitButton /> --------------------------
+
+    const PublishSubmitButton:React.SFC<{
+        published:boolean;
+        onSubmit:()=>void;
+
+    }> = (props) => {
+        return <button type="button" className="default-button"
+                onClick={props.onSubmit}>
+            {props.published ?
+                he.translate('subclist__update_public_desc_btn') :
+                he.translate('subclist__publish_now_btn')
+            }
+        </button>;
+    };
+
+
+    // ------------------------ <PublishingTab /> --------------------------
+
+    class PublishingTab extends React.PureComponent<{
+        rowIdx:number;
+        description:string;
+        published:boolean;
+
     }> {
 
         constructor(props) {
             super(props);
-            this._handleActionSelect = this._handleActionSelect.bind(this);
-            this.state = {
-                data: subcorpLinesModel.getRow(this.props.idx),
-                action: null
+            this.handleSubmitPublish = this.handleSubmitPublish.bind(this);
+            this.handleTextAreaChange = this.handleTextAreaChange.bind(this);
+            this.handleSubmitUpdateDesc = this.handleSubmitUpdateDesc.bind(this);
+        }
+
+        private handleSubmitPublish() {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_LIST_PUBLISH_SUBCORPUS',
+                props: {
+                    rowIdx: this.props.rowIdx,
+                    description: this.props.description
+                }
+            });
+        }
+
+        private handleSubmitUpdateDesc() {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
+                props: {
+                    rowIdx: this.props.rowIdx
+                }
+            });
+        }
+
+        private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
+                props: {
+                    rowIdx: this.props.rowIdx,
+                    description: evt.target.value
+                }
+            });
+        }
+
+        render() {
+            return <FormActionTemplate>
+                <p>
+                    <img src={he.createStaticUrl('img/warning-icon.svg')}
+                        alt="warning-icon.svg" style={{width: '1.3em', verticalAlign: 'middle', marginRight: '0.3em'}} />
+                    {
+                        this.props.published ?
+                            he.translate('subclist__ex_post_desc_update_warning') :
+                            he.translate('subclist__ex_post_publish_warning')
+                    }
+                </p>
+                <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
+                <textarea id="inp_3IDJH" cols={60} rows={10}
+                        onChange={this.handleTextAreaChange}
+                        value={this.props.description} />
+                <p className="note">({he.translate('global__markdown_supported')})</p>
+                <div>
+                    <PublishSubmitButton onSubmit={this.props.published ? this.handleSubmitUpdateDesc :
+                                            this.handleSubmitPublish} published={this.props.published} />
+                </div>
+            </FormActionTemplate>
+        }
+    };
+
+
+    // ------------------------ <ActionBox /> --------------------------
+
+    class ActionBox extends React.PureComponent<{
+        idx:number;
+        action:string;
+        data:SubcorpListItem;
+        modelIsBusy:boolean;
+        onCloseClick:()=>void;
+
+    }> {
+
+        constructor(props) {
+            super(props);
+            this.handleActionSelect = this.handleActionSelect.bind(this);
+        }
+
+        handleActionSelect(action) {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
+                    props: {value: action}
+                });
             };
         }
 
-        _handleActionSelect(evt) {
-            const newState = he.cloneState(this.state);
-            newState.action = evt.target.value;
-            this.setState(newState);
-        }
-
-        _renderActionForm() {
-            switch (this.state.action) {
+        _renderTab() {
+            switch (this.props.action) {
                 case 'restore':
                     return <FormActionRestore idx={this.props.idx}  />;
                 case 'reuse':
-                    return <FormActionReuse idx={this.props.idx} data={this.state.data} />;
+                    return <FormActionReuse idx={this.props.idx} data={this.props.data} />;
                 case 'wipe':
                     return <FormActionWipe idx={this.props.idx} />;
-            }
-        }
-
-        _renderActionMenu() {
-            if (this.state.data.cql) {
-                if (this.state.data.deleted) {
-                    return [
-                        <option key="empty" value="">--</option>,
-                        <option key="restore" value="restore">{he.translate('subclist__action_restore')}{'\u2026'}</option>,
-                        <option key="reuse" value="reuse">{he.translate('subclist__action_reuse')}{'\u2026'}</option>,
-                        <option key="wipe" value="wipe">{he.translate('subclist__action_wipe')}{'\u2026'}</option>
-                    ];
-
-                } else {
-                    return [
-                        <option key="empty" value="">--</option>,
-                        <option key="reuse" value="reuse">{he.translate('subclist__action_reuse')}{'\u2026'}</option>
-                    ]
-                }
-
-            } else {
-                return [];
+                case 'pub':
+                    return <PublishingTab published={this.props.data.published}
+                                    description={this.props.data.description}
+                                    rowIdx={this.props.idx} />;
             }
         }
 
         render() {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-                    <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
+                    <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
+                            customClass="subcorp-actions"
+                            autoWidth={true}
+                            label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
                         <div>
-                            <h3>{he.translate('subclist__backup_of_{subcname}', {subcname: this.state.data.name})}</h3>
-                            <span className="actions">
-                                {he.translate('global__actions') + ':\u00A0'}
-                            </span>
-                            <select onChange={this._handleActionSelect}>
-                                {this._renderActionMenu()}
-                            </select>
-                            {this._renderActionForm()}
+                            <ActionMenu hasCQLBackup={!!this.props.data.cql}
+                                    isDeletedCorp={this.props.data.deleted}
+                                    activeTab={this.props.action}
+                                    onSelect={this.handleActionSelect} />
+                            <div className="loader-wrapper">
+                                {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
+                            </div>
+                            {this._renderTab()}
                         </div>
-                    </layoutViews.PopupBox>
+                    </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
             )
         }
@@ -560,28 +715,32 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------------ <SubcorpList /> --------------------------
 
     class SubcorpList extends React.Component<SubcorpListProps, {
-        hasSelectedLines:boolean;
         filter:SubcListFilter;
         relatedCorpora:Immutable.List<string>;
         actionBoxVisible:number;
+        actionBoxData:SubcorpListItem;
+        actionBoxActionType:string;
+        modelIsBusy:boolean;
 
     }> {
 
         constructor(props) {
             super(props);
             this._modelChangeListener = this._modelChangeListener.bind(this);
-            this._handleDeleteButton = this._handleDeleteButton.bind(this);
             this._handleActionButton = this._handleActionButton.bind(this);
             this._handleActionsClose = this._handleActionsClose.bind(this);
             this.state = this._fetchModelState();
         }
 
         _fetchModelState() {
+            const visibleRow = subcorpLinesModel.getActionBoxVisibleRow();
             return {
-                hasSelectedLines: subcorpLinesModel.hasSelectedLines(),
                 filter: subcorpLinesModel.getFilter(),
                 relatedCorpora: subcorpLinesModel.getRelatedCorpora(),
-                actionBoxVisible: null
+                actionBoxVisible: visibleRow,
+                actionBoxData: visibleRow > -1 ? subcorpLinesModel.getRow(visibleRow) : null,
+                actionBoxActionType: subcorpLinesModel.getActionBoxActionType(),
+                modelIsBusy: subcorpLinesModel.getIsBusy()
             };
         }
 
@@ -597,41 +756,37 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             subcorpLinesModel.removeChangeListener(this._modelChangeListener);
         }
 
-        _handleDeleteButton() {
+        _handleActionButton(action:string, idx:number) {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_DELETE_SELECTED_SUBCORPORA',
+                actionType: 'SUBCORP_LIST_SHOW_ACTION_WINDOW',
+                props: {
+                    value: idx,
+                    action: action
+                }
+            });
+        }
+
+        _handleActionsClose() {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_LIST_HIDE_ACTION_WINDOW',
                 props: {}
             });
         }
 
-        _handleActionButton(idx, evt) {
-            const newState = he.cloneState(this.state);
-            newState.actionBoxVisible = idx;
-            this.setState(newState);
-        }
-
-        _handleActionsClose() {
-            const newState = he.cloneState(this.state);
-            newState.actionBoxVisible = null;
-            this.setState(newState);
-        }
-
         render() {
             return (
-                <div>
+                <div className="SubcorpList">
                     <section className="inner">
                         <FilterForm filter={this.state.filter} relatedCorpora={this.state.relatedCorpora} />
                     </section>
-                    {this.state.actionBoxVisible !== null
-                        ? <ActionBox onCloseClick={this._handleActionsClose} idx={this.state.actionBoxVisible} />
+                    {this.state.actionBoxVisible > -1
+                        ? <ActionBox onCloseClick={this._handleActionsClose}
+                                idx={this.state.actionBoxVisible}
+                                data={this.state.actionBoxData}
+                                action={this.state.actionBoxActionType}
+                                modelIsBusy={this.state.modelIsBusy} />
                         : null}
                     <DataTable actionButtonHandle={this._handleActionButton} />
-                    <div className="actions">
-                        {this.state.hasSelectedLines
-                            ? <button type="button" className="default-button"
-                                onClick={this._handleDeleteButton}>{he.translate('subclist__delete_selected_btn')}</button>
-                            : null}
-                    </div>
                 </div>
             );
         }

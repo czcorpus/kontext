@@ -175,7 +175,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                             </a>
                             {this.state.showHelp
                                 ? <layoutViews.PopupBox onCloseClick={this._helpCloseHandler}
-                                        status="info" autoSize={true}>
+                                        status="info" autoWidth={true}>
                                         <div>{he.translate('query__tt_range_help_text')}</div>
                                     </layoutViews.PopupBox>
                                 : null}
@@ -742,7 +742,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                                 title={he.translate('global__alt_hint')} />
                         </a>
                         {this.state.metaInfoHelpVisible
-                            ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoSize={true}>
+                            ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoWidth={true}>
                                 {this.state.metaInfo.help}
                                 </layoutViews.PopupBox>)
                             : null}

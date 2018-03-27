@@ -138,16 +138,52 @@ export function init(
      */
     class PopupBox extends React.Component<CoreViews.PopupBox.Props, CoreViews.PopupBox.State> {
 
+        private customCss:{[key:string]:string};
+
+        private rootElm:HTMLElement;
+
+        private resize:(ref:HTMLElement)=>void;
+
         constructor(props) {
             super(props);
             this._handleKeyPress = this._handleKeyPress.bind(this);
             this._closeClickHandler = this._closeClickHandler.bind(this);
+            this._windowResizeHandler = this._windowResizeHandler.bind(this);
+
+            this.customCss = {};
+            this._createStyle();
+            if (this.props.autoWidth) {
+                this.resize = (ref) => {
+                    if (ref) {
+                        this.rootElm = ref;
+                        this.rootElm.style.minWidth = '5em';
+                        this.rootElm.style.overflow = 'auto';
+                        this.rootElm.style.width = `${(window.innerWidth / 2.618).toFixed()}px`;
+                    }
+                }
+
+            } else if (!this.customCss['width']) {
+                this.customCss['width'] = '31.9%';
+                this.resize = (_)=>undefined;
+
+            } else {
+                this.resize = (_)=>undefined;
+            }
+        }
+
+        private _windowResizeHandler():void {
+            this.resize(this.rootElm);
         }
 
         componentDidMount() {
             if (this.props.onReady) {
                 this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
             }
+            window.addEventListener('resize', this._windowResizeHandler);
+        }
+
+        componentWillUnmount() {
+            window.removeEventListener('resize', this._windowResizeHandler);
         }
 
         _closeClickHandler() {
@@ -157,13 +193,11 @@ export function init(
         }
 
         _createStyle() {
-            let css = {};
             for (let p in this.props.customStyle) {
                 if (this.props.customStyle.hasOwnProperty(p)) {
-                    css[p] = this.props.customStyle[p];
+                    this.customCss[p] = this.props.customStyle[p];
                 }
             }
-            return css;
         }
 
         _handleKeyPress(evt) {
@@ -196,13 +230,9 @@ export function init(
             if (this.props.customClass) {
                 classes.push(this.props.customClass);
             }
-            const css = this._createStyle();
-            if (this.props.autoSize) {
-                css['width'] = '31.9%';
-            }
 
             return (
-                <div className={classes.join(' ')} style={css}>
+                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}>
                     <div className="header">
                         {this._renderCloseButton()}
                         <StatusIcon status={this.props.status} />
@@ -251,39 +281,76 @@ export function init(
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    const CloseableFrame:React.SFC<CoreViews.CloseableFrame.Props> = (props) => {
+    class CloseableFrame extends React.PureComponent<CoreViews.CloseableFrame.Props> {
 
-        const closeClickHandler = () => {
-            if (typeof props.onCloseClick === 'function') {
-                props.onCloseClick();
+        private resizeFn:(elm:HTMLElement)=>void;
+
+        private rootElm:HTMLElement;
+
+        constructor(props) {
+            super(props);
+            this.closeClickHandler = this.closeClickHandler.bind(this);
+            this.windowResizeHandler = this.windowResizeHandler.bind(this);
+            this.resizeFn = this.props.autoWidth ?
+                (ref) => {
+                    if (ref) {
+                        this.rootElm = ref;
+                        this.rootElm.style.overflow = 'auto';
+                        this.rootElm.style.width = `${(window.innerWidth / 1.618).toFixed()}px`;
+                    }
+                } :
+                (_) => undefined;
+        }
+
+        private closeClickHandler() {
+            if (typeof this.props.onCloseClick === 'function') {
+                this.props.onCloseClick();
             }
-        };
-        const style = {
-            width: '1.5em',
-            height: '1.5em',
-            float: 'right',
-            cursor: 'pointer',
-            fontSize: '1em'
-        };
-        const htmlClass = 'closeable-frame' + (props.customClass ? ` ${props.customClass}` : '');
-        return (
-            <section className={htmlClass} style={props.scrollable ? {overflowY: 'auto'} : {}}>
-                <div className="heading">
-                    <div className="control">
-                        <ImgWithMouseover htmlClass="close-icon"
-                                src={he.createStaticUrl('img/close-icon_s.svg')}
-                                src2={he.createStaticUrl('img/close-icon.svg')}
-                                clickHandler={closeClickHandler}
-                                alt={he.translate('global__close_the_window')} />
+        }
+
+        private windowResizeHandler() {
+            this.resizeFn(this.rootElm);
+        }
+
+        componentDidMount() {
+            window.addEventListener('resize', this.windowResizeHandler);
+        }
+
+        componentWillUnmount() {
+            window.removeEventListener('resize', this.windowResizeHandler);
+        }
+
+        render() {
+            const style = {
+                width: '1.5em',
+                height: '1.5em',
+                float: 'right',
+                cursor: 'pointer',
+                fontSize: '1em'
+            };
+
+            const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
+
+            return (
+                <section className={htmlClass} style={this.props.scrollable ? {overflowY: 'auto'} : {}}
+                        ref={this.resizeFn}>
+                    <div className="heading">
+                        <div className="control">
+                            <ImgWithMouseover htmlClass="close-icon"
+                                    src={he.createStaticUrl('img/close-icon_s.svg')}
+                                    src2={he.createStaticUrl('img/close-icon.svg')}
+                                    clickHandler={this.closeClickHandler}
+                                    alt={he.translate('global__close_the_window')} />
+                        </div>
+                        <h2>
+                            {this.props.label}
+                        </h2>
                     </div>
-                    <h2>
-                        {props.label}
-                    </h2>
-                </div>
-                {props.children}
-            </section>
-        );
-    };
+                    {this.props.children}
+                </section>
+            );
+        }
+    }
 
     // ------------------------------ <InlineHelp /> -----------------------------
 

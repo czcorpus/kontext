@@ -44,8 +44,8 @@ export interface SubcorpListItem {
     created:Date;
     cql:string;
     size:number;
-    selected:boolean;
     published:boolean;
+    description:string;
 }
 
 export interface UnfinishedSubcorp {
@@ -75,6 +75,12 @@ export class SubcorpListModel extends StatefulModel {
 
     private isBusy:boolean;
 
+    private actionBoxVisibleRow:number;
+
+    private actionBoxActionType:string;
+
+    private deleteLocked:boolean;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
@@ -87,6 +93,9 @@ export class SubcorpListModel extends StatefulModel {
         this.relatedCorpora = Immutable.List<string>(relatedCorpora);
         this.sortKey = sortKey;
         this.filter = initialFilter || {show_deleted: false, corpname: ''};
+        this.actionBoxVisibleRow = -1;
+        this.actionBoxActionType = 'pub';
+        this.deleteLocked = true;
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             if (itemList.filter(item => item.category == 'subcorpus').size > 0) {
@@ -104,10 +113,6 @@ export class SubcorpListModel extends StatefulModel {
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
-                case 'SUBCORP_LIST_SELECT_LINE':
-                    this.selectLine(payload.props['idx']);
-                    this.notifyChangeListeners();
-                break;
                 case 'SUBCORP_LIST_SORT_LINES':
                     this.sortItems(payload.props['colName'], payload.props['reverse']).then(
                         (data) => {
@@ -119,13 +124,13 @@ export class SubcorpListModel extends StatefulModel {
                         }
                     )
                 break;
-                case 'SUBCORP_LIST_DELETE_SELECTED_SUBCORPORA':
-                    this.deleteSelectedSubcorpora().then(
+                case 'SUBCORP_LIST_DELETE_SUBCORPUS':
+                    this.deleteSubcorpus(payload.props['rowIdx']).then(
                         (data) => {
                             this.notifyChangeListeners();
                             this.layoutModel.showMessage(
                                 'info',
-                                this.layoutModel.translate('subclist__sel_subcorpora_deleted')
+                                this.layoutModel.translate('subclist__subc_deleted')
                             );
                         },
                         (err) => {
@@ -144,6 +149,19 @@ export class SubcorpListModel extends StatefulModel {
                             this.layoutModel.showMessage('error', err);
                         }
                     )
+                break;
+                case 'SUBCORP_LIST_SHOW_ACTION_WINDOW':
+                    this.actionBoxVisibleRow = payload.props['value'];
+                    this.actionBoxActionType = payload.props['action'];
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_LIST_HIDE_ACTION_WINDOW':
+                    this.actionBoxVisibleRow = -1;
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_LIST_SET_ACTION_BOX_TYPE':
+                    this.actionBoxActionType = payload.props['value'];
+                    this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_LIST_WIPE_SUBCORPUS':
                     this.wipeSubcorpus(payload.props['idx']).then(
@@ -184,12 +202,11 @@ export class SubcorpListModel extends StatefulModel {
                         }
                     );
                 break;
-                case 'SUBCORP_LIST_PUBLISH_ITEM':
-                // TODO description !!!
+                case 'SUBCORP_LIST_PUBLISH_SUBCORPUS':
                     this.isBusy = true;
+                    this.notifyChangeListeners();
                     this.publishSubcorpus(
-                                payload.props['corpname'],
-                                payload.props['subcname'],
+                                payload.props['rowIdx'],
                                 payload.props['description']).then(
                         (_) => {
                             this.isBusy = false;
@@ -206,20 +223,114 @@ export class SubcorpListModel extends StatefulModel {
                         }
                     );
                 break;
+                case 'SUBCORP_LIST_LOCK_DELETE_FUNC':
+                    this.deleteLocked = true;
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_LIST_UNLOCK_DELETE_FUNC':
+                    this.deleteLocked = false;
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION': {
+                    try {
+                        this.updateSubcDesc(payload.props['rowIdx'], payload.props['description']);
+
+                    } catch (e) {
+                        this.layoutModel.showMessage('error', e);
+                    }
+                    this.notifyChangeListeners();
+                }
+                break;
+                case 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT':
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.updateSubcorpusDescSubmit(
+                            payload.props['rowIdx']).then(
+                        (_) => {
+                            this.isBusy = false;
+                            this.layoutModel.showMessage(
+                                'info',
+                                this.layoutModel.translate('subclist__subc_desc_updated')
+                            );
+                            this.notifyChangeListeners();
+                        },
+                        (err) => {
+                            this.isBusy = false;
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                        }
+                    );
+                break;
             }
         });
     }
 
-    private publishSubcorpus(corpname:string, subcname:string, description:string):RSVP.Promise<any> {
+    private updateSubcorpusDescSubmit(rowIdx:number):RSVP.Promise<any> {
+        const data = this.lines.get(rowIdx);
         const args = new MultiDict();
-        args.set('subcname', subcname);
-        args.set('corpname', corpname);
+        args.set('corpname', data.corpname);
+        args.set('usesubcorp', data.usesubcorp);
+        args.set('description', data.description);
+
+        return this.layoutModel.ajax(
+            'POST',
+            this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
+            args
+        );
+    }
+
+    private updateSubcDesc(idx:number, desc:string):void {
+        const data = this.lines.get(idx);
+        if (data.deleted) {
+            throw new Error('Cannot change public description of a deleted subcorpus');
+        }
+        this.lines = this.lines.set(idx, {
+            name: data.name,
+            corpname: data.corpname,
+            usesubcorp: data.usesubcorp,
+            deleted: data.deleted,
+            created: data.created,
+            cql: data.cql,
+            size: data.size,
+            published: data.published,
+            description: desc
+        });
+    }
+
+    private publishSubcorpus(rowIdx:number, description:string):RSVP.Promise<any> {
+        const srchIdx = this.lines.findIndex((_, i) => i === this.actionBoxVisibleRow);
+        if (srchIdx === -1) {
+            throw new Error('Row not found');
+        }
+        const data = this.lines.get(srchIdx);
+        if (data.deleted) {
+            return RSVP.reject(new Error('Cannot publish deleted subcorpus'));
+        }
+
+        const args = new MultiDict();
+        args.set('corpname', data.corpname);
+        args.set('subcname', data.usesubcorp);
         args.set('description', description);
         return this.layoutModel.ajax(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
             args
-        );
+
+        ).then(
+            (_) => {
+                this.lines = this.lines.set(srchIdx, {
+                    name: data.name,
+                    corpname: data.corpname,
+                    usesubcorp: data.usesubcorp,
+                    deleted: data.deleted,
+                    created: data.created,
+                    cql: data.cql,
+                    size: data.size,
+                    published: true,
+                    description: description
+                });
+            }
+        )
     }
 
     private createSubcorpus(idx:number, subcname?:string, cql?:string):RSVP.Promise<any> {
@@ -295,7 +406,8 @@ export class SubcorpListModel extends StatefulModel {
                 cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
                 created: new Date(item.created * 1000),
                 selected: false,
-                published: item.published
+                published: item.published,
+                description: item.description
             }
         }));
     }
@@ -310,20 +422,19 @@ export class SubcorpListModel extends StatefulModel {
         }));
     }
 
-    private deleteSelectedSubcorpora():RSVP.Promise<any> {
-        const selSubc = this.lines.filter(item => item.selected).map(item => {
-            return {
-                corpname: item.corpname,
-                subcname: item.usesubcorp
-            };
-        });
+    private deleteSubcorpus(rowIdx:number):RSVP.Promise<any> {
+        const item = this.lines.get(rowIdx);
+        if (!item) {
+            return RSVP.reject(new Error(`Cannot delete item. Row ${rowIdx} not found.`));
+        }
+        const args = new MultiDict();
+        args.set('corpname', item.corpname);
+        args.set('usesubcorp', item.usesubcorp);
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/delete'),
-            selSubc,
-            {
-                contentType : 'application/json'
-            }
+            args,
+
         ).then(
             (data) => {
                 return this.reloadItems();
@@ -409,10 +520,10 @@ export class SubcorpListModel extends StatefulModel {
             created: line.created,
             deleted: line.deleted,
             name: line.name,
-            selected: !line.selected,
             size: line.size,
             usesubcorp: line.usesubcorp,
-            published: line.published
+            published: line.published,
+            description: line.description
         });
     }
 
@@ -422,10 +533,6 @@ export class SubcorpListModel extends StatefulModel {
 
     getSortKey():SortKey {
         return this.sortKey;
-    }
-
-    hasSelectedLines():boolean {
-        return this.lines.find(item => item.selected) !== undefined;
     }
 
     getFilter():SubcListFilter {
@@ -442,6 +549,22 @@ export class SubcorpListModel extends StatefulModel {
 
     getRelatedCorpora():Immutable.List<string> {
         return this.relatedCorpora;
+    }
+
+    getActionBoxVisibleRow():number {
+        return this.actionBoxVisibleRow;
+    }
+
+    getActionBoxActionType():string {
+        return this.actionBoxActionType;
+    }
+
+    getIsBusy():boolean {
+        return this.isBusy;
+    }
+
+    getDeleteLocked():boolean {
+        return this.deleteLocked;
     }
 }
 
