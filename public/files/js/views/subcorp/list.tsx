@@ -539,7 +539,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         render() {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-                    <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
+                    <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions"
+                            autoWidth={true}>
                         <div>
                             <h3>{he.translate('subclist__backup_of_{subcname}', {subcname: this.state.data.name})}</h3>
                             <span className="actions">
