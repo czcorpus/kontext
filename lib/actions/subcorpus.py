@@ -244,16 +244,26 @@ class Subcorpus(Querying):
     def _create_full_subc_list(self, queries, subc_files):
         pass
 
-    @exposed(access_level=1, skip_corpus_init=True, http_method='POST', return_type='json')
-    def delete(self, request):
-        selected_corpora = json.loads(request.get_data())
-        subc_user_path = self.subcpath[-1]
-        for item in selected_corpora:
+    @exposed(access_level=1, http_method='POST', return_type='json')
+    def delete(self, _):
+        spath = self.corp.spath
+        orig_spath = self.corp.orig_spath
+        if orig_spath:
             try:
-                os.unlink(os.path.join(subc_user_path, item['corpname'],
-                                       item['subcname']).encode('utf-8') + '.subc')
-            except TypeError as e:
-                self.add_system_message('error', e)
+                os.unlink(orig_spath)
+            except IOError as e:
+                logging.getLogger(__name__).warning(e)
+            pub_link = os.path.splitext(orig_spath)[0] + '.pub'
+            if os.path.islink(pub_link):
+                try:
+                    os.unlink(pub_link)
+                except IOError as e:
+                    logging.getLogger(__name__).warning(e)
+        elif not self.corp.is_published:
+            try:
+                os.unlink(spath)
+            except IOError as e:
+                logging.getLogger(__name__).warning(e)
         return {}
 
     @exposed(access_level=1, skip_corpus_init=True)
@@ -274,7 +284,7 @@ class Subcorpus(Querying):
         for corp in user_corpora:
             for item in self.cm.subcorp_names(corp):
                 try:
-                    sc = self.cm.get_Corpus(corp, subcname=item['n'])
+                    sc = self.cm.get_Corpus(corp, subcname=item['n'], decode_desc=False)
                     data.append({
                         'name': '%s:%s' % (corp, item['n']),
                         'size': sc.search_size(),
@@ -283,6 +293,7 @@ class Subcorpus(Querying):
                         'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': item['n'],
                         'deleted': False,
+                        'description': sc.description,
                         'published': corplib.subcorpus_is_published(sc.spath)
                     })
                     related_corpora.add(corp)
@@ -332,11 +343,11 @@ class Subcorpus(Querying):
         ans = {
             'corpusName': self.args.corpname,
             'subCorpusName': subcname,
-            'origSubCorpusName': getattr(sc, 'orig_subcname', subcname),
+            'origSubCorpusName': sc.orig_subcname if sc.is_published else subcname,
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size()),
             'created': time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
-            'description': getattr(sc, 'description', None),
+            'description': sc.description,
             'extended_info': {}
         }
         if plugins.runtime.SUBC_RESTORE.exists:
@@ -371,3 +382,10 @@ class Subcorpus(Querying):
             return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
         else:
             raise UserActionException('Subcorpus {0} not found'.format(subcname))
+
+    @exposed(access_level=1, return_type='json', http_method='POST')
+    def update_public_desc(self, request):
+        if not self.corp.is_published:
+            raise UserActionException('Corpus is not published - cannot change description')
+        corplib.rewrite_subc_desc(self.corp.spath, request.form['description'])
+        return {}

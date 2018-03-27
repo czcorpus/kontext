@@ -45,6 +45,7 @@ export namespace AjaxResponse {
         size:number;
         name:string;
         published:boolean;
+        description:string;
     }
 
     export interface SubcorpList extends Kontext.AjaxResponse {

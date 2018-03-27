@@ -117,6 +117,29 @@ def subcorpus_is_published(subcpath):
     return stat.st_nlink > 1
 
 
+def get_subcorp_pub_info(spath):
+    orig_path = None
+    desc = None
+    namepath = os.path.splitext(spath)[0] + '.name'
+
+    if os.path.isfile(namepath):
+        with open(namepath, 'r') as nf:
+            desc = ''
+            for i, line in enumerate(nf):
+                if i == 0:
+                    orig_path = line.strip()
+                elif i > 1:
+                    desc += line
+    return orig_path, desc
+
+
+def rewrite_subc_desc(publicpath, desc):
+    orig_path, _ = get_subcorp_pub_info(publicpath)
+    with open(os.path.splitext(publicpath)[0] + '.name', 'w') as fw:
+        fw.write(orig_path + '\n\n')
+        fw.write(desc)
+
+
 def mk_publish_links(subcpath, publicpath, desc):
     orig_cwd = os.getcwd()
     os.chdir(os.path.dirname(subcpath))
@@ -152,21 +175,7 @@ class CorpusManager(object):
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def _get_subcorp_pub_info(self, spath):
-        orig_path = None
-        desc = None
-        namepath = os.path.splitext(spath)[0] + '.name'
-        if os.path.isfile(namepath):
-            with open(namepath, 'r') as nf:
-                desc = ''
-                for i, line in enumerate(nf):
-                    if i == 0:
-                        orig_path = line.strip()
-                    elif i > 1:
-                        desc += line
-        return orig_path, desc
-
-    def _open_subcorpus(self, corpname, subcname, corp, spath):
+    def _open_subcorpus(self, corpname, subcname, corp, spath, decode_desc):
         subc = manatee.SubCorpus(corp, spath)
         subc.corp = corp
         subc.spath = spath
@@ -179,15 +188,21 @@ class CorpusManager(object):
         subc.cm = self
         subc.subchash = md5(open(spath).read()).hexdigest()
         subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
-        orig_path, desc = self._get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
+        subc.is_published = subcorpus_is_published(spath)
+        orig_path, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
         if orig_path:
             subc.orig_spath = orig_path
             subc.orig_subcname = os.path.splitext(os.path.basename(orig_path))[0]
+        else:
+            subc.orig_spath = None
+            subc.orig_subcname = None
         if desc:
-            subc.description = markdown(desc)
+            subc.description = markdown(desc) if decode_desc else desc
+        else:
+            subc.description = None
         return subc
 
-    def get_Corpus(self, corpname, corp_variant='', subcname=''):
+    def get_Corpus(self, corpname, corp_variant='', subcname='', decode_desc=True):
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -205,6 +220,7 @@ class CorpusManager(object):
         registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
         corp = manatee.Corpus(registry_file)
         corp.corpname = str(corpname)  # never unicode (paths)
+        corp.is_published = False
         corp.cm = self
 
         if subcname:
@@ -215,7 +231,7 @@ class CorpusManager(object):
                 if type(spath) == unicode:
                     spath = spath.encode('utf-8')
                 if os.path.isfile(spath):
-                    subc = self._open_subcorpus(corpname, subcname, corp, spath)
+                    subc = self._open_subcorpus(corpname, subcname, corp, spath, decode_desc)
                     self._cache[cache_key] = subc
                     return subc
             raise RuntimeError(_('Subcorpus "%s" not found') % subcname)
