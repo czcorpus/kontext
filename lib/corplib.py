@@ -246,17 +246,15 @@ class CorpusManager(object):
     def subc_files(self, corpname):
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
         enc_corpname = corpname.encode('utf-8')
-        subc = []
         sp = self.subcpath[0]
         items = []
         for x in glob.glob(os.path.join(sp, enc_corpname, '*.subc').encode('utf-8')):
             try:
                 items.append(x.decode('utf-8'))
-            except UnicodeDecodeError as e:
+            except UnicodeDecodeError:
                 logging.getLogger(__name__).warning(
                     'Subcorpus filename encoding problem. File: %s' % x)
-        subc.extend(items)
-        return sorted(subc)
+        return sorted(items)
 
     def subcorp_names(self, corpname):
         return [dict(n=os.path.splitext(os.path.basename(s))[0],
