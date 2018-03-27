@@ -299,9 +299,10 @@ class Kontext(Controller):
 
     def _setup_user_paths(self):
         user_id = self.session_get('user', 'id')
+        self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
         if not self.user_is_anonymous():
-            self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id)),
-                             os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
+            self.subcpath.insert(0, os.path.join(settings.get(
+                'corpora', 'users_subcpath'), str(user_id)))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
     def _user_has_persistent_settings(self):
