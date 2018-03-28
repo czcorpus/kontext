@@ -40,6 +40,8 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
 
     private availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
 
+    private corpora:Immutable.List<string>;
+
     constructor({layoutModel, dispatcher, usesubcorp, origSubcorpName, corpora, availSubcorpora=[]}:{
             layoutModel:PageModel;
             dispatcher:ActionDispatcher;
@@ -52,6 +54,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
         this.currentSubcorp = usesubcorp;
         this.origSubcorpName = origSubcorpName;
         this.availSubcorpora = Immutable.List<Kontext.SubcorpListItem>(availSubcorpora);
+        this.corpora = Immutable.List<string>(corpora);
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -87,6 +90,6 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
     }
 
     getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
+        return this.corpora;
     }
 }
