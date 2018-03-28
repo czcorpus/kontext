@@ -53,7 +53,10 @@ import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 
 declare var require:any; // webpack's require
-require('styles/kontext.less');
+require('styles/layout.less');
+require('styles/widgets.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 
 export enum DownloadType {
