@@ -23,6 +23,11 @@ import * as React from 'react';
 
 export namespace CoreViews {
 
+    export enum AutoWidth {
+        WIDE = 'wide',
+        NARROW = 'narrow'
+    }
+
     export namespace ErrorBoundary {
         export type Component = React.ComponentClass<{}>;
     }
@@ -80,7 +85,7 @@ export namespace CoreViews {
 
             customClass?:string;
 
-            autoWidth?:boolean;
+            autoWidth?:CoreViews.AutoWidth;
 
             children:React.ReactNode;
         }
@@ -119,7 +124,7 @@ export namespace CoreViews {
             onCloseClick:()=>void;
             customClass?:string;
             scrollable?:boolean;
-            autoWidth?:boolean;
+            autoWidth?:CoreViews.AutoWidth;
             label:string;
             children:React.ReactNode;
         }

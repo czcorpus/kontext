@@ -23,6 +23,7 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem} from '../../models/subcorp/list';
+import { CoreViews } from '../../types/coreViews';
 
 
 export interface SubcorpListProps {
@@ -637,7 +638,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
                 <textarea id="inp_3IDJH" cols={60} rows={10}
                         onChange={this.handleTextAreaChange}
-                        value={this.props.description} />
+                        value={this.props.description || ''} />
                 <p className="note">({he.translate('global__markdown_supported')})</p>
                 <div>
                     <PublishSubmitButton onSubmit={this.props.published ? this.handleSubmitUpdateDesc :
@@ -693,7 +694,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
                     <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
                             customClass="subcorp-actions"
-                            autoWidth={true}
+                            autoWidth={CoreViews.AutoWidth.WIDE}
                             label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
                         <div>
                             <ActionMenu hasCQLBackup={!!this.props.data.cql}

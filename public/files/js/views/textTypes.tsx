@@ -25,6 +25,7 @@ import {PluginInterfaces} from '../types/plugins';
 import {Kontext, TextTypes} from '../types/common';
 import { TextTypesModel } from '../models/textTypes/attrValues';
 import { ExtendedInfo } from '../models/textTypes/valueSelections';
+import { CoreViews } from '../types/coreViews';
 
 
 export interface TextTypesPanelProps {
@@ -175,7 +176,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                             </a>
                             {this.state.showHelp
                                 ? <layoutViews.PopupBox onCloseClick={this._helpCloseHandler}
-                                        status="info" autoWidth={true}>
+                                        status="info" autoWidth={CoreViews.AutoWidth.NARROW}>
                                         <div>{he.translate('query__tt_range_help_text')}</div>
                                     </layoutViews.PopupBox>
                                 : null}
@@ -742,7 +743,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                                 title={he.translate('global__alt_hint')} />
                         </a>
                         {this.state.metaInfoHelpVisible
-                            ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoWidth={true}>
+                            ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info"
+                                        autoWidth={CoreViews.AutoWidth.NARROW}>
                                 {this.state.metaInfo.help}
                                 </layoutViews.PopupBox>)
                             : null}

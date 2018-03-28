@@ -21,8 +21,23 @@ import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {ActionDispatcher} from '../app/dispatcher';
+import {isTouchDevice} from '../util';
 
 
+const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
+    if (isTouchDevice()) {
+        return window.innerWidth;
+
+    } else if (val === CoreViews.AutoWidth.NARROW) {
+        return window.innerWidth / 2.618;
+
+    } else if (val === CoreViews.AutoWidth.WIDE) {
+        return window.innerWidth / 1.618;
+
+    } else {
+        throw new Error('Cannot calc auto-width - no valid value provided');
+    }
+}
 
 
 export function init(
@@ -158,13 +173,9 @@ export function init(
                         this.rootElm = ref;
                         this.rootElm.style.minWidth = '5em';
                         this.rootElm.style.overflow = 'auto';
-                        this.rootElm.style.width = `${(window.innerWidth / 2.618).toFixed()}px`;
+                        this.rootElm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
                     }
                 }
-
-            } else if (!this.customCss['width']) {
-                this.customCss['width'] = '31.9%';
-                this.resize = (_)=>undefined;
 
             } else {
                 this.resize = (_)=>undefined;
@@ -296,7 +307,7 @@ export function init(
                     if (ref) {
                         this.rootElm = ref;
                         this.rootElm.style.overflow = 'auto';
-                        this.rootElm.style.width = `${(window.innerWidth / 1.618).toFixed()}px`;
+                        this.rootElm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
                     }
                 } :
                 (_) => undefined;
