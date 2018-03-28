@@ -21,8 +21,23 @@ import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {ActionDispatcher} from '../app/dispatcher';
+import {isTouchDevice} from '../util';
 
 
+const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
+    if (isTouchDevice()) {
+        return window.innerWidth;
+
+    } else if (val === CoreViews.AutoWidth.NARROW) {
+        return window.innerWidth / 2.618;
+
+    } else if (val === CoreViews.AutoWidth.WIDE) {
+        return window.innerWidth / 1.618;
+
+    } else {
+        throw new Error('Cannot calc auto-width - no valid value provided');
+    }
+}
 
 
 export function init(
@@ -158,13 +173,9 @@ export function init(
                         this.rootElm = ref;
                         this.rootElm.style.minWidth = '5em';
                         this.rootElm.style.overflow = 'auto';
-                        this.rootElm.style.width = `${(window.innerWidth / 2.618).toFixed()}px`;
+                        this.rootElm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
                     }
                 }
-
-            } else if (!this.customCss['width']) {
-                this.customCss['width'] = '31.9%';
-                this.resize = (_)=>undefined;
 
             } else {
                 this.resize = (_)=>undefined;
@@ -296,7 +307,7 @@ export function init(
                     if (ref) {
                         this.rootElm = ref;
                         this.rootElm.style.overflow = 'auto';
-                        this.rootElm.style.width = `${(window.innerWidth / 1.618).toFixed()}px`;
+                        this.rootElm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
                     }
                 } :
                 (_) => undefined;
@@ -580,7 +591,7 @@ export function init(
             if (props.usesubcorp) {
                 return (
                     <>
-                        <strong>:</strong>
+                        {'\u00a0'}<strong>/</strong>{'\u00a0'}
                         {getSubcName()}
                     </>
                 );
@@ -645,6 +656,14 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
+    const DelItemIcon:React.SFC<CoreViews.DelItemIcon.Props> = (props) => {
+        return <a className={`DelItemIcon ${props.disabled ? 'disabled' : ''} ${props.className}`}
+                    onClick={props.onClick && !props.disabled ? props.onClick : undefined}
+                    title={props.title}>{'\u274C'}</a>;
+    };
+
+    // ------------------------------------------------------------------------------------
+
     return {
         ErrorBoundary: ErrorBoundary,
         ModalOverlay: ModalOverlay,
@@ -658,6 +677,7 @@ export function init(
         AjaxLoaderImage: AjaxLoaderImage,
         AjaxLoaderBarImage: AjaxLoaderBarImage,
         Shortener: Shortener,
-        StatusIcon: StatusIcon
+        StatusIcon: StatusIcon,
+        DelItemIcon: DelItemIcon
     };
 }

@@ -203,7 +203,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
         const numPages = props.lastPage ? props.lastPage : props.currentPage;
         return (
-            <div className="bonito-pagination-core">
+            <div className="ktx-pagination-core">
                 <span className="curr-page">{renderCurrentPage(numPages)}</span>
                 {'\u00A0/\u00A0'}
                 <span className="numofpages">{he.formatNumber(numPages)}</span>
@@ -281,9 +281,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
         render() {
             return (
-                <div className="bonito-pagination">
+                <div className="ktx-pagination">
                     {this.state.currentPage > 1 ?
-                        (<div className="bonito-pagination-left">
+                        (<div className="ktx-pagination-left">
                             <FirstPgButton clickHandler={this._navigActionHandler} />
                             <PrevPgButton clickHandler={this._navigActionHandler} />
                         </div>) : null}
@@ -297,7 +297,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
                         inputKeyDownHandler={this._inputKeyDownHandler} />
 
                     {this.state.currentPage < this.state.lastPage ?
-                        (<div className="bonito-pagination-right">
+                        (<div className="ktx-pagination-right">
                             <NextPgButton clickHandler={this._navigActionHandler} />
                             <LastPgButton clickHandler={this._navigActionHandler} />
                         </div>) : null}

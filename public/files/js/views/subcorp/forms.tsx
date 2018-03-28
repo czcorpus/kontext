@@ -311,7 +311,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             <input type="checkbox" onChange={handleCheckbox} checked={props.value}
                     style={{verticalAlign: 'middle'}} />
             <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
-                {he.translate('subcform__public_must_be_unique')})
+                {he.translate('subcform__publication_notes')})
             </layoutViews.InlineHelp>
         </div>;
     };

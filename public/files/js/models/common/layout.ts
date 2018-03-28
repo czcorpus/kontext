@@ -184,6 +184,7 @@ export interface CorpusInfo extends CorpusInfoResponse {
 }
 
 export interface SubcorpusInfoResponse {
+    corpusId:string;
     corpusName:string;
     corpusSize:string; // formatted num
     created:string;

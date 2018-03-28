@@ -1,0 +1,131 @@
+@import "./shared/globals.less";
+
+@media screen and (max-width: 479px) {
+
+    #logo-wrapper {
+        display: block !important;
+        text-align: left;
+    }
+
+    header#topbar .navig-wrapper {
+        display: block;
+        width: 100%;
+        padding: 0.7em;
+    }
+
+    #main-menu-mount {
+        margin-left: 0;
+        display: block;
+        width: 80%;
+    }
+
+    #menu-bar {
+        margin: 0;
+        font-size: 1.3em;
+        white-space: normal;
+        height: auto;
+        display: block;
+    }
+
+    #menu-level-1 {
+        display: block;
+    }
+
+    #menu-level-1 li {
+        display: block;
+        text-align: left;
+
+        ul.submenu {
+            width: 90%;
+        }
+    }
+
+    #menu-level-1 li.disabled {
+        display: none;
+    }
+
+    #menu-level-1 li.separator {
+        display: none;
+    }
+
+    #topbar {
+        white-space: normal;
+    }
+
+    #content {
+        padding: 0.5em 0 1em 0;
+    }
+
+    #content > section {
+        min-width: 0;
+        display: block;
+        padding-bottom: 1em;
+    }
+
+    section.inner {
+        margin: 0;
+        padding: 1em 0 1em 0;
+    }
+
+    #menu-level-1 > li {
+        display: block;
+    }
+
+    #menu-level-1 > li.active {
+        border: none;
+        background-color: transparent;
+
+        > a {
+            color: @color-logo-blue;
+        }
+    }
+
+    #menu-level-1 > li.active ul.submenu {
+        position: initial;
+        margin-left: 1em;
+        margin-top: -0.1em;
+        li {
+            padding: 0;
+        }
+    }
+
+    .ktx-pagination a > img {
+        height: 1.5em;
+    }
+
+    #modal-overlay > .tooltip-box,
+    #modal-overlay .closeable-frame {
+        transform: none;
+        left: 0;
+        top: 10%;
+        width: 100%;
+    }
+
+    header#topbar #menu-bar,
+    header#topbar .corpus-and-query {
+        white-space: initial;
+    }
+
+    header#topbar .corpus-and-query {
+        padding-top: 0.7em;
+        border-width: 1px 0 0 0;
+        border-style: solid;
+        border-color: @color-light-text;
+    }
+
+    section.closeable-frame .heading div.control img {
+        width: 1.5em;
+        height: 1.5em;
+    }
+
+    #conc-dashboard-mount .ktx-pagination {
+        float: initial !important;
+        display: block;
+        width: 100% !important;
+        padding-bottom: 1em;
+    }
+
+    #result-info {
+        width: 100% !important;
+    }
+}

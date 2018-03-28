@@ -59,7 +59,7 @@ export class SubcorpForm {
 
     private layoutModel:PageModel;
 
-    private corplistComponent:any;
+    private corplistComponent:PluginInterfaces.ICorparchCorpSelection;
 
     private viewComponents:any; // TODO types
 

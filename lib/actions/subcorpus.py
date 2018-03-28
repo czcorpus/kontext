@@ -340,16 +340,17 @@ class Subcorpus(Querying):
     @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
-        ans = {
-            'corpusName': self.args.corpname,
-            'subCorpusName': subcname,
-            'origSubCorpusName': sc.orig_subcname if sc.is_published else subcname,
-            'corpusSize': format_number(sc.size()),
-            'subCorpusSize': format_number(sc.search_size()),
-            'created': time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
-            'description': sc.description,
-            'extended_info': {}
-        }
+        ans = dict(
+            corpusId=self.args.corpname,
+            corpusName=self._human_readable_corpname(),
+            subCorpusName=subcname,
+            origSubCorpusName=sc.orig_subcname if sc.is_published else subcname,
+            corpusSize=format_number(sc.size()),
+            subCorpusSize=format_number(sc.search_size()),
+            created=time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
+            description=sc.description,
+            extended_info={}
+        )
         if plugins.runtime.SUBC_RESTORE.exists:
             with plugins.runtime.SUBC_RESTORE as sr:
                 tmp = sr.get_info(self.session_get('user', 'id'), self.args.corpname, subcname)

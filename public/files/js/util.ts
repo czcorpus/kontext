@@ -243,3 +243,11 @@ export function importColor(color:string, opacity:number):Kontext.RGBAColor {
 export function uid():string {
     return `${new Date().getTime()}${Math.random()}`.substr(2);
 }
+
+/**
+ * note: this has only a limited reliability
+ */
+export function isTouchDevice():boolean {
+    return 'ontouchstart' in window &&
+        window.matchMedia('screen and (max-width: 479px)').matches;
+}

@@ -113,7 +113,7 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         };
 
         return (
-            <div className="parallel-corp-lang">
+            <div className="AlignedCorpBlock">
                 <div className="heading">
                     <a className="make-primary" title={he.translate('query__make_corpus_primary')}
                             onClick={handleMakeMainClick}>

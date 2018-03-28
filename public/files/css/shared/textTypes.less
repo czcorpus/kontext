@@ -1,0 +1,220 @@
+@import "./globals.less";
+
+// used in text types
+table.envelope {
+    background-color: #FFFFFF;
+    border: solid 1px @color-light-frame;
+    border-radius: @border-radius-default;
+    border-spacing: 0;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 10px;
+    margin-bottom: 15px;
+
+    table {
+        border-spacing: 0;
+
+        td, th {
+            padding: 0.4em 1em;
+        }
+
+        td:last-child {
+            padding-right: 1.6em;
+            padding-left: 0;
+        }
+
+        label {
+            display: inline-block;
+            max-width: 20em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    tr.attrib-name {
+        th {
+            padding: 0.6em 1em;
+
+            span.info-link {
+
+                font-size: 0.9em;
+                color: @color-light-text;
+
+                a {
+                    font-weight: normal;
+                    background-image: url('../../img/external-link.png');
+                    background-repeat: no-repeat;
+                    background-position: 100% 0;
+                    padding-right: 12px;
+                    color: @color-light-text;
+                    text-decoration: none;
+                }
+
+                a:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+        th.focused {
+            color: @color-logo-pink;
+        }
+    }
+
+    input[type="text"] {
+        width: 15em;
+    }
+
+    td.extended-info {
+        width: 1.4em;
+        height: 1.4em;
+    }
+
+    td > div.scrollable {
+        display: block;
+        overflow-x: hidden;
+        overflow-y: auto;
+        width: 100%;
+        max-height: 300px;
+    }
+
+    > tbody > tr > td input[type="checkbox"] {
+        display: inline;
+        margin: 0 5px 0 0;
+        padding: 0;
+        vertical-align: bottom;
+    }
+
+    > tbody > tr > td label {
+        margin: 0;
+        padding: 0;
+    }
+
+    > tbody > tr > td label.select-all {
+        padding-left: 8px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    > tbody > tr > td label.select-all {
+        color: @color-logo-blue;
+    }
+
+    > tbody > tr > td,
+    > tbody > tr > th {
+        margin: 0;
+        padding: 5px 0;
+        white-space: nowrap;
+    }
+
+    > tbody > tr > td.separ {
+        border-color: @color-light-frame;
+        border-style: solid;
+        border-width: 0 1px 0 0;
+    }
+
+    > tbody > tr > th {
+        color: @color-default-text;
+        background-color: @color-data-table-footer;
+        padding-top: 10px;
+        padding-bottom: 8px;
+    }
+
+    > tbody > tr.last-line td {
+        background-color: @color-data-table-footer;
+    }
+
+    tr.excluded {
+        display: none;
+    }
+
+    .scrollable ul.auto-complete {
+        position: absolute;
+        list-style-type: none;
+        max-height: 15em;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        background-color: #FFFFFF;
+        box-shadow: @portal-box-shadow;
+        border: 1px solid @color-default-green;
+
+        li {
+            padding: 0.3em 0.7em;
+            margin: 0;
+
+            a {
+                text-decoration: none;
+            }
+        }
+    }
+
+    .metadata {
+        font-size: 80%;
+        color: @color-light-text;
+        text-align: center;
+    }
+}
+
+table.envelope.aligned {
+
+    th,
+    td {
+        input[type="checkbox"] {
+            padding-left: 1em;
+        }
+    }
+
+    td.note {
+        p {
+            max-width: 17em;
+            padding: 0;
+            margin: 0.4em 0 0 0;
+        }
+        color: @color-light-text;
+        white-space: normal;
+        font-size: 0.8em;
+        padding: 0.4em 1em;
+    }
+}
+
+table.envelope.locked {
+    border: 1px solid @locked-attrs-bgcolor;
+
+    > tbody > tr > th {
+        background-color: @locked-attrs-bgcolor;
+    }
+
+    > tbody > tr.last-line td {
+        background-color: @locked-attrs-bgcolor;
+    }
+}
+
+a.bib-info, a.bib-warn {
+    display: inline-block;
+    text-align: center;
+    width: 0.8em;
+    font-family: serif;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+a.bib-info {
+    color: #FFFFFF;
+    background-color: @color-logo-blue;
+    border: 1px solid @color-logo-blue;
+}
+
+a.bib-info:hover {
+    color: @color-logo-blue;
+    background-color: #FFFFFF;
+}
+
+a.bib-warn {
+    color: #FFFFFF;
+    background-color: @color-logo-orange;
+    border: 1px solid @color-logo-orange;
+}

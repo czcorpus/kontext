@@ -1,4 +1,4 @@
-@import "../../../css/shared.less";
+@import "../../../css/shared/globals.less";
 
 .corp-tree-wrapper {
     display: inline-block;
@@ -67,15 +67,15 @@
 
         li {
             padding: 0 0 0 1em;
-            margin: 0;            
+            margin: 0;
         }
 
         li.node a {
             display: block;
             text-decoration: none;
-            color: @color-logo-blue;            
+            color: @color-logo-blue;
         }
-        
+
         li.node > a {
             border: 1px solid @color-light-text;
             padding: 0.4em 0.6em;
@@ -84,7 +84,7 @@
 
         li.node a:hover {
             text-decoration: underline;
-        }       
+        }
 
         li.leaf > a {
             color: @color-default-text;

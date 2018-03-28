@@ -23,6 +23,11 @@ import * as React from 'react';
 
 export namespace CoreViews {
 
+    export enum AutoWidth {
+        WIDE = 'wide',
+        NARROW = 'narrow'
+    }
+
     export namespace ErrorBoundary {
         export type Component = React.ComponentClass<{}>;
     }
@@ -80,7 +85,7 @@ export namespace CoreViews {
 
             customClass?:string;
 
-            autoWidth?:boolean;
+            autoWidth?:CoreViews.AutoWidth;
 
             children:React.ReactNode;
         }
@@ -119,7 +124,7 @@ export namespace CoreViews {
             onCloseClick:()=>void;
             customClass?:string;
             scrollable?:boolean;
-            autoWidth?:boolean;
+            autoWidth?:CoreViews.AutoWidth;
             label:string;
             children:React.ReactNode;
         }
@@ -261,6 +266,18 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace DelItemIcon {
+
+        export interface Props {
+            className?:string;
+            title?:string;
+            disabled?:boolean;
+            onClick?:()=>void;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -277,6 +294,7 @@ export namespace CoreViews {
         CorpnameInfoTrigger:CorpnameInfoTrigger.Component;
         Shortener:Shortener.Component;
         StatusIcon:StatusIcon.Component;
+        DelItemIcon:DelItemIcon.Component;
     }
 }
 
