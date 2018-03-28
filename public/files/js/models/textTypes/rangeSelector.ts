@@ -193,16 +193,14 @@ export class RangeSelector {
      * @param alignedCorpnames Optional list of aligned corpora
      */
     loadData(attribArgs:{[key:string]:any}, alignedCorpnames?:Array<string>):RSVP.Promise<any> { // TODO type
-        let self = this;
-        let requestURL:string = this.pluginApi.createActionUrl('filter_attributes');
-        let ajaxProm;
-        let args = {corpname: this.pluginApi.getConf('corpname')};
+        const requestURL:string = this.pluginApi.createActionUrl('filter_attributes');
+        const args = {corpname: this.pluginApi.getCorpusIdent().id};
 
         if (alignedCorpnames !== undefined) {
             args['aligned'] = JSON.stringify(alignedCorpnames);
         }
 
-        let attrs = this.textTypesModel.exportSelections(false);
+        const attrs = this.textTypesModel.exportSelections(false);
         for (let p in attribArgs) {
             attrs[p] = attribArgs[p];
         }

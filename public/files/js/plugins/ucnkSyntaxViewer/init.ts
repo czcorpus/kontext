@@ -109,7 +109,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntax
             'GET',
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: this.pluginApi.getConf('corpname'),
+                corpname: this.pluginApi.getCorpusIdent().id,
                 kwic_id: tokenNumber,
                 kwic_len: kwicLength
             }

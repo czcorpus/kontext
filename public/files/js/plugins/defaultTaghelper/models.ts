@@ -229,7 +229,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
             {
-                corpname: this.pluginApi.getConf('corpname'),
+                corpname: state.corpname,
                 pattern: state.srchPattern
             }
         );
