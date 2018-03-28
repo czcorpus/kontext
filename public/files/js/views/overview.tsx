@@ -154,36 +154,38 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         } else {
             return (
                 <div id="corpus-details-box">
-                    <div className="top">
-                        <h2 className="corpus-name">{props.data.corpname}</h2>
-                        <p className="corpus-description">{props.data.description}</p>
-                        <p className="metadata">
-                            <strong>{he.translate('global__size')}: </strong>
-                            <span className="size">{props.data.size}</span> {he.translate('global__positions')}<br />
-
-                            <strong className="web_url">{he.translate('global__website')}: </strong>
-                            {renderWebLink()}
-                        </p>
-                    </div>
-
-                    <h3>{he.translate('global__corpus_info_metadata_heading')}</h3>
-
-                    <table className="structs-and-attrs">
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <AttributeList rows={props.data.attrlist} />
-                                </td>
-                                <td style={{paddingLeft: '4em'}}>
-                                    <StructureList rows={props.data.structlist} />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p className="note">
-                        {he.translate('global__remark_figures_denote_different_attributes')}
-                    </p>
-                    <CorpusReference data={props.data.citation_info} />
+                    <h2 className="corpus-name">{props.data.corpname}</h2>
+                    <dl>
+                        <dt>{he.translate('global__description')}:</dt>
+                        <dd>{props.data.description}</dd>
+                        <dt>{he.translate('global__size')}:</dt>
+                        <dd>{props.data.size} {he.translate('global__positions')}
+                        </dd>
+                        <dt>{he.translate('global__website')}:</dt>
+                        <dd>{renderWebLink()}</dd>
+                        <dt>{he.translate('global__corpus_info_metadata_heading')}:</dt>
+                        <dd>
+                            <table className="structs-and-attrs">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <AttributeList rows={props.data.attrlist} />
+                                        </td>
+                                        <td style={{paddingLeft: '4em'}}>
+                                            <StructureList rows={props.data.structlist} />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p className="note">
+                            {he.translate('global__remark_figures_denote_different_attributes')}
+                            </p>
+                        </dd>
+                        <dt>{he.translate('global__citation_info')}:</dt>
+                        <dd>
+                            <CorpusReference data={props.data.citation_info} />
+                        </dd>
+                    </dl>
                 </div>
             );
         }
@@ -195,39 +197,45 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:SubcorpusInfo;
     }> = (props) => {
 
-        const getName = () => {
+        const getAccess = () => {
             if (props.data.subCorpusName !== props.data.origSubCorpusName) {
-                return `${props.data.origSubCorpusName}(${props.data.subCorpusName})`;
+                return he.translate('global__published_subcorp');
             }
-            return props.data.subCorpusName;
+            return he.translate('global__subc_info_access_private');
         };
 
         return (
-            <div id="subcorpus-info-box">
+            <div className="SubcorpusInfo">
                 <h2 className="subcorpus-name">
-                {props.data.corpusName}:<strong>{getName()}</strong></h2>
-                <div className="item">
-                    <strong>{he.translate('global__size_in_tokens')}:</strong>
-                    {'\u00A0'}{props.data.subCorpusSize}
-                </div>
-                <div className="item">
-                    <strong>{he.translate('global__subcorp_created_at')}:</strong>
-                    {'\u00A0'}{props.data.created}
-                </div>
-                <div className="subc-query">
-                    <h3>{he.translate('global__subc_query')}:</h3>
-                    {
-                        props.data.extended_info.cql ?
-                        <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
-                        : <span>{he.translate('global__subc_def_not_avail')}</span>
+                    {props.data.corpusName}:<strong>{props.data.subCorpusName}</strong>
+                </h2>
+
+                <dl>
+                    <dt>{he.translate('global__size_in_tokens')}:</dt>
+                    <dd>{props.data.subCorpusSize}</dd>
+                    <dt>{he.translate('global__subcorp_created_at')}:</dt>
+                    <dd>{props.data.created}</dd>
+                    {props.data.extended_info.cql ?
+                        <>
+                            <dt>{he.translate('global__subc_query')}:</dt>
+                            <dd>
+                                <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
+                            </dd>
+                        </> :
+                        null
                     }
-                </div>
-                {props.data.description ?
-                    <div className="description">
-                        <h3>{he.translate('global__description')}:</h3>
-                        <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
-                    </div> : null
-                }
+                    <dt>{he.translate('global__subc_info_access_hd')}:</dt>
+                    <dd>{getAccess()}</dd>
+                    {props.data.description ?
+                        <>
+                            <dt>{he.translate('global__description')}:</dt>
+                            <dd className="description">
+                                <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
+                            </dd>
+                        </> :
+                        null
+                    }
+                </dl>
             </div>
         );
     };
