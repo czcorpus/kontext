@@ -126,10 +126,10 @@ export function init(
         };
 
         return (
-            <div className="bonito-pagination">
+            <div className="ktx-pagination">
                 <form>
-                    <div className="bonito-pagination-core">
-                        <div className="bonito-pagination-left">
+                    <div className="ktx-pagination-core">
+                        <div className="ktx-pagination-left">
                             {props.hasPrevPage ?
                                 (<a onClick={(e) => handlePageChangeByClick(props.currentPage, -1)}>
                                     <img className="over-img" src={he.createStaticUrl('img/prev-page.svg')}
@@ -137,7 +137,7 @@ export function init(
                                 </a>) : null}
                         </div>
                         {renderPageNum()}
-                        <div className="bonito-pagination-right">
+                        <div className="ktx-pagination-right">
                             {props.currentPage}
                             {props.hasNextPage ?
                                 (<a onClick={(e) => handlePageChangeByClick(props.currentPage, 1)}>

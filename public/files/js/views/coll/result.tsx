@@ -233,7 +233,7 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         };
 
         return (
-            <div className="bonito-pagination-left">
+            <div className="ktx-pagination-left">
                 <a onClick={handleClick}>
                     <img src={utils.createStaticUrl('img/prev-page.svg')}
                             alt={utils.translate('concview_prev_page_btn')} />
@@ -254,7 +254,7 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         };
 
         return (
-            <div className="bonito-pagination-right">
+            <div className="ktx-pagination-right">
                 <a onClick={handleClick}>
                     <img src={utils.createStaticUrl('img/next-page.svg')}
                             alt={utils.translate('concview__next_page_btn')} />
@@ -285,10 +285,10 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         };
 
         return (
-            <form className="bonito-pagination" onKeyDown={handleKeyPress}>
+            <form className="ktx-pagination" onKeyDown={handleKeyPress}>
                 <fieldset className="float">
                     {props.currPage > 1 ? <PrevPageLink /> : null}
-                    <div className="bonito-pagination-core">
+                    <div className="ktx-pagination-core">
                         <PageInput isWaiting={props.isWaiting} currPageInput={props.currPageInput} />
                     </div>
                     {props.hasNextPage ? <NextPageLink /> : null}

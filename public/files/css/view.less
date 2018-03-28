@@ -1,6 +1,12 @@
-@import "shared.less";
+@import "./shared/globals.less";
 
 #conc-dashboard-mount {
+
+    .ktx-pagination {
+        float: right;
+        text-align: right;
+        width: 20%;
+    }
 
     .ConcordanceView,
     .ConcExtendedInfo {
@@ -897,4 +903,8 @@ section#chart-export {
     width: 100%;
     padding-top: 10%;
     padding-bottom: 10%;
+}
+
+#conclines .note {
+    padding: 0 0 0 1em;
 }

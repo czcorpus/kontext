@@ -1,4 +1,4 @@
-@import "shared.less";
+@import "./shared/globals.less";
 
 #modal-overlay {
     position: fixed;
@@ -276,23 +276,6 @@ table.envelope.locked .define-range {
     }
 }
 
-.CollResultView {
-    margin-top: 0;
-    margin-bottom: 1em;
-
-    table.data {
-        margin: 1em;
-    }
-
-    .SaveCollForm {
-
-        .hint {
-            margin-top: 1em;
-            font-size: 0.8em;
-        }
-    }
-}
-
 .TDExistingFileOps {
 
     .active-file {
@@ -312,7 +295,7 @@ fieldset.FieldsetOutputOptions {
 
 .WordlistResult {
 
-    .bonito-pagination {
+    .ktx-pagination {
         text-align: right;
         padding-bottom: 0.7em;
         padding-right: 0.7em;

@@ -208,7 +208,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         };
 
         return (
-            <div className="bonito-pagination-left">
+            <div className="ktx-pagination-left">
                 <a onClick={handleFirstPageClick}>
                     <img src={utils.createStaticUrl('img/first-page.svg')} />
                 </a>
@@ -238,7 +238,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         };
 
         return (
-            <div className="bonito-pagination-right">
+            <div className="ktx-pagination-right">
                 <a onClick={handleNextPageClick}>
                     <img src={utils.createStaticUrl('img/next-page.svg')} />
                 </a>
@@ -271,10 +271,10 @@ export function init({dispatcher, utils, wordlistSaveViews,
         };
 
         return (
-            <div className="bonito-pagination">
+            <div className="ktx-pagination">
                 <form onKeyDown={handleKeyPress}>
                     {parseInt(props.currPage) > 1 ? <PaginatorLeftArrows /> : null}
-                    <div className="bonito-pagination-core">
+                    <div className="ktx-pagination-core">
                         <PaginatorTextInput value={props.currPage} modelIsBusy={props.modelIsBusy} />
                     </div>
                     {!props.isLastPage ? <PaginatorRightArrows /> : null}
