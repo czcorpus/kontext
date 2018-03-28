@@ -232,7 +232,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
 
     private loadData():RSVP.Promise<any> {
         const args = new MultiDict();
-        args.set('corpname', this.pluginApi.getConf('corpname'));
+        args.set('corpname', this.pluginApi.getCorpusIdent().id);
         args.set('offset', this.offset);
         args.set('limit', this.limit + 1);
         args.set('query_type', this.queryType);
