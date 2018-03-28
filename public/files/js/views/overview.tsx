@@ -182,7 +182,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             </p>
                         </dd>
                         <dt>{he.translate('global__citation_info')}:</dt>
-                        <dd>
+                        <dd className="references">
                             <CorpusReference data={props.data.citation_info} />
                         </dd>
                     </dl>
@@ -207,7 +207,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <div className="SubcorpusInfo">
                 <h2 className="subcorpus-name">
-                    {props.data.corpusName}:<strong>{props.data.subCorpusName}</strong>
+                    {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.origSubCorpusName}</strong>
                 </h2>
 
                 <dl>
@@ -250,29 +250,26 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         if (props.data['article_ref'] || props.data['default_ref']
                 || props.data['other_bibliography']) {
             return (
-                <div>
-                    <h3>{he.translate('global__how_to_cite_corpus')}</h3>
+                <>
                     <h4>
                         {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}
                     </h4>
-                    <div dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
+                    <div className="html" dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
                     {props.data.article_ref ?
-                        (<div>
+                        (<>
                             <h4>{he.translate('global__references')}</h4>
-                            <ul>
                             {props.data.article_ref.map((item, i) => {
-                                return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
+                                return <div key={i} className="html" dangerouslySetInnerHTML={{__html: item }} />;
                             })}
-                            </ul>
-                        </div>) :
+                        </>) :
                         null}
                     {props.data.other_bibliography ?
-                        (<div>
+                        (<>
                             <h4>{he.translate('global__general_references')}</h4>
-                            <div dangerouslySetInnerHTML={{__html: props.data.other_bibliography}} />
-                        </div>) :
+                            <div className="html" dangerouslySetInnerHTML={{__html: props.data.other_bibliography}} />
+                        </>) :
                         null}
-                </div>
+                </>
             );
 
         } else {

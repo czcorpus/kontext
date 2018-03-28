@@ -87,13 +87,11 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 </td>
                 <td className="tools">
                     {props.editEnable ?
-                        (<a onClick={handleRemoveClick}>
-                            <img className="remove"
-                                alt={util.translate('defaultCorparch__click_to_remove_item_from_fav')}
-                                title={util.translate('defaultCorparch__click_to_remove_item_from_fav')}
-                                src={util.createStaticUrl('img/close-icon.svg')} />
-                        </a>) :
-                        null}
+                        <layoutViews.DelItemIcon onClick={handleRemoveClick}
+                            className="remove"
+                            title={util.translate('defaultCorparch__click_to_remove_item_from_fav')} /> :
+                        null
+                    }
                 </td>
             </tr>
         );
@@ -116,16 +114,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     <tr>
                         <th>
                             {util.translate('defaultCorparch__fav_items')}
-                        </th>
-                        <th />
-                        <th className="conf">
                             <a onClick={props.onChangeEditEnable}>
                                 <img className="config"
                                     title={util.translate('defaultCorparch__click_to_unlock_removal')}
                                     alt={util.translate('defaultCorparch__click_to_unlock_removal')}
-                                    src={util.createStaticUrl('img/config-icon_16x16.png')} />
+                                    src={util.createStaticUrl('img/config-icon.svg')} />
                             </a>
                         </th>
+                        <th />
+                        <th />
                     </tr>
                     {props.anonymousUser ?
                         <tr><td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td></tr> :
@@ -652,7 +649,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                                 corpusIdent={this.state.corpusIdent} onClick={this._handleOnShow} />
                         {this.state.availSubcorpora.size > 0 ?
                             (<span>
-                                <strong>{'\u00a0:\u00a0'}</strong>
+                                <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
                                 <SubcorpSelection currSubcorpus={this.state.currSubcorpus}
                                     origSubcorpName={this.state.origSubcorpName}
                                     availSubcorpora={this.state.availSubcorpora} />

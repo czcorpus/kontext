@@ -96,10 +96,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 he.translate('subclist__delete_subcorp_locked') :
                 he.translate('subclist__delete_subcorp');
 
-        return <a className={`delete-subc${props.deleteLocked ? ' locked': ''}`} onClick={handleSubmit}
-                    title={title}>
-            {'\u274C'}
-        </a>;
+        return <layoutViews.DelItemIcon className="delete-subc"
+                    disabled={props.deleteLocked}
+                    onClick={handleSubmit} title={title} />;
     }
 
     // ------------------------ <TrDataLine /> --------------------------

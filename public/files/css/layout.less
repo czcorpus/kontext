@@ -150,7 +150,7 @@ a.external {
     display: block;
     margin: 0;
     overflow: auto;
-    padding: 0.5em 2em 2em @ucnk-topbar-left-margin;
+    padding: 0 2em 2em @ucnk-topbar-left-margin;
 }
 
 #content > section {
@@ -198,8 +198,19 @@ section.corpus-and-query {
     background-color: transparent;
 }
 
-section.corpus-and-query > * {
-    margin: 0.5em 1em;
+section.corpus-and-query {
+    #query-overview-mount {
+        margin-top: 1.5em;
+        margin-bottom: 0;
+    }
+
+    #view-options-mount {
+        margin: 0;
+    }
+
+    #general-overview-mount {
+        margin: 0;
+    }
 }
 
 section.corpus-and-query {
@@ -593,13 +604,21 @@ header#topbar {
         }
 
         dt:not(:first-of-type) {
-            margin-top: 0.7em;
+            margin-top: 0.9em;
         }
 
         dd {
             margin-top: 0.3em;
             margin-left: 1em;
             font-size: 1.2em;
+
+            a {
+                color: @color-default-text;
+            }
+
+            a:hover {
+                color: @color-logo-blue;
+            }
         }
     }
 
@@ -680,7 +699,6 @@ header#topbar {
         clear: both;
         border-collapse: separate;
         border: none;
-        margin-top: 1em;
 
         td {
             vertical-align: top;
@@ -695,13 +713,24 @@ header#topbar {
     }
 
     .empty-citation-info {
-        margin-top: 1em;
         margin-bottom: 0.7em;
     }
 
     td.numeric {
         padding-left: 1em;
         text-align: right;
+    }
+
+    dd.references {
+
+        h4 {
+            font-size: 1em;
+            font-weight: normal;
+        }
+
+        .html {
+            font-size: 0.8em;
+        }
     }
 }
 
@@ -1091,6 +1120,26 @@ p.boxed-par {
             margin: 0 2em;
         }
     }
+}
+
+.DelItemIcon {
+    display: inline-block;
+    color: red !important;
+    text-decoration: none;
+    padding: 0 0.1em;
+}
+
+.DelItemIcon.disabled,
+.DelItemIcon.disabled:hover {
+    cursor: default !important;
+    color: @color-superlight-text !important;
+    background-color: transparent !important;
+}
+
+.DelItemIcon:hover {
+    text-decoration: none !important;
+    background-color: red !important;
+    color: #FFFFFF !important;
 }
 
 .query-overview {

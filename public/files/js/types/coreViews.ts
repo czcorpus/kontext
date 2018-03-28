@@ -266,6 +266,18 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace DelItemIcon {
+
+        export interface Props {
+            className?:string;
+            title?:string;
+            disabled?:boolean;
+            onClick?:()=>void;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -282,6 +294,7 @@ export namespace CoreViews {
         CorpnameInfoTrigger:CorpnameInfoTrigger.Component;
         Shortener:Shortener.Component;
         StatusIcon:StatusIcon.Component;
+        DelItemIcon:DelItemIcon.Component;
     }
 }
 

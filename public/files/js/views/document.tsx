@@ -591,7 +591,7 @@ export function init(
             if (props.usesubcorp) {
                 return (
                     <>
-                        <strong>:</strong>
+                        {'\u00a0'}<strong>/</strong>{'\u00a0'}
                         {getSubcName()}
                     </>
                 );
@@ -656,6 +656,14 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
+    const DelItemIcon:React.SFC<CoreViews.DelItemIcon.Props> = (props) => {
+        return <a className={`DelItemIcon ${props.disabled ? 'disabled' : ''} ${props.className}`}
+                    onClick={props.onClick && !props.disabled ? props.onClick : undefined}
+                    title={props.title}>{'\u274C'}</a>;
+    };
+
+    // ------------------------------------------------------------------------------------
+
     return {
         ErrorBoundary: ErrorBoundary,
         ModalOverlay: ModalOverlay,
@@ -669,6 +677,7 @@ export function init(
         AjaxLoaderImage: AjaxLoaderImage,
         AjaxLoaderBarImage: AjaxLoaderBarImage,
         Shortener: Shortener,
-        StatusIcon: StatusIcon
+        StatusIcon: StatusIcon,
+        DelItemIcon: DelItemIcon
     };
 }
