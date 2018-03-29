@@ -286,7 +286,7 @@ class Subcorpus(Querying):
                 try:
                     sc = self.cm.get_Corpus(corp, subcname=item['n'], decode_desc=False)
                     data.append({
-                        'name': '%s:%s' % (corp, item['n']),
+                        'name': '%s / %s' % (corp, item['n']),
                         'size': sc.search_size(),
                         'created': time.mktime(sc.created.timetuple()),
                         'corpname': corp,
