@@ -26,6 +26,7 @@ import { IPluginApi, PluginInterfaces } from "../../types/plugins";
 import { Kontext } from "../../types/common";
 import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
 import { MultiDict } from '../../util';
+import {IConcLinesProvider} from '../../types/concordance';
 
 
 export interface RendererMap {
@@ -65,6 +66,7 @@ export interface KwicConnectState {
     isBusy:boolean;
     visibleProviderIdx:number;
     corpora:Immutable.List<string>;
+    freqType:FreqDistType;
     data:Immutable.List<ProviderWordMatch>;
 }
 
@@ -80,7 +82,12 @@ enum FreqDistType {
 }
 
 
-export interface KwicConnectModelOpts {
+export interface KwicConnectModelArgs {
+    dispatcher:ActionDispatcher;
+    pluginApi:IPluginApi;
+    corpora:Array<string>;
+    rendererMap:RendererMap;
+    concLinesProvider:IConcLinesProvider;
     loadChunkSize:number;
     maxKwicWords:number;
 }
@@ -91,25 +98,37 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     private rendererMap:RendererMap;
 
-    private options:KwicConnectModelOpts;
+    private loadChunkSize:number;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpora:Array<string>, rendererMap:RendererMap,
-                    options:KwicConnectModelOpts) {
+    private maxKwicWords:number;
+
+    private concLinesProvider:IConcLinesProvider;
+
+    constructor({
+            dispatcher,
+            pluginApi,
+            corpora,
+            rendererMap,
+            concLinesProvider,
+            loadChunkSize,
+            maxKwicWords}:KwicConnectModelArgs) {
         super(
             dispatcher,
             {
                 isBusy: false,
                 visibleProviderIdx: 0,
                 data: Immutable.List<ProviderWordMatch>(),
-                corpora: Immutable.List<string>(corpora)
+                corpora: Immutable.List<string>(corpora),
+                freqType: FreqDistType.LEMMA
             },
             (state, action, dispatch) => {
                 switch (action.actionType) {
-                    case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
-                        this.fetchUniqValues(FreqDistType.WORD).then(
+                    case PluginInterfaces.KwicConnect.Actions.FETCH_INFO: {
+                        const freqType = this.selectFreqType();
+                        this.fetchUniqValues(freqType).then(
                             (data) => {
-                                const procData = this.makeStringGroups(data.slice(0, this.options.maxKwicWords),
-                                        this.options.loadChunkSize);
+                                const procData = this.makeStringGroups(data.slice(0, this.maxKwicWords),
+                                        this.loadChunkSize);
                                 return procData.reduce(
                                     (prev, curr) => {
                                         return prev.then(
@@ -134,7 +153,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                                 dispatch({
                                     actionType: Actions.FETCH_INFO_DONE,
                                     props: {
-                                        data: data
+                                        data: data,
+                                        freqType: freqType
                                     }
                                 });
                             },
@@ -146,13 +166,16 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                                 });
                             }
                         );
+                    }
                     break;
                 }
             }
         );
         this.pluginApi = pluginApi;
         this.rendererMap = rendererMap;
-        this.options = options;
+        this.loadChunkSize = loadChunkSize;
+        this.maxKwicWords = maxKwicWords;
+        this.concLinesProvider = concLinesProvider;
     }
 
     reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
@@ -170,10 +193,21 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             break;
             case Actions.FETCH_INFO_DONE:
                 newState.isBusy = false;
+                newState.freqType = action.props['freqType'];
                 this.mergeDataOfProviders(newState, action.props['data']);
             break;
         }
         return newState;
+    }
+
+    /**
+     * Based on most typical (average) kwic length we use either lemma (for single
+     * word kwics) or word.
+     */
+    private selectFreqType():FreqDistType {
+        const kwicLen = ~~Math.round(this.concLinesProvider.getLines().reduce(
+            (acc, curr) => acc + curr.kwicLength, 0) /  this.concLinesProvider.getLines().size);
+        return kwicLen === 1 ? FreqDistType.LEMMA : FreqDistType.WORD;
     }
 
     /**
@@ -264,7 +298,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         ).then(
             (data) => {
                 return data.Blocks[0].Items.map(item => {
-                    return item.Word.map(w => w.n).join(' ');
+                    return item.Word.map(w => w.n.replace(/\s+/, ' ')).join(' ');
                 });
             }
         );

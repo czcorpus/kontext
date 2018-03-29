@@ -22,7 +22,7 @@ import * as React from 'react';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import { ConcLineModel } from '../../models/concordance/lines';
-import {TextChunk} from '../../models/concordance/line';
+import {TextChunk} from '../../types/concordance';
 import {LineSelValue} from '../../models/concordance/lineSelection';
 import {init as initMediaViews} from './media';
 

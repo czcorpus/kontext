@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
 import {CoreViews} from './coreViews';
-
+import {IConcLinesProvider} from '../types/concordance';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -252,6 +252,9 @@ export namespace PluginInterfaces {
         export enum Actions {
             FETCH_INFO = 'KWIC_CONNECT_FETCH_INFO'
         }
+
+        export type Factory = (pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider,
+                               alignedCorpora:Array<string>)=>IPlugin;
     }
 
 

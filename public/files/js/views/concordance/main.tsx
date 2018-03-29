@@ -67,12 +67,12 @@ export interface ConcordanceDashboardProps {
         KWICCorps:Array<string>;
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
-        kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
         onSyntaxPaneReady?:(tokenNumber:number, kwicLength:number)=>void;
         onSyntaxPaneClose:()=>void;
         onChartFrameReady?:(usePrevData?:boolean)=>void;
         onReady:()=>void;
     };
+    kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
 }
 
 
@@ -919,7 +919,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             return (
                 <div>
                     {this.state.showTTOverview ?
-                        <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.concViewProps.kwicConnectView} /> :
+                        <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
                     }
                     <ConcordanceView {...this.props.concViewProps} />

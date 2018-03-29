@@ -23,6 +23,7 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit, View} from './views';
 import {init as renderersInit, Views as RenderersView} from './renderers';
 import {KwicConnectModel, RendererMap} from './model';
+import { IConcLinesProvider } from '../../types/concordance';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -38,19 +39,18 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
     private renderers:RenderersView;
 
 
-    constructor(pluginApi:IPluginApi, maxKwicWords:number, loadChunkSize:number) {
+    constructor(pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider, maxKwicWords:number, loadChunkSize:number) {
         this.pluginApi = pluginApi;
-        this.model = new KwicConnectModel(
-            pluginApi.dispatcher(),
-            pluginApi,
-            [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
+        this.model = new KwicConnectModel({
+            dispatcher: pluginApi.dispatcher(),
+            pluginApi: pluginApi,
+            corpora: [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
                     .concat(...pluginApi.getConf<Array<string>>('alignedCorpora')),
-            this.selectRenderer.bind(this),
-            {
-                loadChunkSize: loadChunkSize,
-                maxKwicWords: maxKwicWords
-            }
-        );
+            rendererMap: this.selectRenderer.bind(this),
+            concLinesProvider: concLinesProvider,
+            loadChunkSize: loadChunkSize,
+            maxKwicWords: maxKwicWords
+        });
     }
 
     getView():React.ComponentClass<{}>|React.SFC<{}> {
@@ -84,13 +84,19 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 }
 
 
-export default function create(pluginApi:IPluginApi, alignedCorpora:Array<string>):PluginInterfaces.KwicConnect.IPlugin {
+export const create:PluginInterfaces.KwicConnect.Factory = (
+            pluginApi:IPluginApi,
+            concLinesProvider:IConcLinesProvider,
+            alignedCorpora:Array<string>) => {
     const conf = pluginApi.getConf<{kwic_connect: {load_chunk_size:number; max_kwic_words:number}}>('pluginData');
     const plg = new DefaultKwicConnectPlugin(
         pluginApi,
+        concLinesProvider,
         conf.kwic_connect.max_kwic_words,
         conf.kwic_connect.load_chunk_size
     );
     plg.init();
     return plg;
 }
+
+export default create;

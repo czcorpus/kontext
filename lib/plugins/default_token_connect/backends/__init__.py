@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import httplib
+import urllib
+import logging
 import sqlite3
 from plugins.default_token_connect.backends.cache import cached
 
@@ -65,16 +67,27 @@ class HTTPBackend(AbstractBackend):
     def process_response(self, connection):
         response = connection.getresponse()
         if self._is_valid_response(response):
+            logging.getLogger(__name__).debug(
+                u'HTTP Backend response status: {0}'.format(response.status))
             return response.read().decode('utf-8'), self._is_found(response)
         else:
             raise Exception('Failed to load the data - error {0}'.format(response.status))
+
+    @staticmethod
+    def enc_val(s):
+        if type(s) is unicode:
+            return urllib.quote(s.encode('utf-8'))
+        return urllib.quote(s)
 
     @cached
     def fetch_data(self, word, lemma, pos, corpora, lang):
         connection = self.create_connection()
         try:
-            args = dict(word=word, lemma=lemma, pos=pos, ui_lang=lang, corpus=corpora[0],
-                        corpus2=corpora[1] if len(corpora) > 1 else '')
+            args = dict(
+                word=self.enc_val(word), lemma=self.enc_val(lemma), pos=self.enc_val(pos),
+                ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
+                corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''))
+            logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
             connection.request('GET', self._conf['path'].format(**args).encode('utf-8', 'replace'))
             return self.process_response(connection)
         finally:

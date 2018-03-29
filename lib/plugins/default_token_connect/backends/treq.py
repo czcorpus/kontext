@@ -18,22 +18,10 @@
 
 import json
 import logging
+import urllib
 
 from plugins.default_token_connect.backends.cache import cached
 from plugins.default_token_connect.backends import HTTPBackend
-
-
-AVAIL_GROUPS = {
-    'cs': ('ACQUIS', 'CORE', 'EUROPARL', 'PRESSEUROP', 'SUBTITLES', 'SYNDICATE'),
-    'en': ('ACQUIS', 'CORE', 'EUROPARL', 'PRESSEUROP', 'SUBTITLES', 'SYNDICATE'),
-    'pl': ('ACQUIS', 'CORE', 'EUROPARL', 'PRESSEUROP', 'SUBTITLES'),
-    'mk': ('CORE', 'SUBTITLES')
-}
-
-AVAIL_LANG_MAPPINGS = {   # TODO
-    'en': ['cs', 'pl', 'de', 'mk'],
-    'cs': ['en', 'mk', 'pl', 'de']
-}
 
 
 class TreqBackend(HTTPBackend):
@@ -53,9 +41,15 @@ class TreqBackend(HTTPBackend):
 
     DEFAULT_MAX_RESULT_LINES = 10
 
+    AVAIL_GROUPS = None
+
+    AVAIL_LANG_MAPPINGS = None
+
     def __init__(self, conf, ident):
         super(TreqBackend, self).__init__(conf, ident)
         self._conf = conf
+        self.AVAIL_GROUPS = conf.get('availGroups', {})
+        self.AVAIL_LANG_MAPPINGS = conf.get('availTranslations', {})
 
     @staticmethod
     def _lang_from_corpname(corpname):
@@ -67,7 +61,7 @@ class TreqBackend(HTTPBackend):
         for the primary language (= corpora[0]).
         """
         primary_lang = self._lang_from_corpname(corpora[0])
-        translations = AVAIL_LANG_MAPPINGS.get(primary_lang, [])
+        translations = self.AVAIL_LANG_MAPPINGS.get(primary_lang, [])
         for cn in corpora[1:]:
             lang = self._lang_from_corpname(cn)
             if lang in translations:
@@ -81,7 +75,7 @@ class TreqBackend(HTTPBackend):
             return False
         lang1 = self._lang_from_corpname(corp1)
         lang2 = self._lang_from_corpname(corp2)
-        return lang1 in AVAIL_LANG_MAPPINGS and lang2 in AVAIL_LANG_MAPPINGS[lang1]
+        return lang1 in self.AVAIL_LANG_MAPPINGS and lang2 in self.AVAIL_LANG_MAPPINGS[lang1]
 
     @staticmethod
     def mk_api_args(lang1, lang2, groups, word, lemma, pos):
@@ -101,8 +95,8 @@ class TreqBackend(HTTPBackend):
         return '/api.php?api=true&' + (u'&'.join(args)).encode('utf-8')
 
     def find_lang_common_groups(self, lang1, lang2):
-        g1 = set(AVAIL_GROUPS.get(lang1, []))
-        g2 = set(AVAIL_GROUPS.get(lang2, []))
+        g1 = set(self.AVAIL_GROUPS.get(lang1, []))
+        g2 = set(self.AVAIL_GROUPS.get(lang2, []))
         return g1.intersection(g2)
 
     def mk_server_addr(self):
@@ -119,8 +113,9 @@ class TreqBackend(HTTPBackend):
         treq_link = None
         if translat_corp and translat_lang:
             common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
-            args = dict(word=word, lemma=lemma, pos=pos, lang1=primary_lang, lang2=translat_lang,
-                        groups=common_groups)
+            args = dict(word=self.enc_val(word), lemma=self.enc_val(lemma), pos=self.enc_val(pos),
+                        lang1=self.enc_val(primary_lang), lang2=self.enc_val(translat_lang),
+                        groups=[self.enc_val(s) for s in common_groups])
             treq_link = (self.mk_server_addr() + '/index.php', self.mk_page_args(**args))
             connection = self.create_connection()
             try:
