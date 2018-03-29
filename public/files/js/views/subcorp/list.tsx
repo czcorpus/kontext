@@ -625,7 +625,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return <FormActionTemplate>
-                <p>
+                <p style={{width: '40em'}}>
                     <img src={he.createStaticUrl('img/warning-icon.svg')}
                         alt="warning-icon.svg" style={{width: '1.3em', verticalAlign: 'middle', marginRight: '0.3em'}} />
                     {
