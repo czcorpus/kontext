@@ -19,32 +19,8 @@
  */
 
 import * as Immutable from 'immutable';
+import {LangSection, TextChunk} from '../../types/concordance';
 
-
-export class TextChunk {
-    className:string;
-    text:Array<string>;
-    openLink:{speechPath:string};
-    closeLink:{speechPath:string};
-    continued:boolean;
-    showAudioPlayer:boolean;
-    mouseover:Array<string>;
-}
-
-
-export abstract class LangSection {
-    tokenNumber:number;
-    lineNumber:number;
-    ref:Array<string>;
-
-    constructor(tokenNumber:number, lineNumber:number, ref:Array<string>) {
-        this.tokenNumber = tokenNumber;
-        this.lineNumber = lineNumber;
-        this.ref = ref;
-    }
-
-    abstract getAllChunks():Immutable.List<TextChunk>;
-}
 
 
 export class KWICSection extends LangSection {
@@ -98,13 +74,4 @@ export class SentSection extends LangSection {
     getAllChunks():Immutable.List<TextChunk> {
         return this.items;
     }
-}
-
-
-export class Line {
-    lineGroup:number;
-    lineNumber:number;
-    kwicLength:number;
-    hasFocus:boolean;
-    languages:Immutable.List<LangSection>;
 }

@@ -98,6 +98,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                             {providerOutput.note ?
                                 <p className="note">{providerOutput.note}</p> : null}
                         </div>
+                        <p className="note">{he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
+                                {attr: this.state.freqType})}</p>
                     </div>
                 );
 

@@ -46,7 +46,10 @@ class DatamuseFrontend(AbstractFrontend):
     def export_data(self, data, status, lang):
         response = super(DatamuseFrontend, self).export_data(data, status, lang)
         response.renderer = 'datamuse-json'
-        response.contents = json.loads(data)
+        try:
+            response.contents = json.loads(data)
+        except ValueError:
+            response.contents = []
         return response
 
 

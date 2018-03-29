@@ -28,7 +28,8 @@ import { ConcLineModel, CorpColumn } from '../../models/concordance/lines';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../models/concordance/detail';
 import {LineSelValue} from '../../models/concordance/lineSelection';
-import { Line, LangSection, KWICSection, TextChunk } from '../../models/concordance/line';
+import {KWICSection } from '../../models/concordance/line';
+import {Line, LangSection, TextChunk} from '../../types/concordance';
 
 
 export interface LinesModuleArgs {

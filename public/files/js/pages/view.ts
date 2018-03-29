@@ -268,7 +268,7 @@ export class ViewPage {
         });
     }
 
-    renderLines(renderDeps:RenderLinesDeps):RSVP.Promise<RenderLinesDeps> {
+    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):RSVP.Promise<RenderLinesDeps> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             renderDeps.lvprops.onReady = () => resolve(renderDeps);
             try {
@@ -276,7 +276,8 @@ export class ViewPage {
                     this.concViews.ConcordanceDashboard,
                     window.document.getElementById('conc-dashboard-mount'),
                     {
-                        concViewProps: renderDeps.lvprops
+                        concViewProps: renderDeps.lvprops,
+                        kwicConnectView: kwicConnectView
                     }
                 );
 
@@ -958,21 +959,8 @@ export class ViewPage {
         }
     }
 
-    private initKwicConnect():PluginInterfaces.KwicConnect.IPlugin {
-        if (this.layoutModel.pluginIsActive('kwic_connect')) {
-            return kwicConnectInit(
-                this.layoutModel.pluginApi(),
-                this.layoutModel.getConf<Array<string>>('alignedCorpora')
-            );
-
-        } else {
-            return null;
-        }
-    }
-
     private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.ISyntaxViewer,
-                tokenConnect:PluginInterfaces.TokenConnect.IPlugin,
-                kwicConnect:PluginInterfaces.KwicConnect.IPlugin):ViewConfiguration {
+                tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
@@ -1013,7 +1001,6 @@ export class ViewPage {
             catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
-            kwicConnectView: kwicConnect !== null ? kwicConnect.getView() : null,
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
                 syntaxViewer.render(
                     document.getElementById('syntax-view-pane'),
@@ -1122,12 +1109,10 @@ export class ViewPage {
                     syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
                 }
                 const tokenConnectPlg = this.initTokenConnect();
-                const kwicConnectPlg = this.initKwicConnect();
                 const lineViewProps = this.initModels(
                     ttModel,
                     syntaxViewerModel,
-                    tokenConnectPlg,
-                    kwicConnectPlg
+                    tokenConnectPlg
                 );
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
@@ -1162,7 +1147,16 @@ export class ViewPage {
             }
         ).then(
             (deps) => {
-                return this.renderLines(deps);
+                return this.renderLines(
+                    deps,
+                    this.layoutModel.pluginIsActive('kwic_connect') ?
+                        kwicConnectInit(
+                            this.layoutModel.pluginApi(),
+                            this.viewModels.lineViewModel,
+                            this.layoutModel.getConf<Array<string>>('alignedCorpora')
+                        ).getView() :
+                        null
+                );
             }
 
         ).then(

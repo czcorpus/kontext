@@ -26,7 +26,8 @@ import {StatefulModel, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
-import {Line, LangSection, KWICSection, TextChunk} from './line';
+import {KWICSection} from './line';
+import {Line, LangSection, TextChunk, IConcLinesProvider} from '../../types/concordance';
 import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
@@ -181,8 +182,6 @@ export interface ViewConfiguration {
 
     supportsSyntaxView:boolean;
 
-    kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
-
     onSyntaxPaneReady:(tokenId:number, kwicLength:number)=>void;
 
     onSyntaxPaneClose:()=>void;
@@ -265,7 +264,7 @@ export class DummySyntaxViewModel extends StatefulModel implements PluginInterfa
 /**
  *
  */
-export class ConcLineModel extends SynchronizedModel {
+export class ConcLineModel extends SynchronizedModel implements IConcLinesProvider {
 
     private layoutModel:PageModel;
 
