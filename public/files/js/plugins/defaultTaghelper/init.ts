@@ -47,7 +47,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.TagHelper.IPlugin {
+const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
     return new TagHelperPlugin(
         pluginApi,
         new TagHelperModel(
@@ -56,4 +56,6 @@ export default function create(pluginApi:IPluginApi):PluginInterfaces.TagHelper.
             pluginApi.getCorpusIdent().id
         )
     );
-}
+};
+
+export default create;

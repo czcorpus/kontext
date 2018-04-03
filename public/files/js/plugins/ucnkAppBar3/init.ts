@@ -60,10 +60,12 @@ export class AppBarPlugin implements PluginInterfaces.ApplicationBar.IPlugin {
     }
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.ApplicationBar.IPlugin {
+const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
     toolbar.init();
     return new AppBarPlugin(new AppBarModel(pluginApi.dispatcher()));
-}
+};
+
+export default create;
 
 
 

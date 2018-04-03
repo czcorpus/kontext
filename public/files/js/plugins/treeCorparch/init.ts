@@ -56,13 +56,14 @@ export class TreeWidgetModel extends StatefulModel {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    private queryModel:QueryModel;
+    private queryModel:PluginInterfaces.Corparch.ICorpSelection;
 
     constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                queryModel:QueryModel, corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
+                queryModel:PluginInterfaces.Corparch.ICorpSelection, corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;
+        this.queryModel = queryModel;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
         this.dispatcher.register((payload:ActionPayload) => {
@@ -144,30 +145,6 @@ export class TreeWidgetModel extends StatefulModel {
 }
 
 
-/**
- * Creates a corplist widget which is a box containing two tabs
- *  1) user's favorite items
- *  2) corpus search tool
- *
- * @param targetElm - an element the component will mount to
- * @param targetAction - ignored here
- * @param pluginApi
- * @param options A configuration of the widget
- */
-export function createWidget(targetAction:string, pluginApi:IPluginApi,
-            queryModel:QueryModel, options:any):React.ComponentClass {
-    const widgetWrapper = window.document.createElement('div');
-
-    const treeModel = new TreeWidgetModel(
-        pluginApi,
-        pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-        queryModel,
-        options.itemClickAction
-    );
-    return viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), treeModel).CorptreeWidget;
-}
-
-
 export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     private pluginApi:IPluginApi;
@@ -176,9 +153,9 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     private viewsLib:TreeCorparchViews;
 
-    private queryModel:QueryModel;
+    private queryModel:PluginInterfaces.Corparch.ICorpSelection;
 
-    constructor(pluginApi:IPluginApi, queryModel:QueryModel) {
+    constructor(pluginApi:IPluginApi, queryModel:PluginInterfaces.Corparch.ICorpSelection) {
         this.pluginApi = pluginApi;
         this.queryModel = queryModel;
         this.treeModel = new TreeWidgetModel(
@@ -210,6 +187,78 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 }
 
 
-export function initCorplistPageComponents(pluginApi:IPluginApi, queryModel:QueryModel):CorplistPage {
-    return new CorplistPage(pluginApi, queryModel);
+class DummyQueryModel implements PluginInterfaces.Corparch.ICorpSelection {
+
+    getCurrentSubcorpus():string {
+        return null;
+    }
+
+    getOrigSubcorpName():string {
+        return null;
+    }
+
+    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
+        return Immutable.List<Kontext.SubcorpListItem>();
+    }
+
+    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
+        return Immutable.List<Kontext.AttrItem>();
+    }
+
+    getCorpora():Immutable.List<string> {
+        return Immutable.List<string>();
+    }
+
+    addChangeListener(fn:()=>void):void {}
+
+    removeChangeListener(fn:()=>void):void {}
+
+    notifyChangeListeners(eventType?:string, error?:Error):void {}
 }
+
+
+class Plugin {
+
+    private pluginApi:IPluginApi;
+
+    constructor(pluginApi:IPluginApi) {
+        this.pluginApi = pluginApi;
+    }
+
+    /**
+     * Creates a corplist widget which is a box containing two tabs
+     *  1) user's favorite items
+     *  2) corpus search tool
+     *
+     * @param targetElm - an element the component will mount to
+     * @param targetAction - ignored here
+     * @param options A configuration of the widget
+     */
+    createWidget(targetAction:string, queryModel:QueryModel, options:Kontext.GeneralProps):React.ComponentClass {
+        const widgetWrapper = window.document.createElement('div');
+
+        const treeModel = new TreeWidgetModel(
+            this.pluginApi,
+            this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            queryModel,
+            options.itemClickAction
+        );
+        return viewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.getComponentHelpers(),
+            treeModel
+        ).CorptreeWidget;
+    }
+
+
+    initCorplistPageComponents():CorplistPage {
+        return new CorplistPage(this.pluginApi, new DummyQueryModel());
+    }
+}
+
+
+const create:PluginInterfaces.Corparch.Factory = (pluginApi) => {
+    return new Plugin(pluginApi);
+}
+
+export default create;

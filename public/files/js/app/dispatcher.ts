@@ -44,6 +44,8 @@ export interface ActionPayload {
      * unreliable.
      */
     error?:Error;
+
+    isSideEffect?:boolean;
 }
 
 export const typedProps = <T>(props) => <T>props;
@@ -137,7 +139,24 @@ export class ActionDispatcher {
                     (state:T, action:ActionPayload) => {
                         const newState = action !== null ? model.reduce(state, action) : state;
                         sideEffects && action !== null ?
-                            sideEffects(newState, action, this.dispatch) :
+                            sideEffects(
+                                newState,
+                                action,
+                                (seAction:Action) => {
+                                    window.setTimeout(() => {
+                                        if (seAction instanceof Rx.Observable) {
+                                            // TODO
+                                        } else {
+                                            this.dispatch({
+                                                isSideEffect: true,
+                                                actionType: seAction.actionType,
+                                                props: seAction.props,
+                                            })
+                                        }
+                                    }, 0);
+
+                                }
+                            ) :
                             null;
                         return newState;
                     },

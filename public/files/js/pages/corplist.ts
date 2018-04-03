@@ -18,7 +18,7 @@
 
 import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
-import * as corparch from 'plugins/corparch/init';
+import corparch from 'plugins/corparch/init';
 
 declare var require:any;
  // weback - ensure a style (even empty one) is created for the page
@@ -31,7 +31,7 @@ export function init(conf:Kontext.Conf, corplistParams, corplistData):void {
     const layoutModel = new PageModel(conf);
     layoutModel.init().then(
         () => {
-            const pagePlugin = corparch.initCorplistPageComponents(layoutModel.pluginApi());
+            const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents();
             pagePlugin.setData(corplistData);
             layoutModel.renderReactComponent(
                 pagePlugin.getForm(),

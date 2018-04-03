@@ -25,40 +25,52 @@ import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from '../../views/overview';
 import {CorplistFormModel, CorplistTableModel} from './corplist';
-import * as dcInit from '../defaultCorparch/init';
+import {Plugin as DCPlugin} from '../defaultCorparch/init';
 
-/**
- *
- * @param pluginApi
- * @returns {CorplistPage}
- */
-export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
-    const overviewViews = overviewViewInit(
-        pluginApi.dispatcher(),
-        pluginApi.getComponentHelpers(),
-        pluginApi.getModels().corpusInfoModel
-    );
-    const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
-        const ans = viewInit({
-            dispatcher: pluginApi.dispatcher(),
-            he: pluginApi.getComponentHelpers(),
-            CorpusInfoBox: overviewViews.CorpusInfoBox,
-            formModel,
-            listModel
-        });
-        return ans;
+class Plugin extends DCPlugin {
+
+    constructor(pluginApi:IPluginApi) {
+        super(pluginApi);
     }
-    return new CorplistPage(pluginApi, initViews);
+
+    /**
+     *
+     */
+    initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {
+        const overviewViews = overviewViewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.getComponentHelpers(),
+            this.pluginApi.getModels().corpusInfoModel
+        );
+        const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
+            const ans = viewInit({
+                dispatcher: this.pluginApi.dispatcher(),
+                he: this.pluginApi.getComponentHelpers(),
+                CorpusInfoBox: overviewViews.CorpusInfoBox,
+                formModel,
+                listModel
+            });
+            return ans;
+        }
+        return new CorplistPage(this.pluginApi, initViews);
+    }
+
+    /**
+     *
+     * @param targetAction
+     * @param pluginApi
+     * @param queryModel
+     * @param options
+     */
+    createWidget(targetAction:string, queryModel:PluginInterfaces.Corparch.ICorpSelection,
+                options:Kontext.GeneralProps):React.ComponentClass {
+        return super.createWidget(targetAction, queryModel, options);
+    }
 }
 
-/**
- *
- * @param targetAction
- * @param pluginApi
- * @param queryModel
- * @param options
- */
-export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:PluginInterfaces.Corparch.ICorpSelection, options:any):React.ComponentClass {
-    return dcInit.createWidget(targetAction, pluginApi, queryModel, options);
+
+const create:PluginInterfaces.Corparch.Factory = (pluginApi) => {
+    return new Plugin(pluginApi);
 }
+
+export default create;

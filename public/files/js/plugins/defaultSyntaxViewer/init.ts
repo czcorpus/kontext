@@ -112,6 +112,8 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
 
 }
 
-export default function create(pluginApi:IPluginApi):SyntaxTreeViewer {
+const create:PluginInterfaces.SyntaxViewer.Factory = (pluginApi) => {
     return new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi);
-}
+};
+
+export default create;

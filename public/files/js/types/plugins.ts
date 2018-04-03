@@ -71,6 +71,10 @@ export namespace PluginInterfaces {
             getUserPaneView():React.ComponentClass;
             getProfileView():React.ComponentClass;
         }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
 
@@ -81,6 +85,9 @@ export namespace PluginInterfaces {
         export interface IPlugin {
         }
 
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
 
@@ -89,6 +96,10 @@ export namespace PluginInterfaces {
     export namespace FooterBar {
 
         export interface IPlugin {
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
         }
 
     }
@@ -104,6 +115,16 @@ export namespace PluginInterfaces {
         }
 
         export type View = React.ComponentClass<{isActive:boolean}>;
+
+        export interface Factory {
+            (
+                pluginApi:IPluginApi,
+                textTypesModel:TextTypes.ITextTypesModel,
+                getCurrentSubcnameFn:()=>string,
+                getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
+                corpusIdAttr:string
+            ):IPlugin;
+        }
     }
 
 
@@ -118,6 +139,9 @@ export namespace PluginInterfaces {
             isWaiting():boolean;
         }
 
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
 
@@ -137,6 +161,10 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
             getWidgetView():TagHelper.View;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
         }
     }
 
@@ -179,6 +207,10 @@ export namespace PluginInterfaces {
 
             getModel():IModel;
         }
+
+        export interface Factory {
+            (pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):IPlugin;
+        }
     }
 
 
@@ -211,6 +243,16 @@ export namespace PluginInterfaces {
             getForm():React.ComponentClass|React.SFC<{}>;
 
             getList():React.ComponentClass|React.SFC<{}>;
+        }
+
+        export interface IPlugin {
+            createWidget(targetAction:string, corpSel:ICorpSelection,
+                    options:Kontext.GeneralProps):React.ComponentClass<{}>;
+            initCorplistPageComponents():ICorplistPage;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
         }
     }
 

@@ -113,7 +113,7 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
 }
 
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.Auth.IPlugin {
+const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
     const plugin = new AuthPlugin(
         new UserProfileModel(
             pluginApi.dispatcher(),
@@ -128,3 +128,5 @@ export default function create(pluginApi:IPluginApi):PluginInterfaces.Auth.IPlug
     );
     return plugin;
 };
+
+export default create;

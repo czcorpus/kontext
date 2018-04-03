@@ -26,10 +26,12 @@ require('./style.less'); // webpack
 export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.ApplicationBar.IPlugin {
+const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
     aai.init();
     return new LindatAppBar();
-}
+};
+
+export default create;
 
 
 

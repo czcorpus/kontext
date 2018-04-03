@@ -30,7 +30,7 @@ import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import * as corplistComponent from 'plugins/corparch/init';
+import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 
@@ -227,9 +227,8 @@ export class SubcorpForm {
                     ttComponent.attachedAlignedCorporaProvider
                 );
 
-                const corplistWidget = corplistComponent.createWidget(
+                const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                    this.layoutModel.pluginApi(),
                     this.subcorpSel,
                     {
                         itemClickAction: (corpora:Array<string>, subcorpId:string) => {

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../types/plugins';
+import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {Kontext} from '../../types/common';
 
 declare var require:any;
@@ -27,6 +27,8 @@ require('./style.less'); // webpack
 export class FooterPlugin {
 }
 
-export default function create(pluginApi:IPluginApi):FooterPlugin {
+const create:PluginInterfaces.FooterBar.Factory = (pluginApi) => {
     return new FooterPlugin();
 }
+
+export default create;
