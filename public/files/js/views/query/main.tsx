@@ -55,7 +55,7 @@ export interface QueryFormProps {
     actionPrefix:string;
     allowCorpusSelection:boolean;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
     attributes:any; // TODO type once text types JSX->TSX
@@ -69,7 +69,7 @@ export interface QueryFormLiteProps {
     operationIdx?:number;
     actionPrefix:string;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
 }
 
 

@@ -76,7 +76,7 @@ export class UserStatusModel extends StatefulModel {
 /**
  *
  */
-export class AuthPlugin implements PluginInterfaces.IAuth {
+export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
 
     private model:UserStatusModel;
 
@@ -113,7 +113,7 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 }
 
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.IAuth {
+export default function create(pluginApi:IPluginApi):PluginInterfaces.Auth.IPlugin {
     const plugin = new AuthPlugin(
         new UserProfileModel(
             pluginApi.dispatcher(),

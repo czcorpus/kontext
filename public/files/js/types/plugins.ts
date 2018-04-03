@@ -63,18 +63,38 @@ export interface IPluginApi {
  */
 export namespace PluginInterfaces {
 
-    export interface IAuth {
-        getUserPaneView():React.ComponentClass;
-        getProfileView():React.ComponentClass;
+    // --------------------------- [auth] plug-in -----------------------------
+
+    export namespace Auth {
+
+        export interface IPlugin {
+            getUserPaneView():React.ComponentClass;
+            getProfileView():React.ComponentClass;
+        }
     }
 
-    export interface IToolbar {
+
+    // --------------------------- [application_bar] plug-in -----------------------------
+
+    export namespace ApplicationBar {
+
+        export interface IPlugin {
+        }
+
     }
 
-    export interface IFooterBar {
+
+    // --------------------------- [footer_bar] plug-in -----------------------------
+
+    export namespace FooterBar {
+
+        export interface IPlugin {
+        }
+
     }
 
-    // --------------------------- subcmixer -------------------------------
+
+    // --------------------------- [subcmixer] plug-in -----------------------------
 
     export namespace SubcMixer {
 
@@ -86,7 +106,8 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<{isActive:boolean}>;
     }
 
-    // ---------------------------------- syntax viewer ---------------------
+
+    // ------------------------------ [syntax_viewer] plug-in ---------------------
 
     export namespace SyntaxViewer {
 
@@ -99,7 +120,8 @@ export namespace PluginInterfaces {
 
     }
 
-    // --------  tag helper ----------
+
+    // ------------------------ [taghelper] plug-in -------------------------
 
     export namespace TagHelper {
 
@@ -118,44 +140,49 @@ export namespace PluginInterfaces {
         }
     }
 
-    // --------- query storage ------
 
-    export interface IQueryStorageModel extends Kontext.EventEmitter {
+    // ------------------------ [query_storage] plug-in -------------------------
 
-        getCurrentCorpusOnly():boolean;
-        getData():Immutable.List<Kontext.QueryHistoryItem>;
-        getQueryType():string;
-        getOffset():number;
-        getIsBusy():boolean;
-        getHasMoreItems():boolean;
-        getArchivedOnly():boolean;
-        getEditingQueryId():string;
-        getEditingQueryName():string;
+    export namespace QueryStorage {
+
+        export interface IModel extends Kontext.EventEmitter {
+
+            getCurrentCorpusOnly():boolean;
+            getData():Immutable.List<Kontext.QueryHistoryItem>;
+            getQueryType():string;
+            getOffset():number;
+            getIsBusy():boolean;
+            getHasMoreItems():boolean;
+            getArchivedOnly():boolean;
+            getEditingQueryId():string;
+            getEditingQueryName():string;
+        }
+
+        export interface WidgetProps {
+            sourceId:string;
+            actionPrefix:string;
+            onCloseTrigger:()=>void;
+        }
+
+        export type WidgetView = React.ComponentClass<WidgetProps>;
+
+        export interface IPlugin {
+
+            /**
+             * Import data to the model. This is meant to be used right
+             * after plug-in initialization and it should never
+             * notify listeners.
+             */
+            importData(data:Array<Kontext.QueryHistoryItem>):void;
+
+            getWidgetView():WidgetView;
+
+            getModel():IModel;
+        }
     }
 
-    export interface QueryStorageWidgetProps {
-        sourceId:string;
-        actionPrefix:string;
-        onCloseTrigger:()=>void;
-    }
 
-    export type QueryStorageWidgetView = React.ComponentClass<QueryStorageWidgetProps>;
-
-    export interface IQueryStorage {
-
-        /**
-         * Import data to the model. This is meant to be used right
-         * after plug-in initialization and it should never
-         * notify listeners.
-         */
-        importData(data:Array<Kontext.QueryHistoryItem>):void;
-
-        getWidgetView():QueryStorageWidgetView;
-
-        getModel():IQueryStorageModel;
-    }
-
-    // ------------------------ corparch -------------------------
+    // ------------------------ [corparch] plug-in -------------------------
 
     export namespace Corparch {
 
@@ -169,9 +196,26 @@ export namespace PluginInterfaces {
             getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
             getCorpora():Immutable.List<string>;
         }
+
+        /**
+         * A factory class for generating corplist page. The page is expected
+         * to contain two blocks
+         *  - a form (typically a filter)
+         *  - a dataset (= list of matching corpora)
+         *
+         */
+        export interface ICorplistPage {
+
+            setData(data:any):void; // TODO type
+
+            getForm():React.ComponentClass|React.SFC<{}>;
+
+            getList():React.ComponentClass|React.SFC<{}>;
+        }
     }
 
-    // -------------------------- live attributes --------------------------
+
+    // -------------------------- [live_attributes] plug-in --------------------------
 
     export namespace LiveAttributes {
 
@@ -229,24 +273,8 @@ export namespace PluginInterfaces {
         export type CustomAttribute = React.ComponentClass<{}>;
     }
 
-    // ------------------------------------------------
 
-    /**
-     * A factory class for generating corplist page. The page is expected
-     * to contain two blocks
-     *  - a form (typically a filter)
-     *  - a dataset (= list of matching corpora)
-     *
-     */
-    export interface ICorplistPage {
-
-        setData(data:any):void; // TODO type
-
-        getForm():React.ComponentClass|React.SFC<{}>;
-
-        getList():React.ComponentClass|React.SFC<{}>;
-    }
-
+    // ------------------------- [issue_reporting] plug-in -----------------------
 
     export interface IssueReporting {
 
@@ -254,6 +282,8 @@ export namespace PluginInterfaces {
 
     }
 
+
+    // ------------------------- [kwic_connect] plug-in -----------------------
 
     export namespace KwicConnect {
 
@@ -271,6 +301,8 @@ export namespace PluginInterfaces {
                                alignedCorpora:Array<string>)=>IPlugin;
     }
 
+
+    // ------------------------- [token_connect] plug-in -----------------------
 
     export namespace TokenConnect {
 

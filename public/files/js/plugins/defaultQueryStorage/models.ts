@@ -45,7 +45,7 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
 };
 
 
-export class QueryStorageModel extends StatefulModel implements PluginInterfaces.IQueryStorageModel {
+export class QueryStorageModel extends StatefulModel implements PluginInterfaces.QueryStorage.IModel {
 
     private pluginApi:IPluginApi;
 

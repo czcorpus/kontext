@@ -55,7 +55,7 @@ export interface TRQueryInputFieldProps {
     lposValue:string;
     wPoSList:Immutable.List<{n:string; v:string}>;
     queryType:string;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Immutable.List<string>;
     inputLanguage:string;
@@ -423,7 +423,7 @@ export function init({
         sourceId:string;
         actionPrefix:string;
         onCloseTrigger:()=>void;
-        queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+        queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
 
     }> = (props) => {
         return (

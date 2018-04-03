@@ -168,7 +168,7 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
 }
 
 
-export class CorplistPage implements PluginInterfaces.ICorplistPage {
+export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     private pluginApi:IPluginApi;
 

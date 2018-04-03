@@ -46,7 +46,7 @@ export interface FilterFormProps {
     filterId:string;
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     actionPrefix:string;
 }
 
