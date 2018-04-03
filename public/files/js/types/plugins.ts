@@ -76,12 +76,15 @@ export namespace PluginInterfaces {
 
     // --------------------------- subcmixer -------------------------------
 
-    export interface ISubcMixer {
-        refreshData():void;
-        getWidgetView():React.ComponentClass;
-    }
+    export namespace SubcMixer {
 
-    export type SubcMixerView = React.ComponentClass<{isActive:boolean}>;
+        export interface IPlugin {
+            refreshData():void;
+            getWidgetView():React.ComponentClass;
+        }
+
+        export type View = React.ComponentClass<{isActive:boolean}>;
+    }
 
     // ---------------------------------- syntax viewer ---------------------
 

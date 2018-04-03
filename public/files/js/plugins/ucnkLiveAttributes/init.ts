@@ -43,7 +43,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.Plu
         this.store = store;
     }
 
-    getViews(subcMixerView:PluginInterfaces.SubcMixerView, textTypesModel:TextTypesModel):Views {
+    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
         return viewInit({
             dispatcher: this.pluginApi.dispatcher(),
             he: this.pluginApi.getComponentHelpers(),
