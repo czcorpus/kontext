@@ -20,7 +20,7 @@
 
 import {Kontext} from '../types/common';
 import * as Rx from '@reactivex/rxjs';
-import {ActionDispatcher, ActionPayload, IReducer, SideEffectHandler} from '../app/dispatcher';
+import {ActionDispatcher, ActionPayload, IReducer, SEDispatcher} from '../app/dispatcher';
 
 /**
  * A base class for KonText's legacy models.
@@ -161,13 +161,10 @@ export abstract class StatelessModel<T> implements IReducer<T> {
 
     private subscriptions:Array<[StatelessModelListener<T>, Rx.Subscription]>;
 
-    private sideEffects:SideEffectHandler<T>;
-
-    constructor(dispatcher:ActionDispatcher, initialState:T, sideEffects?:SideEffectHandler<T>) {
+    constructor(dispatcher:ActionDispatcher, initialState:T) {
         this.dispatcher = dispatcher;
         this.subscriptions = [];
-        this.sideEffects = sideEffects;
-        this.state$ = dispatcher.createStateStream$(this, initialState, sideEffects);
+        this.state$ = dispatcher.createStateStream$(this, initialState);
     }
 
     /**
@@ -178,6 +175,8 @@ export abstract class StatelessModel<T> implements IReducer<T> {
      * more effective).
      */
     abstract reduce(state:T, action:ActionPayload):T;
+
+    sideEffects(state:T, action:ActionPayload, dispatch:SEDispatcher):void {};
 
     /**
      * A function used by React component to listen for

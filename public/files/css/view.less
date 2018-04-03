@@ -17,7 +17,8 @@
         margin-top: 1em;
         box-shadow: @portal-box-shadow;
 
-        .CloseIcon {
+        .CloseIcon,
+        .MinimizeIcon {
             margin-right: 0.6em;
             margin-top: 0.5em;
             float: right;
@@ -82,6 +83,10 @@
             font-size: 1.2em;
         }
 
+        h2.minimized {
+            color: @color-light-text;
+        }
+
         p.note {
             font-size: 0.85em;
             text-align: center;
@@ -113,6 +118,9 @@
             }
         }
 
+        > .minimized-contents {
+
+        }
 
         > .contents {
             display: grid;

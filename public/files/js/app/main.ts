@@ -673,6 +673,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         return this.authPlugin;
     }
 
+    setLocal(k:string, val:string|number|boolean):void {
+        this.userSettings.set(k, val);
+    }
+
+    getLocal<T = string|number|boolean>(k:string, dflt:T=undefined):T {
+        return this.userSettings.get<T>(k) || dflt;
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.

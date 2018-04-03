@@ -21,7 +21,7 @@ import {IPluginApi} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {ActionDispatcher, Action, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -108,54 +108,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 isBusy: false,
                 canUndo: false,
                 stateId: ''
-            },
-            (state, action, dispatch) => { // SIDE EFFECTS
-                switch (action.actionType) {
-                    case 'TAGHELPER_GET_INITIAL_DATA':
-                        if (state.data.last().size === 0) {
-                            this.loadInitialData(state).then(
-                                (data) => {
-                                    dispatch({
-                                        actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                        props: {
-                                            labels: data.labels,
-                                            tags: data.tags
-                                        }
-                                    });
-
-                                },
-                                (err) => {
-                                    dispatch({
-                                        actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                        props: {},
-                                        error: err
-                                    });
-                                }
-                            );
-                        }
-                    break;
-                    case 'TAGHELPER_CHECKBOX_CHANGED':
-                    this.updateData(state, action.props['position']).then(
-                        (data) => {
-                            dispatch({
-                                actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
-                                props: {
-                                    tags: data.tags,
-                                    triggerRow: action.props['position']
-                                }
-                            });
-                        },
-                        (err) => {
-                            dispatch({
-                                actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
-                                props: {},
-                                error: err
-                            });
-                        }
-                    );
-                    break;
-                }
-            });
+            }
+        );
         this.pluginApi = pluginApi;
     }
 
@@ -214,6 +168,54 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 return state;
         }
         return newState;
+    }
+
+    sideEffects(state:TagHelperModelState, action:ActionPayload, dispatch:SEDispatcher) {
+        switch (action.actionType) {
+            case 'TAGHELPER_GET_INITIAL_DATA':
+                if (state.data.last().size === 0) {
+                    this.loadInitialData(state).then(
+                        (data) => {
+                            dispatch({
+                                actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
+                                props: {
+                                    labels: data.labels,
+                                    tags: data.tags
+                                }
+                            });
+
+                        },
+                        (err) => {
+                            dispatch({
+                                actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
+                                props: {},
+                                error: err
+                            });
+                        }
+                    );
+                }
+            break;
+            case 'TAGHELPER_CHECKBOX_CHANGED':
+            this.updateData(state, action.props['position']).then(
+                (data) => {
+                    dispatch({
+                        actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        props: {
+                            tags: data.tags,
+                            triggerRow: action.props['position']
+                        }
+                    });
+                },
+                (err) => {
+                    dispatch({
+                        actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        props: {},
+                        error: err
+                    });
+                }
+            );
+            break;
+        }
     }
 
     private loadInitialData(state:TagHelperModelState):RSVP.Promise<TagDataResponse> {
