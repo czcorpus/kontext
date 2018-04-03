@@ -19,9 +19,9 @@
  */
 
 import {Kontext, ViewOptions} from '../../types/common';
-import {StatefulModel} from '../base';
+import {StatelessModel, StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
 export interface ConcDashboardProps {
@@ -40,12 +40,33 @@ export class ConcDashboard extends StatefulModel {
 
     private hasTTCrit:boolean;
 
+    private extendedInfoMinimized:boolean;
+
+    private static EXTENDED_INFO_MINIMIZED_LOCAL_KEY = 'extendedInfoMinimized';
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
                 globalOpts:ViewOptions.IGeneralViewOptionsModel, props:ConcDashboardProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
+        this.extendedInfoMinimized = this.layoutModel.getLocal(
+                    ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, false);
         this.showTTOverview = props.showTTOverview;
         this.hasTTCrit = props.hasTTCrit;
+
+        dispatcher.register((action:ActionPayload) => {
+            switch (action.actionType) {
+                case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
+                    this.extendedInfoMinimized = true;
+                    this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, true);
+                    this.notifyChangeListeners();
+                break;
+                case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
+                    this.extendedInfoMinimized = false;
+                    this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, false);
+                    this.notifyChangeListeners();
+                break;
+            }
+        });
     }
 
     updateOnGlobalViewOptsChange(model:ViewOptions.IGeneralViewOptionsModel):void {
@@ -55,5 +76,9 @@ export class ConcDashboard extends StatefulModel {
 
     getShowTTOverview():boolean {
         return this.showTTOverview && this.hasTTCrit;
+    }
+
+    getIsExtendedInfoMinimized():boolean {
+        return this.extendedInfoMinimized;
     }
 }

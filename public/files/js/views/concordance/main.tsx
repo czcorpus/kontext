@@ -113,7 +113,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         lineModel: lineViewModel
     });
     const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
-    const extendedInfoViews = extendedInfoViewsInit(dispatcher, he, ttDistModel);
+    const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, dashboardModel});
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------

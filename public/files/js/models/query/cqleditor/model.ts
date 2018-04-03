@@ -26,7 +26,7 @@ import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
 import {QueryInputSetQueryProps} from '../../../models/query/main';
-import {ActionDispatcher, ActionPayload, typedProps} from '../../../app/dispatcher';
+import {ActionDispatcher, ActionPayload, typedProps, SEDispatcher} from '../../../app/dispatcher';
 
 /**
  *
@@ -91,21 +91,6 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                 message: Immutable.Map<string, string>(),
                 rawAnchorIdx: 0,
                 rawFocusIdx: 0
-            },
-            (state, action, dispatch) => { // SIDE EFFECTS
-                switch (action.actionType) {
-                    case 'CQL_EDITOR_SET_RAW_QUERY': {
-                        const args = typedProps<QueryInputSetQueryProps>(action.props);
-                        dispatch({
-                            actionType: `@${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                            props: {
-                                sourceId: args.sourceId,
-                                query: args.query
-                            }
-                        });
-                    }
-                    break;
-                }
             }
         );
         this.attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
@@ -176,6 +161,22 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                 return state;
         }
         return newState;
+    }
+
+    sideEffects(state:CQLEditorModelState, action:ActionPayload, dispatch:SEDispatcher) {
+        switch (action.actionType) {
+            case 'CQL_EDITOR_SET_RAW_QUERY': {
+                const args = typedProps<QueryInputSetQueryProps>(action.props);
+                dispatch({
+                    actionType: `@${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    props: {
+                        sourceId: args.sourceId,
+                        query: args.query
+                    }
+                });
+            }
+            break;
+        }
     }
 
     private getQueryLength(state:CQLEditorModelState, sourceId:string):number {

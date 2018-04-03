@@ -21,7 +21,7 @@
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import { StatelessModel } from "../../models/base";
-import { ActionPayload, ActionDispatcher, typedProps } from "../../app/dispatcher";
+import { ActionPayload, ActionDispatcher, typedProps, SEDispatcher } from "../../app/dispatcher";
 import { IPluginApi, PluginInterfaces } from "../../types/plugins";
 import { Kontext } from "../../types/common";
 import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
@@ -120,55 +120,6 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 data: Immutable.List<ProviderWordMatch>(),
                 corpora: Immutable.List<string>(corpora),
                 freqType: FreqDistType.LEMMA
-            },
-            (state, action, dispatch) => {
-                switch (action.actionType) {
-                    case PluginInterfaces.KwicConnect.Actions.FETCH_INFO: {
-                        const freqType = this.selectFreqType();
-                        this.fetchUniqValues(freqType).then(
-                            (data) => {
-                                const procData = this.makeStringGroups(data.slice(0, this.maxKwicWords),
-                                        this.loadChunkSize);
-                                return procData.reduce(
-                                    (prev, curr) => {
-                                        return prev.then(
-                                            (data) => {
-                                                if (data !== null) {
-                                                    dispatch({
-                                                        actionType: Actions.FETCH_PARTIAL_INFO_DONE,
-                                                        props: {
-                                                            data: data
-                                                        }
-                                                    });
-                                                }
-                                                return this.fetchKwicInfo(state, curr);
-                                            }
-                                        );
-                                    },
-                                    RSVP.Promise.resolve(null)
-                                );
-                            }
-                        ).then(
-                            (data) => {
-                                dispatch({
-                                    actionType: Actions.FETCH_INFO_DONE,
-                                    props: {
-                                        data: data,
-                                        freqType: freqType
-                                    }
-                                });
-                            },
-                            (err) => {
-                                dispatch({
-                                    actionType: Actions.FETCH_INFO_DONE,
-                                    props: {},
-                                    error: err
-                                });
-                            }
-                        );
-                    }
-                    break;
-                }
             }
         );
         this.pluginApi = pluginApi;
@@ -198,6 +149,56 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             break;
         }
         return newState;
+    }
+
+    sideEffects(state:KwicConnectState, action:ActionPayload, dispatch:SEDispatcher) {
+        switch (action.actionType) {
+            case PluginInterfaces.KwicConnect.Actions.FETCH_INFO: {
+                const freqType = this.selectFreqType();
+                this.fetchUniqValues(freqType).then(
+                    (data) => {
+                        const procData = this.makeStringGroups(data.slice(0, this.maxKwicWords),
+                                this.loadChunkSize);
+                        return procData.reduce(
+                            (prev, curr) => {
+                                return prev.then(
+                                    (data) => {
+                                        if (data !== null) {
+                                            dispatch({
+                                                actionType: Actions.FETCH_PARTIAL_INFO_DONE,
+                                                props: {
+                                                    data: data
+                                                }
+                                            });
+                                        }
+                                        return this.fetchKwicInfo(state, curr);
+                                    }
+                                );
+                            },
+                            RSVP.Promise.resolve(null)
+                        );
+                    }
+                ).then(
+                    (data) => {
+                        dispatch({
+                            actionType: Actions.FETCH_INFO_DONE,
+                            props: {
+                                data: data,
+                                freqType: freqType
+                            }
+                        });
+                    },
+                    (err) => {
+                        dispatch({
+                            actionType: Actions.FETCH_INFO_DONE,
+                            props: {},
+                            error: err
+                        });
+                    }
+                );
+            }
+            break;
+        }
     }
 
     /**

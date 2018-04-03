@@ -57,13 +57,8 @@ export const typedProps = <T>(props) => <T>props;
  */
 export type Action = ActionPayload|Rx.Observable<ActionPayload>;
 
-/**
- * A function which may, based on current state
- * (which is a result of the most recent reduction)
- * and action, produce a new action.
- */
-export interface SideEffectHandler<T> {
-    (state:T, action:ActionPayload, dispatch:(a2:ActionPayload)=>void):void;
+export interface SEDispatcher {
+    (seAction:ActionPayload):void;
 }
 
 /**
@@ -72,6 +67,7 @@ export interface SideEffectHandler<T> {
 export interface IReducer<T> {
 
     reduce(state:T, action:ActionPayload):T;
+    sideEffects(state:T, action:ActionPayload, dispatch:SEDispatcher):void;
 
 }
 
@@ -131,15 +127,15 @@ export class ActionDispatcher {
          * actions (typically using a 'switch') and performs another
          * action (typically an async one).
          */
-        createStateStream$<T>(model:IReducer<T>, initialState:T, sideEffects?:SideEffectHandler<T>):Rx.BehaviorSubject<T> {
+        createStateStream$<T>(model:IReducer<T>, initialState:T):Rx.BehaviorSubject<T> {
             const state$ = new Rx.BehaviorSubject(null);
             this.action$
                 .startWith(null)
                 .scan(
                     (state:T, action:ActionPayload) => {
                         const newState = action !== null ? model.reduce(state, action) : state;
-                        sideEffects && action !== null ?
-                            sideEffects(
+                        action !== null ?
+                            model.sideEffects(
                                 newState,
                                 action,
                                 (seAction:Action) => {
