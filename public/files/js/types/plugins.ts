@@ -63,6 +63,7 @@ export interface IPluginApi {
  */
 export namespace PluginInterfaces {
 
+    // ------------------------------------------------------------------------
     // --------------------------- [auth] plug-in -----------------------------
 
     export namespace Auth {
@@ -77,8 +78,8 @@ export namespace PluginInterfaces {
         }
     }
 
-
-    // --------------------------- [application_bar] plug-in -----------------------------
+    // ------------------------------------------------------------------------
+    // --------------------------- [application_bar] plug-in ------------------
 
     export namespace ApplicationBar {
 
@@ -90,8 +91,8 @@ export namespace PluginInterfaces {
         }
     }
 
-
-    // --------------------------- [footer_bar] plug-in -----------------------------
+    // ------------------------------------------------------------------------
+    // --------------------------- [footer_bar] plug-in -----------------------
 
     export namespace FooterBar {
 
@@ -104,8 +105,8 @@ export namespace PluginInterfaces {
 
     }
 
-
-    // --------------------------- [subcmixer] plug-in -----------------------------
+    // ------------------------------------------------------------------------
+    // --------------------------- [subcmixer] plug-in ------------------------
 
     export namespace SubcMixer {
 
@@ -128,7 +129,8 @@ export namespace PluginInterfaces {
     }
 
 
-    // ------------------------------ [syntax_viewer] plug-in ---------------------
+    // ------------------------------------------------------------------------
+    // ------------------------------ [syntax_viewer] plug-in -----------------
 
     export namespace SyntaxViewer {
 
@@ -145,7 +147,8 @@ export namespace PluginInterfaces {
     }
 
 
-    // ------------------------ [taghelper] plug-in -------------------------
+    // ------------------------------------------------------------------------
+    // ------------------------ [taghelper] plug-in ---------------------------
 
     export namespace TagHelper {
 
@@ -168,8 +171,8 @@ export namespace PluginInterfaces {
         }
     }
 
-
-    // ------------------------ [query_storage] plug-in -------------------------
+    // ------------------------------------------------------------------------
+    // ------------------------ [query_storage] plug-in -----------------------
 
     export namespace QueryStorage {
 
@@ -214,7 +217,8 @@ export namespace PluginInterfaces {
     }
 
 
-    // ------------------------ [corparch] plug-in -------------------------
+    // ------------------------------------------------------------------------
+    // ------------------------ [corparch] plug-in ----------------------------
 
     export namespace Corparch {
 
@@ -256,12 +260,12 @@ export namespace PluginInterfaces {
         }
     }
 
-
-    // -------------------------- [live_attributes] plug-in --------------------------
+    // ------------------------------------------------------------------------
+    // -------------------------- [live_attributes] plug-in -------------------
 
     export namespace LiveAttributes {
 
-        export interface Plugin extends TextTypes.AttrValueTextInputListener {
+        export interface IPlugin extends TextTypes.AttrValueTextInputListener {
             getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
             setControlsEnabled(v:boolean):void;
             selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
@@ -313,18 +317,36 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<{}>;
 
         export type CustomAttribute = React.ComponentClass<{}>;
+
+        export interface Factory {
+            (
+                pluginApi:IPluginApi,
+                textTypesModel:TextTypes.ITextTypesModel,
+                selectedCorporaProvider:()=>Immutable.List<string>,
+                ttCheckStatusProvider:()=>boolean,
+                args:PluginInterfaces.LiveAttributes.InitArgs
+            ):IPlugin;
+        }
     }
 
 
-    // ------------------------- [issue_reporting] plug-in -----------------------
+    // ------------------------------------------------------------------------
+    // ------------------------- [issue_reporting] plug-in --------------------
 
-    export interface IssueReporting {
+    export namespace IssueReporting {
 
-        getWidgetView():React.ComponentClass|React.SFC<{}>;
+        export interface IPlugin {
 
+            getWidgetView():React.ComponentClass|React.SFC<{}>;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
 
+    // ------------------------------------------------------------------------
     // ------------------------- [kwic_connect] plug-in -----------------------
 
     export namespace KwicConnect {
@@ -344,7 +366,8 @@ export namespace PluginInterfaces {
     }
 
 
-    // ------------------------- [token_connect] plug-in -----------------------
+    // ------------------------------------------------------------------------
+    // ------------------------- [token_connect] plug-in ----------------------
 
     export namespace TokenConnect {
 
@@ -377,5 +400,10 @@ export namespace PluginInterfaces {
 
             selectRenderer(typeId:string):Renderer;
         }
+
+        export interface Factory {
+            (pluginApi:IPluginApi, alignedCorpora:Array<string>):IPlugin;
+        }
     }
+
 }

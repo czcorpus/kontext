@@ -80,15 +80,15 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                 return this.views.UnsupportedRenderer;
         }
     }
-
 }
 
 
-export default function create(pluginApi:IPluginApi,
-        alignedCorpora:Array<string>):PluginInterfaces.TokenConnect.IPlugin {
+const create:PluginInterfaces.TokenConnect.Factory = (pluginApi, alignedCorpora) => {
     return new DefaultTokenConnectBackend(
         pluginApi,
         initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
         alignedCorpora
     );
-}
+};
+
+export default create;

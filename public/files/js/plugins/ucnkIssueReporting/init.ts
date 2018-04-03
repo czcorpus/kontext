@@ -23,7 +23,7 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 
 
-export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
+export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPlugin {
 
     private view:React.SFC<{}>;
 
@@ -37,7 +37,9 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
 }
 
 
-export default function init(pluginApi:IPluginApi):PluginInterfaces.IssueReporting {
+const init:PluginInterfaces.IssueReporting.Factory = (pluginApi) => {
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers());
     return new IssueReportingPlugin(view.IssueReportingWidget);
-}
+};
+
+export default init;
