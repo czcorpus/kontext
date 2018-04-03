@@ -101,7 +101,7 @@ interface RenderLinesDeps {
     ttModel:TextTypes.ITextTypesModel;
     lvprops:ViewConfiguration;
     qs:PluginInterfaces.IQueryStorage;
-    tagh:PluginInterfaces.ITagHelper;
+    tagh:PluginInterfaces.TagHelper.IPlugin;
 }
 
 /**
@@ -700,7 +700,7 @@ export class ViewPage {
     /**
      *
      */
-    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.ITagHelper, queryStoragePlugin:PluginInterfaces.IQueryStorage):void {
+    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin, queryStoragePlugin:PluginInterfaces.IQueryStorage):void {
         this.queryModels.queryReplayModel = new QueryReplayModel(
             this.layoutModel.dispatcher,
             this.layoutModel,

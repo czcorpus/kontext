@@ -56,7 +56,7 @@ export interface TRQueryInputFieldProps {
     wPoSList:Immutable.List<{n:string; v:string}>;
     queryType:string;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
-    tagHelperView:PluginInterfaces.TagHelperView;
+    tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Immutable.List<string>;
     inputLanguage:string;
     useCQLEditor:boolean;
@@ -277,7 +277,7 @@ export function init({
         sourceId:string;
         actionPrefix:string;
         args:Kontext.GeneralProps;
-        tagHelperView:PluginInterfaces.TagHelperView
+        tagHelperView:PluginInterfaces.TagHelper.View
         closeClickHandler:()=>void;
 
     }> = (props) => {
@@ -475,7 +475,7 @@ export function init({
         actionPrefix:string;
         widgets:Immutable.List<string>;
         inputLanguage:string;
-        tagHelperView:PluginInterfaces.TagHelperView;
+        tagHelperView:PluginInterfaces.TagHelper.View;
         toggleHistoryWidget:()=>void;
 
     }, {

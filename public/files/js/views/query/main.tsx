@@ -54,7 +54,7 @@ export interface QueryFormProps {
     formType:Kontext.ConcFormTypes.QUERY;
     actionPrefix:string;
     allowCorpusSelection:boolean;
-    tagHelperView:PluginInterfaces.TagHelperView;
+    tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
@@ -68,7 +68,7 @@ export interface QueryFormLiteProps {
     corpname:string;
     operationIdx?:number;
     actionPrefix:string;
-    tagHelperView:PluginInterfaces.TagHelperView;
+    tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
 }
 

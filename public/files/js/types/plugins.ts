@@ -101,18 +101,21 @@ export namespace PluginInterfaces {
 
     // --------  tag helper ----------
 
-    export interface TagHelperViewProps {
-        sourceId:string;
-        actionPrefix:string;
-        range:[number, number];
-        onInsert:()=>void;
-        onEscKey:()=>void;
-    }
+    export namespace TagHelper {
 
-    export type TagHelperView = React.ComponentClass<TagHelperViewProps>;
+        export interface ViewProps {
+            sourceId:string;
+            actionPrefix:string;
+            range:[number, number];
+            onInsert:()=>void;
+            onEscKey:()=>void;
+        }
 
-    export interface ITagHelper {
-        getWidgetView():TagHelperView;
+        export type View = React.ComponentClass<ViewProps>;
+
+        export interface IPlugin {
+            getWidgetView():TagHelper.View;
+        }
     }
 
     // --------- query storage ------

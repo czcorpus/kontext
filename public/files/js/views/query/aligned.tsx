@@ -59,7 +59,7 @@ export interface AlignedCorporaProps {
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
     hasLemmaAttr:Immutable.Map<string, boolean>;
     useCQLEditor:boolean;
-    tagHelperView:PluginInterfaces.TagHelperView;
+    tagHelperView:PluginInterfaces.TagHelper.View;
     onEnterKey:()=>void;
 }
 
@@ -89,7 +89,7 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorageWidgetView;
         useCQLEditor:boolean;
-        tagHelperView:PluginInterfaces.TagHelperView;
+        tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
 
     }> = (props) => {
