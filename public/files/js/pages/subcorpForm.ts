@@ -30,7 +30,7 @@ import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import * as corplistComponent from 'plugins/corparch/init';
+import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 
@@ -59,7 +59,7 @@ export class SubcorpForm {
 
     private layoutModel:PageModel;
 
-    private corplistComponent:PluginInterfaces.ICorparchCorpSelection;
+    private corplistComponent:PluginInterfaces.Corparch.ICorpSelection;
 
     private viewComponents:any; // TODO types
 
@@ -69,7 +69,7 @@ export class SubcorpForm {
 
     private textTypesModel:TextTypesModel;
 
-    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
@@ -121,7 +121,7 @@ export class SubcorpForm {
             this.textTypesModel
         );
 
-        const liveAttrsPlugin:PluginInterfaces.ILiveAttributes = liveAttributes(
+        const liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             null, // no corplist provider => manual aligned corp. selection mode
@@ -227,9 +227,8 @@ export class SubcorpForm {
                     ttComponent.attachedAlignedCorporaProvider
                 );
 
-                const corplistWidget = corplistComponent.createWidget(
+                const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                    this.layoutModel.pluginApi(),
                     this.subcorpSel,
                     {
                         itemClickAction: (corpora:Array<string>, subcorpId:string) => {

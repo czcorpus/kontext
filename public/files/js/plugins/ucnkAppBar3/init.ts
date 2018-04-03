@@ -51,7 +51,7 @@ export class AppBarModel extends StatefulModel {
     }
 }
 
-export class AppBarPlugin implements PluginInterfaces.IToolbar {
+export class AppBarPlugin implements PluginInterfaces.ApplicationBar.IPlugin {
 
     private model:AppBarModel;
 
@@ -60,10 +60,12 @@ export class AppBarPlugin implements PluginInterfaces.IToolbar {
     }
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.IToolbar {
+const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
     toolbar.init();
     return new AppBarPlugin(new AppBarModel(pluginApi.dispatcher()));
-}
+};
+
+export default create;
 
 
 

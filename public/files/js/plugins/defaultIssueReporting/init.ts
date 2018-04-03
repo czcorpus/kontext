@@ -103,7 +103,7 @@ export class IssueReportingModel extends StatefulModel {
 }
 
 
-export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
+export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPlugin {
 
     private model:IssueReportingModel;
 
@@ -120,9 +120,10 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting {
 }
 
 
-
-export default function init(pluginApi:IPluginApi):PluginInterfaces.IssueReporting {
+const init:PluginInterfaces.IssueReporting.Factory = (pluginApi) => {
     const model = new IssueReportingModel(pluginApi);
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), model);
     return new IssueReportingPlugin(model, view.IssueReportingWidget);
-}
+};
+
+export default init;

@@ -23,13 +23,15 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 declare var require:any;
 require('./style.less'); // webpack
 
-export class LindatAppBar implements PluginInterfaces.IToolbar {
+export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.IToolbar {
+const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
     aai.init();
     return new LindatAppBar();
-}
+};
+
+export default create;
 
 
 

@@ -29,7 +29,7 @@ import { PluginInterfaces } from '../../types/plugins';
 export interface ViewModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
-    SubcmixerComponent:PluginInterfaces.SubcMixerView;
+    SubcmixerComponent:PluginInterfaces.SubcMixer.View;
     textTypesModel:TextTypes.ITextTypesModel;
     liveAttrsModel:LiveAttrsModel;
 }

@@ -27,7 +27,7 @@ declare var require:any;
 require('./style.less'); // webpack
 
 
-export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
+export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
     private pluginApi:IPluginApi;
 
@@ -38,7 +38,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
         this.model = model;
     }
 
-    getWidgetView():PluginInterfaces.TagHelperView {
+    getWidgetView():PluginInterfaces.TagHelper.View {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
@@ -47,7 +47,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
     }
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.ITagHelper {
+const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
     return new TagHelperPlugin(
         pluginApi,
         new TagHelperModel(
@@ -56,4 +56,6 @@ export default function create(pluginApi:IPluginApi):PluginInterfaces.ITagHelper
             pluginApi.getCorpusIdent().id
         )
     );
-}
+};
+
+export default create;

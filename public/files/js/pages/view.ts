@@ -100,8 +100,8 @@ export class QueryModels {
 interface RenderLinesDeps {
     ttModel:TextTypes.ITextTypesModel;
     lvprops:ViewConfiguration;
-    qs:PluginInterfaces.IQueryStorage;
-    tagh:PluginInterfaces.ITagHelper;
+    qs:PluginInterfaces.QueryStorage.IPlugin;
+    tagh:PluginInterfaces.TagHelper.IPlugin;
 }
 
 /**
@@ -700,7 +700,8 @@ export class ViewPage {
     /**
      *
      */
-    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.ITagHelper, queryStoragePlugin:PluginInterfaces.IQueryStorage):void {
+    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin,
+                    queryStoragePlugin:PluginInterfaces.QueryStorage.IPlugin):void {
         this.queryModels.queryReplayModel = new QueryReplayModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -959,7 +960,7 @@ export class ViewPage {
         }
     }
 
-    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.ISyntaxViewer,
+    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
                 tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -1104,7 +1105,7 @@ export class ViewPage {
                     }
                 );
                 const ttModel = this.initTextTypesModel();
-                let syntaxViewerModel:PluginInterfaces.ISyntaxViewer = syntaxViewerInit(this.layoutModel.pluginApi());
+                let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
                 if (!syntaxViewerModel) {
                     syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
                 }

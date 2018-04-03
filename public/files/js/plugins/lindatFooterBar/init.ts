@@ -17,7 +17,7 @@
  */
 
 import {Kontext} from '../../types/common';
-import {IPluginApi} from '../../types/plugins';
+import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -33,8 +33,10 @@ export class FooterPlugin {
     }
 }
 
-export default function create(pluginApi:IPluginApi):FooterPlugin {
+const create:PluginInterfaces.FooterBar.Factory = (pluginApi) => {
     const plugin = new FooterPlugin();
     plugin.init();
     return plugin;
 }
+
+export default create;

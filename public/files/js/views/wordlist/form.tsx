@@ -28,7 +28,7 @@ import {PluginInterfaces} from '../../types/plugins';
 export interface WordlistFormViewArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
-    CorparchWidget:PluginInterfaces.CorparchWidgetView;
+    CorparchWidget:PluginInterfaces.Corparch.WidgetView;
     wordlistFormModel:WordlistFormModel
 }
 
@@ -78,7 +78,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
      * @param {*} props
      */
     const TRCorpusField:React.SFC<{
-        corparchWidget:PluginInterfaces.CorparchWidgetView;
+        corparchWidget:PluginInterfaces.Corparch.WidgetView;
         currentSubcorp:string;
 
     }> = (props) => {

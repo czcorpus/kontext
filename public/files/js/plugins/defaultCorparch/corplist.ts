@@ -422,7 +422,7 @@ export class CorplistTableModel extends StatefulModel {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage implements PluginInterfaces.ICorplistPage  {
+export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 
     components:any;
 

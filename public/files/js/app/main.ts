@@ -116,7 +116,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     private mainMenuModel:Kontext.IMainMenuModel;
 
-    private authPlugin:PluginInterfaces.IAuth;
+    private authPlugin:PluginInterfaces.Auth.IPlugin;
 
     private l10n:L10n;
 
@@ -669,7 +669,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
     }
 
-    getAuthPlugin():PluginInterfaces.IAuth {
+    getAuthPlugin():PluginInterfaces.Auth.IPlugin {
         return this.authPlugin;
     }
 

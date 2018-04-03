@@ -49,7 +49,7 @@ export interface HistoryViews {
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
-            queryHistoryModel:PluginInterfaces.IQueryStorageModel):HistoryViews {
+            queryHistoryModel:PluginInterfaces.QueryStorage.IModel):HistoryViews {
 
     const queryTypes = {
         'iquery': he.translate('query__qt_basic'),

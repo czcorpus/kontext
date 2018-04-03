@@ -331,7 +331,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<PluginInterfaces.TagHelperViewProps, TagHelperModelState> {
+    class TagBuilder extends React.Component<PluginInterfaces.TagHelper.ViewProps, TagHelperModelState> {
 
         constructor(props) {
             super(props);

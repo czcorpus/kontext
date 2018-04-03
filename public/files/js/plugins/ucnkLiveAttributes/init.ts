@@ -32,7 +32,7 @@ declare var require:any;
 require('./style.less'); // webpack
 
 
-export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
+export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
 
     private pluginApi:IPluginApi;
 
@@ -43,7 +43,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
         this.store = store;
     }
 
-    getViews(subcMixerView:PluginInterfaces.SubcMixerView, textTypesModel:TextTypesModel):Views {
+    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
         return viewInit({
             dispatcher: this.pluginApi.dispatcher(),
             he: this.pluginApi.getComponentHelpers(),
@@ -106,9 +106,8 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
  * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
-export default function create(pluginApi:IPluginApi, textTypesModel:TextTypes.ITextTypesModel,
-        selectedCorporaProvider:()=>Immutable.List<string>,
-        ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs):PluginInterfaces.ILiveAttributes {
+const create:PluginInterfaces.LiveAttributes.Factory = (
+        pluginApi, textTypesModel, selectedCorporaProvider, ttCheckStatusProvider, args) => {
 
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),
@@ -120,3 +119,5 @@ export default function create(pluginApi:IPluginApi, textTypesModel:TextTypes.IT
     );
     return new LiveAttributesPlugin(pluginApi, store);
 }
+
+export default create;

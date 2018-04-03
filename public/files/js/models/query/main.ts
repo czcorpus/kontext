@@ -303,7 +303,7 @@ export interface CorpusSwitchPreserved {
 /**
  *
  */
-export class QueryModel extends GeneralQueryModel implements PluginInterfaces.ICorparchCorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Corparch.ICorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
 
     private corpora:Immutable.List<string>;
 

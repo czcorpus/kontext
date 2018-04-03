@@ -374,7 +374,7 @@ export class SubcMixerModel extends StatefulModel {
 }
 
 
-class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
+class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 
     pluginApi:IPluginApi
 
@@ -400,12 +400,12 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 }
 
 
-export default function create(
+const create:PluginInterfaces.SubcMixer.Factory = (
         pluginApi:IPluginApi,
         textTypesModel:TextTypes.ITextTypesModel,
         getCurrentSubcnameFn:()=>string,
         getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
-        corpusIdAttr:string):PluginInterfaces.ISubcMixer {
+        corpusIdAttr:string) => {
     const model = new SubcMixerModel(
         pluginApi.dispatcher(),
         pluginApi,
@@ -416,3 +416,5 @@ export default function create(
     );
     return new SubcmixerPlugin(pluginApi, model);
 }
+
+export default create;

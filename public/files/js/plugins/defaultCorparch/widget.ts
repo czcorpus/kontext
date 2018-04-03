@@ -64,7 +64,7 @@ export class CorplistWidgetModel extends StatefulModel {
 
     private anonymousUser:boolean;
 
-    private corpSelection:PluginInterfaces.ICorparchCorpSelection;
+    private corpSelection:PluginInterfaces.Corparch.ICorpSelection;
 
     private searchEngine:SearchEngine;
 
@@ -86,7 +86,7 @@ export class CorplistWidgetModel extends StatefulModel {
             dispatcher:ActionDispatcher,
             pluginApi:IPluginApi,
             corpusIdent:Kontext.FullCorpusIdent,
-            corpSelection:PluginInterfaces.ICorparchCorpSelection,
+            corpSelection:PluginInterfaces.Corparch.ICorpSelection,
             anonymousUser:boolean,
             searchEngine:SearchEngine, dataFav:Array<common.ServerFavlistItem>,
             dataFeat:Array<common.CorplistItem>,

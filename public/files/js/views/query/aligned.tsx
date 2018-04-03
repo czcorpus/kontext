@@ -56,10 +56,10 @@ export interface AlignedCorporaProps {
     tagsetDocUrls:Immutable.Map<string, string>;
     pcqPosNegValues:Immutable.Map<string, string>;
     inputLanguages:Immutable.Map<string, string>;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     hasLemmaAttr:Immutable.Map<string, boolean>;
     useCQLEditor:boolean;
-    tagHelperView:PluginInterfaces.TagHelperView;
+    tagHelperView:PluginInterfaces.TagHelper.View;
     onEnterKey:()=>void;
 }
 
@@ -87,9 +87,9 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         attrList:Immutable.List<Kontext.AttrItem>;
         tagsetDocUrl:string;
         inputLanguage:string;
-        queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+        queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
         useCQLEditor:boolean;
-        tagHelperView:PluginInterfaces.TagHelperView;
+        tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
 
     }> = (props) => {

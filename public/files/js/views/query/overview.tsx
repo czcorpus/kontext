@@ -63,7 +63,7 @@ export interface OverviewModuleArgs {
     queryReplayModel:IQueryReplayModel;
     mainMenuModel:Kontext.IMainMenuModel;
     querySaveAsModel:QuerySaveAsFormModel;
-    corparchModel:PluginInterfaces.ICorparchCorpSelection;
+    corparchModel:PluginInterfaces.Corparch.ICorpSelection;
 }
 
 

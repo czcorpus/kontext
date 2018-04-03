@@ -34,7 +34,7 @@ import {init as queryFormInit, QueryFormProps} from '../views/query/main';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import { CQLEditorProps } from '../views/query/cqlEditor';
-import * as corplistComponent from 'plugins/corparch/init';
+import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
@@ -103,9 +103,8 @@ export class FirstFormPage {
 
 
     private initCorplistComponent():React.ComponentClass {
-        return corplistComponent.createWidget(
+        return corplistComponent(this.layoutModel.pluginApi()).createWidget(
             'first_form',
-            this.layoutModel.pluginApi(),
             this.queryModel,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {

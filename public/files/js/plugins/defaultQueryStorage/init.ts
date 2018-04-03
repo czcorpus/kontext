@@ -26,7 +26,7 @@ import {init as viewsInit} from './view';
 declare var require:any;
 require('./style.less'); // webpack
 
-export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
+export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin {
 
     private pluginApi:IPluginApi;
 
@@ -37,7 +37,7 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
         this.model = model;
     }
 
-    getWidgetView():PluginInterfaces.QueryStorageWidgetView {
+    getWidgetView():PluginInterfaces.QueryStorage.WidgetView {
         return viewsInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
@@ -45,7 +45,7 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
         ).QueryStorage;
     }
 
-    getModel():PluginInterfaces.IQueryStorageModel {
+    getModel():PluginInterfaces.QueryStorage.IModel {
         return this.model;
     }
 
@@ -55,6 +55,8 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
 }
 
-export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):PluginInterfaces.IQueryStorage {
+const create:PluginInterfaces.QueryStorage.Factory = (pluginApi, offset, limit, pageSize) => {
     return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize));
-}
+};
+
+export default create;

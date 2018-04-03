@@ -132,8 +132,10 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
      * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
      */
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
-            textTypesModel:TextTypes.ITextTypesModel, selectedCorporaProvider:()=>Immutable.List<string>,
-            ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
+            textTypesModel:TextTypes.ITextTypesModel,
+            selectedCorporaProvider:()=>Immutable.List<string>,
+            ttCheckStatusProvider:()=>boolean,
+            args:PluginInterfaces.LiveAttributes.InitArgs) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.userData = null;

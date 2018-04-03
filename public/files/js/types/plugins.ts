@@ -63,183 +63,291 @@ export interface IPluginApi {
  */
 export namespace PluginInterfaces {
 
-    export interface IAuth {
-        getUserPaneView():React.ComponentClass;
-        getProfileView():React.ComponentClass;
+    // ------------------------------------------------------------------------
+    // --------------------------- [auth] plug-in -----------------------------
+
+    export namespace Auth {
+
+        export interface IPlugin {
+            getUserPaneView():React.ComponentClass;
+            getProfileView():React.ComponentClass;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
-    export interface IToolbar {
+    // ------------------------------------------------------------------------
+    // --------------------------- [application_bar] plug-in ------------------
+
+    export namespace ApplicationBar {
+
+        export interface IPlugin {
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
-    export interface IFooterBar {
+    // ------------------------------------------------------------------------
+    // --------------------------- [footer_bar] plug-in -----------------------
+
+    export namespace FooterBar {
+
+        export interface IPlugin {
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
+
     }
 
-    // --------------------------- subcmixer -------------------------------
+    // ------------------------------------------------------------------------
+    // --------------------------- [subcmixer] plug-in ------------------------
 
-    export interface ISubcMixer {
-        refreshData():void;
-        getWidgetView():React.ComponentClass;
+    export namespace SubcMixer {
+
+        export interface IPlugin {
+            refreshData():void;
+            getWidgetView():React.ComponentClass;
+        }
+
+        export type View = React.ComponentClass<{isActive:boolean}>;
+
+        export interface Factory {
+            (
+                pluginApi:IPluginApi,
+                textTypesModel:TextTypes.ITextTypesModel,
+                getCurrentSubcnameFn:()=>string,
+                getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
+                corpusIdAttr:string
+            ):IPlugin;
+        }
     }
 
-    export type SubcMixerView = React.ComponentClass<{isActive:boolean}>;
 
-    // ---------------------------------- syntax viewer ---------------------
+    // ------------------------------------------------------------------------
+    // ------------------------------ [syntax_viewer] plug-in -----------------
 
-    export interface ISyntaxViewer extends Kontext.EventEmitter {
-        render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
-        close():void;
-        onPageResize():void;
-        isWaiting():boolean;
+    export namespace SyntaxViewer {
+
+        export interface IPlugin extends Kontext.EventEmitter {
+            render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
+            close():void;
+            onPageResize():void;
+            isWaiting():boolean;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
-    // --------  tag helper ----------
 
-    export interface TagHelperViewProps {
-        sourceId:string;
-        actionPrefix:string;
-        range:[number, number];
-        onInsert:()=>void;
-        onEscKey:()=>void;
+    // ------------------------------------------------------------------------
+    // ------------------------ [taghelper] plug-in ---------------------------
+
+    export namespace TagHelper {
+
+        export interface ViewProps {
+            sourceId:string;
+            actionPrefix:string;
+            range:[number, number];
+            onInsert:()=>void;
+            onEscKey:()=>void;
+        }
+
+        export type View = React.ComponentClass<ViewProps>;
+
+        export interface IPlugin {
+            getWidgetView():TagHelper.View;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
-    export type TagHelperView = React.ComponentClass<TagHelperViewProps>;
+    // ------------------------------------------------------------------------
+    // ------------------------ [query_storage] plug-in -----------------------
 
-    export interface ITagHelper {
-        getWidgetView():TagHelperView;
+    export namespace QueryStorage {
+
+        export interface IModel extends Kontext.EventEmitter {
+
+            getCurrentCorpusOnly():boolean;
+            getData():Immutable.List<Kontext.QueryHistoryItem>;
+            getQueryType():string;
+            getOffset():number;
+            getIsBusy():boolean;
+            getHasMoreItems():boolean;
+            getArchivedOnly():boolean;
+            getEditingQueryId():string;
+            getEditingQueryName():string;
+        }
+
+        export interface WidgetProps {
+            sourceId:string;
+            actionPrefix:string;
+            onCloseTrigger:()=>void;
+        }
+
+        export type WidgetView = React.ComponentClass<WidgetProps>;
+
+        export interface IPlugin {
+
+            /**
+             * Import data to the model. This is meant to be used right
+             * after plug-in initialization and it should never
+             * notify listeners.
+             */
+            importData(data:Array<Kontext.QueryHistoryItem>):void;
+
+            getWidgetView():WidgetView;
+
+            getModel():IModel;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):IPlugin;
+        }
     }
 
-    // --------- query storage ------
 
-    export interface IQueryStorageModel extends Kontext.EventEmitter {
+    // ------------------------------------------------------------------------
+    // ------------------------ [corparch] plug-in ----------------------------
 
-        getCurrentCorpusOnly():boolean;
-        getData():Immutable.List<Kontext.QueryHistoryItem>;
-        getQueryType():string;
-        getOffset():number;
-        getIsBusy():boolean;
-        getHasMoreItems():boolean;
-        getArchivedOnly():boolean;
-        getEditingQueryId():string;
-        getEditingQueryName():string;
-    }
+    export namespace Corparch {
 
-    export interface QueryStorageWidgetProps {
-        sourceId:string;
-        actionPrefix:string;
-        onCloseTrigger:()=>void;
-    }
+        export type WidgetView = React.ComponentClass<{}>;
 
-    export type QueryStorageWidgetView = React.ComponentClass<QueryStorageWidgetProps>;
 
-    export interface IQueryStorage {
+        export interface ICorpSelection extends Kontext.EventEmitter {
+            getCurrentSubcorpus():string;
+            getOrigSubcorpName():string;
+            getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
+            getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
+            getCorpora():Immutable.List<string>;
+        }
 
         /**
-         * Import data to the model. This is meant to be used right
-         * after plug-in initialization and it should never
-         * notify listeners.
+         * A factory class for generating corplist page. The page is expected
+         * to contain two blocks
+         *  - a form (typically a filter)
+         *  - a dataset (= list of matching corpora)
+         *
          */
-        importData(data:Array<Kontext.QueryHistoryItem>):void;
+        export interface ICorplistPage {
 
-        getWidgetView():QueryStorageWidgetView;
+            setData(data:any):void; // TODO type
 
-        getModel():IQueryStorageModel;
+            getForm():React.ComponentClass|React.SFC<{}>;
+
+            getList():React.ComponentClass|React.SFC<{}>;
+        }
+
+        export interface IPlugin {
+            createWidget(targetAction:string, corpSel:ICorpSelection,
+                    options:Kontext.GeneralProps):React.ComponentClass<{}>;
+            initCorplistPageComponents():ICorplistPage;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
-    // ------------------------ corparch -------------------------
+    // ------------------------------------------------------------------------
+    // -------------------------- [live_attributes] plug-in -------------------
 
+    export namespace LiveAttributes {
 
-    export type CorparchWidgetView = React.ComponentClass<{}>;
-
-
-    export interface ICorparchCorpSelection extends Kontext.EventEmitter {
-        getCurrentSubcorpus():string;
-        getOrigSubcorpName():string;
-        getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
-        getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
-        getCorpora():Immutable.List<string>;
-    }
-
-    // -------------------------- live attributes --------------------------
-
-    export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
-        getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
-        setControlsEnabled(v:boolean):void;
-        selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
-        hasSelectionSteps():boolean;
-        reset():void;
-        hasSelectedLanguages():boolean;
-        removeUpdateListener(fn:()=>void):void;
-        addUpdateListener(fn:()=>void):void;
-        getTextInputPlaceholder():string;
-        getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
-        getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
-        notifyChangeListeners():void;
-    }
-
-    /**
-     *
-     */
-    export interface ILiveAttrsInitArgs {
+        export interface IPlugin extends TextTypes.AttrValueTextInputListener {
+            getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
+            setControlsEnabled(v:boolean):void;
+            selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
+            hasSelectionSteps():boolean;
+            reset():void;
+            hasSelectedLanguages():boolean;
+            removeUpdateListener(fn:()=>void):void;
+            addUpdateListener(fn:()=>void):void;
+            getTextInputPlaceholder():string;
+            getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
+            getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
+            notifyChangeListeners():void;
+        }
 
         /**
-         * A structural attribute used to uniquely identify a bibliographic
-         * item (i.e. a book). Typically something like "doc.id".
+         *
          */
-        bibAttr:string;
+        export interface InitArgs {
 
-        /**
-         * A list of aligned corpora available to be attached to
-         * the current corpus.
-         */
-        availableAlignedCorpora:Array<Kontext.AttrItem>;
+            /**
+             * A structural attribute used to uniquely identify a bibliographic
+             * item (i.e. a book). Typically something like "doc.id".
+             */
+            bibAttr:string;
 
-        /**
-         * Enable "refine" button when component is initialized?
-         * (e.g. for restoring some previous state where user
-         * already selected some values).
-         */
-        refineEnabled:boolean;
+            /**
+             * A list of aligned corpora available to be attached to
+             * the current corpus.
+             */
+            availableAlignedCorpora:Array<Kontext.AttrItem>;
 
-        /**
-         * If manual mode is disabled then the list of
-         * aligned corpora is synced automatically from
-         * the query form (i.e. if user selects/drops an aligned
-         * corpus then the model's internal list is updated
-         * accordingly)
-         */
-        manualAlignCorporaMode:boolean;
-    }
+            /**
+             * Enable "refine" button when component is initialized?
+             * (e.g. for restoring some previous state where user
+             * already selected some values).
+             */
+            refineEnabled:boolean;
 
-    export type LiveAttributesView = React.ComponentClass<{}>;
+            /**
+             * If manual mode is disabled then the list of
+             * aligned corpora is synced automatically from
+             * the query form (i.e. if user selects/drops an aligned
+             * corpus then the model's internal list is updated
+             * accordingly)
+             */
+            manualAlignCorporaMode:boolean;
+        }
 
-    export type LiveAttributesCustomAttribute = React.ComponentClass<{}>;
+        export type View = React.ComponentClass<{}>;
 
+        export type CustomAttribute = React.ComponentClass<{}>;
 
-    // ------------------------------------------------
-
-    /**
-     * A factory class for generating corplist page. The page is expected
-     * to contain two blocks
-     *  - a form (typically a filter)
-     *  - a dataset (= list of matching corpora)
-     *
-     */
-    export interface ICorplistPage {
-
-        setData(data:any):void; // TODO type
-
-        getForm():React.ComponentClass|React.SFC<{}>;
-
-        getList():React.ComponentClass|React.SFC<{}>;
+        export interface Factory {
+            (
+                pluginApi:IPluginApi,
+                textTypesModel:TextTypes.ITextTypesModel,
+                selectedCorporaProvider:()=>Immutable.List<string>,
+                ttCheckStatusProvider:()=>boolean,
+                args:PluginInterfaces.LiveAttributes.InitArgs
+            ):IPlugin;
+        }
     }
 
 
-    export interface IssueReporting {
+    // ------------------------------------------------------------------------
+    // ------------------------- [issue_reporting] plug-in --------------------
 
-        getWidgetView():React.ComponentClass|React.SFC<{}>;
+    export namespace IssueReporting {
 
+        export interface IPlugin {
+
+            getWidgetView():React.ComponentClass|React.SFC<{}>;
+        }
+
+        export interface Factory {
+            (pluginApi:IPluginApi):IPlugin;
+        }
     }
 
+
+    // ------------------------------------------------------------------------
+    // ------------------------- [kwic_connect] plug-in -----------------------
 
     export namespace KwicConnect {
 
@@ -257,6 +365,9 @@ export namespace PluginInterfaces {
                                alignedCorpora:Array<string>)=>IPlugin;
     }
 
+
+    // ------------------------------------------------------------------------
+    // ------------------------- [token_connect] plug-in ----------------------
 
     export namespace TokenConnect {
 
@@ -289,5 +400,10 @@ export namespace PluginInterfaces {
 
             selectRenderer(typeId:string):Renderer;
         }
+
+        export interface Factory {
+            (pluginApi:IPluginApi, alignedCorpora:Array<string>):IPlugin;
+        }
     }
+
 }

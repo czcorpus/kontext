@@ -40,7 +40,7 @@ class QueryHistoryPage {
 
     private layoutModel:PageModel;
 
-    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;

@@ -39,7 +39,7 @@ import {CQLEditorModel} from '../../models/query/cqleditor/model';
 export interface MainModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
-    CorparchWidget:PluginInterfaces.CorparchWidgetView;
+    CorparchWidget:PluginInterfaces.Corparch.WidgetView;
     queryModel:QueryModel;
     textTypesModel:TextTypesModel;
     queryHintModel:QueryHintModel;
@@ -54,10 +54,10 @@ export interface QueryFormProps {
     formType:Kontext.ConcFormTypes.QUERY;
     actionPrefix:string;
     allowCorpusSelection:boolean;
-    tagHelperView:PluginInterfaces.TagHelperView;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
-    liveAttrsView:PluginInterfaces.LiveAttributesView;
-    liveAttrsCustomTT:PluginInterfaces.LiveAttributesCustomAttribute;
+    tagHelperView:PluginInterfaces.TagHelper.View;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+    liveAttrsView:PluginInterfaces.LiveAttributes.View;
+    liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
     attributes:any; // TODO type once text types JSX->TSX
     onEnterKey:()=>void;
 }
@@ -68,8 +68,8 @@ export interface QueryFormLiteProps {
     corpname:string;
     operationIdx?:number;
     actionPrefix:string;
-    tagHelperView:PluginInterfaces.TagHelperView;
-    queryStorageView:PluginInterfaces.QueryStorageWidgetView;
+    tagHelperView:PluginInterfaces.TagHelper.View;
+    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
 }
 
 
@@ -189,7 +189,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     // ------------------- <TRCorpusField /> -----------------------------
 
     const TRCorpusField:React.SFC<{
-        corparchWidget:PluginInterfaces.CorparchWidgetView;
+        corparchWidget:PluginInterfaces.Corparch.WidgetView;
 
     }> = (props) => {
 

@@ -27,7 +27,7 @@ import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {StatefulModel} from '../models/base';
 import {WordlistFormModel} from '../models/wordlist/form';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
-import {createWidget as createCorparch} from 'plugins/corparch/init';
+import createCorparch from 'plugins/corparch/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -48,7 +48,7 @@ class WordlistFormPage {
 
     private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
-    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
 
     constructor(layoutModel:PageModel) {
@@ -69,10 +69,9 @@ class WordlistFormPage {
         );
     }
 
-    private initCorparchPlugin():PluginInterfaces.CorparchWidgetView {
-        return createCorparch(
+    private initCorparchPlugin():PluginInterfaces.Corparch.WidgetView {
+        return createCorparch(this.layoutModel.pluginApi()).createWidget(
             'wordlist_form',
-            this.layoutModel.pluginApi(),
             this.subcorpSel,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {

@@ -32,60 +32,44 @@ import {SearchEngine} from './search';
 declare var require:any;
 require('./style.less'); // webpack
 
-/**
- *
- * @param pluginApi
- * @returns {CorplistPage}
- */
-export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
-    const overviewViews = overviewViewInit(
-        pluginApi.dispatcher(),
-        pluginApi.getComponentHelpers(),
-        pluginApi.getModels().corpusInfoModel
-    );
-    const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
-        const ans:any = viewInit({
-            dispatcher: pluginApi.dispatcher(),
-            he: pluginApi.getComponentHelpers(),
-            CorpusInfoBox: overviewViews.CorpusInfoBox,
-            formModel: formModel,
-            listModel: listModel
-        });
-        return ans;
+
+export class Plugin {
+
+    protected pluginApi:IPluginApi;
+
+    constructor(pluginApi:IPluginApi) {
+        this.pluginApi = pluginApi;
     }
-    return new CorplistPage(pluginApi, initViews);
-}
 
-/**
- * Creates a corplist widget which is a box containing two tabs
- *  1) user's favorite items
- *  2) corpus search tool
- *
- * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
- * @param pluginApi
- * @param options A configuration for the widget
- */
-export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        corpSel:PluginInterfaces.ICorparchCorpSelection, options:any):React.ComponentClass { // TODO opts type
+    /**
+     * Creates a corplist widget which is a box containing two tabs
+     *  1) user's favorite items
+     *  2) corpus search tool
+     *
+     * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
+     * @param options A configuration for the widget
+     */
+    createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
+                options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
 
-    const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
+    const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
     const featData = pluginData['featured'] || [];
 
-    const corporaLabels:Array<[string,string,string]> = pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'];
+    const corporaLabels:Array<[string,string,string]> = this.pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'];
 
     const searchEngine = new SearchEngine(
-        pluginApi,
+        this.pluginApi,
         10,
         corporaLabels
     );
 
     const model = new CorplistWidgetModel(
-        pluginApi.dispatcher(),
-        pluginApi,
-        pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+        this.pluginApi.dispatcher(),
+        this.pluginApi,
+        this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
         corpSel,
-        pluginApi.getConf<boolean>('anonymousUser'),
+        this.pluginApi.getConf<boolean>('anonymousUser'),
         searchEngine,
         favData,
         featData,
@@ -93,10 +77,44 @@ export function createWidget(targetAction:string, pluginApi:IPluginApi,
     );
     model.initHandlers();
     return widgetInit({
-        dispatcher: pluginApi.dispatcher(),
-        util: pluginApi.getComponentHelpers(),
+        dispatcher: this.pluginApi.dispatcher(),
+        util: this.pluginApi.getComponentHelpers(),
         widgetModel: model,
         corpusSelection: corpSel
     });
     // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
+    }
+
+
+    /**
+     *
+     * @param pluginApi
+     * @returns {CorplistPage}
+     */
+    initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {
+        const overviewViews = overviewViewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.getComponentHelpers(),
+            this.pluginApi.getModels().corpusInfoModel
+        );
+        const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
+            const ans:any = viewInit({
+                dispatcher: this.pluginApi.dispatcher(),
+                he: this.pluginApi.getComponentHelpers(),
+                CorpusInfoBox: overviewViews.CorpusInfoBox,
+                formModel: formModel,
+                listModel: listModel
+            });
+            return ans;
+        }
+        return new CorplistPage(this.pluginApi, initViews);
+    }
 }
+
+
+const create:PluginInterfaces.Corparch.Factory = (pluginApi) => {
+    return new Plugin(pluginApi);
+}
+
+export default create;
+
