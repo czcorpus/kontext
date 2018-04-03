@@ -176,7 +176,7 @@
         for (let p in pluginBuildConf) {
             const remapModules = pluginBuildConf[p]['remapModules'] || {};
             for (let p in remapModules) {
-                moduleMap[p] = remapModules[p];
+                moduleMap[p] = path.resolve(__dirname, '..', '..', 'public', 'files', 'js', remapModules[p]);
             }
         };
         findPluginTags(confDoc).forEach((item) => {
