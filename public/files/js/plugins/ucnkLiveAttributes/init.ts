@@ -32,7 +32,7 @@ declare var require:any;
 require('./style.less'); // webpack
 
 
-export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
+export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.Plugin {
 
     private pluginApi:IPluginApi;
 
@@ -106,9 +106,12 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
  * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
-export default function create(pluginApi:IPluginApi, textTypesModel:TextTypes.ITextTypesModel,
+export default function create(
+        pluginApi:IPluginApi,
+        textTypesModel:TextTypes.ITextTypesModel,
         selectedCorporaProvider:()=>Immutable.List<string>,
-        ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs):PluginInterfaces.ILiveAttributes {
+        ttCheckStatusProvider:()=>boolean,
+        args:PluginInterfaces.LiveAttributes.InitArgs):PluginInterfaces.LiveAttributes.Plugin {
 
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),

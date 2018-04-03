@@ -121,7 +121,7 @@ export class SubcorpForm {
             this.textTypesModel
         );
 
-        const liveAttrsPlugin:PluginInterfaces.ILiveAttributes = liveAttributes(
+        const liveAttrsPlugin:PluginInterfaces.LiveAttributes.Plugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             null, // no corplist provider => manual aligned corp. selection mode

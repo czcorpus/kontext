@@ -29,8 +29,8 @@ import { CoreViews } from '../types/coreViews';
 
 
 export interface TextTypesPanelProps {
-    liveAttrsView:PluginInterfaces.LiveAttributesView;
-    liveAttrsCustomTT:PluginInterfaces.LiveAttributesCustomAttribute;
+    liveAttrsView:PluginInterfaces.LiveAttributes.View;
+    liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
     onReady:()=>void;
 }
 

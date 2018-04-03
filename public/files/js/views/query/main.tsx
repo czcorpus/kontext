@@ -56,8 +56,8 @@ export interface QueryFormProps {
     allowCorpusSelection:boolean;
     tagHelperView:PluginInterfaces.TagHelperView;
     queryStorageView:PluginInterfaces.QueryStorageWidgetView;
-    liveAttrsView:PluginInterfaces.LiveAttributesView;
-    liveAttrsCustomTT:PluginInterfaces.LiveAttributesCustomAttribute;
+    liveAttrsView:PluginInterfaces.LiveAttributes.View;
+    liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
     attributes:any; // TODO type once text types JSX->TSX
     onEnterKey:()=>void;
 }

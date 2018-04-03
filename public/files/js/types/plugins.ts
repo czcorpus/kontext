@@ -161,59 +161,61 @@ export namespace PluginInterfaces {
 
     // -------------------------- live attributes --------------------------
 
-    export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
-        getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
-        setControlsEnabled(v:boolean):void;
-        selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
-        hasSelectionSteps():boolean;
-        reset():void;
-        hasSelectedLanguages():boolean;
-        removeUpdateListener(fn:()=>void):void;
-        addUpdateListener(fn:()=>void):void;
-        getTextInputPlaceholder():string;
-        getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
-        getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
-        notifyChangeListeners():void;
+    export namespace LiveAttributes {
+
+        export interface Plugin extends TextTypes.AttrValueTextInputListener {
+            getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
+            setControlsEnabled(v:boolean):void;
+            selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
+            hasSelectionSteps():boolean;
+            reset():void;
+            hasSelectedLanguages():boolean;
+            removeUpdateListener(fn:()=>void):void;
+            addUpdateListener(fn:()=>void):void;
+            getTextInputPlaceholder():string;
+            getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
+            getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
+            notifyChangeListeners():void;
+        }
+
+        /**
+         *
+         */
+        export interface InitArgs {
+
+            /**
+             * A structural attribute used to uniquely identify a bibliographic
+             * item (i.e. a book). Typically something like "doc.id".
+             */
+            bibAttr:string;
+
+            /**
+             * A list of aligned corpora available to be attached to
+             * the current corpus.
+             */
+            availableAlignedCorpora:Array<Kontext.AttrItem>;
+
+            /**
+             * Enable "refine" button when component is initialized?
+             * (e.g. for restoring some previous state where user
+             * already selected some values).
+             */
+            refineEnabled:boolean;
+
+            /**
+             * If manual mode is disabled then the list of
+             * aligned corpora is synced automatically from
+             * the query form (i.e. if user selects/drops an aligned
+             * corpus then the model's internal list is updated
+             * accordingly)
+             */
+            manualAlignCorporaMode:boolean;
+        }
+
+        export type View = React.ComponentClass<{}>;
+
+        export type CustomAttribute = React.ComponentClass<{}>;
     }
-
-    /**
-     *
-     */
-    export interface ILiveAttrsInitArgs {
-
-        /**
-         * A structural attribute used to uniquely identify a bibliographic
-         * item (i.e. a book). Typically something like "doc.id".
-         */
-        bibAttr:string;
-
-        /**
-         * A list of aligned corpora available to be attached to
-         * the current corpus.
-         */
-        availableAlignedCorpora:Array<Kontext.AttrItem>;
-
-        /**
-         * Enable "refine" button when component is initialized?
-         * (e.g. for restoring some previous state where user
-         * already selected some values).
-         */
-        refineEnabled:boolean;
-
-        /**
-         * If manual mode is disabled then the list of
-         * aligned corpora is synced automatically from
-         * the query form (i.e. if user selects/drops an aligned
-         * corpus then the model's internal list is updated
-         * accordingly)
-         */
-        manualAlignCorporaMode:boolean;
-    }
-
-    export type LiveAttributesView = React.ComponentClass<{}>;
-
-    export type LiveAttributesCustomAttribute = React.ComponentClass<{}>;
-
 
     // ------------------------------------------------
 
