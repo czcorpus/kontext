@@ -247,7 +247,7 @@ function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
 /**
  *
  */
-export class DummySyntaxViewModel extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
+export class DummySyntaxViewModel extends StatefulModel implements PluginInterfaces.SyntaxViewer.IPlugin {
 
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
 
@@ -308,7 +308,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     private saveModel:ConcSaveModel;
 
-    private syntaxViewModel:PluginInterfaces.ISyntaxViewer;
+    private syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin;
 
     private supportsSyntaxView:boolean;
 
@@ -318,7 +318,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
 
     constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
-            saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.ISyntaxViewer,
+            saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
             ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -759,7 +759,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         return this.saveModel;
     }
 
-    getSyntaxViewModel():PluginInterfaces.ISyntaxViewer {
+    getSyntaxViewModel():PluginInterfaces.SyntaxViewer.IPlugin {
         return this.syntaxViewModel;
     }
 

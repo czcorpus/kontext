@@ -88,11 +88,15 @@ export namespace PluginInterfaces {
 
     // ---------------------------------- syntax viewer ---------------------
 
-    export interface ISyntaxViewer extends Kontext.EventEmitter {
-        render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
-        close():void;
-        onPageResize():void;
-        isWaiting():boolean;
+    export namespace SyntaxViewer {
+
+        export interface IPlugin extends Kontext.EventEmitter {
+            render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
+            close():void;
+            onPageResize():void;
+            isWaiting():boolean;
+        }
+
     }
 
     // --------  tag helper ----------

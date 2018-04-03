@@ -959,7 +959,7 @@ export class ViewPage {
         }
     }
 
-    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.ISyntaxViewer,
+    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
                 tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -1104,7 +1104,7 @@ export class ViewPage {
                     }
                 );
                 const ttModel = this.initTextTypesModel();
-                let syntaxViewerModel:PluginInterfaces.ISyntaxViewer = syntaxViewerInit(this.layoutModel.pluginApi());
+                let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
                 if (!syntaxViewerModel) {
                     syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
                 }

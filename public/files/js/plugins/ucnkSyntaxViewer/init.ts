@@ -31,7 +31,7 @@ require('./style.less'); // webpack
 /**
  *
  */
-class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
+class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxViewer.IPlugin {
 
     private pluginApi:IPluginApi;
 
@@ -133,6 +133,6 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntax
     }
 }
 
-export default function create(pluginApi:IPluginApi):PluginInterfaces.ISyntaxViewer {
+export default function create(pluginApi:IPluginApi):PluginInterfaces.SyntaxViewer.IPlugin {
     return new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi);
 }

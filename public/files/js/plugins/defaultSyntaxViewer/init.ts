@@ -35,7 +35,7 @@ require('./style.less'); // webpack
 /**
  *
  */
-export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.ISyntaxViewer {
+export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxViewer.IPlugin {
 
     private pluginApi:IPluginApi;
 
