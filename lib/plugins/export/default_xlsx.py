@@ -64,12 +64,13 @@ class XLSXExport(AbstractExport):
         return output.getvalue()
 
     def writeheading(self, data):
+        self._curr_line = 1
         if type(data) is dict:
             data = ['%s: %s' % (k, v) for (k, v) in data.items()]
         for i in range(1, len(data) + 1):
             col = get_column_letter(i)
             self._sheet.cell('%s%s' % (col, self._curr_line)).value = data[i - 1]
-        self._curr_line += 1
+        self._curr_line += 2
 
     def set_col_types(self, *types):
         self._col_types = types
