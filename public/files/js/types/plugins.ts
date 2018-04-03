@@ -147,16 +147,18 @@ export namespace PluginInterfaces {
 
     // ------------------------ corparch -------------------------
 
+    export namespace Corparch {
 
-    export type CorparchWidgetView = React.ComponentClass<{}>;
+        export type WidgetView = React.ComponentClass<{}>;
 
 
-    export interface ICorparchCorpSelection extends Kontext.EventEmitter {
-        getCurrentSubcorpus():string;
-        getOrigSubcorpName():string;
-        getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
-        getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
-        getCorpora():Immutable.List<string>;
+        export interface ICorpSelection extends Kontext.EventEmitter {
+            getCurrentSubcorpus():string;
+            getOrigSubcorpName():string;
+            getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
+            getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
+            getCorpora():Immutable.List<string>;
+        }
     }
 
     // -------------------------- live attributes --------------------------

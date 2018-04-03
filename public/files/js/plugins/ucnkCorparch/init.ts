@@ -59,6 +59,6 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param options
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:PluginInterfaces.ICorparchCorpSelection, options:any):React.ComponentClass {
+        queryModel:PluginInterfaces.Corparch.ICorpSelection, options:any):React.ComponentClass {
     return dcInit.createWidget(targetAction, pluginApi, queryModel, options);
 }

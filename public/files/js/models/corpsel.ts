@@ -30,7 +30,7 @@ import { ActionDispatcher, ActionPayload } from '../app/dispatcher';
  * on the 'first_form' page for pages where we still expect switching of (sub)corpus
  * but not for querying purposes.
  */
-export class NonQueryCorpusSelectionModel extends StatefulModel implements PluginInterfaces.ICorparchCorpSelection {
+export class NonQueryCorpusSelectionModel extends StatefulModel implements PluginInterfaces.Corparch.ICorpSelection {
 
     private layoutModel:PageModel;
 

@@ -60,7 +60,7 @@ export class CollPage {
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
-    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;

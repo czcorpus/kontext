@@ -28,7 +28,7 @@ import { StructsAndAttrs } from '../../pages/subcorpForm';
 export interface FormsModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
-    CorparchComponent:PluginInterfaces.CorparchWidgetView;
+    CorparchComponent:PluginInterfaces.Corparch.WidgetView;
     subcorpFormModel:SubcorpFormModel;
     subcorpWithinFormModel:SubcorpWithinFormModel;
 }

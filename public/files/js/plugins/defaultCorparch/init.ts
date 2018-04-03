@@ -66,7 +66,7 @@ export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        corpSel:PluginInterfaces.ICorparchCorpSelection, options:any):React.ComponentClass { // TODO opts type
+        corpSel:PluginInterfaces.Corparch.ICorpSelection, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];

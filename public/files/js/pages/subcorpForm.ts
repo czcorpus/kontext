@@ -59,7 +59,7 @@ export class SubcorpForm {
 
     private layoutModel:PageModel;
 
-    private corplistComponent:PluginInterfaces.ICorparchCorpSelection;
+    private corplistComponent:PluginInterfaces.Corparch.ICorpSelection;
 
     private viewComponents:any; // TODO types
 
@@ -69,7 +69,7 @@ export class SubcorpForm {
 
     private textTypesModel:TextTypesModel;
 
-    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;

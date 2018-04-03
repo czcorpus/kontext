@@ -48,7 +48,7 @@ class WordlistFormPage {
 
     private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
-    private subcorpSel:PluginInterfaces.ICorparchCorpSelection;
+    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
 
     constructor(layoutModel:PageModel) {
@@ -69,7 +69,7 @@ class WordlistFormPage {
         );
     }
 
-    private initCorparchPlugin():PluginInterfaces.CorparchWidgetView {
+    private initCorparchPlugin():PluginInterfaces.Corparch.WidgetView {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),

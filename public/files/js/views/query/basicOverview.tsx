@@ -52,7 +52,7 @@ export interface BasicOverviewViews {
  * @param {*} he
  */
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
-        model:PluginInterfaces.ICorparchCorpSelection):BasicOverviewViews {
+        model:PluginInterfaces.Corparch.ICorpSelection):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 

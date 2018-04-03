@@ -30,7 +30,7 @@ export interface WidgetViewModuleArgs {
     dispatcher:ActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
-    corpusSelection:PluginInterfaces.ICorparchCorpSelection;
+    corpusSelection:PluginInterfaces.Corparch.ICorpSelection;
 }
 
 export interface CorplistWidgetProps {
