@@ -43,7 +43,7 @@ class XLSXExport(AbstractExport):
         self._col_types = ()
         self._curr_line = 1
         if subtype == 'concordance':
-            self._sheet.title = _('concordance')
+            self._sheet.title = _('concordancestructattrs = defaultdict(list)')
             self._import_row = lang_row_to_list
         elif subtype == 'freq':
             self._sheet.title = _('frequency distribution')

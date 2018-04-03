@@ -1653,6 +1653,12 @@ class Actions(Querying):
                 ans.append(ans_item)
             return ans
 
+        used_refs = [x.strip('=') for x in self.args.refs.split(',')]
+        availref = (['#', self.corp.get_conf('DOCSTRUCTURE')] +
+                    [x for x in self.corp.get_conf('STRUCTATTRLIST').split(',') if x in used_refs])
+        logging.getLogger(__name__).debug('used_refs: {0}'.format(used_refs))
+        logging.getLogger(__name__).debug('availrefs: {0}'.format(availref))
+
         try:
             corpus_info = self.get_corpus_info(self.args.corpname)
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id'),
