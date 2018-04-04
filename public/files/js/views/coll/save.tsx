@@ -42,7 +42,9 @@ interface SaveCollFormState {
     includeColHeaders:boolean;
     includeHeading:boolean;
     fromLine:string;
+    fromLineValidation:boolean;
     toLine:string;
+    toLineValidation:boolean;
     saveLinesLimit:number;
     lineLimitHintVisible:boolean;
 }
@@ -144,7 +146,9 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     const TRSelLineRangeInputs:React.SFC<{
         fromValue:string;
+        fromValueValidation:boolean;
         toValue:string;
+        toValueValidation:boolean;
         lineLimitHintVisible:boolean;
         saveLinesLimit:number;
         onLineLimitHintShow:(v:boolean)=>void;
@@ -172,17 +176,20 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
         return (
             <tr>
                 <th style={{verticalAlign: 'top'}}>
-                    {utils.translate('coll__save_form_lines_to_model')}:
+                    {utils.translate('coll__save_form_lines_to_store')}:
                 </th>
                 <td>
                     {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
-                    <input type="text" name="from_line" value={props.fromValue}
-                            onChange={handleFromInput}  style={{width: '4em'}} />
+                    <layoutViews.ValidatedItem invalid={!props.fromValueValidation}>
+                        <input type="text" name="from_line" value={props.fromValue}
+                                onChange={handleFromInput}  style={{width: '4em'}} />
+                    </layoutViews.ValidatedItem>
                     {'\u00a0'}
                     {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
-                    <input type="text" name="to_line" value={props.toValue}
-                            onChange={handleToInput} style={{width: '4em'}} />
-
+                    <layoutViews.ValidatedItem invalid={!props.toValueValidation}>
+                        <input type="text" name="to_line" value={props.toValue}
+                                onChange={handleToInput} style={{width: '4em'}} />
+                    </layoutViews.ValidatedItem>
                     <div className="hint">
                         ({utils.translate('coll__save_form_leave_to_load_to_end')}
                         <a className="context-help" onClick={()=>props.onLineLimitHintShow(true)}>
@@ -220,7 +227,9 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                 includeColHeaders: collSaveModel.getIncludeColHeaders(),
                 includeHeading: collSaveModel.getIncludeHeading(),
                 fromLine: collSaveModel.getFromLine(),
+                fromLineValidation: collSaveModel.getFromLineValidation(),
                 toLine: collSaveModel.getToLine(),
+                toLineValidation: collSaveModel.getToLineValidation(),
                 saveLinesLimit: collSaveModel.getMaxSaveLines(),
                 lineLimitHintVisible: false
             };
@@ -272,7 +281,11 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                                 <tbody>
                                     <TRSaveFormatSelect value={this.state.saveformat} />
                                     {this._renderFormatDependentOptions()}
-                                    <TRSelLineRangeInputs fromValue={this.state.fromLine} toValue={this.state.toLine}
+                                    <TRSelLineRangeInputs
+                                            fromValue={this.state.fromLine}
+                                            fromValueValidation={this.state.fromLineValidation}
+                                            toValue={this.state.toLine}
+                                            toValueValidation={this.state.toLineValidation}
                                             saveLinesLimit={this.state.saveLinesLimit}
                                             lineLimitHintVisible={this.state.lineLimitHintVisible}
                                             onLineLimitHintShow={this._switchLineLimitHint} />

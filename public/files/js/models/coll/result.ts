@@ -76,7 +76,11 @@ export class CollResultsSaveModel extends StatefulModel {
 
     private fromLine:string;
 
+    private fromLineValidation:boolean;
+
     private toLine:string;
+
+    private toLineValidation:boolean;
 
     private saveLinkFn:(file:string, url:string)=>void;
 
@@ -95,7 +99,9 @@ export class CollResultsSaveModel extends StatefulModel {
         this.formIsActive = false;
         this.saveformat = 'csv';
         this.fromLine = '1';
+        this.fromLineValidation = true;
         this.toLine = '';
+        this.toLineValidation = true;
         this.includeColHeaders = false;
         this.includeHeading = false;
         this.collArgsProviderFn = collArgsProviderFn;
@@ -142,29 +148,43 @@ export class CollResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SUBMIT':
-                    const err0 = this.validateNumberFormat(this.fromLine, false) ||
-                            this.validateNumberFormat(this.toLine, true);
-                    if (err0) {
-                        this.layoutModel.showMessage('error', err0);
-                        break;
+                    const err = this.validateForm();
+                    if (err) {
+                        this.layoutModel.showMessage('error', err);
+
+                    } else {
+                        this.submit();
+                        this.formIsActive = false;
                     }
-                    const err1 = this.validateFromToVals();
-                    if (err1) {
-                        this.layoutModel.showMessage('error', err1);
-                        break;
-                    }
-                    this.submit();
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
 
-    private validateNumberFormat(v:string, allowEmpty:boolean):Error {
-        if (!isNaN(parseInt(v, 10)) || allowEmpty && v === '') {
-            return null;
+    private validateForm():Error|null {
+        this.fromLineValidation = true;
+        this.toLineValidation = true;
+        if (!this.validateNumberFormat(this.fromLine, false)) {
+            this.fromLineValidation = false;
+            return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        return Error(this.layoutModel.translate('global__invalid_number_format'));
+        if (!this.validateNumberFormat(this.toLine, false)) {
+            this.toLineValidation = false;
+            return new Error(this.layoutModel.translate('global__invalid_number_format'));
+        }
+        if (parseInt(this.fromLine) < 1 || (this.toLine !== '' &&
+                parseInt(this.fromLine) > parseInt(this.toLine))) {
+            this.fromLineValidation = false;
+            return new Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
+        }
+    }
+
+    private validateNumberFormat(v:string, allowEmpty:boolean):boolean {
+        if (!isNaN(parseInt(v, 10)) || allowEmpty && v === '') {
+            return true;
+        }
+        return false;
     }
 
     private validateFromToVals():Error {
@@ -217,8 +237,16 @@ export class CollResultsSaveModel extends StatefulModel {
         return this.fromLine;
     }
 
+    getFromLineValidation():boolean {
+        return this.fromLineValidation;
+    }
+
     getToLine():string {
         return this.toLine;
+    }
+
+    getToLineValidation():boolean {
+        return this.toLineValidation;
     }
 
     getMaxSaveLines():number {

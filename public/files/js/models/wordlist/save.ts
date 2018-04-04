@@ -41,6 +41,8 @@ export class WordlistSaveModel extends StatefulModel {
 
     private toLine:string;
 
+    private toLineValidation:boolean;
+
     private saveFormat:string;
 
     private includeHeading:boolean;
@@ -61,6 +63,7 @@ export class WordlistSaveModel extends StatefulModel {
         this.saveLinkFn = saveLinkFn;
         this.wordlistArgsProviderFn = wordlistArgsProviderFn;
         this.toLine = '';
+        this.toLineValidation = true;
         this.saveFormat = 'csv';
         this.includeHeading = false;
         this.includeColHeaders = false;
@@ -94,7 +97,14 @@ export class WordlistSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SUBMIT':
-                this.submit();
+                const err = this.validateForm();
+                if (err) {
+                    this.layoutModel.showMessage('error', err);
+
+                } else {
+                    this.submit();
+                    this.formIsActive = false;
+                }
                 this.notifyChangeListeners();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
@@ -106,6 +116,17 @@ export class WordlistSaveModel extends StatefulModel {
                 break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        if (this.toLine === '' || !isNaN(parseInt(this.toLine))) {
+            this.toLineValidation = true;
+            return null;
+
+        } else {
+            this.toLineValidation = false;
+            return new Error(this.layoutModel.translate('global__invalid_number_format'));
+        }
     }
 
     private submit():void {
@@ -134,6 +155,10 @@ export class WordlistSaveModel extends StatefulModel {
 
     getToLine():string {
         return this.toLine;
+    }
+
+    getToLineValidation():boolean {
+        return this.toLineValidation;
     }
 
     getSaveFormat():string {

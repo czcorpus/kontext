@@ -278,6 +278,15 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace ValidatedItem {
+
+        export interface Props {
+            invalid:boolean;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -295,6 +304,7 @@ export namespace CoreViews {
         Shortener:Shortener.Component;
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
+        ValidatedItem:ValidatedItem.Component;
     }
 }
 
