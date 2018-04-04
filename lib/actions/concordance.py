@@ -227,11 +227,19 @@ class Actions(Querying):
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
 
-        self._add_flux_save_menu_item('CSV', save_format='csv')
-        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-        self._add_flux_save_menu_item('XML', save_format='xml')
-        self._add_flux_save_menu_item('TXT', save_format='text')
-        self._add_flux_save_menu_item(_('Custom'))
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('TXT', save_format='text',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(_('Custom'))
 
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
@@ -1025,11 +1033,19 @@ class Actions(Querying):
                      'pfilter': pfilter, 'nfilter': corr_nfilter,
                      'norel': 1, 'fbar': 0})
 
-            self._add_flux_save_menu_item('CSV', save_format='csv')
-            self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-            self._add_flux_save_menu_item('XML', save_format='xml')
-            self._add_flux_save_menu_item('TXT', save_format='text')
-            self._add_flux_save_menu_item(_('Custom'))
+            self._add_save_menu_item('CSV', save_format='csv',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XLSX', save_format='xlsx',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XML', save_format='xml',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('TXT', save_format='text',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item(_('Custom'))
 
         result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
@@ -1153,7 +1169,7 @@ class Actions(Querying):
             freq_data = dict(data=[], full_size=0)
             self.add_system_message('error', ex.message)
 
-        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+        self._add_save_menu_item('XLSX', save_format='xlsx')
 
         ans = dict(
             freq_type='ct',
@@ -1220,11 +1236,19 @@ class Actions(Querying):
         calc_args.citemsperpage = self.args.citemsperpage
         calc_args.collpage = self.args.collpage
 
-        self._add_flux_save_menu_item('CSV', save_format='csv')
-        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-        self._add_flux_save_menu_item('XML', save_format='xml')
-        self._add_flux_save_menu_item('TXT', save_format='text')
-        self._add_flux_save_menu_item(_('Custom'))
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('TXT', save_format='text',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(_('Custom'))
 
         ans = coll_calc.calculate_colls(calc_args)
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
@@ -1490,11 +1514,19 @@ class Actions(Querying):
                 wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
                 wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
 
-            self._add_flux_save_menu_item('CSV', save_format='csv')
-            self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-            self._add_flux_save_menu_item('XML', save_format='xml')
-            self._add_flux_save_menu_item('TXT', save_format='text')
-            self._add_flux_save_menu_item(_('Custom'))
+            self._add_save_menu_item('CSV', save_format='csv',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XLSX', save_format='xlsx',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XML', save_format='xml',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('TXT', save_format='text',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item(_('Custom'))
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
             result['SubcorpList'] = []

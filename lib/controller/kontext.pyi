@@ -118,6 +118,8 @@ class Kontext(Controller):
 
     def get_available_aligned_corpora(self) -> List[str]: ...
 
+    def _add_save_menu_item(self, label:basestring, save_format:str, hint:Optional[basestring]): ...
+
 
 class PluginApi(object):
 

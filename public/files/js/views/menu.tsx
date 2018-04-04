@@ -23,6 +23,8 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
 import { MultiDict } from '../util';
+import {isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
+        DynamicSubmenuItem} from '../models/mainMenu';
 
 
 export interface MenuModuleArgs {
@@ -61,13 +63,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     const ConcDependentItem:React.SFC<{
         concArgs:Kontext.IMultiDict;
-        data: {
-            action:string;
-            args:Array<[string, string]>;
-            q:string;
-            label:string;
-            indirect:boolean;
-        };
+        data:StaticSubmenuItem;
 
     }> = (props) => {
 
@@ -81,7 +77,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         return (
             <li>
-                <a href={createLink()}>
+                <a href={createLink()} title={props.data.hint}>
                     {props.data.label}
                     {props.data.indirect ? '\u2026' : null}
                 </a>
@@ -89,18 +85,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         );
     };
 
-    // ----------------------------- <Item /> --------------------------
+    // ----------------------------- <ExternalURLItem /> --------------------------
 
-    const Item:React.SFC<{
-        data: {
-            action:string;
-            args:Kontext.GeneralProps;
-            label:string;
-            openInBlank:boolean;
-            indirect:boolean;
-            boundAction:()=>void;
-        };
-
+    const StaticItem:React.SFC<{
+        data:StaticSubmenuItem
     }> = (props) => {
 
         const createLink = () => {
@@ -119,6 +107,24 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             return undefined;
         };
 
+        return (
+            <li>
+                <a href={createLink()}
+                        title={props.data.hint}
+                        target={props.data.openInBlank ? '_blank' : null}>
+                    {props.data.label}
+                </a>
+            </li>
+        );
+    }
+
+    // ----------------------------- <Item /> --------------------------
+
+    const DynamicItem:React.SFC<{
+        data:DynamicSubmenuItem
+
+    }> = (props) => {
+
         const clickHandler = () => {
             if (typeof props.data.boundAction === 'function') {
                 props.data.boundAction();
@@ -127,8 +133,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         return (
             <li>
-                <a href={createLink()} onClick={clickHandler}
-                        target={props.data.openInBlank ? '_blank' : null}>
+                <a onClick={clickHandler} title={props.data.hint}>
                     {props.data.label}
                     {props.data.indirect ? '\u2026' : null}
                 </a>
@@ -159,6 +164,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             label:string;
             indirect:boolean;
             args:Kontext.GeneralProps;
+            hint:string;
         };
         closeActiveSubmenu:()=>void;
     }> = (props) => {
@@ -172,7 +178,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         };
 
         return (
-            <li>
+            <li title={props.data.hint}>
                 <a onClick={handleClick}>
                     {he.translate(props.data.label)}
                     {props.data.indirect ? '\u2026' : null}
@@ -195,20 +201,25 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         handleMouseOut:()=>void;
 
     }> = (props) => {
-
-        const createItem = (item, key) => {
+        const createItem = (item:Kontext.SubmenuItem, key) => {
             if (item.disabled) {
                 return <DisabledItem key={key} data={item} />;
 
-            } else if (item.message) {
+            } else if (isEventTriggeringItem(item)) {
                 return <EventTriggeringItem key={key} data={item}
                             closeActiveSubmenu={props.closeActiveSubmenu} />;
 
-            } else if (item.currConc) {
+            } else if (isStaticItem(item) && item.currConc) {
                 return <ConcDependentItem key={key} data={item} concArgs={props.concArgs} />;
 
-            } else if (typeof item.boundAction === 'function' || item.boundAction === undefined) {
-                return <Item key={key} data={item} />;
+            } else if (isStaticItem(item)) {
+                return <StaticItem key={key} data={item} />;
+
+            } else if (isDynamicItem(item)) {
+                return <DynamicItem key={key} data={item} />;
+
+            } else {
+                return null;
             }
         };
 
