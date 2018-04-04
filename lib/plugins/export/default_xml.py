@@ -239,6 +239,9 @@ class XMLExport(AbstractExport):
     def writeheading(self, data):
         self._document.add_heading(data)
 
+    def write_ref_headings(self, data):
+        self._document.add_heading(dict(refs=data))
+
     def writerow(self, line_num, *lang_rows):
         if len(lang_rows) == 0:
             raise ValueError('empty line')

@@ -48,6 +48,9 @@ class AbstractExport(object):
     def writeheading(self, data):
         pass  # optional implementation
 
+    def write_ref_headings(self, data):
+        pass  # optional implementation
+
 
 def lang_row_to_list(row):
     ans = []

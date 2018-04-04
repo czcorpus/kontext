@@ -262,14 +262,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
         _renderFormatDependentOptions() {
             switch (this.state.saveFormat) {
             case 'text':
-                return [
-                        <TRAlignKwicCheckbox key="opt-ak" value={this.state.alignKwic} />,
+                return <>
+                        <TRAlignKwicCheckbox key="opt-ak" value={this.state.alignKwic} />
                         <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />
-                ];
+                </>;
             case 'xml':
-                return [<TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />];
+            case 'xlsx':
+            case 'csv':
+                return <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />;
             default:
-                return [];
+                return null;
             }
         }
 
@@ -290,7 +292,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
                                 <tbody>
                                     <TRFormatSelect value={this.state.saveFormat} />
                                     <TRIncludeLineNumbersCheckbox value={this.state.includeLineNumbers} />
-                                    {this._renderFormatDependentOptions().map(item => item)}
+                                    {this._renderFormatDependentOptions()}
                                     <TRLineRangeInput fromLine={this.state.fromLine} toLine={this.state.toLine} />
                                 </tbody>
                             </table>

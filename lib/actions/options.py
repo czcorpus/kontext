@@ -83,8 +83,8 @@ class Options(Kontext):
                                for n in availstruct if n and n != '#']
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
-        structattrs = defaultdict(list)
         reflist = self.args.refs.split(',') if self.args.refs else []
+        structattrs = defaultdict(list)
 
         def ref_is_allowed(r):
             return r and r not in (

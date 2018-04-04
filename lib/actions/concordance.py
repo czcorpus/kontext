@@ -1721,6 +1721,23 @@ class Actions(Querying):
                     writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
                                           for c in aligned_corpora])
 
+                    if heading:
+                        writer.writeheading({
+                            'corpus': self._human_readable_corpname(),
+                            'subcorpus': self.args.usesubcorp,
+                            'concordance_size': data['concsize'],
+                            'arf': data['result_arf'],
+                            'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
+                                      for x in self.concdesc_json().get('Desc', [])]
+                        })
+
+                        doc_struct = self.corp.get_conf('DOCSTRUCTURE')
+                        refs_args = [x.strip('=') for x in self.args.refs.split(',')]
+                        used_refs = ([('#', _('Token number')), (doc_struct, _('Document number'))] +
+                                     [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
+                        used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+                        writer.write_ref_headings(used_refs)
+
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
                         if numbering:
@@ -1734,15 +1751,6 @@ class Actions(Querying):
                             lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key,
                                                       add_linegroup=False)
                         writer.writerow(row_num, *lang_rows)
-                if heading:
-                    writer.writeheading({
-                        'corpus': self._human_readable_corpname(),
-                        'subcorpus': self.args.usesubcorp,
-                        'concordance_size': data['concsize'],
-                        'arf': data['result_arf'],
-                        'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
-                                  for x in self.concdesc_json().get('Desc', [])]
-                    })
                 output = writer.raw_content()
             else:
                 raise UserActionException(_('Unknown export data type'))
