@@ -25,9 +25,16 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 
 
-export class ConcSaveModel extends StatefulModel {
+export interface ConcSaveModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    concSize:number;
+    saveLinkFn:(filename:string, url:string)=>Promise<boolean>;
+    quickSaveRowLimit:number;
+}
 
-    private static QUICK_SAVE_LINE_LIMIT = 10000;
+
+export class ConcSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
@@ -49,8 +56,9 @@ export class ConcSaveModel extends StatefulModel {
 
     private saveLinkFn:(filename:string, url:string)=>Promise<boolean>;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concSize:number,
-                saveLinkFn:(filename:string, url:string)=>Promise<boolean>) {
+    private quickSaveRowLimit:number;
+
+    constructor({dispatcher, layoutModel, concSize, quickSaveRowLimit, saveLinkFn}:ConcSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveformat = 'csv';
@@ -61,6 +69,7 @@ export class ConcSaveModel extends StatefulModel {
         this.includeHeading = false;
         this.concSize = concSize;
         this.saveLinkFn = saveLinkFn;
+        this.quickSaveRowLimit = quickSaveRowLimit;
 
         dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -71,7 +80,7 @@ export class ConcSaveModel extends StatefulModel {
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveformat = payload.props['saveformat'];
                 const tmp = this.toLine;
-                this.toLine = String(Math.min(ConcSaveModel.QUICK_SAVE_LINE_LIMIT, this.concSize));
+                this.toLine = String(Math.min(this.quickSaveRowLimit, this.concSize));
                 this.submit();
                 this.toLine = tmp;
                 this.notifyChangeListeners();

@@ -54,8 +54,10 @@ class Actions(Querying):
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
     SAVECOLL_MAX_LINES = 1000000
+    CONC_QUICK_SAVE_MAX_LINES = 10000
     FREQ_QUICK_SAVE_MAX_LINES = 10000
     COLLS_QUICK_SAVE_MAX_LINES = 10000
+    WORDLIST_QUICK_SAVE_MAX_LINES = 10000
 
     """
     This class specifies all the actions KonText offers to a user via HTTP
@@ -270,6 +272,7 @@ class Actions(Querying):
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:
             out['chart_export_formats'].extend(ce.get_supported_types())
+        out['quick_save_row_limit'] = self.CONC_QUICK_SAVE_MAX_LINES
         return out
 
     @exposed(access_level=1, return_type='json', http_method='POST')
@@ -1034,6 +1037,7 @@ class Actions(Querying):
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         result['text_types_data'] = get_tt(
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        result['quick_save_row_limit'] = self.FREQ_QUICK_SAVE_MAX_LINES
         self._attach_query_params(result)
         return result
 
@@ -1226,9 +1230,11 @@ class Actions(Querying):
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        ans['save_line_limit'] = 100000
+        ans['save_line_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
         ans['text_types_data'] = get_tt(
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
+        ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
         return ans
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')
@@ -1246,7 +1252,7 @@ class Actions(Querying):
         if err is not None:
             raise err
         self.args.collpage = 1
-        self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES  # to make sure we include everything
+        self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES   # we need a one big page when saving
         result = self.collx(line_offset=(from_line - 1), num_lines=num_lines)
         saved_filename = self.args.corpname
         if saveformat == 'text':
@@ -1492,6 +1498,7 @@ class Actions(Querying):
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
             result['SubcorpList'] = []
+            result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
             self._export_subcorpora_list(self.args.corpname, result)
             return result
 

@@ -24,6 +24,15 @@ import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 
 
+export interface WordlistSaveModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    quickSaveRowLimit:number;
+    saveLinkFn:(file:string, url:string)=>void;
+    wordlistArgsProviderFn:()=>MultiDict;
+}
+
+
 export class WordlistSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
@@ -38,14 +47,15 @@ export class WordlistSaveModel extends StatefulModel {
 
     private includeColHeaders:boolean;
 
+    private quickSaveRowLimit:number;
+
     private saveLinkFn:(file:string, url:string)=>void;
 
     private wordlistArgsProviderFn:()=>MultiDict;
 
-    private static QUICK_SAVE_LINE_LIMIT = 10000;
-
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            saveLinkFn:(file:string, url:string)=>void, wordlistArgsProviderFn:()=>MultiDict) {
+    constructor({
+            dispatcher, layoutModel, quickSaveRowLimit,
+            saveLinkFn, wordlistArgsProviderFn}:WordlistSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
@@ -55,6 +65,7 @@ export class WordlistSaveModel extends StatefulModel {
         this.includeHeading = false;
         this.includeColHeaders = false;
         this.formIsActive = false;
+        this.quickSaveRowLimit = quickSaveRowLimit;
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -88,7 +99,7 @@ export class WordlistSaveModel extends StatefulModel {
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveFormat = payload.props['saveformat'];
-                this.toLine = String(WordlistSaveModel.QUICK_SAVE_LINE_LIMIT);
+                this.toLine = `${this.quickSaveRowLimit}`;
                 this.submit();
                 this.toLine = '';
                 this.notifyChangeListeners();

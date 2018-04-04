@@ -49,6 +49,17 @@ export interface AjaxResponse extends Kontext.AjaxResponse {
 }
 
 
+export interface COllResultsSaveModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    mainModel:CollResultModel;
+    quickSaveRowLimit:number;
+    saveCollMaxLines:number;
+    collArgsProviderFn:()=>MultiDict;
+    saveLinkFn:(file:string, url:string)=>void;
+}
+
+
 export class CollResultsSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
@@ -71,13 +82,13 @@ export class CollResultsSaveModel extends StatefulModel {
 
     private collArgsProviderFn:()=>MultiDict;
 
-    private static QUICK_SAVE_LINE_LIMIT = 10000;
+    private quickSaveRowLimit:number;
 
-    private static GLOBAL_SAVE_LINE_LIMIT = 100000;
+    private saveCollMaxLines:number;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            mainModel:CollResultModel, collArgsProviderFn:()=>MultiDict,
-            saveLinkFn:(file:string, url:string)=>void) {
+    constructor({
+            dispatcher, layoutModel, mainModel, quickSaveRowLimit,
+            saveCollMaxLines, collArgsProviderFn, saveLinkFn}) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.mainModel = mainModel;
@@ -89,6 +100,8 @@ export class CollResultsSaveModel extends StatefulModel {
         this.includeHeading = false;
         this.collArgsProviderFn = collArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
+        this.quickSaveRowLimit = quickSaveRowLimit;
+        this.saveCollMaxLines = saveCollMaxLines;
 
         dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -99,7 +112,7 @@ export class CollResultsSaveModel extends StatefulModel {
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = String(CollResultsSaveModel.QUICK_SAVE_LINE_LIMIT);
+                    this.toLine = `${this.quickSaveRowLimit}`;
                     this.submit();
                     this.toLine = '';
                     this.notifyChangeListeners();
@@ -209,7 +222,7 @@ export class CollResultsSaveModel extends StatefulModel {
     }
 
     getMaxSaveLines():number {
-        return CollResultsSaveModel.GLOBAL_SAVE_LINE_LIMIT;
+        return this.saveCollMaxLines;
     }
 }
 
@@ -292,6 +305,20 @@ class CalcWatchdog {
 }
 
 
+export interface CollResulModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    formModel:CollFormModel;
+    initialData:CollResultData;
+    resultHeading:CollResultHeading;
+    pageSize:number;
+    saveLinkFn:((file:string, url:string)=>void);
+    saveLinesLimit:number;
+    unfinished:boolean;
+    quickSaveRowLimit:number;
+    saveCollMaxLines:number;
+}
+
 /**
  *
  */
@@ -325,10 +352,12 @@ export class CollResultModel extends StatefulModel {
 
     private calcWatchdog:CalcWatchdog;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            formModel:CollFormModel, initialData:CollResultData, resultHeading:CollResultHeading,
-            pageSize:number, saveLinkFn:((file:string, url:string)=>void), saveLinesLimit:number,
-            unfinished:boolean) {
+    private quickSaveRowLimit:number;
+
+    constructor({
+            dispatcher, layoutModel, formModel, initialData, resultHeading,
+            pageSize, saveLinkFn, saveLinesLimit, unfinished, quickSaveRowLimit,
+            saveCollMaxLines}) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formModel = formModel;
@@ -340,13 +369,15 @@ export class CollResultModel extends StatefulModel {
         this.pageSize = pageSize;
         this.hasNextPage = true; // we do not know in advance in case of collocations
         this.sortFn = resultHeading.length > 1 && resultHeading[1].s ? resultHeading[1].s : 'f'; // [0] = token column
-        this.saveModel = new CollResultsSaveModel(
-            dispatcher,
-            layoutModel,
-            this,
-            ()=>this.getSubmitArgs(),
-            saveLinkFn
-        );
+        this.saveModel = new CollResultsSaveModel({
+            dispatcher: dispatcher,
+            layoutModel: layoutModel,
+            mainModel: this,
+            collArgsProviderFn: ()=>this.getSubmitArgs(),
+            saveLinkFn: saveLinkFn,
+            quickSaveRowLimit: quickSaveRowLimit,
+            saveCollMaxLines: saveCollMaxLines
+        });
         this.saveLinesLimit = saveLinesLimit;
         this.calcStatus = unfinished ? 0 : 100;
         this.calcWatchdog = new CalcWatchdog(layoutModel, this, (status, err) => {

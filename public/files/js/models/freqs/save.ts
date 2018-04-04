@@ -26,6 +26,17 @@ import {MultiDict} from '../../util';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
 
+
+
+export interface FreqResultsSaveModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    quickSaveRowLimit:number;
+    freqArgsProviderFn:()=>MultiDict;
+    saveLinkFn:(file:string, url:string)=>void;
+}
+
+
 /**
  *
  */
@@ -49,10 +60,11 @@ export class FreqResultsSaveModel extends StatefulModel {
 
     private freqArgsProviderFn:()=>MultiDict;
 
-    private static QUICK_SAVE_LINE_LIMIT = 10000;
+    private quickSaveRowLimit:number;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            freqArgsProviderFn:()=>MultiDict, saveLinkFn:(file:string, url:string)=>void) {
+    constructor({
+            dispatcher, layoutModel, freqArgsProviderFn, saveLinkFn,
+            quickSaveRowLimit}:FreqResultsSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formIsActive = false;
@@ -73,7 +85,7 @@ export class FreqResultsSaveModel extends StatefulModel {
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = String(FreqResultsSaveModel.QUICK_SAVE_LINE_LIMIT);
+                    this.toLine = `${this.quickSaveRowLimit}`;
                     this.submit();
                     this.toLine = '';
                     this.notifyChangeListeners();

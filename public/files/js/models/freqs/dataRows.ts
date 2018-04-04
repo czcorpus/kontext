@@ -57,6 +57,15 @@ export interface ResultBlock {
     Head:Immutable.List<ResultHeader>;
 }
 
+export interface FreqDataRowsModelArgs {
+    dispatcher:ActionDispatcher;
+    pageModel:PageModel;
+    freqCrit:Array<[string, string]>;
+    formProps:FreqFormInputs;
+    quickSaveRowLimit:number;
+    saveLinkFn:(file:string, url:string)=>void;
+}
+
 
 export class FreqDataRowsModel extends StatefulModel {
 
@@ -86,8 +95,10 @@ export class FreqDataRowsModel extends StatefulModel {
 
     private saveModel:FreqResultsSaveModel;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
-            formProps:FreqFormInputs, saveLinkFn:(file:string, url:string)=>void) {
+    private quickSaveRowLimit:number;
+
+    constructor({dispatcher, pageModel, freqCrit, formProps, saveLinkFn,
+                quickSaveRowLimit}:FreqDataRowsModelArgs) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<ResultBlock>();
@@ -101,12 +112,13 @@ export class FreqDataRowsModel extends StatefulModel {
         this.mlxicase = formProps.mlxicase;
         this.mlxctx = formProps.mlxctx;
         this.alignType = formProps.alignType;
-        this.saveModel = new FreqResultsSaveModel(
-            dispatcher,
-            pageModel,
-            ()=>this.getSubmitArgs(),
-            saveLinkFn
-        );
+        this.saveModel = new FreqResultsSaveModel({
+            dispatcher: dispatcher,
+            layoutModel: pageModel,
+            freqArgsProviderFn: ()=>this.getSubmitArgs(),
+            saveLinkFn: saveLinkFn,
+            quickSaveRowLimit: quickSaveRowLimit
+        });
 
         dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {

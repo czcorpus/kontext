@@ -166,17 +166,19 @@ export class CollPage {
 
         // ---- coll result
 
-        this.collResultModel = new CollResultModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.collFormModel,
-            this.layoutModel.getConf<CollResultData>('CollResultData'),
-            this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
-            this.layoutModel.getConf<number>('CollPageSize'),
-            this.setDownloadLink.bind(this),
-            this.layoutModel.getConf<number>('CollSaveLinesLimit'),
-            !!this.layoutModel.getConf<number>('CollUnfinished')
-        );
+        this.collResultModel = new CollResultModel({
+            dispatcher: this.layoutModel.dispatcher,
+            layoutModel: this.layoutModel,
+            formModel: this.collFormModel,
+            initialData: this.layoutModel.getConf<CollResultData>('CollResultData'),
+            resultHeading: this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
+            pageSize: this.layoutModel.getConf<number>('CollPageSize'),
+            saveLinkFn: this.setDownloadLink.bind(this),
+            saveLinesLimit: this.layoutModel.getConf<number>('CollSaveLinesLimit'),
+            unfinished: !!this.layoutModel.getConf<number>('CollUnfinished'),
+            quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
+            saveCollMaxLines: this.layoutModel.getConf<number>('SaveCollMaxLines')
+        });
 
         const collResultViews = collResultViewInit(
             this.layoutModel.dispatcher,
