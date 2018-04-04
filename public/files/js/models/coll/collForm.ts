@@ -57,13 +57,13 @@ export class CollFormModel extends StatefulModel {
 
     private cattr:string;
 
-    private cfromw:string;
+    private cfromw:Kontext.FormValue<string>;
 
-    private ctow:string;
+    private ctow:Kontext.FormValue<string>;
 
-    private cminfreq:string;
+    private cminfreq:Kontext.FormValue<string>;
 
-    private cminbgr:string;
+    private cminbgr:Kontext.FormValue<string>;
 
     private cbgrfns:Immutable.Set<string>;
 
@@ -75,10 +75,10 @@ export class CollFormModel extends StatefulModel {
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.cattr = props.cattr;
-        this.cfromw = props.cfromw;
-        this.ctow = props.ctow;
-        this.cminfreq = props.cminfreq;
-        this.cminbgr = props.cminbgr;
+        this.cfromw = {value: props.cfromw, isRequired: true, isInvalid: false};
+        this.ctow = {value: props.ctow, isRequired: true, isInvalid: false};
+        this.cminfreq = {value: props.cminfreq, isRequired: true, isInvalid: false};
+        this.cminbgr = {value: props.cminbgr, isRequired: true, isInvalid: false};
         this.cbgrfns = Immutable.Set<string>(props.cbgrfns);
         this.csortfn = props.csortfn;
 
@@ -89,39 +89,19 @@ export class CollFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_FORM_SET_CFROMW':
-                    if (this.validateNumber(payload.props['value'])) {
-                        this.cfromw = payload.props['value'];
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('coll__invalid_number_value'));
-                    }
+                    this.cfromw.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_FORM_SET_CTOW':
-                    if (this.validateNumber(payload.props['value'])) {
-                        this.ctow = payload.props['value'];
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('coll__invalid_number_value'));
-                    }
+                    this.ctow.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_FORM_SET_CMINFREQ':
-                    if (this.validateGzNumber(payload.props['value'])) {
-                        this.cminfreq = payload.props['value'];
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('coll__invalid_gz_number_value'));
-                    }
+                    this.cminfreq.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_FORM_SET_CMINBGR':
-                    if (this.validateGzNumber(payload.props['value'])) {
-                        this.cminbgr = payload.props['value'];
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('coll__invalid_gz_number_value'));
-                    }
+                    this.cminbgr.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_FORM_SET_CBGRFNS':
@@ -138,11 +118,49 @@ export class CollFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_FORM_SUBMIT':
-                    this.submit();
-                    // we leave the page here => no need to notify anybody
+                    const err = this.validateForm();
+                    if (err) {
+                        this.pageModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+
+                    } else {
+                        this.submit();
+                        // we leave the page here => no need to notify anybody
+                    }
                 break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        if (this.validateNumber(this.cfromw.value)) {
+            this.cfromw.isInvalid = false;
+
+        } else {
+            this.cfromw.isInvalid = true;
+            return new Error(this.pageModel.translate('coll__invalid_number_value'));
+        }
+        if (this.validateNumber(this.ctow.value)) {
+            this.ctow.isInvalid = false;
+
+        } else {
+            this.ctow.isInvalid = true;;
+            return new Error(this.pageModel.translate('coll__invalid_number_value'));
+        }
+        if (this.validateGzNumber(this.cminfreq.value)) {
+            this.cminfreq.isInvalid = false;
+
+        } else {
+            this.cminfreq.isInvalid = true;
+            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+        }
+        if (this.validateGzNumber(this.cminbgr.value)) {
+            this.cminbgr.isInvalid = false;
+
+        } else {
+            this.cminbgr.isInvalid = true;
+            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+        }
     }
 
     private validateNumber(s:string):boolean {
@@ -177,19 +195,19 @@ export class CollFormModel extends StatefulModel {
         return this.cattr;
     }
 
-    getCfromw():string {
+    getCfromw():Kontext.FormValue<string> {
         return this.cfromw;
     }
 
-    getCtow():string {
+    getCtow():Kontext.FormValue<string> {
         return this.ctow;
     }
 
-    getCminfreq():string {
+    getCminfreq():Kontext.FormValue<string> {
         return this.cminfreq;
     }
 
-    getCminbgr():string {
+    getCminbgr():Kontext.FormValue<string> {
         return this.cminbgr;
     }
 

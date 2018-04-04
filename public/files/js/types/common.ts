@@ -37,6 +37,16 @@ export namespace Kontext {
 
     export type SubcorpListItem = {v:string; n:string; pub:string};
 
+    export interface FormValue<T> {
+
+        value:T;
+
+        isRequired:boolean;
+
+        isInvalid:boolean;
+
+    }
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
