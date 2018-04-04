@@ -1021,12 +1021,13 @@ export class ViewPage {
         this.viewModels.lineViewModel = new ConcLineModel(
                 this.layoutModel,
                 this.layoutModel.dispatcher,
-                new ConcSaveModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.layoutModel.getConf<number>('ConcSize'),
-                    this.setDownloadLink.bind(this)
-                ),
+                new ConcSaveModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    layoutModel: this.layoutModel,
+                    concSize: this.layoutModel.getConf<number>('ConcSize'),
+                    saveLinkFn: this.setDownloadLink.bind(this),
+                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
+                }),
                 syntaxViewer,
                 ttModel,
                 lineViewProps,

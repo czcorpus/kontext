@@ -26,6 +26,17 @@ import {MultiDict} from '../../util';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
 
+
+
+export interface FreqResultsSaveModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    quickSaveRowLimit:number;
+    freqArgsProviderFn:()=>MultiDict;
+    saveLinkFn:(file:string, url:string)=>void;
+}
+
+
 /**
  *
  */
@@ -43,22 +54,29 @@ export class FreqResultsSaveModel extends StatefulModel {
 
     private fromLine:string;
 
+    private fromLineValidation:boolean;
+
     private toLine:string;
+
+    private toLineValidation:boolean;
 
     private saveLinkFn:(file:string, url:string)=>void;
 
     private freqArgsProviderFn:()=>MultiDict;
 
-    private static QUICK_SAVE_LINE_LIMIT = 10000;
+    private quickSaveRowLimit:number;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            freqArgsProviderFn:()=>MultiDict, saveLinkFn:(file:string, url:string)=>void) {
+    constructor({
+            dispatcher, layoutModel, freqArgsProviderFn, saveLinkFn,
+            quickSaveRowLimit}:FreqResultsSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formIsActive = false;
         this.saveformat = 'csv';
         this.fromLine = '1';
+        this.fromLineValidation = true;
         this.toLine = '';
+        this.toLineValidation = true;
         this.includeHeading = false;
         this.includeColHeaders = false;
         this.freqArgsProviderFn = freqArgsProviderFn;
@@ -73,7 +91,7 @@ export class FreqResultsSaveModel extends StatefulModel {
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = String(FreqResultsSaveModel.QUICK_SAVE_LINE_LIMIT);
+                    this.toLine = `${this.quickSaveRowLimit}`;
                     this.submit();
                     this.toLine = '';
                     this.notifyChangeListeners();
@@ -103,39 +121,43 @@ export class FreqResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SUBMIT':
-                    const err0 = this.validateNumberFormat(this.fromLine, false) ||
-                            this.validateNumberFormat(this.toLine, true);
-                    if (err0) {
-                        this.layoutModel.showMessage('error', err0);
-                        break;
+                    const err = this.validateForm();
+                    if (err) {
+                        this.layoutModel.showMessage('error', err);
+
+                    } else {
+                        this.submit();
+                        this.formIsActive = false;
                     }
-                    const err1 = this.validateFromToLines();
-                    if (err1) {
-                        this.layoutModel.showMessage('error', err1);
-                        break;
-                    }
-                    this.submit();
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
 
-    private validateNumberFormat(v:string, allowEmpty:boolean):Error {
-        if (!isNaN(parseInt(v, 10)) || allowEmpty && v === '') {
-            return null;
+    private validateForm():Error|null {
+        this.fromLineValidation = true;
+        this.toLineValidation = true;
+        if (!this.validateNumberFormat(this.fromLine, false)) {
+            this.fromLineValidation = false;
+            return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        return Error(this.layoutModel.translate('global__invalid_number_format'));
+        if (!this.validateNumberFormat(this.toLine, false)) {
+            this.toLineValidation = false;
+            return new Error(this.layoutModel.translate('global__invalid_number_format'));
+        }
+        if (parseInt(this.fromLine) < 1 || (this.toLine !== '' &&
+                parseInt(this.fromLine) > parseInt(this.toLine))) {
+            this.fromLineValidation = false;
+            return new Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
+        }
     }
 
-    private validateFromToLines():Error {
-        const v1 = parseInt(this.fromLine, 10);
-        const v2 = parseInt(this.toLine, 10);
-
-        if (v1 >= 1 && (v1 < v2 || this.toLine === '')) {
-            return null;
+    private validateNumberFormat(v:string, allowEmpty:boolean):boolean {
+        if (!isNaN(parseInt(v, 10)) || allowEmpty && v === '') {
+            return true;
         }
-        return Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
+        return false;
     }
 
     private submit():void {
@@ -172,8 +194,16 @@ export class FreqResultsSaveModel extends StatefulModel {
         return this.fromLine;
     }
 
+    getFromLineValidation():boolean {
+        return this.fromLineValidation;
+    }
+
     getToLine():string {
         return this.toLine;
+    }
+
+    getToLineValidation():boolean {
+        return this.toLineValidation;
     }
 }
 

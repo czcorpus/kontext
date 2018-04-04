@@ -276,13 +276,14 @@ class FreqPage {
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ml':
             case 'tt':
-                this.freqResultModel = new FreqDataRowsModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
-                    this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
-                    this.setDownloadLink.bind(this)
-                );
+                this.freqResultModel = new FreqDataRowsModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    pageModel: this.layoutModel,
+                    freqCrit: this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
+                    formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
+                    saveLinkFn: this.setDownloadLink.bind(this),
+                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
+                });
                 this.freqResultModel.importData(
                     this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
                     this.layoutModel.getConf<number>('FreqItemsPerPage'),

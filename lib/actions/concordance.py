@@ -54,8 +54,10 @@ class Actions(Querying):
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
     SAVECOLL_MAX_LINES = 1000000
+    CONC_QUICK_SAVE_MAX_LINES = 10000
     FREQ_QUICK_SAVE_MAX_LINES = 10000
     COLLS_QUICK_SAVE_MAX_LINES = 10000
+    WORDLIST_QUICK_SAVE_MAX_LINES = 10000
 
     """
     This class specifies all the actions KonText offers to a user via HTTP
@@ -225,11 +227,19 @@ class Actions(Querying):
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
 
-        self._add_flux_save_menu_item('CSV', save_format='csv')
-        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-        self._add_flux_save_menu_item('XML', save_format='xml')
-        self._add_flux_save_menu_item('TXT', save_format='text')
-        self._add_flux_save_menu_item(_('Custom'))
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('TXT', save_format='text',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(_('Custom'))
 
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
@@ -270,6 +280,7 @@ class Actions(Querying):
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:
             out['chart_export_formats'].extend(ce.get_supported_types())
+        out['quick_save_row_limit'] = self.CONC_QUICK_SAVE_MAX_LINES
         return out
 
     @exposed(access_level=1, return_type='json', http_method='POST')
@@ -1022,11 +1033,19 @@ class Actions(Querying):
                      'pfilter': pfilter, 'nfilter': corr_nfilter,
                      'norel': 1, 'fbar': 0})
 
-            self._add_flux_save_menu_item('CSV', save_format='csv')
-            self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-            self._add_flux_save_menu_item('XML', save_format='xml')
-            self._add_flux_save_menu_item('TXT', save_format='text')
-            self._add_flux_save_menu_item(_('Custom'))
+            self._add_save_menu_item('CSV', save_format='csv',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XLSX', save_format='xlsx',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XML', save_format='xml',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('TXT', save_format='text',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.CONC_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item(_('Custom'))
 
         result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
@@ -1034,6 +1053,7 @@ class Actions(Querying):
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         result['text_types_data'] = get_tt(
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        result['quick_save_row_limit'] = self.FREQ_QUICK_SAVE_MAX_LINES
         self._attach_query_params(result)
         return result
 
@@ -1149,7 +1169,7 @@ class Actions(Querying):
             freq_data = dict(data=[], full_size=0)
             self.add_system_message('error', ex.message)
 
-        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+        self._add_save_menu_item('XLSX', save_format='xlsx')
 
         ans = dict(
             freq_type='ct',
@@ -1216,19 +1236,29 @@ class Actions(Querying):
         calc_args.citemsperpage = self.args.citemsperpage
         calc_args.collpage = self.args.collpage
 
-        self._add_flux_save_menu_item('CSV', save_format='csv')
-        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-        self._add_flux_save_menu_item('XML', save_format='xml')
-        self._add_flux_save_menu_item('TXT', save_format='text')
-        self._add_flux_save_menu_item(_('Custom'))
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('TXT', save_format='text',
+                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.CONC_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(_('Custom'))
 
         ans = coll_calc.calculate_colls(calc_args)
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        ans['save_line_limit'] = 100000
+        ans['save_line_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
         ans['text_types_data'] = get_tt(
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
+        ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
         return ans
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')
@@ -1246,7 +1276,7 @@ class Actions(Querying):
         if err is not None:
             raise err
         self.args.collpage = 1
-        self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES  # to make sure we include everything
+        self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES   # we need a one big page when saving
         result = self.collx(line_offset=(from_line - 1), num_lines=num_lines)
         saved_filename = self.args.corpname
         if saveformat == 'text':
@@ -1484,14 +1514,23 @@ class Actions(Querying):
                 wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
                 wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
 
-            self._add_flux_save_menu_item('CSV', save_format='csv')
-            self._add_flux_save_menu_item('XLSX', save_format='xlsx')
-            self._add_flux_save_menu_item('XML', save_format='xml')
-            self._add_flux_save_menu_item('TXT', save_format='text')
-            self._add_flux_save_menu_item(_('Custom'))
+            self._add_save_menu_item('CSV', save_format='csv',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XLSX', save_format='xlsx',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('XML', save_format='xml',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item('TXT', save_format='text',
+                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+            self._add_save_menu_item(_('Custom'))
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
             result['SubcorpList'] = []
+            result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
             self._export_subcorpora_list(self.args.corpname, result)
             return result
 

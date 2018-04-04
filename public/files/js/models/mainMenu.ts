@@ -30,6 +30,7 @@ import { MultiDict } from '../util';
 
 export interface DynamicSubmenuItem extends Kontext.SubmenuItem {
     boundAction:()=>void;
+    indirect:boolean;
 }
 
 export interface StaticSubmenuItem extends Kontext.SubmenuItem {
@@ -37,7 +38,14 @@ export interface StaticSubmenuItem extends Kontext.SubmenuItem {
     args:{[key:string]:any};
     keyCode:number;
     currConc:boolean;
+    indirect:boolean;
+    openInBlank:boolean;
+}
+
+export interface EventTriggeringSubmenuItem extends Kontext.SubmenuItem {
     message:string; // a dispatcher action type
+    args:{[key:string]:any};
+    keyCode:number;
     indirect:boolean;
 }
 
@@ -57,15 +65,19 @@ export interface InitialMenuData {
 /**
  * This defines a TS type guard for DynamicSubmenuItem
  */
-function isDynamicItem(item:Kontext.SubmenuItem): item is DynamicSubmenuItem {
+export function isDynamicItem(item:Kontext.SubmenuItem): item is DynamicSubmenuItem {
     return (<DynamicSubmenuItem>item).boundAction !== undefined;
 }
 
 /**
  * This defines a TS type guard for StaticSubmenuItem
  */
-function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuItem {
+export function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuItem {
     return (<StaticSubmenuItem>item).args !== undefined;
+}
+
+export function isEventTriggeringItem(item:Kontext.SubmenuItem): item is EventTriggeringSubmenuItem {
+    return (<EventTriggeringSubmenuItem>item).message !== undefined;
 }
 
 function importMenuData(data:InitialMenuData):Immutable.List<Kontext.MenuEntry> {
@@ -188,6 +200,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                         return {
                             ident: item.ident,
                             label: item.label,
+                            hint: item.hint,
                             boundAction: item.boundAction,
                             disabled: item.ident === subItemId ? v : item.disabled
                         }
@@ -196,14 +209,30 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                         return {
                             ident: item.ident,
                             action: item.action,
+                            hint: item.hint,
                             args: item.args,
                             keyCode: item.keyCode,
-                            message: item.message,
                             currConc: item.currConc,
                             indirect: item.indirect,
                             label: item.label,
-                            disabled: item.ident === subItemId ? v : item.disabled
+                            disabled: item.ident === subItemId ? v : item.disabled,
+                            openInBlank: item.openInBlank
                         }
+
+                    } else if (isEventTriggeringItem(item)) {
+                        return {
+                            ident: item.ident,
+                            hint: item.hint,
+                            args: item.args,
+                            keyCode: item.keyCode,
+                            message: item.message,
+                            indirect: item.indirect,
+                            label: item.label,
+                            disabled: item.ident === subItemId ? v : item.disabled
+                        };
+
+                    } else {
+                        console.error('unknown menu item ', item);
                     }
                 }).toList();
             }
@@ -253,14 +282,16 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
     }
 
     // TODO currently unused - remove if not needed
-    bindDynamicItem(ident:string, label:string, handler:()=>void) {
+    bindDynamicItem(ident:string, label:string, hint:string, indirect:boolean, handler:()=>void) {
         this.data.forEach((item, i) => {
             item[1].items.forEach((subitem, j) => {
                 if (subitem.ident === ident && isDynamicItem(subitem)) {
                     const newSubitem:DynamicSubmenuItem = {
                         ident: ident,
                         label: label,
+                        hint: hint,
                         disabled: false,
+                        indirect: indirect,
                         boundAction: handler
                     };
                     const newItem:Kontext.MenuItem = {
@@ -284,10 +315,9 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
     exportKeyShortcutActions():Immutable.Map<number, Kontext.MainMenuAtom> {
         return Immutable.Map<number, Kontext.MainMenuAtom>(this.data
             .flatMap(v => Immutable.List<Kontext.SubmenuItem>(v[1].items))
-            .filter(v => isStaticItem(v) && !!v.keyCode && !!v.message)
+            .filter(v => isEventTriggeringItem(v) && !!v.keyCode && !!v.message)
             .map((v:StaticSubmenuItem) => {
                 return [v.keyCode, {
-                    actionName: v.message,
                     actionArgs: v.args,
                     keyCode: v.keyCode
                 }];

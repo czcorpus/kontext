@@ -37,6 +37,16 @@ export namespace Kontext {
 
     export type SubcorpListItem = {v:string; n:string; pub:string};
 
+    export interface FormValue<T> {
+
+        value:T;
+
+        isRequired:boolean;
+
+        isInvalid:boolean;
+
+    }
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
@@ -174,7 +184,9 @@ export namespace Kontext {
     export interface SubmenuItem {
         ident:string;
         label:string;
+        hint:string|null;
         disabled:boolean;
+        currConc?:boolean;
     }
 
     export interface MenuItem {
@@ -226,7 +238,7 @@ export namespace Kontext {
          * This is an ideal solution for miscellaneous plug-in features not
          * included in KonText core.
          */
-        bindDynamicItem(ident:string, label:string, handler:()=>void);
+        bindDynamicItem(ident:string, label:string, hint:string, indirect:boolean, handler:()=>void);
 
         getData():Immutable.List<MenuEntry>;
 

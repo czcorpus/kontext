@@ -24,6 +24,15 @@ import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 
 
+export interface WordlistSaveModelArgs {
+    dispatcher:ActionDispatcher;
+    layoutModel:PageModel;
+    quickSaveRowLimit:number;
+    saveLinkFn:(file:string, url:string)=>void;
+    wordlistArgsProviderFn:()=>MultiDict;
+}
+
+
 export class WordlistSaveModel extends StatefulModel {
 
     private layoutModel:PageModel;
@@ -32,29 +41,34 @@ export class WordlistSaveModel extends StatefulModel {
 
     private toLine:string;
 
+    private toLineValidation:boolean;
+
     private saveFormat:string;
 
     private includeHeading:boolean;
 
     private includeColHeaders:boolean;
 
+    private quickSaveRowLimit:number;
+
     private saveLinkFn:(file:string, url:string)=>void;
 
     private wordlistArgsProviderFn:()=>MultiDict;
 
-    private static QUICK_SAVE_LINE_LIMIT = 10000;
-
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-            saveLinkFn:(file:string, url:string)=>void, wordlistArgsProviderFn:()=>MultiDict) {
+    constructor({
+            dispatcher, layoutModel, quickSaveRowLimit,
+            saveLinkFn, wordlistArgsProviderFn}:WordlistSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
         this.wordlistArgsProviderFn = wordlistArgsProviderFn;
         this.toLine = '';
+        this.toLineValidation = true;
         this.saveFormat = 'csv';
         this.includeHeading = false;
         this.includeColHeaders = false;
         this.formIsActive = false;
+        this.quickSaveRowLimit = quickSaveRowLimit;
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -83,18 +97,36 @@ export class WordlistSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SUBMIT':
-                this.submit();
+                const err = this.validateForm();
+                if (err) {
+                    this.layoutModel.showMessage('error', err);
+
+                } else {
+                    this.submit();
+                    this.formIsActive = false;
+                }
                 this.notifyChangeListeners();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveFormat = payload.props['saveformat'];
-                this.toLine = String(WordlistSaveModel.QUICK_SAVE_LINE_LIMIT);
+                this.toLine = `${this.quickSaveRowLimit}`;
                 this.submit();
                 this.toLine = '';
                 this.notifyChangeListeners();
                 break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        if (this.toLine === '' || !isNaN(parseInt(this.toLine))) {
+            this.toLineValidation = true;
+            return null;
+
+        } else {
+            this.toLineValidation = false;
+            return new Error(this.layoutModel.translate('global__invalid_number_format'));
+        }
     }
 
     private submit():void {
@@ -123,6 +155,10 @@ export class WordlistSaveModel extends StatefulModel {
 
     getToLine():string {
         return this.toLine;
+    }
+
+    getToLineValidation():boolean {
+        return this.toLineValidation;
     }
 
     getSaveFormat():string {

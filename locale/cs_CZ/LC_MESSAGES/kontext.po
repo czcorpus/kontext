@@ -443,3 +443,6 @@ msgstr "Korpus \"{0}\" není k dispozici"
 
 msgid "No corpus selected"
 msgstr "Nebyl vybrán žádný korpus"
+
+msgid "Saves at most {0} items. Use \"Custom\" for more options."
+msgstr "Ukládá maximálně {0} položek. Použijte \"Vlastní\" pro více možností."

@@ -33,10 +33,10 @@ export interface CollFormProps {
 interface CollFormState {
     attrList:Immutable.List<Kontext.AttrItem>;
     cattr:string;
-    cfromw:string;
-    ctow:string;
-    cminfreq:string;
-    cminbgr:string;
+    cfromw:Kontext.FormValue<string>;
+    ctow:Kontext.FormValue<string>;
+    cminfreq:Kontext.FormValue<string>;
+    cminbgr:Kontext.FormValue<string>;
     cbgrfns:Immutable.Set<string>;
     availCbgrfns:Immutable.OrderedMap<string, string>;
     csortfn:string;
@@ -49,6 +49,8 @@ export interface FormsViews {
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, collFormModel:CollFormModel):FormsViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // -------------------- <AttrSelection /> --------------------------------------------
 
@@ -79,8 +81,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
     // -------------------- <WindowSpanInput /> --------------------------------------------
 
     const WindowSpanInput:React.SFC<{
-        cfromw:string;
-        ctow:string;
+        cfromw:Kontext.FormValue<string>;
+        ctow:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -104,11 +106,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         return (
             <div>
-                <input type="text" style={{width: '3em'}} value={props.cfromw}
-                    onChange={handleFromValChange} />
+                <layoutViews.ValidatedItem invalid={props.cfromw.isInvalid}>
+                    <input type="text" style={{width: '3em'}} value={props.cfromw.value}
+                            onChange={handleFromValChange} />
+                </layoutViews.ValidatedItem>
                 {'\u00a0'}{he.translate('coll__to')}{'\u00a0'}
-                <input type="text" style={{width: '3em'}} value={props.ctow}
-                    onChange={handleToValChange} />
+                <layoutViews.ValidatedItem invalid={props.ctow.isInvalid}>
+                    <input type="text" style={{width: '3em'}} value={props.ctow.value}
+                            onChange={handleToValChange} />
+                </layoutViews.ValidatedItem>
             </div>
         );
     };
@@ -116,7 +122,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
     // -------------------- <MinCollFreqCorpInput /> --------------------------------------------
 
     const MinCollFreqCorpInput:React.SFC<{
-        cminfreq:string;
+        cminfreq:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -129,15 +135,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
             });
         };
 
-        return <input type="text" value={props.cminfreq} style={{width: '3em'}}
-                    onChange={handleInputChange} />;
-
+        return (
+            <layoutViews.ValidatedItem invalid={props.cminfreq.isInvalid}>
+                <input type="text" value={props.cminfreq.value} style={{width: '3em'}}
+                        onChange={handleInputChange} />
+            </layoutViews.ValidatedItem>
+        );
     };
 
     // -------------------- <MinCollFreqSpanInput /> --------------------------------------------
 
     const MinCollFreqSpanInput:React.SFC<{
-        cminbgr:string;
+        cminbgr:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -150,8 +159,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
             });
         };
 
-        return <input type="text" value={props.cminbgr} style={{width: '3em'}}
-                        onChange={handleInputChange} />;
+        return (
+            <layoutViews.ValidatedItem invalid={props.cminbgr.isInvalid}>
+                <input type="text" value={props.cminbgr.value} style={{width: '3em'}}
+                        onChange={handleInputChange} />
+            </layoutViews.ValidatedItem>
+        );
+
     };
 
 
@@ -291,7 +305,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
                             <tr>
                                 <th>{he.translate('coll__coll_window_span')}:</th>
                                 <td>
-                                    <WindowSpanInput cfromw={this.state.cfromw} ctow={this.state.ctow} />
+                                    <WindowSpanInput
+                                            cfromw={this.state.cfromw}
+                                            ctow={this.state.ctow} />
                                 </td>
                             </tr>
                             <tr>

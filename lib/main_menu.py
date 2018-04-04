@@ -128,7 +128,7 @@ class AbstractMenuItem(object):
     action/URL
     """
 
-    def __init__(self, ident, label):
+    def __init__(self, ident, label, hint):
         """
         Args:
             ident (MainMenuItemId): menu item identifier
@@ -136,6 +136,7 @@ class AbstractMenuItem(object):
         """
         self._ident = ident
         self._label = label
+        self._hint = hint  # an additional info (typically visible on mouse-over)
         self._args = []
         self._indirect = False
         self._corpus_dependent = False
@@ -213,14 +214,15 @@ class MenuItemInternal(AbstractMenuItem):
     'corpora/corplist').
     """
 
-    def __init__(self, ident, label, action):
-        super(MenuItemInternal, self).__init__(ident, label)
+    def __init__(self, ident, label, action, hint=None):
+        super(MenuItemInternal, self).__init__(ident, label, hint)
         self._action = action
 
     def create(self, out_data):
         return dict(
             ident=self._ident.get_sub_id(),
             label=self._label,
+            hint=self._hint,
             action=self._action,
             indirect=self._indirect,
             currConc=False,
@@ -236,8 +238,8 @@ class HideOnCustomCondItem(MenuItemInternal):
     based on output data.
     """
 
-    def __init__(self, ident, label, action):
-        super(HideOnCustomCondItem, self).__init__(ident, label, action)
+    def __init__(self, ident, label, action, hint=None):
+        super(HideOnCustomCondItem, self).__init__(ident, label, action, hint)
         self._fn = lambda x: True
 
     def enable_if(self, fn):
@@ -257,8 +259,8 @@ class ConcMenuItem(HideOnCustomCondItem):
     concordance arguments.
     """
 
-    def __init__(self, ident, label, action):
-        super(ConcMenuItem, self).__init__(ident, label, action)
+    def __init__(self, ident, label, action, hint=None):
+        super(ConcMenuItem, self).__init__(ident, label, action, hint)
         self._q = []
 
     def create(self, out_data):
@@ -288,8 +290,8 @@ class EventTriggeringItem(HideOnCustomCondItem):
     that keys with multiple values are not supported.
     """
 
-    def __init__(self, ident, label, message, key_code=None):
-        super(EventTriggeringItem, self).__init__(ident, label, None)
+    def __init__(self, ident, label, message, key_code=None, hint=None):
+        super(EventTriggeringItem, self).__init__(ident, label, None, hint)
         self._message = message
         self._key_code = key_code
 
@@ -359,7 +361,7 @@ class MenuGenerator(object):
         # -------------------------------- menu-save ------------------------------------
 
         # save items are generated dynamically during action processing
-        # (see Kontext._add_flux_save_menu_item())
+        # (see Kontext._add_save_menu_item())
 
         # ----------------------------- menu-concordance --------------------------------
 

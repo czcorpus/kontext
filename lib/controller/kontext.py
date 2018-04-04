@@ -790,15 +790,16 @@ class Kontext(Controller):
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
 
-    def _add_flux_save_menu_item(self, label, save_format=None):
+    def _add_save_menu_item(self, label, save_format=None, hint=None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
             self._save_menu.append(
-                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83).mark_indirect())  # key = 's'
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83,
+                                    hint=hint).mark_indirect())  # key = 's'
 
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'
-            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name
+            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
                                                        ).add_args(('saveformat', save_format)))
 
     def _determine_curr_corpus(self, form, corp_list):

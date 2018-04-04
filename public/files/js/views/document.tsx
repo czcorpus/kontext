@@ -664,6 +664,12 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
+    const ValidatedItem:CoreViews.ValidatedItem.Component = (props) => {
+        return <span className={`ValidatedItem${props.invalid ? ' invalid' : ''}`}>{props.children}</span>;
+    };
+
+    // ------------------------------------------------------------------------------------
+
     return {
         ErrorBoundary: ErrorBoundary,
         ModalOverlay: ModalOverlay,
@@ -678,6 +684,7 @@ export function init(
         AjaxLoaderBarImage: AjaxLoaderBarImage,
         Shortener: Shortener,
         StatusIcon: StatusIcon,
-        DelItemIcon: DelItemIcon
+        DelItemIcon: DelItemIcon,
+        ValidatedItem: ValidatedItem
     };
 }

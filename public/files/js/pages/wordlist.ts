@@ -163,12 +163,13 @@ export class WordlistPage extends StatefulModel  {
                 );
                 formModel.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
 
-                this.saveModel = new WordlistSaveModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.setDownloadLink.bind(this),
-                    () => formModel.createSubmitArgs()
-                );
+                this.saveModel = new WordlistSaveModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    layoutModel: this.layoutModel,
+                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
+                    saveLinkFn: this.setDownloadLink.bind(this),
+                    wordlistArgsProviderFn: () => formModel.createSubmitArgs()
+                });
 
                 const resultModel = new WordlistResultModel(
                     this.layoutModel.dispatcher,
