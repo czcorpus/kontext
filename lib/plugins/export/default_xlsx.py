@@ -43,7 +43,7 @@ class XLSXExport(AbstractExport):
         self._col_types = ()
         self._curr_line = 1
         if subtype == 'concordance':
-            self._sheet.title = _('concordancestructattrs = defaultdict(list)')
+            self._sheet.title = _('concordance')
             self._import_row = lang_row_to_list
         elif subtype == 'freq':
             self._sheet.title = _('frequency distribution')
@@ -71,6 +71,15 @@ class XLSXExport(AbstractExport):
             col = get_column_letter(i)
             self._sheet.cell('%s%s' % (col, self._curr_line)).value = data[i - 1]
         self._curr_line += 2
+
+    def write_ref_headings(self, data):
+        for i in range(1, len(data) + 1):
+            col = get_column_letter(i)
+            cell = self._sheet.cell('%s%s' % (col, self._curr_line))
+            cell.font = cell.font.copy(bold=True)
+            cell.value = data[i - 1]
+        self._curr_line += 1
+        self._sheet.merge_cells('A1:G1')
 
     def set_col_types(self, *types):
         self._col_types = types

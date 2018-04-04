@@ -261,14 +261,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         _renderFormatDependentOptions() {
             switch (this.state.saveFormat) {
-            case 'xlsx':
-                return <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />;
             case 'text':
                 return <>
                         <TRAlignKwicCheckbox key="opt-ak" value={this.state.alignKwic} />
                         <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />
                 </>;
             case 'xml':
+            case 'xlsx':
+            case 'csv':
                 return <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />;
             default:
                 return null;

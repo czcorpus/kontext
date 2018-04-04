@@ -1653,12 +1653,6 @@ class Actions(Querying):
                 ans.append(ans_item)
             return ans
 
-        used_refs = [x.strip('=') for x in self.args.refs.split(',')]
-        availref = (['#', self.corp.get_conf('DOCSTRUCTURE')] +
-                    [x for x in self.corp.get_conf('STRUCTATTRLIST').split(',') if x in used_refs])
-        logging.getLogger(__name__).debug('used_refs: {0}'.format(used_refs))
-        logging.getLogger(__name__).debug('availrefs: {0}'.format(availref))
-
         try:
             corpus_info = self.get_corpus_info(self.args.corpname)
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id'),
@@ -1736,6 +1730,13 @@ class Actions(Querying):
                             'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
                                       for x in self.concdesc_json().get('Desc', [])]
                         })
+
+                        doc_struct = self.corp.get_conf('DOCSTRUCTURE')
+                        refs_args = [x.strip('=') for x in self.args.refs.split(',')]
+                        used_refs = ([('#', _('Token number')), (doc_struct, _('Document number'))] +
+                                     [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
+                        used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+                        writer.write_ref_headings(used_refs)
 
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
