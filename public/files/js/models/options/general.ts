@@ -19,7 +19,7 @@
  */
 
 import {Kontext, ViewOptions} from '../../types/common';
-import {StatefulModel} from '../base';
+import {StatefulModel, validateGzNumber} from '../base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {PageModel} from '../../app/main';
@@ -47,9 +47,9 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     // ---- concordance opts
 
-    private pageSize:string;
+    private pageSize:Kontext.FormValue<string>;
 
-    private newCtxSize:string;
+    private newCtxSize:Kontext.FormValue<string>;
 
     private ctxUnit:string;
 
@@ -63,15 +63,15 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     // --- word list opts
 
-    private wlpagesize:string;
+    private wlpagesize:Kontext.FormValue<string>;
 
     // --- freq. page opts
 
-    private fmaxitems:string;
+    private fmaxitems:Kontext.FormValue<string>;
 
     // ---- coll. page opts
 
-    private citemsperpage:string;
+    private citemsperpage:Kontext.FormValue<string>;
 
     private isBusy:boolean;
 
@@ -86,11 +86,11 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE':
-                    this.pageSize = payload.props['value'];
+                    this.pageSize.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE':
-                    this.newCtxSize = payload.props['value'];
+                    this.newCtxSize.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS':
@@ -110,15 +110,15 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE':
-                    this.wlpagesize = payload.props['value'];
+                    this.wlpagesize.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS':
-                    this.fmaxitems = payload.props['value'];
+                    this.fmaxitems.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE':
-                    this.citemsperpage = payload.props['value'];
+                    this.citemsperpage.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY':
@@ -135,24 +135,46 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
                     );
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SUBMIT':
-                    this.isBusy = true;
-                    this.notifyChangeListeners();
-                    this.submit().then(
-                        () => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.submitResponseHandlers.forEach(fn => fn(this));
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
+                    const err = this.validateForm();
+                    if (!err) {
+                        this.isBusy = true;
+                        this.notifyChangeListeners();
+                        this.submit().then(
+                            () => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.submitResponseHandlers.forEach(fn => fn(this));
+                            },
+                            (err) => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.layoutModel.showMessage('error', err);
+                            }
+                        );
+
+                    } else {
+                        this.layoutModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+                    }
 
                 break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        const valItems = [this.pageSize, this.newCtxSize, this.wlpagesize,
+                          this.fmaxitems, this.citemsperpage];
+        for (let i = 0; i < valItems.length; i += 1) {
+            if (validateGzNumber(valItems[i].value)) {
+                valItems[i].isInvalid = false;
+
+            } else {
+                valItems[i].isInvalid = true;
+                return new Error(this.layoutModel.translate('global__invalid_number_format'));
+            }
+        }
+        return null;
     }
 
     private submitTTOverview():RSVP.Promise<Kontext.AjaxResponse> {
@@ -175,14 +197,14 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
         ).then(
             (data) => {
-                this.pageSize = String(data.pagesize);
-                this.newCtxSize = String(data.newctxsize);
+                this.pageSize = {value: `${data.pagesize}`, isInvalid: false, isRequired: true};
+                this.newCtxSize = {value: `${data.newctxsize}`, isInvalid: false, isRequired: true};
                 this.ctxUnit = data.ctxunit;
                 this.lineNumbers = !!data.line_numbers;
                 this.shuffle = !!data.shuffle;
-                this.wlpagesize = String(data.wlpagesize);
-                this.fmaxitems = String(data.fmaxitems);
-                this.citemsperpage = String(data.citemsperpage);
+                this.wlpagesize = {value: `${data.wlpagesize}`, isInvalid: false, isRequired: true};
+                this.fmaxitems = {value: `${data.fmaxitems}`, isInvalid: false, isRequired: true};
+                this.citemsperpage = {value: `${data.citemsperpage}`, isInvalid: false, isRequired: true};
                 this.showTTOverview = !!data.tt_overview;
                 this.useCQLEditor = !!data.cql_editor;
                 return true;
@@ -192,14 +214,14 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     private submit():RSVP.Promise<Kontext.AjaxResponse> {
         const args = new MultiDict();
-        args.set('pagesize', this.pageSize);
-        args.set('newctxsize', this.newCtxSize);
+        args.set('pagesize', this.pageSize.value);
+        args.set('newctxsize', this.newCtxSize.value);
         args.set('ctxunit', this.ctxUnit);
         args.set('line_numbers', this.lineNumbers ? '1' : '0');
         args.set('shuffle', this.shuffle ? '1' : '0');
-        args.set('wlpagesize', this.wlpagesize);
-        args.set('fmaxitems', this.fmaxitems);
-        args.set('citemsperpage', this.citemsperpage);
+        args.set('wlpagesize', this.wlpagesize.value);
+        args.set('fmaxitems', this.fmaxitems.value);
+        args.set('citemsperpage', this.citemsperpage.value);
         args.set('tt_overview', this.showTTOverview ? '1' : '0');
         args.set('cql_editor', this.useCQLEditor ? '1' : '0');
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
@@ -209,17 +231,17 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
         ).then(
             (d) => {
-                this.layoutModel.replaceConcArg('pagesize', [this.pageSize]);
+                this.layoutModel.replaceConcArg('pagesize', [this.pageSize.value]);
                 return d;
             }
         )
     }
 
-    getPageSize():string {
+    getPageSize():Kontext.FormValue<string> {
         return this.pageSize;
     }
 
-    getNewCtxSize():string {
+    getNewCtxSize():Kontext.FormValue<string> {
         return this.newCtxSize;
     }
 
@@ -231,15 +253,15 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         return this.shuffle;
     }
 
-    getWlPageSize():string {
+    getWlPageSize():Kontext.FormValue<string> {
         return this.wlpagesize;
     }
 
-    getFmaxItems():string {
+    getFmaxItems():Kontext.FormValue<string> {
         return this.fmaxitems;
     }
 
-    getCitemsPerPage():string {
+    getCitemsPerPage():Kontext.FormValue<string> {
         return this.citemsperpage;
     }
 

@@ -661,13 +661,13 @@ export namespace ViewOptions {
     }
 
     export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
-        getPageSize():string;
-        getNewCtxSize():string;
+        getPageSize():Kontext.FormValue<string>;
+        getNewCtxSize():Kontext.FormValue<string>;
         getLineNumbers():boolean;
         getShuffle():boolean;
-        getWlPageSize():string;
-        getFmaxItems():string;
-        getCitemsPerPage():string;
+        getWlPageSize():Kontext.FormValue<string>;
+        getFmaxItems():Kontext.FormValue<string>;
+        getCitemsPerPage():Kontext.FormValue<string>;
         getIsBusy():boolean;
         getShowTTOverview():boolean;
         addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
