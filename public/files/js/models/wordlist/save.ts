@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import {Kontext} from '../../types/common';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
@@ -39,9 +40,7 @@ export class WordlistSaveModel extends StatefulModel {
 
     private formIsActive:boolean;
 
-    private toLine:string;
-
-    private toLineValidation:boolean;
+    private toLine:Kontext.FormValue<string>;
 
     private saveFormat:string;
 
@@ -62,8 +61,7 @@ export class WordlistSaveModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
         this.wordlistArgsProviderFn = wordlistArgsProviderFn;
-        this.toLine = '';
-        this.toLineValidation = true;
+        this.toLine = {value: '', isInvalid: false, isRequired: true};
         this.saveFormat = 'csv';
         this.includeHeading = false;
         this.includeColHeaders = false;
@@ -81,7 +79,7 @@ export class WordlistSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SET_TO_LINE':
-                this.toLine = payload.props['value'];
+                this.toLine.value = payload.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SET_FORMAT':
@@ -109,9 +107,9 @@ export class WordlistSaveModel extends StatefulModel {
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveFormat = payload.props['saveformat'];
-                this.toLine = `${this.quickSaveRowLimit}`;
+                this.toLine.value = `${this.quickSaveRowLimit}`;
                 this.submit();
-                this.toLine = '';
+                this.toLine.value = '';
                 this.notifyChangeListeners();
                 break;
             }
@@ -119,12 +117,12 @@ export class WordlistSaveModel extends StatefulModel {
     }
 
     private validateForm():Error|null {
-        if (this.toLine === '' || !isNaN(parseInt(this.toLine))) {
-            this.toLineValidation = true;
+        if (this.toLine.value === '' || !isNaN(parseInt(this.toLine.value))) {
+            this.toLine.isInvalid = false;
             return null;
 
         } else {
-            this.toLineValidation = false;
+            this.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
     }
@@ -134,7 +132,7 @@ export class WordlistSaveModel extends StatefulModel {
         args.remove('format');
         args.set('saveformat', this.saveFormat);
         args.set('from_line', '1');
-        args.set('to_line', this.toLine);
+        args.set('to_line', this.toLine.value);
         if (this.saveFormat === 'csv' || this.saveFormat === 'xlsx') {
             args.set('colheaders', this.includeColHeaders ? '1' : '0');
             args.remove('heading');
@@ -153,12 +151,8 @@ export class WordlistSaveModel extends StatefulModel {
         return this.formIsActive;
     }
 
-    getToLine():string {
+    getToLine():Kontext.FormValue<string> {
         return this.toLine;
-    }
-
-    getToLineValidation():boolean {
-        return this.toLineValidation;
     }
 
     getSaveFormat():string {

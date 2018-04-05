@@ -32,13 +32,15 @@ export interface GeneralViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpers,
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         generalOptionsModel:ViewOptions.IGeneralViewOptionsModel):GeneralViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------- <TRConcPageSizeInput /> ---------------------
 
     const TRConcPageSizeInput:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -54,11 +56,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         return (
             <tr>
                 <th>
-                    {helpers.translate('options__conc_page_size')}:
+                    {he.translate('options__conc_page_size')}:
                 </th>
                 <td>
-                    <input type="text" value={props.value}
-                            onChange={handleInputChange} style={{width: '2em'}} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value}
+                                onChange={handleInputChange} style={{width: '2em'}} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );
@@ -67,7 +71,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <FieldsetConcordance /> ---------------------
 
     const TRKwicContextSize:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -83,11 +87,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         return (
             <tr>
                 <th>
-                    {helpers.translate('options__conc_kwic_context')}:
+                    {he.translate('options__conc_kwic_context')}:
                 </th>
                 <td>
-                    <input type="text" value={props.value}
-                            onChange={handleInputChange} style={{width: '2em'}} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value}
+                                onChange={handleInputChange} style={{width: '2em'}} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );
@@ -113,7 +119,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
             <tr>
                 <th>
                     <label htmlFor="show-line-numbers-input">
-                        {helpers.translate('options__conc_show_line_nums')}:
+                        {he.translate('options__conc_show_line_nums')}:
                     </label>
                 </th>
                 <td>
@@ -144,11 +150,11 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
             <tr>
                 <th>
                     <label htmlFor="always-shuffle">
-                        {helpers.translate('options__conc_shuffle_by_default')}:
+                        {he.translate('options__conc_shuffle_by_default')}:
                     </label>
                     <br />
                     <span className="note">
-                        ({helpers.translate('options__conc_no_effect_on_current')})
+                        ({he.translate('options__conc_no_effect_on_current')})
                     </span>
                 </th>
                 <td>
@@ -180,7 +186,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
             <tr>
                 <th>
                     <label htmlFor="show-tt-overview">
-                        {helpers.translate('options__conc_show_tt_overview')}:
+                        {he.translate('options__conc_show_tt_overview')}:
                     </label>
                 </th>
                 <td>
@@ -210,7 +216,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
             <tr>
                 <th>
                     <label htmlFor="use-cql-editor">
-                        {helpers.translate('options__use_advanced_cql_editor')}:
+                        {he.translate('options__use_advanced_cql_editor')}:
                     </label>
                 </th>
                 <td>
@@ -223,8 +229,8 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <FieldsetConcordance /> ---------------------
 
     const FieldsetConcordance:React.SFC<{
-        pageSize:string;
-        newCtxSize:string;
+        pageSize:Kontext.FormValue<string>;
+        newCtxSize:Kontext.FormValue<string>;
         lineNumbers:boolean;
         shuffle:boolean;
         showTTOverview:boolean;
@@ -234,7 +240,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         return (
             <fieldset className="FieldsetConcordance">
                 <legend>
-                    {helpers.translate('options__concordance_fieldset_heading')}
+                    {he.translate('options__concordance_fieldset_heading')}
                 </legend>
                 <table className="results-range-and-paging">
                     <tbody>
@@ -253,7 +259,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <TRWordlistNumPagesInput /> ---------------------
 
     const TRWordlistNumPagesInput:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -269,11 +275,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         return (
             <tr>
                 <th>
-                    {helpers.translate('options__wordlist_page_size')}:
+                    {he.translate('options__wordlist_page_size')}:
                 </th>
                 <td>
-                    <input type="text" value={props.value} onChange={handleInputChange}
-                            style={{width: '2em'}} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );
@@ -282,13 +290,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <FieldsetWordlist /> ---------------------
 
     const FieldsetWordlist:React.SFC<{
-        wlPageSize:string;
+        wlPageSize:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (
             <fieldset className="FieldsetWordlist">
                 <legend>
-                    {helpers.translate('options__worlist_fieldset_heading')}
+                    {he.translate('options__worlist_fieldset_heading')}
                 </legend>
                 <table className="results-range-and-paging">
                     <tbody>
@@ -302,7 +310,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <TRFmaxitemsInput /> ---------------------
 
     const TRFmaxitemsInput:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -318,11 +326,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         return (
             <tr>
                 <th>
-                    {helpers.translate('options__freq_page_size')}:
+                    {he.translate('options__freq_page_size')}:
                 </th>
                 <td>
-                    <input type="text" value={props.value} onChange={handleInputChange}
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
                             style={{width: '2em'}} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );
@@ -331,13 +341,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <FieldsetFreqDistrib /> ---------------------
 
     const FieldsetFreqDistrib:React.SFC<{
-        fmaxItems:string;
+        fmaxItems:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (
             <fieldset className="FieldsetFreqDistrib">
                 <legend>
-                    {helpers.translate('options__freq_fieldset_heading')}
+                    {he.translate('options__freq_fieldset_heading')}
                 </legend>
                 <table className="results-range-and-paging">
                     <tbody>
@@ -351,7 +361,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <TRCitemsPerPageInput /> ---------------------
 
     const TRCitemsPerPageInput:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -367,11 +377,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         return (
             <tr>
                 <th>
-                    {helpers.translate('options__coll_page_size')}:
+                    {he.translate('options__coll_page_size')}:
                 </th>
                 <td>
-                    <input type="text" value={props.value} onChange={handleInputChange}
-                            style={{width: '2em'}} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );
@@ -380,13 +392,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
     // ------------- <FieldsetColl /> ---------------------
 
     const FieldsetColl:React.SFC<{
-        citemsPerPage:string;
+        citemsPerPage:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (
             <fieldset className="FieldsetColl">
                 <legend>
-                    {helpers.translate('options__coll_fieldset_heading')}
+                    {he.translate('options__coll_fieldset_heading')}
                 </legend>
                 <table className="results-range-and-paging">
                     <tbody>
@@ -412,15 +424,15 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
         };
 
         if (props.modelIsBusy) {
-            return <img src={helpers.createStaticUrl('img/ajax-loader-bar.gif')}
+            return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                         className="button-replace ajax-loader"
-                        alt={helpers.translate('global__loading')} />;
+                        alt={he.translate('global__loading')} />;
 
         } else {
             return (
                 <button type="button" className="default-button"
                         onClick={handleSubmitClick}>
-                    {helpers.translate('options__submit')}
+                    {he.translate('options__submit')}
                 </button>
             );
         }
@@ -430,13 +442,13 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
 
     class GeneralOptions extends React.Component<GeneralOptionsProps,
     {
-        pageSize:string;
-        newCtxSize:string;
+        pageSize:Kontext.FormValue<string>;
+        newCtxSize:Kontext.FormValue<string>;
         lineNumbers:boolean;
         shuffle:boolean;
-        wlPageSize:string;
-        fmaxItems:string;
-        citemsPerPage:string;
+        wlPageSize:Kontext.FormValue<string>;
+        fmaxItems:Kontext.FormValue<string>;
+        citemsPerPage:Kontext.FormValue<string>;
         showTTOverview:boolean;
         modelIsBusy:boolean;
         useCQLEditor:boolean;
@@ -479,7 +491,7 @@ export function init(dispatcher:ActionDispatcher, helpers:Kontext.ComponentHelpe
             return (
                 <div className="GeneralOptions">
                     <p>
-                        {helpers.translate('options__this_applies_for_all_the_corpora')}
+                        {he.translate('options__this_applies_for_all_the_corpora')}
                     </p>
                     <form>
                         <FieldsetConcordance pageSize={this.state.pageSize}

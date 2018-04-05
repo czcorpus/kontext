@@ -29,10 +29,8 @@ export interface ConcSaveFormProps {
 
 
 interface ConcSaveFormState {
-    fromLine:string;
-    fromLineValidation:boolean;
-    toLine:string;
-    toLineValidation:boolean;
+    fromLine:Kontext.FormValue<string>;
+    toLine:Kontext.FormValue<string>;
     saveFormat:string; // TODO enum
     alignKwic:boolean;
     includeLineNumbers:boolean;
@@ -175,10 +173,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
     // ------------------- <TRLineRangeInput /> -------
 
     const TRLineRangeInput:React.SFC<{
-        fromLine:string;
-        fromLineValidation:boolean;
-        toLine:string;
-        toLineValidation:boolean;
+        fromLine:Kontext.FormValue<string>;
+        toLine:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -208,14 +204,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
                 </th>
                 <td>
                     {he.translate('concview__save_form_line_from')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={!props.fromLineValidation}>
-                        <input type="text" value={props.fromLine}
+                    <layoutViews.ValidatedItem invalid={props.fromLine.isInvalid}>
+                        <input type="text" value={props.fromLine.value}
                             onChange={handleFromInput} style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     {'\u00a0'}
                     {he.translate('concview__save_form_line_to')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={!props.toLineValidation}>
-                        <input type="text" value={props.toLine}
+                    <layoutViews.ValidatedItem invalid={props.toLine.isInvalid}>
+                        <input type="text" value={props.toLine.value}
                             onChange={handleToInput} style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -238,9 +234,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
         _fetchModelState() {
             return {
                 fromLine: concSaveModel.getFromLine(),
-                fromLineValidation: concSaveModel.getFromLineValidation(),
                 toLine: concSaveModel.getToLine(),
-                toLineValidation: concSaveModel.getToLineValidation(),
                 saveFormat: concSaveModel.getSaveFormat(),
                 alignKwic: concSaveModel.getAlignKwic(),
                 includeLineNumbers: concSaveModel.getIncludeLineNumbers(),
@@ -304,9 +298,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
                                     <TRIncludeLineNumbersCheckbox value={this.state.includeLineNumbers} />
                                     {this._renderFormatDependentOptions()}
                                     <TRLineRangeInput fromLine={this.state.fromLine}
-                                            toLine={this.state.toLine}
-                                            fromLineValidation={this.state.fromLineValidation}
-                                            toLineValidation={this.state.toLineValidation} />
+                                            toLine={this.state.toLine} />
                                 </tbody>
                             </table>
                             <div className="buttons">

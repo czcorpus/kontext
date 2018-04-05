@@ -260,3 +260,11 @@ export function cloneRecord<T extends Object>(obj:T):T {
     }
     return <T>ans;
 }
+
+export function setFormItemInvalid(item:Kontext.FormValue<string>, isInvalid:boolean):Kontext.FormValue<string> {
+    return {
+        value: item.value,
+        isInvalid: isInvalid,
+        isRequired: item.isRequired
+    };
+}

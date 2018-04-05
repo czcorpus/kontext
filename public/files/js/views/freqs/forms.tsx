@@ -115,12 +115,11 @@ export function init(
 
     // ---------------------- <FreqLimitInput /> --------------------------------------------
 
-    interface FreqLimitInputProps {
+    const FreqLimitInput:React.SFC<{
         actionPrefix:string;
-        flimit:string;
-    }
+        flimit:Kontext.FormValue<string>;
 
-    const FreqLimitInput:React.SFC<FreqLimitInputProps> = (props) => {
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -131,8 +130,13 @@ export function init(
             });
         };
 
-        return <input id="freq-limit-input" type="text" name="flimit" value={props.flimit}
-                    style={{width: '3em'}} onChange={handleInputChange} />;
+        return (
+            <layoutViews.ValidatedItem invalid={props.flimit.isInvalid}>
+                <input id="freq-limit-input" type="text" name="flimit"
+                        value={props.flimit.value}
+                        style={{width: '3em'}} onChange={handleInputChange} />
+            </layoutViews.ValidatedItem>
+        );
     };
 
     // ---------------------- <IncludeEmptyCheckbox /> --------------------------------------------
@@ -159,14 +163,13 @@ export function init(
     interface TTFreqFormProps {
     }
 
-    interface TTFreqFormState {
-        flimit:string;
+    class TTFreqForm extends React.Component<TTFreqFormProps, {
+        flimit:Kontext.FormValue<string>;
         structAttrListSplitTypes:Immutable.List<Immutable.List<Kontext.AttrItem>>;
         fttattr:Immutable.Set<string>;
         fttIncludeEmpty:boolean;
-    }
 
-    class TTFreqForm extends React.Component<TTFreqFormProps, TTFreqFormState> {
+    }> {
 
         constructor(props:TTFreqFormProps) {
             super(props);
@@ -174,7 +177,7 @@ export function init(
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
         }
 
-        _getModelState():TTFreqFormState {
+        _getModelState() {
             return {
                 structAttrListSplitTypes: ttFreqFormModel.getStructAttrListSplitTypes(),
                 fttattr: ttFreqFormModel.getFttattr(),
@@ -457,7 +460,7 @@ export function init(
 
     interface MLFreqFormState {
         attrList:Immutable.List<Kontext.AttrItem>;
-        flimit:string;
+        flimit:Kontext.FormValue<string>;
         levels:Immutable.List<number>;
         mlxattrValues:Immutable.List<string>;
         mlxicaseValues:Immutable.List<boolean>;
