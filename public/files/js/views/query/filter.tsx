@@ -68,8 +68,8 @@ export interface FilterFormState {
     wPoSList:Immutable.List<{v:string; n:string}>;
     inputLanguage:string;
     pnFilterValue:string;
-    filfposValue:string;
-    filtposValue:string;
+    filfposValue:Kontext.FormValue<string>;
+    filtposValue:Kontext.FormValue<string>;
     filflValue:string;
     isLocked:boolean;
     tagAttr:string;
@@ -342,16 +342,20 @@ export function init(
                                 <td>
                                     <label>
                                         {he.translate('query__qfilter_range_from')}:{'\u00a0'}
-                                        <input type="text" style={{width: '3em'}}
-                                            value={this.state.filfposValue}
-                                            onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
+                                        <layoutViews.ValidatedItem invalid={this.state.filfposValue.isInvalid}>
+                                            <input type="text" style={{width: '3em'}}
+                                                value={this.state.filfposValue.value}
+                                                onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
+                                        </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_range_to')}:{'\u00a0'}
-                                        <input type="text" style={{width: '3em'}}
-                                        value={this.state.filtposValue}
-                                            onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
+                                        <layoutViews.ValidatedItem invalid={this.state.filtposValue.isInvalid}>
+                                            <input type="text" style={{width: '3em'}}
+                                                value={this.state.filtposValue.value}
+                                                onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
+                                        </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0,\u00a0'}
                                     <label>

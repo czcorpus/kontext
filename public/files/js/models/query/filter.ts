@@ -27,6 +27,7 @@ import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/attrValues';
 import {QueryContextModel} from './context';
+import {validateNumber, setFormItemInvalid} from '../../models/base';
 import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery} from './main';
 
 
@@ -106,12 +107,12 @@ export class FilterModel extends GeneralQueryModel {
     /**
      * Left range
      */
-    private filfposValues:Immutable.Map<string, string>;
+    private filfposValues:Immutable.Map<string, Kontext.FormValue<string>>;
 
     /**
      * Right range
      */
-    private filtposValues:Immutable.Map<string, string>;
+    private filtposValues:Immutable.Map<string, Kontext.FormValue<string>>;
 
     /**
      * Include kwic checkbox
@@ -154,8 +155,8 @@ export class FilterModel extends GeneralQueryModel {
         this.defaultAttrValues = Immutable.Map<string, string>(props.currDefaultAttrValues);
         this.pnFilterValues = Immutable.Map<string, string>(props.currPnFilterValues);
         this.filflValues = Immutable.Map<string, string>(props.currFilflVlaues);
-        this.filfposValues = Immutable.Map<string, string>(props.currFilfposValues);
-        this.filtposValues = Immutable.Map<string, string>(props.currFiltposValues);
+        this.filfposValues = Immutable.Map<string, Kontext.FormValue<string>>(props.currFilfposValues);
+        this.filtposValues = Immutable.Map<string, Kontext.FormValue<string>>(props.currFiltposValues);
         this.inclkwicValues = Immutable.Map<string, boolean>(props.currInclkwicValues);
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.opLocks = Immutable.Map<string, boolean>(props.opLocks);
@@ -209,12 +210,11 @@ export class FilterModel extends GeneralQueryModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_SET_RANGE':
-                    if (payload.props['rangeId'] === 'filfpos') {
-                        this.filfposValues = this.filfposValues.set(payload.props['filterId'], payload.props['value']);
-
-                    } else if (payload.props['rangeId'] === 'filtpos') {
-                        this.filtposValues = this.filtposValues.set(payload.props['filterId'], payload.props['value']);
-                    }
+                    this.setFilPosValue(
+                        payload.props['filterId'],
+                        payload.props['value'],
+                        payload.props['rangeId']
+                    );
                     this.notifyChangeListeners();
                 break;
                 case'FILTER_QUERY_SET_INCL_KWIC':
@@ -222,11 +222,57 @@ export class FilterModel extends GeneralQueryModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_APPLY_FILTER':
-                    this.submitQuery(payload.props['filterId']);
-                    this.notifyChangeListeners();
+                    const err = this.validateForm(payload.props['filterId']);
+                    if (!err) {
+                        this.submitQuery(payload.props['filterId']);
+                        this.notifyChangeListeners();
+
+                    } else {
+                        this.pageModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+                    }
                 break;
             }
         });
+    }
+
+    private validateForm(filterId:string):Error|null {
+        if (validateNumber(this.filfposValues.get(filterId).value)) {
+            this.filfposValues = this.filfposValues.set(filterId,
+                        setFormItemInvalid(this.filfposValues.get(filterId), false));
+
+        } else {
+            this.filfposValues = this.filfposValues.set(filterId,
+                setFormItemInvalid(this.filfposValues.get(filterId), true));
+            return new Error(this.pageModel.translate('global__invalid_number_format'));
+        }
+
+        if (validateNumber(this.filtposValues.get(filterId).value)) {
+            this.filtposValues = this.filtposValues.set(filterId,
+                        setFormItemInvalid(this.filtposValues.get(filterId), false));
+
+        } else {
+            this.filtposValues = this.filtposValues.set(filterId,
+                setFormItemInvalid(this.filtposValues.get(filterId), true));
+            return new Error(this.pageModel.translate('global__invalid_number_format'));
+        }
+    }
+
+    private setFilPosValue(filterId:string, value:string, rangeId:string):void {
+        if (rangeId === 'filfpos') {
+            this.filfposValues = this.filfposValues.set(filterId, {
+                value: value,
+                isInvalid: false,
+                isRequired: true
+            });
+
+        } else if (rangeId === 'filtpos') {
+            this.filtposValues = this.filtposValues.set(filterId, {
+                value: value,
+                isInvalid: false,
+                isRequired: true
+            });
+        }
     }
 
     externalQueryChange(sourceId:string, query:string):void {
@@ -268,8 +314,10 @@ export class FilterModel extends GeneralQueryModel {
                     this.maincorps = this.queryTypes.set(filterId, data.maincorp);
                     this.pnFilterValues = this.pnFilterValues.set(filterId, data.pnfilter);
                     this.filflValues = this.filflValues.set(filterId, data.filfl);
-                    this.filfposValues = this.filfposValues.set(filterId, data.filfpos);
-                    this.filtposValues = this.filtposValues.set(filterId, data.filtpos);
+                    this.filfposValues = this.filfposValues.set(filterId, {
+                        value: data.filfpos, isInvalid: false, isRequired: true});
+                    this.filtposValues = this.filtposValues.set(filterId, {
+                        value: data.filtpos, isInvalid: false, isRequired: true});
                     this.inclkwicValues = this.inclkwicValues.set(filterId, data.inclkwic);
                     this.matchCaseValues = this.matchCaseValues.set(filterId, data.qmcase);
                     this.defaultAttrValues = this.defaultAttrValues.set(filterId, data.default_attr_value);
@@ -294,12 +342,12 @@ export class FilterModel extends GeneralQueryModel {
 
     private createSubmitArgs(filterId:string):MultiDict {
         const args = this.pageModel.getConcArgs();
-        args.replace('pnfilter', [this.pnFilterValues.get(filterId)]);
-        args.replace('filfl', [this.filflValues.get(filterId)]);
-        args.replace('filfpos', [this.filfposValues.get(filterId)]);
-        args.replace('filtpos', [this.filtposValues.get(filterId)]);
-        args.replace('inclkwic', [this.inclkwicValues.get(filterId) ? '1' : '0']);
-        args.replace('queryselector', [`${this.queryTypes.get(filterId)}row`]);
+        args.set('pnfilter', this.pnFilterValues.get(filterId));
+        args.set('filfl', this.filflValues.get(filterId));
+        args.set('filfpos', this.filfposValues.get(filterId).value);
+        args.set('filtpos', this.filtposValues.get(filterId).value);
+        args.set('inclkwic', this.inclkwicValues.get(filterId) ? '1' : '0');
+        args.set('queryselector', `${this.queryTypes.get(filterId)}row`);
         if (this.withinArgs.get(filterId)) {
             args.set('within', '1');
 
@@ -358,11 +406,11 @@ export class FilterModel extends GeneralQueryModel {
         return this.pnFilterValues;
     }
 
-    getFilfposValues():Immutable.Map<string, string> {
+    getFilfposValues():Immutable.Map<string, Kontext.FormValue<string>> {
         return this.filfposValues;
     }
 
-    getFiltposValues():Immutable.Map<string, string> {
+    getFiltposValues():Immutable.Map<string, Kontext.FormValue<string>> {
         return this.filtposValues;
     }
 

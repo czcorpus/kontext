@@ -92,7 +92,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     private wltype:string; // simple/multilevel
 
-    private wlminfreq:string;
+    private wlminfreq:Kontext.FormValue<string>;
 
     private wlwords:string;
 
@@ -121,7 +121,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.wlattr = this.attrList.get(0).n;
         this.wlnums = 'frq';
         this.wltype = 'simple';
-        this.wlminfreq = '5';
+        this.wlminfreq = {value: '5', isInvalid: false, isRequired: true};
         this.wlsort = 'f';
         this.wlposattr1 = '';
         this.wlposattr2 = '';
@@ -178,12 +178,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SET_WLMINFREQ':
-                if (validateGzNumber(payload.props['value'])) {
-                    this.wlminfreq = payload.props['value'];
-
-                } else {
-                    this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__minfreq_err'));
-                }
+                this.wlminfreq.value = payload.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
@@ -251,11 +246,28 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SUBMIT':
-                this.submit();
+                const err = this.validateForm();
+                if (!err) {
+                    this.submit();
+
+                } else {
+                    this.layoutModel.showMessage('error', err);
+                }
                 this.notifyChangeListeners();
             break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        if (validateGzNumber(this.wlminfreq.value)) {
+            this.wlminfreq.isInvalid = false;
+            return null;
+
+        } else {
+            this.wlminfreq.isInvalid = true;
+            return new Error(this.layoutModel.translate('wordlist__minfreq_err'));
+        }
     }
 
     private doWhiteOrBlackOp(value:string, wlop:()=>void, blop:()=>void):void {
@@ -301,7 +313,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         }
         ans.set('wlattr', this.wlattr);
         ans.set('wlpat', this.wlpat);
-        ans.set('wlminfreq', this.wlminfreq);
+        ans.set('wlminfreq', this.wlminfreq.value);
         ans.set('wlnums', this.wlnums);
         ans.set('wltype', this.wltype);
         ans.set('wlsort', this.wlsort);
@@ -337,7 +349,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
             subcnorm: this.subcnorm,
             wltype: this.wltype,
             wlnums: this.wlnums,
-            wlminfreq: this.wlminfreq,
+            wlminfreq: this.wlminfreq.value,
             wlposattr1: '', // this is likely different between corpora
             wlposattr2: '', // - dtto -
             wlposattr3: '', // - dtto -
@@ -356,7 +368,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.subcnorm = state.subcnorm;
         this.wltype = state.wltype;
         this.wlnums = state.wlnums;
-        this.wlminfreq = state.wlminfreq;
+        this.wlminfreq = {value: state.wlminfreq, isInvalid: false, isRequired: true};
         this.wlposattr1 = state.wlposattr1;
         this.wlposattr2 = state.wlposattr2;
         this.wlposattr3 = state.wlposattr3;
@@ -419,7 +431,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         return this.wlsort;
     }
 
-    getWlminfreq():string {
+    getWlminfreq():Kontext.FormValue<string> {
         return this.wlminfreq;
     }
 
