@@ -120,7 +120,7 @@ export class MultiDict implements Kontext.IMultiDict {
      * already a value present it is removed
      * first.
      */
-    set(key:string, value:any):void {
+    set(key:string, value:number|boolean|string):void {
         this[key] = value;
         this._data[key] = [value];
     }

@@ -64,7 +64,7 @@ export class MLFreqFormModel extends StatefulModel {
 
     private attrList:Immutable.List<Kontext.AttrItem>;
 
-    private flimit:string;
+    private flimit:Kontext.FormValue<string>;
 
     private freqSort:string;
 
@@ -88,7 +88,7 @@ export class MLFreqFormModel extends StatefulModel {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.flimit = props.flimit;
+        this.flimit = {value: props.flimit, isInvalid: false, isRequired: true};
         this.freqSort = props.freq_sort;
         this.mlxattr = Immutable.List<string>(props.mlxattr);
         this.mlxicase = Immutable.List<boolean>(props.mlxicase);
@@ -99,12 +99,7 @@ export class MLFreqFormModel extends StatefulModel {
         dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_ML_SET_FLIMIT':
-                    if (validateGzNumber(payload.props['value'])) {
-                        this.flimit = payload.props['value'];
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('coll__invalid_gz_number_value'));
-                    }
+                    this.flimit.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_ADD_LEVEL':
@@ -150,11 +145,29 @@ export class MLFreqFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_SUBMIT':
-                    this.submit();
-                    // no need to notify anybody
+                    const err = this.validateForm();
+                    if (!err) {
+                        this.notifyChangeListeners();
+                        this.submit();
+
+                    } else {
+                        this.pageModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+                    }
                 break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        if (validateGzNumber(this.flimit.value)) {
+            this.flimit.isInvalid = false;
+            return null;
+
+        } else {
+            this.flimit.isInvalid = true;
+            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+        }
     }
 
     private importMlxctxValue(v:string):number {
@@ -197,7 +210,7 @@ export class MLFreqFormModel extends StatefulModel {
 
     private submit():void {
         const args = this.pageModel.getConcArgs();
-        args.set('flimit', this.flimit);
+        args.set('flimit', this.flimit.value);
         this.mlxattr.forEach((item, i) => {
             args.set(`ml${i+1}attr`, item);
         });
@@ -218,7 +231,7 @@ export class MLFreqFormModel extends StatefulModel {
         return MLFreqFormModel.POSITION_LABELS;
     }
 
-    getFlimit():string {
+    getFlimit():Kontext.FormValue<string> {
         return this.flimit;
     }
 
@@ -264,7 +277,7 @@ export class TTFreqFormModel extends StatefulModel {
 
     private fttIncludeEmpty:boolean;
 
-    private flimit:string;
+    private flimit:Kontext.FormValue<string>;
 
     private freqSort:string;
 
@@ -274,7 +287,7 @@ export class TTFreqFormModel extends StatefulModel {
         this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
         this.fttattr = Immutable.Set<string>(props.fttattr);
         this.fttIncludeEmpty = props.ftt_include_empty;
-        this.flimit = props.flimit;
+        this.flimit = {value: props.flimit, isInvalid: false, isRequired: true};
         this.freqSort = props.freq_sort;
 
         dispatcher.register((payload:ActionPayload) => {
@@ -293,27 +306,40 @@ export class TTFreqFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_TT_SET_FLIMIT':
-                    if (validateGzNumber(payload.props['value'])) {
-                        this.flimit = payload.props['value'];
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('coll__invalid_gz_number_value'));
-                    }
+                    this.flimit.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_TT_SUBMIT':
-                    this.submit();
-                    // no need to notify
+                    const err = this.validateForm();
+                    if (!err) {
+                        this.submit();
+                        // we leave page here
+
+                    } else {
+                        this.pageModel.showMessage('error', err);
+                    }
+                    this.notifyChangeListeners();
                 break;
             }
         });
+    }
+
+    private validateForm():Error|null {
+        if (validateGzNumber(this.flimit.value)) {
+            this.flimit.isInvalid = false;
+            return null;
+
+        } else {
+            this.flimit.isInvalid = true;
+            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+        }
     }
 
     private submit():void {
         const args = this.pageModel.getConcArgs();
         args.replace('fttattr', this.fttattr.toArray());
         args.set('ftt_include_empty', this.fttIncludeEmpty ? '1' : '0');
-        args.set('flimit', this.flimit);
+        args.set('flimit', this.flimit.value);
         args.set('freq_sort', this.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqtt', args.items());
     }
@@ -352,7 +378,7 @@ export class TTFreqFormModel extends StatefulModel {
         return this.fttIncludeEmpty;
     }
 
-    getFlimit():string {
+    getFlimit():Kontext.FormValue<string> {
         return this.flimit;
     }
 }

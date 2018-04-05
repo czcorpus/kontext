@@ -391,7 +391,7 @@ export namespace Kontext {
     export interface IMultiDict {
         getFirst(key:string):string;
         getList(key:string):Array<string>;
-        set(key:string, value:any):void;
+        set(key:string, value:number|boolean|string):void;
         replace(key:string, values:Array<string>):void;
         remove(key:string):void;
         add(key:string, value:any):void;
