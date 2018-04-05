@@ -32,10 +32,8 @@ interface SaveFreqFormState {
     saveformat:string;
     includeColHeaders:boolean;
     includeHeading:boolean;
-    fromLine:string;
-    fromLineValidation:boolean;
-    toLine:string;
-    toLineValidation:boolean;
+    fromLine:Kontext.FormValue<string>;
+    toLine:Kontext.FormValue<string>;
 }
 
 interface ExportedViews {
@@ -158,10 +156,8 @@ export function init(
     // ---------------------------- <TRSelLineRangeInputs /> --------------------------------
 
     interface TRSelLineRangeInputsProps {
-        fromValue:string;
-        fromValueValidation:boolean;
-        toValue:string;
-        toValueValidation:boolean;
+        fromValue:Kontext.FormValue<string>;
+        toValue:Kontext.FormValue<string>;
     }
 
     const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
@@ -191,14 +187,14 @@ export function init(
                 </th>
                 <td>
                     {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={!props.fromValueValidation}>
-                        <input type="text" name="from_line" value={props.fromValue}
+                    <layoutViews.ValidatedItem invalid={props.fromValue.isInvalid}>
+                        <input type="text" name="from_line" value={props.fromValue.value}
                                 onChange={handleFromInput}  style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     {'\u00a0'}
                     {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={!props.toValueValidation}>
-                        <input type="text" name="to_line" value={props.toValue}
+                    <layoutViews.ValidatedItem invalid={props.toValue.isInvalid}>
+                        <input type="text" name="to_line" value={props.toValue.value}
                                 onChange={handleToInput} style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
 
@@ -231,9 +227,7 @@ export function init(
                 includeColHeaders: freqSaveModel.getIncludeColHeaders(),
                 includeHeading: freqSaveModel.getIncludeHeading(),
                 fromLine: freqSaveModel.getFromLine(),
-                fromLineValidation: freqSaveModel.getFromLineValidation(),
                 toLine: freqSaveModel.getToLine(),
-                toLineValidation: freqSaveModel.getToLineValidation()
             };
         }
 
@@ -281,9 +275,7 @@ export function init(
                                     {this._renderFormatDependentOptions()}
                                     <TRSelLineRangeInputs
                                             fromValue={this.state.fromLine}
-                                            fromValueValidation={this.state.fromLineValidation}
-                                            toValue={this.state.toLine}
-                                            toValueValidation={this.state.toLineValidation} />
+                                            toValue={this.state.toLine} />
                                 </tbody>
                             </table>
                             <button type="button" className="default-button"

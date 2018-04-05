@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import {Kontext} from '../../types/common';
 import {MultiDict} from '../../util';
 import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
@@ -44,13 +45,9 @@ export class ConcSaveModel extends StatefulModel {
 
     private includeHeading:boolean;
 
-    private fromLine:string;
+    private fromLine:Kontext.FormValue<string>;
 
-    private fromLineValidation:boolean;
-
-    private toLine:string;
-
-    private toLineValidation:boolean;
+    private toLine:Kontext.FormValue<string>;
 
     private alignKwic:boolean;
 
@@ -66,10 +63,8 @@ export class ConcSaveModel extends StatefulModel {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveformat = 'csv';
-        this.fromLine = '1';
-        this.fromLineValidation = true;
-        this.toLine = String(concSize);
-        this.toLineValidation = true;
+        this.fromLine = {value: '1', isInvalid: false, isRequired: true};
+        this.toLine = {value: `${concSize}`, isInvalid: false, isRequired: true};
         this.alignKwic = false;
         this.includeLineNumbers = false;
         this.includeHeading = false;
@@ -86,7 +81,7 @@ export class ConcSaveModel extends StatefulModel {
             case 'MAIN_MENU_DIRECT_SAVE':
                 this.saveformat = payload.props['saveformat'];
                 const tmp = this.toLine;
-                this.toLine = String(Math.min(this.quickSaveRowLimit, this.concSize));
+                this.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
                 this.submit();
                 this.toLine = tmp;
                 this.notifyChangeListeners();
@@ -100,11 +95,11 @@ export class ConcSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE':
-                 this.fromLine = payload.props['value'];
+                 this.fromLine.value = payload.props['value'];
                  this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_TO_LINE':
-                this.toLine = payload.props['value'];
+                this.toLine.value = payload.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC':
@@ -135,32 +130,32 @@ export class ConcSaveModel extends StatefulModel {
     }
 
     private validateForm():Error|null {
-        if (validateNumber(this.fromLine) && parseInt(this.fromLine, 10) >= 1 &&
-                parseInt(this.fromLine) <= this.concSize) {
-            this.fromLineValidation = true;
+        if (validateNumber(this.fromLine.value) && parseInt(this.fromLine.value, 10) >= 1 &&
+                parseInt(this.fromLine.value) <= this.concSize) {
+            this.fromLine.isInvalid = false;
 
         } else {
-            this.fromLineValidation = false;
+            this.fromLine.isInvalid = true;
             return Error(this.layoutModel.translate('concview__save_form_line_from_err_msg_{value}',
                                 {value: this.concSize}));
         }
 
-        if (validateNumber(this.toLine) && parseInt(this.toLine, 10) > parseInt(this.fromLine) &&
-                parseInt(this.toLine) <= this.concSize) {
-            this.toLineValidation = true;
+        if (validateNumber(this.toLine.value) && parseInt(this.toLine.value, 10) > parseInt(this.fromLine.value) &&
+                parseInt(this.toLine.value) <= this.concSize) {
+            this.toLine.isInvalid = false;
 
         } else {
-            this.toLineValidation = false;
+            this.toLine.isInvalid = true;
             return Error(this.layoutModel.translate('concview__save_form_line_to_err_msg_{value1}{value2}',
-                            {value1: parseInt(this.fromLine, 10) + 1, value2: this.concSize}));
+                            {value1: parseInt(this.fromLine.value, 10) + 1, value2: this.concSize}));
         }
     }
 
     private submit():void {
         const args = this.layoutModel.getConcArgs();
         args.set('saveformat', this.saveformat);
-        args.set('from_line', this.fromLine);
-        args.set('to_line', this.toLine);
+        args.set('from_line', this.fromLine.value);
+        args.set('to_line', this.toLine.value);
         args.set('heading', this.includeHeading ? '1' : '0');
         args.set('numbering', this.includeLineNumbers ? '1' : '0');
         args.set('align_kwic', this.alignKwic ? '1' : '0');
@@ -175,20 +170,12 @@ export class ConcSaveModel extends StatefulModel {
         return this.formIsActive;
     }
 
-    getFromLine():string {
+    getFromLine():Kontext.FormValue<string> {
         return this.fromLine;
     }
 
-    getFromLineValidation():boolean {
-        return this.fromLineValidation;
-    }
-
-    getToLine():string {
+    getToLine():Kontext.FormValue<string> {
         return this.toLine;
-    }
-
-    getToLineValidation():boolean {
-        return this.toLineValidation;
     }
 
     getSaveFormat():string {

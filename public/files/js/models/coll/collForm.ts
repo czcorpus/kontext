@@ -174,10 +174,10 @@ export class CollFormModel extends StatefulModel {
     getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
         args.set('cattr', this.cattr);
-        args.set('cfromw', this.cfromw);
-        args.set('ctow', this.ctow);
-        args.set('cminfreq', this.cminfreq);
-        args.set('cminbgr', this.cminbgr);
+        args.set('cfromw', this.cfromw.value);
+        args.set('ctow', this.ctow.value);
+        args.set('cminfreq', this.cminfreq.value);
+        args.set('cminbgr', this.cminbgr.value);
         args.replace('cbgrfns', this.cbgrfns.toArray());
         args.set('csortfn', this.csortfn);
         return args;

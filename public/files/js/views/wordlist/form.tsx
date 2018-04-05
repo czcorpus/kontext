@@ -56,7 +56,7 @@ export interface WordListFormState {
     wposattr1:string;
     wposattr2:string;
     wposattr3:string;
-    wlminfreq:string;
+    wlminfreq:Kontext.FormValue<string>;
     filterEditorData:WLFilterEditorData;
     hasWlwords:boolean;
     hasBlacklist:boolean;
@@ -362,7 +362,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     // --------------------- <TRWlminfreqInput /> ----------------------------------
 
     const TRWlminfreqInput:React.SFC<{
-        wlminfreq:string;
+        wlminfreq:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -381,9 +381,11 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     {he.translate('wordlist__min_freq_label')}:
                 </td>
                 <td>
-                    <input type="text" value={props.wlminfreq}
-                            onChange={handleInputChange}
-                            style={{width: '3em'}} />
+                    <layoutViews.ValidatedItem invalid={props.wlminfreq.isInvalid}>
+                        <input type="text" value={props.wlminfreq.value}
+                                onChange={handleInputChange}
+                                style={{width: '3em'}} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );

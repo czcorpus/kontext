@@ -41,10 +41,8 @@ interface SaveCollFormState {
     saveformat:string;
     includeColHeaders:boolean;
     includeHeading:boolean;
-    fromLine:string;
-    fromLineValidation:boolean;
-    toLine:string;
-    toLineValidation:boolean;
+    fromLine:Kontext.FormValue<string>;
+    toLine:Kontext.FormValue<string>;
     saveLinesLimit:number;
     lineLimitHintVisible:boolean;
 }
@@ -145,10 +143,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     // --------------- <TRSelLineRangeInputs /> ------------------------
 
     const TRSelLineRangeInputs:React.SFC<{
-        fromValue:string;
-        fromValueValidation:boolean;
-        toValue:string;
-        toValueValidation:boolean;
+        fromValue:Kontext.FormValue<string>;
+        toValue:Kontext.FormValue<string>;
         lineLimitHintVisible:boolean;
         saveLinesLimit:number;
         onLineLimitHintShow:(v:boolean)=>void;
@@ -180,14 +176,14 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                 </th>
                 <td>
                     {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={!props.fromValueValidation}>
-                        <input type="text" name="from_line" value={props.fromValue}
+                    <layoutViews.ValidatedItem invalid={props.fromValue.isInvalid}>
+                        <input type="text" name="from_line" value={props.fromValue.value}
                                 onChange={handleFromInput}  style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     {'\u00a0'}
                     {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={!props.toValueValidation}>
-                        <input type="text" name="to_line" value={props.toValue}
+                    <layoutViews.ValidatedItem invalid={props.toValue.isInvalid}>
+                        <input type="text" name="to_line" value={props.toValue.value}
                                 onChange={handleToInput} style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     <div className="hint">
@@ -227,9 +223,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                 includeColHeaders: collSaveModel.getIncludeColHeaders(),
                 includeHeading: collSaveModel.getIncludeHeading(),
                 fromLine: collSaveModel.getFromLine(),
-                fromLineValidation: collSaveModel.getFromLineValidation(),
                 toLine: collSaveModel.getToLine(),
-                toLineValidation: collSaveModel.getToLineValidation(),
                 saveLinesLimit: collSaveModel.getMaxSaveLines(),
                 lineLimitHintVisible: false
             };
@@ -283,9 +277,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                                     {this._renderFormatDependentOptions()}
                                     <TRSelLineRangeInputs
                                             fromValue={this.state.fromLine}
-                                            fromValueValidation={this.state.fromLineValidation}
                                             toValue={this.state.toLine}
-                                            toValueValidation={this.state.toLineValidation}
                                             saveLinesLimit={this.state.saveLinesLimit}
                                             lineLimitHintVisible={this.state.lineLimitHintVisible}
                                             onLineLimitHintShow={this._switchLineLimitHint} />

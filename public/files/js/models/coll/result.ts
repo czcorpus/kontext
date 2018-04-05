@@ -74,13 +74,9 @@ export class CollResultsSaveModel extends StatefulModel {
 
     private includeHeading:boolean;
 
-    private fromLine:string;
+    private fromLine:Kontext.FormValue<string>;
 
-    private fromLineValidation:boolean;
-
-    private toLine:string;
-
-    private toLineValidation:boolean;
+    private toLine:Kontext.FormValue<string>;
 
     private saveLinkFn:(file:string, url:string)=>void;
 
@@ -98,10 +94,8 @@ export class CollResultsSaveModel extends StatefulModel {
         this.mainModel = mainModel;
         this.formIsActive = false;
         this.saveformat = 'csv';
-        this.fromLine = '1';
-        this.fromLineValidation = true;
-        this.toLine = '';
-        this.toLineValidation = true;
+        this.fromLine = {value: '1', isInvalid: false, isRequired: true};
+        this.toLine = {value: '', isInvalid: false, isRequired: true};
         this.includeColHeaders = false;
         this.includeHeading = false;
         this.collArgsProviderFn = collArgsProviderFn;
@@ -113,14 +107,14 @@ export class CollResultsSaveModel extends StatefulModel {
             switch (payload.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
-                    this.toLine = '';
+                    this.toLine.value = '';
                     this.notifyChangeListeners();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = `${this.quickSaveRowLimit}`;
+                    this.toLine.value = `${this.quickSaveRowLimit}`;
                     this.submit();
-                    this.toLine = '';
+                    this.toLine.value = '';
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_RESULT_CLOSE_SAVE_FORM':
@@ -132,11 +126,11 @@ export class CollResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine = payload.props['value'];
+                    this.fromLine.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_TO_LINE':
-                    this.toLine = payload.props['value'];
+                    this.toLine.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
@@ -163,19 +157,19 @@ export class CollResultsSaveModel extends StatefulModel {
     }
 
     private validateForm():Error|null {
-        this.fromLineValidation = true;
-        this.toLineValidation = true;
-        if (!this.validateNumberFormat(this.fromLine, false)) {
-            this.fromLineValidation = false;
+        this.fromLine.isInvalid = false;
+        this.toLine.isInvalid = false;
+        if (!this.validateNumberFormat(this.fromLine.value, false)) {
+            this.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (!this.validateNumberFormat(this.toLine, false)) {
-            this.toLineValidation = false;
+        if (!this.validateNumberFormat(this.toLine.value, false)) {
+            this.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (parseInt(this.fromLine) < 1 || (this.toLine !== '' &&
-                parseInt(this.fromLine) > parseInt(this.toLine))) {
-            this.fromLineValidation = false;
+        if (parseInt(this.fromLine.value) < 1 || (this.toLine.value !== '' &&
+                parseInt(this.fromLine.value) > parseInt(this.toLine.value))) {
+            this.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
         }
     }
@@ -188,10 +182,10 @@ export class CollResultsSaveModel extends StatefulModel {
     }
 
     private validateFromToVals():Error {
-        const v1 = parseInt(this.fromLine, 10);
-        const v2 = parseInt(this.toLine, 10);
+        const v1 = parseInt(this.fromLine.value, 10);
+        const v2 = parseInt(this.toLine.value, 10);
 
-        if (v1 >= 1 && (v1 < v2 || this.toLine === '')) {
+        if (v1 >= 1 && (v1 < v2 || this.toLine.value === '')) {
             return null;
         }
         return Error(this.layoutModel.translate('coll__save_form_from_val_err_msg'));
@@ -203,8 +197,8 @@ export class CollResultsSaveModel extends StatefulModel {
         args.set('saveformat', this.saveformat);
         args.set('colheaders', this.includeColHeaders ? '1' : '0');
         args.set('heading', this.includeHeading ? '1' : '0');
-        args.set('from_line', this.fromLine);
-        args.set('to_line', this.toLine);
+        args.set('from_line', this.fromLine.value);
+        args.set('to_line', this.toLine.value);
         this.saveLinkFn(
             `collocation.${this.saveformat}`,
             this.layoutModel.createActionUrl('savecoll', args.items())
@@ -233,20 +227,12 @@ export class CollResultsSaveModel extends StatefulModel {
         return this.includeHeading;
     }
 
-    getFromLine():string {
+    getFromLine():Kontext.FormValue<string> {
         return this.fromLine;
     }
 
-    getFromLineValidation():boolean {
-        return this.fromLineValidation;
-    }
-
-    getToLine():string {
+    getToLine():Kontext.FormValue<string> {
         return this.toLine;
-    }
-
-    getToLineValidation():boolean {
-        return this.toLineValidation;
     }
 
     getMaxSaveLines():number {
