@@ -72,6 +72,13 @@ export function init(
 
         return (
             <table className="struct-attr-list">
+                <thead>
+                    <tr>
+                        <th colSpan={props.structAttrListSplitTypes.size}>
+                            {he.translate('query__structattrs')}:
+                        </th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
                         {props.structAttrListSplitTypes.map((chunk, i) => {

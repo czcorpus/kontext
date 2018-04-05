@@ -728,6 +728,7 @@ ul.SortFormSelector {
         }
 
         table.struct-attr-list {
+
             table {
                 border-spacing: 0;
                 padding: 0;
@@ -748,6 +749,16 @@ ul.SortFormSelector {
                 tr:hover {
                     background-color: @color-light-frame;
                 }
+            }
+
+            > tbody > tr > td:not(:last-child) {
+                border-color: @color-superlight-text;
+                border-width: 0 1px 0 0;
+                border-style: solid;
+            }
+
+            > tbody > tr > td:not(:first-child) {
+                padding-left: 1em;
             }
         }
     }
