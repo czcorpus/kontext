@@ -19,6 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
+import {Kontext} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -52,13 +53,9 @@ export class FreqResultsSaveModel extends StatefulModel {
 
     private includeHeading:boolean;
 
-    private fromLine:string;
+    private fromLine:Kontext.FormValue<string>;
 
-    private fromLineValidation:boolean;
-
-    private toLine:string;
-
-    private toLineValidation:boolean;
+    private toLine:Kontext.FormValue<string>;
 
     private saveLinkFn:(file:string, url:string)=>void;
 
@@ -73,10 +70,8 @@ export class FreqResultsSaveModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.formIsActive = false;
         this.saveformat = 'csv';
-        this.fromLine = '1';
-        this.fromLineValidation = true;
-        this.toLine = '';
-        this.toLineValidation = true;
+        this.fromLine = {value: '1', isInvalid: false, isRequired: true};
+        this.toLine = {value: '', isInvalid: false, isRequired: true};
         this.includeHeading = false;
         this.includeColHeaders = false;
         this.freqArgsProviderFn = freqArgsProviderFn;
@@ -86,14 +81,14 @@ export class FreqResultsSaveModel extends StatefulModel {
             switch (payload.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
-                    this.toLine = '';
+                    this.toLine.value = '';
                     this.notifyChangeListeners();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.saveformat = payload.props['saveformat'];
-                    this.toLine = `${this.quickSaveRowLimit}`;
+                    this.toLine.value = `${this.quickSaveRowLimit}`;
                     this.submit();
-                    this.toLine = '';
+                    this.toLine.value = '';
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_RESULT_CLOSE_SAVE_FORM':
@@ -105,11 +100,11 @@ export class FreqResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine = payload.props['value'];
+                    this.fromLine.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_TO_LINE':
-                    this.toLine = payload.props['value'];
+                    this.toLine.value = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING':
@@ -136,19 +131,19 @@ export class FreqResultsSaveModel extends StatefulModel {
     }
 
     private validateForm():Error|null {
-        this.fromLineValidation = true;
-        this.toLineValidation = true;
-        if (!this.validateNumberFormat(this.fromLine, false)) {
-            this.fromLineValidation = false;
+        this.fromLine.isInvalid = false;
+        this.toLine.isInvalid = false;
+        if (!this.validateNumberFormat(this.fromLine.value, false)) {
+            this.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (!this.validateNumberFormat(this.toLine, false)) {
-            this.toLineValidation = false;
+        if (!this.validateNumberFormat(this.toLine.value, false)) {
+            this.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (parseInt(this.fromLine) < 1 || (this.toLine !== '' &&
-                parseInt(this.fromLine) > parseInt(this.toLine))) {
-            this.fromLineValidation = false;
+        if (parseInt(this.fromLine.value) < 1 || (this.toLine.value !== '' &&
+                parseInt(this.fromLine.value) > parseInt(this.toLine.value))) {
+            this.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
         }
     }
@@ -165,8 +160,8 @@ export class FreqResultsSaveModel extends StatefulModel {
         args.set('saveformat', this.saveformat);
         args.set('colheaders', this.includeColHeaders ? '1' : '0');
         args.set('heading', this.includeHeading ? '1' : '0');
-        args.set('from_line', this.fromLine);
-        args.set('to_line', this.toLine);
+        args.set('from_line', this.fromLine.value);
+        args.set('to_line', this.toLine.value);
         args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
             `frequencies.${this.saveformat}`,
@@ -190,20 +185,12 @@ export class FreqResultsSaveModel extends StatefulModel {
         return this.includeHeading;
     }
 
-    getFromLine():string {
+    getFromLine():Kontext.FormValue<string> {
         return this.fromLine;
     }
 
-    getFromLineValidation():boolean {
-        return this.fromLineValidation;
-    }
-
-    getToLine():string {
+    getToLine():Kontext.FormValue<string> {
         return this.toLine;
-    }
-
-    getToLineValidation():boolean {
-        return this.toLineValidation;
     }
 }
 

@@ -43,8 +43,7 @@ export interface WordlistSaveFormProps {
 
 export interface WordlistSaveFormState {
     saveFormat:string;
-    toLine:string;
-    toLineValidation:boolean;
+    toLine:Kontext.FormValue<string>;
     includeHeading:boolean;
     includeColHeaders:boolean;
 }
@@ -136,8 +135,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     // ---------------------------<MaxLinesInput /> -----------------------------
 
     const TRToLineInput:React.SFC<{
-        value:string;
-        valueValidation:boolean;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -154,9 +152,9 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
             <tr>
                 <th>{utils.translate('wordlist__max_num_lines')}:</th>
                 <td>
-                    <layoutViews.ValidatedItem invalid={!props.valueValidation}>
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
                         <input onChange={handleInputChange} type="text"
-                                value={props.value} style={{width: '3em'}} />
+                                value={props.value.value} style={{width: '3em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
             </tr>
@@ -208,7 +206,6 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
             return {
                 saveFormat: saveModel.getSaveFormat(),
                 toLine: saveModel.getToLine(),
-                toLineValidation: saveModel.getToLineValidation(),
                 includeHeading: saveModel.getIncludeHeading(),
                 includeColHeaders: saveModel.getIncludeColHeaders()
             };
@@ -252,8 +249,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
                                     <TRGeneralHeadingSelector includeHeading={this.state.includeHeading}
                                             includeColHeaders={this.state.includeColHeaders}
                                             saveFormat={this.state.saveFormat} />
-                                    <TRToLineInput value={this.state.toLine}
-                                            valueValidation={this.state.toLineValidation} />
+                                    <TRToLineInput value={this.state.toLine} />
                                 </tbody>
                             </table>
                             <div className="buttons">
