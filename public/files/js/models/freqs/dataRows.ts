@@ -109,7 +109,7 @@ export class FreqDataRowsModel extends StatefulModel {
         this.ftt_include_empty = formProps.ftt_include_empty;
         this.flimit = formProps.flimit || '0';
         this.mlxattr = formProps.mlxattr;
-        this.mlxicase = formProps.mlxicase;
+        this.mlxicase = formProps.mlxicase || [false];
         this.mlxctx = formProps.mlxctx;
         this.alignType = formProps.alignType;
         this.saveModel = new FreqResultsSaveModel({

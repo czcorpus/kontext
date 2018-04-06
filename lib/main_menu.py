@@ -442,6 +442,14 @@ class MenuGenerator(object):
                 ('ml', 0))
         )
 
+        self.freq_node_forms_i = (
+            ConcMenuItem(MainMenu.FREQUENCY('node-forms'), _('Node forms') + ' [A=a]', 'freqs',
+                         hint=_('case insensitive'))
+            .add_args(
+                ('fcrit', 'word/ie 0~0>0'),
+                ('ml', 0))
+        )
+
         self.freq_doc_ids = (
             ConcMenuItem(MainMenu.FREQUENCY('doc-ids'), _('Doc IDs'), 'freqs')
             .add_args(
@@ -578,8 +586,8 @@ class MenuGenerator(object):
             )),
             (MainMenu.FREQUENCY.name, dict(
                 label=_('Frequency'),
-                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms, self.freq_doc_ids,
-                          self.freq_text_types, self.freq_custom),
+                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms, self.freq_node_forms_i,
+                          self.freq_doc_ids, self.freq_text_types, self.freq_custom),
                 disabled=is_disabled(MainMenu.FREQUENCY)
             )),
             (MainMenu.COLLOCATIONS.name, dict(

@@ -73,7 +73,8 @@ export function isDynamicItem(item:Kontext.SubmenuItem): item is DynamicSubmenuI
  * This defines a TS type guard for StaticSubmenuItem
  */
 export function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuItem {
-    return (<StaticSubmenuItem>item).args !== undefined;
+    return (<StaticSubmenuItem>item).args !== undefined &&
+                !item.hasOwnProperty('message');
 }
 
 export function isEventTriggeringItem(item:Kontext.SubmenuItem): item is EventTriggeringSubmenuItem {

@@ -17,6 +17,7 @@ section > h2 {
     border-radius: 6px 6px 0 0;
     font-size: 140%;
     font-weight: 300;
+    color: @color-dark-green-text;
 }
 
 button,
@@ -952,7 +953,7 @@ table.data {
     }
 
     > tbody > tr:nth-child(odd) {
-        background-color: @color-light-green;
+        background-color: @table-even-bg;
     }
 
     .deleted {
@@ -1207,6 +1208,25 @@ p.boxed-par {
 .sh-value-clickable {
     text-decoration: none;
     background-color: rgb(236, 243, 250);
+}
+
+fieldset.colloc-metrics {
+    display: inline-block;
+    margin-top: 1em;
+    margin-right: 1em;
+    border: 1px solid #DADADA;
+    border-radius: @border-radius-default;
+
+    table.colloc-metrics td,
+    table.colloc-metrics th {
+        padding: 3px 5px;
+    }
+    table.colloc-metrics th {
+        color: @color-default-text;
+    }
+    table.colloc-metrics label {
+        display: block;
+    }
 }
 
 @keyframes fadein {
