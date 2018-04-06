@@ -174,7 +174,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
         if (props.description) {
             return (
-                <div style={{paddingLeft: '1em', paddingRight: '25%'}}>
+                <div className="TextTypesNotes">
                     <img src={he.createStaticUrl('img/info-icon.svg')}
                             style={{width: '1em', verticalAlign: 'middle', marginRight: '0.7em'}} />
                     <div dangerouslySetInnerHTML={{__html: props.description}} />
