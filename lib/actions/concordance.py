@@ -882,6 +882,9 @@ class Actions(Querying):
         """
         display a frequency list
         """
+        self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
+                                    MainMenu.CONCORDANCE('query-overview'))
+
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -897,8 +900,6 @@ class Actions(Querying):
                 crit_attrs = set(re.findall(r'(\w+\.\w+)\s+[0-9]+', criteria))
             attr_list = set(self.corp.get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
-
-        self.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch'), )
 
         result = {}
         fcrit_is_all_nonstruct = True
@@ -1209,7 +1210,8 @@ class Actions(Querying):
         """
         list collocations
         """
-        self.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch'),)
+        self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
+                                    MainMenu.CONCORDANCE('query-overview'))
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
         if self.args.csortfn == '':
             self.args.csortfn = 'f'
