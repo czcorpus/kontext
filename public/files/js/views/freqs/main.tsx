@@ -151,27 +151,18 @@ export function init(
         );
     };
 
-    // ----------------------- <FilterForm /> -------------------------
+    // ----------------------- <MinFreqInput /> -------------------------
 
-    interface FilterFormProps {
+    const MinFreqInput:React.SFC<{
         minFreqVal:string;
         setLoadingFlag:()=>void;
-    }
 
-    const FilterForm:React.SFC<FilterFormProps> = (props) => {
+    }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_SET_MIN_FREQ_VAL',
                 props: {value: evt.target.value}
-            });
-        };
-
-        const handleApplyClick = (evt) => {
-            props.setLoadingFlag();
-            dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',
-                props: {}
             });
         };
 
@@ -188,19 +179,43 @@ export function init(
         };
 
         return (
-            <form action="freqs">
-                <label>
-                    {he.translate('freq__limit_input_label')}:
-                    {'\u00a0'}
-                    <input type="text" name="flimit" value={props.minFreqVal}
-                            style={{width: '3em'}}
-                            onChange={handleInputChange}
-                            onKeyDown={inputKeyDownHandler} />
-                </label>
+            <label>
+                {he.translate('freq__limit_input_label')}:
                 {'\u00a0'}
-                <button type="button" className="util-button" onClick={handleApplyClick}>
-                    {he.translate('global__apply_btn')}
-                </button>
+                <input type="text" name="flimit" value={props.minFreqVal}
+                        style={{width: '3em'}}
+                        onChange={handleInputChange}
+                        onKeyDown={inputKeyDownHandler} />
+            </label>
+        );
+    };
+
+    // ----------------------- <FilterForm /> -------------------------
+
+    interface FilterFormProps {
+        minFreqVal:string;
+        setLoadingFlag:()=>void;
+    }
+
+    const FilterForm:React.SFC<FilterFormProps> = (props) => {
+
+        const handleApplyClick = (evt) => {
+            props.setLoadingFlag();
+            dispatcher.dispatch({
+                actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',
+                props: {}
+            });
+        };
+
+        return (
+            <form action="freqs">
+                <MinFreqInput minFreqVal={props.minFreqVal} setLoadingFlag={props.setLoadingFlag} />
+                {'\u00a0'}
+                <p>
+                    <button type="button" className="util-button" onClick={handleApplyClick}>
+                        {he.translate('global__apply_btn')}
+                    </button>
+                </p>
             </form>
         );
     };
