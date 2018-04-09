@@ -14,6 +14,7 @@ import os
 from plugins.abstract.appbar import AbstractApplicationBar
 from translation import ugettext as _
 from plugins import inject
+import plugins
 
 
 class LindatTopBar(AbstractApplicationBar):
@@ -76,7 +77,7 @@ class LindatTopBar(AbstractApplicationBar):
         return ''
 
 
-@inject('auth')
+@inject(plugins.runtime.AUTH)
 def create_instance(settings, auth):
     """
         Auth must provide `get_logout_url`
