@@ -21,8 +21,6 @@
 
 /// <reference path="./aai.d.ts" />
 
-/// <amd-dependency path="aai" />
-
 
 export function init():void {
     if (!(window.hasOwnProperty('aai'))) {

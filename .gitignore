@@ -25,6 +25,7 @@ cmpltmpl/*
 !cmpltmpl/__init__.py
 public/files/themes/*
 !public/files/themes/default
+!public/files/themes/lindat
 
 # other
 *.pyc
