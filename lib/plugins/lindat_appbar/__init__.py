@@ -83,16 +83,6 @@ def create_instance(settings, auth):
         Auth must provide `get_logout_url`
     """
     plugin_conf = settings.get('plugins', 'application_bar')
-    urls = settings.get('plugins', 'auth').get('lindat:external_deps')
-    metas = settings.get_meta('plugins', 'auth').get('lindat:external_deps')
-    deps = [dict(
-        module=meta['name'],
-        url=url,
-        shim=dict(
-            deps=[dep.strip() for dep in meta['shim'].split(',')]
-        )
-    ) for url, meta in zip(urls, metas)
-    ]
     templates = {
         'cs_CZ': plugin_conf['lindat:template_cs'],
         'en_US': plugin_conf['lindat:template_en']
@@ -100,6 +90,5 @@ def create_instance(settings, auth):
     return LindatTopBar(
         templates=templates,
         css_url=plugin_conf.get('lindat:css_url'),
-        logout_url=auth.get_logout_url(),
-        external_scripts=deps
+        logout_url=auth.get_logout_url()
     )
