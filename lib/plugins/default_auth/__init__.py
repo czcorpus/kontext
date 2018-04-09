@@ -26,7 +26,7 @@ from translation import ugettext as _
 import plugins
 from plugins import inject
 
-IMPLICIT_CORPUS = 'susanne'
+IMPLICIT_CORPUS = 'ud_fused_test_a'
 
 
 def mk_pwd_hash_default(data):
