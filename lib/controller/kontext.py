@@ -717,6 +717,9 @@ class Kontext(Controller):
         """
         super(Kontext, self).pre_dispatch(path, named_args, action_metadata)
 
+        with plugins.runtime.DISPATCH_HOOK as dhook:
+            dhook.pre_dispatch(self._plugin_api, path, named_args, action_metadata)
+
         def validate_corpus():
             if isinstance(self.corp, fallback_corpus.ErrorCorpus):
                 return self.corp.get_error()
@@ -781,6 +784,10 @@ class Kontext(Controller):
             self.disabled_menu_items = tuple(disabled_set.union(
                 set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result)
+
+        with plugins.runtime.DISPATCH_HOOK as dhook:
+            dhook.post_dispatch(self._plugin_api, methodname, action_metadata)
+
         # create and store concordance query key
         if type(result) is DictType:
             new_query_key = self._store_conc_params()

@@ -121,13 +121,15 @@ class _Names(object):
     ISSUE_REPORTING = _ID('issue_reporting', optional=True)
     TOKEN_CONNECT = _ID('token_connect', optional=True)
     KWIC_CONNECT = _ID('kwic_connect', optional=True)
+    DISPATCH_HOOK = _ID('dispatch_hook', optional=True)
 
     def __iter__(self):
         return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
                      self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS, self.MENU_ITEMS,
                      self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR,
                      self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER,
-                     self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT])
+                     self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
+                     self.DISPATCH_HOOK])
 
 
 runtime = _Names()
