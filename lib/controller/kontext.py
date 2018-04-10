@@ -789,6 +789,8 @@ class Kontext(Controller):
         # log user request
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
+        if plugins.has_plugin('tracker'):
+            plugins.get_plugins()['tracker'].track(methodname, tmpl, result)
 
     def _add_save_menu_item(self, label, save_format=None, hint=None):
         if save_format is None:
