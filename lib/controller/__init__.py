@@ -401,6 +401,8 @@ class Controller(object):
             action_module_path = action_module_path[1:]
         if 'HTTP_X_FORWARDED_PROTO' in self.environ:
             protocol = self.environ['HTTP_X_FORWARDED_PROTO']
+        elif 'HTTP_X_FORWARDED_PROTOCOL' in self.environ:
+                protocol = self.environ['HTTP_X_FORWARDED_PROTOCOL']
         else:
             protocol = self.environ['wsgi.url_scheme']
         url_items = ('%s://%s' % (protocol, self.environ.get('HTTP_HOST')),
