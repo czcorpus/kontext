@@ -19,9 +19,10 @@ import plugins
 
 class LindatTopBar(AbstractApplicationBar):
 
-    def __init__(self, css_url, templates=None, logout_url=None):
+    def __init__(self, css_urls, js_urls, templates=None, logout_url=None):
         self._templates = templates if type(templates) is dict else {}
-        self.css_url = css_url
+        self._css_urls = css_urls
+        self._js_urls = js_urls
         self._logout_url = logout_url
 
     def get_template(self, lang):
@@ -31,12 +32,10 @@ class LindatTopBar(AbstractApplicationBar):
             return self._templates['en_US']
 
     def get_styles(self, plugin_api):
-        return [dict(url=self.css_url)]
+        return [{'url': x} for x in self._css_urls]
 
     def get_scripts(self, plugin_api):
-        return ['//code.jquery.com/jquery-3.3.1.min.js',
-                '//lindat.mff.cuni.cz/aai/discojuice/discojuice-2.1.en.min.js',
-                '//lindat.mff.cuni.cz/aai/aai.js']
+        return self._js_urls
 
     def get_contents(self, plugin_api, return_url):
         tpl_path = self.get_template(plugin_api.user_lang)
@@ -83,12 +82,17 @@ def create_instance(settings, auth):
         Auth must provide `get_logout_url`
     """
     plugin_conf = settings.get('plugins', 'application_bar')
+    main_css = plugin_conf.get('lindat:css_url')
+    external_css = settings.get('theme', 'lindat:external_css', [])
+    external_js = settings.get('theme', 'lindat:external_js', [])
     templates = {
         'cs_CZ': plugin_conf['lindat:template_cs'],
         'en_US': plugin_conf['lindat:template_en']
     }
+    css = [x for x in [main_css] + list(external_css) if x is not None]
     return LindatTopBar(
         templates=templates,
-        css_url=plugin_conf.get('lindat:css_url'),
-        logout_url=auth.get_logout_url()
+        css_urls=css,
+        js_urls=external_js,
+        logout_url=auth.get_logout_url(),
     )
