@@ -45,7 +45,8 @@ class User(Kontext):
         elif request.method == 'POST':
             with plugins.runtime.AUTH as auth:
                 ans = {}
-                self._session['user'] = auth.validate_user(self._plugin_api, request.form['username'],
+                self._session['user'] = auth.validate_user(self._plugin_api,
+                                                           request.form['username'],
                                                            request.form['password'])
                 if not auth.is_anonymous(self._session['user'].get('id', None)):
                     if request.args.get('return_url', None):
