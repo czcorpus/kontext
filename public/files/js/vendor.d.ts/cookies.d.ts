@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-interface DocCookies {
+export interface DocCookies {
     setItem(name:string, value:string, end?:number, path?:string, domain?:string, secure?:boolean);
     getItem(name:string):string;
     removeItem(name:string, path?:string, domain?:string);
