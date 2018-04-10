@@ -157,9 +157,13 @@ class ManateeBackendConf(object):
     def __init__(self, data):
         self._data = data
 
-    def get_trees(self, corpus_id):
-        return dict((tc['id'], TreeConf(tc))
-                    for tc in self._data[corpus_id]['trees'])
+    def get_trees(self, canonical_corpus_id, corpus=None):
+        d = {}
+        for tc in self._data[canonical_corpus_id]['trees']:
+            if corpus is not None and "*" == (tc["detailAttrs"] or [""])[0]:
+                tc['detailAttrs'] = corpus.get_conf('ATTRLIST').split(',')
+                d[tc['id']] = TreeConf(tc)
+        return d
 
     def get_tree_display_list(self, corpus_id):
         return [tc['id'] for tc in self._data[corpus_id]['trees']]
