@@ -1,0 +1,3 @@
+[submodule "public/files/themes/lindat/lindat-common"]
+	path = public/files/themes/lindat/lindat-common
+	url = https://github.com/ufal/lindat-common
