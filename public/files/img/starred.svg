@@ -36,16 +36,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1853"
-     inkscape:window-height="1145"
+     inkscape:window-width="935"
+     inkscape:window-height="674"
      id="namedview3777"
      showgrid="false"
-     inkscape:zoom="19.416667"
-     inkscape:cx="15.571821"
-     inkscape:cy="24"
-     inkscape:window-x="67"
-     inkscape:window-y="27"
-     inkscape:window-maximized="1"
+     inkscape:zoom="4.8541667"
+     inkscape:cx="43.671981"
+     inkscape:cy="7.474873"
+     inkscape:window-x="337"
+     inkscape:window-y="334"
+     inkscape:window-maximized="0"
      inkscape:current-layer="svg0" />
   <defs
      id="defs">
@@ -114,5 +114,5 @@
   <path
      d="M 37.310531,41.5 L 24.030644,34.826121 L 10.735101,41.471448 L 13.289408,27.369086 L 2.5511635,17.368344 L 17.409702,15.326301 L 24.068641,2.5 L 30.697416,15.340488 L 45.551111,17.414249 L 34.789382,27.392039 L 37.310531,41.5 z"
      id="star"
-     style="fill:#00aad4;stroke:#00aad4;fill-opacity:1" />
+     style="fill:#fac467;stroke:#65300e;fill-opacity:1;stroke-opacity:0.75862068" />
 </svg>

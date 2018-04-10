@@ -175,7 +175,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                                     }
                                 );
                             },
-                            RSVP.Promise.resolve(null)
+                            RSVP.Promise.resolve(Immutable.List<ProviderWordMatch>())
                         );
                     }
                 ).then(

@@ -348,8 +348,8 @@ export function init(
                     <div className="heading">
                         <div className="control">
                             <ImgWithMouseover htmlClass="close-icon"
-                                    src={he.createStaticUrl('img/close-icon_s.svg')}
-                                    src2={he.createStaticUrl('img/close-icon.svg')}
+                                    src={he.createStaticUrl('img/close-icon.svg')}
+                                    src2={he.createStaticUrl('img/close-icon_s.svg')}
                                     clickHandler={this.closeClickHandler}
                                     alt={he.translate('global__close_the_window')} />
                         </div>
