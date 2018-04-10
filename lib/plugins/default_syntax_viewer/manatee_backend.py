@@ -157,12 +157,12 @@ class ManateeBackendConf(object):
     def __init__(self, data):
         self._data = data
 
-    def get_trees(self, canonical_corpus_id, corpus=None):
+    def get_trees(self, corpus_id, corpus=None):
         d = {}
-        for tc in self._data[canonical_corpus_id]['trees']:
+        for tc in self._data[corpus_id]['trees']:
             if corpus is not None and "*" == (tc["detailAttrs"] or [""])[0]:
                 tc['detailAttrs'] = corpus.get_conf('ATTRLIST').split(',')
-                d[tc['id']] = TreeConf(tc)
+            d[tc['id']] = TreeConf(tc)
         return d
 
     def get_tree_display_list(self, corpus_id):
@@ -475,7 +475,7 @@ class ManateeBackend(SearchBackend):
             self._process_attr_refs(data, i, attr_refs)
 
     def get_data(self, corpus, corpus_id, token_id, kwic_len):
-        tree_configs = self._conf.get_trees(corpus_id)
+        tree_configs = self._conf.get_trees(corpus_id, corpus)
         tree_list = []
         tree_id_list = self._conf.get_tree_display_list(corpus_id)
         for tree in tree_id_list:
