@@ -26,5 +26,5 @@ interface DocCookies {
 
 
 declare module "vendor/cookies" {
-    export = DocCookies;
+    export var cookies:DocCookies;
 }
