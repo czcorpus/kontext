@@ -1,3 +1,5 @@
+/// <reference path="../../vendor.d.ts/cookies.d.ts" />
+
 import * as cookies from 'vendor/cookies';
 declare var $:any;
 
