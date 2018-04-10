@@ -270,7 +270,7 @@ class TreeGenerator {
             return {
                 id: item[1],
                 value: item[0],
-                isKwic: data.kwicPosition.indexOf(i - 1) > -1 // testing (i - 1) because data.desc[0] == '#' character
+                isKwic: false // testing (i - 1) because data.desc[0] == '#' character
             }
         });
     }
