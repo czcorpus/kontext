@@ -230,7 +230,8 @@
             'SoundManager',
             'vendor/intl-messageformat',
             'vendor/d3',
-            'vendor/d3-color'
+            'vendor/d3-color',
+            'vendor/cookies'
         ];
         if (isProduction) {
             modules.push('translations');
