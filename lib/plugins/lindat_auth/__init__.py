@@ -47,7 +47,7 @@ def lindat_login(self, request):
             else:
                 self.redirect(self.create_url('first_form', {}))
         else:
-            self.disabled_menu_items = self.USER_ACTIONS_DISABLED_ITEMS
+            self.disabled_menu_items = user.USER_ACTIONS_DISABLED_ITEMS
             self.add_system_message('error', _('Incorrect username or password'))
         self.refresh_session_id()
         return ans
