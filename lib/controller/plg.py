@@ -77,7 +77,7 @@ class PluginApi(object):
         return self._controller.get_root_url()
 
     def redirect(self, url, code=303):
-        return getattr(self._controller, '_redirect')(url, code=code)
+        return self._controller.redirect(url, code=code)
 
     @property
     def text_types(self):
