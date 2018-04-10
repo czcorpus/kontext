@@ -1,4 +1,7 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2017 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -40,9 +43,7 @@ element db {
 """
 
 import json
-
 import redis
-
 from plugins.abstract.general_storage import KeyValueStorage
 
 
@@ -58,6 +59,24 @@ class RedisDb(KeyValueStorage):
         self._shard_id = shard_id
         self.redis = redis.StrictRedis(host=self._host, port=self._port, db=self._shard_id)
         self._scan_chunk_size = 50
+
+    def fork(self):
+        """
+        Return a new instance of the plug-in with the same connection
+        parameters.
+
+        This method is used only in case multiprocessing is configured
+        for asynchronous tasks (i.e. in case 'celery' is used, it is
+        never called).
+        """
+        return RedisDb({
+            'default:host': self._host,
+            'default:port': self._port,
+            'default:id': self._db
+        })
+
+    def rename(self, key, new_key):
+        return self.redis.rename(key, new_key)
 
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
@@ -83,7 +102,13 @@ class RedisDb(KeyValueStorage):
         self.redis.rpush(key, json.dumps(value))
 
     def list_pop(self, key):
-        return self.redis.lpop(key)
+        """
+        Removes and returns the first element of the list stored at key.
+
+        arguments:
+        key -- list access key
+        """
+        return json.loads(self.redis.lpop(key))
 
     def list_len(self, key):
         """
@@ -94,6 +119,17 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         """
         return self.redis.llen(key)
+
+    def list_set(self, key, idx, value):
+        """
+        Sets the list element at index to value
+
+        arguments:
+        key -- list access key
+        idx -- a zero based index where the set should be performed
+        value -- a JSON-serializable value to be inserted
+        """
+        return self.redis.lset(key, idx, json.dumps(value))
 
     def list_trim(self, key, keep_left, keep_right):
         """
@@ -115,7 +151,8 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        return self.redis.hget(key, field)
+        v = self.redis.hget(key, field)
+        return json.loads(v) if v else None
 
     def hash_set(self, key, field, value):
         """
@@ -126,17 +163,17 @@ class RedisDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        self.redis.hset(key, field, value)
+        self.redis.hset(key, field, json.dumps(value))
 
-    def hash_del(self, key, *fields):
+    def hash_del(self, key, field):
         """
-        Removes one or more fields from a hash item
+        Removes a field from a hash item
 
         arguments:
         key -- hash item access key
-        *fields -- one or more fields to be deleted
+        field -- the field to be deleted
         """
-        self.redis.hdel(key, *fields)
+        self.redis.hdel(key, field)
 
     def hash_get_all(self, key):
         """
@@ -146,7 +183,7 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        return self.redis.hgetall(key)
+        return dict((k, json.loads(v)) for k, v in self.redis.hgetall(key).items())
 
     def get(self, key, default=None):
         """
@@ -181,6 +218,9 @@ class RedisDb(KeyValueStorage):
         (please note that update actions reset the timer to zero)
         """
         self.redis.expire(key, ttl)
+
+    def clear_ttl(self, key):
+        self.redis.persist(key)
 
     def remove(self, key):
         """
@@ -223,20 +263,23 @@ class RedisDb(KeyValueStorage):
         """
         return self.redis.getset(key, value)
 
+    def incr(self, key, amount=1):
+        """
+        Increments the value of 'key' by 'amount'.  If no key exists,
+        the value will be initialized as 'amount'
+        """
+        return self.redis.incr(key, amount)
+
     def hash_set_map(self, key, mapping):
         """
-        Set key to value within hash ``name`` for each corresponding
-        key and value from the ``mapping`` dict.
+        Set key to value within hash 'name' for each corresponding
+        key and value from the 'mapping' dict.
+        Before setting, the values are json-serialized
         """
-        return self.redis.hmset(key, mapping)
-
-    def incr(self, name, amount=1):
-        """
-        Increments the value of ``key`` by ``amount``.  If no key exists,
-        the value will be initialized as ``amount``
-        """
-        return self.redis.incr(name, amount)
-
+        new_mapping = {}
+        for name in mapping:
+            new_mapping[name] = json.dumps(mapping[name])
+        return self.redis.hmset(key, new_mapping)
 
 class RedisDbManager(RedisDb):
     """
