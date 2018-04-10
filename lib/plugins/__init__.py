@@ -31,8 +31,10 @@ class _ID(object):
     (name, exists?, is avail. for a corpus?,...).
     """
 
-    def __init__(self, ident):
+    def __init__(self, ident, optional=False):
         self._ident = ident
+        self._optional = optional
+        self._forced_module = None
 
     @property
     def instance(self):
@@ -44,6 +46,17 @@ class _ID(object):
         if _has_plugin(self._ident):
             return _plugins[self._ident]
         return None
+
+    @property
+    def is_optional(self):
+        return self._optional
+
+    @property
+    def forced_module(self):
+        return self._forced_module
+
+    def force_module(self, mod):
+        self._forced_module = mod
 
     def __enter__(self):
         if _has_plugin(self._ident):
@@ -94,27 +107,29 @@ class _Names(object):
     USER_ITEMS = _ID('user_items')
     MENU_ITEMS = _ID('menu_items')
 
-    GETLANG = _ID('getlang')
+    GETLANG = _ID('getlang', optional=True)
     CORPARCH = _ID('corparch')
-    QUERY_STORAGE = _ID('query_storage')
-    APPLICATION_BAR = _ID('application_bar')
-    FOOTER_BAR = _ID('footer_bar')
-    LIVE_ATTRIBUTES = _ID('live_attributes')
-    SUBC_RESTORE = _ID('subc_restore')
-    TAGHELPER = _ID('taghelper')
-    SYNTAX_VIEWER = _ID('syntax_viewer')
-    SUBCMIXER = _ID('subcmixer')
-    CHART_EXPORT = _ID('chart_export')
-    ISSUE_REPORTING = _ID('issue_reporting')
-    TOKEN_CONNECT = _ID('token_connect')
-    KWIC_CONNECT = _ID('kwic_connect')
+    QUERY_STORAGE = _ID('query_storage', optional=True)
+    APPLICATION_BAR = _ID('application_bar', optional=True)
+    FOOTER_BAR = _ID('footer_bar', optional=True)
+    LIVE_ATTRIBUTES = _ID('live_attributes', optional=True)
+    SUBC_RESTORE = _ID('subc_restore', optional=True)
+    TAGHELPER = _ID('taghelper', optional=True)
+    SYNTAX_VIEWER = _ID('syntax_viewer', optional=True)
+    SUBCMIXER = _ID('subcmixer', optional=True)
+    CHART_EXPORT = _ID('chart_export', optional=True)
+    ISSUE_REPORTING = _ID('issue_reporting', optional=True)
+    TOKEN_CONNECT = _ID('token_connect', optional=True)
+    KWIC_CONNECT = _ID('kwic_connect', optional=True)
+    DISPATCH_HOOK = _ID('dispatch_hook', optional=True)
 
     def __iter__(self):
         return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
-                     self.CONC_CACHE, self.EXPORT, self.USER_ITEMS, self.MENU_ITEMS, self.GETLANG, self.CORPARCH,
-                     self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES,
-                     self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT,
-                     self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT])
+                     self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS, self.MENU_ITEMS,
+                     self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR,
+                     self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER,
+                     self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
+                     self.DISPATCH_HOOK])
 
 
 runtime = _Names()

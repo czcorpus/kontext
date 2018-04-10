@@ -1,4 +1,5 @@
-from typing import TypeVar, Generic, Any, List, Iterator, Callable
+from typing import TypeVar, Generic, Any, List, Iterator, Callable, Optional
+from types import ModuleType
 import werkzeug.contrib.sessions
 
 from .abstract.general_storage import KeyValueStorage
@@ -22,13 +23,14 @@ from .abstract.syntax_viewer import AbstractSyntaxViewerPlugin
 from .abstract.subcmixer import AbstractSubcMixer
 from .abstract.chart_export import AbstractChartExportPlugin
 from .abstract.issue_reporting import AbstractIssueReporting
+from .abstract.dispatch_hook import AbstractDispatchHook
 from ..kontext import PluginApi
 
 T = TypeVar('T')
 
 class _ID(Generic[T]):
 
-    def __init__(self, ident:str): ...
+    def __init__(self, ident:str,  optional:Optional[bool]): ...
 
     @property
     def instance(self) -> T: ...
@@ -42,6 +44,14 @@ class _ID(Generic[T]):
 
     @property
     def exists(self) -> bool: ...
+
+    @property
+    def is_optional(self) -> bool: ...
+
+    @property
+    def forced_module(self) -> ModuleType: ...
+
+    def force_module(self, mod:ModuleType): ...
 
     def is_enabled_for(self, plugin_api:PluginApi, corpus_id:str) -> bool: ...
 
@@ -71,6 +81,7 @@ class _Names(object):
     CHART_EXPORT:_ID[AbstractChartExportPlugin]
     CHART_EXPORT:_ID[AbstractChartExportPlugin]
     ISSUE_REPORTING: _ID[AbstractIssueReporting]
+    DISPATCH_HOOK: _ID[AbstractDispatchHook]
 
     def __iter__(self) -> Iterator[_ID]: ...
 
@@ -88,4 +99,4 @@ def flush_plugins() -> None: ...
 
 def inject(*args:List[_ID]) -> Callable[Any, Any]: ...
 
-def load_plugin_module(name:str) -> module: ...
+def load_plugin_module(name:str) -> ModuleType: ...
