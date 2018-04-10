@@ -1,1 +1,10 @@
 @import url("./lindat-common/public/css/lindat.css");
+
+#common-bar {
+    height: 57px !important;
+}
+
+footer {
+    margin-top: 0;
+    padding: 0;
+}

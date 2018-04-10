@@ -19,6 +19,7 @@
 import * as aai from './aai-config';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {init as localeInit} from './locale';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -28,10 +29,8 @@ export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
 
 const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
     aai.init();
+    localeInit();
     return new LindatAppBar();
 };
 
 export default create;
-
-
-

@@ -70,6 +70,8 @@ class LindatTopBar(AbstractApplicationBar):
             '<div class="%(user_classes)s">%(login_html)s</div>' +
             '</div>' +
             '<!-- AUTH BAR END -->') % dict(login_html=login_html, user_classes=user_classes)
+        # add proper underline
+        contents = "<div id='lindat-tools'>%s</div>" % contents
         return contents
 
     def get_fallback_content(self):
