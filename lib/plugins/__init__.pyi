@@ -23,6 +23,7 @@ from .abstract.syntax_viewer import AbstractSyntaxViewerPlugin
 from .abstract.subcmixer import AbstractSubcMixer
 from .abstract.chart_export import AbstractChartExportPlugin
 from .abstract.issue_reporting import AbstractIssueReporting
+from .abstract.dispatch_hook import AbstractDispatchHook
 from ..kontext import PluginApi
 
 T = TypeVar('T')
@@ -80,6 +81,7 @@ class _Names(object):
     CHART_EXPORT:_ID[AbstractChartExportPlugin]
     CHART_EXPORT:_ID[AbstractChartExportPlugin]
     ISSUE_REPORTING: _ID[AbstractIssueReporting]
+    DISPATCH_HOOK: _ID[AbstractDispatchHook]
 
     def __iter__(self) -> Iterator[_ID]: ...
 
