@@ -72,28 +72,7 @@ def setup_plugins():
     to be accessed concurrently by multiple requests which means any stateful
     properties should be considered carefully.
     """
-    init_plugin('db')
-    init_plugin('sessions')
-    init_plugin('settings_storage')
-    init_plugin('auth')
-    init_plugin('conc_persistence')
-    init_plugin('conc_cache')
-    init_plugin('export', module=plugins.export)
-    init_plugin('export_freq2d', module=plugins.export_freq2d)
-    init_plugin('user_items')
-    init_plugin('menu_items')
-
-    init_plugin('getlang', optional=True)
-    init_plugin('corparch')
-    init_plugin('query_storage', optional=True)
-    init_plugin('application_bar', optional=True)
-    init_plugin('footer_bar', optional=True)
-    init_plugin('live_attributes', optional=True)
-    init_plugin('subc_restore', optional=True)
-    init_plugin('taghelper', optional=True)
-    init_plugin('syntax_viewer', optional=True)
-    init_plugin('subcmixer', optional=True)
-    init_plugin('chart_export', optional=True)
-    init_plugin('issue_reporting', optional=True)
-    init_plugin('token_connect', optional=True)
-    init_plugin('kwic_connect', optional=True)
+    plugins.runtime.EXPORT.force_module(plugins.export)
+    plugins.runtime.EXPORT_FREQ2D.force_module(plugins.export_freq2d)
+    for plugin in plugins.runtime:
+        init_plugin(plugin.name, optional=plugin.is_optional, module=plugin.forced_module)
