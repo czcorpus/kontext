@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Institute of formal and
+# Copyright (c) 2013 Institute of Formal and Applied Linguistics
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -12,13 +12,49 @@
 
 """
 A simple module for tracking activities and reporting to piwik.
+
+Required XML snippet:
+
+element dispatch_hook {
+
+    element site_id {
+        attribute extension-by { "lindat" }
+        text
+    }
+
+    element rest_site_id {
+        attribute extension-by { "lindat" }
+        text
+    }
+
+    element tracking_api_url {
+        attribute extension-by { "lindat" }
+        text
+    }
+
+    element methods_to_track {
+        attribute extension-by { "lindat" }
+
+        element item {
+            text
+        }+
+    }
+
+    element auth_token {
+        attribute extension-by { "lindat" }
+        text
+    }
+
+}
 """
 
 import os
-import re
 
 from piwikapi.tracking import PiwikTracker
 from piwikapi.tests.request import FakeRequest
+
+from plugins.abstract.dispatch_hook import AbstractDispatchHook
+
 
 def create_instance(conf):
     """
@@ -33,22 +69,23 @@ def create_instance(conf):
     auth_token = None
     context_path = '/'
 
-    if conf.get('plugins', 'tracker').get('site_id'):
-        site_id = conf.get('plugins', 'tracker').get('site_id').strip()
+    if conf.get('plugins', 'dispatch_hook').get('lindat:site_id'):
+        site_id = conf.get('plugins', 'dispatch_hook').get('lindat:site_id').strip()
 
-    if conf.get('plugins', 'tracker').get('rest_site_id'):
-        rest_site_id = conf.get('plugins', 'tracker').get('rest_site_id').strip()
+    if conf.get('plugins', 'dispatch_hook').get('lindat:rest_site_id'):
+        rest_site_id = conf.get('plugins', 'dispatch_hook').get('lindat:rest_site_id').strip()
 
-    if conf.get('plugins', 'tracker').get('tracking_api_url'):
-        tracking_api_url = conf.get('plugins', 'tracker').get('tracking_api_url').strip()
+    if conf.get('plugins', 'dispatch_hook').get('lindat:tracking_api_url'):
+        tracking_api_url = conf.get('plugins', 'dispatch_hook').get(
+            'lindat:tracking_api_url').strip()
 
-    if conf.get('plugins', 'tracker').get('methods_to_track'):
-        methods_to_track = re.split(' *, *', conf.get('plugins', 'tracker').get('methods_to_track').strip())
+    if conf.get('plugins', 'dispatch_hook').get('lindat:methods_to_track'):
+        methods_to_track = conf.get('plugins', 'dispatch_hook').get('lindat:methods_to_track')
 
-    if conf.get('plugins', 'tracker').get('auth_token'):
-        auth_token = conf.get('plugins', 'tracker').get('auth_token').strip()
+    if conf.get('plugins', 'dispatch_hook').get('lindat:auth_token'):
+        auth_token = conf.get('plugins', 'dispatch_hook').get('lindat:auth_token').strip()
 
-    #if conf.get('global', 'root_url_path'):
+    # if conf.get('global', 'root_url_path'):
     #    context_path = conf.get('global', 'root_url_path').strip()
 
     if conf.get('global', 'action_path_prefix'):
@@ -57,7 +94,7 @@ def create_instance(conf):
     return Tracker(site_id, rest_site_id, tracking_api_url, context_path, methods_to_track, auth_token)
 
 
-class Tracker():
+class Tracker(AbstractDispatchHook):
     """
     Piwik tracker module
     """
@@ -74,7 +111,7 @@ class Tracker():
         self.rest_methods = frozenset(['fcs'])
         self.auth_token = auth_token
 
-    def track(self, methodname, tmpl, result):
+    def post_dispatch(self, plugin_api, methodname, action_metadata):
         """
         Sends the tracking information to the tracking backend
         """
@@ -84,7 +121,8 @@ class Tracker():
         server_names = os.environ.get('HTTP_X_FORWARDED_SERVER', '').split(', ')
         server_name = server_names[0] if server_names else ''
         https = os.environ.get('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
-        remote_addrs = os.environ.get('HTTP_X_FORWARDED_FOR', os.environ.get('REMOTE_ADDR', '')).split(', ')
+        remote_addrs = os.environ.get('HTTP_X_FORWARDED_FOR',
+                                      os.environ.get('REMOTE_ADDR', '')).split(', ')
         remote_addr = remote_addrs[0] if remote_addrs else ''
         path_info = self.context_path.rstrip('/') + os.environ.get('PATH_INFO', '')
         title = '%s/%s' % (server_name, methodname)
