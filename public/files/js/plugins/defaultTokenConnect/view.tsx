@@ -24,10 +24,12 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
+import {ValexResponseData} from './valex';
 
 
 export interface Views {
     RawHtmlRenderer:React.SFC<{data: Array<[string, string]>}>;
+    ValexJsonRenderer:React.SFC<{data: ValexResponseData}>;
     SimpleTabularRenderer:React.SFC<{data: Array<Array<[string, string]>>}>;
     DescriptionListRenderer:React.SFC<{data: Array<[string, string]>}>;
     UnsupportedRenderer:React.SFC<{data: any}>;
@@ -119,12 +121,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         );
     };
 
+    // ------------- <ValexJsonRenderer /> -------------------------------
+
+    const ValexJsonRenderer:Views['ValexJsonRenderer'] = (props) => {
+        return (
+            <p>Hi, I'm your new p
+                {JSON.stringify(props.data.result)}
+            </p>
+        )
+    }
+
     return {
         RawHtmlRenderer: RawHtmlRenderer,
         SimpleTabularRenderer: SimpleTabularRenderer,
         DescriptionListRenderer: DescriptionListRenderer,
         UnsupportedRenderer: UnsupportedRenderer,
-        DataMuseSimilarWords: DataMuseSimilarWords
+        DataMuseSimilarWords: DataMuseSimilarWords,
+        ValexJsonRenderer: ValexJsonRenderer
     };
 
 }
