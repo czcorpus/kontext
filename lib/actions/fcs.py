@@ -44,7 +44,8 @@ class Actions(Kontext):
         resources = []
         corpora_d = {value: value}
         if value == 'root':
-            corpora_d = plugins.get('auth').permitted_corpora(self._session_get('user'))
+            corpora_d = plugins.runtime.AUTH.instance.permitted_corpora(self._session_get(
+                'user'))
 
         for i, corpus_id in enumerate(corpora_d):
             if i >= max_items:
@@ -126,7 +127,7 @@ class Actions(Kontext):
 
         # try to get concordance
         try:
-            anon_id = plugins.get('auth').anonymous_user()["id"]
+            anon_id = plugins.runtime.AUTH.instance.anonymous_user()["id"]
             q = ['q' + rq]
             #q = ['aword,[lc="havel"]']
             conc = conclib.get_conc(corp, anon_id, q=q)
@@ -275,7 +276,8 @@ class Actions(Kontext):
                 )
                 if "x-cmd-context" in req.args:
                     req_corpname = req.args["x-cmd-context"]
-                    user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user'))
+                    user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
+                        self._session_get('user'))
                     if req_corpname in user_corpora:
                         corpname = req_corpname
                     else:
@@ -283,7 +285,7 @@ class Actions(Kontext):
                             "Requested unavailable corpus [%s], defaulting to [%s]", req_corpname, corpname)
                     data["corpname"] = corpname
 
-                corp_conf_info = plugins.get('corparch').get_corpus_info(corpname)
+                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info(corpname)
                 data["corppid"] = corp_conf_info.get("web", "")
                 query = req.args.get("query", "")
                 corpus = self.cm.get_Corpus(corpname)
