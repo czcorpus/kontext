@@ -44,7 +44,7 @@ class Actions(Kontext):
         resources = []
         corpora_d = {value: value}
         if value == 'root':
-            corpora_d = plugins.runtime.AUTH.instance.permitted_corpora(self._session_get(
+            corpora_d = plugins.runtime.AUTH.instance.permitted_corpora(self.session_get(
                 'user'))
 
         for i, corpus_id in enumerate(corpora_d):
@@ -277,7 +277,7 @@ class Actions(Kontext):
                 if "x-cmd-context" in req.args:
                     req_corpname = req.args["x-cmd-context"]
                     user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
-                        self._session_get('user'))
+                        self.session_get('user'))
                     if req_corpname in user_corpora:
                         corpname = req_corpname
                     else:
