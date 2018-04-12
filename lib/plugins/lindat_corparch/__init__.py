@@ -53,6 +53,7 @@ grammar {
 
 
 from lxml import etree
+import logging
 
 import plugins
 from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
@@ -88,16 +89,17 @@ class ManateeCorpora(object):
     def __init__(self):
         self._cache = {}
 
-    def get_info(self, canonical_corpus_id):
+    def get_info(self, corpus_id):
         try:
-            if canonical_corpus_id not in self._cache:
-                self._cache[canonical_corpus_id] = ManateeCorpusInfo(
-                    manatee.Corpus(canonical_corpus_id), canonical_corpus_id)
-            return self._cache[canonical_corpus_id]
-        except:
+            if corpus_id not in self._cache:
+                self._cache[corpus_id] = ManateeCorpusInfo(
+                    manatee.Corpus(corpus_id), corpus_id)
+            return self._cache[corpus_id]
+        except Exception as ex:
+            logging.getLogger(__name__).warning(ex)
             # probably a misconfigured/missing corpus
-            return ManateeCorpusInfo(EmptyCorpus(corpname=canonical_corpus_id),
-                                     canonical_corpus_id)
+            return ManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
+                                     corpus_id)
 
 
 class EmptyCorpus(object):
@@ -226,11 +228,11 @@ class CorptreeParser(object):
 
 
 @exposed(return_type='json', skip_corpus_init=True)
-def ajax_get_corptree_data(ctrl, request):
+def ajax_get_corptree_data(self, request):
     """
     An exposed HTTP action required by client-side widget.
     """
-    return plugins.runtime.CORPARCH.instance.get_all(ctrl._session_get('user', 'id'))
+    return plugins.runtime.CORPARCH.instance.get_all(self.session_get('user', 'id'))
 
 
 class TreeCorparch(AbstractCorporaArchive):
@@ -254,7 +256,6 @@ class TreeCorparch(AbstractCorporaArchive):
                         corpus_info['ident']).description
                     corpus_info['size'] = int(
                         self._manatee_corpora.get_info(corpus_info['ident']).size)
-                    corpus_info['formatted_size'] = '{:,}'.format(corpus_info['size'])
                     corpus_info['language'] = self._manatee_corpora.get_info(
                         corpus_info['ident']).lang
                     self._data['sort_corplist'].append(corpus_info)
@@ -282,7 +283,7 @@ class TreeCorparch(AbstractCorporaArchive):
     def setup(self, controller_obj):
         pass
 
-    def get_corpus_info(self, corp_id, language=None):
+    def get_corpus_info(self, language, corp_id):
         if corp_id:
             # get rid of path-like corpus ID prefix
             corp_id = corp_id.split('/')[-1].lower()
