@@ -3,7 +3,7 @@ import l10n
 from functools import partial
 from argmapping import Args
 import kwiclib
-from kontext import Kontext
+from controller.kontext import Kontext
 from controller import exposed
 import conclib
 import plugins
