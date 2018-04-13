@@ -54,6 +54,8 @@ grammar {
 
 from lxml import etree
 import logging
+import copy
+from collections import OrderedDict
 
 import plugins
 from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
@@ -283,12 +285,31 @@ class TreeCorparch(AbstractCorporaArchive):
     def setup(self, controller_obj):
         pass
 
+    @staticmethod
+    def _localize_corpus_info(data, lang_code):
+        ans = copy.deepcopy(data)
+        lang_code = lang_code.split('_')[0]
+        desc = ans.metadata.desc
+        if lang_code in desc:
+            ans.metadata.desc = desc[lang_code]
+        else:
+            ans.metadata.desc = ''
+
+        translated_k = OrderedDict()
+        for keyword, label in ans.metadata.keywords.items():
+            if type(label) is dict and lang_code in label:
+                translated_k[keyword] = label[lang_code]
+            elif type(label) is str:
+                translated_k[keyword] = label
+        ans.metadata.keywords = translated_k
+        return ans
+
     def get_corpus_info(self, language, corp_id):
         if corp_id:
             # get rid of path-like corpus ID prefix
             corp_id = corp_id.split('/')[-1].lower()
             if corp_id in self._metadata:
-                return self._metadata[corp_id]
+                return self._localize_corpus_info(self._metadata[corp_id], language)
             raise ValueError('Missing configuration data for %s' % corp_id)
         else:
             return BrokenCorpusInfo()
