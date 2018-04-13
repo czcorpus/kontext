@@ -32,7 +32,7 @@ import {ActionPayload} from '../../app/dispatcher';
 import {TreeWidgetModel} from './model';
 import {Views as CorplistViews} from './view';
 
-declare var reqire:any;
+declare var require:any;
 require('./style.less'); //  webpack
 
 export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
