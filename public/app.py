@@ -182,10 +182,10 @@ class KonTextWsgiApp(WsgiApp):
         """
         super(KonTextWsgiApp, self).__init__()
         self.cleanup_runtime_modules()
+        os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
         l10n.configure(settings.get('global', 'translations'))
-        os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
