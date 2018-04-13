@@ -436,19 +436,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         // --------------------------------- <WidgetTreeNode /> --------------------------
 
-    class WidgetTreeNode extends React.Component<{
+    class WidgetTreeNode extends React.PureComponent<{
         ident:string;
         active:boolean;
         name:string;
         permittedCorp:Immutable.List<string>;
         corplist:Immutable.List<Node>;
 
-    }, {active:boolean}> {
+    }> {
 
 
         constructor(props) {
             super(props);
-            this.state = {active: false};
             this._clickHandler = this._clickHandler.bind(this);
         }
 
@@ -462,8 +461,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _getStateImagePath() {
-            let path = this.props.active ? 'img/collapse.svg' : 'img/expand.svg';
-            return he.createStaticUrl(path);
+            return he.createStaticUrl(this.props.active ? 'img/collapse.svg' : 'img/expand.svg');
         }
 
         render() {
@@ -504,7 +502,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return he.createStaticUrl('img/locked.svg');
         };
 
-        if (typeof props.permittedCorp[props.ident] === "undefined") {
+        if (props.permittedCorp.contains(props.ident)) {
             return <li className="leaf"><a onClick={clickHandler} style={{color:"gray"}}>
                     <img className="lock-sign" src={getLock()} />
                     {props.name}</a></li>;
@@ -550,7 +548,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     class CorptreeWidget extends React.Component<{
     }, {
         active:boolean,
-        data:any,
+        data:Node,
         permittedCorp:Immutable.List<string>;
         currentCorpus:Kontext.FullCorpusIdent;
     }> {
@@ -559,7 +557,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             super(props);
             this.state = {
                 active: false,
-                data: null,
+                data: treeModel.getData(),
                 permittedCorp: treeModel.getPermittedCorpora(),
                 currentCorpus: treeModel.getCorpusIdent()
             };
@@ -568,7 +566,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _buttonClickHandler() {
-            if (!this.state.active && !this.state.data) {
+            if (!this.state.active && this.state.data.size === 0) {
                 dispatcher.dispatch({
                     actionType: 'TREE_CORPARCH_GET_DATA',
                     props: {}
@@ -607,7 +605,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <WidgetItemList
                                 htmlClass="corp-tree"
                                 name=""
-                                corplist={this.state.data['corplist']}
+                                corplist={this.state.data.corplist}
                                 permittedCorp={this.state.permittedCorp} /> :
                             null
                     }
