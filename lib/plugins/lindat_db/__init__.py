@@ -69,7 +69,7 @@ class RedisDbManager(LindatRedisDb):
     """
 
     def __init__(self, conf, host, port, default_shard_id):
-        super(RedisDbManager, self).__init__(self, host, port, default_shard_id)
+        super(RedisDbManager, self).__init__(host, port, default_shard_id)
         self._shards = []
         if "shards" in conf:
             for shard in conf["shards"].split(","):
