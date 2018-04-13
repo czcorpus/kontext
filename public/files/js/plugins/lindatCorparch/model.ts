@@ -213,7 +213,8 @@ export class TreeWidgetModel extends StatefulModel {
             (data) => {
                 const [corptreeData, permittedCorpora] = data;
                 this.setData(corptreeData);
-                this.permittedCorpora = Immutable.List<string>(Object.keys(permittedCorpora['corpora']));
+                this.permittedCorpora = Immutable.List<string>(
+                        Object.keys(permittedCorpora['corpora'] || {}));
             },
             (error) => {
                 this.pluginApi.showMessage('error', error);
