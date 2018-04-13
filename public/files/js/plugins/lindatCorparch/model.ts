@@ -129,7 +129,7 @@ export class TreeWidgetModel extends StatefulModel {
             (payload:ActionPayload) => {
                 switch (payload.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        let item = this.idMap.get(payload.props['nodeId']);
+                        const item = this.idMap.get(payload.props['nodeId']);
                         item.active = !item.active;
                         this.notifyChangeListeners();
                         break;
@@ -162,7 +162,7 @@ export class TreeWidgetModel extends StatefulModel {
                 ident: serverNode.ident,
                 name: serverNode.name,
                 description: serverNode.description,
-                active: true,
+                active: false,
                 size: serverNode.size,
                 repo: serverNode.repo,
                 pmltq: serverNode.pmltq,
