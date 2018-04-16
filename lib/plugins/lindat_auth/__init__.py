@@ -42,8 +42,8 @@ def lindat_login(self, request):
                                                    request.form['username'] if request.form else None,
                                                    request.form['password'] if request.form else None)
         if not auth.is_anonymous(self._session['user'].get('id', None)):
-            if request.args.get('return_url', None):
-                self.redirect(request.args.get('return_url'))
+            if request.args.get('redirectTo', None):
+                self.redirect(request.args.get('redirectTo'))
             else:
                 self.redirect(self.create_url('first_form', {}))
         else:
