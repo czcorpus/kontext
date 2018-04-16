@@ -132,6 +132,14 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         return dict([('susanne', '')] + [(corpora['ident'], '') for corpora in self._corplist
                      if len(set(corpora['access']).intersection(set(groups))) > 0])
 
+    def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
+        if self.is_anonymous(plugin_api.session_get('user','id')):
+            fallback = '%s%sfirst_form?corpname=%s' % (self.get_login_url(), plugin_api.root_url,
+                                                       corpname)
+            plugin_api.redirect(fallback)
+        else:
+            super(FederatedAuthWithFailover, self).on_forbidden_corpus(plugin_api, corpname, corp_variant)
+
     def is_administrator(self, user_id):
         # TODO(jm)
         return False
