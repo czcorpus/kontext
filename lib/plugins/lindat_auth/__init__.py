@@ -133,7 +133,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                      if len(set(corpora['access']).intersection(set(groups))) > 0])
 
     def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
-        if self.is_anonymous(plugin_api.session_get('user','id')):
+        if self.is_anonymous(plugin_api.user_id):
             fallback = '%s%sfirst_form?corpname=%s' % (self.get_login_url(), plugin_api.root_url,
                                                        corpname)
             plugin_api.redirect(fallback)
