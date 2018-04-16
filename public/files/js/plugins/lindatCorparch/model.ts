@@ -95,8 +95,6 @@ export class TreeWidgetModel extends StatefulModel {
 
     private permittedCorpora:Immutable.List<string>;
 
-    private idMap:Immutable.Map<string, Node>;
-
     private widgetId:number;
 
     private corpusIdent:Kontext.FullCorpusIdent;
@@ -109,7 +107,6 @@ export class TreeWidgetModel extends StatefulModel {
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;
         this.corpusClickHandler = corpusClickHandler;
-        this.idMap = Immutable.Map<string, Node>();
         this.data = {
             access: Immutable.List<NodeAccess>([NodeAccess.ANONYMOUS]),
             active: true,
@@ -129,8 +126,7 @@ export class TreeWidgetModel extends StatefulModel {
             (payload:ActionPayload) => {
                 switch (payload.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        const item = this.idMap.get(payload.props['nodeId']);
-                        item.active = !item.active;
+                        this.toggleNodeActiveStatus(payload.props['nodeId']);
                         this.notifyChangeListeners();
                         break;
                     case 'TREE_CORPARCH_GET_DATA':
@@ -154,6 +150,71 @@ export class TreeWidgetModel extends StatefulModel {
         );
     }
 
+    private toggleNodeActiveStatus(nodeId:string):void {
+        const nodePath = this.findNode([this.data], nodeId);
+        this.data = this.immutableUpdateTree(nodePath, (node) => {
+            node.active = !node.active;
+        });
+    }
+
+    private copyNode(node:Node):Node {
+        return {
+            ident: node.ident,
+            name: node.name,
+            size: node.size,
+            description: node.description,
+            access: node.access,
+            active: node.active,
+            repo: node.repo,
+            pmltq: node.pmltq,
+            level: node.level,
+            language: node.language,
+            features: node.features,
+            corplist: node.corplist
+        };
+    }
+
+    /**
+     * Update last element in node path in an immutable way:
+     * the node itself and all its parents change their instances.
+     * This allows easy and consistent change detection in a respective
+     * React component.
+     */
+    private immutableUpdateTree(nodePath:Array<Node>, mutationFn:(last:Node)=>void):Node {
+        let last = this.copyNode(nodePath[nodePath.length - 1]);
+        mutationFn(last);
+        for (let i = nodePath.length - 2; i >= 0; i -= 1) {
+            const curr = this.copyNode(nodePath[i]);
+            const srchIdx = curr.corplist.findIndex(v => v.ident === last.ident);
+            curr.corplist = curr.corplist.set(srchIdx, last);
+            last = curr;
+        }
+        return last;
+    }
+
+    private findNode(nodePath:Array<Node>, ident:string):Array<Node>|null {
+
+        const srchRecursive = (nodePath:Array<Node>, ident:string):Array<Node>|null => {
+            const curr = nodePath[nodePath.length - 1];
+            if (curr.ident === ident) {
+                return nodePath;
+            }
+            for (let i = 0; i < curr.corplist.size; i +=1) {
+                const srch = srchRecursive(nodePath.concat(curr.corplist.get(i)), ident);
+                if (srch !== null) {
+                    return srch;
+                }
+            }
+            return null;
+        }
+
+        const ans = srchRecursive(nodePath, ident);
+        if (Array.isArray(ans) && ans[ans.length - 1].ident === ident) {
+            return ans;
+        }
+        return null;
+    }
+
     private importTree(serverNode:CorplistNodeServer|CorplistNodeServerResponse, nodeId:string='a',
                         ):Node {
         let node:Node;
@@ -166,7 +227,7 @@ export class TreeWidgetModel extends StatefulModel {
                 size: serverNode.size,
                 repo: serverNode.repo,
                 pmltq: serverNode.pmltq,
-                level: 'outer',
+                level: nodeId.split('.').length <= 2 ? 'outer' : 'inner',
                 language: Immutable.List<string>((serverNode.language || '').split(',')),
                 access: Immutable.List<NodeAccess>((serverNode.access || ['anonymous']).map(x => x as NodeAccess)),
                 features: Immutable.List<string>((serverNode.features || '').split(',')),
@@ -180,7 +241,6 @@ export class TreeWidgetModel extends StatefulModel {
         }
         if (serverNode.corplist) {
             node.ident = nodeId;
-            this.idMap = this.idMap.set(nodeId, node);
             node.corplist = Immutable.List(
                 serverNode.corplist.map((node, i) => this.importTree(node, `${nodeId}.${i}`))
             );
@@ -191,10 +251,13 @@ export class TreeWidgetModel extends StatefulModel {
         return node;
     }
 
-    dumpNode(rootNode: Node): void {
-        if (rootNode['corplist']) {
-            rootNode['corplist'].forEach((item) => this.dumpNode(item));
+    dumpNode(rootNode:Node, indent=0): void {
+        const indentSpc = [];
+        for (let i = 0; i < indent; i += 1) {
+            indentSpc.push(' ');
         }
+        console.log(`${indentSpc.join('')}node[${rootNode.ident}]: active: ${rootNode.active}, name: ${rootNode.name}`);
+        rootNode.corplist.forEach(v => this.dumpNode(v, indent + 4));
     }
 
     loadData():RSVP.Promise<any> {

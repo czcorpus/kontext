@@ -22,7 +22,6 @@
 
 import * as util from '../../util';
 import * as Immutable from 'immutable';
-import {init as viewInit} from './view';
 import RSVP from 'rsvp';
 import * as React from 'react';
 import {Kontext} from '../../types/common';
@@ -30,7 +29,8 @@ import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {ActionPayload} from '../../app/dispatcher';
 import {TreeWidgetModel} from './model';
-import {Views as CorplistViews} from './view';
+import {Views as CorplistViews, init as corplistViewInit} from './view';
+import {Views as WidgetViews, init as widgetViewInit} from './widget';
 
 declare var require:any;
 require('./style.less'); //  webpack
@@ -52,7 +52,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
                 window.location.href = pluginApi.createActionUrl('first_form', [['corpname', corpusIdent]]);
             }
         );
-        this.components = viewInit(
+        this.components = corplistViewInit(
             pluginApi.dispatcher(),
             pluginApi.getComponentHelpers(),
             this.treeModel
@@ -100,7 +100,7 @@ export class Plugin {
                 window.location.href = this.pluginApi.createActionUrl(targetAction, [['corpname', corpusIdent]]);
             }
         );
-        const viewsLib = viewInit(
+        const viewsLib = widgetViewInit(
                 this.pluginApi.dispatcher(),
                 this.pluginApi.getComponentHelpers(),
                 treeStore
