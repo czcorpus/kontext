@@ -664,12 +664,7 @@ class Kontext(Controller):
                     self.redirect(self.create_url('first_form', dict(corpname=corpname)))
                 elif not has_access:
                     path = ['message']
-                    if corpname:
-                        self.add_system_message('error', _(
-                            'Corpus "{0}" not available').format(corpname))
-                    else:
-                        self.add_system_message('error', _('No corpus selected'))
-                    self.set_not_found()
+                    auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
             else:
                 corpname = ''
                 variant = ''

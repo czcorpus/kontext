@@ -66,6 +66,21 @@ class AbstractAuth(object):
         """
         raise NotImplementedError()
 
+    def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
+        """
+        Optional method run in case KonText finds out that user
+        does not have access rights to a corpus specified by 'corpname'.
+        There are two main action types you can perform here:
+        1) Redirect to a different page or set 'not found'.
+        2) Set some system message user can read.
+        """
+        if corpname:
+            plugin_api.add_system_message('error', _(
+                'Corpus "{0}" not available').format(corpname))
+        else:
+            plugin_api.add_system_message('error', _('No corpus selected'))
+        plugin_api.set_not_found()
+
     def get_user_info(self, user_id):
         """
         Return a dictionary containing all the data about a user.
