@@ -39,7 +39,7 @@ class Actions(Kontext):
         supported_default.extend(supported)
         unsupported_args = set(req.args.keys()) - set(supported_default)
         if 0 < len(unsupported_args):
-            raise Exception(8, unsupported_args[0], 'Unsupported parameter')
+            raise Exception(8, list(unsupported_args)[0], 'Unsupported parameter')
 
     def _corpora_info(self, value, max_items):
         resources = []
@@ -69,7 +69,7 @@ class Actions(Kontext):
         """
         query = fcs_query.replace('+', ' ')  # convert URL spaces
         exact_match = True  # attr=".*value.*"
-        if 'exact' in query.lower() and not '=' in query:  # lemma EXACT "dog"
+        if 'exact' in query.lower() and '=' not in query:  # lemma EXACT "dog"
             pos = query.lower().index('exact')  # first occurrence of EXACT
             query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
             exact_match = True
@@ -82,7 +82,7 @@ class Actions(Kontext):
                 attr = attr.strip()
                 term = term.strip()
             else:  # "w1 w2" | "word" | word
-                attr = "word"
+                attr = 'word'
                 # use one of search attributes if in corpora attributes
                 # otherwise use `word` - fails below if not valid
                 for sa in self.search_attrs:
@@ -119,16 +119,16 @@ class Actions(Kontext):
                     rq = '[%s=".*%s.*"]' % (attr, term)
         except:  # there was a problem when parsing
             raise Exception(10, query, 'Query syntax error')
-        if not attr in attrs:
+        if attr not in attrs:
             raise Exception(16, attr, 'Unsupported index')
 
         # try to get concordance
         try:
-            anon_id = plugins.runtime.AUTH.instance.anonymous_user()["id"]
+            anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
             q = ['q' + rq]
-            #q = ['aword,[lc="havel"]']
+            # q = ['aword,[lc="havel"]']
             conc = conclib.get_conc(corp, anon_id, q=q)
-        except Exception, e:
+        except Exception as e:
             raise Exception(10, repr(e), 'Query syntax error')
 
         kwic = kwiclib.Kwic(corp, corpname, conc)
@@ -150,104 +150,104 @@ class Actions(Kontext):
             for kwicline in page['Lines']
         ][start:][:max_rec]
 
-    @exposed(return_type='xml', template="fcs/v1_complete.tmpl", skip_corpus_init=True)
+    @exposed(return_type='xml', template='fcs/v1_complete.tmpl', skip_corpus_init=True)
     def v1(self, req):
         current_version = 1.2
 
         default_corp_list = settings.get('corpora', 'default_corpora', [])
         corpname = None
         if 0 == len(default_corp_list):
-            _logger.critical("FCS cannot work properly without a default_corpora set")
+            _logger.critical('FCS cannot work properly without a default_corpora set')
         else:
             corpname = default_corp_list[0]
 
         pr = urlparse.urlparse(req.host_url)
         # None values should be filled in later
         data = {
-            "corpname": corpname,
-            "corppid": None,
-            "version": current_version,
-            "recordPacking": "xml",
-            "result": [],
-            "operation": None,
-            "numberOfRecords": 0,
-            "server_name": pr.hostname,
-            "server_port": pr.port or 80,
-            "database": req.path,
-            "maximumRecords": None,
-            "maximumTerms": None,
-            "startRecord": None,
-            "responsePosition": None,
+            'corpname': corpname,
+            'corppid': None,
+            'version': current_version,
+            'recordPacking': 'xml',
+            'result': [],
+            'operation': None,
+            'numberOfRecords': 0,
+            'server_name': pr.hostname,
+            'server_port': pr.port or 80,
+            'database': req.path,
+            'maximumRecords': None,
+            'maximumTerms': None,
+            'startRecord': None,
+            'responsePosition': None,
         }
         # supported parameters for all operations
         supported_args = ['operation', 'stylesheet', 'version', 'extraRequestData']
 
         try:
             # check operation
-            operation = req.args.get("operation", "explain")
-            data["operation"] = operation
+            operation = req.args.get('operation', 'explain')
+            data['operation'] = operation
 
             # check version
-            version = req.args.get("version", None)
+            version = req.args.get('version', None)
             if version is not None and current_version < float(version):
                 raise Exception(5, version, 'Unsupported version')
 
             # check integer parameters
-            maximumRecords = req.args.get("maximumRecords", 250)
-            if "maximumRecords" in req.args:
+            maximumRecords = req.args.get('maximumRecords', 250)
+            if 'maximumRecords' in req.args:
                 try:
                     maximumRecords = int(maximumRecords)
                     if maximumRecords <= 0:
                         raise Exception(6, 'maximumRecords', 'Unsupported parameter value')
                 except:
                     raise Exception(6, 'maximumRecords', 'Unsupported parameter value')
-            data["maximumRecords"] = maximumRecords
+            data['maximumRecords'] = maximumRecords
 
-            maximumTerms = req.args.get("maximumTerms", 100)
-            if "maximumTerms" in req.args:
+            maximumTerms = req.args.get('maximumTerms', 100)
+            if 'maximumTerms' in req.args:
                 try:
                     maximumTerms = int(maximumTerms)
                 except:
                     raise Exception(6, 'maximumTerms', 'Unsupported parameter value')
-            data["maximumTerms"] = maximumTerms
+            data['maximumTerms'] = maximumTerms
 
-            startRecord = req.args.get("startRecord", 1)
-            if "startRecord" in req.args:
+            startRecord = req.args.get('startRecord', 1)
+            if 'startRecord' in req.args:
                 try:
                     startRecord = int(startRecord)
                     if startRecord <= 0:
                         raise Exception(6, 'startRecord', 'Unsupported parameter value')
                 except:
                     raise Exception(6, 'startRecord', 'Unsupported parameter value')
-            data["startRecord"] = startRecord
+            data['startRecord'] = startRecord
 
-            responsePosition = req.args.get("responsePosition", 0)
-            if "responsePosition" in req.args:
+            responsePosition = req.args.get('responsePosition', 0)
+            if 'responsePosition' in req.args:
                 try:
                     responsePosition = int(responsePosition)
                 except:
                     raise Exception(6, 'responsePosition', 'Unsupported parameter value')
-            data["responsePosition"] = responsePosition
+            data['responsePosition'] = responsePosition
 
             # set content-type in HTTP header
-            recordPacking = req.args.get("recordPacking", "xml")
-            if recordPacking == "xml":
+            recordPacking = req.args.get('recordPacking', 'xml')
+            if recordPacking == 'xml':
                 pass
-            elif recordPacking == "string":
+            elif recordPacking == 'string':
                 # TODO(jm)!!!
-                self._headers["Content-Type"] = "text/plain; charset=utf-8"
+                self._headers['Content-Type'] = 'text/plain; charset=utf-8'
             else:
                 raise Exception(71, 'recordPacking', 'Unsupported record packing')
 
             # provide info about service
-            if operation == "explain":
+            if operation == 'explain':
                 self._check_args(
                     req, supported_args,
                     ['recordPacking', 'x-fcs-endpoint-description']
                 )
                 corpus = self.cm.get_Corpus(corpname)
-                data["result"] = corpus.get_conf('ATTRLIST').split(',')
-                data["numberOfRecords"] = len(data['result'])
+                data['result'] = corpus.get_conf('ATTRLIST').split(',')
+                data['numberOfRecords'] = len(data['result'])
 
             # wordlist for a given attribute
             elif operation == 'scan':
@@ -255,10 +255,10 @@ class Actions(Kontext):
                     req, supported_args,
                     ['scanClause', 'responsePosition', 'maximumTerms', 'x-cmd-resource-info']
                 )
-                data['resourceInfoRequest'] = req.args.get("x-cmd-resource-info", "") == 'true'
-                scanClause = req.args.get("scanClause", "")
-                if scanClause.startswith("fcs.resource="):
-                    value = scanClause.split("=")[1]
+                data['resourceInfoRequest'] = req.args.get('x-cmd-resource-info', '') == 'true'
+                scanClause = req.args.get('scanClause', '')
+                if scanClause.startswith('fcs.resource='):
+                    value = scanClause.split('=')[1]
                     data['result'] = self._corpora_info(value, maximumTerms)
                 else:
                     data['result'] = conclib.fcs_scan(
@@ -271,21 +271,21 @@ class Actions(Kontext):
                     ['query', 'startRecord', 'maximumRecords', 'recordPacking',
                         'recordSchema', 'resultSetTTL', 'x-cmd-context']
                 )
-                if "x-cmd-context" in req.args:
-                    req_corpname = req.args["x-cmd-context"]
+                if 'x-cmd-context' in req.args:
+                    req_corpname = req.args['x-cmd-context']
                     user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
                         self.session_get('user'))
                     if req_corpname in user_corpora:
                         corpname = req_corpname
                     else:
                         _logger.warning(
-                            "Requested unavailable corpus [%s], defaulting to [%s]", req_corpname, corpname)
-                    data["corpname"] = corpname
+                            'Requested unavailable corpus [%s], defaulting to [%s]', req_corpname, corpname)
+                    data['corpname'] = corpname
 
                 corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info('en_US',
                                                                                    corpname)
-                data["corppid"] = corp_conf_info.get("web", "")
-                query = req.args.get("query", "")
+                data['corppid'] = corp_conf_info.get('web', '')
+                query = req.args.get('query', '')
                 corpus = self.cm.get_Corpus(corpname)
                 if 0 == len(query):
                     raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
@@ -303,14 +303,14 @@ class Actions(Kontext):
         except Exception as e:
             data['message'] = ('error', repr(e))
             try:
-                data['code'], data['details'], data['msg'] = e[0], e[1], e[2]
-            except:
+                data['code'], data['details'], data['msg'] = e
+            except ValueError:
                 data['code'], data['details'] = 1, repr(e)
                 data['msg'] = 'General system error'
 
         return data
 
-    @exposed(return_type='text/xsl', template="fcs/fcs2html.tmpl", skip_corpus_init=True)
+    @exposed(return_type='text/xsl', template='fcs/fcs2html.tmpl', skip_corpus_init=True)
     def fcs2html(self, req):
         """
             Returns XSL template for rendering FCS XML.
