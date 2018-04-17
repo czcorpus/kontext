@@ -31,7 +31,8 @@ The plug-in is composed of three main general components:
 2) **client frontend** visually interprets the data provided by the backend,
 
 3) **server frontend** exports backend data to be readable by the client
-   frontend.
+   frontend and specifies which client-side component is responsible for
+   rendering the contents.
 
 In general it is expected to be possible to mix these (especially backend vs. frontend)
 in different ways - e.g. RawHtmlFrontend is probably usable along with any
@@ -48,7 +49,21 @@ from plugins.abstract import CorpusDependentPlugin
 
 
 class Response(object):
+    """
+    A response as returned by server-side frontend (where server-side
+    frontend receives data from backend).
+    """
+
     def __init__(self, contents, renderer, status, heading, note):
+        """
+
+        Arguments:
+            contents -- any JSON serializable data understood by renderer
+            renderer -- a string ID of a client-side compnent able to render 'contents'
+            status -- a bool representing FOUND/NOT_FOUND
+            heading -- a (possibly localized) heading to be displayed along with the data
+            note -- a (possibly localized) additional info describing what service does.
+        """
         self.contents = contents
         self.renderer = renderer
         self.status = status
@@ -60,6 +75,11 @@ class Response(object):
 
 
 class AbstractBackend(object):
+    """
+    A general description of a service providing
+    external data for (word, lemma, pos, corpora, lang)
+    combination.
+    """
 
     def __init__(self, provider_id):
         self._cache_path = None
@@ -78,10 +98,22 @@ class AbstractBackend(object):
         return self._provider_id
 
     def enabled_for_corpora(self, corpora):
+        """
+        Return False if the backend cannot
+        be used for a specific combination(s)
+        of corpora (primary corp + optional aligned ones).
+        By default the method returns True for all.
+        """
         return True
 
 
 class AbstractFrontend(object):
+    """
+    A general server-side frontend. All the implementations
+    should call its 'export_data' method which performs
+    some core initialization of Response. Concrete implementation
+    then can continue with specific data filling.
+    """
 
     def __init__(self, conf):
         self._headings = conf.get('heading', {})
