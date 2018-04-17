@@ -52,6 +52,7 @@ def lindat_login(self, request):
         self.refresh_session_id()
         return ans
 
+
 class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     """
         A Shibboleth authentication module with a failover
@@ -130,7 +131,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         groups = self.get_groups_for(user_dict)
         # TODO remove susanne (just for debugging)
         return dict([('susanne', '')] + [(corpora['ident'], '') for corpora in self._corplist
-                     if len(set(corpora['access']).intersection(set(groups))) > 0])
+                                         if len(set(corpora['access']).intersection(set(groups))) > 0])
 
     def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
         if self.is_anonymous(plugin_api.user_id):
@@ -138,7 +139,8 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                                                        corpname)
             plugin_api.redirect(fallback)
         else:
-            super(FederatedAuthWithFailover, self).on_forbidden_corpus(plugin_api, corpname, corp_variant)
+            super(FederatedAuthWithFailover, self).on_forbidden_corpus(
+                plugin_api, corpname, corp_variant)
 
     def is_administrator(self, user_id):
         # TODO(jm)
@@ -154,7 +156,8 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         """
             Inspect HTTP headers and try to find a shibboleth user.
         """
-        username = _get_non_empty_header(plugin_api.get_from_environ, *FederatedAuthWithFailover.ID_KEYS)
+        username = _get_non_empty_header(
+            plugin_api.get_from_environ, *FederatedAuthWithFailover.ID_KEYS)
         if username is None or username == FederatedAuthWithFailover.RESERVED_USER:
             return None
 
@@ -242,7 +245,7 @@ def ajax_get_permitted_corpora(ctrl, request):
     """
     An exposed HTTP action showing permitted corpora required by client-side widget.
     """
-    return plugins.runtime.AUTH.instance.permitted_corpora(ctrl.session_get('user'))
+    return dict(permitted_corpora=plugins.runtime.AUTH.instance.permitted_corpora(ctrl.session_get('user')))
 
 
 # =============================================================================

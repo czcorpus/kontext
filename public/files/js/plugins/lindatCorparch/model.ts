@@ -48,15 +48,38 @@ export interface CorplistNodeServer {
     repo:string;
     size:number;
     corplist?:Array<CorplistNodeServer>;
+    permitted:boolean;
 }
 
-function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse):n is CorplistNodeServer {
+/**
+ * A helper interface used with ad hoc object when attaching
+ * permitted flag to sorted corplist.
+ */
+interface CorplistWrapper {
+    corplist:Array<CorplistNodeServer>;
+}
+
+/**
+ * A TS type guard to distinguish between root corplist response (which is kind of a root node of the tree),
+ * actual tree nodes and ad-hoc corplist wrapper.
+ */
+function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|CorplistWrapper):n is CorplistNodeServer {
     return (<CorplistNodeServerResponse>n).messages === undefined;
 }
 
+/**
+ * A server response containing corplist data
+ */
 export interface CorplistNodeServerResponse extends Kontext.AjaxConcResponse {
     corplist:Array<CorplistNodeServer>;
     sort_corplist:Array<CorplistNodeServer>; // TODO this can be generated on client (=> 50% less data via network)
+}
+
+/**
+ * A response containing list of permitted corpora
+ */
+interface PermittedCorporaResponse extends Kontext.AjaxConcResponse {
+    permitted_corpora:{[corpusId:string]:string}; // corpus ID => corpus variant
 }
 
 export enum NodeAccess {
@@ -65,7 +88,8 @@ export enum NodeAccess {
 }
 
 /**
- * Corplist node as used by this model
+ * Corplist node as used by this model. It is derived from
+ * CorplistNodeServer with additional data (e.g. permitted flag).
  */
 export interface Node {
     ident?:string;
@@ -80,6 +104,7 @@ export interface Node {
     language?:Immutable.List<string>;
     features:Immutable.List<string>;
     corplist:Immutable.List<Node>;
+    permitted:boolean;
 }
 
 /**
@@ -92,8 +117,6 @@ export class TreeWidgetModel extends StatefulModel {
     private data:Node;
 
     private sortedCorplist?:Immutable.List<Node>;
-
-    private permittedCorpora:Immutable.List<string>;
 
     private widgetId:number;
 
@@ -118,9 +141,9 @@ export class TreeWidgetModel extends StatefulModel {
             level: null,
             features: Immutable.List<string>(),
             corplist: Immutable.List<Node>(),
+            permitted: true
         };
         this.sortedCorplist = Immutable.List<Node>();
-        this.permittedCorpora = Immutable.List<string>();
 
         this.dispatcher.register(
             (payload:ActionPayload) => {
@@ -170,7 +193,8 @@ export class TreeWidgetModel extends StatefulModel {
             level: node.level,
             language: node.language,
             features: node.features,
-            corplist: node.corplist
+            corplist: node.corplist,
+            permitted: node.permitted
         };
     }
 
@@ -231,7 +255,8 @@ export class TreeWidgetModel extends StatefulModel {
                 language: Immutable.List<string>((serverNode.language || '').split(',')),
                 access: Immutable.List<NodeAccess>((serverNode.access || ['anonymous']).map(x => x as NodeAccess)),
                 features: Immutable.List<string>((serverNode.features || '').split(',')),
-                corplist: null
+                corplist: null,
+                permitted: serverNode.permitted
             };
 
         } else {
@@ -251,6 +276,30 @@ export class TreeWidgetModel extends StatefulModel {
         return node;
     }
 
+    /**
+     * Set the 'permitted' flag for Node instances so we don't have to
+     * pass list of permitted corpora all around.
+     */
+    private attachPermittedFlag(corplistResp:CorplistNodeServerResponse, perm:Array<string>):void {
+        const walkThru = (node:CorplistNodeServer|CorplistNodeServerResponse|CorplistWrapper) => {
+            if (isCorplistNodeServer(node)) {
+                if (node.corplist && node.corplist.length > 0) {
+                    node.permitted = true; // groups are accessible no matter what
+
+                } else {
+                    node.permitted = perm.indexOf(node.ident) > -1;
+                }
+
+            }
+            (node.corplist || []).forEach(c => walkThru(c));
+        };
+        walkThru(corplistResp);
+        walkThru({corplist: corplistResp.sort_corplist});
+    }
+
+    /**
+     * Just for debugging
+     */
     dumpNode(rootNode:Node, indent=0): void {
         const indentSpc = [];
         for (let i = 0; i < indent; i += 1) {
@@ -260,27 +309,30 @@ export class TreeWidgetModel extends StatefulModel {
         rootNode.corplist.forEach(v => this.dumpNode(v, indent + 4));
     }
 
-    loadData():RSVP.Promise<any> {
+    /**
+     * Load corplist and permitted corpora from server
+     */
+    loadData():RSVP.Promise<boolean> {
         return RSVP.all([
             this.pluginApi.ajax<CorplistNodeServerResponse>(
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
                 {}
             ),
-            this.pluginApi.ajax<any>(
+            this.pluginApi.ajax<PermittedCorporaResponse>(
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_permitted_corpora'),
                 {}
             )
         ]).then(
             (data) => {
-                const [corptreeData, permittedCorpora] = data;
-                this.setData(corptreeData);
-                this.permittedCorpora = Immutable.List<string>(
-                        Object.keys(permittedCorpora['corpora'] || {}));
-            },
-            (error) => {
-                this.pluginApi.showMessage('error', error);
+                const [corptreeDataResp, permittedCorporaResp] = data;
+                this.attachPermittedFlag(
+                    corptreeDataResp,
+                    Object.keys(permittedCorporaResp.permitted_corpora || {})
+                );
+                this.setData(corptreeDataResp);
+                return true;
             }
         );
     }
@@ -295,10 +347,6 @@ export class TreeWidgetModel extends StatefulModel {
 
     getSortedData():Immutable.List<Node> {
         return this.sortedCorplist;
-    }
-
-    getPermittedCorpora():Immutable.List<string> {
-        return this.permittedCorpora;
     }
 
     getCorpusIdent():Kontext.FullCorpusIdent {
