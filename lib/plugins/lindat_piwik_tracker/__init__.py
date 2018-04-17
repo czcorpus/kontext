@@ -123,7 +123,7 @@ class Tracker(AbstractDispatchHook):
                                       plugin_api.get_from_environ('REMOTE_ADDR', '')).split(', ')
         remote_addr = remote_addrs[0] if remote_addrs else ''
         path_info = self.context_path.rstrip('/') + plugin_api.get_from_environ('PATH_INFO', '')
-        title = '%s/%s' % (server_name, methodname)
+        title = '%s/%s' % (server_name, path_info.lstrip('/'))
 
         headers = {
             'HTTP_USER_AGENT': plugin_api.get_from_environ('HTTP_USER_AGENT', ''),
