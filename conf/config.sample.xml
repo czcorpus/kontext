@@ -69,6 +69,11 @@
         <right_interval_char>+</right_interval_char>
         <left_interval_char/>
         <interval_char>±</interval_char>
+        <fcs_search_attributes>
+            <item>lemma</item>
+            <item>lc</item>
+            <item>word</item>
+        </fcs_search_attributes>
     </corpora>
     <plugins>
         <application_bar />

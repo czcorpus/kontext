@@ -399,6 +399,16 @@
                             <text />
                         </element>
                     </optional>
+                    <optional>
+                        <element name="fcs_search_attributes">
+                            <oneOrMore>
+                                <element name="item">
+                                    <a:documentation>A positional attribute used for search</a:documentation>
+                                    <text />
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="plugins">
