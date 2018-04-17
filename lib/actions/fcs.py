@@ -26,6 +26,7 @@ class Actions(Kontext):
         ui_lang -- a language code in which current action's result will be presented
         """
         super(Actions, self).__init__(request=request, ui_lang=ui_lang)
+        self.search_attrs = settings.get('corpora', 'fcs_search_attributes', ['word'])
 
     def get_mapping_url_prefix(self):
         """
@@ -73,10 +74,6 @@ class Actions(Kontext):
             query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
             exact_match = True
 
-        search_attrs = settings.get(
-            'corpora', 'fcs_search_attributes', ["word"]
-        ).split(",")
-
         attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
         rq = ''  # query for manatee
         try:  # parse query
@@ -88,7 +85,7 @@ class Actions(Kontext):
                 attr = "word"
                 # use one of search attributes if in corpora attributes
                 # otherwise use `word` - fails below if not valid
-                for sa in search_attrs:
+                for sa in self.search_attrs:
                     if sa in attrs:
                         attr = sa
                         break
