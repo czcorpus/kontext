@@ -1002,6 +1002,7 @@ export class ViewPage {
             catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
+            anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>('anonymousUserConcLoginPrompt'),
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
                 syntaxViewer.render(
                     document.getElementById('syntax-view-pane'),

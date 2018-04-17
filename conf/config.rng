@@ -245,6 +245,15 @@
                             <value>true</value>
                         </choice>
                     </element>
+                    <element name="anonymous_user_conc_login_prompt">
+                        <a:documentation>If true then for anonymous user, on concordance page a prompt to log-in always appears</a:documentation>
+                        <choice>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>false</value>
+                            <value>true</value>
+                        </choice>
+                    </element>
                     <optional>
                         <element name="shuffle_min_result_warning">
                             <data type="integer" />

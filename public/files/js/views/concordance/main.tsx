@@ -67,6 +67,7 @@ export interface ConcordanceDashboardProps {
         KWICCorps:Array<string>;
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
+        anonymousUserConcLoginPrompt:boolean;
         onSyntaxPaneReady?:(tokenNumber:number, kwicLength:number)=>void;
         onSyntaxPaneClose:()=>void;
         onChartFrameReady?:(usePrevData?:boolean)=>void;
@@ -718,7 +719,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 viewMode: lineViewModel.getViewAttrsVmode(),
                 isUnfinishedCalculation: lineViewModel.isUnfinishedCalculation(),
                 concSummary: lineViewModel.getConcSummary(),
-                showAnonymousUserWarn: this.props.anonymousUser,
+                showAnonymousUserWarn: this.props.anonymousUser && this.props.anonymousUserConcLoginPrompt,
                 saveFormVisible: lconcSaveModel.getFormIsActive(),
                 supportsSyntaxView: lineViewModel.getSupportsSyntaxView(),
                 syntaxBoxData: null
