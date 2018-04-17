@@ -15,7 +15,7 @@
    height="48"
    id="svg0"
    sodipodi:docname="starred.svg"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)">
+   inkscape:version="0.92.1 r15371">
   <metadata
      id="metadata3779">
     <rdf:RDF>
@@ -36,16 +36,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="935"
-     inkscape:window-height="674"
+     inkscape:window-width="1855"
+     inkscape:window-height="1176"
      id="namedview3777"
      showgrid="false"
-     inkscape:zoom="4.8541667"
-     inkscape:cx="43.671981"
-     inkscape:cy="7.474873"
-     inkscape:window-x="337"
-     inkscape:window-y="334"
-     inkscape:window-maximized="0"
+     inkscape:zoom="13.729657"
+     inkscape:cx="30.826699"
+     inkscape:cy="28.713142"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
      inkscape:current-layer="svg0" />
   <defs
      id="defs">
@@ -114,5 +114,5 @@
   <path
      d="M 37.310531,41.5 L 24.030644,34.826121 L 10.735101,41.471448 L 13.289408,27.369086 L 2.5511635,17.368344 L 17.409702,15.326301 L 24.068641,2.5 L 30.697416,15.340488 L 45.551111,17.414249 L 34.789382,27.392039 L 37.310531,41.5 z"
      id="star"
-     style="fill:#fac467;stroke:#65300e;fill-opacity:1;stroke-opacity:0.75862068" />
+     style="fill:#009ee0;stroke:#00caf6;fill-opacity:1;stroke-opacity:1" />
 </svg>
