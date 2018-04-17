@@ -1093,6 +1093,8 @@ class Kontext(Controller):
 
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
+        result['anonymous_user_conc_login_prompt'] = settings.get_bool(
+            'global', 'anonymous_user_conc_login_prompt', False)
 
         self._configure_auth_urls(result)
 

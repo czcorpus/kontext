@@ -182,6 +182,8 @@ export interface ViewConfiguration {
 
     supportsSyntaxView:boolean;
 
+    anonymousUserConcLoginPrompt:boolean;
+
     onSyntaxPaneReady:(tokenId:number, kwicLength:number)=>void;
 
     onSyntaxPaneClose:()=>void;
