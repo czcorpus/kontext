@@ -41,7 +41,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         ident:string;
         active:boolean;
         name:string;
-        permittedCorp:Immutable.List<string>;
+        permitted:boolean;
         corplist:Immutable.List<Node>;
 
     }> {
@@ -74,8 +74,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     </a>
                     { this.props.active ?
                         <WidgetItemList name={this.props.name}
-                                        corplist={this.props.corplist}
-                                        permittedCorp={this.props.permittedCorp}/>
+                                        corplist={this.props.corplist} />
                         : null }
                 </li>
             );
@@ -87,7 +86,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const WidgetTreeLeaf:React.SFC<{
         ident:string;
         name:string;
-        permittedCorp:Immutable.List<string>;
+        permitted:boolean;
+
     }> = (props) => {
 
         const clickHandler = () => {
@@ -102,8 +102,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         const getLock = () => {
             return he.createStaticUrl('img/locked.svg');
         };
-
-        if (props.permittedCorp.contains(props.ident)) {
+        console.log(props.ident, props.permitted);
+        if (!props.permitted) {
             return <li className="leaf"><a onClick={clickHandler} style={{color:"gray"}}>
                     <img className="lock-sign" src={getLock()} />
                     {props.name}</a></li>;
@@ -119,7 +119,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         name:string;
         htmlClass?:string;
         corplist:Immutable.List<Node>;
-        permittedCorp:Immutable.List<string>;
 
     }> = (props) => {
 
@@ -128,11 +127,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 if (item.corplist.size > 0) {
                     return <WidgetTreeNode key={i} name={item.name} ident={item.ident}
                                         corplist={item.corplist} active={item.active}
-                                        permittedCorp={props.permittedCorp}/>;
+                                        permitted={item.permitted} />;
 
                 } else {
                     return <WidgetTreeLeaf key={i} name={item.name} ident={item.ident}
-                                           permittedCorp={props.permittedCorp}/>;
+                                            permitted={item.permitted} />;
                 }
             });
         };
@@ -150,7 +149,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     }, {
         active:boolean,
         data:Node,
-        permittedCorp:Immutable.List<string>;
         currentCorpus:Kontext.FullCorpusIdent;
     }> {
 
@@ -159,7 +157,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.state = {
                 active: false,
                 data: treeModel.getData(),
-                permittedCorp: treeModel.getPermittedCorpora(),
                 currentCorpus: treeModel.getCorpusIdent()
             };
             this._buttonClickHandler = this._buttonClickHandler.bind(this);
@@ -182,7 +179,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.setState({
                 active: true,
                 data: treeModel.getData(),
-                permittedCorp: treeModel.getPermittedCorpora(),
                 currentCorpus: treeModel.getCorpusIdent()
             });
         }
@@ -206,8 +202,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <WidgetItemList
                                 htmlClass="corp-tree"
                                 name=""
-                                corplist={this.state.data.corplist}
-                                permittedCorp={this.state.permittedCorp} /> :
+                                corplist={this.state.data.corplist} /> :
                             null
                     }
                 </div>

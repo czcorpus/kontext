@@ -43,11 +43,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         corplist:Immutable.List<Node>;
         activeFeat:string;
         activeLanguage:string;
+        permitted:boolean;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
-        permittedCorp:Immutable.List<string>;
 
     }> = (props) => {
 
@@ -63,9 +63,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 onActiveFeatDrop={props.onActiveFeatDrop}
                                 activeFeat={props.activeFeat}
                                 activeLanguage={props.activeLanguage}
+                                permitted={props.permitted}
                                 onActiveLanguageSet={props.onActiveLanguageSet}
-                                onActiveLanguageDrop={props.onActiveLanguageDrop}
-                                permittedCorp={props.permittedCorp}/>
+                                onActiveLanguageDrop={props.onActiveLanguageDrop} />
                     </div>
             </div>
         );
@@ -79,8 +79,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         activeFeat:string;
         activeLanguage:string;
         name:string;
-        permittedCorp:Immutable.List<string>;
-        corplist:any; // TODO type
+        corplist:Immutable.List<Node>;
+        permitted:boolean;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
@@ -136,7 +136,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={this.props.activeLanguage}
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
-                                permittedCorp={this.props.permittedCorp}/>
+                                permitted={this.props.permitted} />
                     </div>
                 </div>
             );
@@ -148,7 +148,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     class TreeLeaf extends React.Component<{
         access:any; // TODO ??
         ident:string;
-        permittedCorp:Immutable.List<string>;
         activeLanguage:string;
         language:Immutable.List<string>;
         features:Immutable.List<string>;
@@ -158,6 +157,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         size:number;
         name:string;
         description:string;
+        permitted:boolean;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
@@ -173,6 +173,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this._mouseOver = this._mouseOver.bind(this);
             this._searchFeatClick = this._searchFeatClick.bind(this);
             this._searchFeatDrop = this._searchFeatDrop.bind(this);
+            this._searchLangClick = this._searchLangClick.bind(this);
+            this._searchLangDrop = this._searchLangDrop.bind(this);
         }
 
         _mouseOver() {
@@ -185,7 +187,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _myColor() {
             if (this.state.hover) {
-                if (typeof this.props.permittedCorp.contains(this.props.ident)) {
+                if (typeof this.props.permitted) {
                     return "#d8eff7";
                 }
                 else {
@@ -242,21 +244,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _pmltq(pmltq:string) {
-            if (pmltq !== 'no' && this.props.permittedCorp.contains(this.props.ident)) {
+            if (pmltq !== 'no' && this.props.permitted) {
             return <a href={this.props.pmltq} className="md-transparent" title={"Inspect " + this.props.name + " in PML-TQ"}>
                     <span className="glyphicon lindat-pmltq-logo">&nbsp;</span></a>
             }
         }
 
         _download(repo:string) {
-            if (repo !== 'no' && this.props.permittedCorp.contains(this.props.ident)) {
+            if (repo !== 'no' && this.props.permitted) {
             return <a href={this.props.repo} className="md-transparent" title={"Download " + this.props.name}>
                     <span className="glyphicon glyphicon-save"></span></a>
             }
         }
 
-        _access(permittedCorp) {
-            if (this.props.permittedCorp.contains(this.props.ident)) {
+        _access() {
+            if (!this.props.permitted) {
                 return <span className="glyphicon glyphicon-lock"></span>
             }
         }
@@ -304,7 +306,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                     <h3 className="title">
                                         {this._pmltq(this.props.pmltq)}
                                         {this._download(this.props.repo)}
-                                        {this._access(this.props.permittedCorp)}
+                                        {this._access()}
                                         {this._syntax()}
                                         {this.props.name}
                                     </h3>
@@ -328,7 +330,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         corplist:Immutable.List<Node>;
         activeLanguage:string;
         activeFeat:string;
-        permittedCorp:Immutable.List<string>;
+        permitted:boolean;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
@@ -345,22 +347,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                              active={item.active}
                                              activeFeat={props.activeFeat}
                                              activeLanguage={props.activeLanguage}
+                                             permitted={item.permitted}
                                              onActiveLanguageSet={props.onActiveLanguageSet}
                                              onActiveLanguageDrop={props.onActiveLanguageDrop}
                                              onActiveFeatSet={props.onActiveFeatSet}
-                                             onActiveFeatDrop={props.onActiveFeatDrop}
-                                             permittedCorp={props.permittedCorp}/>;
+                                             onActiveFeatDrop={props.onActiveFeatDrop} />;
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
                                                 active={item.active}
                                                 activeFeat={props.activeFeat}
                                                 activeLanguage={props.activeLanguage}
+                                                permitted={item.permitted}
                                                 onActiveLanguageSet={props.onActiveLanguageSet}
                                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
                                                 onActiveFeatSet={props.onActiveFeatSet}
-                                                onActiveFeatDrop={props.onActiveFeatDrop}
-                                                permittedCorp={props.permittedCorp}/>;
+                                                onActiveFeatDrop={props.onActiveFeatDrop} />;
                         }
                     } else {
                         return <TreeLeaf key={i} name={item.name} ident={item.ident}
@@ -374,7 +376,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                          activeFeat={props.activeFeat}
                                          onActiveFeatSet={props.onActiveFeatSet}
                                          onActiveFeatDrop={props.onActiveFeatDrop}
-                                         permittedCorp={props.permittedCorp}/>;
+                                         permitted={item.permitted} />;
                     }
                 });
         };
@@ -394,11 +396,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         activeLanguage:string;
         activeFeat:string;
         htmlClass:string;
+        permitted:boolean;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
-        permittedCorp:Immutable.List<string>;
 
     }, {htmlClass:string}> {
 
@@ -419,7 +421,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeFeat={this.props.activeFeat}
                                 onActiveFeatSet={this.props.onActiveFeatSet}
                                 onActiveFeatDrop={this.props.onActiveFeatDrop}
-                                permittedCorp={this.props.permittedCorp}/>
+                                permitted={item.permitted} />
             ));
         }
 
@@ -443,7 +445,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:Node;
         sortedData:Immutable.List<Node>;
         sorted:boolean;
-        permittedCorp:Immutable.List<string>;
         activeLanguage:string;
         activeFeat:string;
     }> {
@@ -455,8 +456,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 sortedData: treeModel.getSortedData(),
                 sorted: false,
                 activeLanguage: null,
-                activeFeat: null,
-                permittedCorp: treeModel.getPermittedCorpora()
+                activeFeat: null
             };
             this._changeListener = this._changeListener.bind(this);
             this.handleActiveLanguageSet = this.handleActiveLanguageSet.bind(this);
@@ -469,9 +469,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _changeListener() {
             this.setState({
                 data: treeModel.getData(),
+                sortedData: treeModel.getSortedData(),
                 sorted: this.state.sorted,
-                activeLanguage: this.state.activeLanguage,
-                permittedCorp: treeModel.getPermittedCorpora()
+                activeLanguage: this.state.activeLanguage
             });
         }
 
@@ -554,8 +554,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permittedCorp={this.state.permittedCorp}
-                        />
+                                  permitted={this.state.data.permitted} />
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
@@ -566,8 +565,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permittedCorp={this.state.permittedCorp}
-                        />
+                                  permitted={this.state.data.permitted} />
                     </div>
                 </div>
             );
