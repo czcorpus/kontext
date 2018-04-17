@@ -48,8 +48,6 @@ element dispatch_hook {
 }
 """
 
-import os
-
 from piwikapi.tracking import PiwikTracker
 from piwikapi.tests.request import FakeRequest
 
@@ -118,23 +116,23 @@ class Tracker(AbstractDispatchHook):
         if not self.is_tracking_allowed(methodname):
             return
 
-        server_names = os.environ.get('HTTP_X_FORWARDED_SERVER', '').split(', ')
+        server_names = plugin_api.get_from_environ('HTTP_X_FORWARDED_SERVER', '').split(', ')
         server_name = server_names[0] if server_names else ''
-        https = os.environ.get('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
-        remote_addrs = os.environ.get('HTTP_X_FORWARDED_FOR',
-                                      os.environ.get('REMOTE_ADDR', '')).split(', ')
+        https = plugin_api.get_from_environ('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
+        remote_addrs = plugin_api.get_from_environ('HTTP_X_FORWARDED_FOR',
+                                      plugin_api.get_from_environ('REMOTE_ADDR', '')).split(', ')
         remote_addr = remote_addrs[0] if remote_addrs else ''
-        path_info = self.context_path.rstrip('/') + os.environ.get('PATH_INFO', '')
+        path_info = self.context_path.rstrip('/') + plugin_api.get_from_environ('PATH_INFO', '')
         title = '%s/%s' % (server_name, methodname)
 
         headers = {
-            'HTTP_USER_AGENT': os.environ.get('HTTP_USER_AGENT', ''),
+            'HTTP_USER_AGENT': plugin_api.get_from_environ('HTTP_USER_AGENT', ''),
             'REMOTE_ADDR': remote_addr,
-            'HTTP_REFERER': os.environ.get('HTTP_REFERER', ''),
-            'HTTP_ACCEPT_LANGUAGE': os.environ.get('HTTP_ACCEPT_LANGUAGE', ''),
+            'HTTP_REFERER': plugin_api.get_from_environ('HTTP_REFERER', ''),
+            'HTTP_ACCEPT_LANGUAGE': plugin_api.get_from_environ('HTTP_ACCEPT_LANGUAGE', ''),
             'SERVER_NAME': server_name,
             'PATH_INFO': path_info,
-            'QUERY_STRING': os.environ.get('QUERY_STRING', ''),
+            'QUERY_STRING': plugin_api.get_from_environ('QUERY_STRING', ''),
             'HTTPS': https,
         }
 
