@@ -371,7 +371,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 switch (message.responseType) {
                     case 'json': {
                         const respObj = message.response || {};
-                        if (message.response['error_code']) {
+                        if (respObj['error_code']) {
                             outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
 
                         } else if (respObj['messages']) {
