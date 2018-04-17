@@ -116,7 +116,7 @@ class Tracker(AbstractDispatchHook):
         if not self.is_tracking_allowed(methodname):
             return
 
-        server_names = plugin_api.get_from_environ('HTTP_X_FORWARDED_SERVER', '').split(', ')
+        server_names = plugin_api.get_from_environ('HTTP_X_FORWARDED_HOST', '').split(', ')
         server_name = server_names[0] if server_names else ''
         https = plugin_api.get_from_environ('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
         remote_addrs = plugin_api.get_from_environ('HTTP_X_FORWARDED_FOR',
