@@ -235,6 +235,13 @@
                         <a:documentation>A prefix for static files (typically: /files when installed at the root)</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="cookie_path_prefix">
+                            <a:documentation>A path used for cookies, `/` by
+                                default.</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
                     <element name="use_conc_toolbar">
                         <a:documentation>If true then a special toolbar allowing easier setting of
                         common concordance view options is shown</a:documentation>

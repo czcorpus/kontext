@@ -229,7 +229,8 @@ class KonTextWsgiApp(WsgiApp):
             request.session.modified = True
         if request.session.should_save:
             sessions.save(request.session)
-            response.set_cookie(sessions.get_cookie_name(), request.session.sid)
+            cookie_path = settings.get_str('global', 'cookie_path_prefix', '/')
+            response.set_cookie(sessions.get_cookie_name(), request.session.sid, path=cookie_path)
         return response(environ, start_response)
 
 
