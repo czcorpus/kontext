@@ -25,6 +25,9 @@ import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import * as Immutable from 'immutable';
 
+declare var require:any;
+require('./style.less');
+
 
 /**
  *
