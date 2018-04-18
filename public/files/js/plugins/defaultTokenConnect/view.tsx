@@ -140,7 +140,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <VerbList /> -------------------------------
 
     const VerbList:React.SFC<{
-        list:VRD.CompleteSense;
+        list:VRD.CompleteSenseList;
     }> = (props) => {
         const renderVerbInfo = () => {
             return props.list.map((item, i) => {
@@ -179,7 +179,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                         }
                     })}
                 </ul>
-                <TargetVerb verbTargetName={props.name.split(' : ')[1]}
+                <TargetVerb verbSourceName={props.name.split(' : ')[0]}
+                            verbTargetName={props.name.split(' : ')[1]}
                             verbSourceID={props.detail[0][0]}
                             verbTargetList={props.detail[0][2]}/>
             </div>
@@ -190,6 +191,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <TargetVerb /> -------------------------------
 
     const TargetVerb:React.SFC<{
+        verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
         verbTargetList:VRD.VtargetInfo;
@@ -197,8 +199,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         const renderTargetVerbsInfo = () => {
             return props.verbTargetList.map((item, i) => {
                 return <Target key={i} verbTargetName={props.verbTargetName}
+                               verbSourceName={props.verbSourceName}
                                verbSourceID={props.verbSourceID}
-                               verbTargetList={props.verbTargetList} />
+                               verbTargetList={item} />
             });
 
         };
@@ -210,6 +213,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <Target /> -------------------------------
 
     const Target:React.SFC<{
+        verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
         verbTargetList:VRD.VtargetInfo;
@@ -217,12 +221,27 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         return (
             <div>
                 <div>{props.verbTargetName}
-                    {props.verbTargetList[0][1][0].map((listValue, i) => {
+                    {props.verbTargetList[1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
                             return <span key={i}>&nbsp;{listValue}</span>;
                         }
                     })}
                 </div>
+                <div>{props.verbTargetList[1][1]}</div>
+                <ul>
+                    {props.verbTargetList[1][2].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <li key={i}>{listValue}</li>;
+                        }
+                    })}
+                </ul>
+                <div><p>{`Argument mapping for "${props.verbSourceName}" (${props.verbSourceID}) and "${props.verbTargetName}" (${props.verbTargetList[0]}):`}</p></div>
+                <ul className="valexHiddenBullets">
+                    {props.verbTargetList[2].map((listValue, i) => {
+                        return <li key={i}>{listValue[0]}&nbsp;{'\u2192'}&nbsp;{listValue[1]}</li>;
+
+                    })}
+                </ul>
             </div>
         )
     };

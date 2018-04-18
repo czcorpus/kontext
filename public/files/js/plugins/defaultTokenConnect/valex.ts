@@ -7,7 +7,7 @@ enum ExamplesForm {
    COMPLEX = 'complex'
 }
 
-export type CompleteSense = [Sense, SenseInfoList]
+type CompleteSense = [Sense, SenseInfoList]
 
 export type Sense = string
 
@@ -25,7 +25,7 @@ export type VtargetInfo = Array<Array<any>>
 
 type NumResults = string
 
-type CompleteSenseList = Array<CompleteSense>
+export type CompleteSenseList = Array<CompleteSense>
 
 export interface ValexResponseData {
    status: {
