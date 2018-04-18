@@ -19,7 +19,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     subcpath = autoconf.settings.get('corpora', 'users_subcpath')
-    db = plugins.runtime.DB.instance
+    redis_db = plugins.runtime.DB.instance
+    db = redis_db.get_instance('auth')
     keys = list(filter(lambda key: key != '__user_count', db.keys()))
     users = {db.hash_get(key, args.old_key): db.hash_get_all(key) for key in keys}
 
