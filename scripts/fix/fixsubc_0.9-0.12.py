@@ -25,6 +25,12 @@ if __name__ == '__main__':
     users = {db.hash_get(key, args.old_key): db.hash_get_all(key) for key in keys}
 
     for user_subc_dir in [f for f in os.listdir(subcpath) if os.path.isdir(os.path.join(subcpath, f))]:
-        user = users[user_subc_dir]
-        os.rename(os.path.join(subcpath, user_subc_dir), os.path.join(subcpath, user[args.new_key]))
+	key = user_subc_dir
+        if args.old_key == 'id':
+            key = int(user_subc_dir)
+        user = users[key]
+        new_val = user[args.new_key]
+        if args.new_key == 'id':
+            new_val = str(user[args.new_key])
+        os.rename(os.path.join(subcpath, user_subc_dir), os.path.join(subcpath, new_val))
 
