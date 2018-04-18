@@ -97,6 +97,8 @@ def get_full(section, key):
 
 
 def import_bool(v):
+    if not isinstance(v, basestring):
+        return bool(v)
     return {
         'true': True,
         '1': True,
@@ -109,8 +111,11 @@ def get_bool(section, key, default=None):
     """
     The same as get() but returns a bool type
     (True for 'true', '1' values, False for 'false', '0' values)
+    The 'default' can be of any type where non-string values
+    are converted in a standard way. For best readability use
+    just bool values there.
     """
-    return import_bool(str(get(section, str(key).lower(), default)))
+    return import_bool(get(section, str(key).lower(), default))
 
 
 def get_int(section, key, default=-1):
