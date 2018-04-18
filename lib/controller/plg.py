@@ -77,7 +77,13 @@ class PluginApi(object):
         return self._controller.get_root_url()
 
     def redirect(self, url, code=303):
-        return getattr(self._controller, '_redirect')(url, code=code)
+        return self._controller.redirect(url, code=code)
+
+    def set_not_found(self):
+        return self._controller.set_not_found()
+
+    def add_system_message(self, msg_type, text):
+        self._controller.add_system_message(msg_type, text)
 
     @property
     def text_types(self):

@@ -235,9 +235,25 @@
                         <a:documentation>A prefix for static files (typically: /files when installed at the root)</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="cookie_path_prefix">
+                            <a:documentation>A path used for cookies, `/` by
+                                default.</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
                     <element name="use_conc_toolbar">
                         <a:documentation>If true then a special toolbar allowing easier setting of
                         common concordance view options is shown</a:documentation>
+                        <choice>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>false</value>
+                            <value>true</value>
+                        </choice>
+                    </element>
+                    <element name="anonymous_user_conc_login_prompt">
+                        <a:documentation>If true then for anonymous user, on concordance page a prompt to log-in always appears</a:documentation>
                         <choice>
                             <value>0</value>
                             <value>1</value>
@@ -397,6 +413,16 @@
                         <element name="interval_char">
                             <a:documentation>A character used to denote a left interval (e.g. +/-10)</a:documentation>
                             <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="fcs_search_attributes">
+                            <oneOrMore>
+                                <element name="item">
+                                    <a:documentation>A positional attribute used for search</a:documentation>
+                                    <text />
+                                </element>
+                            </oneOrMore>
                         </element>
                     </optional>
                 </interleave>

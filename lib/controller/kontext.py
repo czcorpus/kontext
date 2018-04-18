@@ -190,7 +190,7 @@ class Kontext(Controller):
     ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
                                  MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
                                  MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
-                                 MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW)
+                                 MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
 
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
                            MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'),
@@ -295,7 +295,7 @@ class Kontext(Controller):
     @staticmethod
     def _init_default_settings(options):
         if 'shuffle' not in options:
-            options['shuffle'] = 1
+            options['shuffle'] = 0
 
     def _setup_user_paths(self):
         user_id = self.session_get('user', 'id')
@@ -664,12 +664,7 @@ class Kontext(Controller):
                     self.redirect(self.create_url('first_form', dict(corpname=corpname)))
                 elif not has_access:
                     path = ['message']
-                    if corpname:
-                        self.add_system_message('error', _(
-                            'Corpus "{0}" not available').format(corpname))
-                    else:
-                        self.add_system_message('error', _('No corpus selected'))
-                    self.set_not_found()
+                    auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
             else:
                 corpname = ''
                 variant = ''
@@ -796,6 +791,9 @@ class Kontext(Controller):
         # log user request
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
+        # TODO
+        # if plugins._has_plugin('tracker'):
+        #    plugins.get_plugins()['tracker'].track(methodname, tmpl, result)
 
     def _add_save_menu_item(self, label, save_format=None, hint=None):
         if save_format is None:
@@ -1095,6 +1093,8 @@ class Kontext(Controller):
 
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
+        result['anonymous_user_conc_login_prompt'] = settings.get_bool(
+            'global', 'anonymous_user_conc_login_prompt', False)
 
         self._configure_auth_urls(result)
 

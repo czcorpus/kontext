@@ -131,11 +131,11 @@ export function init(
 
 
         if (!props.status || !m[props.status]) {
-            return <div className="icon-box" />;
+            return <div className={props.htmlClass ? props.htmlClass : 'icon-box'} />;
 
         } else {
             return (
-                <div className="icon-box">
+                <div className={props.htmlClass ? props.htmlClass : 'icon-box'}>
                     <img className="info-icon" src={he.createStaticUrl(m[props.status])}
                             alt={props.status} />
                 </div>

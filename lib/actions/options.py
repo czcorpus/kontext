@@ -52,16 +52,12 @@ class Options(Kontext):
             self.args.ctxattrs = 'word'
         self.args.structattrs = structattrs
 
-    @exposed(access_level=1, vars=('concsize', ), legacy=True, return_type='json')
+    @exposed(access_level=0, vars=('concsize', ), legacy=True, return_type='json')
     def viewattrs(self):
         """
         attrs, refs, structs form
         """
         from collections import defaultdict
-
-        if len(self.args.q) == 0:
-            self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.VIEW,
-                                        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
 
         out = {}
         if self.args.maincorp:
@@ -113,7 +109,7 @@ class Options(Kontext):
         out['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         return out
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
     def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,
@@ -129,7 +125,7 @@ class Options(Kontext):
         else:
             self.redirect('/first_form')
 
-    @exposed(access_level=1, return_type='json', http_method='GET', skip_corpus_init=True)
+    @exposed(access_level=0, return_type='json', http_method='GET', skip_corpus_init=True)
     def viewopts(self, _):
         return dict(
             pagesize=self.args.pagesize,
@@ -144,7 +140,7 @@ class Options(Kontext):
             cql_editor=self.args.cql_editor
         )
 
-    @exposed(access_level=1, return_type='json', http_method='POST', legacy=True, skip_corpus_init=True)
+    @exposed(access_level=0, return_type='json', http_method='POST', legacy=True, skip_corpus_init=True)
     def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0, cql_editor=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
                                tt_overview=tt_overview, cql_editor=cql_editor)

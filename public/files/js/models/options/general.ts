@@ -75,11 +75,14 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     private isBusy:boolean;
 
+    private userIsAnonymous:boolean;
+
     private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsModel)=>void>;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, userIsAnonymous:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
+        this.userIsAnonymous = userIsAnonymous;
         this.submitResponseHandlers = Immutable.List<()=>void>();
         this.isBusy = false;
 
@@ -275,5 +278,9 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     getUseCQLEditor():boolean {
         return this.useCQLEditor;
+    }
+
+    getUserIsAnonymous():boolean {
+        return this.userIsAnonymous;
     }
 }

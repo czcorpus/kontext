@@ -182,10 +182,10 @@ class KonTextWsgiApp(WsgiApp):
         """
         super(KonTextWsgiApp, self).__init__()
         self.cleanup_runtime_modules()
+        os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
         l10n.configure(settings.get('global', 'translations'))
-        os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
@@ -229,7 +229,8 @@ class KonTextWsgiApp(WsgiApp):
             request.session.modified = True
         if request.session.should_save:
             sessions.save(request.session)
-            response.set_cookie(sessions.get_cookie_name(), request.session.sid)
+            cookie_path = settings.get_str('global', 'cookie_path_prefix', '/')
+            response.set_cookie(sessions.get_cookie_name(), request.session.sid, path=cookie_path)
         return response(environ, start_response)
 
 

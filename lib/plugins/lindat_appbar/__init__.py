@@ -10,16 +10,20 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+import os
 from plugins.abstract.appbar import AbstractApplicationBar
 from translation import ugettext as _
+from plugins import inject
+import plugins
 
 
 class LindatTopBar(AbstractApplicationBar):
 
-    def __init__(self, css_url, templates=None):
+    def __init__(self, css_urls, js_urls, templates=None, logout_url=None):
         self._templates = templates if type(templates) is dict else {}
-        self.css_url = css_url
+        self._css_urls = css_urls
+        self._js_urls = js_urls
+        self._logout_url = logout_url
 
     def get_template(self, lang):
         if lang in self._templates:
@@ -28,58 +32,69 @@ class LindatTopBar(AbstractApplicationBar):
             return self._templates['en_US']
 
     def get_styles(self, plugin_api):
-        return [dict(url=self.css_url)]
+        return [{'url': x} for x in self._css_urls]
 
     def get_scripts(self, plugin_api):
-        deps = [
-            dict(
-                module='discojuice',
-                url='//lindat.mff.cuni.cz/aai/discojuice/discojuice-2.1.en.min',
-                shim=dict(deps=['jquery'])
-            ),
-            dict(
-                module='aai',
-                url='//lindat.mff.cuni.cz/aai/aai',
-                shim=dict(deps=['jquery', 'discojuice'])
-            )
-        ]
-        return dict(main=None, deps=deps)
+        return self._js_urls
 
     def get_contents(self, plugin_api, return_url):
         tpl_path = self.get_template(plugin_api.user_lang)
+        if not os.path.exists(tpl_path):
+            return "template [%s] does not exist!" % tpl_path
         with open(tpl_path, mode='rb') as fin:
             html = fin.read().decode('utf-8')
+            user_classes = "user"
 
             if not plugin_api.user_is_anonymous:
-                msgs = dict(fullname=plugin_api.session.get('user', 'fullname'),
-                            logout_url='',
+                user_d = plugin_api.session["user"]
+                msgs = dict(fullname=user_d.get("fullname", "?"),
+                            logout_url=self._logout_url or "",
                             logout_msg=_('logout'))
-                login_html = '%(fullname)s (<a href="%(logout_url)s">%(logout_msg)s</a>)' % msgs
+                login_html = ('<i class="fa fa-user fa-lg">&nbsp;</i>%(fullname)s' +
+                              '<span style="margin-left: 5px; margin-right: 5px;"> | </span>' +
+                              ' <a href="%(logout_url)s"><i class="fa fa-sign-out fa-lg">&nbsp;</i>%(logout_msg)s</a>'
+                              ) % msgs
             else:
-                msgs = dict(fullname=_('anonymous'),
-                            login_url='',
-                            login_msg=_('login'))
-                login_html = ('%(fullname)s (<a href="%(login_url)s" class ="signon" onclick="return false;">'
-                              '%(login_msg)s</a>)') % msgs
+                msgs = dict(login_url='',
+                            login_msg=_('Login'))
+                login_html = ('<a href="%(login_url)s" class ="signon" onclick="return false;">' +
+                              '<i class="fa fa-sign-in fa-lg">&nbsp;</i>'
+                              '%(login_msg)s</a>') % msgs
+                user_classes += " loggedout"
         contents = html + (
             '<ul id="localization-bar" class="navbar-left pull-left list-unstyled" ' +
             'style="position: absolute; top: 0px;">' +
             '</ul>' +
             '<!-- AUTH BAR -->' +
             '<div class="lindat-auth-bar">' +
-            '<span class="user">%(user_label)s: %(login_html)s</span>' +
+            '<div class="%(user_classes)s">%(login_html)s</div>' +
             '</div>' +
-            '<!-- AUTH BAR END -->') % dict(user_label=_('User'), login_html=login_html)
+            '<!-- AUTH BAR END -->') % dict(login_html=login_html, user_classes=user_classes)
+        # add proper underline
+        contents = "<div id='lindat-tools'>%s</div>" % contents
         return contents
 
     def get_fallback_content(self):
         return ''
 
 
-def create_instance(settings):
+@inject(plugins.runtime.AUTH)
+def create_instance(settings, auth):
+    """
+        Auth must provide `get_logout_url`
+    """
     plugin_conf = settings.get('plugins', 'application_bar')
+    main_css = plugin_conf.get('lindat:css_url')
+    external_css = settings.get('theme', 'lindat:external_css', [])
+    external_js = settings.get('theme', 'lindat:external_js', [])
     templates = {
         'cs_CZ': plugin_conf['lindat:template_cs'],
         'en_US': plugin_conf['lindat:template_en']
     }
-    return LindatTopBar(templates=templates, css_url=plugin_conf.get('lindat:css_url'))
+    css = [x for x in [main_css] + list(external_css) if x is not None]
+    return LindatTopBar(
+        templates=templates,
+        css_urls=css,
+        js_urls=external_js,
+        logout_url=auth.get_logout_url(),
+    )

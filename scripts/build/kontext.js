@@ -167,6 +167,7 @@
             'vendor/d3-color': path.resolve(jsPath, 'vendor/d3-color.min'),
             'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),
             'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min'),
+            'vendor/cookies' : path.resolve(jsPath, 'vendor/cookies'),
             'cqlParser/parser': cqlParserPath,
             'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
             'styles': cssPath,
@@ -229,7 +230,8 @@
             'SoundManager',
             'vendor/intl-messageformat',
             'vendor/d3',
-            'vendor/d3-color'
+            'vendor/d3-color',
+            'vendor/cookies'
         ];
         if (isProduction) {
             modules.push('translations');

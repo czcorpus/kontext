@@ -21,18 +21,18 @@
 declare module AAI {
 
     export interface AaiOptions {
-        port?:number;
-        host?:string;
-        repoPath?:string;
-        target?:string;
-        responseUrl?:string;
-        metadataFeed?:string;
-        serviceName?:string;
-        localauth?:string;
+        port?: string;
+        host?: string;
+        repoPath?: string;
+        target?: string;
+        responseUrl?: string;
+        metadataFeed?: string;
+        serviceName?: string;
+        localauth?: string;
     }
 
-    export function setup(opts:AaiOptions):void;
+    export function setup(opts: AaiOptions): void;
 
-    var defaults:any;
+    let defaults: any;
 
 }

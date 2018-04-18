@@ -1,5 +1,5 @@
 #common-bar {
-    height: auto;
+    height: auto !important;
     background-color: #FFFFFF;
     color: #000000;
 
@@ -8,11 +8,50 @@
     }
 
     .user {
-        float: none;
+        padding: 5px 10px 5px 10px;
+        margin: 5px 15px 5px 5px;
+        position: fixed;
+        right: 0px;
+        top: 0px;
+        display: block;
+        background-color: #428bca;
+        color: white;
+        font-weight: bold;
+        border-radius: .25em;
+        font-size: 16px;
+
+        a {
+            color: white;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+    }
+
+    .user.loggedout {
+        background-color: #d9534f;
     }
 
     .lindat-auth-bar {
         background-color: transparent;
-        padding: 0.5em 1em;
     }
+
+    #localization-bar {
+        margin-left:40px;
+    }
+
+    #localization-bar li {
+        list-style-type: none;
+    }
+    .selected img {
+        border: 2px solid rgb(102, 175, 233) !important;
+    }
+}
+
+footer {
+    margin-top: 0;
+    padding: 0;
 }
