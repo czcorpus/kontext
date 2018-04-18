@@ -295,7 +295,7 @@ class Kontext(Controller):
     @staticmethod
     def _init_default_settings(options):
         if 'shuffle' not in options:
-            options['shuffle'] = 1
+            options['shuffle'] = 0
 
     def _setup_user_paths(self):
         user_id = self.session_get('user', 'id')
