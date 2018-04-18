@@ -22,6 +22,8 @@ if __name__ == '__main__':
         except:
             data = redis.hgetall(key)
             for k,v in data.items():
+                if k == 'id':
+                    v = int(v)
                 auth_db.hash_set(key, k, v)
 
 
