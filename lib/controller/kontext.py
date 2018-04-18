@@ -190,7 +190,7 @@ class Kontext(Controller):
     ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
                                  MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
                                  MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
-                                 MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW)
+                                 MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
 
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
                            MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'),
