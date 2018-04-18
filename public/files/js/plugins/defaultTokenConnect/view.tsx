@@ -162,20 +162,20 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> = (props) => {
         return (
             <div>
-                <div>{props.name}</div>
-                <div>{props.name.split(' : ')[0]}
+                <div className="valexSense">{props.name}</div>
+                <div className="valexSourceV">{props.name.split(' : ')[0]}
                     {props.detail[0][1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <span key={i}>&nbsp;{listValue}</span>;
+                            return <span className="valexFrame" key={i}>&nbsp;{listValue}</span>;
                         }
                     })}
                 </div>
 
-                <div>{props.detail[0][1][1]}</div>
-                <ul>
+                <div className="valexExpl">{props.detail[0][1][1]}</div>
+                <ul className="valexExamples">
                     {props.detail[0][1][2].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <li key={i}>{listValue}</li>;
+                            return <li className="valexExamples" key={i}>{listValue}</li>;
                         }
                     })}
                 </ul>
@@ -219,15 +219,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         verbTargetList:VRD.VtargetInfo;
     }> = (props) => {
         return (
-            <div>
-                <div>{props.verbTargetName}
+            <div className="valexTargetBlock">
+                <div className="valexTargetV">{props.verbTargetName}
                     {props.verbTargetList[1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <span key={i}>&nbsp;{listValue}</span>;
+                            return <span className="valexFrame"  key={i}>&nbsp;{listValue}</span>;
                         }
                     })}
                 </div>
-                <div>{props.verbTargetList[1][1]}</div>
+                <div className="valexExplInner">{props.verbTargetList[1][1]}</div>
                 <ul>
                     {props.verbTargetList[1][2].map((listValue, i) => {
                         if (listValue.length !== 0) {
@@ -235,10 +235,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                         }
                     })}
                 </ul>
-                <div><p>{`Argument mapping for "${props.verbSourceName}" (${props.verbSourceID}) and "${props.verbTargetName}" (${props.verbTargetList[0]}):`}</p></div>
+                <div className="valexFrameMap"><p>{`Argument mapping for "${props.verbSourceName}" (${props.verbSourceID}) and "${props.verbTargetName}" (${props.verbTargetList[0]}):`}</p></div>
                 <ul className="valexHiddenBullets">
                     {props.verbTargetList[2].map((listValue, i) => {
-                        return <li key={i}>{listValue[0]}&nbsp;{'\u2192'}&nbsp;{listValue[1]}</li>;
+                        return <li className="" key={i}>{listValue[0]}&nbsp;{'\u2192'}&nbsp;{listValue[1]}</li>;
 
                     })}
                 </ul>
