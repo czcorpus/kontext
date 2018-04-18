@@ -59,6 +59,10 @@ class LindatRedisDb(RedisDb):
         self.redis = redis.StrictRedis(host=self._host, port=self._port, db=self._shard_id)
         self._scan_chunk_size = 50
 
+    def keys(self, pattern='*'):
+        """Returns a list fo keys matching ``pattern``"""
+        return self.redis.keys(pattern)
+
 
 class RedisDbManager(LindatRedisDb):
     """
