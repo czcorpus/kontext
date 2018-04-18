@@ -658,6 +658,7 @@ export namespace ViewOptions {
         getAttrsAllpos():string;
         getShowConcToolbar():boolean;
         getIsWaiting():boolean;
+        getUserIsAnonymous():boolean;
     }
 
     export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
@@ -672,6 +673,7 @@ export namespace ViewOptions {
         getShowTTOverview():boolean;
         addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
         getUseCQLEditor():boolean;
+        getUserIsAnonymous():boolean;
     }
 
 }

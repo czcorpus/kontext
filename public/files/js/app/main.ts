@@ -707,7 +707,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 this.corpViewOptionsModel = new CorpusViewOptionsModel(
                     this.dispatcher,
                     this,
-                    this.getConf<Kontext.FullCorpusIdent>('corpusIdent')
+                    this.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                    this.getConf<boolean>('anonymousUser')
                 );
 
                 this.mainMenuModel = new MainMenuModel(
@@ -719,6 +720,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 this.generalViewOptionsModel = new GeneralViewOptionsModel(
                     this.dispatcher,
                     this,
+                    this.getConf<boolean>('anonymousUser')
                 );
                 this.generalViewOptionsModel.addOnSubmitResponseHandler(
                     ()=>this.mainMenuModel.resetActiveItemAndNotify()

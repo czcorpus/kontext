@@ -58,12 +58,16 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     private isWaiting:boolean;
 
+    private userIsAnonymous:boolean;
+
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+            userIsAnonymous:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.corpusIdent = corpusIdent;
+        this.userIsAnonymous = userIsAnonymous;
         this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
         this.updateHandlers = Immutable.List<()=>void>();
         this.isWaiting = false;
@@ -446,4 +450,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         return this.showConcToolbar;
     }
 
+    getUserIsAnonymous():boolean {
+        return this.userIsAnonymous;
+    }
 }

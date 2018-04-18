@@ -452,6 +452,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         showTTOverview:boolean;
         modelIsBusy:boolean;
         useCQLEditor:boolean;
+        userIsAnonymous:boolean;
     }> {
 
         constructor(props) {
@@ -471,7 +472,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 citemsPerPage: generalOptionsModel.getCitemsPerPage(),
                 showTTOverview: generalOptionsModel.getShowTTOverview(),
                 modelIsBusy: generalOptionsModel.getIsBusy(),
-                useCQLEditor: generalOptionsModel.getUseCQLEditor()
+                useCQLEditor: generalOptionsModel.getUseCQLEditor(),
+                userIsAnonymous: generalOptionsModel.getUserIsAnonymous()
             };
         }
 
@@ -503,6 +505,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <FieldsetWordlist wlPageSize={this.state.wlPageSize}  />
                         <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />
                         <FieldsetColl citemsPerPage={this.state.citemsPerPage} />
+                        {this.state.userIsAnonymous ?
+                            <p className="warn">
+                                <layoutViews.StatusIcon status="warning" htmlClass="icon" />
+                                {he.translate('global__anon_user_opts_save_warn')}
+                            </p> :
+                            null
+                        }
                         <div className="buttons">
                             <SubmitButton modelIsBusy={this.state.modelIsBusy} />
                         </div>

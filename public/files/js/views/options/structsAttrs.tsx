@@ -427,6 +427,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         availRefs:Immutable.List<ViewOptions.RefsDesc>;
         TehasSelectAllRefs:boolean;
         isWaiting:boolean;
+        userIsAnonymous:boolean;
 
     }> = (props) => {
 
@@ -440,6 +441,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
                         <FieldsetMetainformation availRefs={props.availRefs}
                                 hasSelectAll={props.TehasSelectAllRefs} />
+                        {props.userIsAnonymous ?
+                            <p className="warn">
+                                <layoutViews.StatusIcon status="warning" htmlClass="icon" />
+                                {helpers.translate('global__anon_user_opts_save_warn')}
+                            </p> :
+                            null
+                        }
                         <SubmitButtons isWaiting={props.isWaiting} />
                     </div>
                 </form>
@@ -473,6 +481,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         showConcToolbar:boolean;
         isWaiting:boolean;
         isVisible:boolean;
+        userIsAnonymous:boolean;
     }> {
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
@@ -499,7 +508,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 attrsAllpos: viewOptionsModel.getAttrsAllpos(),
                 showConcToolbar: viewOptionsModel.getShowConcToolbar(),
                 isWaiting: viewOptionsModel.getIsWaiting(),
-                isVisible: false
+                isVisible: false,
+                userIsAnonymous: viewOptionsModel.getUserIsAnonymous()
             };
         }
 
@@ -556,7 +566,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                             attrsVmode={this.state.attrsVmode}
                             attrsAllpos={this.state.attrsAllpos}
                             showConcToolbar={this.state.showConcToolbar}
-                            isWaiting={this.state.isWaiting} />
+                            isWaiting={this.state.isWaiting}
+                            userIsAnonymous={this.state.userIsAnonymous} />
                 </div>
             );
         }
