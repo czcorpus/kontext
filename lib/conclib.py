@@ -466,7 +466,7 @@ def fcs_scan(corpname, scan_query, max_ter, start):
     aux function for federated content search: operation=scan
     """
     if not scan_query:
-        raise Exception(7, '', 'Mandatory parameter not supplied')
+        raise Exception(7, 'scan_query', 'Mandatory parameter not supplied')
     query = scan_query.replace('+', ' ')  # convert URL spaces
     exact_match = False
     if 'exact' in query.lower() and not '=' in query:  # lemma ExacT "dog"
