@@ -7,18 +7,25 @@ enum ExamplesForm {
    COMPLEX = 'complex'
 }
 
-type NumResults = string;
+export type CompleteSense = [Sense, SenseInfoList]
 
-type WordPair = string;
+export type Sense = string
 
-type Frame = [WordPair, FrameInfo];
+export type SenseInfoList = Array<SenseInfo>
 
-type FrameId = string;
+export type SenseInfo = [VsourceID, VsourceInfo, VtargetInfoList]
 
-type FrameInfo = [FrameId, any];
+export type VsourceID = string
 
+export type VsourceInfo = Array<any>
 
-type Functors = string;
+export type VtargetInfoList = Array<VtargetInfo>
+
+export type VtargetInfo = Array<Array<any>>
+
+type NumResults = string
+
+type CompleteSenseList = Array<CompleteSense>
 
 export interface ValexResponseData {
    status: {
@@ -34,7 +41,7 @@ export interface ValexResponseData {
    };
    result: [
        NumResults,
-       Array<Frame>
+       CompleteSenseList
    ]
 
 }
