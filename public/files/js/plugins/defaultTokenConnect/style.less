@@ -1,40 +1,85 @@
-ul.valexHiddenBullets {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-}
+@import "../../../css/shared/globals.less";
 
-div.ValexJsonRenderer {
-  div.valexSense {
-    margin: 0 0 0.5em 0;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 0;
-  }
-  div.valexSourceV {
-    font-weight: bold;
-  }
-  .valexFrame {
-    color: darkred;
-    margin: 0 0 0 0.2em;
-  }
-  div.valexExpl {
-    color: #777;
-    font-weight: bold;
-  }
-  li.valexExamples {
-    margin: 0 0 0.2em 0;
-    padding: 0;
-  }
-  div.valexTargetBlock {
-    margin: 0 0 1.4em 0.8em;
+.concordance_DefaultView .token-detail {
 
-    div.valexTargetV {
-      font-weight: bold;
+    // General styling (possibly any service) --->
+
+    dt {
+        font-weight: bold;
     }
-    div.valexExplInner {
-      color: #777;
-      font-weight: bold;
+
+    // a heading for a service output
+    h2.inhouse {
+        margin-left: 0;
+        padding-left: 0;
+        margin-top: 1em;
+        border-style: solid;
+        border-width:  0 0 0.1em 0;
+        border-color: @color-light-grey;
     }
-  }
+
+    p.keywords {
+        line-height: 1.7em;
+        word-spacing: 0.4em;
+    }
+
+    a.keyword {
+        text-decoration: none;
+        font-size: 1.4em;
+    }
+
+    a.keyword:hover {
+        text-decoration: underline;
+    }
+
+    // Valex service --->
+
+    div.ValexJsonRenderer {
+
+        ul.valexHiddenBullets {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        div.valexSense {
+            margin: 0 0 0.5em 0;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 0;
+        }
+
+        div.valexSourceV {
+            font-weight: bold;
+        }
+
+        .valexFrame {
+            color: darkred;
+            margin: 0 0 0 0.2em;
+        }
+
+        div.valexExpl {
+            color: #777;
+            font-weight: bold;
+        }
+
+        li.valexExamples {
+            margin: 0 0 0.2em 0;
+            padding: 0;
+        }
+
+        div.valexTargetBlock {
+            margin: 0 0 1.4em 0.8em;
+
+            div.valexTargetV {
+                font-weight: bold;
+            }
+
+            div.valexExplInner {
+                color: #777;
+                font-weight: bold;
+            }
+        }
+
+    }
 }
