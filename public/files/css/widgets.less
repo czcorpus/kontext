@@ -95,6 +95,8 @@ section.closeable-frame {
 
     > div > p {
         margin: 0.4em 0;
+        padding-left: 0.4em;
+        padding-right: 0.4em;
     }
 
     button.close-link {
@@ -756,13 +758,13 @@ ul.SortFormSelector {
 
 .TRQueryTypeField {
 
-    sup.hint {
+    .hint {
 
         padding-left: 0.4em;
 
         img {
             display: inline-block;
-            width: 0.9em;
+            width: 0.7em;
         }
     }
 
@@ -922,10 +924,28 @@ table.MLSingleLevelFields {
     }
 }
 
+.Abbreviation {
+    display: inline-block;
+    text-decoration: none;
+    cursor: help;
+    border-color: @color-default-text;
+    border-style: dotted;
+    border-width: 0 0 1px 0;
+}
+
 .UnsupportedRenderer {
+
+    .note {
+        text-align: center;
+    }
+
+    .data-label {
+        margin-bottom: 0;
+    }
 
     pre {
         font-size: 0.7em;
+        white-space: normal;
     }
 
 }

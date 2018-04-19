@@ -414,6 +414,45 @@ export function init(
     }
 
 
+    class Abbreviation extends React.Component<CoreViews.Abbreviation.Props, {helpVisible:boolean}> {
+
+        constructor(props) {
+            super(props);
+            this._clickHandler = this._clickHandler.bind(this);
+            this.state = {helpVisible: false};
+        }
+
+        _clickHandler() {
+            this.setState({helpVisible: !this.state.helpVisible});
+        }
+
+        render() {
+            return (
+                <span className="Abbreviation" title={he.translate('global__click_to_see_def')} >
+                    <abbr onClick={this._clickHandler}>
+                        {this.props.value}
+                    </abbr>
+                    {this.state.helpVisible ?
+                            <PopupBox onCloseClick={this._clickHandler}
+                                    customStyle={this.props.customStyle}>
+                                <strong>{this.props.value}</strong> = {this.props.desc}
+                                {this.props.url ?
+                                    <div className="link">
+                                        <hr />
+                                        <a href={this.props.url} target='_blank'>
+                                            {he.translate('global__get_more_info')}
+                                        </a>
+                                    </div> : null}
+                            </PopupBox>
+                            :
+                        null
+                    }
+                </span>
+            );
+        }
+    }
+
+
     // ------------------------------ <Message /> -----------------------------
     // (info/error/warning message box)
 
@@ -677,6 +716,7 @@ export function init(
         PopupBox: PopupBox,
         CloseableFrame: CloseableFrame,
         InlineHelp: InlineHelp,
+        Abbreviation: Abbreviation,
         Messages: Messages,
         CorpnameInfoTrigger: CorpnameInfoTrigger,
         ImgWithMouseover: ImgWithMouseover,

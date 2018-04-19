@@ -192,12 +192,12 @@ export function init({
             const [heading, text] = this._getHintText();
             return (
                 <span>
-                    <sup className="hint" onClick={this._handleHintClick}>
+                    <span className="hint" onClick={this._handleHintClick}>
                         <a>
                             <img src={he.createStaticUrl('img/question-mark.svg')}
                                 alt={he.translate('global__info_icon')} />
                         </a>
-                    </sup>
+                    </span>
                     {this.state.visible ?
                         <layoutViews.PopupBox onCloseClick={this._handleHintClick} takeFocus={true} customClass="hint">
                             <div>

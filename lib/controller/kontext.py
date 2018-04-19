@@ -13,7 +13,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from types import ListType
 import json
 from functools import partial
 import logging
@@ -28,14 +27,14 @@ from werkzeug.datastructures import MultiDict
 import corplib
 import conclib
 from controller import Controller, convert_types, exposed
-from controller.errors import UserActionException, ForbiddenException
+from controller.errors import UserActionException, ForbiddenException, CorpusForbiddenException
 import plugins
 import plugins.abstract
-from plugins.abstract.auth import AbstractInternalAuth, AbstractRemoteAuth
+from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
 from l10n import format_number, corpus_get_conf
-from translation import ugettext as _, get_avail_languages
+from translation import ugettext as _
 import scheduled
 import templating
 import fallback_corpus
@@ -663,8 +662,8 @@ class Kontext(Controller):
                 if has_access and redirect:
                     self.redirect(self.create_url('first_form', dict(corpname=corpname)))
                 elif not has_access:
-                    path = ['message']
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
+                    raise CorpusForbiddenException(corpname, variant)
             else:
                 corpname = ''
                 variant = ''
@@ -738,7 +737,12 @@ class Kontext(Controller):
         self.cm = corplib.CorpusManager(self.subcpath)
 
         # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, corpus_variant, path = self._check_corpus_access(path, form, action_metadata)
+        try:
+            corpname, corpus_variant, path = self._check_corpus_access(path, form, action_metadata)
+        except CorpusForbiddenException as ex:
+            corpname, corpus_variant = ex.corpname, ex.variant
+            path = ['message']
+            action_metadata.update(self._get_method_metadata('message'))
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known

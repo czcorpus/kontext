@@ -155,6 +155,20 @@ export namespace CoreViews {
 
     // -------------------------------
 
+    export namespace Abbreviation {
+
+        export interface Props {
+            value:string;
+            desc:string;
+            customStyle?:{[key:string]:string};
+            url?:string;
+        }
+
+        export type Component = React.ComponentClass<Props>;
+    }
+
+    // -------------------------------
+
     export namespace Message {
 
         export interface Props {
@@ -298,6 +312,7 @@ export namespace CoreViews {
         ImgWithMouseover:ImgWithMouseover.Component;
         CloseableFrame:CloseableFrame.Component;
         InlineHelp:InlineHelp.Component;
+        Abbreviation:Abbreviation.Component;
         Messages:Messages.Component;
         IssueReportingLink:IssueReportingLink.Component;
         AjaxLoaderImage:AjaxLoaderImage.Component;
