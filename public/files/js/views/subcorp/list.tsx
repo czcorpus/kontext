@@ -230,7 +230,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return <a onClick={handleClick} title={he.translate('subclist__click_to_unlock_for_del')}>
-            <img src={he.createStaticUrl('img/config-icon.svg')} style={{width: '1em'}} />
+            <layoutViews.ImgWithMouseover
+                    src={he.createStaticUrl('img/config-icon.svg')} style={{width: '1.2em'}}
+                    alt={he.translate('subclist__click_to_unlock_for_del')} />
             </a>
     };
 
@@ -303,7 +305,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th>{he.translate('subclist__col_published')}</th>
                             <th>{he.translate('subclist__col_backed_up')}</th>
-                            <th>
+                            <th style={{textAlign: 'center'}}>
                                 <DeleteUnlockButton deleteLocked={this.state.deleteLocked} />
                             </th>
                         </tr>

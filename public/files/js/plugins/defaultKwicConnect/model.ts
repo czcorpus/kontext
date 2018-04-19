@@ -220,7 +220,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
      * @param state
      * @param newData
      */
-    private mergeDataOfProviders(state:KwicConnectState, newData: Immutable.List<ProviderWordMatch>):void {
+    private mergeDataOfProviders(state:KwicConnectState, newData:Immutable.List<ProviderWordMatch>):void {
         if (state.data.size > 0) {
             state.data = state.data.map((providerData, i) => {
                 return {

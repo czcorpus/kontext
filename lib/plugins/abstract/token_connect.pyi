@@ -26,11 +26,11 @@ class Response(object):
 
     contents:basestring
     renderer:str
-    status:int
+    status:bool
     heading:unicode
     note:unicode
 
-    def __init__(self, contents:basestring, renderer:str, status:int, heading:unicode, note:unicode): ...
+    def __init__(self, contents:basestring, renderer:str, status:bool, heading:unicode, note:unicode): ...
 
     def to_dict(self) -> Dict[str, Any]: ...
 
@@ -38,7 +38,7 @@ class Response(object):
 class AbstractBackend(object):
 
     def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, corpora:List[str],
-                   lang:str) -> Tuple[Any, int]: ...
+                   lang:str) -> Tuple[Any, bool]: ...
 
 
 class AbstractFrontend(object):
@@ -48,13 +48,13 @@ class AbstractFrontend(object):
 
     def _fetch_localized_prop(self, prop:str, lang:str) -> unicode: ...
 
-    def export_data(self, data:Any, status:int, lang:str) -> Response: ...
+    def export_data(self, data:Any, status:bool, lang:str) -> Response: ...
 
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
     def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, tag:basestring,
-                   corpora:List[str], lang:str) -> List[[Any, int]]: ...
+                   corpora:List[str], lang:str) -> List[[Any, bool]]: ...
 
     def get_required_structattrs(self) -> List[str]: ...
 

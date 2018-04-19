@@ -115,7 +115,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                         <th>
                             {util.translate('defaultCorparch__fav_items')}
                             <a onClick={props.onChangeEditEnable}>
-                                <img className="config"
+                                <layoutViews.ImgWithMouseover htmlClass="config"
                                     title={util.translate('defaultCorparch__click_to_unlock_removal')}
                                     alt={util.translate('defaultCorparch__click_to_unlock_removal')}
                                     src={util.createStaticUrl('img/config-icon.svg')} />
@@ -196,7 +196,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
     }> = (props) => {
 
         const renderIcon = () => {
-            const style = {width: '2em'};
+            const style = {width: '1.6em'};
             if (props.currFavitemId) {
                 return <img src={util.createStaticUrl('img/starred.svg')}
                         title={util.translate('defaultCorparch__in_fav')}

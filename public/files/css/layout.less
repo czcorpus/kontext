@@ -573,6 +573,10 @@ header#topbar {
             border-color: #FFFFFF;
         }
     }
+
+    .notifications a {
+        color: @color-logo-blue;
+    }
 }
 
 #active-corpus {
@@ -1252,7 +1256,6 @@ fieldset.colloc-metrics {
 }
 
 @keyframes color-change {
-    0% { color: @color-default-text; }
-    50% { color: @color-default-text; }
-    70% { color: @color-light-text; }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }

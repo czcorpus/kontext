@@ -285,6 +285,7 @@ export function init(
                         onClick={this.props.clickHandler}
                         alt={this.props.alt}
                         title={this.props.alt}
+                        style={this.props.style ? this.props.style : null}
                         onMouseOver={this._handleCloseMouseover}
                         onMouseOut={this._handleCloseMouseout}  />;
         }
