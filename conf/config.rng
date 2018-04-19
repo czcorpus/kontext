@@ -231,6 +231,13 @@
                         to solve issues regarding apps installed in URL sub-directories</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="http_host">
+                            <text />
+                            <a:documentation>A custom HTTP host value replacing request environment HTTP_HOST
+                            in case one cannot rely on that (e.g. behind some proxy configurations)</a:documentation>
+                        </element>
+                    </optional>
                     <element name="static_files_prefix">
                         <a:documentation>A prefix for static files (typically: /files when installed at the root)</a:documentation>
                         <text />
