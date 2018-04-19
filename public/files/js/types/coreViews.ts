@@ -107,6 +107,7 @@ export namespace CoreViews {
             clickHandler?:()=>void;
             alt:string;
             title?:string;
+            style?:{[prop:string]:string};
         }
 
         export interface State {

@@ -115,7 +115,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                         <th>
                             {util.translate('defaultCorparch__fav_items')}
                             <a onClick={props.onChangeEditEnable}>
-                                <img className="config"
+                                <layoutViews.ImgWithMouseover htmlClass="config"
                                     title={util.translate('defaultCorparch__click_to_unlock_removal')}
                                     alt={util.translate('defaultCorparch__click_to_unlock_removal')}
                                     src={util.createStaticUrl('img/config-icon.svg')} />
