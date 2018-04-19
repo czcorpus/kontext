@@ -640,6 +640,12 @@
                             </optional>
                         </interleave>
                     </element>
+                    <element name="dispatch_hook">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
                 </interleave>
             </element>
         </element>
