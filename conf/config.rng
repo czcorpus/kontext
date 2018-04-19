@@ -276,6 +276,19 @@
                         </element>
                     </optional>
                     <optional>
+                        <element name="shuffle_conc_by_default">
+                            <choice>
+                                <value>0</value>
+                                <value>1</value>
+                                <value>false</value>
+                                <value>true</value>
+                            </choice>
+                            <a:documentation>If true then concordance will be shuffled by default (user can change
+                            this in his/her settings). By default this is set to false.
+                            </a:documentation>
+                        </element>
+                    </optional>
+                    <optional>
                         <element name="help_links_path">
                             <text />
                             <a:documentation>A path to a JSON file containing terms and custom idents used
