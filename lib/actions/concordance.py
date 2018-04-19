@@ -1183,6 +1183,7 @@ class Actions(Querying):
         )
         ans['text_types_data'] = get_tt(
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['quick_save_row_limit'] = 0
         self._attach_query_params(ans)
         return ans
 
