@@ -26,7 +26,6 @@ import sys
 import os
 import wsgiref.util
 import logging
-from logging import handlers
 import locale
 
 from werkzeug.http import parse_accept_header
@@ -69,10 +68,14 @@ class WsgiApp(object):
         maximum file size (optional, default is 8MB): /kontext/global/log_file_size
         number of backed-up files (optional, default is 10): /kontext/global/log_num_files
         """
-        handler = handlers.RotatingFileHandler(conf.get('logging', 'path'),
-                                               maxBytes=conf.get_int(
-                                                   'logging', 'file_size', 8000000),
-                                               backupCount=conf.get_int('logging', 'num_files', 10))
+        try:
+            from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
+        except ImportError:
+            from logging.handlers import RotatingFileHandler as HandlerClass
+        handler = HandlerClass(conf.get('logging', 'path').format(pid=os.getpid()),
+                               maxBytes=conf.get_int(
+                                   'logging', 'file_size', 8000000),
+                               backupCount=conf.get_int('logging', 'num_files', 10))
         handler.setFormatter(logging.Formatter(
             fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
         logger.addHandler(handler)

@@ -314,7 +314,8 @@
             <element name="logging">
                 <interleave>
                     <element name="path">
-                        <a:documentation>Path to KonText application log</a:documentation>
+                        <a:documentation>Path to KonText application log. A Python formatting string with 'pid' key can
+                        be used to create a file with pid in its name (e.g. my_log_{pid}.log).</a:documentation>
                         <text />
                     </element>
                     <element name="file_size">
