@@ -58,29 +58,10 @@ import copy
 from collections import OrderedDict
 
 import plugins
-from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
+from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo
 from controller import exposed
 from actions import corpora
-import l10n
 import manatee
-from functools import partial
-
-
-class ManateeCorpusInfo(object):
-    """
-    Represents a subset of corpus information
-    as provided by manatee.Corpus instance
-    """
-
-    def __init__(self, corpus, canonical_id):
-        self.encoding = corpus.get_conf('ENCODING')
-        import_string = partial(l10n.import_string, from_encoding=self.encoding)
-        self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
-                                  else canonical_id)
-        self.description = import_string(corpus.get_info())
-        self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
-        self.size = corpus.size()
-        self.lang = corpus.get_conf('LANGUAGE')
 
 
 class ManateeCorpora(object):
@@ -94,14 +75,14 @@ class ManateeCorpora(object):
     def get_info(self, corpus_id):
         try:
             if corpus_id not in self._cache:
-                self._cache[corpus_id] = ManateeCorpusInfo(
+                self._cache[corpus_id] = DefaultManateeCorpusInfo(
                     manatee.Corpus(corpus_id), corpus_id)
             return self._cache[corpus_id]
         except Exception as ex:
             logging.getLogger(__name__).warning(ex)
             # probably a misconfigured/missing corpus
-            return ManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
-                                     corpus_id)
+            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
+                                            corpus_id)
 
 
 class EmptyCorpus(object):
@@ -309,8 +290,11 @@ class TreeCorparch(AbstractCorporaArchive):
             # get rid of path-like corpus ID prefix
             corp_id = corp_id.split('/')[-1].lower()
             if corp_id in self._metadata:
-                return self._localize_corpus_info(self._metadata[corp_id], language)
-            raise ValueError('Missing configuration data for %s' % corp_id)
+                ans = self._localize_corpus_info(self._metadata[corp_id], language)
+                ans.manatee = self._manatee_corpora.get_info(corp_id)
+                return ans
+            else:
+                raise ValueError('Missing configuration data for %s' % corp_id)
         else:
             return BrokenCorpusInfo()
 
