@@ -91,6 +91,7 @@ class ManateeCorpusInfo(DictLike):
         self.size = 0
         self.has_lemma = False
         self.tagset_doc = None
+        self.lang = None
 
 
 class DefaultManateeCorpusInfo(ManateeCorpusInfo):
@@ -111,6 +112,7 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
         attrlist = corpus.get_conf('ATTRLIST').split(',')
         self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
         self.tagset_doc = import_string(corpus.get_conf('TAGSETDOC'))
+        self.lang = import_string(corpus.get_conf('LANGUAGE'))
 
 
 class TokenConnect(DictLike):
