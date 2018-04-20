@@ -65,6 +65,10 @@ export class KWICSection extends LangSection {
     getAllChunks():Immutable.List<TextChunk> {
         return this.left.concat(this.kwic, this.right).toList();
     }
+
+    findChunk(chunkId:string):TextChunk {
+        return this.getAllChunks().find(v => v.id === chunkId);
+    }
 }
 
 
@@ -73,5 +77,9 @@ export class SentSection extends LangSection {
 
     getAllChunks():Immutable.List<TextChunk> {
         return this.items;
+    }
+
+    findChunk(chunkId:string):TextChunk {
+        return this.getAllChunks().find(v => v.id === chunkId);
     }
 }

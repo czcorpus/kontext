@@ -499,7 +499,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         constructor(props) {
             super(props);
             this._interval = null;
-            this.state = {img: 0};
+            this.state = {img: 3};
             this._handleMouseOver = this._handleMouseOver.bind(this);
             this._handleMouseOut = this._handleMouseOut.bind(this);
         }
@@ -516,7 +516,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                 window.clearInterval(this._interval);
                 this._interval = null;
                 this.setState({
-                    img: 0
+                    img: 3
                 });
             }
         }

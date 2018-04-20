@@ -619,7 +619,8 @@ export function generate(data:Array<SourceData.Data>, zone:string, tree:string, 
         getHelpLink:(ident:string) => '',
         browserInfo: {
             isFirefox: () => false
-        }
+        },
+        getElmPosition:(elm:HTMLElement):[number, number] => [0, 0]
     };
     const gen = new TreeGenerator(options, helpers);
     gen.generate(data, zone, tree, target);

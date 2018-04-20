@@ -22,6 +22,7 @@ import * as Immutable from 'immutable';
 
 
 export class TextChunk {
+    id:string;
     className:string;
     text:Array<string>;
     openLink:{speechPath:string};
@@ -44,6 +45,8 @@ export abstract class LangSection {
     }
 
     abstract getAllChunks():Immutable.List<TextChunk>;
+
+    abstract findChunk(chunkId:string):TextChunk;
 }
 
 export class Line {
@@ -52,6 +55,16 @@ export class Line {
     kwicLength:number;
     hasFocus:boolean;
     languages:Immutable.List<LangSection>;
+
+    clone():Line {
+        const copy = new Line();
+        copy.lineGroup = this.lineGroup;
+        copy.lineNumber = this.lineNumber;
+        copy.kwicLength = this.kwicLength;
+        copy.hasFocus = this.hasFocus;
+        copy.languages = this.languages;
+        return copy;
+    }
 }
 
 export interface IConcLinesProvider {

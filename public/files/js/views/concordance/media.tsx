@@ -99,9 +99,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return ans.join(' ');
         }
 
+        _position(elm:HTMLElement) {
+
+        }
+
         render() {
             return (
-                <div id="audio-wrapper">
+                <div id="audio-wrapper" ref={(elm) => elm ? this._position(elm) : null}>
                     <div className="audio-controls">
                         <a onClick={this._handleControlClick.bind(this, 'play')} className={this._autoSetHtmlClass('play')}></a>
                         <a onClick={this._handleControlClick.bind(this, 'pause')} className={this._autoSetHtmlClass('pause')}></a>

@@ -59,7 +59,6 @@ interface ConcLinesState {
     lineSelData:Immutable.Map<string, LineSelValue>;
     lineSelMode:string;
     numItemsInLockedGroups:number;
-    audioPlayerIsVisible:boolean;
     useSafeFont:boolean;
     emptyRefValPlaceholder:string;
     corporaColumns:Immutable.List<CorpColumn>;
@@ -441,7 +440,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         cols:Immutable.List<{n:string; visible:boolean;}>;
         catTextColor:string;
         catBgColor:string;
-        audioPlayerIsVisible:boolean;
         showLineNumbers:boolean;
         supportsSyntaxView:boolean;
         numItemsInLockedGroups:number;
@@ -552,7 +550,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             return this.state.selectionValue !== nextState.selectionValue ||
                     this.props.data !== nextProps.data ||
                     this.props.lineSelMode !== nextProps.lineSelMode ||
-                    this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible ||
                     this.props.catBgColor != nextProps.catBgColor ||
                     this.props.cols !== nextProps.cols ||
                     this.props.viewMode !== nextProps.viewMode;
@@ -659,7 +656,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 lineSelData: lineSelectionModel.asMap(),
                 lineSelMode: this._getLineSelMode(),
                 numItemsInLockedGroups: lineModel.getNumItemsInLockedGroups(),
-                audioPlayerIsVisible: lineModel.audioPlayerIsVisible(),
                 useSafeFont: lineModel.getUseSafeFont(),
                 emptyRefValPlaceholder: lineModel.getEmptyRefValPlaceholder(),
                 corporaColumns: lineModel.getCorporaColumns(),
@@ -712,7 +708,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                          showLineNumbers={this.state.showLineNumbers}
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
-                         audioPlayerIsVisible={this.state.audioPlayerIsVisible}
                          tokenConnectClickHandler={this.props.tokenConnectClickHandler}
                          refsDetailClickHandler={this.props.refsDetailClickHandler}
                          emptyRefValPlaceholder={this.state.emptyRefValPlaceholder}

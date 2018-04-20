@@ -340,6 +340,8 @@ export namespace Kontext {
 
         getHelpLink(ident:string):string;
 
+        getElmPosition(elm:HTMLElement):[number, number];
+
         browserInfo:IBrowserInfo;
     }
 

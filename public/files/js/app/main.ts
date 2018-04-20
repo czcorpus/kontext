@@ -870,6 +870,26 @@ class ComponentTools {
     getHelpLink(ident:string) {
         return this.pageModel.getHelpLink(ident);
     }
+
+    getElmPosition(elm:HTMLElement):[number, number] {
+        let x = 0;
+        let y = 0;
+        let srchElm = elm;
+        while (srchElm) {
+            if (srchElm.tagName === 'BODY') {
+                const xScroll = srchElm.scrollLeft || document.documentElement.scrollLeft;
+                const yScroll = srchElm.scrollTop || document.documentElement.scrollTop;
+                x += (srchElm.offsetLeft - xScroll + srchElm.clientLeft);
+                y += (srchElm.offsetTop - yScroll + srchElm.clientTop);
+
+            } else {
+                x += (srchElm.offsetLeft - srchElm.scrollLeft + srchElm.clientLeft);
+                y += (srchElm.offsetTop - srchElm.scrollTop + srchElm.clientTop);
+            }
+            srchElm = srchElm.offsetParent as HTMLElement;
+        }
+        return [x, y];
+    }
 }
 
 
