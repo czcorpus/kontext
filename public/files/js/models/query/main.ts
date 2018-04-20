@@ -351,6 +351,11 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
      * (= user settings). If true then shuffle is
      * set to '0' no matter what value is in user's
      * settings. By default this is set to false.
+     *
+     * We need this when replaying query chain
+     * - otherwise the server would append another
+     * shuffle to the initial query operation
+     * (if applicable).
      */
     private shuffleForbidden:boolean = false;
 
@@ -542,6 +547,11 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                 }
             }
         );
+    }
+
+    onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
+        super.onSettingsChange(optsModel);
+        this.shuffleConcByDefault = optsModel.getShuffle();
     }
 
     private makeCorpusPrimary(corpname:string):void {

@@ -199,8 +199,9 @@ export interface ViewConfiguration {
 function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
     let ans:Array<Line> = [];
 
-    function importTextChunk(item:ServerTextChunk):TextChunk {
+    function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
         return {
+            id: id,
             className: item.class,
             text: item.str.trim().split(' '),
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
@@ -211,26 +212,26 @@ function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
         };
     }
 
-    data.forEach((item:ServerLineData) => {
+    data.forEach((item:ServerLineData, i:number) => {
         let line:Array<KWICSection> = [];
 
         line.push(new KWICSection(
             item.toknum,
             item.linenum,
             item.ref,
-            Immutable.List<TextChunk>(item.Left.map(importTextChunk)),
-            Immutable.List<TextChunk>(item.Kwic.map(importTextChunk)),
-            Immutable.List<TextChunk>(item.Right.map(importTextChunk))
+            Immutable.List<TextChunk>(item.Left.map((v, j) => importTextChunk(v, `C${i}:L${j}`))),
+            Immutable.List<TextChunk>(item.Kwic.map((v, j) => importTextChunk(v, `C${i}:K${j}`))),
+            Immutable.List<TextChunk>(item.Right.map((v, j) => importTextChunk(v, `C${i}:R${j}`)))
         ));
 
-        line = line.concat((item.Align || []).map((item) => {
+        line = line.concat((item.Align || []).map((item, k) => {
             return new KWICSection(
                 item.toknum,
                 item.linenum,
                 item.ref,
-                Immutable.List<TextChunk>(item.Left.map(importTextChunk)),
-                Immutable.List<TextChunk>(item.Kwic.map(importTextChunk)),
-                Immutable.List<TextChunk>(item.Right.map(importTextChunk))
+                Immutable.List<TextChunk>(item.Left.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`))),
+                Immutable.List<TextChunk>(item.Kwic.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`))),
+                Immutable.List<TextChunk>(item.Right.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`)))
             );
         }));
 
@@ -290,7 +291,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     private audioPlayer:AudioPlayer;
 
-    private playerAttachedChunk:TextChunk;
+    private playerAttachedChunk:string;
 
     private pagination:ServerPagination;
 
@@ -350,10 +351,14 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
             () => {
                 this.notifyChangeListeners();
             },
-            this.setStopStatus.bind(this),
+            () => {
+                this.setStopStatus();
+                this.notifyChangeListeners();
+            },
             () => {
                 this.audioPlayer.stop();
                 this.setStopStatus();
+                this.notifyChangeListeners();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
@@ -365,7 +370,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
                     this.changeMainCorpus(payload.props['maincorp']);
                 break;
                 case 'CONCORDANCE_PLAY_AUDIO_SEGMENT':
-                    this.playAudio(payload.props['lineIdx'], payload.props['chunks']);
+                    this.playAudio(payload.props['chunksIds']);
                     this.notifyChangeListeners();
                 break;
                 case 'AUDIO_PLAYER_CLICK_CONTROL':
@@ -614,23 +619,62 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         }
     }
 
-    private playAudio(lineIdx:number, chunks:Array<TextChunk>) {
-        if (this.playerAttachedChunk) {
-            this.audioPlayer.stop();
-            this.playerAttachedChunk.showAudioPlayer = false;
+    private findActiveLineIdx(chunkId:string):number {
+        for (let i = 0; i < this.lines.size; i += 1) {
+            for (let j = 0; j < this.lines.get(i).languages.size; j += 1) {
+                if (this.lines.get(i).languages.get(j).findChunk(chunkId)) {
+                    return i;
+                }
+            }
         }
-        const availChunks = this.lines.get(lineIdx).languages.get(0).getAllChunks();
-        const triggerIdx = availChunks.indexOf(chunks[chunks.length - 1]);
-        availChunks.get(triggerIdx).showAudioPlayer = true;
-        this.playerAttachedChunk = availChunks.get(triggerIdx);
-        this.audioPlayer.start(chunks.map(item => this.createAudioLink(item)).filter(item => !!item));
+        return -1;
+    }
+
+    private findChunks(...chunkIds:Array<string>):Array<TextChunk> {
+        for (let i = 0; i < this.lines.size; i += 1) {
+            for (let j = 0; j < this.lines.get(i).languages.size; j += 1) {
+                const ans = chunkIds.map(c => this.lines.get(i).languages.get(j).findChunk(c)).filter(v => v !== undefined);
+                if (ans.length > 0) {
+                    return ans;
+                }
+            }
+        }
+        return [];
+    }
+
+    private playAudio(chunksIds:Array<string>) {
+        this.setStopStatus(); // stop anything playing right now
+        const activeChunkId = chunksIds[chunksIds.length - 1];
+        this.playerAttachedChunk = activeChunkId;
+        // let's get active line - there can be only one even if we play multiple chunks
+        const activeLine = this.findActiveLineIdx(activeChunkId);
+        const fakeChangedLine = this.lines.get(activeLine).clone();
+        this.lines = this.lines.set(activeLine, fakeChangedLine);
+
+        const playChunks = this.findChunks(...chunksIds);
+        if (playChunks.length > 0) {
+            playChunks[playChunks.length - 1].showAudioPlayer = true
+            this.audioPlayer.start(playChunks.map(item => this.createAudioLink(item)).filter(item => !!item));
+
+        } else {
+            throw new Error('No chunks to play');
+        }
     }
 
     private setStopStatus():void {
         if (this.playerAttachedChunk) {
-            this.playerAttachedChunk.showAudioPlayer = false;
-            this.playerAttachedChunk = null;
-            this.notifyChangeListeners();
+            this.audioPlayer.stop();
+            const playingLineIdx = this.findActiveLineIdx(this.playerAttachedChunk);
+            const modLine = this.lines.get(playingLineIdx).clone();
+            this.lines = this.lines.set(playingLineIdx, modLine);
+            const playingChunk = this.findChunks(this.playerAttachedChunk)[0];
+            if (playingChunk) {
+                playingChunk.showAudioPlayer = false;
+                this.playerAttachedChunk = null;
+
+            } else {
+                throw new Error(`Failed to find playing chunk "${this.playerAttachedChunk}"`);
+            }
         }
     }
 
@@ -645,6 +689,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
             case 'stop':
                 this.audioPlayer.stop();
                 this.setStopStatus();
+                this.notifyChangeListeners();
             break;
         }
     }
@@ -688,13 +733,9 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
     setLineFocus(lineIdx:number, focus:boolean) {
         this.lines = this.lines.map(item => {
             if (item.hasFocus) {
-                return {
-                    hasFocus: false,
-                    kwicLength: item.kwicLength,
-                    languages: item.languages,
-                    lineGroup: item.lineGroup,
-                    lineNumber: item.lineNumber
-                };
+                const ans = item.clone();
+                ans.hasFocus = false;
+                return ans;
 
             } else {
                 return item;
@@ -705,13 +746,8 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
             const oldLine = this.lines.get(lineIdx);
             if (oldLine) {
                 const idx = this.lines.indexOf(oldLine);
-                const newVal:Line = {
-                    hasFocus: focus,
-                    kwicLength: oldLine.kwicLength,
-                    languages: oldLine.languages,
-                    lineGroup: oldLine.lineGroup,
-                    lineNumber: oldLine.lineNumber
-                };
+                const newVal = oldLine.clone();
+                newVal.hasFocus = focus;
                 this.lines = this.lines.set(idx, newVal);
             }
         }
@@ -743,10 +779,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     getOrigSubCorpName():string {
         return this.origSubcorpName;
-    }
-
-    audioPlayerIsVisible():boolean {
-        return !!this.playerAttachedChunk;
     }
 
     getAudioPlayerStatus():AudioPlayerStatus {

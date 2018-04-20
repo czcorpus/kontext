@@ -39,6 +39,7 @@ import hashlib
 
 import werkzeug.urls
 import werkzeug.http
+import werkzeug.exceptions
 
 import plugins
 import settings
@@ -120,7 +121,8 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
                 try:
                     args[full_k] = corr_func.get(default_type, lambda x: x)(value)
                 except ValueError as e:
-                    raise ValueError('Failed to process parameter "{0}": {1}'.format(full_k, e))
+                    raise werkzeug.exceptions.BadRequest(
+                        description='Failed to process parameter "{0}": {1}'.format(full_k, e))
         else:
             if del_nondef:
                 del args[full_k]
@@ -402,10 +404,11 @@ class Controller(object):
         if 'HTTP_X_FORWARDED_PROTO' in self.environ:
             protocol = self.environ['HTTP_X_FORWARDED_PROTO']
         elif 'HTTP_X_FORWARDED_PROTOCOL' in self.environ:
-                protocol = self.environ['HTTP_X_FORWARDED_PROTOCOL']
+            protocol = self.environ['HTTP_X_FORWARDED_PROTOCOL']
         else:
             protocol = self.environ['wsgi.url_scheme']
-        url_items = ('%s://%s' % (protocol, self.environ.get('HTTP_HOST')),
+        url_items = ('%s://%s' % (protocol, settings.get_str('global', 'http_host',
+                                                             self.environ.get('HTTP_HOST'))),
                      settings.get_str('global', 'action_path_prefix', ''),
                      action_module_path)
         return '/'.join(filter(lambda x: bool(x), map(lambda x: x.strip('/'), url_items))) + '/'
@@ -739,6 +742,10 @@ class Controller(object):
         except UserActionException as ex:
             self._status = ex.code
             self.add_system_message('error', fetch_exception_msg(ex))
+            methodname, tmpl, result = self.process_action('message', path, named_args)
+        except werkzeug.exceptions.BadRequest as ex:
+            self._status = ex.code
+            self.add_system_message('error', '{0}: {1}'.format(ex.name, ex.description))
             methodname, tmpl, result = self.process_action('message', path, named_args)
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,

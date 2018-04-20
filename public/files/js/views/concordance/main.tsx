@@ -431,22 +431,19 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     {he.translate('concview__hits_label')}:  {this._renderNumHits()}
                     <span id="conc-calc-info" title="90"></span>
                     <span className="separ">|</span>
-                    <abbr>{he.translate('global__abbr_ipm')}</abbr>
-                    <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}
-                            url={he.getHelpLink('term_ipm')}>
-                        {he.translate('concview__ipm_help')}
-                    </layoutViews.InlineHelp>
+                    <layoutViews.Abbreviation url={he.getHelpLink('term_ipm')}
+                            value={he.translate('global__abbr_ipm')}
+                            desc={he.translate('concview__ipm_help')} />
                     :{'\u00A0'}
                     {this._getIpm()}
                     {'\u00A0'}
                     {this._getIpmDesc()}
                     {'\u00A0'}
                     <span className="separ">|</span>
-                    <abbr>{he.translate('global__abbr_arf')}</abbr>
-                    <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}
-                            url={he.getHelpLink('term_arf')}>
-                        {he.translate('concview__arf_help')}
-                    </layoutViews.InlineHelp>
+
+                    <layoutViews.Abbreviation url={he.getHelpLink('term_arf')}
+                            value={he.translate('global__abbr_arf')}
+                            desc={he.translate('concview__arf_help')} />
                     :{'\u00A0'}
                     {this._getArf()}
                     <span className="separ">|</span>

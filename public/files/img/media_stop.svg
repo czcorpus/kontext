@@ -2,10 +2,7 @@
 <!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Vrstva_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="22.676px" height="22.676px" viewBox="0 0 22.676 22.676" enable-background="new 0 0 22.676 22.676" xml:space="preserve">
-<g>
-	<path fill="#009DDF" d="M5.669,0C5.669,0,0,0,0,5.669v11.339c0,0,0,5.668,5.669,5.668h11.337c0,0,5.67,0,5.67-5.668V5.669
-		c0,0,0-5.669-5.67-5.669H5.669z"/>
-	<rect x="3.942" y="15.035" fill="#EBF6FC" width="14.77" height="3.448"/>
-</g>
+	 width="7.416px" height="9.256px" viewBox="0 0 7.416 9.256" enable-background="new 0 0 7.416 9.256" xml:space="preserve">
+<path fill="#009EE0" d="M6.385,0.936H1c-0.55,0-1,0.45-1,1V7.32c0,0.55,0.45,1,1,1h5.385c0.55,0,1-0.45,1-1V1.936
+	C7.385,1.386,6.934,0.936,6.385,0.936z"/>
 </svg>

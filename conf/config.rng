@@ -231,6 +231,13 @@
                         to solve issues regarding apps installed in URL sub-directories</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="http_host">
+                            <text />
+                            <a:documentation>A custom HTTP host value replacing request environment HTTP_HOST
+                            in case one cannot rely on that (e.g. behind some proxy configurations)</a:documentation>
+                        </element>
+                    </optional>
                     <element name="static_files_prefix">
                         <a:documentation>A prefix for static files (typically: /files when installed at the root)</a:documentation>
                         <text />
@@ -266,6 +273,19 @@
                             <data type="integer" />
                             <a:documentation>Specifies a result size at which a warning about long
                             processing time pops-up when applying *shuffle*</a:documentation>
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="shuffle_conc_by_default">
+                            <choice>
+                                <value>0</value>
+                                <value>1</value>
+                                <value>false</value>
+                                <value>true</value>
+                            </choice>
+                            <a:documentation>If true then concordance will be shuffled by default (user can change
+                            this in his/her settings). By default this is set to false.
+                            </a:documentation>
                         </element>
                     </optional>
                     <optional>
@@ -632,6 +652,12 @@
                                 </element>
                             </optional>
                         </interleave>
+                    </element>
+                    <element name="dispatch_hook">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                 </interleave>
             </element>

@@ -79,8 +79,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
                 props: {
-                    chunks: props.chunks,
-                    lineIdx: props.lineIdx
+                    chunksIds: props.chunks.map(v => v.id),
                 }
             });
         };
