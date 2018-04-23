@@ -698,8 +698,10 @@ export function init(
 
     const DelItemIcon:React.SFC<CoreViews.DelItemIcon.Props> = (props) => {
         return <a className={`DelItemIcon ${props.disabled ? 'disabled' : ''} ${props.className}`}
-                    onClick={props.onClick && !props.disabled ? props.onClick : undefined}
-                    title={props.title}>{'\u274C'}</a>;
+                        onClick={props.onClick && !props.disabled ? props.onClick : undefined}
+                        title={props.title}>
+                    <ImgWithMouseover src={he.createStaticUrl('img/garbage_can.svg')} alt="garbage can" />
+                </a>;
     };
 
     // ------------------------------------------------------------------------------------

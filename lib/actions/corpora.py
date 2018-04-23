@@ -42,7 +42,8 @@ class Corpora(Kontext):
             else:
                 params = {}
                 data = corparch_plugin.get_all(self._plugin_api)
-            return dict(corplist_params=params, corplist_data=data)
+            data['search_params'] = params
+            return dict(corplist_data=data)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):

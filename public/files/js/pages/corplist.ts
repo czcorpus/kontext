@@ -27,23 +27,22 @@ require('styles/corplist.less');
 /**
  * Initializes a corplist.tmpl page model.
  */
-export function init(conf:Kontext.Conf, corplistParams, corplistData):void {
+export function init(conf:Kontext.Conf, corplistData:any):void {
     const layoutModel = new PageModel(conf);
     layoutModel.init().then(
         () => {
-            const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents();
-            pagePlugin.setData(corplistData);
+            const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
             layoutModel.renderReactComponent(
                 pagePlugin.getForm(),
                 <HTMLElement>document.getElementById('content').querySelector('form.filter'),
-                corplistParams
+                {}
             );
 
             corplistData['anonymousUser'] = layoutModel.getConf('anonymousUser'); // TODO not a very good solution
             layoutModel.renderReactComponent(
                 pagePlugin.getList(),
                 document.getElementById('corplist'),
-                corplistData
+                {}
             );
         }
 

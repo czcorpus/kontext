@@ -418,13 +418,14 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         isWaitingForSearchResults:boolean;
         currSearchResult:Immutable.List<SearchResultRow>;
         currSearchPhrase:string;
+        hasSelectedKeywords:boolean;
 
     }> = (props) => {
         return (
             <div>
                 <div className="labels">
-                    <ResetKeyword />
                     {props.availSearchKeywords.map(item => <SearchKeyword key={item.id} {...item} />)}
+                    {props.hasSelectedKeywords ? <ResetKeyword /> : null}
                     <div className="labels-hint">
                         {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
                     </div>
@@ -519,6 +520,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         visible:boolean;
         activeTab:number;
         editEnable:boolean;
+        hasSelectedKeywords:boolean;
     }> {
 
         constructor(props) {
@@ -549,7 +551,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 currSearchPhrase: widgetModel.getCurrSearchPhrase(),
                 visible: false,
                 activeTab: 0,
-                editEnable: false
+                editEnable: false,
+                hasSelectedKeywords: widgetModel.getHasSelectedKeywords()
             }
         }
 
@@ -628,7 +631,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                         <SearchTab availSearchKeywords={this.state.availSearchKeywords}
                                 isWaitingForSearchResults={this.state.isWaitingForSearchResults}
                                 currSearchResult={this.state.currSearchResult}
-                                currSearchPhrase={this.state.currSearchPhrase} />
+                                currSearchPhrase={this.state.currSearchPhrase}
+                                hasSelectedKeywords={this.state.hasSelectedKeywords} />
                     }
                     <div className="footer">
                         <span>

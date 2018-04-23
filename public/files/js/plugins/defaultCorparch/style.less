@@ -142,11 +142,11 @@ section.corplist {
     }
 
     table td {
-        padding: 0.2em 1em;
+        padding: 0.2em 0.2em 0.2em 1em;
     }
 
     table td.tools {
-        padding: 0.2em 0 0 0;
+        padding: 0.2em 0 0 0.3em;
         text-align: left;
         vertical-align: middle;
     }
@@ -240,6 +240,11 @@ section.corplist {
         th {
             font-weight: bold;
         }
+
+        .DelItemIcon img {
+            width: 0.8em;
+            margin-top: -0.15em;
+        }
     }
 
     table.favorite-list {
@@ -274,6 +279,7 @@ section.corplist {
 
     table.featured-list {
         margin-left: @corplist-widget-table-spacing;
+        margin-right: 1em;
     }
 
     div.tables > table tr {
