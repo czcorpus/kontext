@@ -242,8 +242,6 @@ export namespace PluginInterfaces {
          */
         export interface ICorplistPage {
 
-            setData(data:any):void; // TODO type
-
             getForm():React.ComponentClass|React.SFC<{}>;
 
             getList():React.ComponentClass|React.SFC<{}>;
@@ -252,7 +250,7 @@ export namespace PluginInterfaces {
         export interface IPlugin {
             createWidget(targetAction:string, corpSel:ICorpSelection,
                     options:Kontext.GeneralProps):React.ComponentClass<{}>;
-            initCorplistPageComponents():ICorplistPage;
+            initCorplistPageComponents(initialData:any):ICorplistPage;
         }
 
         export interface Factory {

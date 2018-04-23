@@ -17,9 +17,10 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import {CorplistTableModel, CorplistFormModel, CorplistData} from './corplist';
+import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { CorplistItem } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
@@ -28,13 +29,6 @@ import { CorpusInfoType, CorpusInfo } from '../../models/common/layout';
 
 export interface CorplistTableProps {
     anonymousUser:boolean;
-}
-
-interface CorplistTableState {
-    rows:Array<CorplistItem>;
-    nextOffset:number;
-    detail:CorpusInfo;
-    isWaiting:boolean;
 }
 
 export interface FilterFormProps {
@@ -72,12 +66,11 @@ export interface CorplistViewModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
-    formModel:CorplistFormModel;
     listModel:CorplistTableModel;
 }
 
 
-export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:CorplistViewModuleArgs):CorplistViews {
+export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModuleArgs):CorplistViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -210,29 +203,18 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
 
     // -------------------------------- <CorplistTable /> -----------------
 
-    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableState> {
+    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
 
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = this._fetchModelState();
+            this.state = listModel.getState();
         }
 
-        _fetchModelState() {
-            const data = listModel.getData();
-            const detail = listModel.getDetail();
-            return {
-                rows: data.rows,
-                nextOffset: data.nextOffset,
-                detail: detail,
-                isWaiting: listModel.isBusy()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
+        _modelChangeHandler(state) {
+            this.setState(state);
         }
 
         _detailClickHandler(corpusId) {
@@ -260,12 +242,13 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
         }
 
         _renderDetailBox() {
-            if (this.state.detail) {
+            if (this.state.detailData) {
                 return (
                     <layoutViews.PopupBox
                         onCloseClick={this._detailCloseHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                        <CorpusInfoBox data={{...this.state.detail, type:CorpusInfoType.CORPUS}} isWaiting={this.state.isWaiting} />
+                        <CorpusInfoBox data={{...this.state.detailData, type:CorpusInfoType.CORPUS}}
+                                    isWaiting={this.state.isBusy} />
                     </layoutViews.PopupBox>
                 );
 
@@ -335,73 +318,40 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
     /**
      * A keyword link from the filter form
      */
-    class KeywordLink extends React.Component<{
-        keyword:string;
-        label:string;
-        overlayColor:string;
-        isActive:boolean;
-        initWaitingFn:()=>void;
+    const KeywordLink:React.SFC<{
+        keyword:KeywordInfo;
 
-    },
-    {
-        active:boolean;
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = {active: this.props.isActive};
-        }
+        const handleClickFn = (active) => (e) => {
+            e.preventDefault();
+            dispatcher.dispatch({
+                actionType: 'KEYWORD_CLICKED',
+                props: {
+                    keyword: props.keyword.ident,
+                    status: active,
+                    ctrlKey: e.ctrlKey || e.metaKey
+                }
+            });
+        };
 
-        _modelChangeHandler() {
-            this.setState({active: formModel.getKeywordState(this.props.keyword)});
-        }
+        const style = props.keyword.color ? {backgroundColor: props.keyword.color} : null;
+        if (!props.keyword.selected) {
+            const link = he.createActionLink('corplist', [['keyword', props.keyword.ident]]);
+            return (
+                <a className="keyword" href={link}
+                        onClick={handleClickFn(true)}>
+                    <span className="overlay" style={style} >{props.keyword.label}</span>
+                </a>
+            );
 
-        componentDidMount() {
-            formModel.addChangeListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            formModel.removeChangeListener(this._modelChangeHandler);
-        }
-
-        _handleClickFn(active) {
-            return (e) => {
-                e.preventDefault();
-                this.props.initWaitingFn();
-                dispatcher.dispatch({
-                    actionType: 'KEYWORD_CLICKED',
-                    props: {
-                        keyword: this.props.keyword,
-                        status: active,
-                        ctrlKey: e.ctrlKey || e.metaKey
-                    }
-                });
-            };
-        }
-
-        render() {
-            const style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
-
-            if (!this.state.active) {
-                const link = he.createActionLink("corplist?keyword="+this.props.keyword);
-                return (
-                    <a className="keyword" href={link}
-                            data-keyword-id={this.props.keyword}
-                            onClick={this._handleClickFn(true)}>
-                        <span className="overlay" style={style} >{this.props.label}</span>
-                    </a>
-                );
-
-            } else {
-                return (
-                    <span className="keyword current"
-                                data-keyword-id={this.props.keyword}
-                                onClick={this._handleClickFn(false)}>
-                        <span className="overlay" style={style}>{this.props.label}</span>
-                    </span>
-                );
-            }
+        } else {
+            return (
+                <span className="keyword current"
+                            onClick={handleClickFn(false)}>
+                    <span className="overlay" style={style}>{props.keyword.label}</span>
+                </span>
+            );
         }
     }
 
@@ -411,13 +361,11 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
      * A keyword-like link to reset currently set keywords
      */
     const ResetLink:React.SFC<{
-        initWaitingFn:()=>void;
 
     }> = (props) => {
 
         const handleClick = (e) => {
             e.preventDefault();
-            props.initWaitingFn();
             dispatcher.dispatch({
                 actionType: 'KEYWORD_RESET_CLICKED',
                 props: {}
@@ -440,22 +388,21 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
      */
     const KeywordsField:React.SFC<{
         label:string;
-        keywords:Array<[string, string, boolean, string]>;
-        initWaitingFn:()=>void;
+        keywords:Immutable.List<KeywordInfo>;
 
     }> = (props) => {
 
-        const links = props.keywords.map((keyword, i) => {
-            return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
-                                isActive={keyword[2]} overlayColor={keyword[3]}
-                                initWaitingFn={props.initWaitingFn} />;
-        });
+        const hasSelectedKeywords = () => {
+            return props.keywords.some(v => v.selected);
+        };
 
         return (
             <fieldset className="keywords">
                 <legend>{props.label}</legend>
-                <ResetLink initWaitingFn={props.initWaitingFn} />
-                {links}
+                {props.keywords.filter(v => v.visible).map((keyword, i) =>
+                        <KeywordLink key={i} keyword={keyword} />
+                )}
+                {hasSelectedKeywords() ? <ResetLink  /> : null}
                 <div className="inline-label hint">
                     ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
                 </div>
@@ -469,13 +416,11 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
      * An input to specify minimum corpus size
      */
     const MinSizeInput:React.SFC<{
-        minSize:string;
-        initWaitingFn:()=>void;
+        value:string;
 
     }> = (props) => {
 
         const changeHandler = (e) => {
-            props.initWaitingFn();
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
                 props: {minSize: e.target.value}
@@ -483,7 +428,7 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
         };
 
         return <input className="min-max" type="text"
-                    defaultValue={props.minSize}
+                    value={props.value}
                     onChange={changeHandler} />;
     };
 
@@ -493,13 +438,11 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
      * An input to specify maximum corpus size
      */
     const MaxSizeInput:React.SFC<{
-        maxSize:string;
-        initWaitingFn:()=>void;
+        value:string;
 
     }> = (props) => {
 
         const changeHandler = (e) => {
-            props.initWaitingFn();
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
                 props: {maxSize: e.target.value}
@@ -507,15 +450,14 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
         };
 
         return <input className="min-max" type="text"
-                        defaultValue={props.maxSize}
+                        value={props.value}
                         onChange={changeHandler} />;
     };
 
     // -------------------------------- <NameSearchInput /> -----------------
 
     class NameSearchInput extends React.PureComponent<{
-        initialValue:string;
-        initWaitingFn:()=>void;
+        value:string;
 
     }> {
 
@@ -532,7 +474,6 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
                 window.clearTimeout(this._timer);
             }
             this._timer = window.setTimeout(((value) => () => {
-                this.props.initWaitingFn();
                 dispatcher.dispatch({
                     actionType: 'FILTER_CHANGED',
                     props: {corpusName: value}
@@ -542,7 +483,7 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
         }
 
         render() {
-            return <input type="text" defaultValue={this.props.initialValue} onChange={this._changeHandler} />;
+            return <input type="text" defaultValue={this.props.value} onChange={this._changeHandler} />;
         }
     }
 
@@ -552,12 +493,7 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
      * A fieldset containing non-keyword filter inputs.
      */
     class FilterInputFieldset extends React.Component<{
-        filters:{
-            name:Array<string>;
-            minSize:Array<string>;
-            maxSize:Array<string>;
-        };
-        initWaitingFn:()=>void;
+        filters:Filters;
     },
     {
         expanded:boolean;
@@ -566,7 +502,7 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
         constructor(props) {
             super(props);
             this._handleLegendClick = this._handleLegendClick.bind(this);
-            this.state = {expanded: this.props.filters.name[0] ? true : false};
+            this.state = {expanded: false};
         }
 
         _handleLegendClick() {
@@ -584,16 +520,16 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
                 fields = (
                     <div>
                         <span>{he.translate('defaultCorparch__size_from')}: </span>
-                        <MinSizeInput minSize={this.props.filters.minSize[0]} initWaitingFn={this.props.initWaitingFn} />
+                        <MinSizeInput value={this.props.filters.minSize}  />
                         <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
-                        <MaxSizeInput maxSize={this.props.filters.maxSize[0]} initWaitingFn={this.props.initWaitingFn} />
+                        <MaxSizeInput value={this.props.filters.maxSize}  />
                         <div className="hint">
                             {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
                         </div>
                         <p>
                             <span>
                             {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                            <NameSearchInput initialValue={this.props.filters.name[0]} initWaitingFn={this.props.initWaitingFn} />
+                            <NameSearchInput value={this.props.filters.name} />
                         </p>
                     </div>
                 );
@@ -617,17 +553,16 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
     /**
      * Filter form root component
      */
-    class FilterForm extends React.Component<FilterFormProps, {isWaiting: boolean}> {
+    class FilterForm extends React.Component<FilterFormProps, CorplistTableModelState> {
 
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this._initWaiting = this._initWaiting.bind(this);
-            this.state = {isWaiting: false};
+            this.state = listModel.getState();
         }
 
-        _modelChangeHandler() {
-            this.setState({isWaiting: false}); // TODO this is fake and wrong
+        _modelChangeHandler(state) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -638,12 +573,8 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
             listModel.removeChangeListener(this._modelChangeHandler);
         }
 
-        _initWaiting() {
-            this.setState({isWaiting: true});
-        }
-
         _renderLoader() {
-            if (this.state.isWaiting) {
+            if (this.state.isBusy) {
                 return <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} />;
 
@@ -659,12 +590,10 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:Corpl
                         {this._renderLoader()}
                     </div>
                     <KeywordsField
-                        keywords={this.props.keywords}
-                        label={he.translate('defaultCorparch__keywords_field_label')}
-                        initWaitingFn={this._initWaiting} />
+                        keywords={this.state.keywords}
+                        label={he.translate('defaultCorparch__keywords_field_label')} />
                     <FilterInputFieldset
-                        filters={this.props.filters}
-                        initWaitingFn={this._initWaiting} />
+                        filters={this.state.filters} />
                 </section>
             )
         }

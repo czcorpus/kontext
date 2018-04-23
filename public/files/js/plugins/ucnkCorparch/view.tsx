@@ -22,13 +22,13 @@ import {Kontext} from '../../types/common';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 import { CorplistItemUcnk } from './common';
 import { CorpusInfo } from '../../models/common/layout';
+import { CorplistTableModel, CorplistTableModelState } from './corplist';
 
 export interface ViewModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorpusInfoBox;
-    formModel;
-    listModel;
+    listModel:CorplistTableModel;
 }
 
 export interface CorplistTableProps {
@@ -44,13 +44,12 @@ export interface Views {
     FilterForm:React.ComponentClass<FilterFormProps>;
 }
 
-export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:ViewModuleArgs):Views {
+export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):Views {
 
     const defaultComponents = defaultViewInit({
         dispatcher: dispatcher,
         he: he,
         CorpusInfoBox: CorpusInfoBox,
-        formModel: formModel,
         listModel: listModel
     });
     const layoutViews = he.getLayoutViews();
@@ -93,8 +92,9 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:ViewM
         render() {
             return (
                 <form>
-                    <img className="message-icon" src={he.createStaticUrl('img/message-icon.png')}
-                            alt={he.translate('ucnkCorparch__message_icon')} />
+                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/envelope.svg')}
+                            src2={he.createStaticUrl('img/envelope.svg')}
+                            htmlClass="message-icon" alt={he.translate('ucnkCorparch__message_icon')} />
                     <p>{he.translate('ucnkCorparch__please_give_me_access_{corpname}',
                         {corpname: this.props.corpusName})}</p>
                     <label className="hint">
@@ -105,10 +105,10 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:ViewM
                                 onChange={this._textareaChangeHandler}
                                 value={this.state.customMessage} />
                     </div>
-                    <div>
-                        <button className="submit" type="button"
+                    <p>
+                        <button className="default-button" type="button"
                                 onClick={this._submitHandler}>{he.translate('ucnkCorparch__send')}</button>
-                    </div>
+                    </p>
                 </form>
             );
         }
@@ -287,34 +287,18 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:ViewM
     /**
      * dataset table
      */
-    class CorplistTable extends React.Component<CorplistTableProps, {
-        rows:Array<CorplistItemUcnk>;
-        nextOffset:number;
-        detail:CorpusInfo;
-        isWaiting:boolean;
-    }> {
+    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
 
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = this._fetchModelState();
+            this.state = listModel.getState()
         }
 
-        _fetchModelState() {
-            const data = listModel.getData();
-            const detail = listModel.getDetail();
-            return {
-                rows: data.rows,
-                nextOffset: data.nextOffset,
-                detail: detail,
-                isWaiting: listModel.isBusy()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
+        _modelChangeHandler(state) {
+            this.setState(state);
         }
 
         _detailClickHandler(corpusId) {
@@ -344,12 +328,12 @@ export function init({dispatcher, he, CorpusInfoBox, formModel, listModel}:ViewM
         }
 
         _renderDetailBox() {
-            if (this.state.detail) {
+            if (this.state.detailData) {
                 return (
                     <layoutViews.PopupBox
                         onCloseClick={this._detailCloseHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                        <CorpusInfoBox data={this.state.detail} isWaiting={this.state.isWaiting} />
+                        <CorpusInfoBox data={this.state.detailData} isWaiting={this.state.isBusy} />
                     </layoutViews.PopupBox>
                 );
 

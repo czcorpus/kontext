@@ -574,8 +574,32 @@ header#topbar {
         }
     }
 
-    .notifications a {
-        color: @color-logo-blue;
+    .notifications {
+
+        .icons {
+
+            display: inline-block;
+            margin-left: 0.7em;
+
+            .envelope img {
+                margin-top: -0.1em;
+                width: 0.9em;
+            }
+
+            .hourglass img {
+                margin-top: -0.2em;
+                width: 0.7em;
+            }
+
+            > *:not(:last-child) {
+                margin-right: 0.7em;
+            }
+
+            a {
+                color: @color-logo-blue;
+            }
+
+        }
     }
 }
 
@@ -1127,7 +1151,6 @@ p.boxed-par {
 
 .DelItemIcon {
     display: inline-block;
-    color: red !important;
     text-decoration: none;
     padding: 0 0.1em;
 }
@@ -1141,7 +1164,6 @@ p.boxed-par {
 
 .DelItemIcon:hover {
     text-decoration: none !important;
-    background-color: red !important;
     color: #FFFFFF !important;
 }
 

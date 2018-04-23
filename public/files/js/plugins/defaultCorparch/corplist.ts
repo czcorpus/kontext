@@ -17,11 +17,12 @@
  */
 
 import RSVP from 'rsvp';
+import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../../models/base';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {StatelessModel} from '../../models/base';
+import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
@@ -36,243 +37,287 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
 }
 
 
-/**
- * A general model for processing corpus listing queries
- */
-export class QueryProcessingModel extends StatefulModel {
-
-    protected tagPrefix:string;
-
-    protected data:{rows:Array<common.CorplistItem>; filters:any};
-
-    protected selectedKeywords:{[key:string]:boolean};
-
-    protected searchedCorpName:string;
-
-    protected pluginApi:IPluginApi;
-
-    constructor(pluginApi:IPluginApi) {
-        super(pluginApi.dispatcher());
-        this.pluginApi = pluginApi;
-        this.data = {rows: [], filters: []};
-        this.selectedKeywords = {};
-        this.searchedCorpName = null;
-        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
-    }
-
-    public exportFilter():{[key:string]:string} {
-        var ans = <{[key:string]:string}>{};
-
-        if (this.data['filters']) {
-            for (var p in this.data['filters']) {
-                if (this.data['filters'].hasOwnProperty(p)) {
-                    ans[p] = this.data['filters'][p];
-                }
-            }
-        }
-        return ans;
-    }
-
-    protected updateFilter(filter:{[key:string]:string}) {
-        if (!this.data['filters']) {
-            this.data['filters'] = {};
-        }
-        for (var p in filter) {
-            if (filter.hasOwnProperty(p)) {
-                this.data['filters'][p] = filter[p];
-            }
-        }
-    }
-
-    exportQuery():string {
-        var q = [];
-        for (var p in this.selectedKeywords) {
-            if (this.selectedKeywords[p] === true) {
-                q.push(this.tagPrefix + p);
-            }
-        }
-        if (this.searchedCorpName) {
-            q.push(this.searchedCorpName);
-        }
-        return q.join(' ');
-    }
-
-    getKeywordState(keyword:string):boolean {
-        return this.selectedKeywords[keyword];
-    }
-
-    setData(data:any):void {
-        this.data = data;
-    }
+export interface Filters {
+    maxSize:string;
+    minSize:string;
+    name:string;
+    query?:string;
 }
 
-/**
- * This model handles corplist 'filter' form
- */
-export class CorplistFormModel extends QueryProcessingModel {
-
-    protected corplistTableModel:CorplistTableModel;
-
-    protected offset:number;
-
-    static DispatchToken:string;
-
-    constructor(pluginApi:IPluginApi, corplistTableModel:CorplistTableModel) {
-        super(pluginApi);
-        var self = this;
-        this.corplistTableModel = corplistTableModel;
-        this.offset = 0;
-
-        this.dispatcher.register(
-            function (payload:ActionPayload) {
-                switch (payload.actionType) {
-                    case 'KEYWORD_CLICKED':
-                        self.offset = 0;
-                        if (!payload.props['ctrlKey']) {
-                            self.selectedKeywords = {};
-                        }
-                        self.selectedKeywords[payload.props['keyword']] =
-                            !self.selectedKeywords[payload.props['keyword']];
-                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
-                            self.offset).then(
-                                (data) => {
-                                    self.corplistTableModel.notifyChangeListeners();
-                                    self.notifyChangeListeners();
-                                },
-                                (err) => {
-                                    self.pluginApi.showMessage('error', err);
-                                }
-                            );
-                    break;
-                    case 'KEYWORD_RESET_CLICKED':
-                        self.offset = 0;
-                        self.selectedKeywords = {};
-                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
-                            self.offset).then(
-                                (data) => {
-                                    self.corplistTableModel.notifyChangeListeners();
-                                    self.notifyChangeListeners();
-                                },
-                                (err) => {
-                                    console.error(err);
-                                    self.pluginApi.showMessage('error', err);
-                                }
-                            );
-                    break;
-                    case 'EXPANSION_CLICKED':
-                        if (payload.props['offset']) {
-                            self.offset = payload.props['offset'];
-                        }
-                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
-                            self.offset).then(
-                                (data) => {
-                                    self.corplistTableModel.notifyChangeListeners();
-                                    self.notifyChangeListeners();
-                                },
-                                (err) => {
-                                    self.pluginApi.showMessage('error', err);
-                                }
-                            );
-                    break;
-                    case 'FILTER_CHANGED':
-                        self.offset = 0;
-                        if (payload.props.hasOwnProperty('corpusName')) {
-                            self.searchedCorpName = payload.props['corpusName'];
-                            delete payload.props['corpusName'];
-                        }
-                        self.updateFilter(payload.props);
-                        self.corplistTableModel.loadData(self.exportQuery(), self.exportFilter(),
-                            self.offset).then(
-                                (data) => {
-                                    self.corplistTableModel.notifyChangeListeners();
-                                    self.notifyChangeListeners();
-                                },
-                                (err) => {
-                                    self.pluginApi.showMessage('error', err);
-                                }
-                            );
-                    break;
-                }
-                return true;
-            });
-    }
-}
-
-
-export interface CorplistData {
-    filters:{[name:string]:any};
-    keywords:Array<string>;
+export interface CorplistServerData {
+    rows:Array<common.CorplistItem>;
+    search_params:{
+        filters:Filters;
+        keywords:Array<[string, string, boolean, string]>;
+    };
     nextOffset:number;
+    filters:Filters;
+    keywords:Array<string>;
     query:string;
+    current_keywords:any;
+}
+
+export interface CorplistDataResponse extends Kontext.AjaxResponse {
+    nextOffset:number;
+    current_keywords:Array<string>;
+    filters:Filters;
+    keywords:Array<string>;
     rows:Array<common.CorplistItem>;
 }
 
-export interface CorplistDataResponse extends Kontext.AjaxResponse, CorplistData {
+
+export interface KeywordInfo {
+    ident:string;
+    label:string;
+    color:string;
+    visible:boolean;
+    selected:boolean;
+}
+
+const importKeywordInfo = (v:[string, string, boolean, string]):KeywordInfo => {
+    return {
+        ident: v[0],
+        label: v[1],
+        color: v[3],
+        visible: true,
+        selected: false
+    };
+}
+
+
+export interface CorplistTableModelState {
+
+    filters:Filters;
+
+    keywords:Immutable.List<KeywordInfo>;
+
+    detailData:CorpusInfo;
+
+    isBusy:boolean;
+
+    offset:number;
+
+    searchedCorpName:string;
+
+    nextOffset:number;
+
+    query:string;
+
+    rows:Immutable.List<common.CorplistItem>;
 }
 
 
 /**
  * This model handles table dataset
  */
-export class CorplistTableModel extends StatefulModel {
+export class CorplistTableModel extends StatelessModel<CorplistTableModelState> {
 
     protected pluginApi:IPluginApi;
 
-    protected data:CorplistData;
+    protected tagPrefix:string;
 
-    protected detailData:CorpusInfo;
-
-    static DispatchToken:string;
-
-    protected _isBusy:boolean;
 
     /**
      *
      * @param pluginApi
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
-        super(dispatcher);
-        this.pluginApi = pluginApi;
-        this._isBusy = false;
-        this.dispatcher.register((payload:ActionPayload) => {
-                switch (payload.actionType) {
-                    case 'LIST_STAR_CLICKED':
-                        this.changeFavStatus(payload.props['corpusId'], payload.props['corpusName'],
-                            payload.props['type'], payload.props['favId']).then(
-                                (message) => {
-                                    this.notifyChangeListeners();
-                                    this.pluginApi.showMessage('info', message);
-                                },
-                                (err) => {
-                                    this.pluginApi.showMessage('error', err);
-                                }
-                            );
-                    break;
-                    case 'CORPARCH_CORPUS_INFO_REQUIRED':
-                        this._isBusy = true;
-                        this.detailData = this.createEmptyDetail(); // to force view to show detail box
-                        this.notifyChangeListeners();
-                        this.loadCorpusInfo(payload.props['corpusId']).then(
-                            (data) => {
-                                this.detailData = {...data, type: CorpusInfoType.CORPUS};
-                                this._isBusy = false;
-                                this.notifyChangeListeners();
-                            },
-                            (err) => {
-                                this.detailData = null;
-                                this._isBusy = false;
-                                this.notifyChangeListeners();
-                                this.pluginApi.showMessage('message', err);
-                            }
-                        )
-                    break;
-                    case 'CORPARCH_CORPUS_INFO_CLOSED':
-                        this.detailData = null;
-                        this.notifyChangeListeners();
-                    break;
-                }
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData) {
+        super(
+            dispatcher,
+            {
+                filters: { maxSize: '', minSize: '', name: '' },
+                keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo)),
+                detailData: null,
+                isBusy: false,
+                offset: 0,
+                searchedCorpName: '',
+                nextOffset: null,
+                query: '',
+                rows: Immutable.List<common.CorplistItem>(initialData.rows)
             }
         );
+        this.pluginApi = pluginApi;
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
+    }
+
+    reduce(state:CorplistTableModelState, action:ActionPayload):CorplistTableModelState {
+        const newState = this.copyState(state);
+        switch (action.actionType) {
+            case 'LOAD_DATA_DONE':
+                newState.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.importData(newState, action.props['data']);
+                }
+            break;
+            case 'KEYWORD_CLICKED': {
+                newState.offset = 0;
+                if (!action.props['ctrlKey']) {
+                    newState.keywords = newState.keywords.map(v => ({
+                        ident: v.ident,
+                        label: v.label,
+                        color: v.color,
+                        visible: v.visible,
+                        selected: false
+                    })).toList();
+                }
+                const idx = newState.keywords.findIndex(v => v.ident === action.props['keyword']);
+                const v = newState.keywords.get(idx);
+                newState.keywords = newState.keywords.set(idx, {
+                    ident: v.ident,
+                    label: v.label,
+                    color: v.color,
+                    visible: v.visible,
+                    selected: !v.selected
+                });
+                newState.isBusy = true;
+            }
+            break;
+            case 'KEYWORD_RESET_CLICKED':
+                newState.offset = 0;
+                newState.keywords = newState.keywords.map(v => ({
+                    ident: v.ident,
+                    label: v.label,
+                    color: v.color,
+                    visible: v.visible,
+                    selected: false
+                })).toList();
+                newState.isBusy = true;
+            break;
+            case 'EXPANSION_CLICKED':
+                if (action.props['offset']) {
+                    newState.offset = action.props['offset'];
+                }
+                newState.isBusy = true;
+            break;
+            case 'FILTER_CHANGED':
+                newState.offset = 0;
+                if (action.props.hasOwnProperty('corpusName')) {
+                    newState.searchedCorpName = action.props['corpusName'];
+                    delete action.props['corpusName']; // TODO no mutations
+                }
+                this.updateFilter(newState, action.props as Filters);
+                newState.isBusy = true;
+            break;
+            case 'LIST_STAR_CLICKED':
+                newState.isBusy = true;
+            break;
+            case 'LIST_STAR_CLICKED_DONE':
+                newState.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.pluginApi.showMessage('info', action.props['message']);
+                }
+            break;
+            case 'CORPARCH_CORPUS_INFO_REQUIRED':
+                newState.isBusy = true;
+                newState.detailData = this.createEmptyDetail(); // to force view to show detail box
+            break;
+            case 'CORPARCH_CORPUS_INFO_LOADED':
+                newState.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    newState.detailData = action.props as CorpusInfo;
+                }
+            break;
+            case 'CORPARCH_CORPUS_INFO_CLOSED':
+                newState.detailData = null;
+            break;
+            default:
+                return state;
+        }
+        return newState;
+    }
+
+    sideEffects(state:CorplistTableModelState, action:ActionPayload, dispatch:SEDispatcher):void {
+        switch (action.actionType) {
+            case 'KEYWORD_CLICKED':
+            case 'EXPANSION_CLICKED':
+            case 'KEYWORD_RESET_CLICKED':
+            case 'FILTER_CHANGED':
+                this.loadData(this.exportQuery(state), this.exportFilter(state),
+                        state.offset).then(
+                    (data) => {
+                        dispatch({
+                            actionType: 'LOAD_DATA_DONE',
+                            props: {data: data}
+                        });
+                    },
+                    (err) => {
+                        dispatch({
+                            actionType: 'LOAD_DATA_DONE',
+                            error: err,
+                            props: {}
+                        });
+                    }
+                );
+            break;
+            case 'LIST_STAR_CLICKED':
+                this.changeFavStatus(state, action.props['corpusId'], action.props['corpusName'],
+                        action.props['type'], action.props['favId']).then(
+                    (message) => {
+                        dispatch({
+                            actionType: 'LIST_STAR_CLICKED_DONE',
+                            props: {message: message}
+                        });
+                    },
+                    (err) => {
+                        dispatch({
+                            actionType: 'LIST_STAR_CLICKED_DONE',
+                            props: {},
+                            error: err
+                        });
+                    }
+                );
+            break;
+            case 'CORPARCH_CORPUS_INFO_REQUIRED':
+                this.loadCorpusInfo(action.props['corpusId']).then(
+                    (data) => {
+                        dispatch({
+                            actionType: 'CORPARCH_CORPUS_INFO_LOADED',
+                            props: {...data, type: CorpusInfoType.CORPUS}
+                        });
+                    },
+                    (err) => {
+                        dispatch({
+                            actionType: 'CORPARCH_CORPUS_INFO_LOADED',
+                            props: {},
+                            error: err
+                        });
+                    }
+                );
+            break;
+        }
+    };
+
+    public exportFilter(state:CorplistTableModelState):Filters {
+        return state.filters;
+    }
+
+    protected updateFilter(state:CorplistTableModelState, filter:Filters):void {
+        for (var p in filter) {
+            if (filter.hasOwnProperty(p)) {
+                state.filters[p] = filter[p];
+            }
+        }
+    }
+
+    exportQuery(state:CorplistTableModelState):string {
+        const q = state.keywords.filter(v => v.selected && v.visible).map(v => this.tagPrefix + v.ident).toList();
+        if (state.searchedCorpName) {
+            return q.concat(state.searchedCorpName).join(' ');
+        }
+        return q.join(' ');
+    }
+
+    getKeywordState(state:CorplistTableModelState, keyword:string):boolean {
+        return state.keywords.find(v => v.ident === keyword) !== undefined;
     }
 
     private createEmptyDetail():CorpusInfo {
@@ -294,8 +339,8 @@ export class CorplistTableModel extends StatefulModel {
         };
     }
 
-    private changeFavStatus(corpusId:string, corpusName:string, itemType:string,
-            favId:string):RSVP.Promise<string> {
+    private changeFavStatus(state:CorplistTableModelState, corpusId:string, corpusName:string,
+                itemType:string, favId:string):RSVP.Promise<string> {
         if (favId === null) {
             const item:common.GeneratedFavListItem = {
                 subcorpus_id: null,
@@ -308,7 +353,7 @@ export class CorplistTableModel extends StatefulModel {
 
             ).then(
                 (data) => {
-                    this.updateDataItem(corpusId, {fav_id: data.id});
+                    this.updateDataItem(state, corpusId, {fav_id: data.id});
                     return this.pluginApi.translate('defaultCorparch__item_added_to_fav');
                 }
             );
@@ -321,7 +366,7 @@ export class CorplistTableModel extends StatefulModel {
 
             ).then(
                 (data) => {
-                    this.updateDataItem(corpusId, {fav_id: null});
+                    this.updateDataItem(state, corpusId, {fav_id: null});
                     return this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
                 }
             )
@@ -338,7 +383,7 @@ export class CorplistTableModel extends StatefulModel {
         );
     }
 
-    public loadData(query:string, filters:{[key:string]:string}, offset:number, limit?:number):RSVP.Promise<any> {
+    private loadData(query:string, filters:Filters, offset:number, limit?:number):RSVP.Promise<CorplistDataResponse> {
         const args = new MultiDict();
         args.set('query', query);
         if (offset) {
@@ -356,20 +401,11 @@ export class CorplistTableModel extends StatefulModel {
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
             args
-        ).then(
-            (data) => {
-                if (offset === 0) {
-                this.setData(data);
-
-                } else {
-                    this.extendData(data);
-                }
-            }
         );
     }
 
-    protected updateDataItem(corpusId, data) {
-        (this.data.rows || []).forEach((item:common.CorplistItem) => {
+    protected updateDataItem(state:CorplistTableModelState, corpusId, data):void {
+        state.rows.forEach((item:common.CorplistItem) => {
             if (item.id === corpusId) {
                 for (var p in data) {
                     if (data.hasOwnProperty(p)) {
@@ -380,8 +416,8 @@ export class CorplistTableModel extends StatefulModel {
         });
     }
 
-    isFav(corpusId:string):boolean {
-        return this.data.rows.some((item:common.CorplistItem) => {
+    isFav(state:CorplistTableModelState, corpusId:string):boolean {
+        return state.rows.some((item:common.CorplistItem) => {
             if (item.id === corpusId) {
                 return item.fav_id !== null;
             }
@@ -389,33 +425,23 @@ export class CorplistTableModel extends StatefulModel {
         });
     }
 
-    setData(data:CorplistData):void {
-        this.data = data;
+    private importData(state:CorplistTableModelState, inData:CorplistDataResponse):void {
+        state.rows = Immutable.List<common.CorplistItem>(inData.rows);
+        state.keywords = state.keywords.map<KeywordInfo>(v => ({
+            ident: v.ident,
+            label: v.label,
+            color: v.color,
+            visible: true, // currently we do not make visual taglist filtering
+            selected: v.selected
+        })).toList();
     }
 
-    extendData(data:CorplistData):void {
-        if (!this.data) {
-            this.setData(data);
-
-        } else {
-            this.data.filters = data.filters;
-            this.data.keywords = data.keywords;
-            this.data.nextOffset = data.nextOffset;
-            this.data.query = data.query;
-            this.data.rows = this.data.rows.concat(data.rows);
-        }
-    }
-
-    getData():CorplistData {
-        return this.data;
-    }
-
-    getDetail():CorpusInfo {
-        return this.detailData;
-    }
-
-    isBusy():boolean {
-        return this._isBusy;
+    extendData(state:CorplistTableModelState, data:CorplistDataResponse):void {
+        state.filters = data.filters;
+        state.keywords = Immutable.List<KeywordInfo>(data.keywords);
+        state.nextOffset = data.nextOffset;
+        state.query = data.filters.query; // TODO
+        state.rows = state.rows.concat(data.rows).toList();
     }
 }
 
@@ -426,21 +452,14 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 
     components:any;
 
-    pluginApi:IPluginApi;
-
-    protected corplistFormModel:CorplistFormModel;
+    private pluginApi:IPluginApi;
 
     protected corplistTableModel:CorplistTableModel;
 
-    constructor(pluginApi:IPluginApi, viewsInit:((...args:any[])=>any)) {
+    constructor(pluginApi:IPluginApi, initialData:CorplistServerData, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi);
-        this.corplistFormModel = new CorplistFormModel(pluginApi, this.corplistTableModel);
-        this.components = viewsInit(this.corplistFormModel, this.corplistTableModel);
-    }
-
-    setData(data:any):void { // TODO type
-        this.corplistTableModel.setData(data);
+        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi, initialData);
+        this.components = viewsInit(this.corplistTableModel);
     }
 
     getForm():React.ComponentClass {

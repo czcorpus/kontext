@@ -21,11 +21,11 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {CorplistWidgetModel} from './widget';
-import {CorplistPage} from './corplist';
+import {CorplistPage, CorplistDataResponse, CorplistServerData, CorplistTableModelState} from './corplist';
 import {init as viewInit} from './corplistView';
 import {init as widgetInit} from './widgetView';
 import {init as overviewViewInit} from '../../views/overview';
-import {CorplistFormModel, CorplistTableModel} from './corplist';
+import {CorplistTableModel} from './corplist';
 import * as common from './common';
 import {SearchEngine} from './search';
 
@@ -52,37 +52,37 @@ export class Plugin {
     createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
                 options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
 
-    const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
-    const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
-    const featData = pluginData['featured'] || [];
+        const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
+        const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
+        const featData = pluginData['featured'] || [];
 
-    const corporaLabels:Array<[string,string,string]> = this.pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'];
+        const corporaLabels:Array<[string,string,string]> = this.pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'];
 
-    const searchEngine = new SearchEngine(
-        this.pluginApi,
-        10,
-        corporaLabels
-    );
+        const searchEngine = new SearchEngine(
+            this.pluginApi,
+            10,
+            corporaLabels
+        );
 
-    const model = new CorplistWidgetModel(
-        this.pluginApi.dispatcher(),
-        this.pluginApi,
-        this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-        corpSel,
-        this.pluginApi.getConf<boolean>('anonymousUser'),
-        searchEngine,
-        favData,
-        featData,
-        options.itemClickAction
-    );
-    model.initHandlers();
-    return widgetInit({
-        dispatcher: this.pluginApi.dispatcher(),
-        util: this.pluginApi.getComponentHelpers(),
-        widgetModel: model,
-        corpusSelection: corpSel
-    });
-    // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
+        const model = new CorplistWidgetModel(
+            this.pluginApi.dispatcher(),
+            this.pluginApi,
+            this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            corpSel,
+            this.pluginApi.getConf<boolean>('anonymousUser'),
+            searchEngine,
+            favData,
+            featData,
+            options.itemClickAction
+        );
+        model.initHandlers();
+        return widgetInit({
+            dispatcher: this.pluginApi.dispatcher(),
+            util: this.pluginApi.getComponentHelpers(),
+            widgetModel: model,
+            corpusSelection: corpSel
+        });
+        // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     }
 
 
@@ -91,23 +91,22 @@ export class Plugin {
      * @param pluginApi
      * @returns {CorplistPage}
      */
-    initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {
+    initCorplistPageComponents(initialData:CorplistServerData):PluginInterfaces.Corparch.ICorplistPage {
         const overviewViews = overviewViewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
             this.pluginApi.getModels().corpusInfoModel
         );
-        const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
+        const initViews = (listModel:CorplistTableModel) => {
             const ans:any = viewInit({
                 dispatcher: this.pluginApi.dispatcher(),
                 he: this.pluginApi.getComponentHelpers(),
                 CorpusInfoBox: overviewViews.CorpusInfoBox,
-                formModel: formModel,
                 listModel: listModel
             });
             return ans;
         }
-        return new CorplistPage(this.pluginApi, initViews);
+        return new CorplistPage(this.pluginApi, initialData, initViews);
     }
 }
 

@@ -450,4 +450,8 @@ export class CorplistWidgetModel extends StatefulModel {
     getCurrSearchPhrase():string {
         return this.currSearchPhrase;
     }
+
+    getHasSelectedKeywords():boolean {
+        return this.searchEngine.hasSelectedKeywords();
+    }
 }

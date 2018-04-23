@@ -76,13 +76,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const DeleteButton:React.SFC<{
         rowIdx:number;
         subcname:string;
-        deleteLocked:boolean;
 
     }> = (props) => {
 
         const handleSubmit = () => {
-            if (!props.deleteLocked &&
-                        window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
+            if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
                 dispatcher.dispatch({
                     actionType: 'SUBCORP_LIST_DELETE_SUBCORPUS',
                     props: {
@@ -92,13 +90,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
 
-        const title = props.deleteLocked ?
-                he.translate('subclist__delete_subcorp_locked') :
-                he.translate('subclist__delete_subcorp');
-
         return <layoutViews.DelItemIcon className="delete-subc"
-                    disabled={props.deleteLocked}
-                    onClick={handleSubmit} title={title} />;
+                    title={he.translate('subclist__delete_subcorp')}
+                    onClick={handleSubmit} />;
     }
 
     // ------------------------ <TrDataLine /> --------------------------
@@ -106,7 +100,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const TrDataLine:React.SFC<{
         idx:number;
         item:SubcorpListItem;
-        deleteLocked:boolean;
         publishCheckboxHandle:(idx:number)=>void;
         actionButtonHandle:(idx:number)=>void;
 
@@ -156,8 +149,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     }
                 </td>
                 <td>
-                    {!props.item.deleted ? <DeleteButton rowIdx={props.idx} subcname={props.item.usesubcorp}
-                                                        deleteLocked={props.deleteLocked} /> : null}
+                    {!props.item.deleted ?
+                        <DeleteButton rowIdx={props.idx} subcname={props.item.usesubcorp} /> :
+                        null
+                    }
                 </td>
             </tr>
         );
@@ -213,29 +208,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ---------------------- <DeleteUnlockButton /> -----------------
-
-    const DeleteUnlockButton:React.SFC<{
-        deleteLocked:boolean;
-
-    }> = (props) => {
-
-        const handleClick = () => {
-            dispatcher.dispatch({
-                actionType: props.deleteLocked ?
-                    'SUBCORP_LIST_UNLOCK_DELETE_FUNC' :
-                    'SUBCORP_LIST_LOCK_DELETE_FUNC',
-                props: {}
-            });
-        };
-
-        return <a onClick={handleClick} title={he.translate('subclist__click_to_unlock_for_del')}>
-            <layoutViews.ImgWithMouseover
-                    src={he.createStaticUrl('img/config-icon.svg')} style={{width: '1.2em'}}
-                    alt={he.translate('subclist__click_to_unlock_for_del')} />
-            </a>
-    };
-
     // ------------------------ <DataTable /> --------------------------
 
     class DataTable extends React.Component<{
@@ -245,7 +217,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         lines:Immutable.List<SubcorpListItem>;
         sortKey:SortKey;
         unfinished:Immutable.List<UnfinishedSubcorp>;
-        deleteLocked:boolean;
     }> {
 
         constructor(props) {
@@ -259,8 +230,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return {
                 lines: subcorpLinesModel.getLines(),
                 sortKey: subcorpLinesModel.getSortKey(),
-                unfinished: subcorpLinesModel.getUnfinished(),
-                deleteLocked: subcorpLinesModel.getDeleteLocked()
+                unfinished: subcorpLinesModel.getUnfinished()
             }
         }
 
@@ -305,16 +275,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th>{he.translate('subclist__col_published')}</th>
                             <th>{he.translate('subclist__col_backed_up')}</th>
-                            <th style={{textAlign: 'center'}}>
-                                <DeleteUnlockButton deleteLocked={this.state.deleteLocked} />
-                            </th>
+                            <th />
                         </tr>
                         {this.state.unfinished.map(item => <TrUnfinishedLine key={item.name} item={item} /> )}
                         {this.state.lines.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')}
-                                    publishCheckboxHandle={this.props.actionButtonHandle.bind(null, 'pub')}
-                                    deleteLocked={this.state.deleteLocked} />
+                                    publishCheckboxHandle={this.props.actionButtonHandle.bind(null, 'pub')} />
                         ))}
                     </tbody>
                 </table>
