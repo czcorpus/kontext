@@ -102,7 +102,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         const getLock = () => {
             return he.createStaticUrl('img/locked.svg');
         };
-        console.log(props.ident, props.permitted);
+
         if (!props.permitted) {
             return <li className="leaf"><a onClick={clickHandler} style={{color:"gray"}}>
                     <img className="lock-sign" src={getLock()} />

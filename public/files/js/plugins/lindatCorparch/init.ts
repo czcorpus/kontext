@@ -59,10 +59,6 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
         );
     }
 
-    setData(data:any):void { // TODO type
-        this.treeModel.setData(data);
-    }
-
     getForm():React.SFC<{}> {
         return this.components.FilterForm;
     }
