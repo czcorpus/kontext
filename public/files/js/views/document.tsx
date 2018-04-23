@@ -700,7 +700,8 @@ export function init(
         return <a className={`DelItemIcon ${props.disabled ? 'disabled' : ''} ${props.className}`}
                         onClick={props.onClick && !props.disabled ? props.onClick : undefined}
                         title={props.title}>
-                    <ImgWithMouseover src={he.createStaticUrl('img/garbage_can.svg')} alt="garbage can" />
+                    <ImgWithMouseover src={he.createStaticUrl('img/garbage_can.svg')}
+                            alt={props.title ? props.title : "garbage can"} />
                 </a>;
     };
 

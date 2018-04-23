@@ -79,8 +79,6 @@ export class SubcorpListModel extends StatefulModel {
 
     private actionBoxActionType:string;
 
-    private deleteLocked:boolean;
-
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
@@ -95,7 +93,6 @@ export class SubcorpListModel extends StatefulModel {
         this.filter = initialFilter || {show_deleted: false, corpname: ''};
         this.actionBoxVisibleRow = -1;
         this.actionBoxActionType = 'pub';
-        this.deleteLocked = true;
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             if (itemList.filter(item => item.category == 'subcorpus').size > 0) {
@@ -222,14 +219,6 @@ export class SubcorpListModel extends StatefulModel {
                             this.notifyChangeListeners();
                         }
                     );
-                break;
-                case 'SUBCORP_LIST_LOCK_DELETE_FUNC':
-                    this.deleteLocked = true;
-                    this.notifyChangeListeners();
-                break;
-                case 'SUBCORP_LIST_UNLOCK_DELETE_FUNC':
-                    this.deleteLocked = false;
-                    this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION': {
                     try {
@@ -561,10 +550,6 @@ export class SubcorpListModel extends StatefulModel {
 
     getIsBusy():boolean {
         return this.isBusy;
-    }
-
-    getDeleteLocked():boolean {
-        return this.deleteLocked;
     }
 }
 
