@@ -24,8 +24,9 @@ import {CorplistPage} from './corplist';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from '../../views/overview';
-import {CorplistFormModel, CorplistTableModel} from './corplist';
+import {CorplistTableModel} from './corplist';
 import {Plugin as DCPlugin} from '../defaultCorparch/init';
+import { CorplistServerData } from '../defaultCorparch/corplist';
 
 class Plugin extends DCPlugin {
 
@@ -36,23 +37,22 @@ class Plugin extends DCPlugin {
     /**
      *
      */
-    initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {
+    initCorplistPageComponents(initialData:CorplistServerData):PluginInterfaces.Corparch.ICorplistPage {
         const overviewViews = overviewViewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
             this.pluginApi.getModels().corpusInfoModel
         );
-        const initViews = (formModel:CorplistFormModel, listModel:CorplistTableModel) => {
+        const initViews = (listModel:CorplistTableModel) => {
             const ans = viewInit({
                 dispatcher: this.pluginApi.dispatcher(),
                 he: this.pluginApi.getComponentHelpers(),
                 CorpusInfoBox: overviewViews.CorpusInfoBox,
-                formModel,
                 listModel
             });
             return ans;
         }
-        return new CorplistPage(this.pluginApi, initViews);
+        return new CorplistPage(this.pluginApi, initialData, initViews);
     }
 
     /**

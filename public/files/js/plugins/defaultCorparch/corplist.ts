@@ -229,6 +229,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             case 'CORPARCH_CORPUS_INFO_CLOSED':
                 newState.detailData = null;
             break;
+            default:
+                return state;
         }
         return newState;
     }
