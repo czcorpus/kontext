@@ -371,7 +371,11 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         _renderHourglass() {
             if (this.props.numRunning > 0) {
                 const title = he.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning});
-                return <a className="hourglass" title={title}>{'\u231B'}</a>;
+                return <a className="hourglass" title={title}>
+                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/hourglass.svg')}
+                                src2={he.createStaticUrl('img/hourglass.svg')}
+                            alt="hourglass icon" />
+                </a>;
 
             } else {
                 return null;
@@ -381,7 +385,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         _renderEnvelope() {
             if (this.props.numFinished > 0) {
                 const title = he.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished});
-                return <a title={title}>{'\u2709'}</a>;
+                return <a className="envelope" title={title}>
+                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/envelope.svg')}
+                            alt="envelope icon" />
+                </a>;
 
             } else {
                 return null;
@@ -392,9 +399,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             if (this.props.numFinished > 0 || this.props.numRunning > 0) {
                 return (
                     <li className="notifications">
-                        <span onClick={this._handleViewListClick}>
+                        <span className="icons" onClick={this._handleViewListClick}>
                             {this._renderHourglass()}
-                            {'\u00A0'}
                             {this._renderEnvelope()}
                         </span>
                         {this.state.taskList !== null ?
