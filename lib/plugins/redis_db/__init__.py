@@ -218,6 +218,9 @@ class RedisDb(KeyValueStorage):
         """
         self.redis.expire(key, ttl)
 
+    def get_ttl(self, key):
+        return self.redis.ttl(key)
+
     def clear_ttl(self, key):
         self.redis.persist(key)
 

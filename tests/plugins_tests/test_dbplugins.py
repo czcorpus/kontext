@@ -176,7 +176,7 @@ class DbTest(unittest.TestCase):
         key = 'list'
         length = 5
         for i in range(0, length):
-            val = {'q': 'value'+str(i)}
+            val = {'q': 'value' + str(i)}
             self.r.list_append(key, val)
             self.s.list_append(key, val)
             checklist.append(val)
@@ -429,6 +429,30 @@ class DbTest(unittest.TestCase):
                 print('testing clear_ttl:')
                 print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
             self.assertTrue(out_r == out_s == [True, True])
+
+    def test_get_ttl(self):
+        if TEST_TTL_METHODS:
+            key = 'foo'
+            value = 'bar'
+            self.r.set(key, value)
+            self.s.set(key, value)
+            self.r.set_ttl(key, 5)
+            self.s.set_ttl(key, 5)
+
+            t1, t2 = self.r.get_ttl(key), self.s.get_ttl(key)
+            self.assertTrue(t1 > 0)
+            self.assertTrue(t2 > 0)
+
+    def test_get_ttl_initial(self):
+        if TEST_TTL_METHODS:
+            key = 'foo'
+            value = 'bar'
+            self.r.set(key, value)
+            self.s.set(key, value)
+
+            t1, t2 = self.r.get_ttl(key), self.s.get_ttl(key)
+            self.assertEqual(t1, -1)
+            self.assertEqual(t2, -1)
 
     def test_fork(self):
         """
