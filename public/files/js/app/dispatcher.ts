@@ -147,7 +147,8 @@ export class ActionDispatcher {
                                                 isSideEffect: true,
                                                 actionType: seAction.actionType,
                                                 props: seAction.props,
-                                            })
+                                                error: seAction.error
+                                            });
                                         }
                                     }, 0);
 
