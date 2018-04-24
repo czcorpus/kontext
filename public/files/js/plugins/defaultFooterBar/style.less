@@ -1,3 +1,49 @@
+@import "../../../css/shared/globals.less";
+
+
+footer {
+
+    margin-top: 2em;
+    color: @color-light-text;
+    clear: both;
+    padding: 0.5em 2em;
+    text-align: right;
+    line-height: 1.3em;
+
+    .debug-warning {
+        font-size: 8pt;
+        display: inline-block;
+        background-color: #E2007A;
+        color: #EEEEEE;
+        border-radius: 3px;
+        padding: 3px 6px;
+    }
+
+    #copyright-info,
+    #app-version {
+        font-size: 7.5pt;
+    }
+
+    #copyright-info {
+        margin-top: 0.5em;
+    }
+
+    #copyright-info a {
+        color: @color-light-text;
+        text-decoration: none;
+    }
+
+    #copyright-info a:hover {
+        text-decoration: underline;
+    }
+
+    #corpus-search-form {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+}
+
 footer.custom-footer {
     background-color: #F6F3EE;
     border-color: #E1DBD1;

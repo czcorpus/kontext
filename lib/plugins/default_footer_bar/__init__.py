@@ -47,7 +47,24 @@ except ImportError:
 from plugins.abstract.footer_bar import AbstractFootbar
 
 
-class FooterBar(AbstractFootbar):
+class ImplicitFooterBar(AbstractFootbar):
+    """
+    Implicit footer bar return nothing which
+    forces KonText template document.tmpl to
+    use default variant.
+    """
+
+    def get_contents(self, plugin_api, return_url=None):
+        return None
+
+
+class CustomContentFooterBar(AbstractFootbar):
+    """
+    CustomContentFooterBar loads localized Markdown files from
+    a specified directory and passes them to document.tmpl
+    template. The only forced contents is 'debugging mode'
+    box in case debugging mode is on.
+    """
 
     def __init__(self, content_dir):
         self._content_dir = content_dir
@@ -69,4 +86,7 @@ class FooterBar(AbstractFootbar):
 
 
 def create_instance(conf):
-    return FooterBar(content_dir=conf.get('plugins', 'footer_bar')['content_dir'])
+    content_dir = conf.get('plugins', 'footer_bar').get('content_dir', None)
+    if content_dir:
+        return CustomContentFooterBar(content_dir=content_dir)
+    return ImplicitFooterBar()
