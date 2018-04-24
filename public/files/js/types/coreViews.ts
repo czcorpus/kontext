@@ -277,6 +277,7 @@ export namespace CoreViews {
         export interface Props {
             status:string;
             htmlClass?:string;
+            inline?:boolean;
         }
 
         export type Component = React.SFC<Props>;

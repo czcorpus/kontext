@@ -207,7 +207,9 @@ class FreqPage {
         this.querySaveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.layoutModel.getConf<string>('concPersistenceOpId')
+            this.layoutModel.getConf<string>('concPersistenceOpId'),
+            this.layoutModel.getConf<number>('concUrlTTLDays'),
+            this.layoutModel.getConf<boolean>('concExplicitPersistenceUI')
         );
         const queryOverviewViews = queryOverviewInit({
             dispatcher: this.layoutModel.dispatcher,

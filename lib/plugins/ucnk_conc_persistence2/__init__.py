@@ -57,9 +57,8 @@ import uuid
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
-import actions.concordance
 from controller import exposed
-from controller.errors import UserActionException
+from controller.errors import UserActionException, ForbiddenException
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
@@ -152,12 +151,10 @@ class ConcPersistence(AbstractConcPersistence):
     def __init__(self, settings, db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
         ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
-        self.ttl = ttl_days * 24 * 3600
-        anonymous_user_ttl_days = int(plugin_conf.get(
+        self._ttl_days = ttl_days
+        self._anonymous_user_ttl_days = int(plugin_conf.get(
             'default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-        self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
         self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
-
         self.db = db
         self._auth = auth
         self._archive = sqlite3.connect(settings.get(
@@ -175,6 +172,14 @@ class ConcPersistence(AbstractConcPersistence):
         else:
             return 1
 
+    @property
+    def ttl(self):
+        return self._ttl_days * 24 * 3600
+
+    @property
+    def anonymous_user_ttl(self):
+        return self._anonymous_user_ttl_days * 24 * 3600
+
     def is_valid_id(self, data_id):
         """
         Returns True if data_id is a valid data identifier else False is returned
@@ -183,6 +188,11 @@ class ConcPersistence(AbstractConcPersistence):
         data_id -- identifier to be tested
         """
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
+
+    def get_conc_ttl_days(self, user_id):
+        if self._auth.is_anonymous(user_id):
+            return self.anonymous_user_ttl
+        return self._ttl_days
 
     def _execute_sql(self, sql, args=()):
         cursor = self._archive.cursor()
@@ -246,8 +256,16 @@ class ConcPersistence(AbstractConcPersistence):
 
         return latest_id
 
-    def archive(self, conc_id):
+    def archive(self, user_id, conc_id, revoke=False):
+        data = self.db.get(mk_key(conc_id))
+        stored_user_id = data.get('user_id', None)
+        if user_id != stored_user_id:
+            raise ForbiddenException(
+                'Cannot change status of a concordance belonging to another user')
         pass  # we don't have to do anything here as we archive all the queries by default
+
+    def is_archived(self, conc_id):
+        return True  # we ignore archiver task delay and say "True" for all the items
 
     def export_tasks(self):
         """
@@ -257,9 +275,6 @@ class ConcPersistence(AbstractConcPersistence):
             import archive
             return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
         return archive_concordance,
-
-    def export_actions(self):
-        return {actions.concordance.Actions: [create_arch_conc_action(self.db, self._archive)]}
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

@@ -449,3 +449,9 @@ msgstr "Ukládá maximálně {0} položek. Použijte \"Vlastní\" pro více mož
 
 msgid "case insensitive"
 msgstr "nerozlišuje malá a velká písmena"
+
+msgid "Permanent link"
+msgstr "Trvalý odkaz"
+
+msgid "Cannot change status of a concordance belonging to another user"
+msgstr "Nelze měnit status konkordance, která patří jinému uživateli"

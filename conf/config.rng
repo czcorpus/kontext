@@ -297,6 +297,20 @@
                             sample config for more info.</a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="explicit_conc_persistence_ui">
+                            <choice>
+                                <value>0</value>
+                                <value>1</value>
+                                <value>false</value>
+                                <value>true</value>
+                            </choice>
+                            <a:documentation>If true then KonText shows menu item and a button providing a
+                                function -make concordance link persistent-. This is linked
+                                to the conc_persistence.archive() function.
+                            </a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <optional>

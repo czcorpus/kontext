@@ -544,24 +544,21 @@ class Kontext(Controller):
         (otherwise nothing is done).
 
         returns:
-        string ID of the stored operation or None if nothing was done (from whatever reason)
+        string ID of the stored operation (or the current ID of nothing was stored)
         """
-        if plugins.runtime.CONC_PERSISTENCE.exists and self.args.q:
-            with plugins.runtime.CONC_PERSISTENCE as cp:
-                prev_data = self._prev_q_data if self._prev_q_data is not None else {}
-                curr_data = self.get_saveable_conc_data()
-                q_id = cp.store(self.session_get('user', 'id'),
-                                curr_data=curr_data, prev_data=self._prev_q_data)
-                self._save_query_to_history(q_id, curr_data)
-                lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
-                for q_idx, op in self._auto_generated_conc_ops:
-                    prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
-                    curr = dict(lines_groups=lines_groups,
-                                q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
-                    q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
-        else:
-            q_id = None
-        return q_id
+        with plugins.runtime.CONC_PERSISTENCE as cp:
+            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
+            curr_data = self.get_saveable_conc_data()
+            q_id = cp.store(self.session_get('user', 'id'),
+                            curr_data=curr_data, prev_data=self._prev_q_data)
+            self._save_query_to_history(q_id, curr_data)
+            lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
+            for q_idx, op in self._auto_generated_conc_ops:
+                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
+                curr = dict(lines_groups=lines_groups,
+                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
+                q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
+            return q_id
 
     def _clear_prev_conc_params(self):
         self._prev_q_data = None
@@ -590,6 +587,14 @@ class Kontext(Controller):
             if op_id:
                 tpl_data['Q'] = ['~%s' % op_id]
                 tpl_data['conc_persistence_op_id'] = op_id
+                if self._prev_q_data:
+                    if self._prev_q_data.get('id', None) != op_id:
+                        tpl_data['user_owns_conc'] = True  # a new operation has been created => ownersip is clear
+                    else:
+                        tpl_data['user_owns_conc'] = self._prev_q_data.get(
+                            'user_id', None) == self.session_get('user', 'id')
+                else:
+                    tpl_data['user_owns_conc'] = False
             else:
                 tpl_data['Q'] = []
                 tpl_data['conc_persistence_op_id'] = None
@@ -1178,6 +1183,8 @@ class Kontext(Controller):
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
+        result['conc_url_ttl_days'] = plugins.runtime.CONC_PERSISTENCE.instance.get_conc_ttl_days(
+            self.session_get('user', 'id'))
 
         result['multi_sattr_allowed_structs'] = []
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:

@@ -129,15 +129,25 @@ export function init(
             error: 'img/error-icon.svg'
         };
 
+        const renderImg = () => {
+            if (props.status && m[props.status]) {
+                return <img className="info-icon" src={he.createStaticUrl(m[props.status])}
+                            alt={props.status} />;
+            }
+            return null;
+        };
 
-        if (!props.status || !m[props.status]) {
-            return <div className={props.htmlClass ? props.htmlClass : 'icon-box'} />;
+        if (props.inline) {
+            return (
+                <span className={props.htmlClass ? props.htmlClass : null}>
+                    {renderImg()}
+                </span>
+            );
 
         } else {
             return (
                 <div className={props.htmlClass ? props.htmlClass : 'icon-box'}>
-                    <img className="info-icon" src={he.createStaticUrl(m[props.status])}
-                            alt={props.status} />
+                    {renderImg()}
                 </div>
             );
         }

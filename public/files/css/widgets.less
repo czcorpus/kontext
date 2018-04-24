@@ -987,3 +987,40 @@ table.MLSingleLevelFields {
     padding-left: 1em;
     max-width: 50em;
 }
+
+.PersistentConcordanceForm {
+
+    input {
+        font-size: 1.5em;
+        width: 30em;
+        display: inline-block;
+        margin-top: 0.4em;
+        margin-bottom: 1em;
+        color: @color-superlight-text;
+    }
+
+    input.archived {
+        color: @color-default-text;
+    }
+
+}
+
+.QuerySaveAsForm,
+.PersistentConcordanceForm {
+
+    p.hint {
+        width: 30em;
+        white-space: initial;
+        color: @color-default-text;
+
+        .icon {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.4em;
+
+            img {
+                width: 1.2em;
+            }
+        }
+    }
+}
