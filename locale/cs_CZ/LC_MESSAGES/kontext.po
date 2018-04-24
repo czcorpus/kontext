@@ -18,8 +18,8 @@ msgstr "anonymní"
 msgid "The string must be at least 5 characters long."
 msgstr "Řetězec musí být alespoň 5 znaků dlouhý."
 
-msgid "Unknown action: %s"
-msgstr "Neznámá akce: %s"
+msgid "Unknown concordance action: %s"
+msgstr "Neznámá akce na konkordanci: %s"
 
 msgid "instances per million positions (refers to the respective category)"
 msgstr "výskytů na milion pozic (vztaženo k příslušné kategorii)"
