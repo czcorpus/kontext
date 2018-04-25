@@ -18,8 +18,8 @@ msgstr "anonymní"
 msgid "The string must be at least 5 characters long."
 msgstr "Řetězec musí být alespoň 5 znaků dlouhý."
 
-msgid "Unknown action: %s"
-msgstr "Neznámá akce: %s"
+msgid "Unknown concordance action: %s"
+msgstr "Neznámá akce na konkordanci: %s"
 
 msgid "instances per million positions (refers to the respective category)"
 msgstr "výskytů na milion pozic (vztaženo k příslušné kategorii)"
@@ -449,3 +449,9 @@ msgstr "Ukládá maximálně {0} položek. Použijte \"Vlastní\" pro více mož
 
 msgid "case insensitive"
 msgstr "nerozlišuje malá a velká písmena"
+
+msgid "Permanent link"
+msgstr "Trvalý odkaz"
+
+msgid "Cannot change status of a concordance belonging to another user"
+msgstr "Nelze měnit status konkordance, která patří jinému uživateli"

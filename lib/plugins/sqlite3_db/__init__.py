@@ -64,7 +64,7 @@ class DefaultDb(KeyValueStorage):
         cursor = self._conn().cursor()
         cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
         ans = cursor.fetchone()
-        if ans and ans[0] != 0 and ans[0] < time.time():
+        if ans and -1 < ans[0] < time.time():
             cursor.execute('DELETE FROM data WHERE key = ?', (key,))
             self._conn().commit()
         return None
@@ -81,7 +81,7 @@ class DefaultDb(KeyValueStorage):
     def _save_raw_data(self, path, data):
         cursor = self._conn().cursor()
         cursor.execute('INSERT OR REPLACE INTO data (key, value, expires) VALUES (?, ?, ?)',
-                       (path, data, 0))
+                       (path, data, -1))
         self._conn().commit()
 
     def fork(self):
@@ -214,7 +214,8 @@ class DefaultDb(KeyValueStorage):
         data -- a dictionary containing data to be saved
         """
         if type(data) is dict:
-            d2 = dict((k, v) for k, v in data.items() if not k.startswith('__') and not k.endswith('__'))
+            d2 = dict((k, v)
+                      for k, v in data.items() if not k.startswith('__') and not k.endswith('__'))
         else:
             d2 = data
         self._save_raw_data(key, json.dumps(d2))
@@ -262,11 +263,16 @@ class DefaultDb(KeyValueStorage):
             self._conn().commit()
         return None
 
+    def get_ttl(self, key):
+        cursor = self._conn().cursor()
+        cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
+        return cursor.fetchone()[0]
+
     def clear_ttl(self, key):
         self._delete_expired(key)
         if self.exists(key):
             cursor = self._conn().cursor()
-            cursor.execute('UPDATE data SET expires = 0 WHERE key = ?', (key,))
+            cursor.execute('UPDATE data SET expires = -1 WHERE key = ?', (key,))
             self._conn().commit()
         return None
 

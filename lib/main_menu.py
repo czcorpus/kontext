@@ -391,7 +391,15 @@ class MenuGenerator(object):
         self.query_save_as = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-save-as'),
                                 _('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM').mark_indirect()
+            .enable_if(lambda d: d.get('user_owns_conc', False))
         )
+
+        self.archive_conc = lambda: (
+            EventTriggeringItem(MainMenu.CONCORDANCE('archive-conc'),
+                                _('Permanent link'), 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT')
+            .mark_indirect()
+            .enable_if(lambda d: d.get('user_owns_conc', False))
+        ) if self._args['explicit_conc_persistence_ui'] else None
 
         self.query_undo = (
             EventTriggeringItem(MainMenu.CONCORDANCE('undo'), _(
@@ -551,8 +559,14 @@ class MenuGenerator(object):
             return False
 
         def exp(section, *args):
-            return ([item.filter_empty_args().set_disabled(is_disabled(item)).create(self._args) for item in args] +
-                    custom_menu_items(section))
+            ans = []
+            for item in args:
+                if callable(item):
+                    item = item()
+                if item:
+                    ans.append(item.filter_empty_args().set_disabled(
+                        is_disabled(item)).create(self._args))
+            return tuple(ans + custom_menu_items(section))
 
         items = [
             (MainMenu.NEW_QUERY.name, dict(
@@ -576,12 +590,13 @@ class MenuGenerator(object):
             (MainMenu.CONCORDANCE.name, dict(
                 label=_('Concordance'),
                 items=exp(MainMenu.CONCORDANCE, self.curr_conc, self.sorting, self.shuffle, self.sample,
-                          self.query_overview, self.query_save_as, self.query_undo),
+                          self.query_overview, self.query_save_as, self.archive_conc, self.query_undo),
                 disabled=is_disabled(MainMenu.CONCORDANCE)
             )),
             (MainMenu.FILTER.name, dict(
                 label=_('Filter'),
-                items=exp(MainMenu.FILTER, self.filter_pos, self.filter_neg, self.filter_subhits, self.filter_each_first),
+                items=exp(MainMenu.FILTER, self.filter_pos, self.filter_neg,
+                          self.filter_subhits, self.filter_each_first),
                 disabled=is_disabled(MainMenu.FILTER)
             )),
             (MainMenu.FREQUENCY.name, dict(

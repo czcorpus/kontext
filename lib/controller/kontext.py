@@ -41,6 +41,7 @@ import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from controller.plg import PluginApi
+from collections import defaultdict
 
 
 class LinesGroups(object):
@@ -84,20 +85,30 @@ class RequestArgsProxy(object):
     """
     A wrapper class allowing an access to both
     Werkzeug's request.form and request.args (MultiDict objects).
+    It is also possible to force arguments manually in which
+    case anything with the same key from 'form' or 'args' is
+    suppressed. This is used when unpacking arguments from
+    a query hash code.
+
+    The class is used in 'pre dispatch' phase and it is not
+    expected to be used within individual action methods
+    where 'request' object is available and also 'self.args'
+    mapping.
     """
 
     def __init__(self, form, args):
         self._form = form
         self._args = args
+        self._forced = defaultdict(lambda: [])
 
     def __iter__(self):
         return self.keys().__iter__()
 
     def __contains__(self, item):
-        return self._form.__contains__(item) or self._args.__contains__(item)
+        return self._forced.__contains__(item) or self._form.__contains__(item) or self._args.__contains__(item)
 
     def keys(self):
-        return list(set(self._form.keys() + self._args.keys()))
+        return list(set(self._forced.keys() + self._form.keys() + self._args.keys()))
 
     def getlist(self, k):
         """
@@ -107,9 +118,13 @@ class RequestArgsProxy(object):
 
         URL arguments have higher priority over POST ones.
         """
+        tmp = self._forced[k]
+        if len(tmp) > 0:
+            return tmp
         tmp = self._form.getlist(k)
-        if len(tmp) == 0 and k in self._args:
-            tmp = self._args.getlist(k)
+        if len(tmp) > 0:
+            return tmp
+        tmp = self._args.getlist(k)
         return tmp
 
     def getvalue(self, k):
@@ -121,6 +136,9 @@ class RequestArgsProxy(object):
         """
         tmp = self.getlist(k)
         return tmp if len(tmp) > 1 else tmp[0]
+
+    def add_forced_arg(self, k, *v):
+        self._forced[k] = self._forced[k] + list(v)
 
 
 class AsyncTaskStatus(object):
@@ -428,33 +446,44 @@ class Kontext(Controller):
                 options = normalize_opts(self.session_get('settings'))
                 self._session['settings'] = options
 
-    def _restore_prev_conc_params(self):
+    def _restore_prev_conc_params(self, form):
         """
-        Restores previously stored concordance query data using an ID found in self.args.q.
+        Restores previously stored concordance query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
         1. conc_persistence plugin is installed
-        2. self.args.q contains a string recognized as a valid ID of a stored concordance query
+        2. request arg 'q' contains a string recognized as a valid ID of a stored concordance query
            at the position 0 (other positions may contain additional regular query operations
            (shuffle, filter,...)
 
+        Restored values will be stored in 'form' instance as forced ones preventing 'form'
+        from returning its original values (no matter what is there).
+
         In case the conc_persistence is installed and invalid ID is encountered
         UserActionException will be raised.
+
+        arguments:
+            form -- RequestArgsProxy
         """
-        url_q = self.args.q[:]
+        url_q = form.getlist('q')[:]
         with plugins.runtime.CONC_PERSISTENCE as conc_persistence:
-            if plugins.runtime.CONC_PERSISTENCE.exists and self.args.q and conc_persistence.is_valid_id(url_q[0]):
+            if len(url_q) > 0 and conc_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
                 self._prev_q_data = conc_persistence.open(self._q_code)
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._prev_q_data is not None:
-                    self.args.q = self._prev_q_data['q'][:] + url_q[1:]
+                    form.add_forced_arg('q', self._prev_q_data['q'][:] + url_q[1:])
+                    corpora = self._prev_q_data.get('corpora', [])
+                    if len(corpora) > 0:
+                        form.add_forced_arg('corpname', corpora[0])
+                    if len(corpora) > 1:
+                        form.add_forced_arg('align', *corpora[1:])
+                        form.add_forced_arg('viewmode', 'align')
+                    if self._prev_q_data.get('usesubcorp', None):
+                        form.add_forced_arg('usesubcorp', self._prev_q_data['usesubcorp'])
                     self._lines_groups = LinesGroups.deserialize(
                         self._prev_q_data.get('lines_groups', []))
                 else:
-                    # !!! we have to reset the invalid query, otherwise _store_conc_params
-                    # generates a new key pointing to it
-                    self.args.q = []
                     raise UserActionException(_('Invalid or expired query'))
 
     def get_saveable_conc_data(self):
@@ -515,24 +544,21 @@ class Kontext(Controller):
         (otherwise nothing is done).
 
         returns:
-        string ID of the stored operation or None if nothing was done (from whatever reason)
+        string ID of the stored operation (or the current ID of nothing was stored)
         """
-        if plugins.runtime.CONC_PERSISTENCE.exists and self.args.q:
-            with plugins.runtime.CONC_PERSISTENCE as cp:
-                prev_data = self._prev_q_data if self._prev_q_data is not None else {}
-                curr_data = self.get_saveable_conc_data()
-                q_id = cp.store(self.session_get('user', 'id'),
-                                curr_data=curr_data, prev_data=self._prev_q_data)
-                self._save_query_to_history(q_id, curr_data)
-                lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
-                for q_idx, op in self._auto_generated_conc_ops:
-                    prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
-                    curr = dict(lines_groups=lines_groups,
-                                q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
-                    q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
-        else:
-            q_id = None
-        return q_id
+        with plugins.runtime.CONC_PERSISTENCE as cp:
+            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
+            curr_data = self.get_saveable_conc_data()
+            q_id = cp.store(self.session_get('user', 'id'),
+                            curr_data=curr_data, prev_data=self._prev_q_data)
+            self._save_query_to_history(q_id, curr_data)
+            lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
+            for q_idx, op in self._auto_generated_conc_ops:
+                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
+                curr = dict(lines_groups=lines_groups,
+                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
+                q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
+            return q_id
 
     def _clear_prev_conc_params(self):
         self._prev_q_data = None
@@ -561,6 +587,14 @@ class Kontext(Controller):
             if op_id:
                 tpl_data['Q'] = ['~%s' % op_id]
                 tpl_data['conc_persistence_op_id'] = op_id
+                if self._prev_q_data:
+                    if self._prev_q_data.get('id', None) != op_id:
+                        tpl_data['user_owns_conc'] = True  # a new operation has been created => ownersip is clear
+                    else:
+                        tpl_data['user_owns_conc'] = self._prev_q_data.get(
+                            'user_id', None) == self.session_get('user', 'id')
+                else:
+                    tpl_data['user_owns_conc'] = False
             else:
                 tpl_data['Q'] = []
                 tpl_data['conc_persistence_op_id'] = None
@@ -736,6 +770,7 @@ class Kontext(Controller):
 
         self.cm = corplib.CorpusManager(self.subcpath)
 
+        self._restore_prev_conc_params(form)
         # corpus access check and modify path in case user cannot access currently requested corp.
         try:
             corpname, corpus_variant, path = self._check_corpus_access(path, form, action_metadata)
@@ -762,7 +797,6 @@ class Kontext(Controller):
             self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
                                                              for k, v in args.items()]))
-        self._restore_prev_conc_params()
         if len(path) > 0:
             # by default, each action is public
             access_level = action_metadata.get('access_level', 0)
@@ -1149,6 +1183,8 @@ class Kontext(Controller):
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
+        result['conc_url_ttl_days'] = plugins.runtime.CONC_PERSISTENCE.instance.get_conc_ttl_days(
+            self.session_get('user', 'id'))
 
         result['multi_sattr_allowed_structs'] = []
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
@@ -1160,6 +1196,9 @@ class Kontext(Controller):
         for plg in plugins.runtime:
             if hasattr(plg.instance, 'export'):
                 result['plugin_data'][plg.name] = plg.instance.export(self._plugin_api)
+
+        result['explicit_conc_persistence_ui'] = settings.get_bool(
+            'global', 'explicit_conc_persistence_ui', False)
 
         # main menu
         menu_items = MenuGenerator(result, self.args).generate(disabled_items=self.disabled_menu_items,

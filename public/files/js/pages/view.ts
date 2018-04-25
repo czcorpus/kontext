@@ -418,7 +418,9 @@ export class ViewPage {
         this.queryModels.saveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.layoutModel.getConf<string>('concPersistenceOpId')
+            this.layoutModel.getConf<string>('concPersistenceOpId'),
+            this.layoutModel.getConf<number>('concUrlTTLDays'),
+            this.layoutModel.getConf<boolean>('concExplicitPersistenceUI')
         );
 
         const queryFormProps:QueryFormProperties = {

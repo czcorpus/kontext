@@ -43,6 +43,13 @@ class AbstractConcPersistence(object):
         """
         raise NotImplementedError()
 
+    def get_conc_ttl_days(self, user_id):
+        """
+        Returns how many days a concordance link persist for
+        a specified user (typically it is a registered vs. public user).
+        """
+        raise NotImplemented()
+
     def open(self, data_id):
         """
         Load operation data according to the passed data_id argument.
@@ -73,13 +80,28 @@ class AbstractConcPersistence(object):
         """
         raise NotImplementedError()
 
-    def archive(self, conc_id):
+    def archive(self, user_id, conc_id, revoke=False):
         """
         Make the concordance record persistent. For implementations which
         archive concordances automatically this can be just an empty
         function.
 
+        !!! Important note: it is up to this method to decide
+        whether the user user_id is permitted to change
+        the concordance identified by conc_id !!!
+
         arguments:
+        user_id -- user who wants to perform the operation
         conc_id -- an identifier of the concordance
+        """
+        raise NotImplementedError()
+
+    def is_archived(self, conc_id):
+        """
+        arguments:
+            conc_id -- a concordance hash
+
+        returns:
+            True if the concordance is archived else False
         """
         raise NotImplementedError()

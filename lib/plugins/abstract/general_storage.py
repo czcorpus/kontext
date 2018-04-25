@@ -199,6 +199,15 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
+    def get_ttl(self, key):
+        """
+        Return number of seconds of item's TTL or -1 if it's not set
+
+        arguments:
+        key -- data access key
+        """
+        raise NotImplementedError()
+
     def clear_ttl(self, key):
         """
         Make the record persistent again.
@@ -223,4 +232,3 @@ class KeyValueStorage(object):
         Return the current instance of the plug-in
         """
         return self
-

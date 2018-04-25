@@ -25,7 +25,7 @@ import {init as basicOverviewInit} from './basicOverview';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {IQueryReplayModel, QueryReplayModel, ExtendedQueryOperation} from '../../models/query/replay';
-import {QuerySaveAsFormModel} from '../../models/query/save';
+import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 import {ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps} from './miscActions';
 import {QueryFormLiteProps, QueryFormProps} from './main';
 import {FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
@@ -681,6 +681,103 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         );
     };
 
+    // ------------------------ <PersistentConcordanceForm /> --------------------------------
+
+    class PersistentConcordanceForm extends React.Component<{}, QuerySaveAsFormModelState> {
+
+        constructor(props) {
+            super(props);
+            this.state = querySaveAsModel.getState();
+            this.handleCloseEvent = this.handleCloseEvent.bind(this);
+            this.handleModelChange = this.handleModelChange.bind(this);
+            this.handleSubmit = this.handleSubmit.bind(this);
+        }
+
+        private handleCloseEvent() {
+            dispatcher.dispatch({
+                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                props: {}
+            });
+        }
+
+        private handleSubmit() {
+            dispatcher.dispatch({
+                actionType: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
+                props: {revoke: false}
+            });
+        }
+
+        private handleRevokeSubmit() {
+            dispatcher.dispatch({
+                actionType: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
+                props: {revoke: true}
+            });
+        }
+
+        private handleModelChange(state) {
+            this.setState(state);
+        }
+
+        private createPermanentUrl() {
+            return he.createActionLink('view', [['q', '~' + this.state.queryId]]);
+        }
+
+        componentDidMount() {
+            querySaveAsModel.addChangeListener(this.handleModelChange);
+            dispatcher.dispatch({
+                actionType: 'QUERY_GET_CONC_ARCHIVED_STATUS',
+                props: {}
+            });
+        }
+
+        componentWillUnmount() {
+            querySaveAsModel.removeChangeListener(this.handleModelChange);
+        }
+
+        render() {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={this.handleCloseEvent}>
+                    <layoutViews.CloseableFrame onCloseClick={this.handleCloseEvent}
+                                customClass="PersistentConcordanceForm"
+                                label={he.translate('concview__make_conc_link_permanent_hd')}>
+                        {this.state.isBusy ?
+                            <layoutViews.AjaxLoaderImage /> :
+                            <form>
+                                <p className="hint">
+                                    <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
+                                    {this.state.concIsArchived ?
+                                        he.translate('concview__permanent_link_is_archived') + ':' :
+                                        he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.state.concTTLDays})
+                                    }
+                                </p>
+                                <div>
+                                    <input type="text" readOnly={true}
+                                            disabled={!this.state.concIsArchived}
+                                            value={this.createPermanentUrl()}
+                                            className={this.state.concIsArchived ? 'archived' : ''}
+                                            onClick={e => this.state.concIsArchived ?
+                                                            (e.target as HTMLInputElement).select() : null} />
+                                </div>
+                                <p>
+                                    {this.state.concIsArchived ?
+                                        <button type="button" className="danger-button"
+                                                onClick={this.handleRevokeSubmit}>
+                                            {he.translate('concview__make_conc_link_permanent_revoke_archived')}
+                                        </button> :
+                                        <button type="button" className="default-button"
+                                                onClick={this.handleSubmit}>
+                                            {he.translate('global__proceed')}
+                                        </button>
+                                    }
+                                </p>
+                            </form>
+                        }
+                    </layoutViews.CloseableFrame>
+                </layoutViews.ModalOverlay>
+            );
+        }
+    }
+
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
@@ -731,9 +828,15 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         _renderSaveForm() {
-            if (this.state.activeItem && this.state.activeItem.actionName === 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM') {
-                return <saveViews.QuerySaveAsForm />;
+            if (this.state.activeItem) {
+                switch (this.state.activeItem.actionName) {
+                    case 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM':
+                        return <saveViews.QuerySaveAsForm />;
+                    case 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT':
+                        return <PersistentConcordanceForm />;
+                }
             }
+            return null;
         }
 
         render() {

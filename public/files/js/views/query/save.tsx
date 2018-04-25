@@ -21,16 +21,10 @@
 import * as React from 'react';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import{QuerySaveAsFormModel} from '../../models/query/save';
+import{QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 
 
 export interface QuerySaveAsFormProps {
-}
-
-
-interface QuerySaveAsFormState {
-    isWaiting:boolean;
-    name:string;
 }
 
 
@@ -106,21 +100,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------ <QuerySaveAsForm /> -------------------------------
 
-    class QuerySaveAsForm extends React.Component<QuerySaveAsFormProps, QuerySaveAsFormState> {
+    class QuerySaveAsForm extends React.Component<QuerySaveAsFormProps, QuerySaveAsFormModelState> {
 
         constructor(props) {
             super(props);
             this._handleCloseEvent = this._handleCloseEvent.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleKeyDown = this._handleKeyDown.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        private _fetchModelState() {
-            return {
-                name: saveAsFormModel.getName(),
-                isWaiting: saveAsFormModel.getIsBusy()
-            };
+            this.state = saveAsFormModel.getState();
         }
 
         private _handleCloseEvent() {
@@ -145,8 +132,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        private _handleModelChange() {
-            this.setState(this._fetchModelState());
+        private _handleModelChange(state) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -161,13 +148,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseEvent}>
                     <layoutViews.CloseableFrame onCloseClick={this._handleCloseEvent}
+                                customClass="QuerySaveAsForm"
                                 label={he.translate('query__save_as_box_hd')}>
                         <form>
+                            <p className="hint">
+                                <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
+                                {this.state.concExplicitPersistenceUI ?
+                                    he.translate('query__save_as_box_hint_explicit') :
+                                    he.translate('query__save_as_box_hint')
+                                }
+                            </p>
                             <p>
                                 <QueryNameInput value={this.state.name} onKeyDown={this._handleKeyDown} />
                             </p>
                             <p>
-                                <SubmitButton isWaiting={this.state.isWaiting} onKeyDown={this._handleKeyDown}
+                                <SubmitButton isWaiting={this.state.isBusy} onKeyDown={this._handleKeyDown}
                                         onClick={(evt)=>this.submit()} />
                             </p>
                         </form>

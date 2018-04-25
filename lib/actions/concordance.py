@@ -283,7 +283,19 @@ class Actions(Querying):
         out['quick_save_row_limit'] = self.CONC_QUICK_SAVE_MAX_LINES
         return out
 
-    @exposed(access_level=1, return_type='json', http_method='POST')
+    @exposed(acess_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
+    def archive_concordance(self, request):
+        with plugins.runtime.CONC_PERSISTENCE as cp:
+            revoke = bool(int(request.form['revoke']))
+            cp.archive(self.session_get('user', 'id'), request.form['code'], revoke=revoke)
+        return dict(revoked=revoke)
+
+    @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
+    def get_stored_conc_archived_status(self, request):
+        with plugins.runtime.CONC_PERSISTENCE as cp:
+            return dict(is_archived=cp.is_archived(request.args['code']))
+
+    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def save_query(self, request):
         with plugins.runtime.QUERY_STORAGE as qs:
             ans = qs.make_persistent(self.session_get('user', 'id'), request.form['query_id'],

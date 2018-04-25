@@ -61,9 +61,7 @@ import plugins
 from archive import ArchMan
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
-import actions.concordance
-from controller import exposed
-from controller.errors import UserActionException
+from controller.errors import ForbiddenException
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
                ['%d' % i for i in range(10)]
@@ -114,34 +112,6 @@ def mk_short_id(s, min_length=6):
     return ans[:i]
 
 
-def create_arch_conc_action(concdb, archdb):
-    @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
-    def archive_concordance(ctrl, request):
-        conc_key = request.args.get('conc_key')
-
-        if request.method == 'POST':
-            data = concdb.get(mk_key(conc_key))
-            if data:
-                save_time = int(round(time.time()))
-                cursor = archdb.cursor()
-                cursor.execute('INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                               [conc_key, json.dumps(data), save_time, 0])
-                archdb.commit()
-            else:
-                raise UserActionException('Concordance key \'%s\' not found.' % (conc_key,))
-            return dict(save_time=save_time, conc_key=conc_key)
-        elif request.method == 'GET':
-            cursor = archdb.cursor()
-            cursor.execute('SELECT * FROM archive WHERE id = ?', [conc_key])
-            row = cursor.fetchone()
-            return dict(data=json.loads(row[1]) if row is not None else None)
-        else:
-            ctrl.set_not_found()
-            return {}
-
-    return archive_concordance
-
-
 class ConcPersistence(AbstractConcPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
@@ -152,15 +122,21 @@ class ConcPersistence(AbstractConcPersistence):
     DEFAULT_ARCHIVE_ROWS_LIMIT = 1000000
 
     def __init__(self, settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days, arch_rows_limit):
-        self.ttl = ttl_days * 24 * 3600
-        self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
+        self._ttl_days = ttl_days
+        self._anonymous_user_ttl_days = anonymous_user_ttl_days
         self._archive_queue_key = archive.ARCHIVE_QUEUE_KEY
-
         self.db = db
         self._auth = auth
         self._settings = settings  # TO_DO: planned to remove
-
         self.arch_man = ArchMan(db_path, arch_rows_limit)
+
+    @property
+    def ttl(self):
+        return self._ttl_days * 24 * 3600
+
+    @property
+    def anonymous_user_ttl(self):
+        return self._anonymous_user_ttl_days * 24 * 3600
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -181,6 +157,11 @@ class ConcPersistence(AbstractConcPersistence):
         data_id -- identifier to be tested
         """
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
+
+    def get_conc_ttl_days(self, user_id):
+        if self._auth.is_anonymous(user_id):
+            return self._anonymous_user_ttl_days
+        return self._ttl_days
 
     @staticmethod
     def _execute_sql(conn, sql, args=()):
@@ -251,8 +232,16 @@ class ConcPersistence(AbstractConcPersistence):
 
         return latest_id
 
-    def archive(self, conc_id):
+    def archive(self, user_id, conc_id, revoke=False):
+        data = self.db.get(mk_key(conc_id))
+        stored_user_id = data.get('user_id', None)
+        if user_id != stored_user_id:
+            raise ForbiddenException(
+                'Cannot change status of a concordance belonging to another user')
         pass  # we don't have to do anything here as we archive all the queries by default
+
+    def is_archived(self, conc_id):
+        return True  # we ignore archiver task delay and say "True" for all the items
 
     def export_tasks(self):
         """
@@ -263,10 +252,6 @@ class ConcPersistence(AbstractConcPersistence):
             return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
 
         return archive_concordance,
-
-    def export_actions(self):
-        return {actions.concordance.Actions: [create_arch_conc_action(self.db,
-                                                                      self.arch_man.get_current_archive_conn())]}
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

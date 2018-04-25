@@ -95,7 +95,7 @@ class PyConc(manatee.Concordance):
                                              os.path.join(self.pycorp._conc_dir, corp.corpname,
                                                           params + '.conc'))
             else:
-                raise RuntimeError(_('Unknown action: %s') % action)
+                raise RuntimeError(_('Unknown concordance action: %s') % action)
         except UnicodeEncodeError:
             raise RuntimeError('Character encoding of this corpus ({0}) does not support one or more characters in the query.'
                                .format(self.corpus_encoding))
