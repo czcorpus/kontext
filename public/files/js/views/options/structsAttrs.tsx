@@ -133,26 +133,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
             }
         };
 
-        const renderVmodeInfoIcon = () => {
-            let src;
-            let title;
-            if (props.attrsVmode === 'mouseover') {
-                src = helpers.createStaticUrl('img/mouseover-available.svg')
-                title = helpers.translate('options__vmode_switch_indicator_desc');
-
-            } else if (props.attrsVmode === 'mixed') {
-                src = helpers.createStaticUrl('img/mouseover-mixed.svg')
-                title = helpers.translate('options__vmode_switch_indicator_desc');
-
-            } else {
-                src = helpers.createStaticUrl('img/mouseover-not-available.svg');
-                title = helpers.translate('options__vmode_switch_indicator_desc');
-            }
-            return <img className="vmode-indicator" src={src} alt={title} title={title} />;
-        };
-
         return (
-            <div>
+            <div className="AttributesTweaks">
                 <h3 className="label">
                     {helpers.translate('options__attr_apply_header')}{'\u2026'}
                 </h3>
@@ -165,7 +147,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         <option value="mouseover">{helpers.translate('options__vmode_switch_mouseover')}</option>
                         <option value="mixed">{helpers.translate('options__vmode_switch_mixed')}</option>
                     </select>
-                    {props.showConcToolbar ? renderVmodeInfoIcon() : null}
+                    <span className="icons">
+                        {props.showConcToolbar ?
+                            <layoutViews.VmodeIcon attrsAllpos={props.attrsAllpos}
+                                        attrsVmode={props.attrsVmode} /> :
+                            null
+                        }
+                    </span>
                 </div>
                 <div>
                     <select name="allpos"

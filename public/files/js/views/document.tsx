@@ -723,6 +723,38 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
+    const VmodeIcon:CoreViews.VmodeIcon.Component = (props) => {
+        const vmodeMouseover = <img
+            src={he.createStaticUrl('img/vmode_mouseover.svg')}
+            title={he.translate('options__vmode_switch_indicator_desc') +
+                    (props.mouseoverAttrs ? ' ' + he.translate('options__attribs_are_on_mouseover_{attrs}',
+                    {attrs: props.mouseoverAttrs.slice(1).join('/')}) : '')} />;
+
+        const vmodeAll = <img
+            src={he.createStaticUrl('img/vmode_all.svg')}
+            title={he.translate('options__vmode_switch_indicator_desc')} />;
+
+        const vmodeKwic = <img
+            src={he.createStaticUrl('img/vmode_kwic.svg')}
+            title={he.translate('options__vmode_switch_indicator_desc')} />;
+
+        switch (props.attrsVmode + '#' + props.attrsAllpos) {
+            case 'mouseover#all':
+                return vmodeMouseover;
+            case 'mixed#all':
+            case 'mixed#kw':
+                return <>{vmodeMouseover}<strong>+</strong>{vmodeKwic}</>;
+            case 'visible#all':
+                return vmodeAll;
+            case 'visible#kw':
+                return vmodeKwic;
+            default:
+                return <span />;
+        }
+    };
+
+    // ------------------------------------------------------------------------------------
+
     return {
         ErrorBoundary: ErrorBoundary,
         ModalOverlay: ModalOverlay,
@@ -739,6 +771,7 @@ export function init(
         Shortener: Shortener,
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
-        ValidatedItem: ValidatedItem
+        ValidatedItem: ValidatedItem,
+        VmodeIcon: VmodeIcon
     };
 }

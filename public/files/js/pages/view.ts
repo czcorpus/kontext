@@ -976,6 +976,7 @@ export class ViewPage {
         const lineViewProps:ViewConfiguration = {
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
+            AttrAllpos: this.layoutModel.getConf<string>('AttrAllpos'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
             CorporaColumns: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns').map(v =>

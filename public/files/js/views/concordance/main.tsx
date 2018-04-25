@@ -461,6 +461,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     class ConcOptions extends React.Component<{
         viewMode:string; // TODO enum
+        attrsAllpos:string;
     },
     {
         currViewAttrs:Array<string>;
@@ -486,38 +487,17 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             lineViewModel.removeChangeListener(this._modelChangeHandler);
         }
 
-        _renderMouseOverInfo() {
-            let mouseoverImg;
-            let mouseoverAlt;
-            if (this.props.viewMode === 'mouseover') {
-                mouseoverImg = he.createStaticUrl('img/mouseover-available.svg');
-                mouseoverAlt = he.translate('options__attribs_are_on_mouseover_{attrs}',
-                        {attrs: this.state.currViewAttrs.slice(1).join('/')});
-
-            } else if (this.props.viewMode === 'mixed') {
-                mouseoverImg = he.createStaticUrl('img/mouseover-mixed.svg');
-                mouseoverAlt = he.translate('options__attribs_are_mixed_{attrs}',
-                        {attrs: this.state.currViewAttrs.slice(1).join('/')});
-
-            } else {
-                mouseoverImg = he.createStaticUrl('img/mouseover-not-available.svg');
-                mouseoverAlt = he.translate('options__attribs_are_not_mouseover');
-            }
-            return (
-                <span>
-                    {he.translate('options__vmode_status_label')}
-                    {':\u00a0'}
-                    <img key="bubb" className="mouseover-available"
-                            src={mouseoverImg} alt={mouseoverAlt} title={mouseoverAlt} />
-                </span>
-            );
-        }
-
         render() {
             return (
                 <div className="conc-toolbar">
                     <span className="separ">|</span>
-                    {this._renderMouseOverInfo()}
+                    <span className="mouseover-available">
+                        {he.translate('options__vmode_status_label')}
+                        {':\u00a0'}
+                        <layoutViews.VmodeIcon attrsAllpos={this.props.attrsAllpos}
+                                attrsVmode={this.props.viewMode}
+                                mouseoverAttrs={this.state.currViewAttrs} />
+                    </span>
                 </div>
             );
         }
@@ -531,6 +511,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         showConcToolbar:boolean;
         canSendEmail:boolean;
         viewMode:string; // TODO enum
+        attrsAllpos:string;
         onChartFrameReady?:()=>void;
     },
     {
@@ -572,7 +553,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             onChartFrameReady={this.props.onChartFrameReady}
                             canSendEmail={this.props.canSendEmail} />
                     {this.props.showConcToolbar ?
-                        <ConcOptions viewMode={this.props.viewMode} />
+                        <ConcOptions viewMode={this.props.viewMode}
+                                attrsAllpos={this.props.attrsAllpos} />
                         : null}
                 </div>
             );
@@ -686,6 +668,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         concDetailModelIsBusy:boolean;
         refsDetailData:Immutable.List<[RefsColumn, RefsColumn]>;
         viewMode:string;
+        attrsAllpos:string;
         isUnfinishedCalculation:boolean;
         concSummary:LinesConcSummary;
         showAnonymousUserWarn:boolean;
@@ -714,6 +697,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 concDetailModelIsBusy: concDetailModel.getIsBusy(),
                 refsDetailData: refsDetailModel.getData(),
                 viewMode: lineViewModel.getViewAttrsVmode(),
+                attrsAllpos: lineViewModel.getAttrAllpos(),
                 isUnfinishedCalculation: lineViewModel.isUnfinishedCalculation(),
                 concSummary: lineViewModel.getConcSummary(),
                 showAnonymousUserWarn: this.props.anonymousUser && this.props.anonymousUserConcLoginPrompt,
@@ -862,7 +846,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
-                                viewMode={this.state.viewMode} />
+                                viewMode={this.state.viewMode}
+                                attrsAllpos={this.state.attrsAllpos} />
                         {this.state.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
