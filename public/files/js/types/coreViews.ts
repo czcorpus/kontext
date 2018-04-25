@@ -304,6 +304,17 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace VmodeIcon {
+
+        export interface Props {
+            attrsVmode:string;
+            attrsAllpos:string;
+            mouseoverAttrs?:Array<string>;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -323,6 +334,7 @@ export namespace CoreViews {
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
+        VmodeIcon:VmodeIcon.Component;
     }
 }
 

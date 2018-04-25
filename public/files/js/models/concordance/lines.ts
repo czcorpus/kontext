@@ -92,6 +92,8 @@ export interface ViewConfiguration {
      */
     ViewMode:string;
 
+    AttrAllpos:string;
+
     ShowLineNumbers:boolean;
 
     KWICCorps:Array<string>;
@@ -275,6 +277,8 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     private viewMode:string;
 
+    private attrAllpos:string;
+
     private showLineNumbers:boolean;
 
     private kwicCorps:Immutable.List<string>;
@@ -322,13 +326,15 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
-            ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
+            ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration,
+            initialData:Array<ServerLineData>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveModel = saveModel;
         this.syntaxViewModel = syntaxViewModel;
         this.ttModel = ttModel;
         this.viewMode = lineViewProps.ViewMode;
+        this.attrAllpos = lineViewProps.AttrAllpos;
         this.showLineNumbers = lineViewProps.ShowLineNumbers;
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
         this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
@@ -815,6 +821,10 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     getViewMode():string {
         return this.viewMode;
+    }
+
+    getAttrAllpos():string {
+        return this.attrAllpos;
     }
 
     getShowLineNumbers():boolean {

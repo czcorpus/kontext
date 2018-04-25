@@ -552,13 +552,21 @@ fieldset.FieldsetOutputOptions {
             }
         }
 
-        select.no-label, img.vmode-indicator {
+        select.no-label,
+        .icons img,
+        .icons strong {
             display: inline-block;
             margin-top: 0.9em;
             vertical-align: middle;
         }
 
-        img.vmode-indicator {
+        .icons strong {
+            font-size: 1.5em;
+            padding-left: 0.1em;
+            padding-right: 0.1em;
+        }
+
+        .icons img:first-child {
             margin-left: 0.9em;
         }
 
