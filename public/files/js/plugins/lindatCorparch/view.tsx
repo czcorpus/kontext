@@ -246,7 +246,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _pmltq(pmltq:string) {
             if (pmltq !== 'no' && this.props.permitted) {
             return <a href={this.props.pmltq} className="md-transparent" title={"Inspect " + this.props.name + " in PML-TQ"}>
-                    <span className="glyphicon lindat-pmltq-logo">&nbsp;</span></a>
+                    <button className="btn btn-default lindat-pmltq-logo">&nbsp;</button></a>
             }
         }
 
@@ -259,13 +259,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _access() {
             if (!this.props.permitted) {
-                return <span className="glyphicon glyphicon-lock"></span>
+                return <span className="glyphicon glyphicon-lock"></span>;
             }
         }
 
         _syntax() {
             if (this.props.features.includes('syntax')) {
-                return <span className="glyphicon lindat-pmltq-logo">&nbsp;</span>;
+                return <button className="btn btn-default lindat-pmltq-logo">&nbsp;</button>
             }
             return null;
         }
