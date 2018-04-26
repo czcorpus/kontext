@@ -587,14 +587,15 @@ class Kontext(Controller):
             if op_id:
                 tpl_data['Q'] = ['~%s' % op_id]
                 tpl_data['conc_persistence_op_id'] = op_id
-                if self._prev_q_data:
+                if self._prev_q_data:  # => main query already entered; user is doing something else
+                    # => additional operation => ownership is clear
                     if self._prev_q_data.get('id', None) != op_id:
-                        tpl_data['user_owns_conc'] = True  # a new operation has been created => ownersip is clear
-                    else:
+                        tpl_data['user_owns_conc'] = True
+                    else:  # some other action => we have to check if user is the author
                         tpl_data['user_owns_conc'] = self._prev_q_data.get(
                             'user_id', None) == self.session_get('user', 'id')
-                else:
-                    tpl_data['user_owns_conc'] = False
+                else:  # initial query => ownership is clear
+                    tpl_data['user_owns_conc'] = True
             else:
                 tpl_data['Q'] = []
                 tpl_data['conc_persistence_op_id'] = None
