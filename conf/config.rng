@@ -102,6 +102,12 @@
                                 </choice>
                             </element>
                         </optional>
+                        <optional>
+                            <element name="favicon">
+                                <a:documentation>Favicon file name (not a full path)</a:documentation>
+                                <text />
+                            </element>
+                        </optional>
                     </interleave>
                 </element>
             </optional>

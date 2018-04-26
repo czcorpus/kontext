@@ -1071,6 +1071,8 @@ class Kontext(Controller):
         else:
             logo_title = unicode(logo_href)
 
+        theme_favicon = settings.get('theme', 'favicon', None)
+
         data['theme'] = dict(
             name=settings.get('theme', 'name'),
             logo_path=os.path.normpath(os.path.join(
@@ -1080,7 +1082,8 @@ class Kontext(Controller):
             logo_href=logo_href,
             logo_title=logo_title,
             logo_inline_css=settings.get('theme', 'logo_inline_css', ''),
-            online_fonts=settings.get_list('theme', 'fonts')
+            online_fonts=settings.get_list('theme', 'fonts'),
+            favicon='{0}/{1}'.format(theme_name, theme_favicon) if theme_favicon else None
         )
 
     def _configure_auth_urls(self, out):
