@@ -170,6 +170,7 @@ class DbPluginArchBackend(object):
     the archive will slowly eat the RAM. But if you want to use sqlite3_db
     then this is not an issue.
     """
+
     def __init__(self, db, ttl, anonymous_ttl):
         self._db = db
         self._ttl = ttl
@@ -260,11 +261,15 @@ class ConcPersistence(AbstractConcPersistence):
         prev_data -- optional dictionary with previous operation data; again, 'q' entry must be there
 
         returns:
-        new operation ID if a new record is created or current ID if no new operation is defined
+        1) new operation ID if a new record is created,
+        2) current ID if no new operation is defined but there is a previous operation defined
+        3) None if neither previous nor new operation is defined
         """
         def records_differ(r1, r2):
             return r1['q'] != r2['q'] or r1.get('lines_groups') != r2.get('lines_groups')
 
+        if len(curr_data.get('q', [])) == 0:
+            return None
         if prev_data is None or records_differ(curr_data, prev_data):
             data_id = generate_uniq_id()
             curr_data['id'] = data_id
@@ -316,7 +321,8 @@ def create_instance(settings, db, auth):
                                             'In case you use redis_db then please consider setting archive_dir '
                                             'for default_conc_persistence to prevent filling up RAM with archived '
                                             'concordances.')
-        backend = DbPluginArchBackend(db=db, ttl=ttl_days * 24 * 3600, anonymous_ttl=anonymous_ttl_days * 24 * 3600)
+        backend = DbPluginArchBackend(db=db, ttl=ttl_days * 24 * 3600,
+                                      anonymous_ttl=anonymous_ttl_days * 24 * 3600)
 
     return ConcPersistence(db=db, auth=auth,
                            ttl_days=ttl_days,
