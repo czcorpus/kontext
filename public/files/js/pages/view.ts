@@ -469,7 +469,8 @@ export class ViewPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            actionPrefix: ''
+            actionPrefix: '',
+            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
         });
 
         this.queryFormViews = queryFormInit({
@@ -533,11 +534,16 @@ export class ViewPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            actionPrefix: 'FILTER_'
+            actionPrefix: 'FILTER_',
+            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
         });
 
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
             this.queryModels.filterModel.notifyChangeListeners();
+            this.layoutModel.dispatchSideEffect(
+                model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
+                {}
+            );
         });
 
         this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(

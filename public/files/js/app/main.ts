@@ -318,6 +318,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         );
     }
 
+    dispatchSideEffect(actionType:string, props:Kontext.GeneralProps):void {
+        this.dispatcher.dispatch({
+            actionType: actionType,
+            props: props,
+            isSideEffect: true
+        });
+    }
+
     /**
      * Initialize language switching widget located in footer
      */

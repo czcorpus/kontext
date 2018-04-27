@@ -101,7 +101,7 @@ export function init({
         queryModel: queryModel,
         virtualKeyboardModel: virtualKeyboardModel
     });
-    const cqlEditorViews = cqlEditoInit(dispatcher, he, cqlEditorModel);
+    const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel, cqlEditorModel);
     const layoutViews = he.getLayoutViews();
 
 
@@ -721,12 +721,12 @@ export function init({
             };
         }
 
-        _handleInputChange(value) {
+        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement>) {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
                     sourceId: this.props.sourceId,
-                    query: value
+                    query: evt.target.value
                 }
             });
         }
@@ -790,7 +790,7 @@ export function init({
                     return <input className="simple-input" type="text"
                                 spellCheck={false}
                                 ref={this._attachInputElementRef}
-                                onChange={(evt) => this._handleInputChange(evt.target.value)}
+                                onChange={this._handleInputChange}
                                 value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
                 case 'cql':
@@ -798,11 +798,13 @@ export function init({
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
                                 attachCurrInputElement={this._attachInputElementRef}
-                                inputKeyHandler={this._inputKeyHandler} /> :
+                                inputKeyHandler={this._inputKeyHandler}
+                                inputChangeHandler={(_)=>undefined} /> :
                         <cqlEditorViews.CQLEditorFallback
                             sourceId={this.props.sourceId}
                             attachCurrInputElement={this._attachInputElementRef}
-                            inputKeyHandler={this._inputKeyHandler} />;
+                            inputKeyHandler={this._inputKeyHandler}
+                            inputChangeHandler={this._handleInputChange} />;
             }
         }
 

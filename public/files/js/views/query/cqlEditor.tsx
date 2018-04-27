@@ -23,11 +23,13 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
+import {GeneralQueryModel} from '../../models/query/main';
 
 
 export interface CQLEditorProps {
     sourceId:string;
     attachCurrInputElement:(elm:HTMLElement)=>void;
+    inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
 
@@ -37,36 +39,38 @@ export interface CQLEditorViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, editorModel:CQLEditorModel) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+            queryModel:GeneralQueryModel, editorModel:CQLEditorModel) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorProps, CQLEditorModelState> {
+    class CQLEditorFallback extends React.PureComponent<CQLEditorProps, {query:string}> {
 
         constructor(props) {
             super(props);
-            this.state = editorModel.getState();
+            this.state = {query: ''};
             this.handleModelChange = this.handleModelChange.bind(this);
         }
 
-        private handleModelChange(state:CQLEditorModelState) {
-            this.setState(state);
+        private handleModelChange() {
+            this.setState({query: queryModel.getQuery(this.props.sourceId)});
         }
 
         componentDidMount() {
-            editorModel.addChangeListener(this.handleModelChange);
+            queryModel.addChangeListener(this.handleModelChange);
         }
 
         componentWillUnmount() {
-            editorModel.removeChangeListener(this.handleModelChange);
+            queryModel.removeChangeListener(this.handleModelChange);
         }
 
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={item => this.props.attachCurrInputElement(item)}
-                                value={this.state.rawCode.get(this.props.sourceId)}
+                                value={this.state.query}
                                 onKeyDown={this.props.inputKeyHandler}
+                                onChange={this.props.inputChangeHandler}
                                 spellCheck={false} />;
         }
     }
