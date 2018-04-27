@@ -451,7 +451,7 @@ export function init(
                                 {this.props.url ?
                                     <div className="link">
                                         <hr />
-                                        <a href={this.props.url} target='_blank'>
+                                        <a className="external" href={this.props.url} target='_blank'>
                                             {he.translate('global__get_more_info')}
                                         </a>
                                     </div> : null}
