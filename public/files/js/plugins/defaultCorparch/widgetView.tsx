@@ -20,8 +20,8 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import { CorplistWidgetModel } from './widget';
-import { ServerFavlistItem, CorplistItem } from './common';
+import { CorplistWidgetModel, FavListItem } from './widget';
+import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { PluginInterfaces } from '../../types/plugins';
 
@@ -46,12 +46,42 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
     const layoutViews = util.getLayoutViews();
 
+    const FavStar:React.SFC<{
+        ident:string;
+        trashTTL:number;
+
+    }> = (props) => {
+
+        const handleRemoveClick = () => {
+            dispatcher.dispatch({
+                actionType: props.trashTTL === null ?
+                        'DEFAULT_CORPARCH_FAV_ITEM_REMOVE' :
+                        'DEFAULT_CORPARCH_FAV_ITEM_ADD',
+                props: {
+                    itemId: props.ident
+                }
+            });
+        };
+
+        return (
+            <a onClick={handleRemoveClick}>
+                {props.trashTTL === null ?
+                    <img className="starred" src={util.createStaticUrl('img/starred.svg')}
+                            alt={util.translate('defaultCorparch__click_to_remove_item_from_fav')}
+                            title={util.translate('defaultCorparch__click_to_remove_item_from_fav')} /> :
+                    <img className="starred" src={util.createStaticUrl('img/starred_grey.svg')}
+                            alt={util.translate('defaultCorparch__not_in_fav')}
+                            title={util.translate('defaultCorparch__not_in_fav')} />
+                }
+            </a>
+        );
+    };
+
     /**
      *
      */
     const TRFavoriteItem:React.SFC<{
-        data:ServerFavlistItem;
-        editEnable:boolean;
+        data:FavListItem;
 
     }> = (props) => {
 
@@ -64,20 +94,13 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             });
         };
 
-        const handleRemoveClick = () => {
-            dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE',
-                props: {
-                    itemId: props.data.id
-                }
-            });
-        };
-
         return (
-            <tr className="data-item">
+            <tr className={`data-item${props.data.trashTTL !== null ? ' in-trash' : null}`}>
                 <td>
                     <a className="corplist-item"
-                            title={props.data.description}
+                            title={props.data.trashTTL === null ?
+                                        props.data.description :
+                                        util.translate('defaultCorparch__item_will_be_removed')}
                             onClick={handleItemClick}>
                         {props.data.name}
                     </a>
@@ -86,12 +109,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     {props.data.size_info}
                 </td>
                 <td className="tools">
-                    {props.editEnable ?
-                        <layoutViews.DelItemIcon onClick={handleRemoveClick}
-                            className="remove"
-                            title={util.translate('defaultCorparch__click_to_remove_item_from_fav')} /> :
-                        null
-                    }
+                    <FavStar ident={props.data.id} trashTTL={props.data.trashTTL} />
                 </td>
             </tr>
         );
@@ -102,10 +120,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
      * @param {*} props
      */
     const FavoritesBox:React.SFC<{
-        data:Immutable.List<ServerFavlistItem>;
-        editEnable:boolean;
+        data:Immutable.List<FavListItem>;
         anonymousUser:boolean;
-        onChangeEditEnable:()=>void;
 
     }> = (props) => {
         return (
@@ -114,19 +130,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     <tr>
                         <th>
                             {util.translate('defaultCorparch__fav_items')}
-                            <a onClick={props.onChangeEditEnable}>
-                                <layoutViews.ImgWithMouseover htmlClass="config"
-                                    title={util.translate('defaultCorparch__click_to_unlock_removal')}
-                                    alt={util.translate('defaultCorparch__click_to_unlock_removal')}
-                                    src={util.createStaticUrl('img/config-icon.svg')} />
-                            </a>
                         </th>
                         <th />
                         <th />
                     </tr>
                     {props.anonymousUser ?
-                        <tr><td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td></tr> :
-                        props.data.map(item => <TRFavoriteItem key={item.id} data={item} editEnable={props.editEnable} />)
+                        <tr>
+                            <td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td>
+                        </tr> :
+                        props.data.map(item => <TRFavoriteItem key={item.id} data={item} />)
                     }
                 </tbody>
             </table>
@@ -255,17 +267,14 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
      *
      */
     const ListsTab:React.SFC<{
-        dataFav:Immutable.List<ServerFavlistItem>;
+        dataFav:Immutable.List<FavListItem>;
         dataFeat:Immutable.List<CorplistItem>;
-        editEnable:boolean;
         anonymousUser:boolean;
-        onChangeEditEnable:()=>void;
 
     }> = (props) => {
         return (
             <div className="tables">
-                <FavoritesBox data={props.dataFav} editEnable={props.editEnable}
-                            onChangeEditEnable={props.onChangeEditEnable}
+                <FavoritesBox data={props.dataFav}
                             anonymousUser={props.anonymousUser} />
                 <FeaturedBox data={props.dataFeat} />
             </div>
@@ -506,7 +515,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
     class CorplistWidget extends React.Component<CorplistWidgetProps, {
         corpusIdent:Kontext.FullCorpusIdent;
         anonymousUser:boolean;
-        dataFav:Immutable.List<ServerFavlistItem>;
+        dataFav:Immutable.List<FavListItem>;
         dataFeat:Immutable.List<CorplistItem>;
         isWaitingToSwitch:boolean;
         currFavitemId:string;
@@ -519,7 +528,6 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         currSearchPhrase:string;
         visible:boolean;
         activeTab:number;
-        editEnable:boolean;
         hasSelectedKeywords:boolean;
     }> {
 
@@ -528,7 +536,6 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             this.state = this._fetchModelState();
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
-            this._handleChangeEditEnable = this._handleChangeEditEnable.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleOnShow = this._handleOnShow.bind(this);
             this._handleKeypress = this._handleKeypress.bind(this);
@@ -551,7 +558,6 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 currSearchPhrase: widgetModel.getCurrSearchPhrase(),
                 visible: false,
                 activeTab: 0,
-                editEnable: false,
                 hasSelectedKeywords: widgetModel.getHasSelectedKeywords()
             }
         }
@@ -592,19 +598,10 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             this.setState(tmp);
         }
 
-        _handleChangeEditEnable() {
-            const tmp = this._fetchModelState();
-            tmp['visible'] = this.state.visible;
-            tmp['activeTab'] = this.state.activeTab;
-            tmp['editEnable'] = !this.state.editEnable;
-            this.setState(tmp);
-        }
-
         _handleModelChange() {
             const tmp = this._fetchModelState();
             tmp['visible'] = this.state.visible;
             tmp['activeTab'] = this.state.activeTab;
-            tmp['editEnable'] = this.state.editEnable;
             this.setState(tmp);
         }
 
@@ -625,8 +622,6 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.state.activeTab} />
                     {this.state.activeTab === 0 ?
                         <ListsTab dataFav={this.state.dataFav} dataFeat={this.state.dataFeat}
-                                editEnable={this.state.editEnable}
-                                onChangeEditEnable={this._handleChangeEditEnable}
                                 anonymousUser={this.state.anonymousUser} /> :
                         <SearchTab availSearchKeywords={this.state.availSearchKeywords}
                                 isWaitingForSearchResults={this.state.isWaitingForSearchResults}

@@ -392,6 +392,9 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
         this.dispatcher.register(payload => {
             switch (payload.actionType) {
+                case 'CQL_EDITOR_DISABLE':
+                    this.notifyChangeListeners();
+                break;
                 case 'QUERY_INPUT_SELECT_TYPE':
                     let qType = payload.props['queryType'];
                     if (!this.hasLemma.get(payload.props['sourceId']) &&  qType === 'lemma') {

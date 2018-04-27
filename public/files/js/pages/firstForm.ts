@@ -239,6 +239,10 @@ export class FirstFormPage {
         this.onQueryModelReady(this.queryModel);
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
             this.queryModel.onSettingsChange(model);
+            this.layoutModel.dispatchSideEffect(
+                model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
+                {}
+            );
         });
 
         this.cqlEditorModel = new CQLEditorModel({
@@ -247,7 +251,8 @@ export class FirstFormPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryModel.getTagAttr() : null,
-            actionPrefix: ''
+            actionPrefix: '',
+            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
         });
     }
 

@@ -173,16 +173,10 @@ export namespace CoreViews {
 
         export interface Props {
             messageId:string;
-            fadingOut:boolean;
-            transitionTime:number;
             messageType:string;
             messageText:string;
-        }
-
-        export interface Props {
-            mode:string;
-            transitionTime:number;
-            children:React.ReactNode;
+            ttl:number;
+            timeFadeout:number;
         }
     }
 
@@ -192,11 +186,6 @@ export namespace CoreViews {
 
         export interface Props {}
 
-        export interface State {
-            messages:any; // TODO type
-            transitionTime:number;
-        }
-
         export type Component = React.ComponentClass<Props>;
     }
 
@@ -204,17 +193,12 @@ export namespace CoreViews {
 
     export namespace FadeInFrame {
 
-        export interface State {
-            opacity:number;
-        }
-
         export interface Props {
-            transitionTime:number;
-            mode:string;
+            opacity:number;
             children:React.ReactNode;
         }
 
-        export type Component = React.ComponentClass<Props>;
+        export type Component = React.SFC<Props>;
     }
 
     // -------------------------------

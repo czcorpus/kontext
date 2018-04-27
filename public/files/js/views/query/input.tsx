@@ -101,7 +101,7 @@ export function init({
         queryModel: queryModel,
         virtualKeyboardModel: virtualKeyboardModel
     });
-    const cqlEditorViews = cqlEditoInit(dispatcher, he, cqlEditorModel);
+    const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel, cqlEditorModel);
     const layoutViews = he.getLayoutViews();
 
 
@@ -174,22 +174,22 @@ export function init({
         _getHintText() {
             switch (this.props.queryType) {
                 case 'iquery':
-                return [he.translate('query__qt_basic'), he.translate('query__type_hint_basic')];
+                    return [he.translate('query__qt_basic'), he.translate('query__type_hint_basic'), null];
                 case 'lemma':
-                return [he.translate('query__qt_lemma'), he.translate('query__type_hint_lemma')];
+                    return [he.translate('query__qt_lemma'), he.translate('query__type_hint_lemma'), null];
                 case 'phrase':
-                return [he.translate('query__qt_phrase'), he.translate('query__type_hint_phrase')];
+                    return [he.translate('query__qt_phrase'), he.translate('query__type_hint_phrase'), null];
                 case 'word':
-                return [he.translate('query__qt_word_form'), he.translate('query__type_hint_word')];
+                    return [he.translate('query__qt_word_form'), he.translate('query__type_hint_word'), null];
                 case 'char':
-                return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char')];
+                    return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char'), null];
                 case 'cql':
-                return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql')];
+                    return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql'), he.getHelpLink('term_cql')];
             }
         }
 
         render() {
-            const [heading, text] = this._getHintText();
+            const [heading, text, helpUrl] = this._getHintText();
             return (
                 <span>
                     <span className="hint" onClick={this._handleHintClick}>
@@ -202,7 +202,16 @@ export function init({
                         <layoutViews.PopupBox onCloseClick={this._handleHintClick} takeFocus={true} customClass="hint">
                             <div>
                                 <h3>{he.translate('query__select_type')} <span className="type">"{heading}"</span></h3>
-                                <p>{text}</p>
+                                <p dangerouslySetInnerHTML={{__html: text}} />
+                                {helpUrl ?
+                                    <p className="link">
+                                        <hr />
+                                        <a href={helpUrl} className="external" target='_blank'>
+                                            {he.translate('global__get_more_info')}
+                                        </a>
+                                    </p> :
+                                    null
+                                }
                             </div>
                         </layoutViews.PopupBox> :
                         null
@@ -712,12 +721,12 @@ export function init({
             };
         }
 
-        _handleInputChange(value) {
+        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement>) {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
                     sourceId: this.props.sourceId,
-                    query: value
+                    query: evt.target.value
                 }
             });
         }
@@ -781,7 +790,7 @@ export function init({
                     return <input className="simple-input" type="text"
                                 spellCheck={false}
                                 ref={this._attachInputElementRef}
-                                onChange={(evt) => this._handleInputChange(evt.target.value)}
+                                onChange={this._handleInputChange}
                                 value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
                 case 'cql':
@@ -789,11 +798,13 @@ export function init({
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
                                 attachCurrInputElement={this._attachInputElementRef}
-                                inputKeyHandler={this._inputKeyHandler} /> :
+                                inputKeyHandler={this._inputKeyHandler}
+                                inputChangeHandler={(_)=>undefined} /> :
                         <cqlEditorViews.CQLEditorFallback
                             sourceId={this.props.sourceId}
                             attachCurrInputElement={this._attachInputElementRef}
-                            inputKeyHandler={this._inputKeyHandler} />;
+                            inputKeyHandler={this._inputKeyHandler}
+                            inputChangeHandler={this._handleInputChange} />;
             }
         }
 

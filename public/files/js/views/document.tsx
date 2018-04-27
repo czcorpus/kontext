@@ -22,6 +22,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {ActionDispatcher} from '../app/dispatcher';
 import {isTouchDevice} from '../util';
+import {MessageModel, MessageModelState} from '../models/common/layout';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -43,7 +44,8 @@ const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
 export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
-        modelProvider:Kontext.LayoutModel):CoreViews.Runtime {
+        modelProvider:Kontext.LayoutModel,
+        messageModel:MessageModel):CoreViews.Runtime {
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
@@ -449,7 +451,7 @@ export function init(
                                 {this.props.url ?
                                     <div className="link">
                                         <hr />
-                                        <a href={this.props.url} target='_blank'>
+                                        <a className="external" href={this.props.url} target='_blank'>
                                             {he.translate('global__get_more_info')}
                                         </a>
                                     </div> : null}
@@ -470,25 +472,12 @@ export function init(
 
         const handleCloseClick = (e) => {
             e.preventDefault();
-            he.doThingsWithDelay(
-                () => {
-                    dispatcher.dispatch({
-                        actionType: 'MESSAGE_FADE_OUT_ITEM',
-                        props: {
-                            messageId: props.messageId
-                        }
-                    });
-                },
-                () => {
-                    dispatcher.dispatch({
-                        actionType: 'MESSAGE_CLOSED',
-                        props: {
-                            messageId: props.messageId
-                        }
-                    });
-                },
-                500
-            );
+            dispatcher.dispatch({
+                actionType: 'MESSAGE_CLOSED',
+                props: {
+                    messageId: props.messageId
+                }
+            });
         };
 
         const typeIconMap = {
@@ -498,9 +487,12 @@ export function init(
             mail: he.createStaticUrl('img/message-icon.png')
         };
 
+        const calcOpacity = () => {
+            return Math.min(1, props.ttl / props.timeFadeout);
+        };
+
         return (
-            <FadeInFrame mode={props.fadingOut ? 'fadeout' : 'fadein'}
-                    transitionTime={props.transitionTime}>
+            <FadeInFrame opacity={calcOpacity()}>
                 <div className={'message ' + props.messageType}>
                     <div className="button-box">
                         <a className="close-icon">
@@ -522,60 +514,35 @@ export function init(
 
     // ------------------------------ <FadeInFrame /> -----------------------------
 
-    class FadeInFrame extends React.Component<CoreViews.FadeInFrame.Props, CoreViews.FadeInFrame.State> {
+    const FadeInFrame:React.SFC<CoreViews.FadeInFrame.Props> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleAnimationEnd = this._handleAnimationEnd.bind(this);
-            this.state = {opacity: this.props.mode === 'fadein' ? 0 : 1};
-        }
-
-        _handleAnimationEnd() {
-            this.setState({opacity: 1 - this.state.opacity});
-        }
-
-
-        render() {
-            const style = {
-                animationDuration: `${this.props.transitionTime}ms`,
-                animationName: this.props.mode,
-                animationIterationCount: 1,
-                opacity: this.state.opacity
-            };
-            return (
-                <div style={style} onAnimationEnd={this._handleAnimationEnd}>
-                    {this.props.children}
-                </div>
-            );
-        }
+        return (
+            <div style={{opacity: props.opacity}}>
+                {props.children}
+            </div>
+        );
     }
 
     // ------------------------------ <Messages /> -----------------------------
 
-    class Messages extends React.Component<CoreViews.Messages.Props, CoreViews.Messages.State> {
+    class Messages extends React.Component<CoreViews.Messages.Props, MessageModelState> {
 
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
-            this.state = {
-                messages: modelProvider.messageModel.getMessages(),
-                transitionTime: modelProvider.messageModel.getTransitionTime()
-            };
+            this.state = messageModel.getState();
         }
 
-        _changeListener() {
-            this.setState({
-                messages: modelProvider.messageModel.getMessages(),
-                transitionTime: modelProvider.messageModel.getTransitionTime()
-            });
+        _changeListener(state) {
+            this.setState(state);
         }
 
         componentDidMount() {
-            modelProvider.messageModel.addChangeListener(this._changeListener);
+            messageModel.addChangeListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            modelProvider.messageModel.removeChangeListener(this._changeListener);
+            messageModel.removeChangeListener(this._changeListener);
         }
 
         render() {
@@ -583,7 +550,7 @@ export function init(
                 return (
                     <div className="messages">
                         {this.state.messages.map((item, i) => (
-                            <Message key={`msg:${i}`} transitionTime={this.state.transitionTime} {...item} />
+                            <Message key={`msg:${i}`} {...item} />
                         ))}
                     </div>
                 );

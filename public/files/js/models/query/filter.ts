@@ -169,6 +169,9 @@ export class FilterModel extends GeneralQueryModel {
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
+                case 'CQL_EDITOR_DISABLE':
+                    this.notifyChangeListeners();
+                break;
                 case 'FILTER_QUERY_INPUT_SELECT_TYPE':
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
                     this.notifyChangeListeners();

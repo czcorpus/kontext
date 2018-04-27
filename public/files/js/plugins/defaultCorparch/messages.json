@@ -2,7 +2,6 @@
   "en-US": {
     "defaultCorparch__unknown_size": "unknown size",
     "defaultCorparch__click_to_remove_item_from_fav": "click to remove the corpus from favourites",
-    "defaultCorparch__click_to_unlock_removal": "click to (un)lock corpora for removal",
     "defaultCorparch__hold_ctrl_for_multiple": "Hold CTRL/Command to select multiple labels",
     "defaultCorparch__you_can_use_suffixes_size": "You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T",
     "defaultCorparch__size_from": "size from",
@@ -26,20 +25,20 @@
     "defaultCorparch__please_log_in_to_see_fav": "Please log-in to use favourite corpora",
     "defaultCorparch__hit_tab_to_see_other": "Hit [Tab] to search for other corpora",
     "defaultCorparch__in_fav": "In favourites",
-    "defaultCorparch__not_in_fav": "Not in favourites",
+    "defaultCorparch__not_in_fav": "Click to add to favourites",
     "defaultCorparch__item_added_to_fav": "Corpus added to favourites",
     "defaultCorparch__advanced_filters": "Advanced filter",
     "defaultCorparch__filters": "Filters",
     "defaultCorparch__corpus_name_input_label": "corpus name",
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Please note that the list only displays first {maxNum} items. If you cannot find your corpus, please refine your search or visit the <a href=\"{link}\">full list page</a>.",
     "defaultCorparch__no_keyword": "Reset",
+    "defaultCorparch__item_will_be_removed": "Item will be removed from the list in a few moments. Click the star icon to add it back to favourites.",
     "defaultCorparch__err001": "Maximum allowed number ({maxNum}) of favorite corpora exceeded. To add a new item, please remove an existing item first."
 
   },
   "cs-CZ": {
     "defaultCorparch__unknown_size": "neznámá velikost",
     "defaultCorparch__click_to_remove_item_from_fav": "klikněte pro vyřazení korpusu z oblíbených",
-    "defaultCorparch__click_to_unlock_removal": "klikněte pro odemčení/uzamčení režimu odebírání korpusů ze seznamu",
     "defaultCorparch__hold_ctrl_for_multiple": "Přidržte klávesu CTRL/Command, chcete-li vybrat více štítků",
     "defaultCorparch__you_can_use_suffixes_size": "Pro zápis přibližné velikosti lze použít přípony - např. 50k, 100M, 7G, 1T",
     "defaultCorparch__size_from": "velikost od",
@@ -63,13 +62,14 @@
     "defaultCorparch__please_log_in_to_see_fav": "Pro zobrazení oblíbených korpusů se prosím přihlašte",
     "defaultCorparch__hit_tab_to_see_other": "Stiskněte [Tab] pro vyhledávání ostatních korpusů",
     "defaultCorparch__in_fav": "V oblíbených",
-    "defaultCorparch__not_in_fav": "Není v oblíbených",
+    "defaultCorparch__not_in_fav": "Klikněte pro přidání do oblíbených",
     "defaultCorparch__item_added_to_fav": "Korpus přidán do oblíbených",
     "defaultCorparch__advanced_filters": "Pokročilý filtr",
     "defaultCorparch__filters": "Filtry",
     "defaultCorparch__corpus_name_input_label": "název korpusu",
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Berte prosím na vědomí, že seznam zobrazuje pouze prvních {maxNum} položek. Nemůžete-li najít hledaný korpus, zkuste zpřesnit zadání nebo použijte <a href=\"{link}\">úplný seznam korpusů</a>.",
     "defaultCorparch__no_keyword": "Zrušit výběr",
+    "defaultCorparch__item_will_be_removed": "Položka bude za několik okamžiků odstraněna ze seznamu. Klikněte na ikonku hvězdičky pro její opětovné přidání do oblíbených.",
     "defaultCorparch__err001": "Byl překročen maximální povolený počet oblíbených korpusů ({maxNum}). Pro přidání nové položky je třeba nejdříve smazat některou z existujících."
   }
 }

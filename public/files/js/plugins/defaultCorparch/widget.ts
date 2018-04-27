@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import RSVP from 'rsvp';
+import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';
 import * as common from './common';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
@@ -25,7 +27,6 @@ import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
-import RSVP from 'rsvp';
 
 /**
  *
@@ -43,6 +44,11 @@ export interface Options  {
 }
 
 
+export interface FavListItem extends common.ServerFavlistItem {
+    trashTTL:number;
+}
+
+
 /**
  *
  */
@@ -52,7 +58,7 @@ export class CorplistWidgetModel extends StatefulModel {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    private dataFav:Immutable.List<common.ServerFavlistItem>;
+    private dataFav:Immutable.List<FavListItem>;
 
     private dataFeat:Immutable.List<common.CorplistItem>;
 
@@ -82,6 +88,10 @@ export class CorplistWidgetModel extends StatefulModel {
 
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
 
+    private static TRASH_TTL_TICKS = 20;
+
+    private trashTimerSubsc:Rx.Subscription;
+
     constructor(
             dispatcher:ActionDispatcher,
             pluginApi:IPluginApi,
@@ -98,7 +108,7 @@ export class CorplistWidgetModel extends StatefulModel {
         this.currentSubcorp = corpSelection.getCurrentSubcorpus();
         this.origSubcorpName = corpSelection.getOrigSubcorpName();
         this.anonymousUser = anonymousUser;
-        this.dataFav = Immutable.List<common.ServerFavlistItem>(dataFav);
+        this.dataFav = this.importServerItems(dataFav);
         this.dataFeat = Immutable.List<common.CorplistItem>(dataFeat);
         this.isWaitingToSwitch = false;
         this.currFavitemId = this.findCurrFavitemId(this.extractItemFromPage());
@@ -152,18 +162,11 @@ export class CorplistWidgetModel extends StatefulModel {
                         }
                     );
                 break;
+                case 'DEFAULT_CORPARCH_FAV_ITEM_ADD':
+                    this.removeItemFromTrash(payload.props['itemId']);
+                break;
                 case 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE':
-                    this.removeFavItem(payload.props['itemId']).then(
-                        (data) => {
-                            this.currFavitemId = this.findCurrFavitemId(this.extractItemFromPage());
-                            this.pluginApi.showMessage('info', this.pluginApi.translate('defaultCorparch__item_removed_from_fav'));
-                            this.notifyChangeListeners();
-                        },
-                        (err) => {
-                            this.pluginApi.showMessage('error', this.pluginApi.translate('defaultCorparch__failed_to_remove_fav'));
-                            this.notifyChangeListeners();
-                        }
-                    );
+                    this.moveItemToTrash(payload.props['itemId']);
                 break;
                 case 'DEFAULT_CORPARCH_STAR_ICON_CLICK':
                     (() => {
@@ -217,6 +220,90 @@ export class CorplistWidgetModel extends StatefulModel {
         });
     }
 
+    private removeItemFromTrash(itemId:string):void {
+        const idx = this.dataFav.findIndex(x => x.id === itemId);
+        if (idx > -1) {
+            const item = this.dataFav.get(idx);
+            this.dataFav = this.dataFav.set(idx, {
+                id: item.id,
+                name: item.name,
+                subcorpus_id: item.subcorpus_id,
+                size: item.size,
+                size_info: item.size_info,
+                corpora: item.corpora,
+                description: item.description,
+                trashTTL: null
+            });
+        }
+        if (this.trashTimerSubsc) {
+            this.trashTimerSubsc.unsubscribe();
+        }
+        this.currFavitemId = this.findCurrFavitemId(this.extractItemFromPage());
+        this.notifyChangeListeners();
+    }
+
+    private moveItemToTrash(itemId:string):void {
+        const idx = this.dataFav.findIndex(x => x.id === itemId);
+        if (idx > -1) {
+            const item = this.dataFav.get(idx);
+            this.dataFav = this.dataFav.set(idx, {
+                id: item.id,
+                name: item.name,
+                subcorpus_id: item.subcorpus_id,
+                size: item.size,
+                size_info: item.size_info,
+                corpora: item.corpora,
+                description: item.description,
+                trashTTL: CorplistWidgetModel.TRASH_TTL_TICKS
+            });
+            this.currFavitemId = this.findCurrFavitemId(this.extractItemFromPage());
+            this.notifyChangeListeners();
+            const src = Rx.Observable.timer(0, 1000).take(CorplistWidgetModel.TRASH_TTL_TICKS);
+            if (this.trashTimerSubsc) {
+                this.trashTimerSubsc.unsubscribe();
+            }
+            this.trashTimerSubsc = src.subscribe(
+                () => {
+                    this.checkTrashedItems();
+                },
+                (_) => undefined,
+                () => {
+                    this.unsetFavItem(itemId, false).then(
+                        () => {
+                            this.notifyChangeListeners();
+                        }
+                    )
+                }
+            );
+        }
+    }
+
+    private checkTrashedItems():void {
+        this.dataFav = this.dataFav.map(item => ({
+            id: item.id,
+            name: item.name,
+            subcorpus_id: item.subcorpus_id,
+            size: item.size,
+            size_info: item.size_info,
+            corpora: item.corpora,
+            description: item.description,
+            trashTTL: item.trashTTL !== null ? item.trashTTL -= 1 : null
+        })).filter(item => item.trashTTL > 0 || item.trashTTL === null).toList();
+    }
+
+    private importServerItems(items:Array<common.ServerFavlistItem>):Immutable.List<FavListItem> {
+        return Immutable.List<FavListItem>(items.map(v => ({
+            id: v.id,
+            name: v.name,
+            subcorpus_id: v.subcorpus_id,
+            size: v.size,
+            size_info: v.size_info,
+            corpora: v.corpora,
+            description: v.description,
+            trashTTL: null
+        })));
+    }
+
     initHandlers():void {
         this.searchEngine.addOnDone(() => {
             this.isWaitingForSearchResults = false;
@@ -258,7 +345,7 @@ export class CorplistWidgetModel extends StatefulModel {
      */
     private findCurrFavitemId(item:common.GeneratedFavListItem):string {
         const normalize = (v:string) => v ? v : '';
-        const srch = this.dataFav.find(x => {
+        const srch = this.dataFav.filter(x => x.trashTTL === null).find(x => {
                 return normalize(x.subcorpus_id) === normalize(item.subcorpus_id) &&
                     item.corpora.join('') === x.corpora.map(x => x.id).join('');
         });
@@ -335,23 +422,24 @@ export class CorplistWidgetModel extends StatefulModel {
                 return this.pluginApi.ajax<Array<common.CorplistItem>>(
                     'GET',
                     this.pluginApi.createActionUrl('user/get_favorite_corpora'),
-                    {},
-                    {contentType : 'application/x-www-form-urlencoded'}
+                    {}
                 );
             }
 
         ).then(
             (favItems:any) => { // TODO (indirect) fix d.ts types of ajax()
                 const items = <Array<common.CorplistItem>>favItems;
-                this.dataFav = Immutable.List<common.ServerFavlistItem>(favItems);
+                this.dataFav = this.importServerItems(favItems);
             }
         );
     }
 
-    private reloadItems(editAction:RSVP.Promise<any>, message:string):RSVP.Promise<any> {
+    private reloadItems(editAction:RSVP.Promise<any>, message:string|null):RSVP.Promise<any> {
         return editAction.then<Array<common.CorplistItem>>(
             (data:Kontext.AjaxResponse) => {
-                this.pluginApi.showMessage('info', message);
+                if (message !== null) {
+                    this.pluginApi.showMessage('info', message);
+                }
                 return this.pluginApi.ajax<Array<common.CorplistItem>>(
                     'GET',
                     this.pluginApi.createActionUrl('user/get_favorite_corpora'),
@@ -361,13 +449,15 @@ export class CorplistWidgetModel extends StatefulModel {
         ).then(
             (favItems:any) => {
                 const items = <Array<common.CorplistItem>>favItems;
-                this.dataFav = Immutable.List<common.ServerFavlistItem>(favItems);
+                this.dataFav = this.importServerItems(favItems);
             }
         );
     }
 
-    private setFavItem():RSVP.Promise<any> {
-        const message = this.pluginApi.translate('defaultCorparch__item_added_to_fav');
+    private setFavItem(showMessage:boolean=true):RSVP.Promise<any> {
+        const message = showMessage ?
+                this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
+                null;
         const newItem = this.extractItemFromPage();
         return this.reloadItems(this.pluginApi.ajax(
             'POST',
@@ -376,8 +466,10 @@ export class CorplistWidgetModel extends StatefulModel {
         ), message);
     }
 
-    private unsetFavItem(id:string):RSVP.Promise<any> {
-        const message = this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
+    private unsetFavItem(id:string, showMessage:boolean=true):RSVP.Promise<any> {
+        const message = showMessage ?
+                this.pluginApi.translate('defaultCorparch__item_removed_from_fav') :
+                null;
         return this.reloadItems(this.pluginApi.ajax(
             'POST',
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
@@ -397,7 +489,7 @@ export class CorplistWidgetModel extends StatefulModel {
         return this.origSubcorpName;
     }
 
-    getDataFav():Immutable.List<common.ServerFavlistItem> {
+    getDataFav():Immutable.List<FavListItem> {
         return this.dataFav;
     }
 
