@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../app/dispatcher';
 import {Kontext} from '../types/common';
-import { MessageModel } from '../models/common/layout';
+import { MessageModel, MessageModelState } from '../models/common/layout';
 
 
 export interface MessageViewProps {
@@ -36,7 +36,7 @@ export interface MessageViews {
     MessagePageHelp:React.ComponentClass<MessageViewProps>;
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, model:Kontext.IMessagePageModel):MessageViews {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, model:MessageModel):MessageViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -60,16 +60,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
 
     // ---------------------- <MessagePageHelp /> ------------------------------------
 
-    class MessagePageHelp extends React.Component<MessageViewProps, {
-        messages:Immutable.List<Kontext.UserNotification>;
-
-    }> {
+    class MessagePageHelp extends React.Component<MessageViewProps, MessageModelState> {
 
         constructor(props) {
             super(props);
-            this.state = {
-                messages: model.getMessages()
-            };
+            this.state = model.getState();
             this.handleCorporaClick = this.handleCorporaClick.bind(this);
             this.handleStoreChange = this.handleStoreChange.bind(this);
         }
@@ -78,8 +73,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
             window.location.href = he.createActionLink('corpora/corplist');
         }
 
-        private handleStoreChange() {
-            this.setState({messages: model.getMessages()});
+        private handleStoreChange(state) {
+            this.setState(state);
         }
 
         componentDidMount() {

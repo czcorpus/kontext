@@ -253,16 +253,8 @@ export namespace Kontext {
         messageId:string;
         messageType:string;
         messageText:string;
-        fadingOut:boolean;
-    }
-
-    /**
-     * A model managing system messages presented to a user
-     */
-    export interface IMessagePageModel extends EventEmitter {
-        addMessage(messageType:string, messageText:string, onClose:()=>void);
-        getMessages():Immutable.List<UserNotification>;
-        getTransitionTime():number;
+        ttl:number;
+        timeFadeout:number;
     }
 
     /**
@@ -336,8 +328,6 @@ export namespace Kontext {
          */
         cloneState<T>(obj:Readonly<T>|T):Mutable<T>;
 
-        doThingsWithDelay(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
-
         getHelpLink(ident:string):string;
 
         getElmPosition(elm:HTMLElement):[number, number];
@@ -347,7 +337,6 @@ export namespace Kontext {
 
     export interface LayoutModel {
         corpusInfoModel:ICorpusInfoModel,
-        messageModel:IMessagePageModel,
         userInfoModel:IUserInfoModel,
         corpusViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
         generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;

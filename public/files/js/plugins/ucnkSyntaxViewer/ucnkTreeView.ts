@@ -615,7 +615,6 @@ export function generate(data:Array<SourceData.Data>, zone:string, tree:string, 
         addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
         removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
         cloneState:<T extends {[key:string]:any}>(obj:T):T => obj,
-        doThingsWithDelay:(immediateFn:()=>void, actualFn:()=>void, delay:number) => undefined,
         getHelpLink:(ident:string) => '',
         browserInfo: {
             isFirefox: () => false

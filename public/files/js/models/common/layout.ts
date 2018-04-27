@@ -19,136 +19,134 @@
  */
 
 import {Kontext} from '../../types/common';
-import {StatefulModel} from '../base';
+import {StatelessModel, StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
+import * as Rx from '@reactivex/rxjs';
+
+
+export interface MessageModelState {
+    messages:Immutable.List<Kontext.UserNotification>;
+}
+
 
 /**
  *
  */
-export class MessageModel extends StatefulModel implements Kontext.IMessagePageModel {
-
-    private messages:Immutable.List<Kontext.UserNotification>;
-
-    private onClose:{[id:string]:()=>void};
+export class MessageModel extends StatelessModel<MessageModelState> {
 
     private pluginApi:IPluginApi;
 
     private autoRemoveMessages:boolean;
 
+    private static TIME_TICK = 50;
+
+    private static TIME_FADEOUT = 300;
+
+    private timerSubsc:Rx.Subscription;
+
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, autoRemoveMessages:boolean) {
-        super(dispatcher);
-        this.messages = Immutable.List<Kontext.UserNotification>();
-        this.onClose = {};
+        super(
+            dispatcher,
+            {messages: Immutable.List<Kontext.UserNotification>()}
+        );
         this.pluginApi = pluginApi;
         this.autoRemoveMessages = autoRemoveMessages;
-
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
-                case 'MESSAGE_FADE_OUT_ITEM':
-                    this.fadeOutMessage(payload.props['messageId']);
-                    this.notifyChangeListeners();
-                break;
-                case 'MESSAGE_CLOSED':
-                    this.removeMessage(payload.props['messageId']);
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
     }
 
-    addMessage(messageType:string, messageText:string, onClose:()=>void) {
-        const msgId = uid();
-        const baseInterval = this.pluginApi.getConf<number>('messageAutoHideInterval');
+    reduce(state:MessageModelState, action:ActionPayload):MessageModelState {
+        let newState;
+        switch (action.actionType) {
+            case 'MESSAGE_ADD':
+                newState = this.copyState(state);
+                this.addMessage(
+                    newState,
+                    action.props['messageType'],
+                    action.props['messageText']
+                )
+            break;
+            case 'MESSAGE_DECREASE_TTL':
+                newState = this.copyState(state);
+                newState.messages = newState.messages.map(msg => {
+                    return {
+                        messageId: msg.messageId,
+                        messageType: msg.messageType,
+                        messageText: msg.messageText,
+                        ttl: msg.ttl -= MessageModel.TIME_TICK,
+                        timeFadeout: msg.timeFadeout
+                    }
+                }).filter(msg => msg.ttl > 0);
+            break;
+            case 'MESSAGE_CLOSED':
+                newState = this.copyState(state);
+                this.removeMessage(newState, action.props['messageId']);
+            break;
+            default:
+                newState = state;
+        }
+        return newState;
+    }
 
-        let viewTime;
+    sideEffects(state:MessageModelState, action:ActionPayload, dispatch:SEDispatcher):void {
+        switch (action.actionType) {
+            case 'MESSAGE_ADD':
+                if (this.autoRemoveMessages) {
+                    const ticksWait = this.calcMessageTTL(action.props['messageType']) / MessageModel.TIME_TICK;
+                    const ticksFadeOut = MessageModel.TIME_FADEOUT / MessageModel.TIME_TICK;
+                    if (this.timerSubsc) {
+                        this.timerSubsc.unsubscribe();
+                    }
+                    const src = Rx.Observable.timer(0, MessageModel.TIME_TICK).take(ticksWait + ticksFadeOut);
+                    this.timerSubsc = src.subscribe((x) => {
+                        dispatch({
+                            actionType: 'MESSAGE_DECREASE_TTL',
+                            props: {}
+                        });
+                    });
+                }
+            break;
+        }
+    }
+
+    private calcMessageTTL(messageType:string):number {
+        const baseInterval = this.pluginApi.getConf<number>('messageAutoHideInterval');
         switch (messageType) {
             case 'error':
             case 'mail':
-                viewTime = 3 * baseInterval;
-            break;
+                return 3 * baseInterval;
             case 'warning':
-                viewTime = 2 * baseInterval;
-            break;
+                return 2 * baseInterval;
             case 'info':
             default:
-                viewTime = baseInterval;
+                return baseInterval;
         }
+    }
 
-        this.messages = this.messages.push({
+    private addMessage(state:MessageModelState, messageType:string, messageText:string):void {
+        state.messages = state.messages.push({
             messageType: messageType,
             messageText: messageText,
-            messageId: msgId,
-            fadingOut: false
+            messageId: uid(),
+            ttl: this.calcMessageTTL(messageType),
+            timeFadeout: MessageModel.TIME_FADEOUT
         });
-
-        if (onClose) {
-            this.onClose[msgId] = onClose;
-        }
-
-        if (viewTime > 0 && this.autoRemoveMessages) {
-            window.setTimeout(() => {
-                if (this.messages.find(v => v.messageId === msgId)) {
-                    this.fadeOutAndRemoveMessage(msgId);
-                }
-            }, this.pluginApi.getConf<number>('messageAutoHideInterval'));
-        }
-        this.notifyChangeListeners();
     }
 
-    getMessages():Immutable.List<Kontext.UserNotification> {
-        return this.messages;
-    }
-
-    getTransitionTime():number {
-        return 500;
-    }
-
-    fadeOutMessage(messageId:string):void {
-        const srchIdx = this.messages.findIndex(v => v.messageId === messageId);
-        if (srchIdx > -1 ) {
-            const curr = this.messages.get(srchIdx);
-            this.messages = this.messages.set(srchIdx, {
-                messageId: curr.messageId,
-                messageType: curr.messageType,
-                messageText: curr.messageText,
-                fadingOut: true
+    private removeMessage(state:MessageModelState, messageId:string):void {
+        const srchIdx = state.messages.findIndex(v => v.messageId === messageId);
+        if (srchIdx > -1) {
+            const msg = state.messages.get(srchIdx);
+            state.messages = state.messages.set(srchIdx,
+            {
+                messageId: msg.messageId,
+                messageType: msg.messageType,
+                messageText: msg.messageText,
+                ttl: MessageModel.TIME_FADEOUT,
+                timeFadeout: MessageModel.TIME_FADEOUT
             });
-        } else {
-            throw new Error(`Cannot fade out message, ID ${messageId} not found`);
-        }
-    }
-
-    fadeOutAndRemoveMessage(messageId:string):void {
-        const srchIdx = this.messages.findIndex(v => v.messageId === messageId);
-        if (srchIdx > -1 ) {
-            const curr = this.messages.get(srchIdx);
-            this.messages = this.messages.set(srchIdx, {
-                messageId: curr.messageId,
-                messageType: curr.messageType,
-                messageText: curr.messageText,
-                fadingOut: true
-            });
-            this.notifyChangeListeners();
-            window.setTimeout(() => {
-                this.removeMessage(messageId);
-                this.notifyChangeListeners();
-            }, this.getTransitionTime());
-        }
-    }
-
-    removeMessage(messageId:string):void {
-        const srchIdx = this.messages.findIndex(v => v.messageId === messageId);
-        if (srchIdx > -1 ) {
-            this.messages = this.messages.remove(srchIdx);
-            if (typeof this.onClose[messageId] === 'function') {
-                const fn = this.onClose[messageId];
-                delete(this.onClose[messageId]);
-                fn();
-            }
         }
     }
 }

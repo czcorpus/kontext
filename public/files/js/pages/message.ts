@@ -53,7 +53,7 @@ class MessagePage {
                 const views = messageViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.getModels().messageModel
+                    this.layoutModel.getMessageModel()
                 );
                 this.layoutModel.renderReactComponent<MessageViewProps>(
                     views.MessagePageHelp,

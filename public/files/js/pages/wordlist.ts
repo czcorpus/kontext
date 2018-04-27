@@ -63,8 +63,8 @@ export class WordlistPage extends StatefulModel  {
         this.stopWatching();
         this.layoutModel.showMessage(
                 'error',
-                this.layoutModel.translate('global__bg_calculation_failed'),
-                () => {window.history.back();});
+                this.layoutModel.translate('global__bg_calculation_failed')
+        );
     }
 
     private checkStatus():void {

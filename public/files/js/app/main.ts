@@ -153,13 +153,16 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     getModels():Kontext.LayoutModel {
         return {
             corpusInfoModel: this.corpusInfoModel,
-            messageModel: this.messageModel,
             userInfoModel: this.userInfoModel,
             corpusViewOptionsModel: this.corpViewOptionsModel,
             generalViewOptionsModel: this.generalViewOptionsModel,
             asyncTaskInfoModel: this.asyncTaskChecker,
             mainMenuModel: this.mainMenuModel
         };
+    }
+
+    getMessageModel():docModels.MessageModel {
+        return this.messageModel;
     }
 
     getComponentHelpers():Kontext.ComponentHelpers {
@@ -346,7 +349,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
             );
         }
         (this.getConf<Array<[string, string]>>('notifications') || []).forEach((msg) => {
-            this.messageModel.addMessage(msg[0], msg[1], null);
+            this.dispatcher.dispatch({
+                actionType: 'MESSAGE_ADD',
+                props: {
+                    messageType: msg[0],
+                    messageText: msg[1]
+                }
+            });
         });
     }
 
@@ -361,7 +370,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      *                  or an object containing an attribute 'messages' can
      *                  be used.
      */
-    showMessage(msgType:string, message:any, onClose?:()=>void):void {
+    showMessage(msgType:string, message:any):void {
         let outMsg;
         if (msgType === 'error') {
             if (this.getConf<boolean>('isDebug')) {
@@ -396,13 +405,19 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 outMsg = message.message || this.translate('global__unknown_error');
 
             } else {
-                outMsg = String(message);
+                outMsg = `${message}`;
             }
 
         } else {
-            outMsg = String(message);
+            outMsg = `${message}`;
         }
-        this.messageModel.addMessage(msgType, outMsg, onClose);
+        this.dispatcher.dispatch({
+            actionType: 'MESSAGE_ADD',
+            props: {
+                messageType: msgType,
+                messageText: outMsg
+            }
+        });
     }
 
     /**
@@ -729,7 +744,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 this.layoutViews = documentViewsFactory(
                     this.dispatcher,
                     this.getComponentHelpers(),
-                    this.getModels()
+                    this.getModels(),
+                    this.messageModel
                 );
 
                 this.commonViews = commonViewsFactory(this.getComponentHelpers());
@@ -860,13 +876,6 @@ class ComponentTools {
         }
     }
 
-    doThingsWithDelay(immediateFn:()=>void, actualFn:()=>void, delay:number) {
-        immediateFn();
-        window.setTimeout(() => {
-            actualFn();
-        }, delay);
-    }
-
     getHelpLink(ident:string) {
         return this.pageModel.getHelpLink(ident);
     }
@@ -923,8 +932,8 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
     }
 
-    showMessage(type, message, onClose) {
-        return this.pageModel.showMessage(type, message, onClose);
+    showMessage(type, message) {
+        return this.pageModel.showMessage(type, message);
     }
 
     translate(msg, values?) {
