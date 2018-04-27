@@ -334,6 +334,7 @@ class RuleCharMap {
             case 'BINOR':
             case 'BINAND':
             case 'NUMBER':
+            case 'NNUMBER':
             case 'DASH':
             case 'RG_OP':
             case 'RG_ESCAPED':
