@@ -922,8 +922,8 @@ export class ViewPage {
                 const action = actionMap.get(evt.keyCode);
                 if (action) {
                     this.layoutModel.dispatcher.dispatch({
-                        actionType: action.actionName,
-                        props: action.actionArgs
+                        actionType: action.message,
+                        props: action.args
                     });
                 }
             }

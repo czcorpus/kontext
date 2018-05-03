@@ -180,13 +180,19 @@ export namespace Kontext {
         keyCode:number;
     }
 
-
     export interface SubmenuItem {
         ident:string;
         label:string;
         hint:string|null;
         disabled:boolean;
         currConc?:boolean;
+    }
+
+    export interface EventTriggeringSubmenuItem extends SubmenuItem {
+        message:string; // a dispatcher action type
+        args:GeneralProps;
+        keyCode:number;
+        indirect:boolean;
     }
 
     export interface MenuItem {
@@ -225,7 +231,7 @@ export namespace Kontext {
          */
         removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
 
-        exportKeyShortcutActions():Immutable.Map<number, MainMenuAtom>
+        exportKeyShortcutActions():Immutable.Map<number, EventTriggeringSubmenuItem>
 
         /**
          * Bind a custom event handler (typically a one dispatching a custom
