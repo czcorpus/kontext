@@ -42,13 +42,6 @@ export interface StaticSubmenuItem extends Kontext.SubmenuItem {
     openInBlank:boolean;
 }
 
-export interface EventTriggeringSubmenuItem extends Kontext.SubmenuItem {
-    message:string; // a dispatcher action type
-    args:{[key:string]:any};
-    keyCode:number;
-    indirect:boolean;
-}
-
 export interface InitialMenuItem {
     disabled:boolean;
     fallback_action:string;
@@ -77,8 +70,8 @@ export function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuIte
                 !item.hasOwnProperty('message');
 }
 
-export function isEventTriggeringItem(item:Kontext.SubmenuItem): item is EventTriggeringSubmenuItem {
-    return (<EventTriggeringSubmenuItem>item).message !== undefined;
+export function isEventTriggeringItem(item:Kontext.SubmenuItem): item is Kontext.EventTriggeringSubmenuItem {
+    return (<Kontext.EventTriggeringSubmenuItem>item).message !== undefined;
 }
 
 function importMenuData(data:InitialMenuData):Immutable.List<Kontext.MenuEntry> {
@@ -313,16 +306,14 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         return this.data;
     }
 
-    exportKeyShortcutActions():Immutable.Map<number, Kontext.MainMenuAtom> {
-        return Immutable.Map<number, Kontext.MainMenuAtom>(this.data
-            .flatMap(v => Immutable.List<Kontext.SubmenuItem>(v[1].items))
-            .filter(v => isEventTriggeringItem(v) && !!v.keyCode && !!v.message)
-            .map((v:StaticSubmenuItem) => {
-                return [v.keyCode, {
-                    actionArgs: v.args,
-                    keyCode: v.keyCode
-                }];
-            }));
+    exportKeyShortcutActions():Immutable.Map<number, Kontext.EventTriggeringSubmenuItem> {
+        return Immutable.Map<number, Kontext.EventTriggeringSubmenuItem>(
+            this.data
+                .flatMap(v => Immutable.List<Kontext.SubmenuItem>(v[1].items))
+                .filter(v => isEventTriggeringItem(v) && !!v.keyCode)
+                .map((v:Kontext.EventTriggeringSubmenuItem) => [v.keyCode, v])
+                .toList()
+        );
     }
 
     getConcArgs():MultiDict {
