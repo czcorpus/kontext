@@ -632,6 +632,15 @@ class Kontext(Controller):
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
+    def _fix_interdependent_attrs(self):
+        """
+        Some self.args values may not play well together with some default
+        values of dependent attributes. This method should ensure that all
+        the values are consistent.
+        """
+        if self.args.attr_vmode in ('mouseover', 'mixed') and self.args.attr_allpos == 'kw':
+            self.args.attr_allpos = 'all'
+
     def _map_args_to_attrs(self, req_args, named_args):
         """
         arguments:
@@ -669,6 +678,7 @@ class Kontext(Controller):
 
         convert_types(na, self.clone_args())
         self.args.__dict__.update(na)
+        self._fix_interdependent_attrs()
 
     def _check_corpus_access(self, path, form, action_metadata):
         """
