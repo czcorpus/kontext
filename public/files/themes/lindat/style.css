@@ -1,1 +1,17 @@
 @import url("./lindat-common/public/css/lindat.css");
+body
+{
+background-image: none !important;
+}
+section.lindatCorparch-section
+{
+background-color: white !important;
+}
+section.lindatCorparch-section>h2
+{
+background-color: white !important;
+}
+#modal-overlay>.tooltip-box
+{
+background-color: white !important;
+}
