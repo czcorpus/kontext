@@ -116,7 +116,7 @@ class Options(Kontext):
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
-        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs',
+        self._save_options(['attrs', 'attr_vmode', 'attr_allpos', 'ctxattrs', 'structs',
                             'refs', 'structattrs'], self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts())))

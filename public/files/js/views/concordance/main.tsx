@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, ViewOptions} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
@@ -460,8 +460,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     // ------------------------- <ConcOptions /> ---------------------------
 
     class ConcOptions extends React.Component<{
-        viewMode:string; // TODO enum
-        attrsAllpos:string;
+        viewMode:ViewOptions.AttrViewMode;
     },
     {
         currViewAttrs:Array<string>;
@@ -494,8 +493,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     <span className="mouseover-available">
                         {he.translate('options__vmode_status_label')}
                         {':\u00a0'}
-                        <layoutViews.VmodeIcon attrsAllpos={this.props.attrsAllpos}
-                                attrsVmode={this.props.viewMode}
+                        <layoutViews.VmodeIcon
+                                viewMode={this.props.viewMode}
                                 mouseoverAttrs={this.state.currViewAttrs} />
                     </span>
                 </div>
@@ -510,8 +509,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     class ConcToolbarWrapper extends React.Component<{
         showConcToolbar:boolean;
         canSendEmail:boolean;
-        viewMode:string; // TODO enum
-        attrsAllpos:string;
+        viewMode:ViewOptions.AttrViewMode;
         onChartFrameReady?:()=>void;
     },
     {
@@ -553,8 +551,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             onChartFrameReady={this.props.onChartFrameReady}
                             canSendEmail={this.props.canSendEmail} />
                     {this.props.showConcToolbar ?
-                        <ConcOptions viewMode={this.props.viewMode}
-                                attrsAllpos={this.props.attrsAllpos} />
+                        <ConcOptions viewMode={this.props.viewMode} />
                         : null}
                 </div>
             );
@@ -668,7 +665,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         concDetailModelIsBusy:boolean;
         refsDetailData:Immutable.List<[RefsColumn, RefsColumn]>;
         viewMode:string;
-        attrsAllpos:string;
+        attrViewMode:ViewOptions.AttrViewMode;
         isUnfinishedCalculation:boolean;
         concSummary:LinesConcSummary;
         showAnonymousUserWarn:boolean;
@@ -696,8 +693,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 tokenConnectIsBusy: concDetailModel.getTokenConnectIsBusy(),
                 concDetailModelIsBusy: concDetailModel.getIsBusy(),
                 refsDetailData: refsDetailModel.getData(),
-                viewMode: lineViewModel.getViewAttrsVmode(),
-                attrsAllpos: lineViewModel.getAttrAllpos(),
+                viewMode: lineViewModel.getViewMode(),
+                attrViewMode: lineViewModel.getViewAttrsVmode(),
                 isUnfinishedCalculation: lineViewModel.isUnfinishedCalculation(),
                 concSummary: lineViewModel.getConcSummary(),
                 showAnonymousUserWarn: this.props.anonymousUser && this.props.anonymousUserConcLoginPrompt,
@@ -846,8 +843,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
-                                viewMode={this.state.viewMode}
-                                attrsAllpos={this.state.attrsAllpos} />
+                                viewMode={this.state.attrViewMode} />
                         {this.state.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>

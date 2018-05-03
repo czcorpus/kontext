@@ -507,7 +507,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <FieldsetColl citemsPerPage={this.state.citemsPerPage} />
                         {this.state.userIsAnonymous ?
                             <p className="warn">
-                                <layoutViews.StatusIcon status="warning" htmlClass="icon" />
+                                <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
                                 {he.translate('global__anon_user_opts_save_warn')}
                             </p> :
                             null

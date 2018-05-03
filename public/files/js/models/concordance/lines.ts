@@ -31,6 +31,7 @@ import {Line, LangSection, TextChunk, IConcLinesProvider} from '../../types/conc
 import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
+import {transformVmode} from '../options/structsAttrs';
 
 export interface ServerTextChunk {
     class:string;
@@ -93,6 +94,8 @@ export interface ViewConfiguration {
     ViewMode:string;
 
     AttrAllpos:string;
+
+    AttrViewMode:string;
 
     ShowLineNumbers:boolean;
 
@@ -279,6 +282,8 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     private attrAllpos:string;
 
+    private attrViewMode:string;
+
     private showLineNumbers:boolean;
 
     private kwicCorps:Immutable.List<string>;
@@ -335,6 +340,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         this.ttModel = ttModel;
         this.viewMode = lineViewProps.ViewMode;
         this.attrAllpos = lineViewProps.AttrAllpos;
+        this.attrViewMode = lineViewProps.AttrViewMode;
         this.showLineNumbers = lineViewProps.ShowLineNumbers;
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
         this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
@@ -465,6 +471,9 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
     }
 
     updateOnCorpViewOptsChange():void {
+        this.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
+        this.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
+
         this.reloadPage().then(
             (data) => {
                 this.pushHistoryState(this.currentPage);
@@ -494,8 +503,8 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         return (this.layoutModel.getConcArgs()['attrs'] || []).split(',');
     }
 
-    getViewAttrsVmode():string {
-        return this.layoutModel.getConcArgs()['attr_vmode'];
+    getViewAttrsVmode():ViewOptions.AttrViewMode {
+        return transformVmode(this.attrViewMode, this.attrAllpos);
     }
 
     getNumItemsInLockedGroups():number {
@@ -821,10 +830,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     getViewMode():string {
         return this.viewMode;
-    }
-
-    getAttrAllpos():string {
-        return this.attrAllpos;
     }
 
     getShowLineNumbers():boolean {
