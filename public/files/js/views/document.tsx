@@ -693,17 +693,20 @@ export function init(
     const VmodeIcon:CoreViews.VmodeIcon.Component = (props) => {
         const vmodeMouseover = <img
             src={he.createStaticUrl('img/vmode_mouseover.svg')}
-            title={he.translate('options__vmode_switch_indicator_desc') +
+            title={`${he.translate('options__vmode_status_label')}: ` +
+                    `${he.translate('options__vmode_switch_mouseover_all')}.` +
                     (props.mouseoverAttrs ? ' ' + he.translate('options__attribs_are_on_mouseover_{attrs}',
                     {attrs: props.mouseoverAttrs.slice(1).join('/')}) : '')} />;
 
         const vmodeAll = <img
             src={he.createStaticUrl('img/vmode_all.svg')}
-            title={he.translate('options__vmode_switch_indicator_desc')} />;
+            title={`${he.translate('options__vmode_status_label')}: ` +
+                    `${he.translate('options__vmode_switch_visible_all')}.`} />;
 
         const vmodeKwic = <img
             src={he.createStaticUrl('img/vmode_kwic.svg')}
-            title={he.translate('options__vmode_switch_indicator_desc')} />;
+            title={`${he.translate('options__vmode_status_label')}: ` +
+                   `${he.translate('options__vmode_switch_visible_kwic')}.`} />;
 
         switch (props.viewMode) {
             case ViewOptions.AttrViewMode.MOUSEOVER:

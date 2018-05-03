@@ -422,7 +422,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 hasSelectAll={props.TehasSelectAllRefs} />
                         {props.userIsAnonymous ?
                             <p className="warn">
-                                <layoutViews.StatusIcon status="warning" htmlClass="icon" />
+                                <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
                                 {helpers.translate('global__anon_user_opts_save_warn')}
                             </p> :
                             null
