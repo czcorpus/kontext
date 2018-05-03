@@ -31,6 +31,7 @@ import {Line, LangSection, TextChunk, IConcLinesProvider} from '../../types/conc
 import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
+import {transformVmode} from '../options/structsAttrs';
 
 export interface ServerTextChunk {
     class:string;
@@ -494,8 +495,8 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         return (this.layoutModel.getConcArgs()['attrs'] || []).split(',');
     }
 
-    getViewAttrsVmode():string {
-        return this.layoutModel.getConcArgs()['attr_vmode'];
+    getViewAttrsVmode():ViewOptions.AttrViewMode {
+        return transformVmode(this.layoutModel.getConcArgs()['attr_vmode'], this.attrAllpos);
     }
 
     getNumItemsInLockedGroups():number {
@@ -821,10 +822,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     getViewMode():string {
         return this.viewMode;
-    }
-
-    getAttrAllpos():string {
-        return this.attrAllpos;
     }
 
     getShowLineNumbers():boolean {

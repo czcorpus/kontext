@@ -27,6 +27,24 @@ import RSVP from 'rsvp';
 import { MultiDict } from '../../util';
 
 
+export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.AttrViewMode => {
+    if (vmode === 'visible' && attrAllPos === 'all') {
+        return ViewOptions.AttrViewMode.VISIBLE_ALL;
+
+    } else if (vmode === 'visible' && attrAllPos === 'kw') {
+        return ViewOptions.AttrViewMode.VISIBLE_KWIC;
+
+    } else if (vmode === 'mouseover' && attrAllPos === 'all') {
+        return ViewOptions.AttrViewMode.MOUSEOVER;
+
+    } else if (vmode === 'mixed' && attrAllPos === 'all') {
+        return ViewOptions.AttrViewMode.MIXED;
+
+    } else {
+        throw new Error(`Unknown internal attribute viewing mode configuration: [${vmode}, ${attrAllPos}]`);
+    }
+}
+
 
 export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions.ICorpViewOptionsModel {
 
@@ -50,7 +68,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     private hasLoadedData:boolean = false;
 
-    private attrVmode:string; // visible/mouseover
+    private attrVmode:string;
 
     private attrAllpos:string; // kw/all
 
@@ -85,22 +103,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                     );
                 break;
                 case 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY':
-                    if (payload.props['name'] === 'allpos') {
-                        this.attrAllpos = payload.props['value'];
-
-                    } else if (payload.props['name'] === 'attr_vmode') {
-                        this.attrVmode = payload.props['value'];
-                        // Here we limit possible combinations of attrVmode and attrAllPos.
-                        // Please note that server's 'view' action always ensures that:
-                        // if attrVmode == 'mouseover' then attrAllPos = 'all'
-                        // which means that these settings should obey that rule
-                        if (this.attrVmode === 'mouseover') {
-                            this.attrAllpos = 'all';
-
-                        } else {
-                            this.attrAllpos = 'kw';
-                        }
-                    }
+                    this.setAttrVisibilityMode(payload.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE':
@@ -156,6 +159,27 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         this.updateHandlers = this.updateHandlers.push(fn);
     }
 
+    private setAttrVisibilityMode(value:ViewOptions.AttrViewMode):void {
+        switch (value) {
+            case ViewOptions.AttrViewMode.VISIBLE_ALL:
+                this.attrVmode = 'visible';
+                this.attrAllpos = 'all';
+            break;
+            case ViewOptions.AttrViewMode.VISIBLE_KWIC:
+                this.attrVmode = 'visible';
+                this.attrAllpos = 'kw';
+            break;
+            case ViewOptions.AttrViewMode.MOUSEOVER:
+                this.attrVmode = 'mouseover';
+                this.attrAllpos = 'all';
+            break;
+            case ViewOptions.AttrViewMode.MIXED:
+                this.attrVmode = 'mixed';
+                this.attrAllpos = 'all';
+            break;
+        }
+    }
+
     private serialize():any {
         const ans = {
             setattrs: this.attrList.filter(item => item.selected).map(item => item.n).toArray(),
@@ -167,8 +191,8 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                             .flatMap(x => x)
                             .toArray(),
             setrefs: this.referenceList.filter(item => item.selected).map(item => item.n).toArray(),
-            attr_allpos: this.getAttrsAllpos(),
-            attr_vmode: this.getAttrsVmode()
+            attr_allpos: this.attrAllpos,
+            attr_vmode: this.attrVmode
         };
 
         return ans;
@@ -178,6 +202,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         const corpname = this.layoutModel.getCorpusIdent().id;
         const urlArgs = new MultiDict([['corpname', corpname], ['format', 'json']]);
         const formArgs = this.serialize();
+
         return this.layoutModel.ajax<ViewOptions.SaveViewAttrsOptionsResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewattrsx', urlArgs),
@@ -192,7 +217,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                         [this.layoutModel.getConf<string>('baseAttr')]);
             }
             this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
-            this.layoutModel.replaceConcArg('attr_vmode', [this.getAttrsVmode()]);
+            this.layoutModel.replaceConcArg('attr_vmode', [this.attrVmode]);
             this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
             this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
             return data;
@@ -438,8 +463,8 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         return this.selectAllReferences;
     }
 
-    getAttrsVmode():string {
-        return this.attrVmode;
+    getAttrsVmode():ViewOptions.AttrViewMode {
+        return transformVmode(this.attrVmode, this.attrAllpos);
     }
 
     getAttrsAllpos():string {

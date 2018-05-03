@@ -619,6 +619,13 @@ export namespace ViewOptions {
         selected: boolean;
     }
 
+    export enum AttrViewMode {
+        VISIBLE_ALL = 'visible-all',
+        VISIBLE_KWIC = 'visible-kwic',
+        MOUSEOVER = 'mouseover',
+        MIXED = 'mixed'
+    }
+
     export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
 
     export interface PageData {
@@ -640,18 +647,18 @@ export namespace ViewOptions {
 
     export interface ICorpViewOptionsModel extends Kontext.EventEmitter {
         getCorpusIdent():Kontext.FullCorpusIdent;
-        initFromPageData(data:ViewOptions.PageData):void;
-        loadData():RSVP.Promise<ViewOptions.PageData>;
+        initFromPageData(data:PageData):void;
+        loadData():RSVP.Promise<PageData>;
         isLoaded():boolean;
         addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
-        getAttributes():Immutable.List<ViewOptions.AttrDesc>;
+        getAttributes():Immutable.List<AttrDesc>;
         getSelectAllAttributes():boolean;
-        getStructures():Immutable.List<ViewOptions.StructDesc>;
-        getStructAttrs():ViewOptions.AvailStructAttrs;
+        getStructures():Immutable.List<StructDesc>;
+        getStructAttrs():AvailStructAttrs;
         getReferences():Immutable.List<RefsDesc>;
         getSelectAllReferences():boolean;
         getFixedAttr():string;
-        getAttrsVmode():string;
+        getAttrsVmode():AttrViewMode;
         getAttrsAllpos():string;
         getShowConcToolbar():boolean;
         getIsWaiting():boolean;

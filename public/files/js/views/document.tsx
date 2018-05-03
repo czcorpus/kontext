@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
+import {Kontext, ViewOptions} from '../types/common';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -705,15 +705,14 @@ export function init(
             src={he.createStaticUrl('img/vmode_kwic.svg')}
             title={he.translate('options__vmode_switch_indicator_desc')} />;
 
-        switch (props.attrsVmode + '#' + props.attrsAllpos) {
-            case 'mouseover#all':
+        switch (props.viewMode) {
+            case ViewOptions.AttrViewMode.MOUSEOVER:
                 return vmodeMouseover;
-            case 'mixed#all':
-            case 'mixed#kw':
+            case ViewOptions.AttrViewMode.MIXED:
                 return <>{vmodeMouseover}<strong>+</strong>{vmodeKwic}</>;
-            case 'visible#all':
+            case ViewOptions.AttrViewMode.VISIBLE_ALL:
                 return vmodeAll;
-            case 'visible#kw':
+            case ViewOptions.AttrViewMode.VISIBLE_KWIC:
                 return vmodeKwic;
             default:
                 return <span />;

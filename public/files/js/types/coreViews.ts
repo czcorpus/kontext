@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import {ViewOptions} from './common';
 
 
 export namespace CoreViews {
@@ -291,8 +292,7 @@ export namespace CoreViews {
     export namespace VmodeIcon {
 
         export interface Props {
-            attrsVmode:string;
-            attrsAllpos:string;
+            viewMode:ViewOptions.AttrViewMode;
             mouseoverAttrs?:Array<string>;
         }
 

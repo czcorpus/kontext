@@ -115,22 +115,18 @@ export function init({dispatcher, helpers, viewOptionsModel,
     // ---------------------------- <AttributesTweaks /> ----------------------
 
     const AttributesTweaks:React.SFC<{
-        attrsVmode:string; // TODO enum
+        attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
-        attrsAllpos:string;
 
     }> = (props) => {
 
-        const handleSelectChangeFn = (name) => {
-            return (event) => {
-                dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
-                    props: {
-                        name: name,
-                        value: event.target.value
-                    }
-                });
-            }
+        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
+                props: {
+                    value: event.target.value
+                }
+            });
         };
 
         return (
@@ -141,31 +137,27 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <div>
                     <select name="attr_vmode"
                             value={props.attrsVmode}
-                            onChange={handleSelectChangeFn('attr_vmode')}
+                            onChange={handleSelectChangeFn}
                             className="no-label">
-                        <option value="visible">{helpers.translate('options__vmode_switch_visible')}</option>
-                        <option value="mouseover">{helpers.translate('options__vmode_switch_mouseover')}</option>
-                        <option value="mixed">{helpers.translate('options__vmode_switch_mixed')}</option>
+                        <option value={ViewOptions.AttrViewMode.VISIBLE_ALL}>
+                            {helpers.translate('options__vmode_switch_visible_all')}
+                        </option>
+                        <option value={ViewOptions.AttrViewMode.VISIBLE_KWIC}>
+                            {helpers.translate('options__vmode_switch_visible_kwic')}
+                        </option>
+                        <option value={ViewOptions.AttrViewMode.MOUSEOVER}>
+                            {helpers.translate('options__vmode_switch_mouseover_all')}
+                        </option>
+                        <option value={ViewOptions.AttrViewMode.MIXED}>
+                            {helpers.translate('options__vmode_switch_mixed')}
+                        </option>
                     </select>
                     <span className="icons">
                         {props.showConcToolbar ?
-                            <layoutViews.VmodeIcon attrsAllpos={props.attrsAllpos}
-                                        attrsVmode={props.attrsVmode} /> :
+                            <layoutViews.VmodeIcon viewMode={props.attrsVmode} /> :
                             null
                         }
                     </span>
-                </div>
-                <div>
-                    <select name="allpos"
-                            value={props.attrsAllpos}
-                            className="no-label"
-                            onChange={handleSelectChangeFn('allpos')}
-                            disabled={props.attrsVmode === 'mouseover' || props.attrsVmode === 'mixed'}
-                            title={props.attrsVmode === 'mouseover' ?
-                                    helpers.translate('options__locked_allpos_expl') : null}>
-                        <option value="all">{helpers.translate('options__attr_apply_all')}</option>
-                        <option value="kw">{helpers.translate('options__attr_apply_kwic')}</option>
-                    </select>
                 </div>
             </div>
         );
@@ -176,8 +168,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
     const FieldsetAttributes:React.SFC<{
         attrList:Immutable.List<ViewOptions.AttrDesc>;
         hasSelectAll:boolean;
-        attrsVmode:string;
-        attrsAllpos:string;
+        attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
 
     }> = (props) => {
@@ -205,7 +196,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 </ul>
                 <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
                 <hr />
-                <AttributesTweaks attrsVmode={props.attrsVmode} attrsAllpos={props.attrsAllpos}
+                <AttributesTweaks attrsVmode={props.attrsVmode}
                         showConcToolbar={props.showConcToolbar} />
             </fieldset>
         );
@@ -408,9 +399,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         attrList:Immutable.List<ViewOptions.AttrDesc>;
         availStructs: Immutable.List<ViewOptions.StructDesc>;
         hasSelectAllAttrs:boolean;
-        attrsAllpos:string;
         showConcToolbar:boolean;
-        attrsVmode:string;
+        attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
         availRefs:Immutable.List<ViewOptions.RefsDesc>;
         TehasSelectAllRefs:boolean;
@@ -424,8 +414,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
                         <FieldsetAttributes  attrList={props.attrList}
-                                hasSelectAll={props.hasSelectAllAttrs} attrsAllpos={props.attrsAllpos}
-                                attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
+                                hasSelectAll={props.hasSelectAllAttrs}
+                                attrsVmode={props.attrsVmode}
+                                showConcToolbar={props.showConcToolbar} />
                         <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
                         <FieldsetMetainformation availRefs={props.availRefs}
                                 hasSelectAll={props.TehasSelectAllRefs} />
@@ -464,8 +455,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAllAttrs:boolean;
         TehasSelectAllRefs:boolean;
         hasLoadedData:boolean;
-        attrsVmode:string;
-        attrsAllpos:string;
+        attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
         isWaiting:boolean;
         isVisible:boolean;
@@ -493,7 +483,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 TehasSelectAllRefs: viewOptionsModel.getSelectAllReferences(),
                 hasLoadedData: viewOptionsModel.isLoaded(),
                 attrsVmode: viewOptionsModel.getAttrsVmode(),
-                attrsAllpos: viewOptionsModel.getAttrsAllpos(),
                 showConcToolbar: viewOptionsModel.getShowConcToolbar(),
                 isWaiting: viewOptionsModel.getIsWaiting(),
                 isVisible: false,
@@ -552,7 +541,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
                             TehasSelectAllRefs={this.state.TehasSelectAllRefs}
                             hasLoadedData={this.state.hasLoadedData}
                             attrsVmode={this.state.attrsVmode}
-                            attrsAllpos={this.state.attrsAllpos}
                             showConcToolbar={this.state.showConcToolbar}
                             isWaiting={this.state.isWaiting}
                             userIsAnonymous={this.state.userIsAnonymous} />
