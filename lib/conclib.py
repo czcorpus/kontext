@@ -32,6 +32,7 @@ from kwiclib import tokens2strclass
 from l10n import import_string
 import plugins
 from concworker import GeneralWorker
+import corplib
 
 
 class ConcCalculationControlException(Exception):
@@ -143,6 +144,13 @@ def _get_cached_conc(corp, subchash, q, minsize):
 
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     cache_map.refresh_map()
+    calc_status = cache_map.get_calc_status(subchash, q)
+    if calc_status:
+        corp_mtime = corplib.corp_mtime(corp)
+        if calc_status.created - corp_mtime < 0:
+            logging.getLogger(__name__).warning('Removed outdated cache file (older than corpus indices)')
+            cache_map.del_full_entry(subchash, q)
+
     if _contains_shuffle_seq(q):
         srch_from = 1
     else:
