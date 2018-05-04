@@ -412,6 +412,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
                     this.concSummary.ipm = payload.props['relconcsize'];
                     this.concSummary.arf = payload.props['arf'];
                     this.pagination.lastPage = payload.props['availPages'];
+                    this.notifyChangeListeners();
                     this.synchronize(
                         payload.actionType,
                         {

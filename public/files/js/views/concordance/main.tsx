@@ -278,7 +278,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcSummary /> ---------------------------
 
-    class ConcSummary extends React.Component<{
+    const ConcSummary:React.SFC<{
         corpname:string;
         isUnfinishedCalculation:boolean;
         concSize:number;
@@ -286,91 +286,59 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         ipm:number;
         arf:number;
         isShuffled:boolean;
-    },
-    {
         canCalculateAdHocIpm:boolean;
         fastAdHocIpm:boolean;
         adHocIpm:number;
         subCorpName:string;
         origSubcorpName:string;
         isWaiting:boolean;
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleCalcIpmClick = this._handleCalcIpmClick.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                canCalculateAdHocIpm: lineViewModel.getProvidesAdHocIpm(),
-                fastAdHocIpm: lineViewModel.getFastAdHocIpm(),
-                adHocIpm: lineViewModel.getAdHocIpm(),
-                subCorpName: lineViewModel.getSubCorpName(),
-                origSubcorpName: lineViewModel.getOrigSubCorpName(),
-                isWaiting: lineViewModel.getIsBusy()
-            };
-        }
-
-        _renderNumHits() {
+        const renderNumHits = () => {
             const ans = [];
-            if (this.props.isUnfinishedCalculation) {
-                ans.push(<span key="hits:1" id="conc-loader">
+            if (props.isUnfinishedCalculation) {
+                ans.push(<span key="hits:1" className="conc-loader">
                             <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} title={he.translate('global__processing')}
                                 alt={he.translate('global__processing')} />
                         </span>);
             }
-            if (this.props.concSize === this.props.fullSize || this.props.fullSize === -1) { // TODO concSize vs. fullSize
-                ans.push(<strong key="hits:2" id="fullsize" title={String(this.props.concSize)}>
-                        {he.formatNumber(this.props.concSize)}</strong>);
+            if (props.concSize === props.fullSize || props.fullSize === -1) {
+                ans.push(<strong key="hits:2" className={`conc-size${props.isUnfinishedCalculation ? ' unfinished' : ''}`} title={String(props.concSize)}>
+                        {he.formatNumber(props.concSize)}</strong>);
 
             } else {
                 ans.push(<a key="hits:1b" className="size-warning"><img src={he.createStaticUrl('img/warning-icon.svg')} /></a>);
                 ans.push(<span key="hits:2b" id="loader"></span>);
-                ans.push(<strong key="hits:3b">{he.formatNumber(this.props.concSize)}</strong>);
+                ans.push(<strong key="hits:3b" className={`conc-size${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.concSize)}</strong>);
                 ans.push('\u00a0' + he.translate('concview__out_of_total') + '\u00a0');
-                ans.push(<span key="hits:4b" id="fullsize" title={String(this.props.fullSize)}>{he.formatNumber(this.props.fullSize)}</span>);
+                ans.push(<span key="hits:4b" id="fullsize" title={String(props.fullSize)}>{he.formatNumber(props.fullSize)}</span>);
             }
             return ans;
-        }
+        };
 
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            lineViewModel.addChangeListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            lineViewModel.removeChangeListener(this._modelChangeHandler);
-        }
-
-        _getIpm() {
-            if (this.state.isWaiting) {
+        const getIpm = () => {
+            if (props.isWaiting) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                             alt={he.translate('global__calculating')}
                             title={he.translate('global__calculating')} />;
 
-            } else if (typeof this.props.ipm === 'number' && !this.state.canCalculateAdHocIpm) {
-                return <span className="ipm">{he.formatNumber(this.props.ipm)}</span>;
+            } else if (typeof props.ipm === 'number' && !props.canCalculateAdHocIpm) {
+                return <span className={`ipm${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.ipm)}</span>;
 
-            } else if (this.state.adHocIpm) {
-                return <span className="ipm">{he.formatNumber(this.state.adHocIpm)}</span>;
+            } else if (props.adHocIpm) {
+                return <span className={`ipm${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.adHocIpm)}</span>;
 
-            } else if (this.state.canCalculateAdHocIpm) {
-                return <a onClick={this._handleCalcIpmClick}>{he.translate('global__calculate')}</a>;
+            } else if (props.canCalculateAdHocIpm) {
+                return <a onClick={handleCalcIpmClick}>{he.translate('global__calculate')}</a>;
 
             } else {
                 return null;
             }
-        }
+        };
 
-        _getIpmDesc() {
-            if (this.state.canCalculateAdHocIpm) {
-                if (this.state.adHocIpm) {
+        const getIpmDesc = () => {
+            if (props.canCalculateAdHocIpm) {
+                if (props.adHocIpm) {
                     return (
                         <span className="ipm-note">(
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
@@ -382,12 +350,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     return null;
                 }
 
-            } else if (this.state.subCorpName) {
+            } else if (props.subCorpName) {
                 return (
                     <span className="ipm-note">(
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
                         {he.translate('concview__ipm_rel_to_the_{subcname}',
-                        {subcname: this.state.subCorpName})}
+                        {subcname: props.subCorpName})}
                     )</span>
                 );
 
@@ -396,65 +364,60 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     <span className="ipm-note">(
                         <img src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')} />
                         {he.translate('concview__ipm_rel_to_the_{corpname}',
-                            {corpname: this.props.corpname})}
+                            {corpname: props.corpname})}
                     )</span>
                 );
             }
-        }
+        };
 
-        _handleCalcIpmClick() {
-            const userConfirm = this.state.fastAdHocIpm ?
+        const handleCalcIpmClick = () => {
+            const userConfirm = props.fastAdHocIpm ?
                     true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
-                const newState = he.cloneState(this.state);
-                newState.isWaiting = true;
-                this.setState(newState);
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
                     props: {}
                 });
             }
-        }
+        };
 
-        _getArf() {
-            if (this.props.arf) {
-                return <strong id="arf">{he.formatNumber(this.props.arf)}</strong>;
+        const getArf = () => {
+            if (props.arf) {
+                return <strong id="arf">{he.formatNumber(props.arf)}</strong>;
 
             } else {
                 return <strong id="arf" title={he.translate('concview__arf_not_avail')}>-</strong>;
             }
-        }
+        };
 
-        render() {
-            return (
-                <div id="result-info">
-                    {he.translate('concview__hits_label')}:  {this._renderNumHits()}
-                    <span id="conc-calc-info" title="90"></span>
-                    <span className="separ">|</span>
-                    <layoutViews.Abbreviation url={he.getHelpLink('term_ipm')}
-                            value={he.translate('global__abbr_ipm')}
-                            desc={he.translate('concview__ipm_help')} />
-                    :{'\u00A0'}
-                    {this._getIpm()}
-                    {'\u00A0'}
-                    {this._getIpmDesc()}
-                    {'\u00A0'}
-                    <span className="separ">|</span>
+        return (
+            <div id="result-info">
+                {he.translate('concview__hits_label')}:  {renderNumHits()}
+                <span id="conc-calc-info" title="90"></span>
+                <span className="separ">|</span>
+                <layoutViews.Abbreviation url={he.getHelpLink('term_ipm')}
+                        value={he.translate('global__abbr_ipm')}
+                        desc={he.translate('concview__ipm_help')} />
+                :{'\u00A0'}
+                {getIpm()}
+                {'\u00A0'}
+                {getIpmDesc()}
+                {'\u00A0'}
+                <span className="separ">|</span>
 
-                    <layoutViews.Abbreviation url={he.getHelpLink('term_arf')}
-                            value={he.translate('global__abbr_arf')}
-                            desc={he.translate('concview__arf_help')} />
-                    :{'\u00A0'}
-                    {this._getArf()}
-                    <span className="separ">|</span>
-                    <span className="notice-shuffled">
-                    {this.props.isShuffled ?
-                        he.translate('concview__result_shuffled') :
-                        he.translate('concview__result_sorted')}
-                    </span>
-                </div>
-            );
-        }
+                <layoutViews.Abbreviation url={he.getHelpLink('term_arf')}
+                        value={he.translate('global__abbr_arf')}
+                        desc={he.translate('concview__arf_help')} />
+                :{'\u00A0'}
+                {getArf()}
+                <span className="separ">|</span>
+                <span className="notice-shuffled">
+                {props.isShuffled ?
+                    he.translate('concview__result_shuffled') :
+                    he.translate('concview__result_sorted')}
+                </span>
+            </div>
+        );
     }
 
     // ------------------------- <ConcOptions /> ---------------------------
@@ -672,6 +635,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         saveFormVisible:boolean;
         supportsSyntaxView:boolean;
         syntaxBoxData:{tokenNumber:number; kwicLength:number};
+        canCalculateAdHocIpm:boolean;
+        fastAdHocIpm:boolean;
+        adHocIpm:number;
+        subCorpName:string;
+        origSubcorpName:string;
+        isWaiting:boolean;
     }> {
 
         constructor(props) {
@@ -700,7 +669,13 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 showAnonymousUserWarn: this.props.anonymousUser && this.props.anonymousUserConcLoginPrompt,
                 saveFormVisible: lconcSaveModel.getFormIsActive(),
                 supportsSyntaxView: lineViewModel.getSupportsSyntaxView(),
-                syntaxBoxData: null
+                syntaxBoxData: null,
+                canCalculateAdHocIpm: lineViewModel.getProvidesAdHocIpm(),
+                fastAdHocIpm: lineViewModel.getFastAdHocIpm(),
+                adHocIpm: lineViewModel.getAdHocIpm(),
+                subCorpName: lineViewModel.getSubCorpName(),
+                origSubcorpName: lineViewModel.getOrigSubCorpName(),
+                isWaiting: lineViewModel.getIsBusy()
             };
         }
 
@@ -837,6 +812,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <ConcSummary {...this.state.concSummary}
                                 corpname={this.props.baseCorpname}
                                 isUnfinishedCalculation={this.state.isUnfinishedCalculation}
+                                canCalculateAdHocIpm={this.state.canCalculateAdHocIpm}
+                                fastAdHocIpm={this.state.fastAdHocIpm}
+                                adHocIpm={this.state.adHocIpm}
+                                subCorpName={this.state.subCorpName}
+                                origSubcorpName={this.state.origSubcorpName}
+                                isWaiting={this.state.isWaiting}
                                 />
                         </div>
                         <ConcToolbarWrapper
