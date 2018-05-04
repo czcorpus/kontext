@@ -84,7 +84,7 @@
             <logout_url>/user/logout?continue=%s</logout_url>
         </auth>
         <conc_cache>
-            <module>redis_conc_cache</module>
+            <module>default_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <conc_persistence>
