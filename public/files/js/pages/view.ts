@@ -312,16 +312,9 @@ export class ViewPage {
 
                 ).then(
                     (data:AjaxResponse.ConcStatus) => {
-                        if (!data.finished) {
-                            if (data.fullsize > 0) {
-                                applyData(data); // partial result
-                            }
-                            if (idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
-                                loop(idx + 1, delay * decay, decay);
-                            }
-
-                        } else {
-                            applyData(data);
+                        applyData(data);
+                        if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
+                            loop(idx + 1, delay * decay, decay);
                         }
                     }
                 );
