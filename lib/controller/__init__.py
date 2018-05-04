@@ -451,7 +451,7 @@ class Controller(object):
                 raise ActionValidationException(err, validator)
 
     @staticmethod
-    def _invoke_legacy_action(action, args, named_args):
+    def _invoke_legacy_action(action, named_args):
         """
         Calls an action method (= method with the @exposed annotation) in the
         "bonito" way (i.e. with automatic mapping between request args to target
@@ -461,7 +461,6 @@ class Controller(object):
 
         arguments:
         action -- name of the action
-        args -- positional arguments of the action (tuple/list)
         named_args -- a dictionary of named args and their defined default values
         """
         na = named_args.copy()
@@ -470,7 +469,7 @@ class Controller(object):
         else:
             del_nondef = 1
         convert_types(na, _function_defaults(action), del_nondef=del_nondef)
-        return action(*args[1:], **na)
+        return action(**na)
 
     def call_function(self, func, args, **named_args):
         """
@@ -641,14 +640,14 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def pre_dispatch(self, path, args, action_metadata=None):
+    def pre_dispatch(self, args, action_metadata=None):
         """
         Allows specific operations to be performed before the action itself is processed.
         """
         if action_metadata is None:
             action_metadata = {}
         self.add_validator(partial(self._validate_http_method, action_metadata))
-        return path, args
+        return args
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
@@ -715,6 +714,11 @@ class Controller(object):
             new_err = err
         return new_err
 
+    def _run_message_action(self, named_args, return_type):
+        if return_type == 'json':
+            return self.process_action('message_json', named_args)
+        return self.process_action('message', named_args)
+
     def run(self, path=None):
         """
         This method wraps all the processing of an HTTP request.
@@ -731,22 +735,23 @@ class Controller(object):
         named_args = {}
         headers = []
         action_metadata = self._get_method_metadata(path[0])
+        return_type = action_metadata.get('return_type', 'html')
         try:
             self.init_session()
             if self.is_action(path[0], action_metadata):
-                path, named_args = self.pre_dispatch(path, named_args, action_metadata)
+                named_args = self.pre_dispatch(named_args, action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_action(path[0], path, named_args)
+                methodname, tmpl, result = self.process_action(path[0], named_args)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
         except UserActionException as ex:
             self._status = ex.code
             self.add_system_message('error', fetch_exception_msg(ex))
-            methodname, tmpl, result = self.process_action('message', path, named_args)
+            methodname, tmpl, result = self._run_message_action(named_args, return_type)
         except werkzeug.exceptions.BadRequest as ex:
             self._status = ex.code
             self.add_system_message('error', '{0}: {1}'.format(ex.name, ex.description))
-            methodname, tmpl, result = self.process_action('message', path, named_args)
+            methodname, tmpl, result = self._run_message_action(named_args, return_type)
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
@@ -756,7 +761,7 @@ class Controller(object):
                 self.add_system_message('error', fetch_exception_msg(ex))
             else:
                 self.handle_dispatch_error(ex)
-            methodname, tmpl, result = self.process_action('message', path, named_args)
+            methodname, tmpl, result = self._run_message_action(named_args, return_type)
 
         # Let's test whether process_method actually invoked requested method.
         # If not (e.g. there was an error and a fallback has been used) then reload action metadata
@@ -766,7 +771,7 @@ class Controller(object):
         self._proc_time = round(time.time() - self._proc_time, 4)
         self.post_dispatch(methodname, action_metadata, tmpl, result)
         # response rendering
-        headers += self.output_headers(action_metadata.get('return_type', 'html'))
+        headers += self.output_headers(return_type)
         output = StringIO.StringIO()
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata, outf=output)
@@ -774,12 +779,11 @@ class Controller(object):
         output.close()
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
-    def handle_action_error(self, ex, action_name, pos_args, named_args):
+    def handle_action_error(self, ex, action_name, named_args):
         """
         arguments:
         ex -- a risen exception
         action_name -- a name of the original processed method
-        pos_args -- positional arguments of the action method
         named_args -- key=>value arguments of the action method
         """
         e2 = self._normalize_error(ex)
@@ -810,10 +814,9 @@ class Controller(object):
             else:
                 self.add_system_message('error', user_msg)
 
-            self.pre_dispatch(self._exceptmethod, named_args,
-                              self._get_method_metadata(self._exceptmethod))
+            self.pre_dispatch(self._exceptmethod, self._get_method_metadata(self._exceptmethod))
             em, self._exceptmethod = self._exceptmethod, None
-            return self.process_action(em, pos_args, named_args)
+            return self.process_action(em, named_args)
 
     def handle_dispatch_error(self, ex):
         """
@@ -826,13 +829,17 @@ class Controller(object):
                                 _('Failed to process your request. '
                                   'Please try again later or contact system support.'))
 
-    def process_action(self, methodname, pos_args, named_args):
+    def process_action(self, methodname, named_args):
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
 
-        Please note that 'request' and 'pos_args'+'named_args' are used in a mutually exclusive
+        Please note that 'request' and 'named_args' are used in a mutually exclusive
         way (the former is passed to 'new style' actions, the latter is used for legacy ones).
+
+        arguments:
+            methodname -- a string name of a processed method
+            named_args -- named args for the method (legacy actions)
 
         returns: tuple of 3 elements
           0 = method name actually used (it may have changed e.g. due to an error)
@@ -843,12 +850,13 @@ class Controller(object):
         # to a respective form preceding the result (by convention,
         # this is usually encoded as [action] -> [action]_form
         action_metadata = self._get_method_metadata(methodname)
+
         if getattr(self.args, 'reload', None):
             self.args.reload = None
             if methodname != 'subcorp':
                 reload_template = methodname + '_form'
                 if self._is_template(reload_template):
-                    return self.process_action(reload_template, pos_args, named_args)
+                    return self.process_action(reload_template, named_args)
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
@@ -856,10 +864,10 @@ class Controller(object):
                 # new-style actions use werkzeug.wrappers.Request
                 method_ans = method(self._request)
             else:
-                method_ans = self._invoke_legacy_action(method, pos_args, named_args)
+                method_ans = self._invoke_legacy_action(method, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except Exception as ex:
-            return self.handle_action_error(ex, methodname, pos_args, named_args)
+            return self.handle_action_error(ex, methodname, named_args)
 
     def urlencode(self, key_val_pairs):
         """
