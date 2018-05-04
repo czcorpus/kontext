@@ -56,6 +56,14 @@ def manatee_min_version(ver):
     return ver <= actual
 
 
+def corp_mtime(corpus):
+    reg_mtime = os.path.getmtime(corpus.get_confpath())
+    data_path = corpus.get_conf('PATH')
+    data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
+    data_mtime = os.path.getmtime(data_dir)
+    return max(reg_mtime, data_mtime)
+
+
 def open_corpus(*args, **kwargs):
     """
     Creates a manatee.Corpus instance

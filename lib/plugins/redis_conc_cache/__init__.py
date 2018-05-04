@@ -33,7 +33,6 @@ element conc_cache {
 """
 import os
 import hashlib
-import json
 
 import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
@@ -136,6 +135,7 @@ class RedisCacheMapping(AbstractConcCache):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             return stored_data[1]
+        return None
 
     def update_calc_status(self, subchash, query, calc_status):
         stored_data = self._get_entry(subchash, query)

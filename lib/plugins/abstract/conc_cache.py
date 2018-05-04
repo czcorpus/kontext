@@ -38,7 +38,8 @@ class CalcStatus(object):
     def __init__(self, task_id=None):
         self.task_id = task_id
         self.pid = os.getpid()
-        self.last_upd = int(time.time())
+        self.created = int(time.time())
+        self.last_upd = self.created
         # in case we check status before any calculation (represented by the
         # BackgroundCalc class) starts (the calculation updates curr_wait as it
         # runs), we want to be sure the limit is big enough for BackgroundCalc to
@@ -79,18 +80,6 @@ class CalcStatus(object):
 
 class AbstractConcCache(object):
 
-    def get_stored_pidfile(self, subchash, q):
-        """
-        Return stored pidfile.
-        The method should return None if no record is found.
-
-        Arguments:
-        subchash -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_Corpus()
-        q -- a list of query elements
-        """
-        raise NotImplementedError()
-
     def get_stored_size(self, subchash, q):
         """
         Return stored concordance size.
@@ -101,6 +90,9 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
+        raise NotImplementedError()
+
+    def get_calc_status(self, subchash, query):
         raise NotImplementedError()
 
     def refresh_map(self):
