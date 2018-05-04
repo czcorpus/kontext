@@ -19,7 +19,7 @@
 
 class AbstractDispatchHook(object):
 
-    def pre_dispatch(self, plugin_api, path, named_args, action_metadata):
+    def pre_dispatch(self, plugin_api, named_args, action_metadata):
         """
         A function run right after Controller.pre_dispatch and before
         any Kontext.pre_dispatch.
@@ -30,7 +30,6 @@ class AbstractDispatchHook(object):
 
         Args:
             plugin_api -- an API available to plugins (controller.plg.PluginApi)
-            path -- original action path
             named_args -- args mapped from action method (legacy actions only)
             action_metadata -- action metadata (added by @inject)
         """

@@ -138,14 +138,14 @@ def get_subcorp_pub_info(spath):
                     orig_path = line.strip()
                 elif i > 1:
                     desc += line
-    return orig_path, desc
+    return orig_path, desc.decode('utf-8') if desc else None
 
 
 def rewrite_subc_desc(publicpath, desc):
     orig_path, _ = get_subcorp_pub_info(publicpath)
     with open(os.path.splitext(publicpath)[0] + '.name', 'w') as fw:
         fw.write(orig_path + '\n\n')
-        fw.write(desc)
+        fw.write(desc.encode('utf-8'))
 
 
 def mk_publish_links(subcpath, publicpath, desc):
@@ -162,7 +162,7 @@ def mk_publish_links(subcpath, publicpath, desc):
     os.symlink(os.path.join(*link_elms), os.path.splitext(subcpath)[0] + '.pub')
     with open(os.path.splitext(publicpath)[0] + '.name', 'w') as namefile:
         namefile.write(subcpath + '\n\n')
-        namefile.write(desc)
+        namefile.write(desc.encode('utf-8'))
     os.chdir(orig_cwd)
 
 

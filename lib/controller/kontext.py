@@ -680,14 +680,13 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
         self._fix_interdependent_attrs()
 
-    def _check_corpus_access(self, path, form, action_metadata):
+    def _check_corpus_access(self, form, action_metadata):
         """
         Args:
-            path: current action path as a list
             form:
             action_metadata:
 
-        Returns: a 3-tuple (copus id, corpus variant, action path)
+        Returns: a 3-tuple (copus id, corpus variant)
         """
         def validate_access(cn, allowed):
             if cn in allowed:
@@ -712,7 +711,7 @@ class Kontext(Controller):
             else:
                 corpname = ''
                 variant = ''
-            return corpname, variant, path
+            return corpname, variant
 
     def _apply_semi_persistent_args(self, form_proxy):
         """
@@ -748,16 +747,16 @@ class Kontext(Controller):
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
     # TODO: decompose this method (phase 2)
-    def pre_dispatch(self, path, named_args, action_metadata=None):
+    def pre_dispatch(self, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
         options, validating corpus access rights, scheduled actions.
         """
-        super(Kontext, self).pre_dispatch(path, named_args, action_metadata)
+        super(Kontext, self).pre_dispatch(named_args, action_metadata)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.pre_dispatch(self._plugin_api, path, named_args, action_metadata)
+            dhook.pre_dispatch(self._plugin_api, named_args, action_metadata)
 
         def validate_corpus():
             if isinstance(self.corp, fallback_corpus.ErrorCorpus):
@@ -784,7 +783,7 @@ class Kontext(Controller):
         self._restore_prev_conc_params(form)
         # corpus access check and modify path in case user cannot access currently requested corp.
         try:
-            corpname, corpus_variant, path = self._check_corpus_access(path, form, action_metadata)
+            corpname, corpus_variant = self._check_corpus_access(form, action_metadata)
         except CorpusForbiddenException as ex:
             corpname, corpus_variant = ex.corpname, ex.variant
             path = ['message']
@@ -808,16 +807,16 @@ class Kontext(Controller):
             self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
                                                              for k, v in args.items()]))
-        if len(path) > 0:
-            # by default, each action is public
-            access_level = action_metadata.get('access_level', 0)
-            if access_level and self.user_is_anonymous():
-                raise ForbiddenException(_('Access forbidden'))
+        # by default, each action is public
+        access_level = action_metadata.get('access_level', 0)
+        if access_level and self.user_is_anonymous():
+            raise ForbiddenException(_('Access forbidden'))
+
         # plugins setup
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'setup', None)):
                 p.instance.setup(self)
-        return path, named_args
+        return named_args
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
@@ -1421,3 +1420,7 @@ class Kontext(Controller):
                                                     human_corpname=queries[0].get('human_corpname', None))
         kwargs['popup_server_messages'] = False
         return kwargs
+
+    @exposed(accept_kwargs=True, skip_corpus_init=True, return_type='json')
+    def message_json(self, *args, **kwargs):
+        return self.message(*args, **kwargs)
