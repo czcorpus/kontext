@@ -181,7 +181,21 @@ class CorptreeParser(object):
         ans.sample_size = elm.attrib.get('sample_size', -1)
         ans.citation_info.default_ref = CorptreeParser._get_repo_citation(
             elm.attrib['repo']) if 'repo' in elm.attrib else None
+        ans.token_connect.providers, ans.kwic_connect.providers = CorptreeParser.parse_tckc_providers(elm)
         return ans
+
+    @staticmethod
+    def parse_tckc_providers(node):
+        tc_providers = []
+        kc_providers = []
+        token_connect_elm = node.find('token_connect')
+        if token_connect_elm is not None:
+            tc_providers = [p.text for p in token_connect_elm.findall('provider')]
+
+        kwic_connect_elm = node.find('kwic_connect')
+        if kwic_connect_elm is not None:
+            kc_providers = [p.text for p in kwic_connect_elm.findall('provider')]
+        return tc_providers, kc_providers
 
     def parse_node(self, elm):
         data = {}
