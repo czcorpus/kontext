@@ -83,12 +83,12 @@ class ForbiddenException(UserActionException):
         super(ForbiddenException, self).__init__(message, 403)
 
 
-class ActionValidationException(Exception):
+class ActionValidationException(UserActionException):
 
     def __init__(self, orig_err, validator_fn):
+        super(ActionValidationException, self).__init__('Validator [{0}]: {1}'.format(validator_fn.__name__, orig_err))
         self._orig_err = orig_err
         self._validator_fn = validator_fn
-        self.message = 'Validator [{0}]: {1}'.format(validator_fn.__name__, orig_err)
 
     def __repr__(self):
         return self.message

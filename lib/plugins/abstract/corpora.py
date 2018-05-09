@@ -195,6 +195,10 @@ class AbstractCorporaArchive(object):
         """
         Return a full available corpus information.
 
+        Important note: the method should never raise
+        an exception. In case of an error please return
+        BrokenCorpusInfo from this package.
+
         arguments:
         user_lang -- user language (e.g. en_US)
         corp_id -- corpus identifier
