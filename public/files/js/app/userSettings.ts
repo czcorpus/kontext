@@ -21,23 +21,32 @@ import {Kontext} from '../types/common';
 /**
  *
  */
-class NullStorage implements Storage {
+class TransientStorage implements Storage {
+
+    private data:{[key:string]:any};
+
+    constructor() {
+        this.data = {}
+    }
 
     key(idx:number):string {
         return null
     }
 
     getItem(key:string):string {
-        return null;
+        return this.data[key];
     }
 
     setItem(key:string, value:string) {
+        this.data[key] = value;
     }
 
     removeItem(key:string) {
+        delete this.data[key];
     }
 
     clear():void {
+        this.data = {};
     }
 
     length:number = 0;
@@ -75,7 +84,14 @@ export class UserSettings implements Kontext.IUserSettings {
 
     private dumpToStorage() {
         this.data[this.timestampKey] = this.getTimstamp();
-        this.storage.setItem(this.storageKey, JSON.stringify(this.data));
+        try {
+            this.storage.setItem(this.storageKey, JSON.stringify(this.data));
+
+        } catch (e) {
+            console.error(`Storage access error ${e}. Switching to NullStorage.`);
+            this.storage = new TransientStorage();
+            this.storage.setItem(this.storageKey, JSON.stringify(this.data));
+        }
     }
 
     get<T>(key:string):T {
@@ -89,7 +105,14 @@ export class UserSettings implements Kontext.IUserSettings {
 
     init():void {
         if (this.storageKey in this.storage) {
-            this.data = JSON.parse(this.storage.getItem(this.storageKey));
+            try {
+                this.data = JSON.parse(this.storage.getItem(this.storageKey));
+
+            } catch (e) {
+                console.error(`Storage access error ${e}. Switching to NullStorage.`);
+                this.storage = new TransientStorage();
+                this.data = JSON.parse(this.storage.getItem(this.storageKey));
+            }
 
         } else {
             this.data[this.timestampKey] = this.getTimstamp();
@@ -101,7 +124,7 @@ export class UserSettings implements Kontext.IUserSettings {
      */
     static createInstance(conf:Kontext.IConfHandler):UserSettings {
         return new UserSettings(
-            (typeof window.localStorage === 'object') ? window.localStorage : new NullStorage(),
+            (typeof window.localStorage === 'object' && false) ? window.localStorage : new TransientStorage(),
             'kontext_ui',
             '__timestamp__'
         );
