@@ -308,7 +308,7 @@ class TreeCorparch(AbstractCorporaArchive):
                 ans.manatee = self._manatee_corpora.get_info(corp_id)
                 return ans
             else:
-                raise ValueError('Missing configuration data for %s' % corp_id)
+                return BrokenCorpusInfo(name=corp_id)
         else:
             return BrokenCorpusInfo()
 
