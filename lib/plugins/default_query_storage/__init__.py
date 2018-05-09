@@ -19,23 +19,21 @@ Required config.xml/plugins entries:
 
 element query_storage {
   element module { "default_query_storage" }
-  element num_kept_records {
+  element ttl_days {
     attribute extension-by { "default" }
-    text # how many records to keep stored per user
-  }
+    xsd:integer # how many days records will be kept in storage
+  }?
   element page_num_records {
     attribute extension-by { "default" }
     text # how many records to show in 'recent queries' page
   }
-  element clear_async {
-    attribute extension-by { "default" }
-    "1" | "0" | "true" | "false"  # if true then old records are removed in a separate task
 }
 """
 
 from datetime import datetime
 import time
 import random
+import logging
 
 from plugins.abstract.query_storage import AbstractQueryStorage
 from plugins import inject
@@ -44,9 +42,10 @@ import plugins
 
 class QueryStorage(AbstractQueryStorage):
 
-    PROB_DELETE_OLD_RECORDS = 0.2
+    # we define a 10% chance that on write there will be a check for old records
+    PROB_DELETE_OLD_RECORDS = 0.1
 
-    CLEANUP_QUEUE_KEY = 'query_history_cleanup_queue'
+    DEFAULT_TTL_DAYS = 10
 
     def __init__(self, conf, db, conc_persistence, auth):
         """
@@ -54,10 +53,14 @@ class QueryStorage(AbstractQueryStorage):
         conf -- the 'settings' module (or some compatible object)
         db -- default_db storage backend
         """
-        tmp = conf.get('plugins', 'query_storage').get('default:num_kept_records', None)
-        self._async_cleanup = conf.import_bool(
-            conf.get('plugins', 'query_storage').get('default:async_cleanup', '0'))
-        self.num_kept_records = int(tmp) if tmp else 10
+        tmp = conf.get('plugins', 'query_storage').get('default:ttl_days', None)
+        if tmp:
+            self.ttl_days = int(tmp)
+        else:
+            self.ttl_days = self.DEFAULT_TTL_DAYS
+            logging.getLogger(__name__).warning(
+                'QueryStorage - ttl_days not set, using default value {0} day(s) for query history records'.format(
+                    self.ttl_days))
         self.db = db
         self._conc_persistence = conc_persistence
         self._auth = auth
@@ -73,16 +76,15 @@ class QueryStorage(AbstractQueryStorage):
 
     def write(self, user_id, query_id):
         """
-        stores information about a query
+        stores information about a query; from time
+        to time also check remove too old records
 
         arguments:
         see the super class
         """
         item = dict(created=self._current_timestamp(), query_id=query_id, name=None)
         self.db.list_append(self._mk_key(user_id), item)
-        if self._async_cleanup:
-            self.db.hash_set(self.CLEANUP_QUEUE_KEY, user_id, int(user_id))
-        elif random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
+        if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
 
     def make_persistent(self, user_id, query_id, name):
@@ -162,6 +164,9 @@ class QueryStorage(AbstractQueryStorage):
                 tmp = self._merge_conc_data(item)
                 if tmp:
                     full_data.append(tmp)
+                elif 'name' in item:
+                    logging.getLogger(__name__).warning('Failed to pair named query [{0}] with concordance [{1}]'.format(
+                        item['name'], item['query_id']))
             else:
                 # deprecated type of record (this will vanish soon as there
                 # are no persistent history records based on the old format)
@@ -200,6 +205,7 @@ class QueryStorage(AbstractQueryStorage):
 
         if limit is None:
             limit = len(full_data)
+
         tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
         corp_cache = {}
         for i, item in enumerate(tmp):
@@ -215,32 +221,23 @@ class QueryStorage(AbstractQueryStorage):
 
     def delete_old_records(self, user_id):
         """
-        Deletes oldest records until the final length of the list equals
-        <num_kept_records> configuration value. Named records are
+        Deletes records older than ttl_days. Named records are
         kept intact.
         """
         data_key = self._mk_key(user_id)
         curr_data = self.db.list_get(data_key)
         tmp_key = self._mk_tmp_key(user_id)
         self.db.remove(tmp_key)
-        limit = 0
+        curr_time = time.time()
         new_list = []
-        for item in reversed(curr_data):
+        for item in curr_data:
             if item.get('name', None) is not None:
                 new_list.append(item)
-            elif limit < self.num_kept_records:
+            elif int(curr_time - item['created']) / 86400 < self.ttl_days:
                 new_list.append(item)
-                limit += 1
-        for item in reversed(new_list):
+        for item in new_list:
             self.db.list_append(tmp_key, item)
         self.db.rename(tmp_key, data_key)
-
-    def export_tasks(self):
-        def clean_history():
-            for str_id, user_id in self.db.hash_get_all(self.CLEANUP_QUEUE_KEY).items():
-                self.delete_old_records(user_id)
-                self.db.hash_del(self.CLEANUP_QUEUE_KEY, str_id)
-        return clean_history,
 
 
 @inject(plugins.runtime.DB, plugins.runtime.CONC_PERSISTENCE, plugins.runtime.AUTH)

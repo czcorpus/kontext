@@ -26,6 +26,21 @@ def update_1(doc):
         srch.text = 'default_conc_cache'
 
 
+def update_2(doc):
+    srch = doc.find('/plugins/query_storage/num_kept_records')
+    if srch is not None:
+        srch.getparent().remove(srch)
+
+    # <ttl_days extension-by="default">10</ttl_days>
+    srch = doc.find('/plugins/query_storage/ttl_days')
+    if srch is None:
+        srch = doc.find('/plugins/query_storage')
+        new_elm = etree.SubElement(srch, 'ttl_days')
+        new_elm.attrib['extension-by'] = 'default'
+        new_elm.text = '7'
+        new_elm.tail = '\n      '
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.11.x '
