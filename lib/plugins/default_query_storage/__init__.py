@@ -108,6 +108,11 @@ class QueryStorage(AbstractQueryStorage):
                 return True
         return False
 
+    def _is_paired_with_conc(self, data):
+        q_id = data['query_id']
+        edata = self._conc_persistence.open(q_id)
+        return edata and 'lastop_form' in edata
+
     def _merge_conc_data(self, data):
         q_id = data['query_id']
         edata = self._conc_persistence.open(q_id)
@@ -164,9 +169,6 @@ class QueryStorage(AbstractQueryStorage):
                 tmp = self._merge_conc_data(item)
                 if tmp:
                     full_data.append(tmp)
-                elif 'name' in item:
-                    logging.getLogger(__name__).warning('Failed to pair named query [{0}] with concordance [{1}]'.format(
-                        item['name'], item['query_id']))
             else:
                 # deprecated type of record (this will vanish soon as there
                 # are no persistent history records based on the old format)
@@ -232,7 +234,12 @@ class QueryStorage(AbstractQueryStorage):
         new_list = []
         for item in curr_data:
             if item.get('name', None) is not None:
-                new_list.append(item)
+                if self._is_paired_with_conc(item):
+                    new_list.append(item)
+                else:
+                    logging.getLogger(__name__).warning(
+                        u'Removed unpaired named query {0} of concordance {1}.'.format(item['name'],
+                                                                                       item['query_id']))
             elif int(curr_time - item['created']) / 86400 < self.ttl_days:
                 new_list.append(item)
         for item in new_list:
