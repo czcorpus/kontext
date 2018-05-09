@@ -94,8 +94,9 @@ class ActionValidationException(UserActionException):
         return self.message
 
 
-class CorpusForbiddenException(Exception):
+class CorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
+        super(ForbiddenException, self).__init__('Access to {0} forbidden'.format(corpname))
         self.corpname = corpname
         self.variant = variant

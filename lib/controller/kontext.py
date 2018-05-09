@@ -782,12 +782,7 @@ class Kontext(Controller):
 
         self._restore_prev_conc_params(form)
         # corpus access check and modify path in case user cannot access currently requested corp.
-        try:
-            corpname, corpus_variant = self._check_corpus_access(form, action_metadata)
-        except CorpusForbiddenException as ex:
-            corpname, corpus_variant = ex.corpname, ex.variant
-            path = ['message']
-            action_metadata.update(self._get_method_metadata('message'))
+        corpname, corpus_variant = self._check_corpus_access(form, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
