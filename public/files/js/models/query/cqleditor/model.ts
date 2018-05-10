@@ -132,14 +132,20 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
             case 'CQL_EDITOR_SET_RAW_QUERY': {
                 newState = this.copyState(state);
                 const args = typedProps<CQLEditorSetRawQueryProps>(action.props);
-                newState.rawAnchorIdx = args.rawAnchorIdx;
-                newState.rawFocusIdx = args.rawFocusIdx;
+                if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
+                    newState.rawAnchorIdx = args.rawAnchorIdx;
+                    newState.rawFocusIdx = args.rawFocusIdx;
+                }
                 this.setRawQuery(
                     newState,
                     args.sourceId,
                     args.query,
                     args.range
                 );
+                if (args.range) {
+                    this.moveCursorToPos(
+                        newState, args.sourceId, args.range[0] + args.query.length - 1);
+                }
             }
             break;
             case 'QUERY_INPUT_SET_QUERY':
@@ -213,13 +219,18 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
         return state.rawCode.has(sourceId) ? state.rawCode.get(sourceId).length : 0;
     }
 
+    private moveCursorToPos(state:CQLEditorModelState, sourceId:string, posIdx:number):void {
+        state.rawAnchorIdx = posIdx;
+        state.rawFocusIdx = posIdx;
+    }
+
     private moveCursorToEnd(state:CQLEditorModelState, sourceId:string):void {
-        state.rawAnchorIdx = state.rawCode.get(sourceId).length;
-        state.rawFocusIdx = state.rawCode.get(sourceId).length;
+        this.moveCursorToPos(state, sourceId, state.rawCode.get(sourceId).length);
     }
 
     /**
-     *
+     * @param range in case we want to insert a CQL snipped into an existing code;
+     *              if undefined then whole query is replaced
      */
     private setRawQuery(state:CQLEditorModelState, sourceId:string, query:string, range:[number, number]):void {
         let newQuery:string;
