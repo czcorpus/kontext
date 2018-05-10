@@ -269,7 +269,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         if (/^\||[^\\]\|/.exec(state.presetPattern)) {
             this.pluginApi.showMessage('warning', this.pluginApi.translate('taghelper__cannot_parse'));
         }
-        const parsePattern = /\[[^\]]+\]|[^\]^\[^\.]|\./g;
+        const parsePattern = /\[\\?[^\]]+\]|\\?[^\]^\[^\.]|\.\*|\./g;
         const values = [];
         let item = null;
         while ((item = parsePattern.exec(state.presetPattern)) !== null) {
