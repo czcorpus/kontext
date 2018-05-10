@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union
 import werkzeug.contrib.sessions
 import werkzeug.wrappers
 from controller import KonTextCookie, Controller
@@ -23,6 +23,7 @@ from main_menu import AbstractMenuItem
 
 T = TypeVar('T')
 
+JSONVal = Union[basestring, int, float, bool, None, Dict[str, Any], List[Any]]
 
 class LinesGroups(object):
 
@@ -119,6 +120,8 @@ class Kontext(Controller):
     def get_available_aligned_corpora(self) -> List[str]: ...
 
     def _add_save_menu_item(self, label:basestring, save_format:str, hint:Optional[basestring]): ...
+
+    def _create_action_log(self, user_settings:Dict[str, Any], action_name:str, proc_time:float) -> Dict[str, JSONVal]: ...
 
 
 class PluginApi(object):

@@ -264,7 +264,7 @@ class Kontext(Controller):
     def get_mapping_url_prefix(self):
         return super(Kontext, self).get_mapping_url_prefix()
 
-    def _log_request(self, user_settings, action_name, proc_time=None):
+    def _create_action_log(self, user_settings, action_name, proc_time=None):
         """
         Logs user's request by storing URL parameters, user settings and user name
 
@@ -273,6 +273,9 @@ class Kontext(Controller):
         action_name -- name of current action
         proc_time -- float specifying how long the action took;
         default is None - in such case no information is stored
+
+        returns:
+        log record dict
         """
         import datetime
 
@@ -306,8 +309,7 @@ class Kontext(Controller):
                 log_data['request'][k] = self.environ.get(k)
             elif val == 'pid':
                 log_data['pid'] = os.getpid()
-
-        logging.getLogger('QUERY').info(json.dumps(log_data))
+        return log_data
 
     @staticmethod
     def _init_default_settings(options):
@@ -823,20 +825,18 @@ class Kontext(Controller):
                 set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result)
 
-        with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.post_dispatch(self._plugin_api, methodname, action_metadata)
-
         # create and store concordance query key
         if type(result) is DictType:
             new_query_key = self._store_conc_params()
             self._update_output_with_conc_params(new_query_key, result)
 
         # log user request
-        self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
-                          proc_time=self._proc_time)
-        # TODO
-        # if plugins._has_plugin('tracker'):
-        #    plugins.get_plugins()['tracker'].track(methodname, tmpl, result)
+        log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
+                                           proc_time=self._proc_time)
+        if not settings.get_bool('logging', 'skip_user_actions', False):
+            logging.getLogger('QUERY').info(json.dumps(log_data))
+        with plugins.runtime.DISPATCH_HOOK as dhook:
+            dhook.post_dispatch(self._plugin_api, methodname, action_metadata, log_data)
 
     def _add_save_menu_item(self, label, save_format=None, hint=None):
         if save_format is None:

@@ -35,7 +35,7 @@ class AbstractDispatchHook(object):
         """
         pass
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata):
+    def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
         """
         A function run right after Controller.post_dispatch and before
         Kontext.post_dispatch.
@@ -43,11 +43,15 @@ class AbstractDispatchHook(object):
         The 'action_metadata' is mutable but in this phase, changing
         it has no effect on processed action.
 
-        This hook can be used e.g. for logging and reporting.
+        This hook can be used e.g. for logging and reporting (see log_data arg).
 
         Args:
             plugin_api -- an API available to plugins (controller.plg.PluginApi)
             methodname -- processed action method
             action_metadata -- action metadata (added by @inject)
+            log_data -- an action log record created by KonText (the same data are
+                        written to the log file (if configured so)).
+                        It's OK to mutate this value as it is already been used by
+                        KonText when the func. is called.
         """
         pass

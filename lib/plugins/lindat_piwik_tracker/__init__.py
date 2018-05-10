@@ -109,7 +109,7 @@ class Tracker(AbstractDispatchHook):
         self.rest_methods = frozenset(['fcs'])
         self.auth_token = auth_token
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata):
+    def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
         """
         Sends the tracking information to the tracking backend
         """
@@ -120,7 +120,7 @@ class Tracker(AbstractDispatchHook):
         server_name = server_names[0] if server_names else ''
         https = plugin_api.get_from_environ('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
         remote_addrs = plugin_api.get_from_environ('HTTP_X_FORWARDED_FOR',
-                                      plugin_api.get_from_environ('REMOTE_ADDR', '')).split(', ')
+                                                   plugin_api.get_from_environ('REMOTE_ADDR', '')).split(', ')
         remote_addr = remote_addrs[0] if remote_addrs else ''
         path_info = self.context_path.rstrip('/') + plugin_api.get_from_environ('PATH_INFO', '')
 
