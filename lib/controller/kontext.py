@@ -27,7 +27,8 @@ from werkzeug.datastructures import MultiDict
 import corplib
 import conclib
 from controller import Controller, convert_types, exposed
-from controller.errors import UserActionException, ForbiddenException, CorpusForbiddenException
+from controller.errors import (UserActionException, ForbiddenException, CorpusForbiddenException,
+        AlignedCorpusForbiddenException)
 import plugins
 import plugins.abstract
 from plugins.abstract.auth import AbstractInternalAuth
@@ -688,7 +689,7 @@ class Kontext(Controller):
             form:
             action_metadata:
 
-        Returns: a 3-tuple (copus id, corpus variant)
+        Returns: a 2-tuple (copus id, corpus variant)
         """
         def validate_access(cn, allowed):
             if cn in allowed:
@@ -710,6 +711,13 @@ class Kontext(Controller):
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                     raise CorpusForbiddenException(corpname, variant)
+                for al_corp in form.getlist('align'):
+                    al_access, al_variant = validate_access(al_corp, allowed_corpora)
+                    # we cannot accept aligned corpora without access right
+                    # or with different variant (from implementation reasons in this case)
+                    # than the main corpus has
+                    if not al_access or al_variant != variant:
+                        raise AlignedCorpusForbiddenException(al_corp, al_variant)
             else:
                 corpname = ''
                 variant = ''

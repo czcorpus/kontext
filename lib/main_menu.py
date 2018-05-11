@@ -316,7 +316,7 @@ class MenuGenerator(object):
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usecubcorp', self._args['usesubcorp']),
-                ('align', self._args['align']))
+                ('align', self._args['align'] if len(self._args['align']) else None))
             .mark_indirect()
         )
 

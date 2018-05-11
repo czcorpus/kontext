@@ -97,6 +97,14 @@ class ActionValidationException(UserActionException):
 class CorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
-        super(ForbiddenException, self).__init__('Access to {0} forbidden'.format(corpname))
+        super(CorpusForbiddenException, self).__init__('Access to {0} forbidden'.format(corpname))
+        self.corpname = corpname
+        self.variant = variant
+
+
+class AlignedCorpusForbiddenException(ForbiddenException):
+
+    def __init__(self, corpname, variant):
+        super(AlignedCorpusForbiddenException, self).__init__('Access to aligned corpus {0} forbidden'.format(corpname))
         self.corpname = corpname
         self.variant = variant
