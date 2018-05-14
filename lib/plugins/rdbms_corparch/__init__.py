@@ -14,35 +14,44 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import sqlite3
 import logging
 import re
+import copy
+from collections import OrderedDict, defaultdict
 
 import manatee
-from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, DefaultManateeCorpusInfo,
-                                      CorplistProvider)
-from fallback_corpus import EmptyCorpus
+from controller import exposed
+import actions.user
+import plugins
+from plugins.abstract.corpora import AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider
 import l10n
+from plugins.rdbms_corparch.backend import Backend, ManateeCorpora
+from translation import ugettext as _
 
 
-class ManateeCorpora(object):
+def parse_query(tag_prefix, query):
     """
-    A caching source of ManateeCorpusInfo instances.
+    Parses a search query:
+
+    <query> ::= <label> | <desc_part>
+    <label> ::= <tag_prefix> <desc_part>
+
+    returns:
+    2-tuple (list of description substrings, list of labels/keywords)
     """
-
-    def __init__(self):
-        self._cache = {}
-
-    def get_info(self, corpus_id):
-        try:
-            if corpus_id not in self._cache:
-                self._cache[corpus_id] = DefaultManateeCorpusInfo(
-                    manatee.Corpus(corpus_id), corpus_id)
-            return self._cache[corpus_id]
-        except:
-            # probably a misconfigured/missing corpus
-            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
-                                            corpus_id)
+    if query is not None:
+        tokens = re.split(r'\s+', query.strip())
+    else:
+        tokens = []
+    query_keywords = []
+    substrs = []
+    for t in tokens:
+        if len(t) > 0:
+            if t[0] == tag_prefix:
+                query_keywords.append(t[1:])
+            else:
+                substrs.append(t)
+    return substrs, query_keywords
 
 
 class DeafultCorplistProvider(CorplistProvider):
@@ -97,16 +106,118 @@ class DeafultCorplistProvider(CorplistProvider):
         return True
 
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
-        logging.getLogger(__name__).debug('query: {0}'.format(query))
-        return []
+        if query is False:  # False means 'use default values'
+            query = ''
+        ans = {'rows': []}
+        permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
+        used_keywords = set()
+        all_keywords_map = dict(self._corparch.all_keywords(plugin_api.user_lang))
+        if filter_dict.get('minSize'):
+            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
+        else:
+            min_size = 0
+        if filter_dict.get('maxSize'):
+            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
+        else:
+            max_size = None
+
+        if offset is None:
+            offset = 0
+        else:
+            offset = int(offset)
+
+        if limit is None:
+            limit = int(self._corparch.max_page_size)
+        else:
+            limit = int(limit)
+
+        user_items = self._corparch.user_items.get_user_items(plugin_api)
+
+        def fav_id(corpus_id):
+            for item in user_items:
+                if item.is_single_corpus and item.main_corpus_id == corpus_id:
+                    return item.ident
+            return None
+
+        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+
+        normalized_query_substrs = [s.lower() for s in query_substrs]
+        for corp in self._corparch.get_list(plugin_api, permitted_corpora):
+            full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
+            if not isinstance(full_data, BrokenCorpusInfo):
+                keywords = [k for k in full_data['metadata']['keywords'].keys()]
+                tests = []
+                found_in = []
+
+                tests.extend([k in keywords for k in query_keywords])
+                for s in normalized_query_substrs:
+                    # the name must be tested first to prevent the list 'found_in'
+                    # to be filled in case item matches both name and description
+                    if s in corp['name'].lower():
+                        tests.append(True)
+                    elif s in (corp['desc'].lower() if corp['desc'] else ''):
+                        tests.append(True)
+                        found_in.append(_('description'))
+                    else:
+                        tests.append(False)
+                tests.append(self.matches_size(corp, min_size, max_size))
+                tests.append(self._corparch.custom_filter(
+                    self._plugin_api, full_data, permitted_corpora))
+
+                if self.matches_all(tests):
+                    corp['size'] = corp['size']
+                    corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
+                    corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
+                    corp['found_in'] = found_in
+                    corp['fav_id'] = fav_id(corp['id'])
+                    # because of client-side fav/feat/search items compatibility
+                    corp['corpus_id'] = corp['id']
+                    self._corparch.customize_search_result_item(self._plugin_api, corp, permitted_corpora,
+                                                                full_data)
+                    ans['rows'].append(corp)
+                    used_keywords.update(keywords)
+                    if not self.should_fetch_next(ans, offset, limit):
+                        break
+        ans['rows'], ans['nextOffset'] = self.cut_result(
+            self.sort(plugin_api, ans['rows']), offset, limit)
+        ans['keywords'] = l10n.sort(used_keywords, loc=plugin_api.user_lang)
+        ans['query'] = query
+        ans['current_keywords'] = query_keywords
+        ans['filters'] = dict(filter_dict)
+        return ans
+
+
+@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+def get_favorite_corpora(ctrl, request):
+    with plugins.runtime.CORPARCH as ca:
+        return ca.export_favorite(ctrl._plugin_api)
 
 
 class RDBMSCorparch(AbstractSearchableCorporaArchive):
 
-    def __init__(self, db_path):
-        self._db = sqlite3.connect(db_path)
-        self._db.row_factory = sqlite3.Row
+    LABEL_OVERLAY_TRANSPARENCY = 0.20
+
+    def __init__(self, backend, auth, user_items, tag_prefix, max_num_hints, max_page_size, registry_lang):
+        self._backend = backend
         self._mc = ManateeCorpora()
+        self._auth = auth
+        self._user_items = user_items
+        self._tag_prefix = tag_prefix
+        self._max_num_hints = int(max_num_hints)
+        self._max_page_size = max_page_size
+        self._registry_lang = registry_lang
+        self._raw_list_data = None
+        self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
+        self._colors = {}
+        self._descriptions = {}
+
+    @property
+    def max_page_size(self):
+        return self._max_page_size
+
+    @property
+    def user_items(self):
+        return self._user_items
 
     def _parse_color(self, code):
         code = code.lower()
@@ -121,20 +232,13 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 return 'rgba(%s, %s, %s, %01.2f)' % (m.group(1), m.group(2), m.group(3), transparency)
         raise ValueError('Invalid color code: %s' % code)
 
-    def _get_corpus_keywords(self, corp_id):
-        cursor = self._db.cursor()
-        cursor.execute('SELECT id, label_cs, label_en, color FROM keyword_corpus AS kc JOIN keyword AS k '
-                       'ON kc.keyword_id = k.id WHERE kc.corpus_id = ?', (corp_id,))
-        ans = {}
-        for row in cursor.fetchall():
-            ans[row['id']] = dict(cs=row['label_cs'], en=row['label_en'])
-        return ans
+    def get_label_color(self, label_id):
+        return self._colors.get(label_id, None)
 
-    def corp_info_from_row(self, row):
+    def _corp_info_from_row(self, row):
         if row:
             mci = self._mc.get_info(corpus_id=row['id'])
             ans = self.create_corpus_info()
-            logging.getLogger(__name__).debug('row: {0}'.format(dict(row)))
             ans.id = row['id']
             ans.name = mci.name
             ans.web = row['web']
@@ -150,30 +254,182 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = row['featured']
             ans.metadata.database = row['database']
-            ans.metadata.keywords = self._get_corpus_keywords(row['id'])
-            logging.getLogger(__name__).debug('xxx: {0}'.format(ans.metadata.keywords))
+            ans.metadata.keywords = self._backend.get_corpus_keywords(row['id'])
+            ans.metadata.desc = row['ttdesc_id']
             return ans
         return None
 
-    def _load_corpus_data(self, corp_id, user_lang):
-        c = self._db.cursor()
-        c.execute('SELECT c.id, c.web, c.sentence_struct, c.tagset, c.collator_locale, c.speech_segment, '
-                  'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
-                  'm.database, m.label_attr, m.id_attr, m.featured, m.reference_default, m.reference_other '
-                  'FROM corpus AS c JOIN metadata AS m ON c.id = m.corpus_id WHERE c.id = ?', (corp_id,))
-        row = c.fetchone()
-        return self.corp_info_from_row(row) if row else BrokenCorpusInfo(corp_id=corp_id)
+    def _raw_list(self):
+        if self._raw_list_data is None:
+            self._descriptions = defaultdict(lambda: {})
+            for row in self._backend.load_descriptions():
+                self._descriptions['cs'][row['id']] = row['text_cs']
+                self._descriptions['en'][row['id']] = row['text_en']
+            self._raw_list_data = OrderedDict([(row['id'], self._corp_info_from_row(row))
+                                               for row in self._backend.load_all_corpora()])
+        return self._raw_list_data
 
-    def get_corpus_info(self, user_lang, corp_id):
-        if corp_id:
-            ans = self._load_corpus_data(corp_id, user_lang)
+    def _export_untranslated_label(self, plugin_api, text):
+        if self._registry_lang[:2] == plugin_api.user_lang[:2]:
+            return text
         else:
-            ans = BrokenCorpusInfo()
+            return u'{0} [{1}]'.format(text, _('translation not available'))
+
+    def _export_featured(self, plugin_api):
+        permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
+
+        def is_featured(o):
+            return o['metadata'].get('featured', False)
+
+        featured = []
+        for x in self._raw_list().values():
+            if x['id'] in permitted_corpora and is_featured(x):
+                featured.append({
+                    # on client-side, this may contain also subc. id, aligned ids
+                    'id': x['id'],
+                    'corpus_id': x['id'],
+                    'name': self._mc.get_info(x['id']).name,
+                    'size': self._mc.get_info(x['id']).size,
+                    'size_info': l10n.simplify_num(self._mc.get_info(x['id']).size),
+                    'description': self._export_untranslated_label(
+                        plugin_api, self._mc.get_info(x['id']).description)
+                })
+        return featured
+
+    def _localize_corpus_info(self, data, lang_code):
+        """
+        Updates localized values from data (please note that not all
+        the data are localized - e.g. paths to files) by a single variant
+        given passed lang_code.
+        """
+        ans = copy.deepcopy(data)
+        lang_code = lang_code.split('_')[0]
+        desc = ans.metadata.desc
+        if ans.metadata.desc is not None and lang_code in self._descriptions:
+            ans.metadata.desc = self._descriptions[lang_code][ans.metadata.desc]
+        else:
+            ans.metadata.desc = ''
+
+        translated_k = OrderedDict()
+        for keyword, label in ans.metadata.keywords.items():
+            if type(label) is dict and lang_code in label:
+                translated_k[keyword] = label[lang_code]
+            elif type(label) is str:
+                translated_k[keyword] = label
+        ans.metadata.keywords = translated_k
         return ans
 
+    @staticmethod
+    def _get_iso639lang(lang):
+        """
+        return 2-letter version of a lang-code
+        """
+        return lang.split('_')[0]
+
+    def all_keywords(self, lang):
+        if self._keywords is None:
+            self._keywords = defaultdict(lambda: OrderedDict())
+            for row in self._backend.load_all_keywords():
+                #  id, label_cs, label_en, color
+                self._keywords['cs'][row['id']] = row['label_cs']
+                self._keywords['en'][row['id']] = row['label_en']
+                self._colors[row['id']] = self._parse_color(row['color'])
+        lang_key = self._get_iso639lang(lang)
+        return self._keywords[lang_key].items()
+
+    def get_corpus_info(self, user_lang, corp_name):
+        if corp_name:
+            # get rid of path-like corpus ID prefix
+            corp_name = corp_name.split('/')[-1].lower()
+            if corp_name in self._raw_list():
+                if user_lang is not None:
+                    ans = self._localize_corpus_info(self._raw_list()[corp_name],
+                                                     lang_code=user_lang)
+                else:
+                    ans = self._raw_list()[corp_name]
+                ans.manatee = self._mc.get_info(corp_name)
+                return ans
+            return BrokenCorpusInfo(name=corp_name)
+        else:
+            return BrokenCorpusInfo()
+
     def get_list(self, plugin_api, user_allowed_corpora):
-        return []
+        """
+        arguments:
+        user_allowed_corpora -- a dict (corpus_id, corpus_variant) containing corpora ids
+                                accessible by the current user
+        """
+        cl = []
+        for item in self._raw_list().values():
+            corp_id, path, web = item['id'], item['path'], item['sentence_struct']
+            if corp_id in user_allowed_corpora:
+                try:
+                    corp_info = self._mc.get_info(corp_id)
+                    cl.append({'id': corp_id,
+                               'name': l10n.import_string(corp_info.name,
+                                                          from_encoding=corp_info.encoding),
+                               'desc': l10n.import_string(corp_info.description,
+                                                          from_encoding=corp_info.encoding),
+                               'size': corp_info.size,
+                               'path': path
+                               })
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warn(
+                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
+                                                                               type(e).__name__, e))
+                    cl.append({
+                        'id': corp_id, 'name': corp_id,
+                        'path': path, 'desc': '', 'size': None})
+        return cl
+
+    def create_corplist_provider(self, plugin_api):
+        return DeafultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
+
+    def export_favorite(self, plugin_api):
+        ans = []
+        for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
+            tmp = item.to_dict()
+            tmp['description'] = self._export_untranslated_label(
+                plugin_api, self._mc.get_info(item.main_corpus_id).description)
+            ans.append(tmp)
+        return ans
+
+    def initial_search_params(self, plugin_api, query, filter_dict=None):
+        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+        all_keywords = self.all_keywords(plugin_api.user_lang)
+        exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
+                        for k, lab in all_keywords]
+        return {
+            'keywords': exp_keywords,
+            'filters': {
+                'maxSize': filter_dict.getlist('maxSize'),
+                'minSize': filter_dict.getlist('minSize'),
+                'name': query_substrs
+            }
+        }
+
+    def export_actions(self):
+        return {actions.user.User: [get_favorite_corpora]}
+
+    def export(self, plugin_api):
+        return dict(
+            favorite=self.export_favorite(plugin_api),
+            featured=self._export_featured(plugin_api),
+            corpora_labels=[(k, lab, '')  # TODO self.get_label_color(k)
+                            for k, lab in self.all_keywords(plugin_api.user_lang)],
+            tag_prefix=self._tag_prefix,
+            max_num_hints=self._max_num_hints
+        )
 
 
-def create_instance(conf):
-    return RDBMSCorparch(db_path=conf.get('plugins', 'corparch')['file'])
+@plugins.inject(plugins.runtime.AUTH, plugins.runtime.USER_ITEMS)
+def create_instance(conf, auth, user_items):
+    return RDBMSCorparch(backend=Backend(db_path=conf.get('plugins', 'corparch')['file']),
+                         auth=auth,
+                         user_items=user_items,
+                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                         max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
+                                                                           None),
+                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

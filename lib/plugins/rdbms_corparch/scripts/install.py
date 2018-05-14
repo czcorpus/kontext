@@ -1,5 +1,6 @@
 import os
-import sys
+import time
+import re
 from lxml import etree
 import sqlite3
 import argparse
@@ -9,7 +10,6 @@ class Shared(object):
     _desc = {}
     _article_id = 0
     _ttdesc_id = 0
-    _corp_order = 0
 
     @property
     def article_id_inc(self):
@@ -30,11 +30,6 @@ class Shared(object):
     @property
     def ttdesc_id(self):
         return self._ttdesc_id
-
-    @property
-    def corp_order_inc(self):
-        self._corp_order += 1
-        return self._corp_order
 
 
 def decode_bool(v):
@@ -65,6 +60,24 @@ def prepare_tables(db):
         db.executescript(' '.join(fr.readlines()))
 
 
+def create_sorting_values(ident):
+    srch = re.match(r'(?i)^intercorp(_v(\d+))?_\w+$', ident)
+    if srch:
+        if srch.groups()[0]:
+            return 'intercorp', int(srch.groups()[1])
+        else:
+            return 'intercorp', 6
+
+    srch = re.match(r'(?i)^oral_v(\d+)$', ident)
+    if srch:
+        return 'oral', int(srch.groups()[0])
+
+    srch = re.match(r'(?i)^oral(\d{4})$', ident)
+    if srch:
+        return 'oral', int(srch.groups()[0]) - 3000
+    return ident, 1
+
+
 def create_corp_record(node, db, shared):
     ident = node.attrib['ident'].lower()
     web = node.attrib['web'] if 'web' in node.attrib else None
@@ -76,14 +89,15 @@ def create_corp_record(node, db, shared):
     speech_overlap_val = node.attrib.get('speech_overlap_val', None)
     collator_locale = node.attrib.get('collator_locale', 'en_US')
     use_safe_font = decode_bool(node.attrib.get('use_safe_font', 'false'))
-
+    curr_time = time.time()
     cursor = db.cursor()
-    cursor.execute('INSERT INTO corpus (id, list_pos, web, sentence_struct, tagset, collator_locale, speech_segment, '
-                   'speaker_id_attr,  speech_overlap_attr,  speech_overlap_val, use_safe_font) '
-                   'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (ident, shared.corp_order_inc, web, sentence_struct,
-                                                                tagset, collator_locale, speech_segment,
-                                                                speaker_id_attr, speech_overlap_attr,
-                                                                speech_overlap_val, use_safe_font))
+    group_name, version = create_sorting_values(ident)
+    cursor.execute('INSERT INTO corpus (id, group_name, version, created, updated, active, web, sentence_struct, '
+                   'tagset, collator_locale, speech_segment, speaker_id_attr,  speech_overlap_attr, '
+                   'speech_overlap_val, use_safe_font) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                   (ident, group_name, version, int(curr_time), int(curr_time), 1, web, sentence_struct, tagset,
+                    collator_locale, speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val,
+                    use_safe_font))
     create_metadata_record(node, ident, db, shared)
     parse_tckc(node, db, ident)
 
@@ -111,6 +125,8 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id):
                 ident = d.attrib['ident']
         cursor.execute('INSERT INTO ttdesc (id, text_cs, text_en) VALUES (?, ?, ?)', (shared.ttdesc_id_inc,
                                                                                       text_cs, text_en))
+        cursor.execute(
+            'INSERT INTO ttdesc_corpus (corpus_id, ttdesc_id) VALUES (?, ?)', (corpus_id, shared.ttdesc_id))
         if ident:
             shared.add_ref_art(ident, shared.ttdesc_id)
     return ans

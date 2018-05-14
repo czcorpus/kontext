@@ -1,6 +1,10 @@
 CREATE TABLE corpus (
 	id text NOT NULL,
-	list_pos int NOT NULL,
+	group_name text NOT NULL,
+	version int NOT NULL DEFAULT 1,
+	created int NOT NULL,
+	updated int NOT NULL,
+	active int NOT NULL,
 	web text,
 	sentence_struct text,
 	tagset text,
