@@ -36,6 +36,8 @@ def fetch_exception_msg(ex):
             msg = unicode(ex)
         except:
             msg = '%r' % ex
+    if not msg:
+        msg = ex.__class__.__name__
     return msg
 
 
@@ -86,7 +88,8 @@ class ForbiddenException(UserActionException):
 class ActionValidationException(UserActionException):
 
     def __init__(self, orig_err, validator_fn):
-        super(ActionValidationException, self).__init__('Validator [{0}]: {1}'.format(validator_fn.__name__, orig_err))
+        super(ActionValidationException, self).__init__(
+            'Validator [{0}]: {1}'.format(validator_fn.__name__, orig_err))
         self._orig_err = orig_err
         self._validator_fn = validator_fn
 
@@ -105,6 +108,7 @@ class CorpusForbiddenException(ForbiddenException):
 class AlignedCorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
-        super(AlignedCorpusForbiddenException, self).__init__('Access to aligned corpus {0} forbidden'.format(corpname))
+        super(AlignedCorpusForbiddenException, self).__init__(
+            'Access to aligned corpus {0} forbidden'.format(corpname))
         self.corpname = corpname
         self.variant = variant
