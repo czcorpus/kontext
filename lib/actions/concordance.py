@@ -1974,7 +1974,7 @@ class Actions(Querying):
             return dict(total=conc.fullsize() if conc else None)
 
     @exposed(return_type='json', http_method='POST')
-    def ajax_switch_corpus(self, request):
+    def ajax_switch_corpus(self, _):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
@@ -2020,7 +2020,6 @@ class Actions(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
-        subcorp = self.args.usesubcorp if self.args.usesubcorp else None
 
         ans = dict(
             corpname=self.args.corpname,
@@ -2029,8 +2028,8 @@ class Actions(Querying):
             humanCorpname=self._human_readable_corpname(),
             corpusIdent=dict(id=self.args.corpname, name=self._human_readable_corpname(),
                              variant=self._corpus_variant,
-                             usesubcorp=self.args.usesubcorp if self.args.usesubcorp else None,
-                             origSubcorpName=getattr(self.corp, 'orig_subcname', subcorp)),
+                             usesubcorp=self.args.usesubcorp,
+                             origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp)),
             currentArgs=[['corpname', self.args.corpname]],
             compiledQuery=[],
             concPersistenceOpId=None,
