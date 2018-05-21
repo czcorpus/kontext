@@ -108,6 +108,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.corpusIdent,
+                    this.layoutModel.getConf<string>('subcorpname'),
                     this.layoutModel.getConf<Array<string>>('SubcorpList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')

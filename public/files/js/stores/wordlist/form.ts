@@ -110,10 +110,11 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
-            subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
+            currentSubcorpus:string, subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>,
+            structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
         this.corpusIdent = corpusIdent;
-        this.currentSubcorpus = '';
+        this.currentSubcorpus = currentSubcorpus;
         this.layoutModel = layoutModel;
         this.subcorpList = Immutable.List<string>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
