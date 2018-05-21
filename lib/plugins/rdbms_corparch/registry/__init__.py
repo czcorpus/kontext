@@ -101,15 +101,12 @@ class Struct(object):
         self.attrs.append(attr)
 
     @property
-    def struct_type(self):
-        for a in self.attrs:
-            if isinstance(a, SimpleAttr) and a.name == 'TYPE':
-                return a.value
-        return None
-
-    @property
     def attributes(self):
         return (x for x in self.attrs if isinstance(x, Attribute))
+
+    @property
+    def simple_items(self):
+        return (x for x in self.attrs if isinstance(x, SimpleAttr))
 
 
 class RegistryConf(object):
@@ -234,7 +231,7 @@ class RegistryConf(object):
         structattr_map = {}
         for struct in self.structs:
             struct_id = self._backend.save_registry_structure(
-                reg_id, struct.name, struct.struct_type)
+                reg_id, struct.name, [(x.name, x.value) for x in struct.simple_items])
             for attr in struct.attributes:
                 sa_id = self._backend.save_registry_structattr(
                     struct_id, attr.name, [(x.name, x.value) for x in attr.attrs])
@@ -277,6 +274,8 @@ class RegistryConf(object):
 
         for item in self._backend.load_registry_structures(self._id):
             st = Struct(name=item['name'])
+            for k, v in [x for x in dict(item).items() if x[0].upper() == x[0]]:
+                st.new_item(SimpleAttr(k, value=v))
             for sattr in self._backend.load_registry_structattrs(item['id']):
                 sobj = Attribute(name=sattr['name'])
                 for k, v in [x for x in dict(sattr).items() if x[0].upper() == x[0]]:
@@ -306,8 +305,8 @@ class RegModelSerializer(object):
     def _sprint_structattrs(self, items):
         ans = []
         for item in items:
-            if isinstance(item, SimpleAttr):
-                ans.append(u'{0}{1}\n'.format(2 * self.INDENT, self._sprint_simple(item)))
+            if isinstance(item, SimpleAttr) and item.value != '' and item.value is not None:
+                ans.append(u'{0}{1}\n'.format(self.INDENT, self._sprint_simple(item)))
             elif isinstance(item, Attribute):
                 ans.append(u'{0}\n'.format(self._sprint_posattr(item, self.INDENT)))
         return ''.join(ans)

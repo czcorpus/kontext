@@ -62,9 +62,9 @@ class Tokenizer(object):
             for item in items:
                 if item == '':
                     continue
-                if item[0] == '"' and item[-1] == '"':
+                if item[0] == '"' and item[-1] == '"' and len(item) > 2:
                     line_ans.append(item[1:-1])
-                elif item[0] == '"':
+                elif item[0] == '"' and not is_q:
                     line_ans.append([])
                     is_q = True
                     v = item[1:]
@@ -72,7 +72,10 @@ class Tokenizer(object):
                 elif item[-1] == '"':
                     is_q = False
                     v = item[:-1]
-                    line_ans[-1].append(v)
+                    if type(line_ans[-1]) is list and line_ans[-1][0] == '"' and v == '"':
+                        line_ans[-1].append(' ')
+                    else:
+                        line_ans[-1].append(v)
                 else:
                     if is_q:
                         line_ans[-1].append(item)

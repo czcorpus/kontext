@@ -79,10 +79,12 @@ class Backend(DatabaseBackend):
     def load_registry_table(self, corpus_id, variant):
         cols = ['id'] + ['{0} AS {1}'.format(v, k) for k, v in self.REG_COLS_MAP.items()]
         if variant:
-            sql = 'SELECT {0} FROM registry WHERE corpus_id = ? AND variant = ?'.format(', '.join(cols))
+            sql = 'SELECT {0} FROM registry WHERE corpus_id = ? AND variant = ?'.format(
+                ', '.join(cols))
             vals = (corpus_id, variant)
         else:
-            sql = 'SELECT {0} FROM registry WHERE corpus_id = ? AND variant IS NULL'.format(', '.join(cols))
+            sql = 'SELECT {0} FROM registry WHERE corpus_id = ? AND variant IS NULL'.format(
+                ', '.join(cols))
             vals = (corpus_id,)
         cursor = self._db.cursor()
         cursor.execute(sql, vals)
@@ -92,7 +94,7 @@ class Backend(DatabaseBackend):
         """
         """
         cols = ['registry_id', 'name'] + [self.POS_COLS_MAP[k]
-                                        for k, v in values if k in self.POS_COLS_MAP]
+                                          for k, v in values if k in self.POS_COLS_MAP]
         vals = [registry_id, name] + [v for k, v in values if k in self.POS_COLS_MAP]
         sql = 'INSERT INTO rattribute ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(['?'] * len(vals)))
@@ -100,7 +102,8 @@ class Backend(DatabaseBackend):
         try:
             cursor.execute(sql, vals)
         except sqlite3.Error as ex:
-            logging.getLogger(__name__).error(u'Failed to save registry values: {0}.'.format(zip(cols, vals)))
+            logging.getLogger(__name__).error(
+                u'Failed to save registry values: {0}.'.format(zip(cols, vals)))
             raise ex
         cursor.execute('SELECT last_insert_rowid()')
         return cursor.fetchone()[0]
@@ -134,9 +137,11 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         for aid in aligned_ids:
             try:
-                cursor.execute('INSERT INTO ralignment (registry1_id, registry2_id) VALUES (?, ?)', (registry_id, aid))
+                cursor.execute(
+                    'INSERT INTO ralignment (registry1_id, registry2_id) VALUES (?, ?)', (registry_id, aid))
             except sqlite3.Error as ex:
-                logging.getLogger(__name__).error(u'Failed to insert values {0}, {1}'.format(registry_id, aid))
+                logging.getLogger(__name__).error(
+                    u'Failed to insert values {0}, {1}'.format(registry_id, aid))
                 raise ex
 
     def load_registry_alignments(self, registry_id):
@@ -147,17 +152,23 @@ class Backend(DatabaseBackend):
                        'WHERE ra.registry1_id = ?', (registry_id,))
         return [row['id'] for row in cursor.fetchall()]
 
-    def save_registry_structure(self, registry_id, name, type):
+    def save_registry_structure(self, registry_id, name, values):
+        cols = ['registry_id', 'name'] + [self.STRUCT_COLS_MAP[k]
+                                          for k, v in values if k in self.STRUCT_COLS_MAP]
+        vals = [registry_id, name] + [v for k, v in values if k in self.STRUCT_COLS_MAP]
+        sql = 'INSERT INTO rstructure ({0}) VALUES ({1})'.format(
+            ', '.join(cols), ', '.join(['?'] * len(vals)))
         cursor = self._db.cursor()
-        cursor.execute('INSERT INTO rstructure (registry_id, name, type) VALUES (?, ?, ?)',
-                       (registry_id, name, type))
+        cursor.execute(sql, vals)
         cursor.execute('SELECT last_insert_rowid()')
         return cursor.fetchone()[0]
 
     def load_registry_structures(self, registry_id):
+        cols = ['id', 'registry_id', 'name'] + \
+            ['{0} AS {1}'.format(v, k) for k, v in self.STRUCT_COLS_MAP.items()]
+        sql = 'SELECT {0} FROM rstructure WHERE registry_id = ?'.format(', '.join(cols))
         cursor = self._db.cursor()
-        cursor.execute(
-            'SELECT id, name, type AS TYPE FROM rstructure WHERE registry_id = ?', (registry_id,))
+        cursor.execute(sql, (registry_id,))
         return cursor.fetchall()
 
     def save_registry_structattr(self, struct_id, name, values):
@@ -172,7 +183,8 @@ class Backend(DatabaseBackend):
         try:
             cursor.execute(sql, vals)
         except sqlite3.Error as ex:
-            logging.getLogger(__name__).error(u'Failed to insert values {0}'.format(zip(cols, vals)))
+            logging.getLogger(__name__).error(
+                u'Failed to insert values {0}'.format(zip(cols, vals)))
             raise ex
         cursor.execute('SELECT last_insert_rowid()')
         return cursor.fetchone()[0]
