@@ -20,6 +20,7 @@ from datetime import datetime
 import time
 import math
 import hashlib
+import logging
 try:
     import cPickle as pickle
 except ImportError:
@@ -84,15 +85,16 @@ def corp_freqs_cache_path(corp, attrname):
     a path encoded as an 8-bit string (i.e. unicode paths are encoded)
     """
     if hasattr(corp, 'spath'):
-        ans = corp.spath.decode('utf-8')[:-4] + attrname
+        path_ne, _ = os.path.splitext(corp.spath.decode('utf-8'))
+        ans = path_ne + '.' + attrname
     else:
         cache_dir = os.path.abspath(settings.get('corpora', 'freqs_precalc_dir'))
         subdirs = (corp.corpname,)
         for d in subdirs:
-            cache_dir = '%s/%s' % (cache_dir, d)
+            cache_dir = os.path.join(cache_dir, d)
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir)
-        ans = '%s/%s' % (cache_dir, attrname)
+        ans = os.path.join(cache_dir, attrname)
     return ans.encode('utf-8')
 
 
@@ -134,7 +136,8 @@ def _get_total_calc_status(base_path):
             log_file = create_log_path(base_path, m)
             last_line = get_log_last_line(log_file)
             p = int(re.split(r'\s+', last_line)[0])
-        except:
+        except Exception as ex:
+            logging.getLogger(__name__).error(ex)
             p = 0
         items.append(p)
     return sum(items) / 3.

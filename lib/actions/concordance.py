@@ -1429,7 +1429,6 @@ class Actions(Querying):
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
-
         if not wlpat:
             self.args.wlpat = '.*'
         if '.' in self.args.wlattr:
@@ -1512,6 +1511,7 @@ class Actions(Querying):
 
             if '.' in self.args.wlattr:
                 self.args.wlnums = orig_wlnums
+
             try:
                 result['wlattr_label'] = (self.corp.get_conf(self.args.wlattr + '.LABEL') or
                                           self.args.wlattr)
@@ -1550,7 +1550,7 @@ class Actions(Querying):
 
         except corplib.MissingSubCorpFreqFile as e:
             result.update({'attrname': self.args.cattr, 'tasks': []})
-            out = freq_calc.build_arf_db(e.args[0], self.args.wlattr)
+            out = freq_calc.build_arf_db(e.corpus, self.args.wlattr)
             if type(out) is list:
                 processing = 0
                 result['tasks'].extend(out)
@@ -1558,7 +1558,8 @@ class Actions(Querying):
                 processing = out
             else:
                 processing = 0
-            result['wlattr'] = None
+            result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
+            result['wlattr'] = self.args.wlattr
             result['wlattr_label'] = ''
             result['processing'] = processing
             result['SubcorpList'] = []

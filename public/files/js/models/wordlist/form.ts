@@ -111,7 +111,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
         this.corpusIdent = corpusIdent;
-        this.currentSubcorpus = '';
+        this.currentSubcorpus = corpusIdent.usesubcorp;
         this.origSubcorpName = '';
         this.layoutModel = layoutModel;
         this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(subcorpList);

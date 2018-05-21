@@ -602,7 +602,20 @@ def subcorp_base_file(corp, attrname):
 
 
 class MissingSubCorpFreqFile(Exception):
-    pass
+
+    def __init__(self, corpus, orig_error):
+        self._corpus = corpus
+        self._orig_error = orig_error
+
+    def __unicode__(self):
+        return u'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
+
+    def __repr__(self):
+        return self.__unicode__().encode('utf-8')
+
+    @property
+    def corpus(self):
+        return self._corpus
 
 
 def frq_db(corp, attrname, nums='frq', id_range=0):
@@ -615,32 +628,32 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
         frq = array.array('f')
         try:
             frq.fromfile(open(filename), id_range)
-        except IOError:
-            raise MissingSubCorpFreqFile(corp)
+        except IOError as ex:
+            raise MissingSubCorpFreqFile(corp, ex)
         except exceptions.EOFError:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
-            raise MissingSubCorpFreqFile(corp)
+            raise MissingSubCorpFreqFile(corp, ex)
     else:
         try:
             if corp.get_conf('VIRTUAL') and not hasattr(corp, 'spath') and nums == 'frq':
                 raise IOError
             frq = array.array('i')
             frq.fromfile(open(filename), id_range)
-        except exceptions.EOFError:
+        except exceptions.EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             os.remove(filename.rsplit('.', 1)[0] + '.arf')
             os.remove(filename.rsplit('.', 1)[0] + '.frq')
-            raise MissingSubCorpFreqFile(corp)
+            raise MissingSubCorpFreqFile(corp, ex)
         except IOError:
             try:
                 frq = array.array('l')
                 frq.fromfile(open(filename + '64'), id_range)
-            except IOError:
+            except IOError as ex:
                 if not hasattr(corp, 'spath') and nums == 'frq':
                     a = corp.get_attr(attrname)
                     frq.fromlist([a.freq(i) for i in xrange(a.id_range())])
                 else:
-                    raise MissingSubCorpFreqFile(corp)
+                    raise MissingSubCorpFreqFile(corp, ex)
     return frq
 
 
