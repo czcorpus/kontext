@@ -37,6 +37,8 @@ class DatabaseBackend(object):
 
     SATTR_COLS_MAP:Dict[str, str]
 
+    STRUCT_COLS_MAP:Dict[str, str]
+
     def commit(self): ...
 
     def get_corpus_keywords(self, corp_id:basestring) -> Dict[str, Dict[str, str]]: ...

@@ -88,9 +88,11 @@ class DatabaseBackend(object):
                           MULTISEP='multisep',
                           ATTRDOC='attrdoc',
                           ATTRDOCLABEL='attrdoclabel',
-                          NUMERIC='rnumeric',
-                          DISPLAYTAG='displaytag',
-                          DISPLAYBEGIN='displaybegin')
+                          NUMERIC='rnumeric')
+
+    STRUCT_COLS_MAP = dict(TYPE='type',
+                           DISPLAYTAG='displaytag',
+                           DISPLAYBEGIN='displaybegin')
 
     def commit(self):
         pass
@@ -143,7 +145,7 @@ class DatabaseBackend(object):
     def load_registry_alignments(self, registry_id):
         raise NotImplementedError()
 
-    def save_registry_structure(self, registry_id, name, type):
+    def save_registry_structure(self, registry_id, name, values):
         raise NotImplementedError()
 
     def save_registry_structattr(self, struct_id, name, values):
