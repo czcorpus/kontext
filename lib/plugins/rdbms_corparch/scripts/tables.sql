@@ -146,8 +146,11 @@ CREATE TABLE rstructure (
     registry_id int NOT NULL,
     name TEXT NOT NULL,
     type TEXT,
+    displaytag INT,
+    displaybegin TEXT,
     FOREIGN KEY (registry_id) REFERENCES registry(id),
-    CHECK (type IS NULL OR type IN ('file32', 'map32', 'file64', 'map64'))
+    CHECK (type IS NULL OR type IN ('file32', 'map32', 'file64', 'map64')),
+    CHECK (displaytag IS NULL OR displaytag IN ('0', '1'))
 );
 
 CREATE TABLE rstructattr (

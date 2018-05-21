@@ -88,7 +88,9 @@ class DatabaseBackend(object):
                           MULTISEP='multisep',
                           ATTRDOC='attrdoc',
                           ATTRDOCLABEL='attrdoclabel',
-                          NUMERIC='rnumeric')
+                          NUMERIC='rnumeric',
+                          DISPLAYTAG='displaytag',
+                          DISPLAYBEGIN='displaybegin')
 
     def commit(self):
         pass
