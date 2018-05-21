@@ -145,6 +145,11 @@ class Parser(object):
             return self.state_4, obj
         return self.state_3b, obj
 
+    def state_3c(self, token, obj):
+        if token == '$':
+            return self.state_7, obj
+        return self.state_3c, obj
+
     @watchable
     def state_4(self, token, obj):
         if token == '}':
@@ -185,6 +190,8 @@ class Parser(object):
             return self.state_7, obj
         elif token == '}':
             return self.state_4, obj
+        elif token == '#':
+            return self.state_3c, obj
 
     @watchable
     def state_8(self, token, obj):
