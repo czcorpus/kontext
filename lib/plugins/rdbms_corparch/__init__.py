@@ -1,4 +1,6 @@
-# Copyright (c) 2018 Czech National Corpus
+# Copyright (c) 2018 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,18 +16,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
 import re
 import copy
 from collections import OrderedDict, defaultdict
+import os
+import logging
 
-import manatee
 from controller import exposed
 import actions.user
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider
 import l10n
-from plugins.rdbms_corparch.backend import Backend, ManateeCorpora
+from plugins.rdbms_corparch.backend import ManateeCorpora
+from plugins.rdbms_corparch.backend.sqlite import Backend
+from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
 from translation import ugettext as _
 
 
@@ -333,7 +337,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 #  id, label_cs, label_en, color
                 self._keywords['cs'][row['id']] = row['label_cs']
                 self._keywords['en'][row['id']] = row['label_en']
-                self._colors[row['id']] = self._parse_color(row['color'])
+                self._colors[row['id']] = self._parse_color(row['color']) if row['color'] else None
         lang_key = self._get_iso639lang(lang)
         return self._keywords[lang_key].items()
 
@@ -408,6 +412,22 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 'name': query_substrs
             }
         }
+
+    def rebuild_registry(self, registry_path, variant, proc_aligned=False):
+        logging.getLogger(__name__).info('Rebuilding registry {0}'.format(registry_path))
+        rc = RegistryConf(corpus_id=os.path.basename(registry_path),
+                          variant=variant,
+                          backend=self._backend)
+        rc.load()
+        if not os.path.exists(os.path.dirname(registry_path)):
+            os.makedirs(os.path.dirname(registry_path))
+        s = RegModelSerializer(add_heading=True)
+        with open(registry_path, 'w') as fw:
+            fw.write(s.serialize(rc).encode(rc.encoding))
+        if proc_aligned:
+            for aligned in rc.aligned:
+                self.rebuild_registry(os.path.join(
+                    os.path.dirname(registry_path), aligned), variant)
 
     def export_actions(self):
         return {actions.user.User: [get_favorite_corpora]}

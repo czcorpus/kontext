@@ -54,6 +54,11 @@ def prepare_tables(db):
     cursor.execute('DROP TABLE IF EXISTS keyword')
     cursor.execute('DROP TABLE IF EXISTS keyword_corpus')
     cursor.execute('DROP TABLE IF EXISTS tckc_corpus')
+    cursor.execute('DROP TABLE IF EXISTS registry')
+    cursor.execute('DROP TABLE IF EXISTS ralignment')
+    cursor.execute('DROP TABLE IF EXISTS rattribute')
+    cursor.execute('DROP TABLE IF EXISTS rstructure')
+    cursor.execute('DROP TABLE IF EXISTS rstructattr')
 
     sql_path = os.path.join(os.path.dirname(__file__), './tables.sql')
     with open(sql_path) as fr:

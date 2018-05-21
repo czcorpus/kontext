@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import os.path
+import os
 import glob
 from hashlib import md5
 from datetime import datetime
@@ -33,6 +33,7 @@ from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
+import plugins
 
 
 def manatee_version():
@@ -226,6 +227,7 @@ class CorpusManager(object):
         if cache_key in self._cache:
             return self._cache[cache_key]
         registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
+        self._ensure_reg_file(registry_file, corp_variant)
         corp = manatee.Corpus(registry_file)
         corp.corpname = str(corpname)  # never unicode (paths)
         corp.is_published = False
@@ -245,7 +247,15 @@ class CorpusManager(object):
             raise RuntimeError(_('Subcorpus "%s" not found') % subcname)
         else:
             self._cache[cache_key] = corp
-            return corp
+        return corp
+
+    def _ensure_reg_file(self, rel_path, variant):
+        fullpath = os.path.join(os.environ['MANATEE_REGISTRY'], rel_path)
+        if not os.path.isfile(fullpath):
+            with plugins.runtime.CORPARCH as ca:
+                fn = getattr(ca, 'rebuild_registry', None)
+                if callable(fn):
+                    fn(fullpath, variant, proc_aligned=True)
 
     def findPosAttr(self, corpname, attrname):
         return manatee.findPosAttr(corpname.split(':', 1)[0], attrname)
