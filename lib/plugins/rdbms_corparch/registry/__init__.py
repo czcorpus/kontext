@@ -27,6 +27,10 @@ def should_be_quoted(attr, s):
     return True
 
 
+def split_clean(sc, val):
+    return [v for v in re.split(sc, val) if v != ''] if val is not None else []
+
+
 class RecordNotFound(Exception):
     pass
 
@@ -143,7 +147,7 @@ class RegistryConf(object):
     def subcorpattrs(self):
         for item in self.simple_items:
             if item.name == 'SUBCORPATTRS':
-                return [v for v in re.split(r'[|,]', item.value) if v != '']
+                return split_clean(r'[|,]', item.value)
         return []
 
     def set_subcorpattrs(self, items):
@@ -183,7 +187,7 @@ class RegistryConf(object):
     def freqttattrs(self):
         for item in self.simple_items:
             if item.name == 'FREQTTATTRS':
-                return [v for v in re.split(r'[|,]', item.value) if v != '']
+                return split_clean(r'[|,]', item.value)
         return []
 
     @property
@@ -199,7 +203,7 @@ class RegistryConf(object):
     def aligned(self):
         for item in self.simple_items:
             if item.name == 'ALIGNED':
-                return [v for v in item.value.split(',') if v != '']
+                return split_clean(',', item.value)
         return []
 
     def save(self):
