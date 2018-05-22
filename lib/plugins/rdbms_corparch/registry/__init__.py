@@ -143,7 +143,7 @@ class RegistryConf(object):
     def subcorpattrs(self):
         for item in self.simple_items:
             if item.name == 'SUBCORPATTRS':
-                return re.split(r'[|,]', item.value)
+                return [v for v in re.split(r'[|,]', item.value) if v != '']
         return []
 
     def set_subcorpattrs(self, items):
@@ -183,7 +183,7 @@ class RegistryConf(object):
     def freqttattrs(self):
         for item in self.simple_items:
             if item.name == 'FREQTTATTRS':
-                return re.split(r'[|,]', item.value)
+                return [v for v in re.split(r'[|,]', item.value) if v != '']
         return []
 
     @property
@@ -199,7 +199,7 @@ class RegistryConf(object):
     def aligned(self):
         for item in self.simple_items:
             if item.name == 'ALIGNED':
-                return item.value.split(',')
+                return [v for v in item.value.split(',') if v != '']
         return []
 
     def save(self):
