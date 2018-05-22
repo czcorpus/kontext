@@ -62,7 +62,7 @@ class Tokenizer(object):
             for item in items:
                 if item == '':
                     continue
-                if item[0] == '"' and item[-1] == '"' and len(item) > 2:
+                if item[0] == '"' and item[-1] == '"' and len(item) > 1:
                     line_ans.append(item[1:-1])
                 elif item[0] == '"' and not is_q:
                     line_ans.append([])
@@ -165,7 +165,7 @@ class Parser(object):
             return self.state_5, obj
         elif token == '$':
             return self.state_4, obj
-        elif token == '#':
+        elif token.startswith('#'):
             return self.state_3b, obj
 
     @watchable
@@ -193,7 +193,7 @@ class Parser(object):
             return self.state_7, obj
         elif token == '}':
             return self.state_4, obj
-        elif token == '#':
+        elif token.startswith('#'):
             return self.state_3c, obj
 
     @watchable
