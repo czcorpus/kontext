@@ -27,11 +27,12 @@ def import_legacy_record(data):
     ans = FavoriteItem()
     ans.ident = data['id']
     ans.name = data.get('name', '??')
-    ans.corpora = [dict(id=data['corpus_id'], name=data['name'])]
+    ans.corpora = [dict(id=data['corpus_id'], name=data['name'], canonical_id=data['canonical_id'])]
     if data.get('corpora', None):
         for item in data.get('corpora', []):
             try:
-                ans.corpora.append(dict(id=item['canonical_id'], name=item['name']))
+                ans.corpora.append(
+                    dict(id=item['canonical_id'], name=item['name'], canonical_id=data['canonical_id']))
             except Exception as ex:
                 logging.getLogger(__name__).warning(
                     u'Failed to import legacy fav. item record component: {0}'.format(ex))
