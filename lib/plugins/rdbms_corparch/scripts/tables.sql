@@ -22,10 +22,11 @@ CREATE TABLE metadata (
 	database TEXT,
 	label_attr TEXT,
 	id_attr TEXT,
-	featured TEXT,
+	featured INTEGER DEFAULT 0,
 	reference_default TEXT,
 	reference_other TEXT,
-	FOREIGN KEY (corpus_id) REFERENCES corpus(id)
+	FOREIGN KEY (corpus_id) REFERENCES corpus(id),
+	CHECK (featured == 0 OR featured == 1)
 );
 
 CREATE TABLE ttdesc (

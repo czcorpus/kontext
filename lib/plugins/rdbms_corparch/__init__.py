@@ -256,7 +256,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.use_safe_font = row['use_safe_font']
             ans.metadata.id_attr = row['id_attr']
             ans.metadata.label_attr = row['label_attr']
-            ans.metadata.featured = row['featured']
+            ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = self._backend.get_corpus_keywords(row['id'])
             ans.metadata.desc = row['ttdesc_id']
