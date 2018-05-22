@@ -793,7 +793,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         return this.subCorpName;
     }
 
-    getOrigSubCorpName():string {
+    getCurrentSubcorpusOrigName():string {
         return this.origSubcorpName;
     }
 

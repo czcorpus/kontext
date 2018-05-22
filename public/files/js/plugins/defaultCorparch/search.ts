@@ -90,46 +90,23 @@ class Cache {
  */
 export class SearchEngine {
 
-    private currKeywords:Immutable.List<string>;
-
-    private availKeywords:Immutable.List<SearchKeyword>;
-
     private cache:Cache;
 
     private pluginApi:IPluginApi;
 
-    private onWaiting:()=>void;
 
-    private onDone:()=>void;
-
-
-    constructor(pluginApi:IPluginApi, cacheCapacity:number, keywords:Array<[string, string, string]>) {
+    constructor(pluginApi:IPluginApi, cacheCapacity:number) {
         this.pluginApi = pluginApi;
         this.cache = new Cache(cacheCapacity);
-        this.currKeywords = Immutable.List<string>();
-        this.availKeywords = Immutable.List<SearchKeyword>(keywords.map(item => {
-            return {id: item[0], label: item[1], color: item[2], selected:false};
-        }));
     }
 
-    addOnWaiting(fn:()=>void):void {
-        this.onWaiting = fn;
-    }
-
-    addOnDone(fn:()=>void):void {
-        this.onDone = fn;
-    }
-
-    private mkQuery(phrase:string):string {
-        const kw = this.availKeywords.filter(item => item.selected).map(item => '+' + item.id).join(' ');
+    private mkQuery(phrase:string, keywords:Immutable.List<SearchKeyword>):string {
+        const kw = keywords.filter(item => item.selected).map(item => '+' + item.id).join(' ');
         return `${kw} ${phrase}`;
     }
 
-    search(phrase:string):RSVP.Promise<Immutable.List<SearchResultRow>> {
-        if (this.onWaiting) {
-            this.onWaiting();
-        }
-        const q = this.mkQuery(phrase);
+    search(phrase:string, keywords:Immutable.List<SearchKeyword>):RSVP.Promise<Immutable.List<SearchResultRow>> {
+        const q = this.mkQuery(phrase, keywords);
         return (() => {
             if (this.cache.has(q)) {
                 return new RSVP.Promise((resolve:(v)=>void, reject:(e)=>void) => {
@@ -152,52 +129,9 @@ export class SearchEngine {
             }
         })().then(
             (data:Array<SearchResultRow>) => {
-                if (this.onDone) {
-                    this.onDone();
-                }
                 return Immutable.List<SearchResultRow>(data);
             }
         );
-    }
-
-    getAvailKeywords():Immutable.List<SearchKeyword> {
-        return this.availKeywords;
-    }
-
-    resetKeywordSelectStatus():void {
-        this.availKeywords = this.availKeywords.map(item => {
-            return {
-                id: item.id,
-                label: item.label,
-                color: item.color,
-                selected: false
-            };
-        }).toList();
-    }
-
-    setKeywordSelectedStatus(id:string, status:boolean, exclusive:boolean):void {
-        if (exclusive) {
-            this.resetKeywordSelectStatus();
-        }
-        const idx = this.availKeywords.findIndex(x => x.id === id);
-        if (idx > -1) {
-            const v = this.availKeywords.get(idx);
-            this.availKeywords = this.availKeywords.set(idx,
-                {
-                    id: v.id,
-                    label: v.label,
-                    color: v.color,
-                    selected: status
-                }
-            );
-
-        } else {
-            throw new Error(`Cannot change label status - label ${id} not found`);
-        }
-    }
-
-    hasSelectedKeywords():boolean {
-        return this.availKeywords.find(x => x.selected) !== undefined;
     }
 
 }

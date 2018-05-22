@@ -77,7 +77,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
         return this.currentSubcorp;
     }
 
-    getOrigSubcorpName():string {
+    getCurrentSubcorpusOrigName():string {
         return this.origSubcorpName;
     }
 

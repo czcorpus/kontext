@@ -80,7 +80,7 @@ export class SubcorpForm {
         return this.subcorpFormModel.getSubcname();
     }
 
-    getOrigSubcorpName():string {
+    getCurrentSubcorpusOrigName():string {
         return this.subcorpFormModel.getSubcname();
     }
 
