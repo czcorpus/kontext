@@ -160,9 +160,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         name:VRD.Sense;
         detail:VRD.SenseInfoList;
     }> = (props) => {
+
+        const toPDTVallex = (props) => {
+            console.log('Hi!')
+        };
+
         return (
             <div>
-                <div className="valexSense">{props.name}</div>
+                <div className="valexSense" onClick={toPDTVallex}>{props.name}</div>
                 <div className="valexSourceV">{props.name.split(' : ')[0]}
                     {props.detail[0][1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
