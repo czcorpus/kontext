@@ -161,14 +161,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         detail:VRD.SenseInfoList;
     }> = (props) => {
 
-        //const toPDTVallex = (props) => {
-        //    console.log('Hi!')
-
-        //};
+        const toPDTVallex = (props) => {
+            console.log('Hi!');
+            const PDTVallex = props.name.split(' : ')[0];
+            console.log(PDTVallex);
+            const fullLink = 'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + PDTVallex;
+            return fullLink
+        };
 
         return (
             <div>
-                <a className="valexSense" href={"http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=${props.name.split(' : ')[0]}"}>{props.name}</a>
+                <a className="valexSense" href={this.toPDTVallex()}>{props.name}</a>
                 <div className="valexSourceV">{props.name.split(' : ')[0]}
                     {props.detail[0][1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
