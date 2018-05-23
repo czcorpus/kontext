@@ -171,7 +171,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         return (
             <div>
-                <a className="valexSense" href={this.toPDTVallex()}>{props.name}</a>
+                <a className="valexSense" href={toPDTVallex(props)}>{props.name}</a>
                 <div className="valexSourceV">{props.name.split(' : ')[0]}
                     {props.detail[0][1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
