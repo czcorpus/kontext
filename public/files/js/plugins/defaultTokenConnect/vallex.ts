@@ -27,7 +27,7 @@ type NumResults = string
 
 export type CompleteSenseList = Array<CompleteSense>
 
-export interface ValexResponseData {
+export interface VallexResponseData {
    status: {
        status:string;
    };

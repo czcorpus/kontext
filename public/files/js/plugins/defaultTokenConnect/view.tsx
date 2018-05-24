@@ -24,12 +24,12 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
-import * as VRD from './valex';
+import * as VRD from './vallex';
 
 
 export interface Views {
     RawHtmlRenderer:React.SFC<{data: Array<[string, string]>}>;
-    ValexJsonRenderer:React.SFC<{data: VRD.ValexResponseData}>;
+    VallexJsonRenderer:React.SFC<{data: VRD.VallexResponseData}>;
     SimpleTabularRenderer:React.SFC<{data: Array<Array<[string, string]>>}>;
     DescriptionListRenderer:React.SFC<{data: Array<[string, string]>}>;
     UnsupportedRenderer:React.SFC<{data: any}>;
@@ -121,12 +121,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         );
     };
 
-    // ------------- <ValexJsonRenderer /> -------------------------------
+    // ------------- <VallexJsonRenderer /> -------------------------------
 
-    const ValexJsonRenderer:Views['ValexJsonRenderer'] = (props) => {
+    const VallexJsonRenderer:Views['VallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="ValexJsonRenderer">
+                <div className="VallexJsonRenderer">
                     <VerbList list={props.data.result[1]} language={props.data.inputParameters.language} />
                 </div>
             );
@@ -163,30 +163,33 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         language:string;
     }> = (props) => {
 
-        const toPDTVallex = (props) => {
-            const lang = props.language;
-            console.log(lang);
-            const PDTVallex = props.name.split(' : ')[0];
-            const fullLink = 'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + PDTVallex;
-            return fullLink
+        const toVallex = (props) => {
+            const TargetVallex = props.name.split(' : ')[0];
+            if (props.language == 'cz') {
+                const fullLink = 'https://lindat.mff.cuni.cz/services/CzEngVallex/CzEngVallex.html?vlanguage=cz&block=D&first_verb=' + TargetVallex + '&second_verb=ALL';
+                return fullLink
+            } else {
+                const fullLink = 'https://lindat.mff.cuni.cz/services/CzEngVallex/CzEngVallex.html?vlanguage=en&block=D&first_verb=' + TargetVallex + '&second_verb=ALL';
+                return fullLink
+            }
         };
 
         return (
             <div>
-                <a className="valexSense" href={toPDTVallex(props)}>{props.name}</a>
-                <div className="valexSourceV">{props.name.split(' : ')[0]}
+                <a className="vallexSense" href={toVallex(props)}>{props.name}</a>
+                <div className="vallexSourceV">{props.name.split(' : ')[0]}
                     {props.detail[0][1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <span className="valexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                            return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
                         }
                     })}
                 </div>
 
-                <div className="valexExpl">{props.detail[0][1][1]}</div>
-                <ul className="valexExamples">
+                <div className="vallexExpl">{props.detail[0][1][1]}</div>
+                <ul className="vallexExamples">
                     {props.detail[0][1][2].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <li className="valexExamples" key={i}>{listValue}</li>;
+                            return <li className="vallexExamples" key={i}>{listValue}</li>;
                         }
                     })}
                 </ul>
@@ -230,15 +233,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         verbTargetList:VRD.VtargetInfo;
     }> = (props) => {
         return (
-            <div className="valexTargetBlock">
-                <div className="valexTargetV">{props.verbTargetName}
+            <div className="vallexTargetBlock">
+                <div className="vallexTargetV">{props.verbTargetName}
                     {props.verbTargetList[1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <span className="valexFrame"  key={i}>&nbsp;{listValue}</span>;
+                            return <span className="vallexFrame"  key={i}>&nbsp;{listValue}</span>;
                         }
                     })}
                 </div>
-                <div className="valexExplInner">{props.verbTargetList[1][1]}</div>
+                <div className="vallexExplInner">{props.verbTargetList[1][1]}</div>
                 <ul>
                     {props.verbTargetList[1][2].map((listValue, i) => {
                         if (listValue.length !== 0) {
@@ -246,8 +249,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                         }
                     })}
                 </ul>
-                <div className="valexFrameMap"><p>{`Argument mapping for "${props.verbSourceName}" (${props.verbSourceID}) and "${props.verbTargetName}" (${props.verbTargetList[0]}):`}</p></div>
-                <ul className="valexHiddenBullets">
+                <div className="vallexFrameMap"><p>{`Argument mapping for "${props.verbSourceName}" (${props.verbSourceID}) and "${props.verbTargetName}" (${props.verbTargetList[0]}):`}</p></div>
+                <ul className="vallexHiddenBullets">
                     {props.verbTargetList[2].map((listValue, i) => {
                         return <li className="" key={i}>{listValue[0]}&nbsp;{'\u2192'}&nbsp;{listValue[1]}</li>;
 
@@ -264,7 +267,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         DescriptionListRenderer: DescriptionListRenderer,
         UnsupportedRenderer: UnsupportedRenderer,
         DataMuseSimilarWords: DataMuseSimilarWords,
-        ValexJsonRenderer: ValexJsonRenderer
+        VallexJsonRenderer: VallexJsonRenderer
     };
 
 }
