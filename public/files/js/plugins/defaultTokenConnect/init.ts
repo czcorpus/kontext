@@ -79,8 +79,8 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                 return this.views.DescriptionListRenderer;
             case 'datamuse-json':
                 return this.views.DataMuseSimilarWords;
-            case 'valex-json':
-                return this.views.ValexJsonRenderer;
+            case 'vallex-json':
+                return this.views.VallexJsonRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }
