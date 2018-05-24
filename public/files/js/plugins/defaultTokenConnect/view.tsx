@@ -127,7 +127,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         if (props.data.result.length > 0) {
             return (
                 <div className="ValexJsonRenderer">
-                    <VerbList list={props.data.result[1]} />
+                    <VerbList list={props.data.result[1]} language={props.data.inputParameters.language} />
                 </div>
             );
         } else {
@@ -141,10 +141,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     const VerbList:React.SFC<{
         list:VRD.CompleteSenseList;
+        language:string;
     }> = (props) => {
         const renderVerbInfo = () => {
             return props.list.map((item, i) => {
-                return <Pair key={i} name={item[0]} detail={item[1]} />
+                return <Pair language={props.language} key={i} name={item[0]} detail={item[1]} />
             });
 
         };
@@ -159,9 +160,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         key:any;
         name:VRD.Sense;
         detail:VRD.SenseInfoList;
+        language:string;
     }> = (props) => {
 
         const toPDTVallex = (props) => {
+            const lang = props.language;
+            console.log(lang);
             const PDTVallex = props.name.split(' : ')[0];
             const fullLink = 'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + PDTVallex;
             return fullLink
