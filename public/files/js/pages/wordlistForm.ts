@@ -143,7 +143,10 @@ class WordlistFormPage {
             }
 
         ).then(
-            this.layoutModel.addUiTestingFlag
+            (_) => {
+                this.layoutModel.restoreModelsDataAfterSwitch();
+                this.layoutModel.addUiTestingFlag();
+            }
 
         ).catch(
             (err) => console.error(err)

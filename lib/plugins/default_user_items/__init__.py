@@ -78,7 +78,7 @@ def set_favorite_item(ctrl, request):
     ))
     with plugins.runtime.USER_ITEMS as uit:
         uit.add_user_item(ctrl._plugin_api, item)
-        return dict(id=item.ident)
+        return item.to_dict()
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)

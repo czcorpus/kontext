@@ -86,6 +86,7 @@ class Backend(DatabaseBackend):
             sql = 'SELECT {0} FROM registry WHERE corpus_id = ? AND variant IS NULL'.format(
                 ', '.join(cols))
             vals = (corpus_id,)
+            print(vals)
         cursor = self._db.cursor()
         cursor.execute(sql, vals)
         return cursor.fetchone()

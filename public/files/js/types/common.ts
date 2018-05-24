@@ -547,6 +547,15 @@ export namespace Kontext {
      * I.e. the object stores some of the attributes and
      * its successor will use these values to set the
      * same properties.
+     *
+     * Please note that the model is expected to
+     * respond to the action
+     * CORPUS_SWITCH_MODEL_RESTORE where data
+     * along with model state key are passed.
+     * The action is passed for all the key+data
+     * pair so each model must check for the key
+     * to be sure it works with its own serialized
+     * data.
      */
     export interface ICorpusSwitchAware<T> {
 
@@ -555,11 +564,6 @@ export namespace Kontext {
          * a single object T
          */
         csExportState():T;
-
-        /**
-         * Import desired properties from object T
-         */
-        csSetState(state:T):void;
 
         /**
          * Return a key under which the data will

@@ -136,125 +136,130 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
-            case 'QUERY_INPUT_SELECT_SUBCORP':
-                if (payload.props['pubName']) {
-                    this.currentSubcorpus = payload.props['pubName'];
-                    this.origSubcorpName = payload.props['subcorp'];
+                case 'QUERY_INPUT_SELECT_SUBCORP':
+                    if (payload.props['pubName']) {
+                        this.currentSubcorpus = payload.props['pubName'];
+                        this.origSubcorpName = payload.props['subcorp'];
 
-                } else {
-                    this.currentSubcorpus = payload.props['subcorp'];
-                    this.origSubcorpName = payload.props['subcorp'];
-                }
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SELECT_ATTR':
-                this.wlattr = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SET_WLPAT':
-                this.wlpat = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SET_WLNUMS':
-                this.wlnums = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SELECT_WLPOSATTR':
-                switch (payload.props['position']) {
-                case 1:
-                    this.wlposattr1 = payload.props['value'];
-                break;
-                case 2:
-                    this.wlposattr2 = payload.props['value'];
-                break;
-                case 3:
-                    this.wlposattr3 = payload.props['value'];
-                break;
-                }
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SET_WLTYPE':
-                this.wltype = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SET_WLMINFREQ':
-                this.wlminfreq.value = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
-                this.includeNonwords = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SET_FILTER_FILE':
-                const file:File = payload.props['value'];
-                if (file) {
-                    this.handleFilterFileSelection(file, payload.props['target']).then(
-                        () => {
-                            this.notifyChangeListeners();
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
-                        }
-                    );
-                }
-            break;
-            case 'WORDLIST_FORM_UPDATE_EDITOR':
-                this.filterEditorData.data = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_REOPEN_EDITOR':
-                this.filterEditorData = {
-                    target: payload.props['target'],
-                    data: '',
-                    fileName: ''
-                };
-                this.doWhiteOrBlackOp(
-                    payload.props['target'],
-                    () => {
-                        this.filterEditorData.data = this.wlwords;
-                        this.filterEditorData.fileName = this.wlFileName;
-                    },
-                    () => {
-                        this.filterEditorData.data = this.blacklist;
-                        this.filterEditorData.fileName = this.blFileName;
+                    } else {
+                        this.currentSubcorpus = payload.props['subcorp'];
+                        this.origSubcorpName = payload.props['subcorp'];
                     }
-                );
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_CLEAR_FILTER_FILE':
-                if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SELECT_ATTR':
+                    this.wlattr = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SET_WLPAT':
+                    this.wlpat = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SET_WLNUMS':
+                    this.wlnums = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SELECT_WLPOSATTR':
+                    switch (payload.props['position']) {
+                    case 1:
+                        this.wlposattr1 = payload.props['value'];
+                    break;
+                    case 2:
+                        this.wlposattr2 = payload.props['value'];
+                    break;
+                    case 3:
+                        this.wlposattr3 = payload.props['value'];
+                    break;
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SET_WLTYPE':
+                    this.wltype = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SET_WLMINFREQ':
+                    this.wlminfreq.value = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
+                    this.includeNonwords = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SET_FILTER_FILE':
+                    const file:File = payload.props['value'];
+                    if (file) {
+                        this.handleFilterFileSelection(file, payload.props['target']).then(
+                            () => {
+                                this.notifyChangeListeners();
+                            },
+                            (err) => {
+                                this.layoutModel.showMessage('error', err);
+                                this.notifyChangeListeners();
+                            }
+                        );
+                    }
+                break;
+                case 'WORDLIST_FORM_UPDATE_EDITOR':
+                    this.filterEditorData.data = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_REOPEN_EDITOR':
+                    this.filterEditorData = {
+                        target: payload.props['target'],
+                        data: '',
+                        fileName: ''
+                    };
                     this.doWhiteOrBlackOp(
                         payload.props['target'],
-                        () => { this.wlwords = ''; this.wlFileName = '' },
-                        () => { this.blacklist = ''; this.blFileName = '' }
+                        () => {
+                            this.filterEditorData.data = this.wlwords;
+                            this.filterEditorData.fileName = this.wlFileName;
+                        },
+                        () => {
+                            this.filterEditorData.data = this.blacklist;
+                            this.filterEditorData.fileName = this.blFileName;
+                        }
                     );
                     this.notifyChangeListeners();
-                }
-            break;
-            case 'WORDLIST_FORM_CLOSE_EDITOR':
-                this.doWhiteOrBlackOp(
-                    this.filterEditorData.target,
-                    () => this.wlwords = this.filterEditorData.data,
-                    () => this.blacklist = this.filterEditorData.data
-                );
-                this.filterEditorData = null;
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_RESULT_SET_SORT_COLUMN':
-                this.wlsort = payload.props['sortKey'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SUBMIT':
-                const err = this.validateForm();
-                if (!err) {
-                    this.submit();
+                break;
+                case 'WORDLIST_FORM_CLEAR_FILTER_FILE':
+                    if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
+                        this.doWhiteOrBlackOp(
+                            payload.props['target'],
+                            () => { this.wlwords = ''; this.wlFileName = '' },
+                            () => { this.blacklist = ''; this.blFileName = '' }
+                        );
+                        this.notifyChangeListeners();
+                    }
+                break;
+                case 'WORDLIST_FORM_CLOSE_EDITOR':
+                    this.doWhiteOrBlackOp(
+                        this.filterEditorData.target,
+                        () => this.wlwords = this.filterEditorData.data,
+                        () => this.blacklist = this.filterEditorData.data
+                    );
+                    this.filterEditorData = null;
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_RESULT_SET_SORT_COLUMN':
+                    this.wlsort = payload.props['sortKey'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_SUBMIT':
+                    const err = this.validateForm();
+                    if (!err) {
+                        this.submit();
 
-                } else {
-                    this.layoutModel.showMessage('error', err);
+                    } else {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'CORPUS_SWITCH_MODEL_RESTORE':
+                if (payload.props['key'] === this.csGetStateKey()) {
+                    this.csSetState(payload.props['data']);
                 }
-                this.notifyChangeListeners();
-            break;
+                break;
             }
         });
     }

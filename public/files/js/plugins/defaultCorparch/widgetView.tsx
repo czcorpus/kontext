@@ -20,7 +20,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import { CorplistWidgetModel, FavListItem } from './widget';
+import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { PluginInterfaces } from '../../types/plugins';
@@ -461,12 +461,11 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
     }> = (props) => {
         return (
-            <button type="button" className="util-button" onClick={props.onClick}>
-                {props.isWaitingToSwitch ?
-                    <img src={util.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={util.translate('global__loading')} /> :
-                    <span title={props.corpusIdent.name}>{props.corpusIdent.id}</span>
-                }
+            <button type="button"
+                    className={`util-button${props.isWaitingToSwitch ? ' waiting': ''}`}
+                    onClick={props.onClick}>
+                {props.isWaitingToSwitch ? <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> : null }
+                <span className="corpus-name" title={props.corpusIdent.name}>{props.corpusIdent.id}</span>
             </button>
         );
     };
@@ -512,28 +511,11 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
     /**
      *
      */
-    class CorplistWidget extends React.Component<CorplistWidgetProps, {
-        corpusIdent:Kontext.FullCorpusIdent;
-        anonymousUser:boolean;
-        dataFav:Immutable.List<FavListItem>;
-        dataFeat:Immutable.List<CorplistItem>;
-        isWaitingToSwitch:boolean;
-        currFavitemId:string;
-        currSubcorpus:string;
-        origSubcorpName:string;
-        availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
-        availSearchKeywords:Immutable.List<SearchKeyword>;
-        isWaitingForSearchResults:boolean;
-        currSearchResult:Immutable.List<SearchResultRow>;
-        currSearchPhrase:string;
-        visible:boolean;
-        activeTab:number;
-        hasSelectedKeywords:boolean;
-    }> {
+    class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
+            this.state = widgetModel.getState();
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -541,29 +523,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             this._handleKeypress = this._handleKeypress.bind(this);
         }
 
-        _fetchModelState() {
-            return {
-                corpusIdent: widgetModel.getCorpusIdent(),
-                anonymousUser: widgetModel.getIsAnonymousUser(),
-                dataFav: widgetModel.getDataFav(),
-                dataFeat: widgetModel.getDataFeat(),
-                isWaitingToSwitch: widgetModel.getIsWaitingToSwitch(),
-                currFavitemId: widgetModel.getCurrFavitemId(),
-                currSubcorpus: widgetModel.getCurrentSubcorp(),
-                origSubcorpName: widgetModel.getOrigSubcorpName(),
-                availSubcorpora: corpusSelection.getAvailableSubcorpora(),
-                availSearchKeywords: widgetModel.getAvailKeywords(),
-                isWaitingForSearchResults: widgetModel.getIsWaitingForSearchResults(),
-                currSearchResult: widgetModel.getcurrSearchResult(),
-                currSearchPhrase: widgetModel.getCurrSearchPhrase(),
-                visible: false,
-                activeTab: 0,
-                hasSelectedKeywords: widgetModel.getHasSelectedKeywords()
-            }
-        }
-
         _handleKeypress(evt) {
-            if (this.state.visible) {
+            if (this.state.isVisible) {
                 switch (evt.keyCode) {
                     case 9:
                         this._handleTabSwitch(1 - this.state.activeTab);
@@ -580,29 +541,30 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         }
 
         _handleOnShow() {
-            const tmp = this._fetchModelState();
-            tmp['visible'] = !this.state.visible;
-            this.setState(tmp);
+            dispatcher.dispatch({
+                actionType: 'DEFAULT_CORPARCH_WIDGET_SHOW',
+                props: {}
+            });
         }
 
         _handleCloseClick() {
-            const tmp = this._fetchModelState();
-            tmp['visible'] = false;
-            this.setState(tmp);
+            dispatcher.dispatch({
+                actionType: 'DEFAULT_CORPARCH_WIDGET_HIDE',
+                props: {}
+            });
         }
 
         _handleTabSwitch(v) {
-            const tmp = this._fetchModelState();
-            tmp['visible'] = this.state.visible;
-            tmp['activeTab'] = v
-            this.setState(tmp);
+            dispatcher.dispatch({
+                actionType: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+                props: {
+                    value: v
+                }
+            });
         }
 
-        _handleModelChange() {
-            const tmp = this._fetchModelState();
-            tmp['visible'] = this.state.visible;
-            tmp['activeTab'] = this.state.activeTab;
-            this.setState(tmp);
+        _handleModelChange(state:CorplistWidgetModelState) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -627,7 +589,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                                 isWaitingForSearchResults={this.state.isWaitingForSearchResults}
                                 currSearchResult={this.state.currSearchResult}
                                 currSearchPhrase={this.state.currSearchPhrase}
-                                hasSelectedKeywords={this.state.hasSelectedKeywords} />
+                                hasSelectedKeywords={this.state.availSearchKeywords.find(x => x.selected) !== undefined} />
                     }
                     <div className="footer">
                         <span>
@@ -644,14 +606,14 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             return (
                 <div className="CorplistWidget">
                     <div>
-                        <CorpusButton isWaitingToSwitch={this.state.isWaitingToSwitch}
+                        <CorpusButton isWaitingToSwitch={this.state.isBusy}
                                 corpusIdent={this.state.corpusIdent} onClick={this._handleOnShow} />
-                        {this.state.availSubcorpora.size > 0 ?
+                        {this.state.availableSubcorpora.size > 0 ?
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
                                 <SubcorpSelection currSubcorpus={this.state.currSubcorpus}
                                     origSubcorpName={this.state.origSubcorpName}
-                                    availSubcorpora={this.state.availSubcorpora} />
+                                    availSubcorpora={this.state.availableSubcorpora} />
                             </span>) :
                             null
                         }
@@ -660,7 +622,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                             null
                         }
                     </div>
-                    {this.state.visible ? this._renderWidget() : null}
+                    {this.state.isVisible ? this._renderWidget() : null}
                 </div>
             );
         }
