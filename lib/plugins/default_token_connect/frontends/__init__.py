@@ -37,16 +37,6 @@ class RawHtmlFrontend(AbstractFrontend):
         response.contents = [('__html', data)]
         return response
 
-class VallexFrontend(AbstractFrontend):
-
-    def __init__(self, conf):
-        super(VallexFrontend, self).__init__(conf)
-
-    def export_data(self, data, status, lang):
-        response = super(VallexFrontend, self).export_data(data, status, lang)
-        response.renderer = 'vallex-json'
-        response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
-        return response
 
 class DatamuseFrontend(AbstractFrontend):
 

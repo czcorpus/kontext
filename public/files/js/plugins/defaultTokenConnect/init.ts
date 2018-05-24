@@ -27,6 +27,7 @@ import * as Immutable from 'immutable';
 
 declare var require:any;
 require('./style.less');
+require('../defaultTokenConnect/style.less');
 
 
 /**
@@ -34,11 +35,11 @@ require('./style.less');
  */
 export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect.IPlugin {
 
-    private pluginApi:IPluginApi;
+    protected pluginApi:IPluginApi;
 
-    private views:DefaultTokenConnectRenderers;
+    protected views:DefaultTokenConnectRenderers;
 
-    alignedCorpora:Immutable.List<string>;
+    protected alignedCorpora:Immutable.List<string>;
 
     constructor(pluginApi:IPluginApi, views:DefaultTokenConnectRenderers, alignedCorpora:Array<string>) {
         this.pluginApi = pluginApi;
@@ -79,8 +80,6 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                 return this.views.DescriptionListRenderer;
             case 'datamuse-json':
                 return this.views.DataMuseSimilarWords;
-            case 'vallex-json':
-                return this.views.VallexJsonRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }
