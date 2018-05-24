@@ -162,9 +162,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> = (props) => {
 
         const toPDTVallex = (props) => {
-            console.log('Hi!');
             const PDTVallex = props.name.split(' : ')[0];
-            console.log(PDTVallex);
             const fullLink = 'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + PDTVallex;
             return fullLink
         };
@@ -175,7 +173,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                 <div className="valexSourceV">{props.name.split(' : ')[0]}
                     {props.detail[0][1][0].map((listValue, i) => {
                         if (listValue.length !== 0) {
-                            return <span className="valexFrame" key={i}>&nbsp;{listValue}</span>;
+                            return <span className="valexFrame" key={i}>&nbsp;<p dangerouslySetInnerHTML={{__html: listValue}}/></span>;
                         }
                     })}
                 </div>
