@@ -27,8 +27,6 @@ import * as Immutable from 'immutable';
 
 declare var require:any;
 require('./style.less');
-require('../defaultTokenConnect/style.less');
-
 
 /**
  *
