@@ -32,7 +32,7 @@ class Backend(DatabaseBackend):
     def commit(self):
         self._db.commit()
 
-    def get_corpus_keywords(self, corp_id):
+    def load_corpus_keywords(self, corp_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT id, label_cs, label_en, color FROM keyword_corpus AS kc JOIN keyword AS k '
                        'ON kc.keyword_id = k.id WHERE kc.corpus_id = ?', (corp_id,))
@@ -201,7 +201,7 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('UPDATE rstructattr SET subcorpattrs_idx = ? WHERE id = ?', (idx, struct_id))
 
-    def get_subcorpattrs(self, registry_id):
+    def load_subcorpattrs(self, registry_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT r.name AS struct, rs.name AS structattr '
                        'FROM rstructure AS r JOIN rstructattr AS rs ON r.id = rs.rstructure_id '
@@ -213,10 +213,15 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('UPDATE rstructattr SET freqttattrs_idx = ? WHERE id = ?', (idx, struct_id))
 
-    def get_freqttattrs(self, registry_id):
+    def load_freqttattrs(self, registry_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT r.name AS struct, rs.name AS structattr '
                        'FROM rstructure AS r JOIN rstructattr AS rs ON r.id = rs.rstructure_id '
                        'WHERE rs.freqttattrs_idx > -1 AND r.registry_id = ?'
                        'ORDER BY rs.freqttattrs_idx', (registry_id,))
         return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
+
+    def load_tckc_providers(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT provider, type FROM tckc_corpus WHERE corpus_id = ?', (corpus_id,))
+        return cursor.fetchall()

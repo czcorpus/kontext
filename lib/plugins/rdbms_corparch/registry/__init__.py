@@ -261,8 +261,8 @@ class RegistryConf(object):
         for k, v in dict(data).items():
             if re.match(r'[A-Z_]+', k):
                 self._items.append(SimpleAttr(name=k, value=v))
-        self.set_subcorpattrs(self._backend.get_subcorpattrs(self._id))
-        self.set_freqttattrs(self._backend.get_freqttattrs(self._id))
+        self.set_subcorpattrs(self._backend.load_subcorpattrs(self._id))
+        self.set_freqttattrs(self._backend.load_freqttattrs(self._id))
         self.set_aligned(self._backend.load_registry_alignments(self._id))
 
         for item in self._backend.load_registry_posattrs(self._id):

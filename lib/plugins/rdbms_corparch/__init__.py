@@ -25,7 +25,8 @@ import logging
 from controller import exposed
 import actions.user
 import plugins
-from plugins.abstract.corpora import AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider
+from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
+                                      TokenConnect, KwicConnect)
 import l10n
 from plugins.rdbms_corparch.backend import ManateeCorpora
 from plugins.rdbms_corparch.backend.sqlite import Backend
@@ -214,6 +215,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
         self._descriptions = {}
+        self._tc_providers = {}
+        self._kc_providers = {}
 
     @property
     def max_page_size(self):
@@ -258,7 +261,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
-            ans.metadata.keywords = self._backend.get_corpus_keywords(row['id'])
+            ans.metadata.keywords = self._backend.load_corpus_keywords(row['id'])
             ans.metadata.desc = row['ttdesc_id']
             return ans
         return None
@@ -341,6 +344,18 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         lang_key = self._get_iso639lang(lang)
         return self._keywords[lang_key].items()
 
+    def _get_tckc_providers(self, corpus_id):
+        if corpus_id not in self._tc_providers and corpus_id not in self._kc_providers:
+            self._tc_providers[corpus_id] = TokenConnect()
+            self._kc_providers[corpus_id] = KwicConnect()
+            data = self._backend.load_tckc_providers(corpus_id)
+            for row in data:
+                if row['type'] == 'tc':
+                    self._tc_providers[corpus_id].providers.append(row['provider'])
+                elif row['type'] == 'kc':
+                    self._kc_providers[corpus_id].providers.append(row['provider'])
+        return self._tc_providers[corpus_id], self._kc_providers[corpus_id]
+
     def get_corpus_info(self, user_lang, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
@@ -352,6 +367,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 else:
                     ans = self._raw_list()[corp_name]
                 ans.manatee = self._mc.get_info(corp_name)
+                ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
+
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
