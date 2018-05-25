@@ -24,7 +24,7 @@ import traceback
 from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser
+from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
 from plugins.rdbms_corparch.backend.sqlite import Backend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
@@ -47,18 +47,6 @@ def remove_comments(infile):
         if not line.strip().startswith('#'):
             ans.append(line)
     return ''.join(ans)
-
-
-def infer_encoding(file_path):
-    with open(file_path) as fr:
-        for line in fr:
-            if 'ENCODING' in line:
-                if 'utf8' in line.lower() or 'utf-8' in line.lower():
-                    return 'utf-8'
-                elif 'iso' in line.lower() and '8859-2' in line:
-                    return 'iso-8859-2'
-                break
-    return 'utf-8'
 
 
 def process_directory(dir_path, variant, backend, auto_align):
