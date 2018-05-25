@@ -44,7 +44,7 @@ CREATE TABLE ttdesc_corpus (
 );
 
 CREATE TABLE reference_article (
-	id int NOT NULL,
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 	corpus_id TEXT,
 	article TEXT,
 	FOREIGN KEY (corpus_id) REFERENCES corpus(id)

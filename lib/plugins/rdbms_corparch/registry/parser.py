@@ -28,6 +28,18 @@ class RegistrySyntaxError(Exception):
     pass
 
 
+def infer_encoding(file_path):
+    with open(file_path) as fr:
+        for line in fr:
+            if 'ENCODING' in line:
+                if 'utf8' in line.lower() or 'utf-8' in line.lower():
+                    return 'utf-8'
+                elif 'iso' in line.lower() and '8859-2' in line:
+                    return 'iso-8859-2'
+                break
+    return 'utf-8'
+
+
 def watchable(f):
 
     @wraps(f)

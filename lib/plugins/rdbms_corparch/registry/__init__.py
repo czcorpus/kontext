@@ -256,7 +256,7 @@ class RegistryConf(object):
         data = self._backend.load_registry_table(self._corpus_id, variant=self._variant)
         if data is None:
             raise RecordNotFound(u'Corpus record not found for {0} (variant: {1})'.format(
-                self._corpus_id, self._variant if self._variant else '-'))
+                self._corpus_id, self._variant if self._variant else '--'))
         self._id = data['id']
         for k, v in dict(data).items():
             if re.match(r'[A-Z_]+', k):

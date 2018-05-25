@@ -32,6 +32,85 @@ class Backend(DatabaseBackend):
     def commit(self):
         self._db.commit()
 
+    def contains_corpus(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT id FROM corpus WHERE id = ?', (corpus_id,))
+        return cursor.fetchone() is not None
+
+    def remove_corpus(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT id FROM registry WHERE corpus_id = ?', (corpus_id,))
+        for row in cursor.fetchall():
+            reg_id = row['id']
+            cursor.execute('DELETE FROM ralignment WHERE registry1_id = ? OR registry2_id = ?', (reg_id, reg_id))
+            cursor.execute('DELETE FROM rattribute WHERE registry_id = ?', (reg_id,))
+
+            cursor.execute('SELECT id FROM rstructure WHERE registry_id = ?', (reg_id,))
+            for row2 in cursor.fetchall():
+                cursor.execute('DELETE FROM rstructattr WHERE rstructure_id = ?', (row2['id'],))
+
+            cursor.execute('DELETE FROM registry WHERE id = ?', (reg_id,))
+
+        cursor.execute('DELETE FROM tckc_corpus WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM keyword_corpus WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM reference_article WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM ttdesc_corpus WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM metadata WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM corpus WHERE id = ?', (corpus_id,))
+
+    def save_corpus_config(self, install_json):
+        curr_time = time.time()
+        cursor = self._db.cursor()
+        vals1 = (
+            install_json.ident,
+            install_json.get_group_name(),
+            install_json.get_version(),
+            int(curr_time),
+            int(curr_time),
+            1,
+            install_json.web,
+            install_json.sentence_struct,
+            install_json.tagset,
+            install_json.collator_locale,
+            install_json.speech_segment,
+            install_json.speaker_id_attr,
+            install_json.speech_overlap_attr,
+            install_json.speech_overlap_val,
+            install_json.use_safe_font
+        )
+        cursor.execute('INSERT INTO corpus (id, group_name, version, created, updated, active, web, sentence_struct, '
+                       'tagset, collator_locale, speech_segment, speaker_id_attr,  speech_overlap_attr, '
+                       'speech_overlap_val, use_safe_font) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                       vals1)
+
+        vals2 = (
+            install_json.ident,
+            install_json.metadata.database,
+            install_json.metadata.label_attr,
+            install_json.metadata.id_attr,
+            install_json.metadata.featured,
+            install_json.reference.default,
+            install_json.reference.other_bibliography
+        )
+        cursor.execute('INSERT INTO metadata (corpus_id, database, label_attr, id_attr, featured, reference_default, '
+                       'reference_other) VALUES (?, ?, ?, ?, ?, ?, ?)', vals2)
+
+        for art in install_json.reference.articles:
+            vals3 = (install_json.ident, art)
+            cursor.execute('INSERT INTO reference_article (corpus_id, article) VALUES (?, ?)', vals3)
+
+        for k in install_json.metadata.keywords:
+            vals4 = (install_json.ident, k)
+            cursor.execute('INSERT INTO keyword_corpus (corpus_id, keyword_id) VALUES (?, ?)', vals4)
+
+        for p in install_json.token_connect:
+            vals5 = (install_json.ident, p, 'tc')
+            cursor.execute('INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (?, ?, ?)', vals5)
+
+        for p in install_json.kwic_connect:
+            vals6 = (install_json.ident, p, 'kc')
+            cursor.execute('INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (?, ?, ?)', vals6)
+
     def load_corpus_keywords(self, corp_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT id, label_cs, label_en, color FROM keyword_corpus AS kc JOIN keyword AS k '
