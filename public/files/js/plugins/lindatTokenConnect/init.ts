@@ -25,6 +25,10 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import {init as initDefaultView, Views as DefaultTokenConnectRenderers} from '../defaultTokenConnect/view';
 import {init as initLindatView, Views as LindatTokenConnectRenderers} from './view';
 
+declare var require:any;
+require('../defaultTokenConnect/style.less');
+require('./style.less');
+
 
 export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
 
