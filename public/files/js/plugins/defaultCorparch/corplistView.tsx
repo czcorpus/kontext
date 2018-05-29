@@ -264,6 +264,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                                     detailClickHandler={this._detailClickHandler} />;
             });
             let expansion = null;
+
             if (this.state.nextOffset) {
                 expansion = <ListExpansion offset={this.state.nextOffset} />;
             }

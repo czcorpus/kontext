@@ -655,8 +655,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         ).then(
                             (data) => {
                                 resolve(data);
+                            },
+                            (err) => {
+                                reject(err);
                             }
-                        )
+                        );
                     }, 350);
                 }
             );

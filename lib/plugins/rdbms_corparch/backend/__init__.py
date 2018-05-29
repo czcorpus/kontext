@@ -18,6 +18,7 @@
 
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
+from collections import OrderedDict
 import manatee
 
 
@@ -46,53 +47,56 @@ class DatabaseBackend(object):
     data.
     """
 
-    REG_COLS_MAP = dict(NAME='name',
-                        PATH='path',
-                        VERTICAL='vertical',
-                        LANGUAGE='language',
-                        LOCALE='locale',
-                        ENCODING='rencoding',
-                        INFO='info',
-                        DOCSTRUCTURE='docstructure',
-                        SHORTREF='shortref',
-                        FREQTTATTRS='freqttattrs',
-                        TAGSETDOC='tagsetdoc',
-                        MAXCONTEXT='maxcontext',
-                        MAXDETAIL='maxdetail',
-                        MAXKWIC='maxkwic',
-                        WPOSLIST='wposlist',
-                        WSDEF='wsdef',
-                        WSBASE='wsbase',
-                        WSTHES='wsthes',
-                        ALIGNSTRUCT='alignstruct',
-                        ALIGNDEF='aligndef'
-                        )
+    REG_COLS_MAP = OrderedDict(
+        NAME='name',
+        PATH='path',
+        VERTICAL='vertical',
+        LANGUAGE='language',
+        LOCALE='locale',
+        ENCODING='rencoding',
+        INFO='info',
+        DOCSTRUCTURE='docstructure',
+        SHORTREF='shortref',
+        FREQTTATTRS='freqttattrs',
+        TAGSETDOC='tagsetdoc',
+        MAXCONTEXT='maxcontext',
+        MAXDETAIL='maxdetail',
+        MAXKWIC='maxkwic',
+        WPOSLIST='wposlist',
+        WSDEF='wsdef',
+        WSBASE='wsbase',
+        WSTHES='wsthes',
+        ALIGNSTRUCT='alignstruct',
+        ALIGNDEF='aligndef')
 
-    POS_COLS_MAP = dict(TYPE='type',
-                        LABEL='label',
-                        DYNAMIC='dynamic',
-                        DYNLIB='dynlib',
-                        ARG1='arg1',
-                        ARG2='arg2',
-                        FUNTYPE='funtype',
-                        DYNTYPE='dyntype',
-                        TRANSQUERY='transquery',
-                        MULTIVALUE='multivalue',
-                        MULTISEP='multisep')
+    POS_COLS_MAP = OrderedDict(
+        TYPE='type',
+        LABEL='label',
+        DYNAMIC='dynamic',
+        DYNLIB='dynlib',
+        ARG1='arg1',
+        ARG2='arg2',
+        FUNTYPE='funtype',
+        DYNTYPE='dyntype',
+        TRANSQUERY='transquery',
+        MULTIVALUE='multivalue',
+        MULTISEP='multisep')
 
-    SATTR_COLS_MAP = dict(TYPE='type',
-                          LOCALE='locale',
-                          MULTIVALUE='multivalue',
-                          DEFAULTVALUE='defaultvalue',
-                          MAXLISTSIZE='maxlistsize',
-                          MULTISEP='multisep',
-                          ATTRDOC='attrdoc',
-                          ATTRDOCLABEL='attrdoclabel',
-                          NUMERIC='rnumeric')
+    SATTR_COLS_MAP = OrderedDict(
+        TYPE='type',
+        LOCALE='locale',
+        MULTIVALUE='multivalue',
+        DEFAULTVALUE='defaultvalue',
+        MAXLISTSIZE='maxlistsize',
+        MULTISEP='multisep',
+        ATTRDOC='attrdoc',
+        ATTRDOCLABEL='attrdoclabel',
+        NUMERIC='rnumeric')
 
-    STRUCT_COLS_MAP = dict(TYPE='type',
-                           DISPLAYTAG='displaytag',
-                           DISPLAYBEGIN='displaybegin')
+    STRUCT_COLS_MAP = OrderedDict(
+        TYPE='type',
+        DISPLAYTAG='displaytag',
+        DISPLAYBEGIN='displaybegin')
 
     def commit(self):
         pass
@@ -106,7 +110,13 @@ class DatabaseBackend(object):
     def save_corpus_config(self, install_json):
         raise NotImplementedError()
 
-    def load_corpus_keywords(self, corp_id):
+    def save_corpus_article(self, text):
+        raise NotImplementedError()
+
+    def attach_corpus_article(self, corpus_id, article_id, role):
+        raise NotImplementedError()
+
+    def load_corpus_articles(self, corpus_id):
         raise NotImplementedError()
 
     def load_all_keywords(self):
@@ -115,18 +125,16 @@ class DatabaseBackend(object):
         """
         raise NotImplementedError()
 
-    def load_descriptions(self):
+    def load_description(self, desc_id):
         """
-        expected db cols: id, text_[lang],...
         """
         raise NotImplementedError()
 
-    def load_all_corpora(self):
+    def load_corpus(self, corp_id):
+        raise NotImplementedError()
+
+    def load_all_corpora(self, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
         """
-        expected db cols: c.id, c.web, c.sentence_struct, c.tagset, c.collator_locale, c.speech_segment,
-                          c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font,
-                          m.database, m.label_attr, m.id_attr, m.featured, m.reference_default, m.reference_other,
-                          tc.ttdesc_id AS ttdesc_id
         """
         raise NotImplementedError()
 
@@ -136,7 +144,7 @@ class DatabaseBackend(object):
     def load_registry_table(self, corpus_id, variant):
         raise NotImplementedError()
 
-    def save_registry_posattr(self, registry_id, name, values):
+    def save_registry_posattr(self, registry_id, name, position, values):
         raise NotImplementedError()
 
     def load_registry_posattrs(self, registry_id):
@@ -154,7 +162,10 @@ class DatabaseBackend(object):
     def load_registry_alignments(self, registry_id):
         raise NotImplementedError()
 
-    def save_registry_structure(self, registry_id, name, values):
+    def save_registry_structure(self, registry_id, name, values, update_existing=False):
+        raise NotImplementedError()
+
+    def load_registry_structures(self, registry_id):
         raise NotImplementedError()
 
     def save_registry_structattr(self, struct_id, name, values):
