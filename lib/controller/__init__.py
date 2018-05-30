@@ -45,7 +45,8 @@ import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
-from controller.errors import UserActionException, NotFoundException, get_traceback, fetch_exception_msg, ActionValidationException
+from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
+                               ActionValidationException, CorpusForbiddenException)
 from templating import CheetahResponseFile
 
 
@@ -744,6 +745,8 @@ class Controller(object):
                 methodname, tmpl, result = self.process_action(path[0], named_args)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
+        except CorpusForbiddenException:
+            methodname, tmpl, result = self._run_message_action(named_args, return_type)
         except UserActionException as ex:
             self._status = ex.code
             self.add_system_message('error', fetch_exception_msg(ex))
