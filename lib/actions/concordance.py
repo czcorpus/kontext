@@ -748,7 +748,7 @@ class Actions(Querying):
             ans['TextTypeSel'] = get_tt(
                 self.corp, self._plugin_api).export_with_norms(ret_nums=False)
         except ConcError as e:
-            self.add_system_message('info', e.message)
+            self.add_system_message('warning', e.message)
         ans.update(self.view())
         return ans
 
