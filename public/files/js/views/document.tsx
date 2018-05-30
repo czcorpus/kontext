@@ -659,7 +659,10 @@ export function init(
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
 
     const AjaxLoaderBarImage:React.SFC<CoreViews.AjaxLoaderBarImage.Props> = (props) => {
-        return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
+        return <img
+                className={props.htmlClass ? props.htmlClass : undefined}
+                src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                alt={he.translate('global__loading')} />;
     };
 
     // ------------------------------------------------------------------------------------

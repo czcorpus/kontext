@@ -704,6 +704,18 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         return this.userSettings.get<T>(k) || dflt;
     }
 
+    restoreModelsDataAfterSwitch():void {
+        this.appNavig.forEachCorpSwitchSerializedItem((key, data) => {
+            this.dispatcher.dispatch({
+                actionType: 'CORPUS_SWITCH_MODEL_RESTORE',
+                props: {
+                    key: key,
+                    data: data
+                }
+            });
+        });
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.

@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -11,6 +13,7 @@
 # GNU General Public License for more details.
 
 import json
+import logging
 
 from plugins.abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
@@ -24,10 +27,14 @@ def import_legacy_record(data):
     ans = FavoriteItem()
     ans.ident = data['id']
     ans.name = data.get('name', '??')
+    ans.corpora = [dict(id=data['corpus_id'], name=data['name'])]
     if data.get('corpora', None):
-        ans.corpora = data.get('corpora')
-    else:
-        ans.corpora = [dict(id=data['corpus_id'], name=data['name'])]
+        for item in data.get('corpora', []):
+            try:
+                ans.corpora.append(dict(id=item['canonical_id'], name=item['name']))
+            except Exception as ex:
+                logging.getLogger(__name__).warning(
+                    u'Failed to import legacy fav. item record component: {0}'.format(ex))
     ans.subcorpus_id = data.get('subcorpus_id', None)
     ans.size = data.get('size', None)
     ans.size_info = data.get('size_info', None)
@@ -71,7 +78,7 @@ def set_favorite_item(ctrl, request):
     ))
     with plugins.runtime.USER_ITEMS as uit:
         uit.add_user_item(ctrl._plugin_api, item)
-        return dict(id=item.ident)
+        return item.to_dict()
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)

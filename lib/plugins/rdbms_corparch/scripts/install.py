@@ -1,20 +1,35 @@
+# Copyright (c) 2018 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 import os
+import sys
 import time
 import re
 from lxml import etree
 import sqlite3
 import argparse
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from plugins.rdbms_corparch.backend.input import InstallJson
 
 
 class Shared(object):
     _desc = {}
-    _article_id = 0
     _ttdesc_id = 0
-
-    @property
-    def article_id_inc(self):
-        self._article_id += 1
-        return self._article_id
 
     def get_ref_ttdesc(self, ident):
         return self._desc.get(ident, [])
@@ -30,6 +45,32 @@ class Shared(object):
     @property
     def ttdesc_id(self):
         return self._ttdesc_id
+
+
+class InstallJsonDir(object):
+
+    def __init__(self, dir_path):
+        self._dir_path = dir_path
+        self._data = {}
+        self._current = None
+
+    def switch_to(self, corpus_id):
+        if corpus_id not in self._data:
+            self._data[corpus_id] = InstallJson()
+        self._current = self._data[corpus_id]
+
+    @property
+    def current(self):
+        return self._current
+
+    def write(self):
+        if args.json_out:
+            if not os.path.exists(args.json_out):
+                os.makedirs(args.json_out)
+            for ident, conf in self._data.items():
+                fpath = os.path.join(self._dir_path, ident + '.json')
+                with open(fpath, 'wb') as fw:
+                    conf.write(fw)
 
 
 def decode_bool(v):
@@ -65,25 +106,7 @@ def prepare_tables(db):
         db.executescript(' '.join(fr.readlines()))
 
 
-def create_sorting_values(ident):
-    srch = re.match(r'(?i)^intercorp(_v(\d+))?_\w+$', ident)
-    if srch:
-        if srch.groups()[0]:
-            return 'intercorp', int(srch.groups()[1])
-        else:
-            return 'intercorp', 6
-
-    srch = re.match(r'(?i)^oral_v(\d+)$', ident)
-    if srch:
-        return 'oral', int(srch.groups()[0])
-
-    srch = re.match(r'(?i)^oral(\d{4})$', ident)
-    if srch:
-        return 'oral', int(srch.groups()[0]) - 3000
-    return ident, 1
-
-
-def create_corp_record(node, db, shared):
+def create_corp_record(node, db, shared, json_out):
     ident = node.attrib['ident'].lower()
     web = node.attrib['web'] if 'web' in node.attrib else None
     sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
@@ -96,18 +119,29 @@ def create_corp_record(node, db, shared):
     use_safe_font = decode_bool(node.attrib.get('use_safe_font', 'false'))
     curr_time = time.time()
     cursor = db.cursor()
-    group_name, version = create_sorting_values(ident)
+    group_name, version = InstallJson.create_sorting_values(ident)
     cursor.execute('INSERT INTO corpus (id, group_name, version, created, updated, active, web, sentence_struct, '
                    'tagset, collator_locale, speech_segment, speaker_id_attr,  speech_overlap_attr, '
                    'speech_overlap_val, use_safe_font) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                    (ident, group_name, version, int(curr_time), int(curr_time), 1, web, sentence_struct, tagset,
                     collator_locale, speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val,
                     use_safe_font))
-    create_metadata_record(node, ident, db, shared)
-    parse_tckc(node, db, ident)
+    json_out.switch_to(ident)
+    json_out.current.ident = ident
+    json_out.current.web = web
+    json_out.current.sentence_struct = sentence_struct
+    json_out.current.tagset = tagset
+    json_out.current.speech_segment = speech_segment
+    json_out.current.speaker_id_attr = speaker_id_attr
+    json_out.current.speech_overlap_attr = speech_overlap_attr
+    json_out.current.speech_overlap_val = speech_overlap_val
+    json_out.current.collator_locale = collator_locale
+    json_out.use_safe_font = use_safe_font
+    create_metadata_record(node, ident, db, shared, json_out.current)
+    parse_tckc(node, db, ident, json_out.current)
 
 
-def parse_meta_desc(meta_elm, db, shared, corpus_id):
+def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
     ans = {}
     desc_all = meta_elm.findall('desc')
     cursor = db.cursor()
@@ -132,34 +166,42 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id):
                                                                                       text_cs, text_en))
         cursor.execute(
             'INSERT INTO ttdesc_corpus (corpus_id, ttdesc_id) VALUES (?, ?)', (corpus_id, shared.ttdesc_id))
+        json_out.metadata.desc = shared.ttdesc_id
         if ident:
             shared.add_ref_art(ident, shared.ttdesc_id)
     return ans
 
 
-def parse_keywords(elm, db, shared, corpus_id):
+def parse_keywords(elm, db, shared, corpus_id, json_out):
     cursor = db.cursor()
     for k in elm.findall('keywords/item'):
         cursor.execute('INSERT INTO keyword_corpus (corpus_id, keyword_id) VALUES (?, ?)',
                        (corpus_id, k.text.strip()))
+        json_out.metadata.keywords.append(k.text.strip())
 
 
-def parse_tckc(elm, db, corpus_id):
+def parse_tckc(elm, db, corpus_id, json_out):
     cursor = db.cursor()
     token_connect_elm = elm.find('token_connect')
     if token_connect_elm is not None:
         for p in token_connect_elm.findall('provider'):
             cursor.execute('INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (?, ?, ?)',
                            (corpus_id, p.text.strip(), 'tc'))
+            json_out.token_connect.append(p.text.strip())
 
     kwic_connect_elm = elm.find('kwic_connect')
     if kwic_connect_elm is not None:
         for p in kwic_connect_elm.findall('provider'):
             cursor.execute('INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (?, ?, ?)',
                            (corpus_id, p.text.strip(), 'kc'))
+            json_out.kwic_connect.append(p.text.strip())
 
 
-def create_metadata_record(node, corpus_id, db, shared):
+def create_metadata_record(node, corpus_id, db, shared, json_out):
+
+    def clean_reference(s):
+        return re.sub(r'\s+', ' ', s.strip())
+
     meta_elm = node.find('metadata')
     if meta_elm is not None:
         db_path = getattr(meta_elm.find('database'), 'text', None)
@@ -170,8 +212,12 @@ def create_metadata_record(node, corpus_id, db, shared):
         ref_elm = node.find('reference')
         if ref_elm is not None:
             default_ref = getattr(ref_elm.find('default'), 'text', None)
-            articles = [x.text for x in ref_elm.findall('article')]
+            if default_ref is not None:
+                default_ref = clean_reference(default_ref)
+            articles = [clean_reference(x.text) for x in ref_elm.findall('article')]
             other_bibliography = getattr(ref_elm.find('other_bibliography'), 'text', None)
+            if other_bibliography is not None:
+                other_bibliography = clean_reference(other_bibliography)
         else:
             default_ref = None
             articles = []
@@ -181,13 +227,19 @@ def create_metadata_record(node, corpus_id, db, shared):
         cursor.execute('INSERT INTO metadata (corpus_id, database, label_attr, id_attr, featured, reference_default, '
                        'reference_other) VALUES (?, ?, ?, ?, ?, ?, ?)', (corpus_id, db_path, label_attr, id_attr,
                                                                          is_feat, default_ref, other_bibliography))
-
+        json_out.metadata.database = db_path
+        json_out.metadata.label_attr = label_attr
+        json_out.metadata.id_attr = id_attr
+        json_out.metadata.featured = is_feat
+        json_out.metadata.keywords = []
+        json_out.reference.default = default_ref
+        json_out.reference.other_bibliography = other_bibliography
         for art in articles:
-            cursor.execute('INSERT INTO reference_article (id, corpus_id, article) VALUES (?, ?, ?)',
-                           (shared.article_id_inc, corpus_id, art))
-
-        parse_meta_desc(meta_elm, db, shared, corpus_id)
-        parse_keywords(meta_elm, db, shared, corpus_id)
+            cursor.execute('INSERT INTO reference_article (corpus_id, article) VALUES (?, ?)',
+                           (corpus_id, art))
+            json_out.reference.articles.append(art)
+        parse_meta_desc(meta_elm, db, shared, corpus_id, json_out)
+        parse_keywords(meta_elm, db, shared, corpus_id, json_out)
 
 
 def parse_keywords_def(root, db):
@@ -207,8 +259,8 @@ def parse_keywords_def(root, db):
                                                item.attrib['color'] if 'color' in item.attrib else None))
 
 
-def parse_corplist(path, db_path, shared):
-    with open(path) as f, sqlite3.connect(db_path) as db:
+def parse_corplist(path, db, shared, json_out):
+    with open(path) as f:
         prepare_tables(db)
         xml = etree.parse(f)
 
@@ -217,7 +269,7 @@ def parse_corplist(path, db_path, shared):
         corpora = xml.findall('//corpus')
         for c in corpora:
             try:
-                create_corp_record(c, db, shared)
+                create_corp_record(c, db, shared, json_out)
             except Exception as ex:
                 print('Skipping corpus [{0}] due to error: {1}'.format(c.attrib['ident'], ex))
         db.commit()
@@ -228,5 +280,15 @@ if __name__ == '__main__':
         description='Import existing corplist.xml into a new sqlite3 database')
     parser.add_argument('corplist', metavar='CORPLIST', type=str)
     parser.add_argument('dbpath', metavar='DBPATH', type=str)
+    parser.add_argument('-s', '--schema-only', metavar='SCHEMA_ONLY', action='store_const', const=True)
+    parser.add_argument('-j', '--json-out', metavar='JSON_OUT', type=str,
+                        help='A directory where corpus installation JSON should be stored')
     args = parser.parse_args()
-    parse_corplist(args.corplist, args.dbpath, Shared())
+    with sqlite3.connect(args.dbpath) as db:
+        if args.schema_only:
+            prepare_tables(db)
+        else:
+            ijson = InstallJsonDir(args.json_out)
+            parse_corplist(args.corplist, db, Shared(), ijson)
+            ijson.write()
+        db.commit()

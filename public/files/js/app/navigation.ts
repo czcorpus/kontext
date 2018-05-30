@@ -361,11 +361,10 @@ export class AppNavigation implements Kontext.IURLHandler {
      */
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
-        // now we look at the possible previous stored state
-        const v = this.switchCorpStateStorage.get(obj.csGetStateKey());
-        if (v) {
-            obj.csSetState(v);
-        }
+    }
+
+    forEachCorpSwitchSerializedItem(fn:(storeKey:string, data:any)=>void):void {
+        this.switchCorpStateStorage.forEach((value, key) => fn(key, value));
     }
 
     /**

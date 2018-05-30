@@ -404,6 +404,9 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], qType);
                     this.notifyChangeListeners();
                 break;
+                case 'CORPARCH_FAV_ITEM_CLICK':
+
+                break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
                     if (payload.props['pubName']) {
                         this.currentSubcorp = payload.props['pubName'];
@@ -477,15 +480,32 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                     this.makeCorpusPrimary(payload.props['corpname']);
                     break;
                 case 'QUERY_INPUT_SUBMIT':
-                    const errors = this.corpora.map(corpname => {
-                        return this.isPossibleQueryTypeMismatch(corpname);
-                    }).filter(err => !!err);
-                    if (errors.size === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
+                    if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
                         this.submitQuery();
+                    }
+                break;
+                case 'CORPUS_SWITCH_MODEL_RESTORE':
+                    if (payload.props['key'] === this.csGetStateKey()) {
+                        this.csSetState(payload.props['data']);
                     }
                 break;
             }
         });
+    }
+
+    private testPrimaryQueryNonEmpty():boolean {
+        if (this.queries.get(this.corpora.get(0)).length > 0) {
+            return true;
+
+        } else {
+            this.pageModel.showMessage('error', this.pageModel.translate('query__query_must_be_entered'));
+            return false;
+        }
+    }
+
+    private testQueryTypeMismatch():boolean {
+        const errors = this.corpora.map(corpname => this.isPossibleQueryTypeMismatch(corpname)).filter(err => !!err);
+        return errors.size === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
     }
 
     csExportState():CorpusSwitchPreserved {
@@ -775,7 +795,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         return this.currentSubcorp;
     }
 
-    getOrigSubcorpName():string {
+    getCurrentSubcorpusOrigName():string {
         return this.origSubcorpName;
     }
 

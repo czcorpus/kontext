@@ -61,21 +61,21 @@ export class Plugin {
         const searchEngine = new SearchEngine(
             this.pluginApi,
             10,
-            corporaLabels
         );
 
-        const model = new CorplistWidgetModel(
-            this.pluginApi.dispatcher(),
-            this.pluginApi,
-            this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            corpSel,
-            this.pluginApi.getConf<boolean>('anonymousUser'),
-            searchEngine,
-            favData,
-            featData,
-            options.itemClickAction
-        );
-        model.initHandlers();
+        const model = new CorplistWidgetModel({
+            dispatcher: this.pluginApi.dispatcher(),
+            pluginApi: this.pluginApi,
+            corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            corpSelection: corpSel,
+            anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
+            searchEngine: searchEngine,
+            dataFav: favData,
+            dataFeat: featData,
+            onItemClick: options.itemClickAction,
+            corporaLabels: corporaLabels
+        });
+        this.pluginApi.registerSwitchCorpAwareObject(model);
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),

@@ -193,7 +193,7 @@ class DummyQueryModel implements PluginInterfaces.Corparch.ICorpSelection {
         return null;
     }
 
-    getOrigSubcorpName():string {
+    getCurrentSubcorpusOrigName():string {
         return null;
     }
 

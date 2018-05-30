@@ -227,7 +227,9 @@ export namespace CoreViews {
     // -------------------------------
 
     export namespace AjaxLoaderBarImage {
-        export interface Props {}
+        export interface Props {
+            htmlClass?:string;
+        }
         export type Component = React.SFC<Props>;
     }
 

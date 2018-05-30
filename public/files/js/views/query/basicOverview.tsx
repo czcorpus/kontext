@@ -69,7 +69,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             super(props);
             this.state = {
                 usesubcorp: model.getCurrentSubcorpus(),
-                origSubcorpName: model.getOrigSubcorpName()
+                origSubcorpName: model.getCurrentSubcorpusOrigName()
             };
             this.handleStoreChange = this.handleStoreChange.bind(this);
         }
@@ -77,7 +77,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         private handleStoreChange() {
             this.setState({
                 usesubcorp: model.getCurrentSubcorpus(),
-                origSubcorpName: model.getOrigSubcorpName()
+                origSubcorpName: model.getCurrentSubcorpusOrigName()
             })
         }
 

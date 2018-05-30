@@ -16,9 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import List, Any, Optional, Tuple, Dict
+from typing import List, Any, Tuple, Dict
 
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
+from plugins.rdbms_corparch.backend.input import InstallJson
 
 
 class ManateeCorpora(object):
@@ -26,7 +27,6 @@ class ManateeCorpora(object):
     _cache:Dict[str, DefaultManateeCorpusInfo]
 
     def get_info(self, corpus_id) -> DefaultManateeCorpusInfo: ...
-
 
 
 class DatabaseBackend(object):
@@ -41,7 +41,13 @@ class DatabaseBackend(object):
 
     def commit(self): ...
 
-    def get_corpus_keywords(self, corp_id:basestring) -> Dict[str, Dict[str, str]]: ...
+    def contains_corpus(self, corpus_id:basestring): ...
+
+    def remove_corpus(self, corpus_id:basestring): ...
+
+    def save_corpus_config(self, install_json:InstallJson): ...
+
+    def load_corpus_keywords(self, corp_id:basestring) -> Dict[str, Dict[str, str]]: ...
 
     def load_all_keywords(self) -> Dict[str, unicode]: ...
 
@@ -71,9 +77,9 @@ class DatabaseBackend(object):
 
     def save_subcorpattr(self, struct_id:int, idx:int): ...
 
-    def get_subcorpattrs(self, registry_id:int) -> List[str]: ...
+    def load_subcorpattrs(self, registry_id:int) -> List[str]: ...
 
     def save_freqttattr(self, struct_id:int, idx:int): ...
 
-    def get_freqttattrs(self, registry_id:int) -> List[str]: ...
+    def load_freqttattrs(self, registry_id:int) -> List[str]: ...
 

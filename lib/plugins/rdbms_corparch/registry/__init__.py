@@ -27,6 +27,10 @@ def should_be_quoted(attr, s):
     return True
 
 
+def split_clean(sc, val):
+    return [v for v in re.split(sc, val) if v != ''] if val is not None else []
+
+
 class RecordNotFound(Exception):
     pass
 
@@ -143,7 +147,7 @@ class RegistryConf(object):
     def subcorpattrs(self):
         for item in self.simple_items:
             if item.name == 'SUBCORPATTRS':
-                return re.split(r'[|,]', item.value)
+                return split_clean(r'[|,]', item.value)
         return []
 
     def set_subcorpattrs(self, items):
@@ -183,7 +187,7 @@ class RegistryConf(object):
     def freqttattrs(self):
         for item in self.simple_items:
             if item.name == 'FREQTTATTRS':
-                return re.split(r'[|,]', item.value)
+                return split_clean(r'[|,]', item.value)
         return []
 
     @property
@@ -199,7 +203,7 @@ class RegistryConf(object):
     def aligned(self):
         for item in self.simple_items:
             if item.name == 'ALIGNED':
-                return item.value.split(',')
+                return split_clean(',', item.value)
         return []
 
     def save(self):
@@ -252,13 +256,13 @@ class RegistryConf(object):
         data = self._backend.load_registry_table(self._corpus_id, variant=self._variant)
         if data is None:
             raise RecordNotFound(u'Corpus record not found for {0} (variant: {1})'.format(
-                self._corpus_id, self._variant if self._variant else '-'))
+                self._corpus_id, self._variant if self._variant else '--'))
         self._id = data['id']
         for k, v in dict(data).items():
             if re.match(r'[A-Z_]+', k):
                 self._items.append(SimpleAttr(name=k, value=v))
-        self.set_subcorpattrs(self._backend.get_subcorpattrs(self._id))
-        self.set_freqttattrs(self._backend.get_freqttattrs(self._id))
+        self.set_subcorpattrs(self._backend.load_subcorpattrs(self._id))
+        self.set_freqttattrs(self._backend.load_freqttattrs(self._id))
         self.set_aligned(self._backend.load_registry_alignments(self._id))
 
         for item in self._backend.load_registry_posattrs(self._id):

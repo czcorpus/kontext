@@ -28,6 +28,18 @@ class RegistrySyntaxError(Exception):
     pass
 
 
+def infer_encoding(file_path):
+    with open(file_path) as fr:
+        for line in fr:
+            if 'ENCODING' in line:
+                if 'utf8' in line.lower() or 'utf-8' in line.lower():
+                    return 'utf-8'
+                elif 'iso' in line.lower() and '8859-2' in line:
+                    return 'iso-8859-2'
+                break
+    return 'utf-8'
+
+
 def watchable(f):
 
     @wraps(f)
@@ -62,7 +74,7 @@ class Tokenizer(object):
             for item in items:
                 if item == '':
                     continue
-                if item[0] == '"' and item[-1] == '"' and len(item) > 2:
+                if item[0] == '"' and item[-1] == '"' and len(item) > 1:
                     line_ans.append(item[1:-1])
                 elif item[0] == '"' and not is_q:
                     line_ans.append([])
@@ -165,7 +177,7 @@ class Parser(object):
             return self.state_5, obj
         elif token == '$':
             return self.state_4, obj
-        elif token == '#':
+        elif token.startswith('#'):
             return self.state_3b, obj
 
     @watchable
@@ -193,7 +205,7 @@ class Parser(object):
             return self.state_7, obj
         elif token == '}':
             return self.state_4, obj
-        elif token == '#':
+        elif token.startswith('#'):
             return self.state_3c, obj
 
     @watchable

@@ -16,9 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import manatee
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
+import manatee
 
 
 class ManateeCorpora(object):
@@ -97,7 +97,16 @@ class DatabaseBackend(object):
     def commit(self):
         pass
 
-    def get_corpus_keywords(self, corp_id):
+    def contains_corpus(self, corpus_id):
+        raise NotImplementedError()
+
+    def remove_corpus(self, corpus_id):
+        raise NotImplementedError()
+
+    def save_corpus_config(self, install_json):
+        raise NotImplementedError()
+
+    def load_corpus_keywords(self, corp_id):
         raise NotImplementedError()
 
     def load_all_keywords(self):
@@ -154,11 +163,14 @@ class DatabaseBackend(object):
     def save_subcorpattr(self, struct_id, idx):
         raise NotImplementedError()
 
-    def get_subcorpattrs(self, registry_id):
+    def load_subcorpattrs(self, registry_id):
         raise NotImplementedError()
 
     def save_freqttattr(self, registry_id, idx):
         raise NotImplementedError()
 
-    def get_freqttattrs(self, registry_id):
+    def load_freqttattrs(self, registry_id):
+        raise NotImplementedError()
+
+    def load_tckc_providers(self, corpus_id):
         raise NotImplementedError()
