@@ -238,7 +238,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
     user_id -- database user ID
     minsize -- a min size of concordance to return immediately (even if it is not finished yet)
                (-1 => whole concordance)
-    q -- a tuple/list containing an extended query representation 
+    q -- a tuple/list containing an extended query representation
          (e.g. ['aword,[] within <doc id="foo" />', 'p0 ...'])
     fromp -- a page offset
     pagesize -- a page size (in lines, related to 'fromp')
@@ -248,7 +248,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
     samplesize -- ?
     """
     if not q:
-        raise Exception('No query provided')
+        return None
     q = tuple(q)
     if not minsize:
         if len(q) > 1:  # subsequent concordance processing by its methods

@@ -361,9 +361,23 @@ export class FilterModel extends GeneralQueryModel {
         return args;
     }
 
-    submitQuery(filterId:string):void {
+    private testQueryNonEmpty(filterId:string):boolean {
+        if (this.queries.get(filterId).length > 0) {
+            return true;
+
+        } else {
+            this.pageModel.showMessage('error', this.pageModel.translate('query__query_must_be_entered'));
+            return false;
+        }
+    }
+
+    private testQueryTypeMismatch(filterId):boolean {
         const error = this.validateQuery(this.queries.get(filterId), this.queryTypes.get(filterId));
-        if (!error || window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
+        return !error || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
+    }
+
+    submitQuery(filterId:string):void {
+        if (this.testQueryNonEmpty(filterId) && this.testQueryTypeMismatch(filterId)) {
             const args = this.createSubmitArgs(filterId);
             window.location.href = this.pageModel.createActionUrl('filter', args.items());
         }

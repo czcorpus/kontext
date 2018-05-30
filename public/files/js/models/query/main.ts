@@ -480,10 +480,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                     this.makeCorpusPrimary(payload.props['corpname']);
                     break;
                 case 'QUERY_INPUT_SUBMIT':
-                    const errors = this.corpora.map(corpname => {
-                        return this.isPossibleQueryTypeMismatch(corpname);
-                    }).filter(err => !!err);
-                    if (errors.size === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
+                    if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
                         this.submitQuery();
                     }
                 break;
@@ -494,6 +491,21 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                 break;
             }
         });
+    }
+
+    private testPrimaryQueryNonEmpty():boolean {
+        if (this.queries.get(this.corpora.get(0)).length > 0) {
+            return true;
+
+        } else {
+            this.pageModel.showMessage('error', this.pageModel.translate('query__query_must_be_entered'));
+            return false;
+        }
+    }
+
+    private testQueryTypeMismatch():boolean {
+        const errors = this.corpora.map(corpname => this.isPossibleQueryTypeMismatch(corpname)).filter(err => !!err);
+        return errors.size === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
     }
 
     csExportState():CorpusSwitchPreserved {
