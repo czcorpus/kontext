@@ -78,7 +78,7 @@ import logging
 import plugins
 from plugins import inject
 from plugins.default_corparch import CorpusArchive, DeafultCorplistProvider, parse_query
-from plugins.abstract.corpora import CorpusInfo
+from plugins.abstract.corpora import CorpusListItem, CorpusInfo
 import l10n
 from controller import exposed
 import actions.user
@@ -87,9 +87,19 @@ from translation import ugettext as _
 DEFAULT_LANG = 'en'
 
 
+class UcnkCorpusListItem(CorpusListItem):
+    """
+    A modified CorpusListInfo containing 'requestable' flag
+    """
+
+    def __init__(self):
+        super(CorpusListItem, self).__init__()
+        self.requestable = False
+
+
 class UcnkCorpusInfo(CorpusInfo):
     """
-    A modified CorpusInfo containing 'internal' flag
+    A modified CorpusInfo containing 'requestable' flag
     """
 
     def __init__(self):
@@ -217,6 +227,9 @@ class UcnkCorpArch(CorpusArchive):
         else:
             return False
 
+    def create_corpus_list_item(self):
+        return UcnkCorpusListItem()
+
     def create_corpus_info(self):
         return UcnkCorpusInfo()
 
@@ -229,12 +242,11 @@ class UcnkCorpArch(CorpusArchive):
         corpus_info.requestable = self._decode_bool(node.attrib.get('requestable'))
         self._get_range_attributes(corpus_info, node)
 
-    def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
-        item['requestable'] = (corpus_info.requestable and corpus_info.id not in permitted_corpora
-                               and not plugin_api.user_is_anonymous)
+    def customize_corpus_list_item(self, plugin_api, item, permitted_corpora):
+        item.requestable = (item.requestable and item.id not in permitted_corpora and not plugin_api.user_is_anonymous)
 
-    def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
-        return corpus_info.id in permitted_corpora or (corpus_info.requestable and not plugin_api.user_is_anonymous)
+    def custom_filter(self, plugin_api, corpus_list_item, permitted_corpora):
+        return corpus_list_item.id in permitted_corpora or (corpus_list_item.requestable and not plugin_api.user_is_anonymous)
 
     def get_list(self, plugin_api, user_allowed_corpora):
         """

@@ -101,8 +101,6 @@ export interface CorplistTableModelState {
 
     nextOffset:number;
 
-    query:string;
-
     rows:Immutable.List<common.CorplistItem>;
 }
 
@@ -131,8 +129,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 isBusy: false,
                 offset: 0,
                 searchedCorpName: '',
-                nextOffset: null,
-                query: '',
+                nextOffset: initialData.nextOffset,
                 rows: Immutable.List<common.CorplistItem>(initialData.rows)
             }
         );
@@ -150,6 +147,15 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
                 } else {
                     this.importData(newState, action.props['data']);
+                }
+            break;
+            case 'LOAD_EXPANSION_DATA_DONE':
+                newState.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.extendData(newState, action.props['data']);
                 }
             break;
             case 'KEYWORD_CLICKED': {
@@ -238,7 +244,6 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     sideEffects(state:CorplistTableModelState, action:ActionPayload, dispatch:SEDispatcher):void {
         switch (action.actionType) {
             case 'KEYWORD_CLICKED':
-            case 'EXPANSION_CLICKED':
             case 'KEYWORD_RESET_CLICKED':
             case 'FILTER_CHANGED':
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
@@ -252,6 +257,24 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     (err) => {
                         dispatch({
                             actionType: 'LOAD_DATA_DONE',
+                            error: err,
+                            props: {}
+                        });
+                    }
+                );
+            break;
+            case 'EXPANSION_CLICKED':
+                this.loadData(this.exportQuery(state), this.exportFilter(state),
+                        state.offset).then(
+                    (data) => {
+                        dispatch({
+                            actionType: 'LOAD_EXPANSION_DATA_DONE',
+                            props: {data: data}
+                        });
+                    },
+                    (err) => {
+                        dispatch({
+                            actionType: 'LOAD_EXPANSION_DATA_DONE',
                             error: err,
                             props: {}
                         });
@@ -386,10 +409,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     private loadData(query:string, filters:Filters, offset:number, limit?:number):RSVP.Promise<CorplistDataResponse> {
         const args = new MultiDict();
         args.set('query', query);
-        if (offset) {
-            args.set('offset', offset);
-        }
-        if (limit) {
+        args.set('offset', offset);
+        if (limit !== undefined) {
             args.set('limit', limit);
         }
         if (filters) {
@@ -434,13 +455,21 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             visible: true, // currently we do not make visual taglist filtering
             selected: v.selected
         })).toList();
+        state.nextOffset = inData.nextOffset;
+        state.filters = {
+            maxSize: inData.filters.maxSize,
+            minSize: inData.filters.minSize,
+            name: inData.filters.name
+        };
     }
 
-    extendData(state:CorplistTableModelState, data:CorplistDataResponse):void {
-        state.filters = data.filters;
-        state.keywords = Immutable.List<KeywordInfo>(data.keywords);
+    private extendData(state:CorplistTableModelState, data:CorplistDataResponse):void {
+        state.filters = {
+            maxSize: data.filters.maxSize,
+            minSize: data.filters.minSize,
+            name: data.filters.name
+        };
         state.nextOffset = data.nextOffset;
-        state.query = data.filters.query; // TODO
         state.rows = state.rows.concat(data.rows).toList();
     }
 }

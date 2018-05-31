@@ -312,9 +312,6 @@ class TreeCorparch(AbstractCorporaArchive):
         else:
             return BrokenCorpusInfo()
 
-    def get_list(self, user_allowed_corpora):
-        return sorted(self._metadata.keys())
-
     def get_all(self, user_id):
         self._data['sort_corplist'].sort(key=lambda x: x['size'], reverse=True)
         return self._data

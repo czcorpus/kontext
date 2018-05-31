@@ -20,7 +20,6 @@ import os
 import argparse
 import sys
 import logging
-import traceback
 from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
@@ -66,7 +65,8 @@ def process_directory(dir_path, variant, backend, auto_align):
                     id_map[ans['corpus_id']] = ans['id']
                 except Exception as ex:
                     logging.getLogger(__name__).error(ex)
-                    traceback.print_exc()
+                    #import traceback
+                    # traceback.print_exc()
     aligned_ids_map = defaultdict(lambda: [])
     if auto_align:
         ids = set(id_map.values())

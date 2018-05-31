@@ -63,7 +63,7 @@ class Attribute(object):
         self.attrs = attrs if attrs else []
 
     def __unicode__(self):
-        return u'PosAttr({0} -> {1})'.format(self.name, u', '.join(x.__unicode__() for x in self.attrs))
+        return u'Attr({0} -> {1})'.format(self.name, u', '.join(x.__unicode__() for x in self.attrs))
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -78,6 +78,17 @@ class Attribute(object):
     @property
     def non_empty_items(self):
         return [attr for attr in self.attrs if attr.value is not None]
+
+
+class PosAttribute(Attribute):
+
+    def __init__(self, name=None, attrs=None, position=None):
+        super(PosAttribute, self).__init__(name, attrs)
+        self.position = position
+
+    def __unicode__(self):
+        return u'PosAttr[{0}]({1} -> {2})'.format(self.position, self.name,
+                                                  u', '.join(x.__unicode__() for x in self.attrs))
 
 
 class Struct(object):
@@ -215,7 +226,7 @@ class RegistryConf(object):
         posattr_map = {}
         for pos in self.posattrs:
             new_id = self._backend.save_registry_posattr(
-                reg_id, pos.name, [(x.name, x.value) for x in pos.attrs])
+                reg_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
             posattr_map[pos.name] = new_id
 
         # now we fill in self references
@@ -231,11 +242,17 @@ class RegistryConf(object):
                 self._backend.update_registry_posattr_references(
                     posattr_map[pos.name], fromattr_id, mapto_id)
 
-        # structures
+        # structures >>>
+        corp = self._backend.load_corpus(self._corpus_id)
+        # sentence struct is expected to be already present if defined in main corpus
+        # configuration (see update_existing arg below)
+        sentence_struct = corp['sentence_struct']
         structattr_map = {}
         for struct in self.structs:
             struct_id = self._backend.save_registry_structure(
-                reg_id, struct.name, [(x.name, x.value) for x in struct.simple_items])
+                registry_id=reg_id, name=struct.name, values=[
+                    (x.name, x.value) for x in struct.simple_items],
+                update_existing=sentence_struct == struct.name)
             for attr in struct.attributes:
                 sa_id = self._backend.save_registry_structattr(
                     struct_id, attr.name, [(x.name, x.value) for x in attr.attrs])
@@ -266,7 +283,7 @@ class RegistryConf(object):
         self.set_aligned(self._backend.load_registry_alignments(self._id))
 
         for item in self._backend.load_registry_posattrs(self._id):
-            pa = Attribute(name=item['name'])
+            pa = PosAttribute(name=item['name'], position=item['position'])
             for k, v in [x for x in dict(item).items() if x[0].upper() == x[0]]:
                 pa.new_item(SimpleAttr(k, value=v))
             fromattr, mapto = self._backend.load_registry_posattr_references(item['id'])
@@ -341,7 +358,7 @@ class RegModelSerializer(object):
             if item.value is not None:
                 ans += self._sprint_simple(item)
                 ans += '\n'
-        for item in sorted(conf.posattrs, key=lambda x: x.name):
+        for item in sorted(conf.posattrs, key=lambda x: x.position):
             ans += '\n' + self._sprint_posattr(item)
             ans += '\n'
         for item in sorted(conf.structs, key=lambda x: x.name):

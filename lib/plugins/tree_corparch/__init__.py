@@ -189,9 +189,6 @@ class TreeCorparch(AbstractCorporaArchive):
         else:
             return self._localize_corpus_info(BrokenCorpusInfo(), user_lang)
 
-    def get_list(self, plugin_api, user_allowed_corpora):
-        return sorted(self._metadata.keys())
-
     def get_all(self, plugin_api):
         return self._data
 

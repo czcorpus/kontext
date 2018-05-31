@@ -70,7 +70,7 @@ class CorpusMetadata(DictLike):
 class CitationInfo(DictLike):
     def __init__(self):
         self.default_ref = None
-        self.article_ref = None
+        self.article_ref = []
         self.other_bibliography = None
 
     def to_dict(self):
@@ -122,8 +122,45 @@ class TokenConnect(DictLike):
 
 
 class KwicConnect(DictLike):
+
     def __init__(self):
         self.providers = []
+
+
+class CorpusListItem(DictLike):
+
+    def __init__(self, id=None, corpus_id=None, name=None, description=None, size=0, path=None, keywords=None):
+        self.id = id
+        self.corpus_id = corpus_id
+        self.name = name
+        self.description = description
+        self.size = size
+        self.size_info = l10n.simplify_num(size)
+        self.path = path
+        self.featured = False
+        self.found_in = []
+        self.keywords = [] if keywords is None else keywords
+
+    def __unicode__(self):
+        return u'CorpusListItem({0})'.format(self.__dict__)
+
+    def __repr__(self):
+        return self.__unicode__()
+
+
+class BrokenCorpusListItem(CorpusListItem):
+
+    def __init__(self, id=None, name=None, path=None):
+        super(BrokenCorpusListItem, self).__init__(id=id, name=name, path=path)
+
+
+class CorpusListFilter(object):
+
+    def __init__(self, name=None, min_size=0, offset=0, limit=-1):
+        self.name = name
+        self.min_size = min_size
+        self.offset = offset
+        self.limit = limit
 
 
 class CorpusInfo(DictLike):
@@ -210,18 +247,6 @@ class AbstractCorporaArchive(object):
         """
         raise NotImplementedError()
 
-    def get_list(self, plugin_api, user_allowed_corpora):
-        """
-        Return a list of dicts containing information about individual corpora.
-        (it should be equal to self.corplist().values())
-
-        arguments:
-        plugin_api --
-        user_allowed_corpora -- a dict (corpus_id, corpus_variant) of corpora ids the current
-                                user can access
-        """
-        raise NotImplementedError()
-
 
 class SimpleCorporaArchive(AbstractCorporaArchive):
     """
@@ -249,18 +274,6 @@ class CorplistProvider(object):
         offset -- zero-based offset specifying returned data
         limit -- number of items to return
         filter_dict -- a dictionary containing additional search parameters
-        """
-        raise NotImplementedError()
-
-    def sort(self, plugin_api, data, *fields):
-        """
-        arguments:
-        plugin_api --
-        data -- a list of dicts to be sorted
-        *fields -- zero or more keys to be used to sort the data
-
-        returns:
-        sorted original data or their shallow copy
         """
         raise NotImplementedError()
 
@@ -311,13 +324,13 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         raise NotImplementedError()
 
-    def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
+    def custom_filter(self, plugin_api, corpus_list_item, permitted_corpora):
         """
         An optional custom filter to exclude specific items from results.
 
         arguments:
         plugin_api -- a controller.PluginApi instance
-        corpus_info -- a CorpusInfo object
+        corpus_list_item -- a CorpusListItem object
         permitted_corpora -- a dict (corpus_id, corpus_variant) as returned
                              by auth.permitted_corpora
         """
@@ -340,16 +353,22 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         pass
 
-    def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
+    def create_corpus_list_item(self):
         """
-        An optional method allowing customization of search result item (= a dict)
+        An optional factory method which returns a CorpusListItem compatible instance.
+        Overriding this method allows you to list customized corpus info items.
+        """
+        return CorpusListItem()
+
+    def customize_corpus_list_item(self, plugin_api, item, permitted_corpora):
+        """
+        An optional method allowing customization of search result item (= CorplistItem)
         using full_data (= custom CorpusInfo implementation).
 
         arguments:
         plugin_api -- a controller.PluginApi instance
-        item -- a dict containing corpus information as required by client-side
+        item -- a CorpusListItem instance
         permitted_corpora -- list of permitted corpora as returned by the 'auth' plug-in
                              (i.e. a dict corpus_id=>corpus_variant)
-        corpus_info -- a CorpusInfo instance
         """
         pass

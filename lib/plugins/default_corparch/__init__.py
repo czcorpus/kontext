@@ -326,8 +326,7 @@ class DeafultCorplistProvider(CorplistProvider):
                     corp['fav_id'] = fav_id(corp['id'])
                     # because of client-side fav/feat/search items compatibility
                     corp['corpus_id'] = corp['id']
-                    self._corparch.customize_search_result_item(self._plugin_api, corp, permitted_corpora,
-                                                                full_data)
+                    self._corparch.customize_corpus_list_item(self._plugin_api, corp, permitted_corpora)
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
@@ -712,7 +711,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             max_num_hints=self._max_num_hints
         )
 
-    def customize_search_result_item(self, plugin_api, item, permitted_corpora, full_data):
+    def customize_corpus_list_item(self, plugin_api, item, permitted_corpora):
         pass
 
     def initial_search_params(self, plugin_api, query, filter_dict=None):
