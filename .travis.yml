@@ -1,15 +1,25 @@
 sudo: required
+dist: trusty
 language: python
+services:
+  - redis-server
 python:
   - "2.7"
 env:
-  - PYTHONPATH=./tests/mocks
-before_install:
-  - sudo apt-get install libxml2-dev libxslt-dev python-dev python-pyicu
-install:
-  - pip install -r dev-requirements.txt
-script:
-  - python tests/runtests.py
-services:
-  - redis-server
+  global:
+    - PORT=5000
+    - COMPLETE_BUILD=false
+    - INTEGRATIONTEST=false
+    - UNITTEST=false
+    - MANATEE_FROM_PACKAGES=false
+  matrix:
+    - PYTHONPATH="/opt/kontext/lib/python2.7/site-packages:$PYTHONPATH" COMPLETE_BUILD=true INTEGRATIONTEST=true
+    - UNITTEST=true
 
+install:
+  - if [[ "x$COMPLETE_BUILD" == "xtrue" ]]; then ./build-scripts/setup.sh; fi
+  - pip install -r dev-requirements.txt
+
+script:
+  - if [[ "x$INTEGRATIONTEST" == "xtrue" ]]; then ./build-scripts/test.sh; fi
+  - if [[ "x$UNITTEST" == "xtrue" ]]; then PYTHONPATH="./tests/mocks" python tests/runtests.py; fi

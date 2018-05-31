@@ -1,0 +1,24 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {},
+    "rules": {
+        "eofline": false,
+        "max-line-length": [true, 100],
+        "member-access": false,
+        "array-type": [false],
+        "ordered-imports": [false],
+        "object-literal-sort-keys": false,
+        "no-var-requires": false,
+        "interface-name": [
+            false
+        ],
+	"quotemark": [true, "single"],
+	"no-reference": false,
+	"prefer-const": false
+    },
+    "rulesDirectory": [],
+    "exclude": ["**/node_modules/**/*"]
+}
