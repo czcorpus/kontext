@@ -24,6 +24,7 @@
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
         <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>
+        <calc_backend_time_limit>600</calc_backend_time_limit>
         <action_path_prefix />
         <static_files_prefix>/files</static_files_prefix>
         <use_conc_toolbar>0</use_conc_toolbar>

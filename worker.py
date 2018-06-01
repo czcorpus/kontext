@@ -73,6 +73,9 @@ from bgcalc import subc_calc
 from bgcalc import coll_calc
 
 
+time_limit = settings.get_int('global', 'calc_backend_time_limit', 300)
+
+
 _, conf = settings.get_full('global', 'calc_backend')
 app = task.get_celery_app(conf['conf'])
 
@@ -169,7 +172,7 @@ class CustomTasks(object):
 
 # ----------------------------- CONCORDANCE -----------------------------------
 
-@app.task(bind=True)
+@app.task(bind=True, time_limit=time_limit)
 def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize):
     """
     Register concordance calculation and initiate the calculation.
@@ -194,7 +197,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     return initial_args
 
 
-@app.task(bind=True, ignore_result=True)  # TODO ignore? what about errors?
+@app.task(bind=True, ignore_result=True, time_limit=time_limit)  # TODO ignore? what about errors?
 def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     """
     Perform actual concordance calculation.
@@ -228,7 +231,7 @@ class CollsTask(app.Task):
                 self.cache_data = None
 
 
-@app.task(base=CollsTask)
+@app.task(base=CollsTask, time_limit=time_limit)
 def calculate_colls(coll_args):
     """
     arguments:
@@ -245,7 +248,7 @@ def calculate_colls(coll_args):
     return ans
 
 
-@app.task
+@app.task(time_limit=time_limit)
 def clean_colls_cache():
     return coll_calc.clean_colls_cache()
 
@@ -265,7 +268,7 @@ class FreqsTask(app.Task):
                 self.cache_data = None
 
 
-@app.task(base=FreqsTask)
+@app.task(base=FreqsTask, time_limit=time_limit)
 def calculate_freqs(args):
     args = freq_calc.FreqCalsArgs(**args)
     calculate_freqs.cache_path = args.cache_path
@@ -278,13 +281,13 @@ def calculate_freqs(args):
     return ans
 
 
-@app.task
+@app.task(time_limit=time_limit)
 def calculate_freqs_ct(args):
     args = freq_calc.CTFreqCalcArgs(**args)
     return freq_calc.CTCalculation(args).run()
 
 
-@app.task
+@app.task(time_limit=time_limit)
 def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 
@@ -292,7 +295,7 @@ def clean_freqs_cache():
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-@app.task
+@app.task(time_limit=time_limit)
 def compile_frq(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
@@ -302,7 +305,7 @@ def compile_frq(corp_id, subcorp_path, attr, logfile):
     return _compile_frq(corp, attr, logfile)
 
 
-@app.task
+@app.task(time_limit=time_limit)
 def compile_arf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
@@ -330,7 +333,7 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-@app.task
+@app.task(time_limit=time_limit)
 def compile_docf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
@@ -354,7 +357,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
-@app.task
+@app.task(time_limit=time_limit)
 def create_subcorpus(user_id, corp_id, path, tt_query, cql):
     worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
     return worker.run(tt_query, cql, path)
