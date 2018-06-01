@@ -326,7 +326,6 @@ class DeafultCorplistProvider(CorplistProvider):
                     corp['fav_id'] = fav_id(corp['id'])
                     # because of client-side fav/feat/search items compatibility
                     corp['corpus_id'] = corp['id']
-                    self._corparch.customize_corpus_list_item(self._plugin_api, corp, permitted_corpora)
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
@@ -545,7 +544,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
         ans.sample_size = node.attrib.get('sample_size', -1)
         ans.use_safe_font = self._decode_bool(node.attrib.get('use_safe_font', 'false'))
-        self.customize_corpus_info(ans, node)
 
         ref_elm = node.find('reference')
         if ref_elm is not None:
@@ -710,9 +708,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )
-
-    def customize_corpus_list_item(self, plugin_api, item, permitted_corpora):
-        pass
 
     def initial_search_params(self, plugin_api, query, filter_dict=None):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)

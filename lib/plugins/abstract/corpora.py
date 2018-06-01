@@ -17,13 +17,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-This module contains classes representing a corpus and a list/set
-of corpora as Manatee-independent database-like records. Any
-corpora search/listing is based on these classes.
-Especially the 'corparch' and 'live_attributes' plug-ins
-use them quite a lot.
+This module contains classes representing individual corpus metadata/description.
+We try to pack together data from KonText corparch data, Manatee data and possible
+other sources. So anytime KonText wants to access individual
+corpus information it excepts instances of these classes to be
+involved.
 
-These classes are storage-independent which means that
+Please note that corpus as an item from corparch list is not
+represented here as it is solely a problem of individual corparch
+implementations where typically we need only a few items when
+listing corpora (name, size,...).
+
+The classes are storage-independent which means that
 a concrete format of stored corpora information is up to
 a concrete 'corparch' plug-in (default_corparch uses XML)
 
@@ -127,42 +132,6 @@ class KwicConnect(DictLike):
         self.providers = []
 
 
-class CorpusListItem(DictLike):
-
-    def __init__(self, id=None, corpus_id=None, name=None, description=None, size=0, path=None, keywords=None):
-        self.id = id
-        self.corpus_id = corpus_id
-        self.name = name
-        self.description = description
-        self.size = size
-        self.size_info = l10n.simplify_num(size)
-        self.path = path
-        self.featured = False
-        self.found_in = []
-        self.keywords = [] if keywords is None else keywords
-
-    def __unicode__(self):
-        return u'CorpusListItem({0})'.format(self.__dict__)
-
-    def __repr__(self):
-        return self.__unicode__()
-
-
-class BrokenCorpusListItem(CorpusListItem):
-
-    def __init__(self, id=None, name=None, path=None):
-        super(BrokenCorpusListItem, self).__init__(id=id, name=name, path=path)
-
-
-class CorpusListFilter(object):
-
-    def __init__(self, name=None, min_size=0, offset=0, limit=-1):
-        self.name = name
-        self.min_size = min_size
-        self.offset = offset
-        self.limit = limit
-
-
 class CorpusInfo(DictLike):
     """
     Genereal corpus information and metadata.
@@ -184,6 +153,7 @@ class CorpusInfo(DictLike):
         self.speech_overlap_val = None
         self.bib_struct = None
         self.sample_size = -1
+        self.featured = False
         self.collator_locale = 'en_US'  # this does not apply for Manatee functions
         self.use_safe_font = False
         self.citation_info = CitationInfo()
@@ -342,33 +312,3 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         Overriding this method allows you to use your own CorpusInfo implementations.
         """
         return CorpusInfo()
-
-    def customize_corpus_info(self, corpus_info, node):
-        """
-        An optional method allowing custom corpus_info initialization.
-
-        arguments:
-        corpus_info -- a CorpusInfo instance
-        node -- an Etree XML node <corpus>
-        """
-        pass
-
-    def create_corpus_list_item(self):
-        """
-        An optional factory method which returns a CorpusListItem compatible instance.
-        Overriding this method allows you to list customized corpus info items.
-        """
-        return CorpusListItem()
-
-    def customize_corpus_list_item(self, plugin_api, item, permitted_corpora):
-        """
-        An optional method allowing customization of search result item (= CorplistItem)
-        using full_data (= custom CorpusInfo implementation).
-
-        arguments:
-        plugin_api -- a controller.PluginApi instance
-        item -- a CorpusListItem instance
-        permitted_corpora -- list of permitted corpora as returned by the 'auth' plug-in
-                             (i.e. a dict corpus_id=>corpus_variant)
-        """
-        pass
