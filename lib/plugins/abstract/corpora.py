@@ -153,6 +153,7 @@ class CorpusInfo(DictLike):
         self.speech_overlap_val = None
         self.bib_struct = None
         self.sample_size = -1
+        self.featured = False
         self.collator_locale = 'en_US'  # this does not apply for Manatee functions
         self.use_safe_font = False
         self.citation_info = CitationInfo()
@@ -311,13 +312,3 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         Overriding this method allows you to use your own CorpusInfo implementations.
         """
         return CorpusInfo()
-
-    def customize_corpus_info(self, corpus_info, node):
-        """
-        An optional method allowing custom corpus_info initialization.
-
-        arguments:
-        corpus_info -- a CorpusInfo instance
-        node -- an Etree XML node <corpus>
-        """
-        pass

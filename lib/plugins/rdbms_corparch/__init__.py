@@ -261,20 +261,23 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         else:
             return u'{0} [{1}]'.format(text, _('translation not available'))
 
+    def corpus_list_item_from_row(self, plugin_api, row):
+        keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else [])]
+        return CorpusListItem(id=row['id'],
+                              corpus_id=row['id'],
+                              name=row['name'],
+                              description=self._export_untranslated_label(plugin_api, row['info']),
+                              size=row['size'],
+                              featured=row['featured'],
+                              path=None,
+                              keywords=keywords)
+
     def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
         user_id = plugin_api.user_dict['id']
         ans = OrderedDict()
         for row in self._backend.load_all_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
                                                   max_size=max_size, offset=offset, limit=limit):
-            keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else [])]
-            ans[row['id']] = CorpusListItem(id=row['id'],
-                                            corpus_id=row['id'],
-                                            name=row['name'],
-                                            description=self._export_untranslated_label(plugin_api, row['info']),
-                                            size=row['size'],
-                                            featured=row['featured'],
-                                            path=None,
-                                            keywords=keywords)
+            ans[row['id']] = self.corpus_list_item_from_row(plugin_api, row)
         return ans
 
     def get_l10n_keywords(self, id_list, lang_code):
