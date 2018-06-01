@@ -231,6 +231,12 @@
                             <value>celery</value>
                         </choice>
                     </element>
+                    <optional>
+                        <element name="calc_backend_time_limit">
+                            <a:documentation>Number of seconds for backend tasks to run.</a:documentation>
+                            <data type="integer" />
+                        </element>
+                    </optional>
                     <element name="action_path_prefix">
                         <a:documentation>A prefix for action URLs (e.g. /apps/kontext). This can be used
                         to solve issues regarding apps installed in URL sub-directories</a:documentation>
