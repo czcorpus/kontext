@@ -31,6 +31,8 @@ from texttypes import TextTypeCollector, get_tt
 import settings
 import argmapping
 
+TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+
 
 class SubcorpusError(Exception):
     pass
@@ -136,7 +138,9 @@ class Subcorpus(Querying):
                 import task
                 app = task.get_celery_app(conf['conf'])
                 res = app.send_task('worker.create_subcorpus',
-                                    (self.session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
+                                    (self.session_get('user', 'id'),
+                                     self.args.corpname, path, tt_query, imp_cql),
+                                    time_limit=TASK_TIME_LIMIT)
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                                                        label=u'%s:%s' % (self._canonical_corpname(basecorpname),
