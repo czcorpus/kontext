@@ -29,6 +29,8 @@ from structures import FixedDict
 from bgcalc import UnfinishedConcordanceError
 from translation import ugettext as _
 
+TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+
 
 class CollCalcArgs(FixedDict):
     """
@@ -177,7 +179,8 @@ def calculate_colls(coll_args):
         if backend == 'celery':
             import task
             app = task.get_celery_app(conf['conf'])
-            res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),))
+            res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
+                                time_limit=TASK_TIME_LIMIT)
             # worker task caches the value AFTER the result is returned (see worker.py)
             ans = res.get()
         elif backend == 'multiprocessing':

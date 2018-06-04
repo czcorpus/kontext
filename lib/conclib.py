@@ -35,6 +35,9 @@ from concworker import GeneralWorker
 import corplib
 
 
+TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+
+
 class ConcCalculationControlException(Exception):
     pass
 
@@ -75,7 +78,8 @@ def _min_conc_unfinished(cache_map, q, subchash, minsize):
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
         cache_map.del_full_entry(subchash, q)
-        raise ConcCalculationControlException('Missing status information (invalid cache entry has been removed).')
+        raise ConcCalculationControlException(
+            'Missing status information (invalid cache entry has been removed).')
 
     status.test_error()
     return not status.has_some_result(minsize=minsize)
@@ -148,7 +152,8 @@ def _get_cached_conc(corp, subchash, q, minsize):
     if calc_status:
         corp_mtime = corplib.corp_mtime(corp)
         if calc_status.created - corp_mtime < 0:
-            logging.getLogger(__name__).warning('Removed outdated cache file (older than corpus indices)')
+            logging.getLogger(__name__).warning(
+                'Removed outdated cache file (older than corpus indices)')
             cache_map.del_full_entry(subchash, q)
 
     if _contains_shuffle_seq(q):
@@ -179,7 +184,8 @@ def _get_cached_conc(corp, subchash, q, minsize):
                 if not _min_conc_unfinished(cache_map=cache_map, subchash=subchash, q=q[:i], minsize=minsize):
                     conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
             except (ConcCalculationControlException, manatee.FileAccessError) as ex:
-                logging.getLogger(__name__).error('Failed to join unfinished calculation: {0}'.format(ex))
+                logging.getLogger(__name__).error(
+                    'Failed to join unfinished calculation: {0}'.format(ex))
                 _cancel_async_task(cache_map, subchash, q[:i])
                 continue
             ans = (i, conc)
@@ -203,7 +209,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         import task
         app = task.get_celery_app(conf['conf'])
         ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
-                            subchash, q, samplesize))
+                                                     subchash, q, samplesize, TASK_TIME_LIMIT), time_limit=10)  # register should be fast
         ans.get()  # = wait for task registration
     else:
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
@@ -225,7 +231,8 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
     status.concsize = conc.size()
     if save:
         cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-        cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size(), calc_status=status)
+        cachefile, stored_pidfile = cache_map.add_to_map(
+            subchash, q[:1], conc.size(), calc_status=status)
         conc.save(cachefile)
         # update size in map file
         cache_map.add_to_map(subchash, q[:1], conc.size())
@@ -299,7 +306,8 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
                 _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:act + 1], minsize=-1)
             elif not stored_status:
                 conc.save(cachefile)
-                cache_map.update_calc_status(subchash, q[:act + 1], dict(finished=True, concsize=conc.size()))
+                cache_map.update_calc_status(
+                    subchash, q[:act + 1], dict(finished=True, concsize=conc.size()))
     return conc
 
 
@@ -344,7 +352,8 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
 
     if q is None:
         q = []
-    _t = lambda s: _(s) if translate else lambda s: s
+
+    def _t(s): return _(s) if translate else lambda s: s
 
     desctext = {'q': _t('Query'),
                 'a': _t('Query'),
@@ -451,7 +460,8 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
     region_right = tokens2strclass(cr.region(pos + hitlen,
                                              pos + hitlen + detail_right_ctx))
     for seg in region_left + region_kwic + region_right:
-        seg['str'] = import_string(seg['str'].replace('===NONE===', ''), from_encoding=corpus_encoding)
+        seg['str'] = import_string(seg['str'].replace(
+            '===NONE===', ''), from_encoding=corpus_encoding)
     for seg in region_kwic:
         if not seg['class']:
             seg['class'] = 'coll'
@@ -460,9 +470,9 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
     if hitlen != 1:
         refbase.append(('hitlen', hitlen))
     data['expand_left_args'] = dict(refbase + [('detail_left_ctx', detail_left_ctx + detail_ctx_incr),
-                                    ('detail_right_ctx', detail_right_ctx)])
+                                               ('detail_right_ctx', detail_right_ctx)])
     data['expand_right_args'] = dict(refbase + [('detail_left_ctx', detail_left_ctx),
-                                     ('detail_right_ctx', detail_right_ctx + detail_ctx_incr)])
+                                                ('detail_right_ctx', detail_right_ctx + detail_ctx_incr)])
     data['righttoleft'] = corp.get_conf('RIGHTTOLEFT')
     data['pos'] = pos
     data['maxdetail'] = maxdetail
@@ -479,7 +489,7 @@ def fcs_scan(corpname, scan_query, max_ter, start):
     exact_match = False
     if 'exact' in query.lower() and not '=' in query:  # lemma ExacT "dog"
         pos = query.lower().index('exact')  # first occurence of EXACT
-        query = query[:pos] + '=' + query[pos+5:]  # 1st exact > =
+        query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
         exact_match = True
     corp = manatee.Corpus(corpname)
     attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
