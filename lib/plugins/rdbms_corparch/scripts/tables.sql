@@ -31,13 +31,9 @@ CREATE TABLE kontext_metadata (
 	label_attr TEXT,
 	id_attr TEXT,
 	featured INTEGER DEFAULT 0,
-	reference_default INTEGER,
-	reference_other INTEGER,
 	ttdesc_id INTEGER,
-	CONSTRAINT kontext_metadata_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES corpus(id),
-	CONSTRAINT kontext_metadata_reference_default_fkey FOREIGN KEY (reference_default) REFERENCES article(id),
-	CONSTRAINT kontext_metadata_reference_other_fkey FOREIGN KEY (reference_other) REFERENCES article(id),
-	CONSTRAINT kontext_metadata_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES ttdesc(id),
+	CONSTRAINT kontext_metadata_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
+	CONSTRAINT kontext_metadata_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id),
 	CHECK (featured == 0 OR featured == 1)
 );
 
@@ -52,8 +48,8 @@ CREATE TABLE kontext_corpus_article (
 	article_id INTEGER NOT NULL,
 	corpus_id TEXT NOT NULL,
 	role TEXT NOT NULL,
-	CONSTRAINT kontext_corpus_article_article_id_fkey FOREIGN KEY (article_id) REFERENCES article(id),
-	CONSTRAINT kontext_corpus_article_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES corpus(id),
+	CONSTRAINT kontext_corpus_article_article_id_fkey FOREIGN KEY (article_id) REFERENCES kontext_article(id),
+	CONSTRAINT kontext_corpus_article_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
 	CHECK (role IN ('default', 'standard', 'other'))
 );
 
@@ -68,15 +64,15 @@ CREATE TABLE kontext_keyword (
 CREATE TABLE kontext_keyword_corpus (
 	corpus_id TEXT NOT NULL,
 	keyword_id TEXT NOT NULL,
-	CONSTRAINT kontext_keyword_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES corpus(id),
-	CONSTRAINT kontext_keyword_corpus_keyword_id_fkey FOREIGN KEY (keyword_id) REFERENCES keyword(id)
+	CONSTRAINT kontext_keyword_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
+	CONSTRAINT kontext_keyword_corpus_keyword_id_fkey FOREIGN KEY (keyword_id) REFERENCES kontext_keyword(id)
 );
 
 CREATE TABLE kontext_tckc_corpus (
 	corpus_id TEXT NOT NULL,
 	provider TEXT,
 	type TEXT,
-	CONSTRAINT kontext_tckc_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES corpus(id)
+	CONSTRAINT kontext_tckc_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id)
 );
 
 /* --------------------------------------- */
@@ -184,7 +180,18 @@ CREATE TABLE registry_structattr (
 );
 
 
+CREATE TABLE registry_conf_user (
+    user_id INTEGER NOT NULL,
+    registry_conf_id INTEGER NOT NULL,
+    CONSTRAINT registry_conf_user_pkey PRIMARY KEY (user_id, registry_conf_id),
+    CONSTRAINT registry_conf_user_registry_conf_id_fkey FOREIGN KEY (registry_conf_id) REFERENCES registry_conf(id)
+);
 
+
+CREATE VIEW  registry_overview AS
+SELECT kc.id AS corpus_id, rc.id AS registry_id, rc.variant
+FROM kontext_corpus AS kc
+JOIN registry_conf AS rc ON kc.id = rc.corpus_id;
 
 
 

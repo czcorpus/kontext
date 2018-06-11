@@ -16,9 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import os
+from collections import OrderedDict
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
-from collections import OrderedDict
 import manatee
 
 
@@ -39,6 +40,49 @@ class ManateeCorpora(object):
         except:
             # probably a misconfigured/missing corpus
             return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id), corpus_id)
+
+
+class InstallCorpusInfo(object):
+    """
+    Provides specific information required
+    when installing a new corpus to a corparch
+    database.
+    """
+
+    def __init__(self, reg_path):
+        self._reg_path = reg_path
+
+    def get_corpus_size(self, corp_id):
+        c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+        return c.size()
+
+    def get_corpus_name(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('NAME').decode(self.get_corpus_encoding(corp_id))
+        except:
+            return None
+
+    def get_corpus_description(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('INFO').decode(self.get_corpus_encoding(corp_id))
+        except:
+            return None
+
+    def get_corpus_encoding(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('ENCODING')
+        except:
+            return None
+
+    def get_data_path(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('PATH').rstrip('/')
+        except:
+            return None
 
 
 class DatabaseBackend(object):
@@ -107,7 +151,7 @@ class DatabaseBackend(object):
     def remove_corpus(self, corpus_id):
         raise NotImplementedError()
 
-    def save_corpus_config(self, install_json):
+    def save_corpus_config(self, install_json, registry_dir):
         raise NotImplementedError()
 
     def save_corpus_article(self, text):
@@ -184,4 +228,15 @@ class DatabaseBackend(object):
         raise NotImplementedError()
 
     def load_tckc_providers(self, corpus_id):
+        raise NotImplementedError()
+
+    def create_initial_registry(self, reg_path, sentence_struct):
+        """
+        arguments:
+            reg_path --
+            sentence_struct --
+
+        returns:
+            an ID of a newly created registry structure for the 'sentence_struct'
+        """
         raise NotImplementedError()

@@ -111,7 +111,8 @@ class Config(object):
 
 
 def parse_registry(infile, variant, backend, encoding):
-    logging.getLogger(__name__).info('Found registry. Parsing and importing file {0}'.format(infile.name))
+    logging.getLogger(__name__).info(
+        'Found registry. Parsing and importing file {0}'.format(infile.name))
     corpus_id = os.path.basename(infile.name)
     tokenize = Tokenizer(infile, encoding)
     tokens = tokenize()
@@ -133,9 +134,10 @@ def process_corpora(conf_list, backend, reg_dir, variant, replace):
                 backend.remove_corpus(conf.ident)
 
             if backend.contains_corpus(conf.ident):
-                logging.getLogger(__name__).info('Corpus {0} already present - skipping.'.format(conf.ident))
+                logging.getLogger(__name__).info(
+                    'Corpus {0} already present - skipping.'.format(conf.ident))
             else:
-                backend.save_corpus_config(conf)
+                backend.save_corpus_config(conf, reg_dir)
                 logging.getLogger(__name__).info('Saved config for {0}.'.format(conf.ident))
 
             if variant:

@@ -25,13 +25,14 @@ import sqlite3
 import argparse
 from hashlib import md5
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from plugins.rdbms_corparch.backend import InstallCorpusInfo
 from plugins.rdbms_corparch.backend.input import InstallJson
-import manatee
 
 
-class Shared(object):
+class Shared(InstallCorpusInfo):
 
     def __init__(self, reg_path):
+        super(Shared, self).__init__(reg_path)
         self._desc = {}
         self._ttdesc_id = 0
         self._articles = {}  # entry hash => db ID
@@ -61,38 +62,6 @@ class Shared(object):
     def add_article(self, entry, db_id):
         ahash = md5(entry.encode('utf-8')).hexdigest()
         self._articles[ahash] = db_id
-
-    def get_corpus_size(self, corp_id):
-        c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
-        return c.size()
-
-    def get_corpus_name(self, corp_id):
-        try:
-            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
-            return c.get_conf('NAME').decode(self.get_corpus_encoding(corp_id))
-        except:
-            return None
-
-    def get_corpus_description(self, corp_id):
-        try:
-            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
-            return c.get_conf('INFO').decode(self.get_corpus_encoding(corp_id))
-        except:
-            return None
-
-    def get_corpus_encoding(self, corp_id):
-        try:
-            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
-            return c.get_conf('ENCODING')
-        except:
-            return None
-
-    def get_data_path(self, corp_id):
-        try:
-            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
-            return c.get_conf('PATH').rstrip('/')
-        except:
-            return None
 
 
 class InstallJsonDir(object):
@@ -148,6 +117,7 @@ def prepare_tables(db):
     cursor.execute('DROP TABLE IF EXISTS registry_attribute')
     cursor.execute('DROP TABLE IF EXISTS registry_structure')
     cursor.execute('DROP TABLE IF EXISTS registry_structattr')
+    cursor.execute('DROP TABLE IF EXISTS registry_conf_user')
 
     sql_path = os.path.join(os.path.dirname(__file__), './tables.sql')
     with open(sql_path) as fr:
