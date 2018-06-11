@@ -117,7 +117,7 @@ class Backend(DatabaseBackend):
         for art in install_json.reference.articles:
             vals3 = (install_json.ident, art)
             cursor.execute(
-                'INSERT INTO reference_article (corpus_id, article) VALUES (?, ?)', vals3)
+                'INSERT INTO kontext_article (corpus_id, article) VALUES (?, ?)', vals3)
 
         for k in install_json.metadata.keywords:
             vals4 = (install_json.ident, k)

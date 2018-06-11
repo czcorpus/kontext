@@ -19,8 +19,9 @@
 import sqlite3
 import time
 import logging
+import os
 
-from plugins.rdbms_corparch.backend import DatabaseBackend
+from plugins.rdbms_corparch.backend import DatabaseBackend, InstallCorpusInfo
 
 
 class Backend(DatabaseBackend):
@@ -35,12 +36,39 @@ class Backend(DatabaseBackend):
 
     def contains_corpus(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT id FROM corpus WHERE id = ?', (corpus_id,))
+        cursor.execute('SELECT id FROM kontext_corpus WHERE id = ?', (corpus_id,))
         return cursor.fetchone() is not None
 
     def remove_corpus(self, corpus_id):
         cursor = self._db.cursor()
+
+        # articles
+        cursor.execute('SELECT a.id '
+                       'FROM kontext_article AS a '
+                       'LEFT JOIN kontext_corpus_article AS ca ON a.id = ca.article_id '
+                       'WHERE ca.corpus_id IS NULL')
+        for row3 in cursor.fetchall():
+            cursor.execute('DELETE FROM kontext_article WHERE id = ?', (row3['id'],))
+
+        # text types description
+        cursor.execute('SELECT t.id '
+                       'FROM kontext_ttdesc AS t '
+                       'LEFT JOIN kontext_metadata AS m ON m.ttdesc_id = t.id '
+                       'WHERE m.ttdesc_id IS NULL')
+        for row4 in cursor.fetchall():
+            cursor.execute('DELETE FROM kontext_ttdesc WHERE id = ?', (row4['id'],))
+
+        # metadata
+        cursor.execute('DELETE FROM kontext_metadata WHERE corpus_id = ?', (corpus_id,))
+
+        # misc. M:N stuff
+        cursor.execute('DELETE FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM kontext_keyword_corpus WHERE corpus_id = ?', (corpus_id,))
+        cursor.execute('DELETE FROM kontext_corpus_article WHERE corpus_id = ?', (corpus_id,))
+
+        # registry
         cursor.execute('SELECT id FROM registry_conf WHERE corpus_id = ?', (corpus_id,))
+
         for row in cursor.fetchall():
             reg_id = row['id']
             cursor.execute('DELETE FROM registry_alignment WHERE registry1_id = ? OR registry2_id = ?',
@@ -52,33 +80,23 @@ class Backend(DatabaseBackend):
                 cursor.execute(
                     'DELETE FROM registry_structattr WHERE rstructure_id = ?', (row2['id'],))
 
+            cursor.execute('DELETE FROM registry_structure WHERE registry_id = ?', (reg_id,))
+            cursor.execute('DELETE FROM registry_conf_user WHERE registry_conf_id = ?', (reg_id,))
+
             cursor.execute('DELETE FROM registry_conf WHERE id = ?', (reg_id,))
-
-        cursor.execute('DELETE FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
-        cursor.execute('DELETE FROM kontext_keyword_corpus WHERE corpus_id = ?', (corpus_id,))
-
-        cursor.execute('DELETE FROM kontext_corpus_article WHERE corpus_id = ?', (corpus_id,))
-        cursor.execute('SELECT a.id '
-                       'FROM kontext_article AS a '
-                       'LEFT JOIN kontext_corpus_article AS ca ON a.id = ca.article_id '
-                       'WHERE ac.corpus_id IS NULL')
-        for row3 in cursor.fetchall():
-            cursor.execute('DELETE FROM kontext_article WHERE id = ?', (row3['id'],))
-
-        cursor.execute('DELETE FROM kontext_metadata WHERE corpus_id = ?', (corpus_id,))
-
-        cursor.execute('SELECT t.id '
-                       'FROM kontext_ttdesc AS t '
-                       'LEFT JOIN kontext_metadata AS m ON m.ttdesc_id = t.id '
-                       'WHERE m.ttdesc_id IS NULL')
-        for row4 in cursor.fetchall():
-            cursor.execute('DELETE FROM kontext_ttdesc WHERE id = ?', (row4['id'],))
 
         cursor.execute('DELETE FROM kontext_corpus WHERE id = ?', (corpus_id,))
 
-    def save_corpus_config(self, install_json):
+    def _find_article(self, contents):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT id FROM kontext_article WHERE entry LIKE ?', (contents.strip(),))
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+    def save_corpus_config(self, install_json, registry_dir):
         curr_time = time.time()
         cursor = self._db.cursor()
+
         vals1 = (
             install_json.ident,
             install_json.get_group_name(),
@@ -87,7 +105,6 @@ class Backend(DatabaseBackend):
             int(curr_time),
             1,
             install_json.web,
-            install_json.sentence_struct,
             install_json.tagset,
             install_json.collator_locale,
             install_json.speech_segment,
@@ -97,32 +114,59 @@ class Backend(DatabaseBackend):
             install_json.use_safe_font
         )
         cursor.execute('INSERT INTO kontext_corpus (id, group_name, version, created, updated, active, web, '
-                       'sentence_struct, tagset, collator_locale, speech_segment, speaker_id_attr, '
+                       'tagset, collator_locale, speech_segment, speaker_id_attr, '
                        'speech_overlap_attr, speech_overlap_val, use_safe_font) '
-                       'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                       'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                        vals1)
+
+        # articles
+
+        articles = []
+        def_art_id = None
+        if install_json.reference.default:
+            def_art_id = self._find_article(install_json.reference.default)
+            if def_art_id is None:
+                def_art_id = self.save_corpus_article(install_json.reference.default)
+        articles.append((def_art_id, 'default'))
+
+        other_art_id = None
+        if install_json.reference.other_bibliography:
+            other_art_id = self._find_article(install_json.reference.other_bibliography)
+            if other_art_id is None:
+                other_art_id = self.save_corpus_article(install_json.reference.other_bibliography)
+        articles.append((other_art_id, 'other'))
+
+        for art in install_json.reference.articles:
+            std_art_id = self._find_article(art)
+            if std_art_id is None:
+                std_art_id = self.save_corpus_article(art)
+            articles.append((std_art_id, 'standard'))
+
+        for article_id, art_type in articles:
+            if article_id:
+                self.attach_corpus_article(install_json.ident, article_id, art_type)
+
+        # metadata
 
         vals2 = (
             install_json.ident,
             install_json.metadata.database,
             install_json.metadata.label_attr,
             install_json.metadata.id_attr,
-            install_json.metadata.featured,
-            install_json.reference.default,
-            install_json.reference.other_bibliography
+            int(install_json.metadata.featured)
         )
-        cursor.execute('INSERT INTO kontext_metadata (corpus_id, database, label_attr, id_attr, featured, '
-                       'reference_default, reference_other) VALUES (?, ?, ?, ?, ?, ?, ?)', vals2)
+        cursor.execute('INSERT INTO kontext_metadata (corpus_id, database, label_attr, id_attr, featured) '
+                       'VALUES (?, ?, ?, ?, ?)', vals2)
 
-        for art in install_json.reference.articles:
-            vals3 = (install_json.ident, art)
-            cursor.execute(
-                'INSERT INTO reference_article (corpus_id, article) VALUES (?, ?)', vals3)
-
+        avail_keywords = set(x['id'] for x in self.load_all_keywords())
         for k in install_json.metadata.keywords:
-            vals4 = (install_json.ident, k)
-            cursor.execute(
-                'INSERT INTO kontext_keyword_corpus (corpus_id, keyword_id) VALUES (?, ?)', vals4)
+            if k in avail_keywords:
+                vals4 = (install_json.ident, k)
+                cursor.execute(
+                    'INSERT INTO kontext_keyword_corpus (corpus_id, keyword_id) VALUES (?, ?)', vals4)
+            else:
+                logging.getLogger(__name__).warning(
+                    'Ignoring metadata label "{0}" - not supported'.format(k))
 
         for p in install_json.token_connect:
             vals5 = (install_json.ident, p, 'tc')
@@ -133,6 +177,11 @@ class Backend(DatabaseBackend):
             vals6 = (install_json.ident, p, 'kc')
             cursor.execute(
                 'INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (?, ?, ?)', vals6)
+
+        sentence_struct_id = self.create_initial_registry(reg_path=registry_dir,
+                                                          sentence_struct=install_json.sentence_struct)
+        cursor.execute('UPDATE kontext_corpus SET sentence_struct_id = ? WHERE id = ?',
+                       (sentence_struct_id, install_json.ident))
 
     def save_corpus_article(self, text):
         cursor = self._db.cursor()
@@ -167,7 +216,7 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('SELECT c.id, c.web, rs.name AS sentence_struct, c.tagset, c.collator_locale, c.speech_segment, '
                        'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
-                       'm.featured, m.database, m.label_attr, m.id_attr, m.reference_default, m.reference_other, '
+                       'm.featured, m.database, m.label_attr, m.id_attr, '
                        'tc.id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
                        'c.size, rc.info, rc.name, rc.rencoding AS encoding, rc.language '
                        'FROM kontext_corpus AS c '
@@ -181,7 +230,7 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
-        where_cond = ['c.active = ?', 'uc.user_id = ?']
+        where_cond = ['c.active = ?', 'rcu.user_id = ?']
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
@@ -217,8 +266,8 @@ class Backend(DatabaseBackend):
                'FROM kontext_corpus AS c '
                'LEFT JOIN kontext_metadata AS m ON m.corpus_id = c.id '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_id = c.id '
-               'LEFT JOIN registry_conf AS rc ON rc.corpus_id = c.id '
-               'JOIN kontext_user_corpus AS uc ON c.id = uc.corpus_id '
+               'JOIN registry_conf AS rc ON rc.corpus_id = c.id '
+               'JOIN kontext_registry_conf_user AS rcu ON rc.id = rcu.registry_conf_id '
                'WHERE {0} '
                'GROUP BY c.id '
                'HAVING num_match_keys >= ? '
@@ -419,3 +468,41 @@ class Backend(DatabaseBackend):
         cursor.execute(
             'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
         return cursor.fetchall()
+
+    def save_permitted_corpora(self, user_id, corpora):
+        cursor = self._db.cursor()
+        cursor.execute('DELETE FROM kontext_user_corpus WHERE user_id = ?', (user_id,))
+        for corp, variant in corpora:
+            cursor.execute(
+                'INSERT INTO kontext_user_corpus (user_id, corpus_id) VALUES (?, ?)', (user_id, corp))
+
+    def load_permitted_corpora(self, user_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT rc.corpus_id, rc.variant '
+                       'FROM registry_conf_user AS rcu '
+                       'JOIN registry_conf AS rc ON rcu.registry_conf_id = rc.id '
+                       'WHERE rcu.user_id = ?', (user_id,))
+        return cursor.fetchall()
+
+    def create_initial_registry(self, reg_path, sentence_struct):
+        corpus_id = os.path.basename(reg_path)
+        corpus_info = InstallCorpusInfo(os.path.dirname(reg_path))
+        t1 = int(time.time())
+        cursor = self._db.cursor()
+        cursor.execute('INSERT INTO registry_conf (corpus_id, path, name, info, rencoding, created, updated) '
+                       'VALUES (?, ?, ?, ?, ?, ?, ?)',
+                       (corpus_id, corpus_info.get_data_path(corpus_id), corpus_info.get_corpus_name(corpus_id),
+                        corpus_info.get_corpus_description(
+                            corpus_id), corpus_info.get_corpus_encoding(corpus_id),
+                        t1, t1))
+        cursor.execute('SELECT last_insert_rowid()')
+
+        if sentence_struct:
+            reg_id = cursor.fetchone()[0]
+            cursor.execute('INSERT INTO registry_structure (registry_id, name) VALUES (?, ?)',
+                           (reg_id, sentence_struct))
+            cursor.execute('SELECT last_insert_rowid()')
+            struct_id = cursor.fetchone()[0]
+        else:
+            struct_id = None
+        return struct_id
