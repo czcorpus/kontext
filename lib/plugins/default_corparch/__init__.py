@@ -142,7 +142,7 @@ from lxml import etree
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
-from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo
+from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo, DictLike
 from plugins import inject
 import l10n
 import manatee
@@ -181,6 +181,28 @@ class ManateeCorpora(object):
             # probably a misconfigured/missing corpus
             return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
                                             corpus_id)
+
+
+class CorpusListItem(DictLike):
+
+    def __init__(self, id=None, corpus_id=None, name=None, description=None, size=0, path=None,
+                 featured=False, keywords=None):
+        self.id = id
+        self.corpus_id = corpus_id
+        self.name = name
+        self.description = description
+        self.size = size
+        self.size_info = l10n.simplify_num(size)
+        self.path = path
+        self.featured = featured
+        self.found_in = []
+        self.keywords = [] if keywords is None else keywords
+
+    def __unicode__(self):
+        return u'CorpusListItem({0})'.format(self.__dict__)
+
+    def __repr__(self):
+        return self.__unicode__()
 
 
 def parse_query(tag_prefix, query):

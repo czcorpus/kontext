@@ -15,7 +15,6 @@ CREATE TABLE kontext_corpus (
     speech_overlap_attr TEXT,
     speech_overlap_val TEXT,
     use_safe_font int,
-    use_variant int NOT NULL DEFAULT 0,
     CONSTRAINT kontext_corpus_pkey PRIMARY KEY(id),
     FOREIGN KEY (sentence_struct_id) REFERENCES registry_structure(id)
 );
