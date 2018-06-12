@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
+import logging
 from collections import OrderedDict
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
@@ -81,7 +82,8 @@ class InstallCorpusInfo(object):
         try:
             c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
             return c.get_conf('PATH').rstrip('/')
-        except:
+        except Exception as ex:
+            logging.getLogger(__name__).warning(ex)
             return None
 
 
@@ -151,7 +153,7 @@ class DatabaseBackend(object):
     def remove_corpus(self, corpus_id):
         raise NotImplementedError()
 
-    def save_corpus_config(self, install_json, registry_dir):
+    def save_corpus_config(self, install_json, registry_dir, corp_size):
         raise NotImplementedError()
 
     def save_corpus_article(self, text):
@@ -230,10 +232,11 @@ class DatabaseBackend(object):
     def load_tckc_providers(self, corpus_id):
         raise NotImplementedError()
 
-    def create_initial_registry(self, reg_path, sentence_struct):
+    def create_initial_registry(self, reg_dir, corpus_id, sentence_struct):
         """
         arguments:
-            reg_path --
+            reg_dir --
+            corpus_id --
             sentence_struct --
 
         returns:

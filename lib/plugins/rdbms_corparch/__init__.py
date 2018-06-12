@@ -245,7 +245,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = [x for x in (
-                row['keywords'].split(',') if row['keywords'] else [])]
+                row['keywords'].split(',') if row['keywords'] else []) if x]
             ans.metadata.desc = row['ttdesc_id']
             ans.manatee.encoding = row['encoding']
             ans.manatee.description = row['info']
@@ -262,7 +262,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             return u'{0} [{1}]'.format(text, _('translation not available'))
 
     def corpus_list_item_from_row(self, plugin_api, row):
-        keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else [])]
+        keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else []) if x]
         return CorpusListItem(id=row['id'],
                               corpus_id=row['id'],
                               name=row['name'],

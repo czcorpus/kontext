@@ -87,7 +87,7 @@ from lxml import etree
 import manatee
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.rdbms_corparch.backend.sqlite import Backend
+from plugins.ucnk_corparch2.backend.mysql import Backend
 from plugins.rdbms_corparch.backend.input import InstallJson
 from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
 
