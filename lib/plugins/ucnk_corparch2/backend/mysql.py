@@ -28,47 +28,110 @@ import mysql.connector.errors
 import time
 import logging
 import urlparse
+from types import ModuleType
 
 from plugins.rdbms_corparch.backend import DatabaseBackend, InstallCorpusInfo
 
 
-_DB_RECONNECT_DELAY = 1
-_DB_RECONNECT_ATTEMPTS = 3
+class MySQLConfException(Exception):
+    pass
 
 
-def mysql_connect(conn_url):
-    parsed = urlparse.urlparse(conn_url)
-    conf = dict(host=parsed.netloc, db=parsed.path.strip('/'))
-    conf.update(dict((x[0], x[1][0]) for x in urlparse.parse_qs(parsed.query).items()))
-    # TODO pool size configurable
-    return mysql.connector.connect(pool_name='kontext', pool_size=1, **conf)
+class MySQLConf(object):
+    """
+    MySQL backend configuration wrapper which is able to read
+    set-up from "auth" plug-in XML subtree or from its own (very
+    similar) subtree. It is also possible to instantiate it
+    as empty and attach values manually (which is used when
+    running from CMD).
+    """
+
+    def __init__(self, conf=None):
+        self.pool_name = 'kontext_mysql_pool'
+        if isinstance(conf, ModuleType):
+            if conf.get('plugins', 'auth', {}).get('module') == 'ucnk_remote_auth4':
+                self.host = conf.get('plugins', 'auth')['ucnk:sync_host']
+                self.database = conf.get('plugins', 'auth')['ucnk:sync_db']
+                self.user = conf.get('plugins', 'auth')['ucnk:sync_user']
+                self.password = conf.get('plugins', 'auth')['ucnk:sync_passwd']
+                self.pool_size = int(conf.get('plugins', 'auth')['ucnk:sync_pool_size'])
+                self.conn_retry_delay = int(conf.get('plugins', 'auth')['ucnk:sync_retry_delay'])
+                self.conn_retry_attempts = int(conf.get('plugins', 'auth')['ucnk:sync_retry_attempts'])
+            else:
+                self.host = conf.get('plugins', 'corparch')['ucnk:mysql_host']
+                self.database = conf.get('plugins', 'corparch')['ucnk:mysql_db']
+                self.user = conf.get('plugins', 'corparch')['ucnk:mysql_user']
+                self.password = conf.get('plugins', 'corparch')['ucnk:mysql_passwd']
+                self.pool_size = int(conf.get('plugins', 'corparch')['ucnk:mysql_pool_size'])
+                self.conn_retry_delay = int(conf.get('plugins', 'corparch')['ucnk:mysql_retry_delay'])
+                self.conn_retry_attempts = int(conf.get('plugins', 'corparch')['ucnk:mysql_retry_attempts'])
+        elif type(conf) is str:
+            parsed = urlparse.urlparse(conf)
+            self.host = parsed.netloc
+            self.database = parsed.path.strip('/')
+            for k, v in urlparse.parse_qs(parsed.query).items():
+                setattr(self, k, v[0])
+            self.pool_size = 1
+            self.conn_retry_delay = 2
+            self.conn_retry_attempts = 1
+        elif conf is not None:
+            raise MySQLConfException('Unknown configuration source. Use either a "settings" module object or a connection URL (found: {0}'.format(type(conf)))
+
+    @property
+    def conn_dict(self):
+        return dict(host=self.host, database=self.database, user=self.user,
+                    password=self.password, pool_size=self.pool_size)
 
 
-class Backend(DatabaseBackend):
+class MySQL(object):
+    """
+    A simple wrapper for mysql.connector with ability
+    to reconnect.
+    """
 
-    def __init__(self, db_path):
-        self._db = mysql_connect(db_path)
+    def __init__(self, mysql_conf):
+        self._conn = mysql.connector.connect(**mysql_conf.conn_dict)
+        self._conn_retry_delay = mysql_conf.conn_retry_delay
+        self._conn_retry_attempts = mysql_conf.conn_retry_attempts
 
-    def commit(self):
-        self._db.commit()
-
-    def _new_cursor(self):
+    def cursor(self, dictionary=True, buffered=False):
         try:
-            return self._db.cursor(dictionary=True)
+            return self._conn.cursor(dictionary=dictionary, buffered=buffered)
         except mysql.connector.errors.OperationalError as ex:
             if 'MySQL Connection not available' in ex.msg:
                 logging.getLogger(__name__).warning(
                     'Lost connection to MySQL server - reconnecting')
-                self._db.reconnect(delay=_DB_RECONNECT_DELAY, attempts=_DB_RECONNECT_ATTEMPTS)
-                return self._db.cursor(dictionary=True)
+                self._conn.reconnect(delay=self._conn_retry_delay, attempts=self._conn_retry_attempts)
+                return self._conn.cursor(dictionary=dictionary, buffered=buffered)
+
+    @property
+    def connection(self):
+        return self._conn
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+
+class Backend(DatabaseBackend):
+    """
+    UCNK's custom MySQL backend. With some minor modifications it should be
+    also usable with general rdbms_corparch but it is not tested in such
+    a configuration.
+    """
+
+    def __init__(self, conf):
+        self._db = MySQL(conf)
 
     def contains_corpus(self, corpus_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT id FROM kontext_corpus WHERE id = %s', (corpus_id,))
         return cursor.fetchone() is not None
 
     def remove_corpus(self, corpus_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
 
         # articles
         cursor.execute('SELECT a.id '
@@ -116,14 +179,14 @@ class Backend(DatabaseBackend):
         cursor.execute('DELETE FROM kontext_corpus WHERE id = %s', (corpus_id,))
 
     def _find_article(self, contents):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT id FROM kontext_article WHERE entry LIKE %s', (contents.strip(),))
         row = cursor.fetchone()
         return row[0] if row else None
 
     def save_corpus_config(self, install_json, registry_dir, corp_size):
         curr_time = time.time()
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
 
         vals1 = (
             install_json.ident,
@@ -214,18 +277,18 @@ class Backend(DatabaseBackend):
                        (sentence_struct_id, install_json.ident))
 
     def save_corpus_article(self, text):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('INSERT INTO kontext_article (entry) VALUES (%s)', (text,))
         cursor.execute('SELECT last_insert_id() AS last_id')
         return cursor.fetchone()['last_id']
 
     def attach_corpus_article(self, corpus_id, article_id, role):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('INSERT INTO kontext_corpus_article (corpus_id, article_id, role) '
                        'VALUES (%s, %s, %s)', (corpus_id, article_id, role))
 
     def load_corpus_articles(self, corpus_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT ca.role, a.entry '
                        'FROM kontext_article AS a '
                        'JOIN kontext_corpus_article AS ca ON ca.article_id = a.id '
@@ -233,17 +296,17 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def load_all_keywords(self):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY id')
         return cursor.fetchall()
 
     def load_description(self, desc_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
         return cursor.fetchall()
 
     def load_corpus(self, corp_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT c.id, c.web, rs.name AS sentence_struct, c.tagset, c.collator_locale, c.speech_segment, '
                        'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                        'c.requestable, m.featured, m.db AS `database`, m.label_attr, m.id_attr, '
@@ -284,7 +347,7 @@ class Backend(DatabaseBackend):
         values_cond.append(limit)
         values_cond.append(offset)
 
-        c = self._new_cursor()
+        c = self._db.cursor()
         sql = ('SELECT c.id, c.web, c.tagset, c.collator_locale, c.speech_segment, c.requestable, '
                'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                'm.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
@@ -309,7 +372,7 @@ class Backend(DatabaseBackend):
         return c.fetchall()
 
     def save_registry_table(self, corpus_id, variant, values):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         if variant:
             cursor.execute(
                 'SELECT id FROM registry_conf WHERE corpus_id = %s AND variant = %s', (corpus_id, variant))
@@ -339,7 +402,7 @@ class Backend(DatabaseBackend):
             sql = 'SELECT {0} FROM registry_conf WHERE corpus_id = %s AND variant IS NULL'.format(
                 ', '.join(cols))
             vals = (corpus_id,)
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute(sql, vals)
         return cursor.fetchone()
 
@@ -351,7 +414,7 @@ class Backend(DatabaseBackend):
         vals = [registry_id, name, position] + [v for k, v in values if k in self.POS_COLS_MAP]
         sql = 'INSERT INTO registry_attribute ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(['%s'] * len(vals)))
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         try:
             cursor.execute(sql, vals)
         except mysql.connector.errors.Error as ex:
@@ -364,7 +427,7 @@ class Backend(DatabaseBackend):
     def load_registry_posattrs(self, registry_id):
         sql = 'SELECT {0} FROM registry_attribute WHERE registry_id = %s ORDER BY position'.format(
             ', '.join(['id', 'name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in self.POS_COLS_MAP.items()]))
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute(sql, (registry_id,))
         return cursor.fetchall()
 
@@ -372,12 +435,12 @@ class Backend(DatabaseBackend):
         """
         both fromattr_id and mapto_id can be None
         """
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('UPDATE registry_attribute SET fromattr_id = %s, mapto_id = %s WHERE id = %s',
                        (fromattr_id, mapto_id, posattr_id))
 
     def load_registry_posattr_references(self, posattr_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT r2.name AS n1, r3.name AS n2 '
                        'FROM registry_attribute AS r1 '
                        'LEFT JOIN registry_attribute AS r2 ON r1.fromattr_id = r2.id '
@@ -387,7 +450,7 @@ class Backend(DatabaseBackend):
         return (ans['n1'], ans['n2']) if ans is not None else (None, None)
 
     def save_registry_alignments(self, registry_id, aligned_ids):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         for aid in aligned_ids:
             try:
                 cursor.execute(
@@ -398,7 +461,7 @@ class Backend(DatabaseBackend):
                 raise ex
 
     def load_registry_alignments(self, registry_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT r2.corpus_id AS id '
                        'FROM registry_alignment AS ra '
                        'JOIN registry_conf AS r2 ON ra.registry2_id = r2.id '
@@ -408,7 +471,7 @@ class Backend(DatabaseBackend):
     def save_registry_structure(self, registry_id, name, values, update_existing=False):
         base_cols = [self.STRUCT_COLS_MAP[k] for k, v in values if k in self.STRUCT_COLS_MAP]
         base_vals = [v for k, v in values if k in self.STRUCT_COLS_MAP]
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
 
         if update_existing:
             cursor.execute('SELECT id FROM registry_structure WHERE registry_id = %s AND name = %s',
@@ -434,7 +497,7 @@ class Backend(DatabaseBackend):
         cols = ['id', 'registry_id', 'name'] + \
             ['`{0}` AS `{1}`'.format(v, k) for k, v in self.STRUCT_COLS_MAP.items()]
         sql = 'SELECT {0} FROM registry_structure WHERE registry_id = %s'.format(', '.join(cols))
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute(sql, (registry_id,))
         return cursor.fetchall()
 
@@ -446,7 +509,7 @@ class Backend(DatabaseBackend):
         vals = [struct_id, name] + [v for k, v in values if k in self.SATTR_COLS_MAP]
         sql = 'INSERT INTO registry_structattr ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(['%s'] * len(vals)))
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         try:
             cursor.execute(sql, vals)
         except mysql.connector.errors.Error as ex:
@@ -457,19 +520,19 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()['last_id']
 
     def load_registry_structattrs(self, struct_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         sql = 'SELECT {0} FROM registry_structattr WHERE rstructure_id = %s'.format(
             ', '.join(['id', 'name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in self.SATTR_COLS_MAP.items()]))
         cursor.execute(sql, (struct_id,))
         return cursor.fetchall()
 
     def save_subcorpattr(self, struct_id, idx):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute(
             'UPDATE registry_structattr SET subcorpattrs_idx = %s WHERE id = %s', (idx, struct_id))
 
     def load_subcorpattrs(self, registry_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT r.name AS struct, rs.name AS structattr '
                        'FROM registry_structure AS r '
                        'JOIN registry_structattr AS rs ON r.id = rs.rstructure_id '
@@ -478,12 +541,12 @@ class Backend(DatabaseBackend):
         return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
 
     def save_freqttattr(self, struct_id, idx):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute(
             'UPDATE registry_structattr SET freqttattrs_idx = %s WHERE id = %s', (idx, struct_id))
 
     def load_freqttattrs(self, registry_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT r.name AS struct, rs.name AS structattr '
                        'FROM registry_structure AS r '
                        'JOIN registry_structattr AS rs ON r.id = rs.rstructure_id '
@@ -492,20 +555,20 @@ class Backend(DatabaseBackend):
         return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
 
     def load_tckc_providers(self, corpus_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute(
             'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_id = %s', (corpus_id,))
         return cursor.fetchall()
 
     def save_permitted_corpora(self, user_id, corpora):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('DELETE FROM kontext_user_corpus WHERE user_id = %s', (user_id,))
         for corp, variant in corpora:
             cursor.execute(
                 'INSERT INTO kontext_user_corpus (user_id, corpus_id) VALUES (%s, %s)', (user_id, corp))
 
     def load_permitted_corpora(self, user_id):
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('SELECT rc.corpus_id, rc.variant '
                        'FROM registry_conf_user AS rcu '
                        'JOIN registry_conf AS rc ON rcu.registry_conf_id = rc.id '
@@ -515,7 +578,7 @@ class Backend(DatabaseBackend):
     def create_initial_registry(self, reg_dir, corpus_id, sentence_struct):
         corpus_info = InstallCorpusInfo(reg_dir)
         t1 = int(time.time())
-        cursor = self._new_cursor()
+        cursor = self._db.cursor()
         cursor.execute('INSERT INTO registry_conf (corpus_id, path, name, info, rencoding, created, updated) '
                        'VALUES (%s, %s, %s, %s, %s, %s, %s)',
                        (corpus_id, corpus_info.get_data_path(corpus_id), corpus_info.get_corpus_name(corpus_id),

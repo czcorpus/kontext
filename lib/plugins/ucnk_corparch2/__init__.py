@@ -21,45 +21,7 @@ are passed through via the 'export' method which is recognized by KonText and th
 interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 
-Required config.xml/plugins entries:
-
-element corparch {
-  element module { "corparch" }
-  element file { text } # a path to a configuration XML file
-  element root_elm_path {
-        text # an XPath query leading to a root element where configuration can be found
-  }
-  element tag_prefix {
-    attribute extension-by { "default" }
-    text # a spec. character specifying that the following string is a tag/label
-  }
-  element max_num_hints {
-    text # the maximum number of hints corpus selection widget shows
-         # even if there are more results available
-  }
-  element default_page_list_size {
-    attribute extension-by { "default" }
-    text # number of items on the 'corplist' page
-  }
-  element access_req_smtp_server {
-    attribute extension-by { "ucnk" }
-    text # an address of a SMTP server KonText will send corpus access request through
-  }
-  element access_req_sender {
-    attribute extension-by { "ucnk" }
-    text # an e-email sender address user will see once she gets the message
-  }
-  element access_req_recipients {
-    attribute extension-by { "ucnk" }
-    element item {  # a list of recipients/adminstrators who will be notified about request
-      text  # an e-mail address
-    }+
-  }
-  element default_label {
-      attribute extension-by { "ucnk" }
-      text # corpus label to be selected by default in case user has not already selected anything
-  }
-}
+Required config.xml/plugins entries: please see config.rng
 
 To see the format of the "corplist.xml" file please
 see default_corparch/resources/corplist.rng.
@@ -79,8 +41,7 @@ import plugins
 from plugins import inject
 from plugins.rdbms_corparch import RDBMSCorparch, CorpusListItem, parse_query
 from plugins.abstract.corpora import CorpusInfo
-# TODO - final version should contain MySQL backend compatible with UCNK database
-from plugins.ucnk_corparch2.backend.mysql import Backend
+from plugins.ucnk_corparch2.backend.mysql import Backend, MySQLConf
 from controller import exposed
 import actions.user
 from translation import ugettext as _
@@ -231,7 +192,7 @@ class UcnkCorpArch(RDBMSCorparch):
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH)
 def create_instance(conf, user_items, auth):
-    backend = Backend(db_path=conf.get('plugins', 'corparch')['file'])
+    backend = Backend(MySQLConf(conf))
     return UcnkCorpArch(backend=backend,
                         auth=auth,
                         user_items=user_items,

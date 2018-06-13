@@ -87,7 +87,7 @@ from lxml import etree
 import manatee
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.ucnk_corparch2.backend.mysql import Backend
+from plugins.ucnk_corparch2.backend.mysql import Backend, MySQLConf
 from plugins.rdbms_corparch.backend.input import InstallJson
 from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
 
@@ -173,10 +173,24 @@ def load_default_conf(inp_path):
 def find_db_reg_paths(conf_path):
     with open(conf_path) as fr:
         doc = etree.parse(fr)
-        srch = doc.find('/plugins/corparch/file')
-        if srch is not None:
-            return srch.text
-    return None
+        conf = MySQLConf()
+        srch = doc.findall('/plugins/corparch/*')
+        for item in srch:
+            if item.tag == 'mysql_host':
+                conf.host = item.text
+            elif item.tag == 'mysql_db':
+                conf.database = item.text
+            elif item.tag == 'mysql_user':
+                conf.user = item.text
+            elif item.tag == 'mysql_passwd':
+                conf.password = item.text
+            elif item.tag == 'mysql_pool_size':
+                conf.pool_size = int(item.text)
+            elif item.tag == 'mysql_retry_delay':
+                conf.conn_retry_delay = int(item.text)
+            elif item.tag == 'mysql_retry_attempts':
+                conf.conn_retry_attempts = int(item.text)
+        return conf
 
 
 if __name__ == '__main__':
@@ -194,8 +208,8 @@ if __name__ == '__main__':
     conf = Config(registry_dir_path=args.registry_dir, kontext_conf_path=args.kontext_conf)
     jsonpath = args.jsonpath.rstrip('/')
     conf.update_missing(load_default_conf(jsonpath))
-    db_path = find_db_reg_paths(conf.kontext_conf_path)
-    backend = Backend(db_path)
+    db_conf = find_db_reg_paths(conf.kontext_conf_path)
+    backend = Backend(db_conf)
     if os.path.isfile(jsonpath):
         file_list = [jsonpath]
     elif os.path.isdir(jsonpath):

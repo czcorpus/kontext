@@ -27,7 +27,7 @@ import mysql.connector
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.rdbms_corparch.backend import InstallCorpusInfo
 from plugins.rdbms_corparch.backend.input import InstallJson
-from plugins.ucnk_corparch2.backend.mysql import mysql_connect
+from plugins.ucnk_corparch2.backend.mysql import MySQL, MySQLConf
 
 
 class Shared(InstallCorpusInfo):
@@ -362,7 +362,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--variant', type=str,
                         help='Try to search for alternative registry in a directory with this name')
     args = parser.parse_args()
-    db = mysql_connect(args.dbpath)
+    db = MySQL(MySQLConf(args.dbpath))
     if args.schema_only:
         prepare_tables(db)
     else:
