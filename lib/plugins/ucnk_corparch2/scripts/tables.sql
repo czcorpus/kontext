@@ -21,14 +21,14 @@ CREATE TABLE kontext_corpus (
     requestable int DEFAULT 0,
     CONSTRAINT kontext_corpus_pkey PRIMARY KEY (id),
     CONSTRAINT kontext_corpus_sentence_struct_id_fkey FOREIGN KEY (sentence_struct_id) REFERENCES registry_structure(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_article;
 CREATE TABLE kontext_article (
     id INTEGER NOT NULL AUTO_INCREMENT,
     entry TEXT NOT NULL,
     CONSTRAINT kontext_article_pkey PRIMARY KEY (id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_metadata;
 CREATE TABLE kontext_metadata (
@@ -41,7 +41,7 @@ CREATE TABLE kontext_metadata (
 	CONSTRAINT kontext_metadata_pkey PRIMARY KEY (corpus_id),
 	CONSTRAINT kontext_metadata_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
 	CONSTRAINT kontext_metadata_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_ttdesc;
 CREATE TABLE kontext_ttdesc (
@@ -49,7 +49,7 @@ CREATE TABLE kontext_ttdesc (
     text_cs TEXT,
     text_en TEXT,
     CONSTRAINT kontext_ttdesc_pkey PRIMARY KEY (id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_corpus_article;
 CREATE TABLE kontext_corpus_article (
@@ -60,7 +60,7 @@ CREATE TABLE kontext_corpus_article (
 	CONSTRAINT kontext_corpus_article_article_id_fkey FOREIGN KEY (article_id) REFERENCES kontext_article(id),
 	CONSTRAINT kontext_corpus_article_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
 	CHECK (role IN ('default', 'standard', 'other'))
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_keyword;
 CREATE TABLE kontext_keyword (
@@ -69,7 +69,7 @@ CREATE TABLE kontext_keyword (
 	label_en VARCHAR(255) NOT NULL,
 	color VARCHAR(255),
 	CONSTRAINT kontext_keyword_pkey PRIMARY KEY (id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_keyword_corpus;
 CREATE TABLE kontext_keyword_corpus (
@@ -78,7 +78,7 @@ CREATE TABLE kontext_keyword_corpus (
 	CONSTRAINT kontext_keyword_corpus_pkey PRIMARY KEY (corpus_id, keyword_id),
 	CONSTRAINT kontext_keyword_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
 	CONSTRAINT kontext_keyword_corpus_keyword_id_fkey FOREIGN KEY (keyword_id) REFERENCES kontext_keyword(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS kontext_tckc_corpus;
 CREATE TABLE kontext_tckc_corpus (
@@ -87,7 +87,7 @@ CREATE TABLE kontext_tckc_corpus (
 	type VARCHAR(63),
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_id, provider, type),
 	CONSTRAINT kontext_tckc_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 /* --------------------------------------- */
 
@@ -124,7 +124,7 @@ CREATE TABLE registry_conf (
     CONSTRAINT registry_conf_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id),
     CONSTRAINT registry_conf_docstructure_id_fkey FOREIGN KEY (docstructure_id) REFERENCES registry_structure(id),
     CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (wsattr_id) REFERENCES registry_attribute(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS registry_alignment;
 CREATE TABLE registry_alignment (
@@ -133,7 +133,7 @@ CREATE TABLE registry_alignment (
     CONSTRAINT registry_alignment_pkey PRIMARY KEY (registry1_id, registry2_id),
     CONSTRAINT registry_alignment_registry1_id_fkey FOREIGN KEY (registry1_id) REFERENCES registry_conf(id),
     CONSTRAINT registry_alignment_registry2_id_fkey FOREIGN KEY (registry2_id) REFERENCES registry_conf(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS registry_attribute;
 CREATE TABLE registry_attribute (
@@ -158,7 +158,7 @@ CREATE TABLE registry_attribute (
     CONSTRAINT registry_attribute_registry_id_fkey FOREIGN KEY (registry_id) REFERENCES registry_conf(id),
     CONSTRAINT registry_attribute_fromattr_id_fkey FOREIGN KEY (fromattr_id) REFERENCES registry_attribute(id),
     CONSTRAINT registry_attribute_mapto_id_fkey FOREIGN KEY (mapto_id) REFERENCES registry_attribute(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS registry_structure;
 CREATE TABLE registry_structure (
@@ -170,7 +170,7 @@ CREATE TABLE registry_structure (
     displaybegin VARCHAR(255),
     CONSTRAINT registry_structure_pkey PRIMARY KEY (id),
     CONSTRAINT registry_structure_registry_id_fkey FOREIGN KEY (registry_id) REFERENCES registry_conf(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 DROP TABLE IF EXISTS registry_structattr;
 CREATE TABLE registry_structattr (
@@ -190,7 +190,7 @@ CREATE TABLE registry_structattr (
     freqttattrs_idx INTEGER DEFAULT -1,
     CONSTRAINT registry_structattr_pkey PRIMARY KEY (id),
     CONSTRAINT registry_structattr_rstructure_id_fkey FOREIGN KEY (rstructure_id) REFERENCES registry_structure(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 /* --------------------------------------------- */
 
@@ -200,7 +200,7 @@ CREATE TABLE registry_conf_user (
     registry_conf_id INTEGER NOT NULL,
     CONSTRAINT registry_conf_user_pkey PRIMARY KEY (user_id, registry_conf_id),
     CONSTRAINT registry_conf_user_registry_conf_id_fkey FOREIGN KEY (registry_conf_id) REFERENCES registry_conf(id)
-) ENGINE = INNODB;
+) ENGINE = INNODB CHARSET=utf8;
 
 
 /* THIS PROCEDURE IS A MOCK REPLACEMENT TO SIMULATE PRODUCTION ENVIRONMENT */
@@ -208,12 +208,10 @@ DROP PROCEDURE IF EXISTS user_corpus_proc;
 DELIMITER $$
 CREATE PROCEDURE user_corpus_proc (user_id int)
 BEGIN
-SELECT u.id, kc.id, rc.variant, IF(rc.variant IS NOT NULL, CONCAT(rc.variant, '/', kc.id), kc.id)
-FROM registry_conf_user_init AS rcui
-JOIN user AS u ON u.id = rcui.user_id
-JOIN registry_conf AS rc ON rc.id = rcui.registry_conf_id
+SELECT user_id, kc.id, rc.variant, IF(rc.variant IS NOT NULL, CONCAT(rc.variant, '/', kc.id), kc.id)
+FROM registry_conf AS rc
 JOIN kontext_corpus AS kc ON kc.id = rc.corpus_id
-WHERE u.id = user_id;
+WHERE rc.variant IS NULL;
 END $$
 DELIMITER ;
 

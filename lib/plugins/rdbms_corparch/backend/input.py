@@ -33,9 +33,9 @@ class InstallJsonMetadata(object):
     def update(self, data):
         for attr in self.__dict__.keys():
             if attr == 'featured':
-                self.featured = bool(data['featured'])
+                self.featured = bool(data.get('featured', []))
             else:
-                setattr(self, attr, data[attr])
+                setattr(self, attr, data.get(attr, None))
 
 
 class InstallJsonReference(object):
@@ -46,8 +46,9 @@ class InstallJsonReference(object):
         self.other_bibliography = None
 
     def update(self, data):
-        for attr in self.__dict__.keys():
-            setattr(self, attr, data[attr])
+        self.default = data.get('default', None)
+        self.articles = data.get('articles', [])
+        self.other_bibliography = data.get('other_bibliography', None)
 
 
 class InstallJson(object):
@@ -97,12 +98,12 @@ class InstallJson(object):
         data = json.load(fr)
         for attr in self.__dict__.keys():
             if attr == 'metadata':
-                self.metadata.update(data[attr])
+                self.metadata.update(data.get(attr, {}))
             elif attr == 'reference':
-                self.reference.update(data[attr])
+                self.reference.update(data.get(attr, {}))
                 pass
             else:
-                setattr(self, attr, data[attr])
+                setattr(self, attr, data.get(attr, None))
 
     def to_dict(self):
         ans = {}

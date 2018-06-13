@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="corparch">
+            <element name="module">
+                <value>ucnk_corparch2</value>
+            </element>
+            <element name="js_module">
+                <value>ucnkCorparch</value>
+            </element>
+            <element name="tag_prefix">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="default_label">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="max_num_hints">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+            <element name="max_num_favorites">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+            <element name="default_page_list_size">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+            <element name="access_req_smtp_server">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="access_req_sender">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="access_req_recipients">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <zeroOrMore>
+                    <element name="item">
+                        <text />
+                    </element>
+                </zeroOrMore>
+            </element>
+            <element name="mysql_host">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="mysql_db">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="mysql_user">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="mysql_passwd">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="mysql_pool_size">
+                <a:documentation>1 should be OK in most cases</a:documentation>
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+            <element name="mysql_retry_delay">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+            <element name="mysql_retry_attempts">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+        </element>
+    </start>
+</grammar>

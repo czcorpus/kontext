@@ -27,7 +27,7 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
-from plugins.ucnk_corparch2.backend.mysql import Backend
+from plugins.ucnk_remote_auth4.backend.mysql import Backend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO)
