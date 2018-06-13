@@ -23,7 +23,7 @@ import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
-from plugins.ucnk_corparch2.backend.mysql import Backend
+from plugins.ucnk_remote_auth4.backend.mysql import Backend
 
 
 def load_registry(corpus_id, variant, backend):

@@ -85,14 +85,12 @@ element auth {
 import urllib
 import httplib
 import json
-import logging
-import MySQLdb
 import ssl
 
 import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins import inject
-from plugins.ucnk_corparch2.backend.mysql import Backend
+from plugins.ucnk_remote_auth4.backend.mysql import Backend, MySQLConf
 
 
 IMPLICIT_CORPUS = 'susanne'
@@ -140,10 +138,6 @@ class CentralAuth(AbstractRemoteAuth):
     def _mk_user_key(user_id):
         return 'user:%d' % user_id
 
-    @staticmethod
-    def _mk_list_key(user_id):
-        return 'corplist:user:%s' % user_id
-
     def _create_connection(self):
         if self._ssl_context is not None:
             return httplib.HTTPSConnection(self._toolbar_conf.server,
@@ -156,6 +150,9 @@ class CentralAuth(AbstractRemoteAuth):
                                           timeout=self._auth_conf.toolbar_server_timeout)
 
     def _fetch_toolbar_api_response(self, args):
+        ## ----------------- DEBUG/DEVEL BEGIN
+        return json.dumps(dict(user=dict(id=2)))
+        ## ----------------- DEBUG/DEVEL END
         connection = self._create_connection()
         try:
             connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
@@ -224,7 +221,7 @@ class CentralAuth(AbstractRemoteAuth):
         returns:
         a dict (corpus_id, corpus_variant)
         """
-        corpora = self._db.get_permitted_corpora(self._mk_list_key(user_dict['id']))
+        corpora = self._db.get_permitted_corpora(user_dict['id'])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict((c, self._variant_prefix(c)) for c in corpora)
@@ -257,5 +254,5 @@ class CentralAuth(AbstractRemoteAuth):
 
 @inject(plugins.runtime.SESSIONS)
 def create_instance(conf, sessions):
-    backend = Backend(db_path=conf.get('plugins', 'corparch')['file'])
+    backend = Backend(MySQLConf(conf))
     return CentralAuth(db=backend, sessions=sessions, conf=conf)

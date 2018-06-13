@@ -23,11 +23,11 @@ import re
 from lxml import etree
 import argparse
 from hashlib import md5
-import mysql.connector
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.rdbms_corparch.backend import InstallCorpusInfo
 from plugins.rdbms_corparch.backend.input import InstallJson
-from plugins.ucnk_corparch2.backend.mysql import MySQL, MySQLConf
+from plugins.ucnk_remote_auth4.backend.mysql import MySQL, MySQLConf
 
 
 class Shared(InstallCorpusInfo):

@@ -41,7 +41,7 @@ import plugins
 from plugins import inject
 from plugins.rdbms_corparch import RDBMSCorparch, CorpusListItem, parse_query
 from plugins.abstract.corpora import CorpusInfo
-from plugins.ucnk_corparch2.backend.mysql import Backend, MySQLConf
+from plugins.ucnk_remote_auth4.backend.mysql import Backend, MySQLConf
 from controller import exposed
 import actions.user
 from translation import ugettext as _
@@ -87,7 +87,7 @@ def ask_corpus_access(ctrl, request):
     return ans
 
 
-class UcnkCorpArch(RDBMSCorparch):
+class UcnkCorpArch2(RDBMSCorparch):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
@@ -98,9 +98,9 @@ class UcnkCorpArch(RDBMSCorparch):
     def __init__(self, backend, auth, user_items, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
                  access_req_recipients, default_label, registry_lang):
-        super(UcnkCorpArch, self).__init__(backend=backend, user_items=user_items,
-                                           tag_prefix=tag_prefix, max_num_hints=max_num_hints,
-                                           max_page_size=max_page_size, registry_lang=registry_lang)
+        super(UcnkCorpArch2, self).__init__(backend=backend, user_items=user_items,
+                                            tag_prefix=tag_prefix, max_num_hints=max_num_hints,
+                                            max_page_size=max_page_size, registry_lang=registry_lang)
         self._auth = auth
         self.access_req_sender = access_req_sender
         self.access_req_smtp_server = access_req_smtp_server
@@ -108,17 +108,17 @@ class UcnkCorpArch(RDBMSCorparch):
         self.default_label = default_label
 
     def corpus_list_item_from_row(self, plugin_api, row):
-        obj = super(UcnkCorpArch, self).corpus_list_item_from_row(plugin_api, row)
+        obj = super(UcnkCorpArch2, self).corpus_list_item_from_row(plugin_api, row)
         obj.requestable = row['requestable']
         return obj
 
     def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
-        return super(UcnkCorpArch, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
-                                                      min_size=min_size, max_size=max_size, offset=offset,
-                                                      limit=limit if limit > -1 else 1000000000)
+        return super(UcnkCorpArch2, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
+                                                       min_size=min_size, max_size=max_size, offset=offset,
+                                                       limit=limit if limit > -1 else 1000000000)
 
     def export(self, plugin_api):
-        ans = super(UcnkCorpArch, self).export(plugin_api)
+        ans = super(UcnkCorpArch2, self).export(plugin_api)
         ans['initial_keywords'] = plugin_api.session.get(
             self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
@@ -136,7 +136,7 @@ class UcnkCorpArch(RDBMSCorparch):
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
-        return super(UcnkCorpArch, self).search(plugin_api, query, offset, limit, filter_dict)
+        return super(UcnkCorpArch2, self).search(plugin_api, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, plugin_api, custom_message):
         """
@@ -193,17 +193,17 @@ class UcnkCorpArch(RDBMSCorparch):
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH)
 def create_instance(conf, user_items, auth):
     backend = Backend(MySQLConf(conf))
-    return UcnkCorpArch(backend=backend,
-                        auth=auth,
-                        user_items=user_items,
-                        tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                        max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
-                        max_page_size=conf.get('plugins', 'corparch').get(
-                            'default:default_page_list_size', None),
-                        access_req_smtp_server=conf.get('plugins',
-                                                        'corparch')['ucnk:access_req_smtp_server'],
-                        access_req_sender=conf.get('plugins', 'corparch')['ucnk:access_req_sender'],
-                        access_req_recipients=conf.get('plugins',
-                                                       'corparch')['ucnk:access_req_recipients'],
-                        default_label=conf.get('plugins', 'corparch')['ucnk:default_label'],
-                        registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
+    return UcnkCorpArch2(backend=backend,
+                         auth=auth,
+                         user_items=user_items,
+                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                         max_page_size=conf.get('plugins', 'corparch').get(
+                             'default:default_page_list_size', None),
+                         access_req_smtp_server=conf.get('plugins',
+                                                         'corparch')['ucnk:access_req_smtp_server'],
+                         access_req_sender=conf.get('plugins', 'corparch')['ucnk:access_req_sender'],
+                         access_req_recipients=conf.get('plugins',
+                                                        'corparch')['ucnk:access_req_recipients'],
+                         default_label=conf.get('plugins', 'corparch')['ucnk:default_label'],
+                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

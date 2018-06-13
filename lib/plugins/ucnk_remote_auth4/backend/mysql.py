@@ -560,20 +560,33 @@ class Backend(DatabaseBackend):
             'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_id = %s', (corpus_id,))
         return cursor.fetchall()
 
-    def save_permitted_corpora(self, user_id, corpora):
+    # TODO this is a temporary function to overcome legacy 'user_corpus_proc' procedure
+    def _load_reg_corp_map(self):
         cursor = self._db.cursor()
-        cursor.execute('DELETE FROM kontext_user_corpus WHERE user_id = %s', (user_id,))
-        for corp, variant in corpora:
-            cursor.execute(
-                'INSERT INTO kontext_user_corpus (user_id, corpus_id) VALUES (%s, %s)', (user_id, corp))
+        cursor.execute('SELECT id, corpus_id, variant FROM registry_conf')
+        rows = cursor.fetchall()
+        return dict(((r['corpus_id'], r['variant']), r['id']) for r in rows)
 
-    def load_permitted_corpora(self, user_id):
+    def refresh_user_permissions(self, user_id):
+        reg_map = self._load_reg_corp_map() # TODO this is a temporary solution
+        cursor = self._db.cursor(dictionary=False)
+        cursor.execute('DELETE FROM registry_conf_user WHERE user_id = %s', (user_id,))
+        cursor.callproc('user_corpus_proc', (user_id,))
+        # stored procedure returns: user_id, corpus_id, limited, name
+        for result in cursor.stored_results():
+            rows = result.fetchall()
+        for row in rows:
+            reg_id = reg_map[(row[1], 'omezeni' if row[2] else None)]
+            cursor.execute(
+                'INSERT INTO registry_conf_user (user_id, registry_conf_id) VALUES (%s, %s)', (user_id, reg_id))
+
+    def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT rc.corpus_id, rc.variant '
                        'FROM registry_conf_user AS rcu '
                        'JOIN registry_conf AS rc ON rcu.registry_conf_id = rc.id '
                        'WHERE rcu.user_id = %s', (user_id,))
-        return cursor.fetchall()
+        return dict((r['corpus_id'], r['variant']) for r in cursor.fetchall())
 
     def create_initial_registry(self, reg_dir, corpus_id, sentence_struct):
         corpus_info = InstallCorpusInfo(reg_dir)

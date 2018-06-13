@@ -208,12 +208,10 @@ DROP PROCEDURE IF EXISTS user_corpus_proc;
 DELIMITER $$
 CREATE PROCEDURE user_corpus_proc (user_id int)
 BEGIN
-SELECT u.id, kc.id, rc.variant, IF(rc.variant IS NOT NULL, CONCAT(rc.variant, '/', kc.id), kc.id)
-FROM registry_conf_user_init AS rcui
-JOIN user AS u ON u.id = rcui.user_id
-JOIN registry_conf AS rc ON rc.id = rcui.registry_conf_id
+SELECT user_id, kc.id, rc.variant, IF(rc.variant IS NOT NULL, CONCAT(rc.variant, '/', kc.id), kc.id)
+FROM registry_conf AS rc
 JOIN kontext_corpus AS kc ON kc.id = rc.corpus_id
-WHERE u.id = user_id;
+WHERE rc.variant IS NULL;
 END $$
 DELIMITER ;
 
