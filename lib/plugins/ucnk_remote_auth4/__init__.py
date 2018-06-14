@@ -11,75 +11,19 @@
 # GNU General Public License for more details.
 
 """
-This is a specific authentication module as used by the Institute
-of The Czech National Corpus. It obtains a user status via
-a custom HTTP service (aka "CNC toolbar"). When asked about passed
-cookie-stored identifier, the remote service returns two values mixed
-into one:
+This is the 4-generation of UCNK-specific authentication module.
+It leaves all the authentication and authorization on an external
+HTTP service. Once the service receives a specific cookie-stored token,
+it returns two values (everything is JSON-encoded):
 
-1. an HTML code for KonText's application bar (= a part of KonText's web interface)
-2. a JSON inserted in a <div> element containing current user credentials
+1. user credentials and authentication status
+2. HTML code for the ucnk_appbar3 plugin (top bar toolbar)
 
-(note: the search pattern to extract the JSON part is defined
-here in CentralAuth.UCNK_TOOLBAR_PATTERN)
+The ucnk_remote_auth4 plug-in stores the received HTML code into a special
+'shared' storage for ucnk_appbar3 (which, in consequence, does not have to
+produce another HTTP request).
 
-Because there is also a UCNK-specific plug-in "ucnk_appbar" which
-requires the HTML part of the response, the ucnk_remote_auth2 plug-in
-stores the received HTML code into user's session where it is available for
-later pick-up. (Please note that KonText plug-ins cannot send user/request
-data to each other). This prevents additional HTTP request from ucnk_appbar.
-
-Required config.xml/plugins entries (RelaxNG compact format):
-
-element auth {
-    element module { "ucnk_remote_auth3" }
-    element auth_cookie_name {
-        text  # name of a cookie used to store KonText's internal auth ID
-    }
-    element api_cookies {
-        attribute extension-by { "ucnk" }
-        element item { text }*  # a list of cnc_toolbar_* cookies to be passed to API as arguments
-    }
-    element login_url {
-        text  # URL where KonText redirects user to log her in; placeholders can be used
-    }
-    element logout_url {
-        text  # URL where KonText redirects user to log her out; placeholders can be used
-    }
-    element toolbar_server {
-        attribute extension-by { "ucnk" }
-        text  # authentication service address (without path part)
-    }
-    element toolbar_port {
-        attribute extension-by { "ucnk" }
-        text  # TCP port used by the external service
-    }
-    element toolbar_path {
-        attribute extension-by { "ucnk" }
-        text  # path part of the service; placeholders are supported
-    }
-    element toolbar_server_timeout {
-        attribute extension-by { "ucnk" }
-        xsd:integer  # number of seconds to wait for the response
-    }
-    element sync_host {
-        attribute extension-by { "ucnk" }
-        text # hostname of a remote MySQL server
-    }
-    element sync_db {
-        attribute extension-by { "ucnk" }
-        text # database name
-    }
-    element sync_user {
-        attribute extension-by { "ucnk" }
-        text # database username
-    }
-    element sync_passwd {
-        attribute extension-by { "ucnk" }
-        text # database password
-    }
-
-}
+Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
 
 import urllib
@@ -150,9 +94,6 @@ class CentralAuth(AbstractRemoteAuth):
                                           timeout=self._auth_conf.toolbar_server_timeout)
 
     def _fetch_toolbar_api_response(self, args):
-        ## ----------------- DEBUG/DEVEL BEGIN
-        return json.dumps(dict(user=dict(id=2)))
-        ## ----------------- DEBUG/DEVEL END
         connection = self._create_connection()
         try:
             connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
@@ -208,9 +149,6 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()
 
-    def _variant_prefix(self, corpname):
-        return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
-
     def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
@@ -222,9 +160,9 @@ class CentralAuth(AbstractRemoteAuth):
         a dict (corpus_id, corpus_variant)
         """
         corpora = self._db.get_permitted_corpora(user_dict['id'])
-        if IMPLICIT_CORPUS not in corpora:
-            corpora.append(IMPLICIT_CORPUS)
-        return dict((c, self._variant_prefix(c)) for c in corpora)
+        if (IMPLICIT_CORPUS, None) not in corpora:
+            corpora.append((IMPLICIT_CORPUS, None))
+        return dict((c, pref) for c, pref in corpora)
 
     def refresh_user_permissions(self, plugin_api):
         self._db.refresh_user_permissions(
