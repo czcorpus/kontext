@@ -56,15 +56,18 @@ class MySQLConf(object):
                 self.password = conf.get('plugins', 'auth')['ucnk:sync_passwd']
                 self.pool_size = int(conf.get('plugins', 'auth')['ucnk:sync_pool_size'])
                 self.conn_retry_delay = int(conf.get('plugins', 'auth')['ucnk:sync_retry_delay'])
-                self.conn_retry_attempts = int(conf.get('plugins', 'auth')['ucnk:sync_retry_attempts'])
+                self.conn_retry_attempts = int(conf.get('plugins', 'auth')[
+                                               'ucnk:sync_retry_attempts'])
             else:
                 self.host = conf.get('plugins', 'corparch')['ucnk:mysql_host']
                 self.database = conf.get('plugins', 'corparch')['ucnk:mysql_db']
                 self.user = conf.get('plugins', 'corparch')['ucnk:mysql_user']
                 self.password = conf.get('plugins', 'corparch')['ucnk:mysql_passwd']
                 self.pool_size = int(conf.get('plugins', 'corparch')['ucnk:mysql_pool_size'])
-                self.conn_retry_delay = int(conf.get('plugins', 'corparch')['ucnk:mysql_retry_delay'])
-                self.conn_retry_attempts = int(conf.get('plugins', 'corparch')['ucnk:mysql_retry_attempts'])
+                self.conn_retry_delay = int(conf.get('plugins', 'corparch')[
+                                            'ucnk:mysql_retry_delay'])
+                self.conn_retry_attempts = int(conf.get('plugins', 'corparch')[
+                                               'ucnk:mysql_retry_attempts'])
         elif type(conf) is str:
             parsed = urlparse.urlparse(conf)
             self.host = parsed.netloc
@@ -75,7 +78,8 @@ class MySQLConf(object):
             self.conn_retry_delay = 2
             self.conn_retry_attempts = 1
         elif conf is not None:
-            raise MySQLConfException('Unknown configuration source. Use either a "settings" module object or a connection URL (found: {0}'.format(type(conf)))
+            raise MySQLConfException(
+                'Unknown configuration source. Use either a "settings" module object or a connection URL (found: {0}'.format(type(conf)))
 
     @property
     def conn_dict(self):
@@ -101,7 +105,8 @@ class MySQL(object):
             if 'MySQL Connection not available' in ex.msg:
                 logging.getLogger(__name__).warning(
                     'Lost connection to MySQL server - reconnecting')
-                self._conn.reconnect(delay=self._conn_retry_delay, attempts=self._conn_retry_attempts)
+                self._conn.reconnect(delay=self._conn_retry_delay,
+                                     attempts=self._conn_retry_attempts)
                 return self._conn.cursor(dictionary=dictionary, buffered=buffered)
 
     @property
@@ -567,27 +572,6 @@ class Backend(DatabaseBackend):
         rows = cursor.fetchall()
         return dict(((r['corpus_id'], r['variant']), r['id']) for r in rows)
 
-    def refresh_user_permissions(self, user_id):
-        reg_map = self._load_reg_corp_map() # TODO this is a temporary solution
-        cursor = self._db.cursor(dictionary=False)
-        cursor.execute('DELETE FROM registry_conf_user WHERE user_id = %s', (user_id,))
-        cursor.callproc('user_corpus_proc', (user_id,))
-        # stored procedure returns: user_id, corpus_id, limited, name
-        for result in cursor.stored_results():
-            rows = result.fetchall()
-        for row in rows:
-            reg_id = reg_map[(row[1], 'omezeni' if row[2] else None)]
-            cursor.execute(
-                'INSERT INTO registry_conf_user (user_id, registry_conf_id) VALUES (%s, %s)', (user_id, reg_id))
-
-    def get_permitted_corpora(self, user_id):
-        cursor = self._db.cursor()
-        cursor.execute('SELECT rc.corpus_id, rc.variant '
-                       'FROM registry_conf_user AS rcu '
-                       'JOIN registry_conf AS rc ON rcu.registry_conf_id = rc.id '
-                       'WHERE rcu.user_id = %s', (user_id,))
-        return dict((r['corpus_id'], r['variant']) for r in cursor.fetchall())
-
     def create_initial_registry(self, reg_dir, corpus_id, sentence_struct):
         corpus_info = InstallCorpusInfo(reg_dir)
         t1 = int(time.time())
@@ -609,3 +593,27 @@ class Backend(DatabaseBackend):
         else:
             struct_id = None
         return struct_id
+
+    # TODO this function should be improved as it loads all the registry info to cache user permissions
+    # -- we should get rid of this caching and join our selects directly to a list of user avail. corpora
+    def refresh_user_permissions(self, user_id):
+        reg_map = self._load_reg_corp_map()
+        cursor = self._db.cursor(dictionary=False)
+        cursor.execute('DELETE FROM registry_conf_user WHERE user_id = %s', (user_id,))
+        cursor.callproc('user_corpus_proc', (user_id,))
+        # stored procedure returns: user_id, corpus_id, limited, name
+        for result in cursor.stored_results():
+            rows = result.fetchall()
+        for row in rows:
+            reg_id = reg_map[(row[1], 'omezeni' if row[2] else None)]
+            cursor.execute(
+                'INSERT INTO registry_conf_user (user_id, registry_conf_id) VALUES (%s, %s)', (user_id, reg_id))
+        self._db.commit()
+
+    def get_permitted_corpora(self, user_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT rc.corpus_id, rc.variant '
+                       'FROM registry_conf_user AS rcu '
+                       'JOIN registry_conf AS rc ON rcu.registry_conf_id = rc.id '
+                       'WHERE rcu.user_id = %s', (user_id,))
+        return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]

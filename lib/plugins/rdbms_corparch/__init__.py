@@ -358,19 +358,24 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         Obtain full corpus info
         """
         if corp_name:
-            # get rid of path-like corpus ID prefix
-            corp_name = corp_name.split('/')[-1].lower()
-            corp_info = self._fetch_corpus_info(corp_name)
-            if corp_info is not None:
-                if user_lang is not None:
-                    ans = self._localize_corpus_info(corp_info, lang_code=user_lang)
-                else:
-                    ans = corp_info
-                ans.manatee = self._mc.get_info(corp_name)
-                ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
+            try:
+                # get rid of path-like corpus ID prefix
+                corp_name = corp_name.split('/')[-1].lower()
+                corp_info = self._fetch_corpus_info(corp_name)
+                if corp_info is not None:
+                    if user_lang is not None:
+                        ans = self._localize_corpus_info(corp_info, lang_code=user_lang)
+                    else:
+                        ans = corp_info
+                    ans.manatee = self._mc.get_info(corp_name)
+                    ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
 
-                return ans
-            return BrokenCorpusInfo(name=corp_name)
+                    return ans
+                return BrokenCorpusInfo(name=corp_name)
+            except Exception as ex:
+                logging.getLogger(__name__).warning(
+                    'Failed to fetch corpus info for {0}: {1}'.format(corp_name, ex))
+                return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
 

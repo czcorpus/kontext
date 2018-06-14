@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+
+    <define name="ucnk-custom">
+        <attribute name="extension-by">
+            <value>ucnk</value>
+        </attribute>
+    </define>
+
+    <start>
+        <element name="auth">
+            <element name="module">
+                <value>ucnk_remote_auth4</value>
+            </element>
+            <element name="auth_cookie_name">
+                <text />
+            </element>
+            <element name="api_cookies">
+                <ref name="ucnk-custom" />
+                <zeroOrMore>
+                    <element name="item">
+                        <text />
+                    </element>
+                </zeroOrMore>
+            </element>
+            <element name="login_url">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="logout_url">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="toolbar_server">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="toolbar_port">
+                <ref name="ucnk-custom" />
+                <data type="integer" />
+            </element>
+            <element name="toolbar_path">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="toolbar_server_timeout">
+                <ref name="ucnk-custom" />
+                <data type="integer" />
+            </element>
+            <element name="sync_host">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="sync_db">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="sync_user">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="sync_passwd">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="sync_pool_size">
+                <a:documentation>1 should be OK in most cases</a:documentation>
+                <ref name="ucnk-custom" />
+                <data type="integer" />
+            </element>
+            <element name="sync_retry_delay">
+                <ref name="ucnk-custom" />
+                <data type="integer" />
+            </element>
+            <element name="sync_retry_attempts">
+                <ref name="ucnk-custom" />
+                <data type="integer" />
+            </element>
+        </element>
+    </start>
+</grammar>
