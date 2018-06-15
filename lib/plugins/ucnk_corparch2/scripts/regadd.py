@@ -27,7 +27,8 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
-from plugins.ucnk_remote_auth4.backend.mysql import Backend
+from plugins.ucnk_remote_auth4.backend.mysql import MySQLConf
+from plugins.ucnk_remote_auth4.backend.mysql_w import WritableBackend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO)
@@ -51,11 +52,12 @@ def remove_comments(infile):
     return ''.join(ans)
 
 
-def process_directory(dir_path, variant, backend, auto_align):
+def process_directory(dir_path, variant, backend, auto_align, verbose):
     if variant:
         dir_path = os.path.join(dir_path, variant)
     aligned = {}
     id_map = {}
+    created_rt = {}
     for item in os.listdir(dir_path):
         fpath = os.path.join(dir_path, item)
         if os.path.isfile(fpath):
@@ -63,11 +65,15 @@ def process_directory(dir_path, variant, backend, auto_align):
             with open(fpath) as fr:
                 try:
                     ans = parse_registry(fr, variant=variant, backend=backend, encoding=enc)
+                    created_rt[ans['corpus_id']] = ans['created_rt']
                     if not auto_align:
-                        aligned[ans['id']] = ans['aligned']
-                    id_map[ans['corpus_id']] = ans['id']
+                        aligned[ans['corpus_id']] = ans['aligned']
+                    id_map[ans['corpus_id']] = ans['corpus_id']
                 except Exception as ex:
                     logging.getLogger(__name__).error(ex)
+                    if verbose:
+                        import traceback
+                        traceback.print_exc(ex)
     aligned_ids_map = defaultdict(lambda: [])
     if auto_align:
         ids = set(id_map.values())
@@ -83,7 +89,8 @@ def process_directory(dir_path, variant, backend, auto_align):
                         'Ignored alignment {0} --> {1}'.format(id, a))
 
     for corpus_id, aligned_ids in aligned_ids_map.items():
-        backend.save_registry_alignments(corpus_id, aligned_ids)
+        if created_rt.get(corpus_id, False):
+            backend.save_corpus_alignments(corpus_id, aligned_ids)
 
 
 if __name__ == '__main__':
@@ -92,17 +99,19 @@ if __name__ == '__main__':
     parser.add_argument('rpath', metavar='REGISTRY_PATH', type=str)
     parser.add_argument('dbpath', metavar='DB_PATH', type=str)
     parser.add_argument('-e', '--encoding', metavar='ENCODING', type=str, default=None)
-    parser.add_argument('-v', '--variant', metavar='VARIANT', type=str,
+    parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
                         help='A subdirectory containing (restricted) variants of corpora')
-    parser.add_argument('-a', '--auto-align', metavar='AUTO_ALIGN', action='store_const', const=True,
+    parser.add_argument('-l', '--auto-align', metavar='AUTO_ALIGN', action='store_const', const=True,
                         help='Align all the corpus in a directory automatically')
+    parser.add_argument('-v', '--verbose', action='store_const', const=True,
+                        help='Provide more information during processing (especially errors)')
     args = parser.parse_args()
-    backend = Backend(args.dbpath)
+    backend = WritableBackend(MySQLConf(args.dbpath))
 
     if os.path.isdir(args.rpath):
-        process_directory(args.rpath, None, backend, args.auto_align)
+        process_directory(args.rpath, None, backend, args.auto_align, args.verbose)
         if args.variant:
-            process_directory(args.rpath, args.variant, backend, args.auto_align)
+            process_directory(args.rpath, args.variant, backend, args.auto_align, args.verbose)
     else:
         with open(args.rpath) as fr:
             parse_registry(fr,

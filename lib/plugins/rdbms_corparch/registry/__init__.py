@@ -130,7 +130,6 @@ class RegistryConf(object):
     """
 
     def __init__(self, corpus_id, variant, backend):
-        self._id = None
         self._corpus_id = corpus_id
         self._variant = variant
         self._items = []
@@ -219,54 +218,49 @@ class RegistryConf(object):
 
     def save(self):
         # top level keys and values
-        reg_id = self._backend.save_registry_table(
+        created_rt = self._backend.save_registry_table(
             self._corpus_id, self._variant, [(x.name, x.value) for x in self.simple_items])
 
-        # positional attributes
-        posattr_map = {}
-        for pos in self.posattrs:
-            new_id = self._backend.save_registry_posattr(
-                reg_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
-            posattr_map[pos.name] = new_id
+        if created_rt:
+            # positional attributes
+            posattr_map = {}
+            for pos in self.posattrs:
+                new_id = self._backend.save_corpus_posattr(
+                    self._corpus_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
+                posattr_map[pos.name] = new_id
 
-        # now we fill in self references
-        for pos in self.posattrs:
-            fromattr_id = None
-            mapto_id = None
-            for pitem in pos.attrs:
-                if pitem.name == 'FROMATTR':
-                    fromattr_id = posattr_map[pitem.value]
-                elif pitem.name == 'MAPTO':
-                    mapto_id = posattr_map[pitem.value]
-            if fromattr_id is not None or mapto_id is not None:
-                self._backend.update_registry_posattr_references(
-                    posattr_map[pos.name], fromattr_id, mapto_id)
+            # now we fill in self references
+            for pos in self.posattrs:
+                fromattr_id = None
+                mapto_id = None
+                for pitem in pos.attrs:
+                    if pitem.name == 'FROMATTR':
+                        fromattr_id = posattr_map[pitem.value]
+                    elif pitem.name == 'MAPTO':
+                        mapto_id = posattr_map[pitem.value]
+                if fromattr_id is not None or mapto_id is not None:
+                    self._backend.update_corpus_posattr_references(
+                        self._corpus_id, posattr_map[pos.name], fromattr_id, mapto_id)
 
-        # structures >>>
-        corp = self._backend.load_corpus(self._corpus_id)
-        # sentence struct is expected to be already present if defined in main corpus
-        # configuration (see update_existing arg below)
-        sentence_struct = corp['sentence_struct']
-        structattr_map = {}
-        for struct in self.structs:
-            struct_id = self._backend.save_registry_structure(
-                registry_id=reg_id, name=struct.name, values=[
-                    (x.name, x.value) for x in struct.simple_items],
-                update_existing=sentence_struct == struct.name)
-            for attr in struct.attributes:
-                sa_id = self._backend.save_registry_structattr(
-                    struct_id, attr.name, [(x.name, x.value) for x in attr.attrs])
-                structattr_map['{0}.{1}'.format(struct.name, attr.name)] = sa_id
+            # structures >>>
+            for struct in self.structs:
+                self._backend.save_corpus_structure(
+                    corpus_id=self._corpus_id, name=struct.name, values=[
+                        (x.name, x.value) for x in struct.simple_items])
 
-        for i, sc in enumerate(self.subcorpattrs):
-            self._backend.save_subcorpattr(structattr_map[sc], i)
+                for structattr in struct.attrs:
+                    self._backend.save_corpus_structattr(self._corpus_id, struct.name, structattr.name,
+                                                         [(x.name, x.value) for x in structattr.attrs])
 
-        for i, fc in enumerate(self.freqttattrs):
-            self._backend.save_freqttattr(structattr_map[fc], i)
+            for i, sc in enumerate(self.subcorpattrs):
+                struct, attr = sc.split('.')
+                self._backend.save_subcorpattr(self._corpus_id, struct, attr, i)
 
+            for i, fc in enumerate(self.freqttattrs):
+                struct, attr = sc.split('.')
+                self._backend.save_freqttattr(self._corpus_id, struct, attr, i)
         self._backend.commit()
-
-        return dict(id=reg_id, corpus_id=self._corpus_id, aligned=self.aligned)
+        return dict(corpus_id=self._corpus_id, aligned=self.aligned, created_rt=created_rt)
 
     def load(self):
         self._items = []
@@ -274,30 +268,30 @@ class RegistryConf(object):
         if data is None:
             raise RecordNotFound(u'Corpus record not found for {0} (variant: {1})'.format(
                 self._corpus_id, self._variant if self._variant else '--'))
-        self._id = data['id']
         for k, v in dict(data).items():
             if re.match(r'[A-Z_]+', k):
                 self._items.append(SimpleAttr(name=k, value=v))
-        self.set_subcorpattrs(self._backend.load_subcorpattrs(self._id))
-        self.set_freqttattrs(self._backend.load_freqttattrs(self._id))
-        self.set_aligned(self._backend.load_registry_alignments(self._id))
+        self.set_subcorpattrs(self._backend.load_subcorpattrs(self._corpus_id))
+        self.set_freqttattrs(self._backend.load_freqttattrs(self._corpus_id))
+        self.set_aligned(self._backend.load_corpus_alignments(self._corpus_id))
 
-        for item in self._backend.load_registry_posattrs(self._id):
+        for item in self._backend.load_corpus_posattrs(self._corpus_id):
             pa = PosAttribute(name=item['name'], position=item['position'])
             for k, v in [x for x in dict(item).items() if x[0].upper() == x[0]]:
                 pa.new_item(SimpleAttr(k, value=v))
-            fromattr, mapto = self._backend.load_registry_posattr_references(item['id'])
+            fromattr, mapto = self._backend.load_corpus_posattr_references(
+                self._corpus_id, item['name'])
             if fromattr:
                 pa.new_item(SimpleAttr('FROMATTR', fromattr))
             if mapto:
                 pa.new_item(SimpleAttr('MAPTO', mapto))
             self.add_item(pa)
 
-        for item in self._backend.load_registry_structures(self._id):
+        for item in self._backend.load_corpus_structures(self._corpus_id):
             st = Struct(name=item['name'])
             for k, v in [x for x in dict(item).items() if x[0].upper() == x[0]]:
                 st.new_item(SimpleAttr(k, value=v))
-            for sattr in self._backend.load_registry_structattrs(item['id']):
+            for sattr in self._backend.load_corpus_structattrs(self._corpus_id, item['name']):
                 sobj = Attribute(name=sattr['name'])
                 for k, v in [x for x in dict(sattr).items() if x[0].upper() == x[0]]:
                     sobj.new_item(SimpleAttr(k, value=v))
