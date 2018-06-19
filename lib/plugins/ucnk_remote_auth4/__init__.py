@@ -94,6 +94,9 @@ class CentralAuth(AbstractRemoteAuth):
                                           timeout=self._auth_conf.toolbar_server_timeout)
 
     def _fetch_toolbar_api_response(self, args):
+        # DEBUG BEGIN
+        return json.dumps(dict(user=dict(id=2, fullname='Test Guy')))
+        # DEBUG END
         connection = self._create_connection()
         try:
             connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
@@ -133,9 +136,9 @@ class CentralAuth(AbstractRemoteAuth):
         if 'id' not in response_obj['user']:
             response_obj['user']['id'] = self._anonymous_id
 
-        if curr_user_id != response_obj['user']['id']:
+        if curr_user_id != response_obj['user']['id'] or True:  # TODO
             plugin_api.refresh_session_id()
-            if response_obj['user']['id'] != self._anonymous_id:
+            if response_obj['user']['id'] != self._anonymous_id or True:  # TODO
                 # user logged in => keep session data (except for credentials)
                 plugin_api.session['user'] = {
                     'id': int(response_obj['user']['id']),

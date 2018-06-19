@@ -77,17 +77,19 @@ info applicable for any corpus:
 
 But these values can be also set directly as command line parameters (they overwrite the values from the file).
 """
-
+from __future__ import absolute_import
 import os
 import argparse
 import sys
 import json
 import logging
-from lxml import etree
 import manatee
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.ucnk_remote_auth4.backend.mysql import Backend, MySQLConf
+import settings
+from plugins.ucnk_remote_auth4.backend.mysql import MySQLConf
+from plugins.ucnk_remote_auth4.backend.mysql_w import WritableBackend
+
 from plugins.rdbms_corparch.backend.input import InstallJson
 from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
 
@@ -170,27 +172,8 @@ def load_default_conf(inp_path):
     return {}
 
 
-def find_db_reg_paths(conf_path):
-    with open(conf_path) as fr:
-        doc = etree.parse(fr)
-        conf = MySQLConf()
-        srch = doc.findall('/plugins/corparch/*')
-        for item in srch:
-            if item.tag == 'mysql_host':
-                conf.host = item.text
-            elif item.tag == 'mysql_db':
-                conf.database = item.text
-            elif item.tag == 'mysql_user':
-                conf.user = item.text
-            elif item.tag == 'mysql_passwd':
-                conf.password = item.text
-            elif item.tag == 'mysql_pool_size':
-                conf.pool_size = int(item.text)
-            elif item.tag == 'mysql_retry_delay':
-                conf.conn_retry_delay = int(item.text)
-            elif item.tag == 'mysql_retry_attempts':
-                conf.conn_retry_attempts = int(item.text)
-        return conf
+def find_db_reg_paths(conf):
+    return MySQLConf(conf)
 
 
 if __name__ == '__main__':
@@ -200,16 +183,23 @@ if __name__ == '__main__':
                         help='Path to a single json file or to a directory with multiple json files of aligned corpora')
     parser.add_argument('-d', '--registry-dir', metavar='REG_DIR', type=str)
     parser.add_argument('-k', '--kontext-conf', metavar='KONTEXT_CONF', type=str)
-    parser.add_argument('-v', '--variant', metavar='VARIANT', type=str,
+    parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
                         help='Add corpus as a specified variant')
     parser.add_argument('-r', '--replace', metavar='REPLACE', action='store_const', const=True,
                         help='Remove possible existing record first')
     args = parser.parse_args()
-    conf = Config(registry_dir_path=args.registry_dir, kontext_conf_path=args.kontext_conf)
+    if args.kontext_conf:
+        conf_path = args.kontext_conf
+    else:
+        conf_path = os.path.join(os.getcwd(), 'conf', 'config.xml')
+        logging.getLogger(__name__).info(
+            'No config.xml path specified - assuming ./conf/config.xml')
+    conf = Config(registry_dir_path=args.registry_dir, kontext_conf_path=conf_path)
+    settings.load(conf_path)
     jsonpath = args.jsonpath.rstrip('/')
     conf.update_missing(load_default_conf(jsonpath))
-    db_conf = find_db_reg_paths(conf.kontext_conf_path)
-    backend = Backend(db_conf)
+    db_conf = find_db_reg_paths(settings)
+    backend = WritableBackend(db_conf)
     if os.path.isfile(jsonpath):
         file_list = [jsonpath]
     elif os.path.isdir(jsonpath):

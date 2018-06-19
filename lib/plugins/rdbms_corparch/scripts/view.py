@@ -37,11 +37,16 @@ if __name__ == '__main__':
         description='View database-stored Manatee registry')
     parser.add_argument('dbpath', metavar='DB_PATH', type=str)
     parser.add_argument('corpus_id', metavar='CORPUS_ID', type=str)
-    parser.add_argument('-v', '--variant', metavar='VARIANT', type=str,
+    parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
                         help='A subdirectory containing (restricted) variants of the corpus')
+    parser.add_argument('-v', '--verbose', action='store_const', const=True,
+                        help='Provide more information during processing (especially errors)')
     args = parser.parse_args()
     try:
         backend = Backend(args.dbpath)
         print(load_registry(args.corpus_id, variant=args.variant, backend=backend).encode('utf-8'))
-    except Exception as e:
-        print(e, file=sys.stderr)
+    except Exception as ex:
+        print(ex, file=sys.stderr)
+        if args.verbose:
+            import traceback
+            traceback.print_exc(ex)

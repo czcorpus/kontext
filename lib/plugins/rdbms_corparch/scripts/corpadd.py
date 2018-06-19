@@ -77,7 +77,7 @@ info applicable for any corpus:
 
 But these values can be also set directly as command line parameters (they overwrite the values from the file).
 """
-
+from __future__ import absolute_import
 import os
 import argparse
 import sys
@@ -87,7 +87,8 @@ from lxml import etree
 import manatee
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.rdbms_corparch.backend.sqlite import Backend
+import settings
+from plugins.rdbms_corparch.backend.sqlite_w import WritableBackend
 from plugins.rdbms_corparch.backend.input import InstallJson
 from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
 
@@ -186,16 +187,23 @@ if __name__ == '__main__':
                         help='Path to a single json file or to a directory with multiple json files of aligned corpora')
     parser.add_argument('-d', '--registry-dir', metavar='REG_DIR', type=str)
     parser.add_argument('-k', '--kontext-conf', metavar='KONTEXT_CONF', type=str)
-    parser.add_argument('-v', '--variant', metavar='VARIANT', type=str,
+    parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
                         help='Add corpus as a specified variant')
     parser.add_argument('-r', '--replace', metavar='REPLACE', action='store_const', const=True,
                         help='Remove possible existing record first')
     args = parser.parse_args()
-    conf = Config(registry_dir_path=args.registry_dir, kontext_conf_path=args.kontext_conf)
+    if args.kontext_conf:
+        conf_path = args.kontext_conf
+    else:
+        conf_path = os.path.join(os.getcwd(), 'conf', 'config.xml')
+        logging.getLogger(__name__).info(
+            'No config.xml path specified - assuming ./conf/config.xml')
+    conf = Config(registry_dir_path=args.registry_dir, kontext_conf_path=conf_path)
+    settings.load(conf_path)
     jsonpath = args.jsonpath.rstrip('/')
     conf.update_missing(load_default_conf(jsonpath))
     db_path = find_db_reg_paths(conf.kontext_conf_path)
-    backend = Backend(db_path)
+    backend = WritableBackend(db_path)
     if os.path.isfile(jsonpath):
         file_list = [jsonpath]
     elif os.path.isdir(jsonpath):
