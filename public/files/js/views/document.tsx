@@ -585,7 +585,7 @@ export function init(
         };
 
         const getSubcName = () => {
-            if (props.origSubcorpName !== props.usesubcorp) {
+            if (props.origSubcorpName && props.origSubcorpName !== props.usesubcorp) {
                 return <>
                     <a className="subcorpus" title={he.translate('global__subcorpus')}
                                         onClick={handleSubcnameClick}>

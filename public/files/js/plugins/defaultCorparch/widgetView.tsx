@@ -497,7 +497,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         };
 
         const selItemIdx = () => {
-            const orig = props.currSubcorpus !== props.origSubcorpName ?
+            const orig = props.origSubcorpName && props.currSubcorpus !== props.origSubcorpName ?
                 props.origSubcorpName :
                 props.currSubcorpus;
             return props.availSubcorpora.findIndex(v => v.v === orig);
