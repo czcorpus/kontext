@@ -32,3 +32,5 @@ public/files/themes/*
 .tscache
 **/.baseDir.ts
 tscommand*.txt
+
+Dockerfile

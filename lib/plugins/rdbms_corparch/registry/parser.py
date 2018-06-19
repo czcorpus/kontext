@@ -18,7 +18,7 @@
 
 import re
 from functools import wraps
-from plugins.rdbms_corparch.registry import Attribute, Struct, SimpleAttr, RegistryConf
+from plugins.rdbms_corparch.registry import Attribute, PosAttribute, Struct, SimpleAttr, RegistryConf
 
 
 DEBUG = 0
@@ -104,6 +104,7 @@ class Parser(object):
     def __init__(self, corpus_id, variant, tokens, backend):
         self._tokens = tokens
         self._items = RegistryConf(corpus_id, variant, backend)
+        self._posattr_idx = 0
 
     @staticmethod
     def is_key(s):
@@ -123,7 +124,9 @@ class Parser(object):
             if obj:
                 self._items.add_item(obj)
             if token == 'ATTRIBUTE':
-                return self.state_1, Attribute(token)
+                attr = PosAttribute(position=self._posattr_idx, name=token)
+                self._posattr_idx += 1
+                return self.state_1, attr
             elif token == 'STRUCTURE':
                 return self.state_1, Struct(token)
             else:

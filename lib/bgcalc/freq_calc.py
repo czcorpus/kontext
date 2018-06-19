@@ -38,6 +38,8 @@ from controller.errors import UserActionException
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
+TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+
 
 class FreqCalsArgs(FixedDict):
     """
@@ -181,8 +183,9 @@ def build_arf_db(corp, attrname):
         for m in ('frq', 'arf', 'docf'):
             logfilename_m = create_log_path(base_path, m)
             write_log_header(corp, logfilename_m)
-            res = app.send_task('worker.compile_%s' %
-                                m, (corp.corpname, subc_path, attrname, logfilename_m))
+            res = app.send_task('worker.compile_{0}'.format(m),
+                                (corp.corpname, subc_path, attrname, logfilename_m),
+                                time_limit=TASK_TIME_LIMIT)
             task_ids.append(res.id)
         return task_ids
 
@@ -286,7 +289,8 @@ def calculate_freqs(args):
             import task
             args.cache_path = cache_path
             app = task.get_celery_app(conf['conf'])
-            res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),))
+            res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),),
+                                time_limit=TASK_TIME_LIMIT)
             # worker task caches the value AFTER the result is returned (see worker.py)
             calc_result = res.get()
         if backend == 'multiprocessing':
@@ -478,7 +482,8 @@ def calculate_freqs_ct(args):
         import task
         try:
             app = task.get_celery_app(conf['conf'])
-            res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),))
+            res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),),
+                                time_limit=TASK_TIME_LIMIT)
             calc_result = res.get()
         except Exception as ex:
             if is_celery_user_error(ex):

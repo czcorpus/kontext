@@ -170,7 +170,7 @@ class CustomTasks(object):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 @app.task(bind=True)
-def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize):
+def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -181,6 +181,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     subchash -- a MD5 checksum of the sub-corpus data file
     query -- a query tuple
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+    time_limit -- a time limit (in seconds) for the main conc. task
 
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
@@ -190,8 +191,10 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
-        conc_calculate.delay(initial_args, user_id, corpus_id,
-                             subc_name, subchash, query, samplesize)
+        app.send_task('worker.conc_calculate',
+                      args=(initial_args, user_id, corpus_id,
+                            subc_name, subchash, query, samplesize),
+                      time_limit=time_limit)
     return initial_args
 
 
@@ -247,7 +250,7 @@ def calculate_colls(coll_args):
     return ans
 
 
-@app.task
+@app.task()
 def clean_colls_cache():
     return coll_calc.clean_colls_cache()
 
@@ -280,13 +283,13 @@ def calculate_freqs(args):
     return ans
 
 
-@app.task
+@app.task()
 def calculate_freqs_ct(args):
     args = freq_calc.CTFreqCalcArgs(**args)
     return freq_calc.CTCalculation(args).run()
 
 
-@app.task
+@app.task()
 def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 
@@ -294,7 +297,7 @@ def clean_freqs_cache():
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-@app.task
+@app.task()
 def compile_frq(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
@@ -304,7 +307,7 @@ def compile_frq(corp_id, subcorp_path, attr, logfile):
     return _compile_frq(corp, attr, logfile)
 
 
-@app.task
+@app.task()
 def compile_arf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
@@ -332,7 +335,7 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-@app.task
+@app.task()
 def compile_docf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
@@ -356,7 +359,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
-@app.task
+@app.task()
 def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, description):
     worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id, publish_path=publish_path,
                                            description=description)

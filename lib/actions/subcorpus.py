@@ -16,8 +16,6 @@ import json
 import time
 import hashlib
 
-import werkzeug.urls
-
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
 from controller.kontext import AsyncTaskStatus
@@ -31,6 +29,8 @@ import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings
 import argmapping
+
+TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
 
 
 class SubcorpusError(Exception):
@@ -151,7 +151,8 @@ class Subcorpus(Querying):
                 app = task.get_celery_app(conf['conf'])
                 res = app.send_task('worker.create_subcorpus',
                                     (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                                     tt_query, imp_cql, description))
+                                     tt_query, imp_cql, description),
+                                    time_limit=TASK_TIME_LIMIT)
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                                                        label=u'%s:%s' % (basecorpname, subcname),

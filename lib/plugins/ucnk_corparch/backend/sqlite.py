@@ -181,7 +181,7 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
-        where_cond = ['c.active = ?', 'uc.user_id = ?']
+        where_cond = ['c.active = ?', '(uc.user_id = ? OR c.requestable = 1)']
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
@@ -212,13 +212,14 @@ class Backend(DatabaseBackend):
                'COUNT(kc.keyword_id) AS num_match_keys, '
                'c.size, rc.info, ifnull(rc.name, c.id) AS name, rc.rencoding AS encoding, rc.language,'
                'm.featured, '
+               '(c.requestable = 1 AND uc.user_id IS NULL) AS requestable, '
                '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                'WHERE kcx.corpus_id = c.id)  AS keywords '
                'FROM kontext_corpus AS c '
                'LEFT JOIN kontext_metadata AS m ON m.corpus_id = c.id '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_id = c.id '
                'LEFT JOIN registry_conf AS rc ON rc.corpus_id = c.id '
-               'JOIN kontext_user_corpus AS uc ON c.id = uc.corpus_id '
+               'LEFT JOIN kontext_user_corpus AS uc ON c.id = uc.corpus_id '
                'WHERE {0} '
                'GROUP BY c.id '
                'HAVING num_match_keys >= ? '

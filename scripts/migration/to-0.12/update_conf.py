@@ -41,6 +41,17 @@ def update_2(doc):
         new_elm.tail = '\n      '
 
 
+def update_3(doc):
+    srch = doc.find('/global/calc_backend')
+    if srch is not None:
+        parent = srch.getparent()
+        new_elm = etree.Element('calc_backend_time_limit')
+        new_elm.text = '300'
+        new_elm.tail = '\n        '
+        srch.tail = '\n        '
+        parent.insert(parent.index(srch) + 1, new_elm)
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.11.x '

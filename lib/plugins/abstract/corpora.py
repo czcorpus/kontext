@@ -17,13 +17,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-This module contains classes representing a corpus and a list/set
-of corpora as Manatee-independent database-like records. Any
-corpora search/listing is based on these classes.
-Especially the 'corparch' and 'live_attributes' plug-ins
-use them quite a lot.
+This module contains classes representing individual corpus metadata/description.
+We try to pack together data from KonText corparch data, Manatee data and possible
+other sources. So anytime KonText wants to access individual
+corpus information it excepts instances of these classes to be
+involved.
 
-These classes are storage-independent which means that
+Please note that corpus as an item from corparch list is not
+represented here as it is solely a problem of individual corparch
+implementations where typically we need only a few items when
+listing corpora (name, size,...).
+
+The classes are storage-independent which means that
 a concrete format of stored corpora information is up to
 a concrete 'corparch' plug-in (default_corparch uses XML)
 
@@ -70,7 +75,7 @@ class CorpusMetadata(DictLike):
 class CitationInfo(DictLike):
     def __init__(self):
         self.default_ref = None
-        self.article_ref = None
+        self.article_ref = []
         self.other_bibliography = None
 
     def to_dict(self):
@@ -122,6 +127,7 @@ class TokenConnect(DictLike):
 
 
 class KwicConnect(DictLike):
+
     def __init__(self):
         self.providers = []
 
@@ -147,6 +153,7 @@ class CorpusInfo(DictLike):
         self.speech_overlap_val = None
         self.bib_struct = None
         self.sample_size = -1
+        self.featured = False
         self.collator_locale = 'en_US'  # this does not apply for Manatee functions
         self.use_safe_font = False
         self.citation_info = CitationInfo()
@@ -210,18 +217,6 @@ class AbstractCorporaArchive(object):
         """
         raise NotImplementedError()
 
-    def get_list(self, plugin_api, user_allowed_corpora):
-        """
-        Return a list of dicts containing information about individual corpora.
-        (it should be equal to self.corplist().values())
-
-        arguments:
-        plugin_api --
-        user_allowed_corpora -- a dict (corpus_id, corpus_variant) of corpora ids the current
-                                user can access
-        """
-        raise NotImplementedError()
-
 
 class SimpleCorporaArchive(AbstractCorporaArchive):
     """
@@ -249,18 +244,6 @@ class CorplistProvider(object):
         offset -- zero-based offset specifying returned data
         limit -- number of items to return
         filter_dict -- a dictionary containing additional search parameters
-        """
-        raise NotImplementedError()
-
-    def sort(self, plugin_api, data, *fields):
-        """
-        arguments:
-        plugin_api --
-        data -- a list of dicts to be sorted
-        *fields -- zero or more keys to be used to sort the data
-
-        returns:
-        sorted original data or their shallow copy
         """
         raise NotImplementedError()
 
@@ -311,13 +294,13 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         raise NotImplementedError()
 
-    def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
+    def custom_filter(self, plugin_api, corpus_list_item, permitted_corpora):
         """
         An optional custom filter to exclude specific items from results.
 
         arguments:
         plugin_api -- a controller.PluginApi instance
-        corpus_info -- a CorpusInfo object
+        corpus_list_item -- a CorpusListItem object
         permitted_corpora -- a dict (corpus_id, corpus_variant) as returned
                              by auth.permitted_corpora
         """
@@ -329,27 +312,3 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         Overriding this method allows you to use your own CorpusInfo implementations.
         """
         return CorpusInfo()
-
-    def customize_corpus_info(self, corpus_info, node):
-        """
-        An optional method allowing custom corpus_info initialization.
-
-        arguments:
-        corpus_info -- a CorpusInfo instance
-        node -- an Etree XML node <corpus>
-        """
-        pass
-
-    def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
-        """
-        An optional method allowing customization of search result item (= a dict)
-        using full_data (= custom CorpusInfo implementation).
-
-        arguments:
-        plugin_api -- a controller.PluginApi instance
-        item -- a dict containing corpus information as required by client-side
-        permitted_corpora -- list of permitted corpora as returned by the 'auth' plug-in
-                             (i.e. a dict corpus_id=>corpus_variant)
-        corpus_info -- a CorpusInfo instance
-        """
-        pass
