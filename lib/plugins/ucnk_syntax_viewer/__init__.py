@@ -37,6 +37,7 @@ element syntax_viewer {
 import plugins
 import plugins.default_syntax_viewer as dsv
 import plugins.default_syntax_viewer.manatee_backend as mbk
+from plugins.abstract.syntax_viewer import BackendDataParseException
 
 
 class UcnkTreeTemplate(mbk.TreexTemplate):
@@ -58,6 +59,11 @@ class UcnkManateeBackend(mbk.ManateeBackend):
     def import_parent_values(self, v):
         return [int(x) for x in v.split('|') if x != '']
 
+    def _fetch_fallback_info(self, corpus, corpus_id, token_id, kwic_len, parent_attr, ref_attrs):
+        attrs = ['word', parent_attr] + ref_attrs.keys()
+        raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, attrs)
+        return self._parse_raw_sent(raw_data['data'], attrs, self._conf.get_empty_value_placeholders(corpus_id))
+
     def get_data(self, corpus, corpus_id, token_id, kwic_len):
         tree_configs = self._conf.get_trees(corpus_id)
         tree_id = self._conf.get_tree_display_list(corpus_id)[0]
@@ -65,6 +71,24 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
         parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
                                            self._conf.get_empty_value_placeholders(corpus_id))
+
+        fallback_parse = None
+        for i in range(len(parsed_data)):
+            if self.is_error_node(parsed_data[i]):
+                replac = dict(parsed_data[i].result.items())
+                if fallback_parse is None:
+                    fallback_parse = self._fetch_fallback_info(corpus, corpus_id, token_id, kwic_len, conf.parent_attr,
+                                                               conf.attr_refs)
+                if self.is_error_node(fallback_parse[i]):
+                    # even fallback is broken - nothing we can do
+                    raise BackendDataParseException('Failed to parse sentence')
+                for k, v in parsed_data[i].result.items():
+                    if k == conf.parent_attr or k in conf.attr_refs:
+                        replac[k] = fallback_parse[i][k]
+                    elif v is None:
+                        replac[k] = '??'
+                parsed_data[i] = replac
+
         if conf.root_node:
             parsed_data = [conf.root_node] + parsed_data
         self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs)
