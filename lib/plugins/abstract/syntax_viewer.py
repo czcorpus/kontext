@@ -25,11 +25,11 @@ class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
         raise NotImplementedError()
 
 
-class SyntaxDataBackendError(Exception):
+class BackendException(Exception):
     pass
 
 
-class MaximumContextExceeded(Exception):
+class MaximumContextExceeded(BackendException):
     """
     This should be thrown by SearchBackend.get_data() in case
     a processed sentence reaches out of available Manatee context
@@ -40,9 +40,23 @@ class MaximumContextExceeded(Exception):
     pass
 
 
+class BackendDataParseException(BackendException):
+
+    def __init__(self, result):
+        super(BackendDataParseException, self).__init__(None)
+        self._result = result
+
+    @property
+    def result(self):
+        return self._result
+
+    def __repr__(self):
+        return 'BackendDataParseException({0})'.format(self._result)
+
+
 class SearchBackend(object):
     """
-    SearchBackend represents an object able to obtain 
+    SearchBackend represents an object able to obtain
     data needed to construct syntax trees. It may be
     fetched either from Manatee index or from some other
     resource in case syntactic data are stored separately.
@@ -82,3 +96,7 @@ class SearchBackend(object):
 
         """
         raise NotImplementedError()
+
+    @staticmethod
+    def is_error_node(node):
+        return isinstance(node, BackendDataParseException)

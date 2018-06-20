@@ -55,7 +55,7 @@ import json
 import manatee
 
 from l10n import import_string
-from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded
+from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
 
 
 class TreeConf(object):
@@ -162,7 +162,8 @@ class ManateeBackendConf(object):
         for tc in self._data[corpus_id]['trees']:
             if corpus is not None and "*" == (tc["detailAttrs"] or [""])[0]:
                 filtered = tc.get("filtered", [])
-                tc['detailAttrs'] = [x for x in corpus.get_conf('ATTRLIST').split(',') if x not in filtered]
+                tc['detailAttrs'] = [x for x in corpus.get_conf(
+                    'ATTRLIST').split(',') if x not in filtered]
             d[tc['id']] = TreeConf(tc)
         return d
 
@@ -408,9 +409,18 @@ class ManateeBackend(SearchBackend):
 
         data = []
         for i in range(0, len(in_data), 4):
-            item = dict(zip(tree_attrs, [import_raw_val(x) for x in in_data[i + 2].split('/')]))
-            item['word'] = in_data[i]
-            data.append(item)
+            parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
+            if len(parsed) > len(tree_attrs):
+                item = dict(zip(tree_attrs, len(tree_attrs) * [None]))
+                item['word'] = in_data[i]
+                # In case of a parsing error we wrap a partial result into
+                # an error and try later to fetch essential data only (= parent
+                # and other references to other values).
+                data.append(BackendDataParseException(result=item))
+            else:
+                item = dict(zip(tree_attrs, parsed))
+                item['word'] = in_data[i]
+                data.append(item)
         return data
 
     def _get_abs_reference(self, curr_idx, item, ref_attr):
@@ -481,7 +491,8 @@ class ManateeBackend(SearchBackend):
         tree_id_list = self._conf.get_tree_display_list(corpus_id)
         for tree in tree_id_list:
             conf = tree_configs[tree]
-            raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
+            raw_data = self._load_raw_sent(corpus=corpus, corpus_id=corpus_id, token_id=token_id, kwic_len=kwic_len,
+                                           tree_attrs=conf.all_attrs)
             parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
                                                self._conf.get_empty_value_placeholders(corpus_id))
             if conf.root_node:
