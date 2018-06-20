@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <element name="dispatch_hook">
+            <element name="module">
+                <value>ucnk_dispatch_hook</value>
+            </element>
+            <element name="queue_key">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+        </element>
+    </start>
+</grammar>
