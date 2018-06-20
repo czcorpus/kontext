@@ -86,7 +86,7 @@ class UcnkManateeBackend(mbk.ManateeBackend):
                     if k == conf.parent_attr or k in conf.attr_refs:
                         replac[k] = fallback_parse[i][k]
                     elif v is None:
-                        replac[k] = '??'
+                        replac[k] = 'N/A'
                 parsed_data[i] = replac
 
         if conf.root_node:
