@@ -54,19 +54,19 @@ class WritableBackend(Backend):
         cursor.execute('DELETE FROM kontext_keyword_corpus WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM kontext_corpus_article WHERE corpus_name = %s', (corpus_id,))
 
-        cursor.execute('DELETE FROM kontext_corpus_alignment WHERE corpus_name_1 = %s OR corpus_name_2 = %s',
+        cursor.execute('DELETE FROM corpus_alignment WHERE corpus_name_1 = %s OR corpus_name_2 = %s',
                        (corpus_id, corpus_id))
         cursor.execute('DELETE FROM corpus_posattr WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM corpus_structattr WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM corpus_structure WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM kontext_corpus_user WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM registry_conf WHERE corpus_name = %s', (corpus_id,))
-        cursor.execute('DELETE FROM kontext_corpus WHERE id = %s', (corpus_id,))
+        cursor.execute('DELETE FROM corpora WHERE id = %s', (corpus_id,))
 
         # text types description
         cursor.execute('SELECT t.id '
                        'FROM kontext_ttdesc AS t '
-                       'LEFT JOIN kontext_corpus AS kc ON kc.ttdesc_id = t.id '
+                       'LEFT JOIN corpora AS kc ON kc.ttdesc_id = t.id '
                        'WHERE kc.ttdesc_id IS NULL')
         for row4 in cursor.fetchall():
             cursor.execute('DELETE FROM kontext_ttdesc WHERE id = %s', (row4['id'],))
@@ -207,7 +207,7 @@ class WritableBackend(Backend):
             install_json.ident, install_json.metadata.label_attr)
         bli_struct, bli_attr = self._create_structattr_if_none(
             install_json.ident, install_json.metadata.id_attr)
-        cursor.execute('UPDATE kontext_corpus SET sentence_struct = %s, '
+        cursor.execute('UPDATE corpora SET sentence_struct = %s, '
                        'speech_segment_struct = %s, speech_segment_attr = %s, '
                        'speaker_id_struct = %s, speaker_id_attr = %s, '
                        'speech_overlap_struct = %s, speech_overlap_attr = %s, '
@@ -312,7 +312,7 @@ class WritableBackend(Backend):
         for aid in aligned_ids:
             try:
                 cursor.execute(
-                    'INSERT INTO kontext_corpus_alignment (corpus_name_1, corpus_name_2) '
+                    'INSERT INTO corpus_alignment (corpus_name_1, corpus_name_2) '
                     'VALUES (%s, %s)', (corpus_id, aid))
             except mysql.connector.errors.Error as ex:
                 logging.getLogger(__name__).error(
