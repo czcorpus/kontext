@@ -50,8 +50,8 @@ ALTER TABLE corpora
 	ADD COLUMN size INT NOT NULL DEFAULT 0,
 	ADD COLUMN group_name VARCHAR(255) NOT NULL,
 	ADD COLUMN version int NOT NULL DEFAULT 1,
-	ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	ADD COLUMN updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	ADD COLUMN created VARCHAR(25),
+	ADD COLUMN updated VARCHAR(25),
 	ADD COLUMN active int NOT NULL,
 	ADD COLUMN web VARCHAR(255),
 	ADD COLUMN sentence_struct VARCHAR(63),
@@ -73,16 +73,6 @@ ALTER TABLE corpora
 	ADD COLUMN bib_id_attr VARCHAR(63),
 	ADD COLUMN featured INTEGER DEFAULT 0,
 	ADD COLUMN ttdesc_id INTEGER;
-
-ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_sentence_struct_fkey FOREIGN KEY (name, sentence_struct) REFERENCES corpus_structure(corpus_name, name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_speaker_id_attr_fkey FOREIGN KEY (name, speaker_id_struct, speaker_id_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_speech_overlap_attr_fkey FOREIGN KEY (name, speech_overlap_struct, speech_overlap_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_bib_label_structattr_fkey FOREIGN KEY (name, bib_label_struct, bib_label_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES  corpus_structattr(corpus_name, structure_name, name);
-ALTER TABLE corpora ADD CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id);
-
 
 /* ------------------------------- CORPUS ALIGNMENT * ---------------- */
 
@@ -165,8 +155,8 @@ DROP TABLE IF EXISTS registry_conf;
 CREATE TABLE registry_conf (
     corpus_name VARCHAR(63) NOT NULL,
     name VARCHAR(255),
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created VARCHAR(25),
+    updated VARCHAR(25),
     path VARCHAR(255) NOT NULL,
     vertical VARCHAR(255),
     language VARCHAR(255),
@@ -275,6 +265,17 @@ CREATE TABLE kontext_corpus_user (
     CONSTRAINT kontext_corpus_user_pkey PRIMARY KEY (user_id, corpus_name),
     CONSTRAINT kontext_corpus_user_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
+
+
+ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_sentence_struct_fkey FOREIGN KEY (name, sentence_struct) REFERENCES corpus_structure(corpus_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_speaker_id_attr_fkey FOREIGN KEY (name, speaker_id_struct, speaker_id_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_speech_overlap_attr_fkey FOREIGN KEY (name, speech_overlap_struct, speech_overlap_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_bib_label_structattr_fkey FOREIGN KEY (name, bib_label_struct, bib_label_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES  corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id);
+
 
 
 /* THIS PROCEDURE IS A MOCK REPLACEMENT TO SIMULATE PRODUCTION ENVIRONMENT */
