@@ -94,9 +94,6 @@ class CentralAuth(AbstractRemoteAuth):
                                           timeout=self._auth_conf.toolbar_server_timeout)
 
     def _fetch_toolbar_api_response(self, args):
-        # DEBUG BEGIN
-        return json.dumps(dict(user=dict(id=2, fullname='Test Guy')))
-        # DEBUG END
         connection = self._create_connection()
         try:
             connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
