@@ -70,8 +70,13 @@ class MySQLConf(object):
         elif type(conf) is str:
             parsed = urlparse.urlparse(conf)
             self.host = parsed.netloc
-            self.database = parsed.path.strip('/')
-            for k, v in urlparse.parse_qs(parsed.query).items():
+            if parsed.query:
+                p_query = parsed.query
+                self.database = parsed.path.strip('/')
+            else:
+                p_db, p_query = parsed.path.rsplit('?')
+                self.database = p_db.strip('/')
+            for k, v in urlparse.parse_qs(p_query).items():
                 setattr(self, k, v[0])
             self.pool_size = 1
             self.conn_retry_delay = 2
@@ -83,7 +88,7 @@ class MySQLConf(object):
     @property
     def conn_dict(self):
         return dict(host=self.host, database=self.database, user=self.user,
-                    password=self.password, pool_size=self.pool_size)
+                    password=self.password, pool_size=self.pool_size, pool_name=self.pool_name)
 
 
 class MySQL(object):
