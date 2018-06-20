@@ -1,55 +1,98 @@
-SET FOREIGN_KEY_CHECKS=0;
-
-DROP TABLE IF EXISTS kontext_corpus;
-CREATE TABLE kontext_corpus (
+/* We assume there is a table called 'corpora' available
+CREATE TABLE corpora (
     id INT NOT NULL AUTO_INCREMENT,
 	name VARCHAR(63) NOT NULL,
-	size INT NOT NULL DEFAULT 0,
-	group_name VARCHAR(255) NOT NULL,
-	version int NOT NULL DEFAULT 1,
-	created int NOT NULL,
-	updated int NOT NULL,
-	active int NOT NULL,
-	web VARCHAR(255),
-	sentence_struct VARCHAR(63),
-	tagset VARCHAR(255),
-    collator_locale VARCHAR(255),
-    speech_segment_struct VARCHAR(63),
-    speech_segment_attr VARCHAR(63),
-    speaker_id_struct VARCHAR(63),
-    speaker_id_attr VARCHAR(63),
-    speech_overlap_struct VARCHAR(63),
-    speech_overlap_attr VARCHAR(63),
-    speech_overlap_val VARCHAR(255),
-    use_safe_font int,
-    requestable int DEFAULT 0,
-    text_types_db VARCHAR(255),
-    bib_label_struct VARCHAR(63),
-	bib_label_attr VARCHAR(63),
-	bib_id_struct VARCHAR(63),
-	bib_id_attr VARCHAR(63),
-	featured INTEGER DEFAULT 0,
-	ttdesc_id INTEGER,
-    CONSTRAINT kontext_corpus_pkey PRIMARY KEY (id),
-    CONSTRAINT kontext_corpus_name_uniq UNIQUE (name),
-    CONSTRAINT kontext_corpus_sentence_struct_fkey FOREIGN KEY (name, sentence_struct) REFERENCES corpus_structure(corpus_name, name),
-    CONSTRAINT kontext_corpus_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name),
-    CONSTRAINT kontext_corpus_speaker_id_attr_fkey FOREIGN KEY (name, speaker_id_struct, speaker_id_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name),
-    CONSTRAINT kontext_corpus_speech_overlap_attr_fkey FOREIGN KEY (name, speech_overlap_struct, speech_overlap_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name),
-    CONSTRAINT kontext_corpus_bib_label_structattr_fkey FOREIGN KEY (name, bib_label_struct, bib_label_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name),
-    CONSTRAINT kontext_corpus_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES  corpus_structattr(corpus_name, structure_name, name),
-    CONSTRAINT kontext_corpus_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id)
+	CONSTRAINT kontext_corpus_pkey PRIMARY KEY (id)
 ) ENGINE = INNODB CHARSET=utf8;
+INSERT INTO corpora (name) VALUES ('syn2010'), ('syn2015'), ('intercorp_v10_cs'), ('intercorp_v10_en'), ('intercorp_v10_mk'),
+('intercorp_v10_pl'), ('oral2006'), ('oral2008'), ('oral2013'), ('susanne'), ('capek'), ('camus'), ('diakorp_v6'),
+('koditex');
+*/
+SET FOREIGN_KEY_CHECKS=0;
+ALTER TABLE corpora DROP INDEX corpora_name_uniq;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_sentence_struct_fkey;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_speech_segment_structattr_fkey;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_speaker_id_attr_fkey;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_speech_overlap_attr_fkey;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_bib_label_structattr_fkey;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_bib_id_structattr_fkey;
+ALTER TABLE corpora DROP FOREIGN KEY corpora_ttdesc_id_fkey;
+ALTER TABLE corpora DROP COLUMN size;
+ALTER TABLE corpora DROP COLUMN group_name;
+ALTER TABLE corpora DROP COLUMN version;
+ALTER TABLE corpora DROP COLUMN created;
+ALTER TABLE corpora DROP COLUMN updated;
+ALTER TABLE corpora DROP COLUMN active;
+ALTER TABLE corpora DROP COLUMN web;
+ALTER TABLE corpora DROP COLUMN sentence_struct;
+ALTER TABLE corpora DROP COLUMN tagset;
+ALTER TABLE corpora DROP COLUMN collator_locale;
+ALTER TABLE corpora DROP COLUMN speech_segment_struct;
+ALTER TABLE corpora DROP COLUMN speech_segment_attr;
+ALTER TABLE corpora DROP COLUMN speaker_id_struct;
+ALTER TABLE corpora DROP COLUMN speaker_id_attr;
+ALTER TABLE corpora DROP COLUMN speech_overlap_struct;
+ALTER TABLE corpora DROP COLUMN speech_overlap_attr;
+ALTER TABLE corpora DROP COLUMN speech_overlap_val;
+ALTER TABLE corpora DROP COLUMN use_safe_font;
+ALTER TABLE corpora DROP COLUMN requestable;
+ALTER TABLE corpora DROP COLUMN text_types_db;
+ALTER TABLE corpora DROP COLUMN bib_label_struct;
+ALTER TABLE corpora DROP COLUMN bib_label_attr;
+ALTER TABLE corpora DROP COLUMN bib_id_struct;
+ALTER TABLE corpora DROP COLUMN bib_id_attr;
+ALTER TABLE corpora DROP COLUMN featured;
+ALTER TABLE corpora DROP COLUMN featured;
+ALTER TABLE corpora DROP COLUMN ttdesc_id;
+
+SET FOREIGN_KEY_CHECKS=0;
+ALTER TABLE corpora
+	ADD COLUMN size INT NOT NULL DEFAULT 0,
+	ADD COLUMN group_name VARCHAR(255) NOT NULL,
+	ADD COLUMN version int NOT NULL DEFAULT 1,
+	ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	ADD COLUMN updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	ADD COLUMN active int NOT NULL,
+	ADD COLUMN web VARCHAR(255),
+	ADD COLUMN sentence_struct VARCHAR(63),
+	ADD COLUMN tagset VARCHAR(255),
+    ADD COLUMN collator_locale VARCHAR(255),
+    ADD COLUMN speech_segment_struct VARCHAR(63),
+    ADD COLUMN speech_segment_attr VARCHAR(63),
+    ADD COLUMN speaker_id_struct VARCHAR(63),
+    ADD COLUMN speaker_id_attr VARCHAR(63),
+    ADD COLUMN speech_overlap_struct VARCHAR(63),
+    ADD COLUMN speech_overlap_attr VARCHAR(63),
+    ADD COLUMN speech_overlap_val VARCHAR(255),
+    ADD COLUMN use_safe_font int,
+    ADD COLUMN requestable int DEFAULT 0,
+    ADD COLUMN text_types_db VARCHAR(255),
+    ADD COLUMN bib_label_struct VARCHAR(63),
+	ADD COLUMN bib_label_attr VARCHAR(63),
+	ADD COLUMN bib_id_struct VARCHAR(63),
+	ADD COLUMN bib_id_attr VARCHAR(63),
+	ADD COLUMN featured INTEGER DEFAULT 0,
+	ADD COLUMN ttdesc_id INTEGER;
+
+ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_sentence_struct_fkey FOREIGN KEY (name, sentence_struct) REFERENCES corpus_structure(corpus_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_speaker_id_attr_fkey FOREIGN KEY (name, speaker_id_struct, speaker_id_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_speech_overlap_attr_fkey FOREIGN KEY (name, speech_overlap_struct, speech_overlap_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_bib_label_structattr_fkey FOREIGN KEY (name, bib_label_struct, bib_label_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES  corpus_structattr(corpus_name, structure_name, name);
+ALTER TABLE corpora ADD CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id);
+
 
 /* ------------------------------- CORPUS ALIGNMENT * ---------------- */
 
-DROP TABLE IF EXISTS kontext_corpus_alignment;
-CREATE TABLE kontext_corpus_alignment (
+DROP TABLE IF EXISTS corpus_alignment;
+CREATE TABLE corpus_alignment (
     corpus_name_1 VARCHAR(63) NOT NULL,
     corpus_name_2 VARCHAR(63) NOT NULL,
-    CONSTRAINT kontext_corpus_alignment_pkey PRIMARY KEY (corpus_name_1, corpus_name_2),
-    CONSTRAINT kontext_corpus_alignment_corpus_name_1_fkey FOREIGN KEY (corpus_name_1) REFERENCES kontext_corpus(name),
-    CONSTRAINT kontext_corpus_alignment_corpus_name_2_fkey FOREIGN KEY (corpus_name_2) REFERENCES kontext_corpus(name)
+    CONSTRAINT corpus_alignment_pkey PRIMARY KEY (corpus_name_1, corpus_name_2),
+    CONSTRAINT corpus_alignment_corpus_name_1_fkey FOREIGN KEY (corpus_name_1) REFERENCES corpora(name),
+    CONSTRAINT corpus_alignment_corpus_name_2_fkey FOREIGN KEY (corpus_name_2) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
 
 /* ------------------------------- ARTICLE ------------------------ */
@@ -80,7 +123,7 @@ CREATE TABLE kontext_corpus_article (
 	role ENUM('default', 'standard', 'other') NOT NULL,
 	CONSTRAINT kontext_corpus_article_pkey PRIMARY KEY (article_id, corpus_name),
 	CONSTRAINT kontext_corpus_article_article_id_fkey FOREIGN KEY (article_id) REFERENCES kontext_article(id),
-	CONSTRAINT kontext_corpus_article_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
+	CONSTRAINT kontext_corpus_article_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
 
 /* ------------------------------- SEARCH KEYWORDS ('tags') ------------------- */
@@ -101,7 +144,7 @@ CREATE TABLE kontext_keyword_corpus (
 	corpus_name VARCHAR(63) NOT NULL,
 	keyword_id VARCHAR(63) NOT NULL,
 	CONSTRAINT kontext_keyword_corpus_pkey PRIMARY KEY (corpus_name, keyword_id),
-	CONSTRAINT kontext_keyword_corpus_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
+	CONSTRAINT kontext_keyword_corpus_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name),
 	CONSTRAINT kontext_keyword_corpus_keyword_id_fkey FOREIGN KEY (keyword_id) REFERENCES kontext_keyword(id)
 ) ENGINE = INNODB CHARSET=utf8;
 
@@ -113,7 +156,7 @@ CREATE TABLE kontext_tckc_corpus (
 	provider VARCHAR(127) NOT NULL,
 	type VARCHAR(63),
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_name, provider, type),
-	CONSTRAINT kontext_tckc_corpus_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
+	CONSTRAINT kontext_tckc_corpus_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
 
 /* -------------------------------- MAIN REGISTRY CONF. FILE ------- */
@@ -122,8 +165,8 @@ DROP TABLE IF EXISTS registry_conf;
 CREATE TABLE registry_conf (
     corpus_name VARCHAR(63) NOT NULL,
     name VARCHAR(255),
-    created INTEGER NOT NULL,
-    updated INTEGER NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     path VARCHAR(255) NOT NULL,
     vertical VARCHAR(255),
     language VARCHAR(255),
@@ -142,7 +185,7 @@ CREATE TABLE registry_conf (
     alignstruct TEXT,
     aligndef TEXT,
     CONSTRAINT registry_conf_pkey PRIMARY KEY (corpus_name),
-    CONSTRAINT registry_conf_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
+    CONSTRAINT registry_conf_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name),
     CONSTRAINT registry_conf_docstructure_fkey FOREIGN KEY (corpus_name, docstructure) REFERENCES corpus_structure(corpus_name, name),
     CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (corpus_name, wsattr) REFERENCES corpus_posattr(corpus_name, name)
 ) ENGINE = INNODB CHARSET=utf8;
@@ -158,7 +201,7 @@ CREATE TABLE registry_variable (
     maxdetail INTEGER,
     maxkwic INTEGER,
     CONSTRAINT registry_varible_pkey PRIMARY KEY (id),
-    CONSTRAINT registry_varible_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
+    CONSTRAINT registry_varible_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name),
     CONSTRAINT registry_variable_corp_variant_uniq UNIQUE (corpus_name, variant)
 ) ENGINE = INNODB CHARSET=utf8;
 
@@ -183,7 +226,7 @@ CREATE TABLE corpus_posattr (
     multivalue ENUM('yes', 'no', 'y', 'n'),
     multisep VARCHAR(31),
     CONSTRAINT corpus_posattr_pkey PRIMARY KEY (corpus_name, name),
-    CONSTRAINT corpus_posattr_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
+    CONSTRAINT corpus_posattr_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name),
     CONSTRAINT corpus_posattr_fromattr_fkey FOREIGN KEY (corpus_name, fromattr) REFERENCES corpus_posattr(corpus_name, name),
     CONSTRAINT corpus_posattr_mapto_fkey FOREIGN KEY (corpus_name, mapto) REFERENCES corpus_posattr(corpus_name, name)
 ) ENGINE = INNODB CHARSET=utf8;
@@ -197,7 +240,7 @@ CREATE TABLE corpus_structure (
     displaytag ENUM('0', '1'),
     displaybegin VARCHAR(255),
     CONSTRAINT corpus_structure_pkey PRIMARY KEY (corpus_name, name),
-    CONSTRAINT corpus_structure_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
+    CONSTRAINT corpus_structure_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
 
 
@@ -218,7 +261,7 @@ CREATE TABLE corpus_structattr (
     subcorpattrs_idx INTEGER DEFAULT -1,
     freqttattrs_idx INTEGER DEFAULT -1,
     CONSTRAINT corpus_structattr_pkey PRIMARY KEY (corpus_name, structure_name, name),
-    CONSTRAINT corpus_structattr_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
+    CONSTRAINT corpus_structattr_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name),
     CONSTRAINT corpus_structattr_structure_name_fkey FOREIGN KEY (corpus_name, structure_name) REFERENCES corpus_structure(corpus_name, name)
 ) ENGINE = INNODB CHARSET=utf8;
 
@@ -230,7 +273,7 @@ CREATE TABLE kontext_corpus_user (
     corpus_name VARCHAR(63) NOT NULL,
     variant VARCHAR(63),
     CONSTRAINT kontext_corpus_user_pkey PRIMARY KEY (user_id, corpus_name),
-    CONSTRAINT kontext_corpus_user_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
+    CONSTRAINT kontext_corpus_user_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
 
 
@@ -240,17 +283,6 @@ DELIMITER $$
 CREATE PROCEDURE user_corpus_proc (user_id int)
 BEGIN
 SELECT user_id, kc.name, NULL AS variant, kc.name
-FROM kontext_corpus AS kc;
+FROM corpora AS kc;
 END $$
 DELIMITER ;
-
-/* THIS IS ONLY FOR LOCAL DEVEL PURPOSES */
-DROP VIEW IF EXISTS registry_overview;
-CREATE VIEW  registry_overview AS
-SELECT kc.name AS corpus_id, rv.variant
-FROM kontext_corpus AS kc
-JOIN registry_variable AS rv ON kc.name = rv.corpus_name;
-
-
-
-

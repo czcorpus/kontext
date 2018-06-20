@@ -119,8 +119,7 @@ def prepare_tables(db):
     cursor.execute('DELETE FROM corpus_structattr')
     cursor.execute('DELETE FROM corpus_structure')
     cursor.execute('DELETE FROM kontext_article')
-    cursor.execute('DELETE FROM kontext_corpus')
-    cursor.execute('DELETE FROM kontext_corpus_alignment')
+    cursor.execute('DELETE FROM corpus_alignment')
     cursor.execute('DELETE FROM kontext_corpus_article')
     cursor.execute('DELETE FROM kontext_corpus_user')
     cursor.execute('DELETE FROM kontext_keyword')
@@ -138,8 +137,17 @@ def fetch_structattr(s):
     return tuple(x if x else None for x in s.split('.'))
 
 
+def _corpus_exists(db, ident):
+    cursor = new_cursor(db)
+    cursor.execute('SELECT COUNT(*) AS cnt FROM corpora WHERE name = %s LIMIT 1', (ident,))
+    row = cursor.fetchone()
+    return row and row['cnt'] == 1
+
+
 def create_corp_record(node, db, shared, json_out, variant):
     ident = node.attrib['ident'].lower()
+    if not _corpus_exists(db, ident):
+        return
     web = node.attrib['web'] if 'web' in node.attrib else None
     tagset = node.attrib.get('tagset', None)
     speech_segment_struct, speech_segment_attr = fetch_structattr(
@@ -151,16 +159,15 @@ def create_corp_record(node, db, shared, json_out, variant):
     collator_locale = node.attrib.get('collator_locale', 'en_US')
     use_safe_font = decode_bool(node.attrib.get('use_safe_font', 'false'))
     sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
-    curr_time = time.time()
     group_name, version = InstallJson.create_sorting_values(ident)
 
     cursor = new_cursor(db)
-    cursor.execute('INSERT INTO kontext_corpus (name, group_name, version, created, updated, active, web, '
-                   'tagset, collator_locale, speech_overlap_val, use_safe_font, size) '
-                   'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                   (ident, group_name, version, int(curr_time), int(curr_time), 1, web, tagset,
-                    collator_locale, speech_overlap_val,
-                    use_safe_font, shared.get_corpus_size(ident)))
+    cursor.execute('UPDATE corpora SET group_name = %s, version = %s, updated = CURRENT_TIMESTAMP, '
+                   'web = %s, tagset = %s, collator_locale = %s, speech_overlap_val = %s, use_safe_font = %s, '
+                   'size = %s '
+                   'WHERE name = %s',
+                   (group_name, version, web, tagset, collator_locale, speech_overlap_val, use_safe_font,
+                    shared.get_corpus_size(ident), ident))
 
     # dependent structures and attrs
     if speech_segment_struct and speech_segment_attr:
@@ -175,7 +182,7 @@ def create_corp_record(node, db, shared, json_out, variant):
     if sentence_struct:
         create_structure(db, ident, sentence_struct)
 
-    cursor.execute('UPDATE kontext_corpus SET '
+    cursor.execute('UPDATE corpora SET '
                    'sentence_struct = %s, '
                    'speech_segment_struct = %s, speech_segment_attr = %s, speaker_id_struct = %s, '
                    'speaker_id_attr = %s, speech_overlap_struct = %s, speech_overlap_attr = %s '
@@ -229,7 +236,7 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
         message_key = desc_all[0].attrib['ref']
         value = shared.get_ref_ttdesc(message_key)
         cursor.execute(
-            'UPDATE kontext_corpus SET ttdesc_id = %s WHERE name = %s', (value, corpus_id))
+            'UPDATE corpora SET ttdesc_id = %s WHERE name = %s', (value, corpus_id))
     elif len(desc_all) > 0:
         text_cs = ''
         text_en = ''
@@ -245,7 +252,7 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
         cursor.execute('INSERT INTO kontext_ttdesc (id, text_cs, text_en) VALUES (%s, %s, %s)',
                        (shared.ttdesc_id_inc, text_cs, text_en))
         cursor.execute(
-            'UPDATE kontext_corpus SET ttdesc_id = %s WHERE name = %s', (shared.ttdesc_id, corpus_id))
+            'UPDATE corpora SET ttdesc_id = %s WHERE name = %s', (shared.ttdesc_id, corpus_id))
         json_out.metadata.desc = shared.ttdesc_id
         if ident:
             shared.add_ref_art(ident, shared.ttdesc_id)
@@ -309,7 +316,7 @@ def create_metadata_record(db, shared, node, corpus_id, json_out):
             create_structattr(db, corpus_id, id_struct, id_attr)
 
         cursor = new_cursor(db)
-        cursor.execute('UPDATE kontext_corpus SET '
+        cursor.execute('UPDATE corpora SET '
                        'text_types_db = %s, bib_label_struct = %s, bib_label_attr = %s, '
                        'bib_id_struct = %s, bib_id_attr = %s, featured = %s '
                        'WHERE name = %s', (db_path, label_struct, label_attr, id_struct, id_attr, is_feat, corpus_id))

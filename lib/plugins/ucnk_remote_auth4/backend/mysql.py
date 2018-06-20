@@ -164,7 +164,7 @@ class Backend(DatabaseBackend):
             '  AS speech_segment, '
             'tc.id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
             'c.size, rc.info, rc.name, rc.rencoding AS encoding, rc.language '
-            'FROM kontext_corpus AS c '
+            'FROM corpora AS c '
             'LEFT JOIN kontext_ttdesc AS tc ON tc.id = c.ttdesc_id '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
@@ -208,7 +208,7 @@ class Backend(DatabaseBackend):
                'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language,'
                '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                'WHERE kcx.corpus_name = c.name) AS keywords '
-               'FROM kontext_corpus AS c '
+               'FROM corpora AS c '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
                'JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
@@ -260,7 +260,7 @@ class Backend(DatabaseBackend):
     def load_corpus_alignments(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT ca.corpus_name_2 AS id '
-                       'FROM kontext_corpus_alignment AS ca '
+                       'FROM corpus_alignment AS ca '
                        'WHERE ca.corpus_name_1 = %s', (corpus_id,))
         return [row['id'] for row in cursor.fetchall()]
 
