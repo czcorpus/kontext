@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 from __future__ import absolute_import
-import time
+import datetime
+import pytz
 import logging
 import mysql.connector
 from plugins.ucnk_remote_auth4.backend.mysql import Backend
@@ -127,15 +129,15 @@ class WritableBackend(Backend):
                                (corpus_id, name))
 
     def save_corpus_config(self, install_json, registry_dir, corp_size):
-        curr_time = time.time()
+        t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
         cursor = self._db.cursor()
 
         vals1 = (
             install_json.ident,
             install_json.get_group_name(),
             install_json.get_version(),
-            int(curr_time),
-            int(curr_time),
+            t1,
+            t1,
             1,
             install_json.web,
             install_json.tagset,
@@ -256,7 +258,7 @@ class WritableBackend(Backend):
         if self._registry_table_exists(corpus_id):
             created = False
         else:
-            t1 = time.time()
+            t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
             cols = ['corpus_name', 'created', 'updated'] + [self.REG_COLS_MAP[k]
                                                             for k, v in values.items() if k in self.REG_COLS_MAP]
             vals = [corpus_id, t1, t1] + [v for k, v in values.items() if k in self.REG_COLS_MAP]

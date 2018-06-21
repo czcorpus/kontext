@@ -74,6 +74,8 @@ ALTER TABLE corpora
 	ADD COLUMN featured INTEGER DEFAULT 0,
 	ADD COLUMN ttdesc_id INTEGER;
 
+ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
+
 /* ------------------------------- CORPUS ALIGNMENT * ---------------- */
 
 DROP TABLE IF EXISTS corpus_alignment;
@@ -267,7 +269,6 @@ CREATE TABLE kontext_corpus_user (
 ) ENGINE = INNODB CHARSET=utf8;
 
 
-ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
 ALTER TABLE corpora ADD CONSTRAINT corpora_sentence_struct_fkey FOREIGN KEY (name, sentence_struct) REFERENCES corpus_structure(corpus_name, name);
 ALTER TABLE corpora ADD CONSTRAINT corpora_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
 ALTER TABLE corpora ADD CONSTRAINT corpora_speaker_id_attr_fkey FOREIGN KEY (name, speaker_id_struct, speaker_id_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
