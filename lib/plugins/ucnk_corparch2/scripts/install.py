@@ -18,7 +18,8 @@
 
 import os
 import sys
-import time
+import datetime
+import pytz
 import re
 from lxml import etree
 import argparse
@@ -162,12 +163,13 @@ def create_corp_record(node, db, shared, json_out, variant):
     group_name, version = InstallJson.create_sorting_values(ident)
 
     cursor = new_cursor(db)
+    t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
     cursor.execute('UPDATE corpora SET group_name = %s, version = %s, updated = CURRENT_TIMESTAMP, '
                    'web = %s, tagset = %s, collator_locale = %s, speech_overlap_val = %s, use_safe_font = %s, '
-                   'size = %s '
+                   'size = %s, created = %s, updated = %s '
                    'WHERE name = %s',
                    (group_name, version, web, tagset, collator_locale, speech_overlap_val, use_safe_font,
-                    shared.get_corpus_size(ident), ident))
+                    shared.get_corpus_size(ident), t1, t1, ident))
 
     # dependent structures and attrs
     if speech_segment_struct and speech_segment_attr:
