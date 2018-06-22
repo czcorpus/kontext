@@ -20,25 +20,63 @@ import argparse
 import os
 
 
+APP_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+SCHEMA_PATH = os.path.realpath(os.path.join(APP_PATH, 'conf', 'config.rng'))
+
+
 def validate_config(schema, conf):
     relax = etree.RelaxNG(schema)
     try:
         relax.assertValid(conf)
-        print('\nOK. The file conforms the schema.')
+        return None
     except etree.DocumentInvalid as e:
-        print(e)
+        return e
+
+
+def validate_main_config(conf_obj, schema_path):
+    ans = '\n'
+    with open(schema_path, 'rb') as schema_f:
+        if hasattr(conf_obj, 'docinfo'):
+            ans += 'Validating file "{0}"...'.format(conf_obj.docinfo.URL)
+        else:
+            ans += 'Validating configuration of plug-in [{0}]...'.format(os.path.basename(os.path.dirname(schema_path)))
+        schema = etree.parse(schema_f)
+        err = validate_config(schema, conf_obj)
+        if err:
+            ans += '\n> ERROR: {0}'.format(err)
+        else:
+            ans += '\n> OK'
+    return ans
+
+
+def get_plugin_rng_path(plugin_id):
+    return os.path.realpath(os.path.join(APP_PATH, 'lib', 'plugins', plugin_id, 'config.rng'))
+
+
+def find_plugins(conf):
+    ans = []
+    items = conf.findall('plugins/*')
+    for item in items:
+        ident = item.find('module')
+        if ident is not None:
+            rng_path = get_plugin_rng_path(ident.text)
+            if os.path.isfile(rng_path):
+                ans.append((ident.getparent(), rng_path))
+    return ans
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Validates KonText XML configuration files against RelaxNG schemas')
     parser.add_argument('config_file', metavar='CONF_FILE', type=str,
                         help='a path to a config file to be validated')
-    parser.add_argument('schema_file', metavar='SCHEMA_FILE', type=str,
-                        help='a path to a RelaxNG schema file')
     args = parser.parse_args()
-    with open(args.schema_file, 'rb') as schema_f, open(args.config_file, 'rb') as conf_f:
-        print('Testing file "%s" against schema "%s"...' % (os.path.basename(args.config_file),
-                                                            os.path.basename(args.schema_file)))
-        schema = etree.parse(schema_f)
+    with open(args.config_file, 'rb') as conf_f:
         conf = etree.parse(conf_f)
-        validate_config(schema, conf)
-        print(80 * '=')
+        ans = validate_main_config(conf, SCHEMA_PATH)
+        print(ans)
+        plugins = find_plugins(conf)
+
+    for elm, schema_path in plugins:
+        ans = validate_main_config(elm, schema_path)
+        print(ans)
+    print(80 * '=')
