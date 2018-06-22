@@ -15,19 +15,7 @@
 """
 A plugin providing a storage for user's queries for services such as 'query history'.
 
-Required config.xml/plugins entries:
-
-element query_storage {
-  element module { "default_query_storage" }
-  element ttl_days {
-    attribute extension-by { "default" }
-    xsd:integer # how many days records will be kept in storage
-  }?
-  element page_num_records {
-    attribute extension-by { "default" }
-    text # how many records to show in 'recent queries' page
-  }
-}
+Required config.xml/plugins entries: please see config.rng
 """
 
 from datetime import datetime

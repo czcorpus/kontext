@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <element name="db">
+            <element name="module">
+                <value>redis_db</value>
+            </element>
+            <element name="host">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="port">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="integer" />
+            </element>
+             <element name="id">
+                 <attribute name="extension-by">
+                    <value>default</value>
+                 </attribute>
+                 <data type="integer" />
+             </element>
+        </element>
+    </start>
+</grammar>
