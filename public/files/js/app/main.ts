@@ -1041,5 +1041,5 @@ export enum PluginName {
     CORPARCH = 'corparch',
     LIVE_ATTRIBUTES = 'live_attributes',
     SUBCMIXER = 'subcmixer',
-    SYNTAX_VIEWER = 'syntax_viewer',
+    SYNTAX_VIEWER = 'syntax_viewer'
 }

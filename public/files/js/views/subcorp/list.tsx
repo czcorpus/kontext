@@ -294,6 +294,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const FilterForm:React.SFC<{
         filter:SubcListFilter;
         relatedCorpora:Immutable.List<string>;
+        usesSubcRestore:boolean;
 
     }> = (props) => {
 
@@ -329,10 +330,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 {props.relatedCorpora.map(item => <option key={item} value={item}>{item}</option>)}
                             </select>
                     </div>
-                    <div>
-                        <label htmlFor="inp_EDPtb">{he.translate('subclist__show_deleted')}:</label>
-                        <input id="inp_EDPtb" type="checkbox" onChange={handleShowDeleted} checked={props.filter['show_deleted']} />
-                    </div>
+                    {props.usesSubcRestore ?
+                        <div>
+                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_deleted')}:</label>
+                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowDeleted} checked={props.filter['show_deleted']} />
+                        </div> :
+                        null
+                    }
                 </fieldset>
             </form>
         );
@@ -690,6 +694,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         actionBoxData:SubcorpListItem;
         actionBoxActionType:string;
         modelIsBusy:boolean;
+        usesSubcRestore:boolean;
 
     }> {
 
@@ -709,7 +714,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 actionBoxVisible: visibleRow,
                 actionBoxData: visibleRow > -1 ? subcorpLinesModel.getRow(visibleRow) : null,
                 actionBoxActionType: subcorpLinesModel.getActionBoxActionType(),
-                modelIsBusy: subcorpLinesModel.getIsBusy()
+                modelIsBusy: subcorpLinesModel.getIsBusy(),
+                usesSubcRestore: subcorpLinesModel.getUsesSubcRestore()
             };
         }
 
@@ -746,7 +752,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <div className="SubcorpList">
                     <section className="inner">
-                        <FilterForm filter={this.state.filter} relatedCorpora={this.state.relatedCorpora} />
+                        <FilterForm filter={this.state.filter} relatedCorpora={this.state.relatedCorpora}
+                                usesSubcRestore={this.state.usesSubcRestore} />
                     </section>
                     {this.state.actionBoxVisible > -1
                         ? <ActionBox onCloseClick={this._handleActionsClose}
