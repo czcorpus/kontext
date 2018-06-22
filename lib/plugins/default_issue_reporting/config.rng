@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <element name="issue_reporting">
+            <element name="module">
+                <value>default_issue_reporting</value>
+            </element>
+            <element name="js_module">
+                <value>defaultIssueReporting</value>
+            </element>
+            <element name="smtp_server">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="mail_sender">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="mail_recipients">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <zeroOrMore>
+                    <element name="item">
+                        <text />
+                    </element>
+                </zeroOrMore>
+            </element>
+        </element>
+    </start>
+</grammar>
