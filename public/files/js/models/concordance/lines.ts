@@ -420,6 +420,16 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
                         }
                     );
                 break;
+                case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
+                    this.unfinishedCalculation = false;
+                    this.concSummary.concSize = 0;
+                    this.concSummary.fullSize = 0;
+                    this.concSummary.ipm = 0;
+                    this.concSummary.arf = 0;
+                    this.pagination.lastPage = 0;
+                    this.lines = this.lines.clear();
+                    this.notifyChangeListeners();
+                break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
                     this.isBusy = true;
                     this.notifyChangeListeners();
