@@ -181,8 +181,27 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
     }
 
     private serialize():any {
+
+        // we have to make sure 'word' is always the first - otherwise
+        // we may produce incorrect visible/mouseover attribute configuration.
+        const attrCmp = (a1:ViewOptions.StructAttrDesc, a2:ViewOptions.StructAttrDesc) => {
+            if (a1.n === 'word') {
+                return -1;
+
+            } else if (a2.n === 'word') {
+                return 1;
+
+            } else {
+                return a1.n.localeCompare(a2.n);
+            }
+        };
+
         const ans = {
-            setattrs: this.attrList.filter(item => item.selected).map(item => item.n).toArray(),
+            setattrs: this.attrList
+                .filter(item => item.selected)
+                .sort(attrCmp)
+                .map(item => item.n)
+                .toArray(),
             setstructs: this.structList.filter(item => item.selected).map(item => item.n).toArray(),
             setstructattrs: this.structAttrs
                             .map((v, k) => v.filter(x => x.selected))
