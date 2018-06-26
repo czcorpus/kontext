@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union, Iterable
 import werkzeug.contrib.sessions
 import werkzeug.wrappers
 from controller import KonTextCookie, Controller
@@ -122,6 +122,12 @@ class Kontext(Controller):
     def _add_save_menu_item(self, label:basestring, save_format:str, hint:Optional[basestring]): ...
 
     def _create_action_log(self, user_settings:Dict[str, Any], action_name:str, proc_time:float) -> Dict[str, JSONVal]: ...
+
+    def _save_options(self, optlist:Optional[Iterable], selector:str): ...
+
+    def _redirect_to_conc(self): ...
+
+    def _get_struct_opts(self) -> str: ...
 
 
 class PluginApi(object):
