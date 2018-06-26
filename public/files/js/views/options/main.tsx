@@ -55,6 +55,7 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
     class OptionsContainer extends React.Component<OptionsContainerProps, {
         activeItem:Kontext.MainMenuActiveItem;
         corpusIdent: Kontext.FullCorpusIdent;
+        menuBusy:boolean;
 
     }> {
 
@@ -68,7 +69,8 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
         _fetchModelState() {
             return {
                 activeItem: mainMenuModel.getActiveItem(),
-                corpusIdent: viewOptionsModel.getCorpusIdent()
+                corpusIdent: viewOptionsModel.getCorpusIdent(),
+                menuBusy: mainMenuModel.isBusy()
             };
         }
 
@@ -126,16 +128,24 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
 
         render() {
             if (this._isActive()) {
-                return (
-                    <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
+                return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
                         <layoutViews.CloseableFrame
                                 scrollable={true}
                                 onCloseClick={this._handleCloseClick}
-                                label={this._renderTitle()}>
+                                label={this._renderTitle()}
+                                customClass="OptionsContainer">
                             {this._renderForm()}
                         </layoutViews.CloseableFrame>
-                    </layoutViews.ModalOverlay>
-                );
+                    </layoutViews.ModalOverlay>;
+
+            } else if (this.state.menuBusy) {
+                return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
+                        <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
+                                    onCloseClick={()=>undefined}
+                                    customClass="OptionsContainer busy">
+                            <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay>;
 
             } else {
                 return null;

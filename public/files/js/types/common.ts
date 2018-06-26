@@ -251,6 +251,8 @@ export namespace Kontext {
         resetActiveItemAndNotify():void;
 
         getConcArgs():IMultiDict;
+
+        isBusy():boolean;
     }
 
     // ---------------------------------------------------------
