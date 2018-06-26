@@ -28,7 +28,7 @@ import corplib
 import conclib
 from controller import Controller, convert_types, exposed
 from controller.errors import (UserActionException, ForbiddenException, CorpusForbiddenException,
-        AlignedCorpusForbiddenException)
+                               AlignedCorpusForbiddenException)
 import plugins
 import plugins.abstract
 from plugins.abstract.auth import AbstractInternalAuth
@@ -815,7 +815,7 @@ class Kontext(Controller):
         # by default, each action is public
         access_level = action_metadata.get('access_level', 0)
         if access_level and self.user_is_anonymous():
-            raise ForbiddenException(_('Access forbidden'))
+            raise ForbiddenException(_('Access forbidden - please log-in.'))
 
         # plugins setup
         for p in plugins.runtime:
