@@ -455,3 +455,6 @@ msgstr "Trvalý odkaz"
 
 msgid "Cannot change status of a concordance belonging to another user"
 msgstr "Nelze měnit status konkordance, která patří jinému uživateli"
+
+msgid "Access forbidden - please log-in."
+msgstr "Přístup zamítnut - přihlašte se prosím."
