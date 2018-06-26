@@ -844,7 +844,7 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view',
+    @exposed(access_level=0, template='view.tmpl', vars=('concsize',), page_model='view',
              legacy=True)
     def reduce(self):
         """

@@ -1,5 +1,7 @@
 # Copyright (c) 2003-2014  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2014 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,6 +32,7 @@ import plugins
 from conclib import PyConc
 from corplib import CorpusManager, is_subcorpus
 import manatee
+from concworker.errors import ConcCalculationStatusException
 
 
 class GeneralWorker(object):
@@ -68,6 +71,9 @@ class GeneralWorker(object):
             subchash = getattr(corp, 'subchash', None)
             cache_map = self._cache_factory.get_mapping(corp)
             cachefile = cache_map.cache_file_path(subchash, q)
+            status = cache_map.get_calc_status(subchash, q)
+            if status.error is not None:
+                raise ConcCalculationStatusException('Concordance calculation failed', status.error)
 
         if cachefile and os.path.isfile(cachefile):
             cache = open(cachefile, 'rb')
@@ -190,4 +196,7 @@ class ConcCalculation(GeneralWorker):
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
             if cache_map is not None:
                 cache_map.update_calc_status(
-                    subchash, query, dict(curr_wait=sleeptime, error=str(e)))
+                    subchash, query, dict(
+                        finished=True,
+                        curr_wait=sleeptime,
+                        error=e.message if getattr(e, 'message', None) else e.__class__.__name__))
