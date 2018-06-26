@@ -184,15 +184,15 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         const ans = {
             setattrs: this.attrList.filter(item => item.selected).map(item => item.n).toArray(),
             setstructs: this.structList.filter(item => item.selected).map(item => item.n).toArray(),
-            structattrs: this.structAttrs
+            setstructattrs: this.structAttrs
                             .map((v, k) => v.filter(x => x.selected))
                             .map((v, k) => v.map(x => `${k}.${x.n}`))
                             .valueSeq()
                             .flatMap(x => x)
                             .toArray(),
             setrefs: this.referenceList.filter(item => item.selected).map(item => item.n).toArray(),
-            attr_allpos: this.attrAllpos,
-            attr_vmode: this.attrVmode
+            setattr_allpos: this.attrAllpos,
+            setattr_vmode: this.attrVmode
         };
 
         return ans;
@@ -217,7 +217,8 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                         [this.layoutModel.getConf<string>('baseAttr')]);
             }
             this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
-            this.layoutModel.replaceConcArg('attr_vmode', [this.attrVmode]);
+            this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
+            this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
             this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
             this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
             return data;

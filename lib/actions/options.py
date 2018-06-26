@@ -41,16 +41,18 @@ class Options(Kontext):
         self.args.tt_overview = tt_overview
         self.args.cql_editor = cql_editor
 
-    def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
+    def _set_new_viewattrs(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
+                           setstructattrs=()):
         self.args.attrs = ','.join(setattrs)
         self.args.structs = ','.join(setstructs)
         self.args.refs = ','.join(setrefs)
-        self.args.attr_allpos = allpos
-        if allpos == 'all':
+        self.args.attr_allpos = setattr_allpos
+        self.args.attr_vmode = setattr_vmode
+        if setattr_allpos == 'all':
             self.args.ctxattrs = self.args.attrs
         else:
             self.args.ctxattrs = 'word'
-        self.args.structattrs = structattrs
+        self.args.structattrs = setstructattrs
 
     @exposed(access_level=0, vars=('concsize', ), legacy=True, return_type='json')
     def viewattrs(self):
@@ -110,12 +112,14 @@ class Options(Kontext):
         return out
 
     @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
-    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
+    def viewattrsx(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
+                   setstructattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
-                                allpos=allpos,
+                                setattr_allpos=setattr_allpos,
+                                setattr_vmode=setattr_vmode,
                                 setstructs=setstructs,
                                 setrefs=setrefs,
-                                structattrs=structattrs)
+                                setstructattrs=setstructattrs)
         self._save_options(['attrs', 'attr_vmode', 'attr_allpos', 'ctxattrs', 'structs',
                             'refs', 'structattrs'], self.args.corpname)
         if self.args.format == 'json':
