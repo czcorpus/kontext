@@ -299,7 +299,8 @@ export class ViewPage {
                     relconcsize: data.relconcsize,
                     arf: data.arf,
                     fullsize: data.fullsize,
-                    availPages: Math.ceil(data.concsize / linesPerPage)
+                    availPages: Math.ceil(data.concsize / linesPerPage),
+                    error: null
                 }
             });
         };
@@ -316,6 +317,15 @@ export class ViewPage {
                         if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
                             loop(idx + 1, delay * decay, decay);
                         }
+                    }
+
+                ).catch(
+                    (err) => {
+                        this.layoutModel.dispatcher.dispatch({
+                            actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                            props: {}
+                        });
+                        this.layoutModel.showMessage('error', err);
                     }
                 );
             }, delay);

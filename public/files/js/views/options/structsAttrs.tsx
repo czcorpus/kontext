@@ -132,7 +132,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         return (
             <div className="AttributesTweaks">
                 <h3 className="label">
-                    {helpers.translate('options__attr_apply_header')}{'\u2026'}
+                    {helpers.translate('options__attr_apply_header')}
                 </h3>
                 <div>
                     <select name="attr_vmode"
@@ -514,13 +514,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
         componentDidMount() {
             mainMenuModel.addChangeListener(this._handleModelChange);
             viewOptionsModel.addChangeListener(this._handleViewOptsModelChange);
-            // ---> not needed (see action prerequisite)
-            if (this.state.isVisible) {
-                dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_LOAD_DATA',
-                    props: {}
-                });
-            }
         }
 
         componentWillUnmount() {

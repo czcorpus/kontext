@@ -104,6 +104,8 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     private data:Immutable.List<Kontext.MenuEntry>;
 
+    private _isBusy:boolean;
+
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
@@ -112,6 +114,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         this.visibleSubmenu = null;
         this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
         this.data = importMenuData(initialData);
+        this._isBusy = false;
 
         this.dispatcher.register((payload:ActionPayload) => {
             if (payload.actionType === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
@@ -128,6 +131,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
             } else if (payload.actionType.indexOf('MAIN_MENU_') === 0) {
                 if (this.selectionListeners.has(payload.actionType)) {
+                    this._isBusy = true;
                     this.selectionListeners.get(payload.actionType).reduce<RSVP.Promise<any>>(
                         (red, curr) => {
                             return red.then(
@@ -144,10 +148,13 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                                 actionName: payload.actionType,
                                 actionArgs: payload.props
                             };
+                            this._isBusy = false;
                             this.notifyChangeListeners();
                         }
                     ).catch(
                         (err) => {
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
                             this.pageModel.showMessage('error', err);
                         }
                     )
@@ -322,6 +329,10 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     getVisibleSubmenu():string {
         return this.visibleSubmenu;
+    }
+
+    isBusy():boolean {
+        return this._isBusy;
     }
 
 }

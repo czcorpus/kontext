@@ -220,7 +220,9 @@ export namespace CoreViews {
     // -------------------------------
 
     export namespace AjaxLoaderImage {
-        export interface Props {}
+        export interface Props {
+            htmlClass?:string;
+        }
         export type Component = React.SFC<Props>;
     }
 

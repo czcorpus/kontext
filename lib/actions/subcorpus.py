@@ -334,7 +334,8 @@ class Subcorpus(Querying):
             sort_key=dict(name=sort_key, reverse=rev),
             filter=filter_args,
             unfinished_subc=[uc.to_dict() for uc in unfinished_corpora],
-            related_corpora=sorted(related_corpora)
+            related_corpora=sorted(related_corpora),
+            uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
         )
         return ans
 

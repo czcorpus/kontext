@@ -23,23 +23,7 @@ and based on RedisDB in-memory database engine.
 
 This plug-in should be able to handle high-load installations without any problems.
 
-required XML:
-
-element db {
-  element module { "redis_db" }
-  element host {
-    attribute extension-by { "default" }
-    text #  Redis address
-  }
-  element port {
-    attribute extension-by { "default" }
-    xsd:integer
-  }
-  element id {
-    attribute extension-by { "default" }
-    xsd:integer
-  }
-}
+required XML: please see config.rng
 """
 
 import json

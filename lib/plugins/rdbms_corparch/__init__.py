@@ -245,7 +245,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = [x for x in (
-                row['keywords'].split(',') if row['keywords'] else [])]
+                row['keywords'].split(',') if row['keywords'] else []) if x]
             ans.metadata.desc = row['ttdesc_id']
             ans.manatee.encoding = row['encoding']
             ans.manatee.description = row['info']
@@ -262,7 +262,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             return u'{0} [{1}]'.format(text, _('translation not available'))
 
     def corpus_list_item_from_row(self, plugin_api, row):
-        keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else [])]
+        keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else []) if x]
         return CorpusListItem(id=row['id'],
                               corpus_id=row['id'],
                               name=row['name'],
@@ -358,19 +358,24 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         Obtain full corpus info
         """
         if corp_name:
-            # get rid of path-like corpus ID prefix
-            corp_name = corp_name.split('/')[-1].lower()
-            corp_info = self._fetch_corpus_info(corp_name)
-            if corp_info is not None:
-                if user_lang is not None:
-                    ans = self._localize_corpus_info(corp_info, lang_code=user_lang)
-                else:
-                    ans = corp_info
-                ans.manatee = self._mc.get_info(corp_name)
-                ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
+            try:
+                # get rid of path-like corpus ID prefix
+                corp_name = corp_name.split('/')[-1].lower()
+                corp_info = self._fetch_corpus_info(corp_name)
+                if corp_info is not None:
+                    if user_lang is not None:
+                        ans = self._localize_corpus_info(corp_info, lang_code=user_lang)
+                    else:
+                        ans = corp_info
+                    ans.manatee = self._mc.get_info(corp_name)
+                    ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
 
-                return ans
-            return BrokenCorpusInfo(name=corp_name)
+                    return ans
+                return BrokenCorpusInfo(name=corp_name)
+            except Exception as ex:
+                logging.getLogger(__name__).warning(
+                    'Failed to fetch corpus info for {0}: {1}'.format(corp_name, ex))
+                return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
 

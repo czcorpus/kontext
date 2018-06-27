@@ -16,9 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import os
+import logging
+from collections import OrderedDict
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
-from collections import OrderedDict
 import manatee
 
 
@@ -41,6 +43,50 @@ class ManateeCorpora(object):
             return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id), corpus_id)
 
 
+class InstallCorpusInfo(object):
+    """
+    Provides specific information required
+    when installing a new corpus to a corparch
+    database.
+    """
+
+    def __init__(self, reg_path):
+        self._reg_path = reg_path
+
+    def get_corpus_size(self, corp_id):
+        c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+        return c.size()
+
+    def get_corpus_name(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('NAME').decode(self.get_corpus_encoding(corp_id))
+        except:
+            return None
+
+    def get_corpus_description(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('INFO').decode(self.get_corpus_encoding(corp_id))
+        except:
+            return None
+
+    def get_corpus_encoding(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('ENCODING')
+        except:
+            return None
+
+    def get_data_path(self, corp_id):
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('PATH').rstrip('/')
+        except Exception as ex:
+            logging.getLogger(__name__).warning(ex)
+            return None
+
+
 class DatabaseBackend(object):
     """
     An abstract database backend for loading/storing corpus configuration
@@ -59,15 +105,17 @@ class DatabaseBackend(object):
         SHORTREF='shortref',
         FREQTTATTRS='freqttattrs',
         TAGSETDOC='tagsetdoc',
-        MAXCONTEXT='maxcontext',
-        MAXDETAIL='maxdetail',
-        MAXKWIC='maxkwic',
         WPOSLIST='wposlist',
         WSDEF='wsdef',
         WSBASE='wsbase',
         WSTHES='wsthes',
         ALIGNSTRUCT='alignstruct',
         ALIGNDEF='aligndef')
+
+    REG_VAR_COLS_MAP = OrderedDict(
+        MAXCONTEXT='maxcontext',
+        MAXDETAIL='maxdetail',
+        MAXKWIC='maxkwic')
 
     POS_COLS_MAP = OrderedDict(
         TYPE='type',
@@ -98,22 +146,7 @@ class DatabaseBackend(object):
         DISPLAYTAG='displaytag',
         DISPLAYBEGIN='displaybegin')
 
-    def commit(self):
-        pass
-
     def contains_corpus(self, corpus_id):
-        raise NotImplementedError()
-
-    def remove_corpus(self, corpus_id):
-        raise NotImplementedError()
-
-    def save_corpus_config(self, install_json):
-        raise NotImplementedError()
-
-    def save_corpus_article(self, text):
-        raise NotImplementedError()
-
-    def attach_corpus_article(self, corpus_id, article_id, role):
         raise NotImplementedError()
 
     def load_corpus_articles(self, corpus_id):
@@ -138,50 +171,73 @@ class DatabaseBackend(object):
         """
         raise NotImplementedError()
 
-    def save_registry_table(self, corpus_id, variant, values):
-        raise NotImplementedError()
-
     def load_registry_table(self, corpus_id, variant):
         raise NotImplementedError()
 
-    def save_registry_posattr(self, registry_id, name, position, values):
+    def load_corpus_posattrs(self, corpus_id):
         raise NotImplementedError()
 
-    def load_registry_posattrs(self, registry_id):
+    def load_corpus_posattr_references(self, corpus_id, posattr_id):
         raise NotImplementedError()
 
-    def update_registry_posattr_references(self, posattr_id, fromattr_id, mapto_id):
+    def load_corpus_alignments(self, corpus_id):
         raise NotImplementedError()
 
-    def load_registry_posattr_references(self, posattr_id):
+    def load_corpus_structures(self, corpus_id):
         raise NotImplementedError()
 
-    def save_registry_alignments(self, registry_id, aligned_ids):
+    def load_subcorpattrs(self, corpus_id):
         raise NotImplementedError()
 
-    def load_registry_alignments(self, registry_id):
-        raise NotImplementedError()
-
-    def save_registry_structure(self, registry_id, name, values, update_existing=False):
-        raise NotImplementedError()
-
-    def load_registry_structures(self, registry_id):
-        raise NotImplementedError()
-
-    def save_registry_structattr(self, struct_id, name, values):
-        raise NotImplementedError()
-
-    def save_subcorpattr(self, struct_id, idx):
-        raise NotImplementedError()
-
-    def load_subcorpattrs(self, registry_id):
-        raise NotImplementedError()
-
-    def save_freqttattr(self, registry_id, idx):
-        raise NotImplementedError()
-
-    def load_freqttattrs(self, registry_id):
+    def load_freqttattrs(self, corpus_id):
         raise NotImplementedError()
 
     def load_tckc_providers(self, corpus_id):
+        raise NotImplementedError()
+
+
+class DatabaseWritableBackend(DatabaseBackend):
+
+    def commit(self):
+        raise NotImplementedError()
+
+    def remove_corpus(self, corpus_id):
+        raise NotImplementedError()
+
+    def save_corpus_config(self, install_json, registry_dir, corp_size):
+        raise NotImplementedError()
+
+    def save_corpus_article(self, text):
+        raise NotImplementedError()
+
+    def attach_corpus_article(self, corpus_id, article_id, role):
+        raise NotImplementedError()
+
+    def save_registry_table(self, corpus_id, variant, values):
+        """
+        returns:
+        True if a record has been actually created
+        or False if the record already exists (and the method did nothing).
+        """
+        raise NotImplementedError()
+
+    def save_corpus_posattr(self, corpus_id, name, position, values):
+        raise NotImplementedError()
+
+    def update_corpus_posattr_references(self, corpus_id, posattr_id, fromattr_id, mapto_id):
+        raise NotImplementedError()
+
+    def save_corpus_alignments(self, corpus_id, aligned_ids):
+        raise NotImplementedError()
+
+    def save_corpus_structure(self, corpus_id, name, values):
+        raise NotImplementedError()
+
+    def save_corpus_structattr(self, corpus_id, struct_id, name, values):
+        raise NotImplementedError()
+
+    def save_subcorpattr(self, corpus_id, struct_name, attr_name, idx):
+        raise NotImplementedError()
+
+    def save_freqttattr(self, corpus_id, struct_name, attr_name, idx):
         raise NotImplementedError()

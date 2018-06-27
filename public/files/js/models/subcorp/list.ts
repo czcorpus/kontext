@@ -23,7 +23,7 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
-import {PageModel} from '../../app/main';
+import {PageModel, PluginName} from '../../app/main';
 import {StatefulModel} from '../base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import { MultiDict } from '../../util';
@@ -550,6 +550,10 @@ export class SubcorpListModel extends StatefulModel {
 
     getIsBusy():boolean {
         return this.isBusy;
+    }
+
+    getUsesSubcRestore():boolean {
+        return this.layoutModel.getConf<boolean>('UsesSubcRestore');
     }
 }
 

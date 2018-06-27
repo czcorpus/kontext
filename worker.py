@@ -194,11 +194,11 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
         app.send_task('worker.conc_calculate',
                       args=(initial_args, user_id, corpus_id,
                             subc_name, subchash, query, samplesize),
-                      time_limit=time_limit)
+                      soft_time_limit=time_limit)
     return initial_args
 
 
-@app.task(bind=True, ignore_result=True)  # TODO ignore? what about errors?
+@app.task(bind=True)
 def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     """
     Perform actual concordance calculation.

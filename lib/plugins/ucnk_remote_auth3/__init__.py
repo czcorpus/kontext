@@ -145,7 +145,12 @@ class CentralAuth(AbstractRemoteAuth):
         self._auth_conf = auth_conf
         self._conf = conf
         self._sync_conf = SyncDbConf(conf)
-        self._ssl_context = ssl.create_default_context() if self._toolbar_conf.port == 443 else None
+        try:
+            self._ssl_context = ssl.create_default_context() if self._toolbar_uses_ssl else None
+        except AttributeError:
+            logging.getLogger(__name__).warning(
+                'Using fallback https client initialization. Reason: older Python ver.')
+            self._ssl_context = None
 
     @staticmethod
     def _mk_user_key(user_id):
@@ -155,12 +160,21 @@ class CentralAuth(AbstractRemoteAuth):
     def _mk_list_key(user_id):
         return 'corplist:user:%s' % user_id
 
+    @property
+    def _toolbar_uses_ssl(self):
+        return self._toolbar_conf.port == 443
+
     def _create_connection(self):
-        if self._ssl_context is not None:
-            return httplib.HTTPSConnection(self._toolbar_conf.server,
-                                           port=self._toolbar_conf.port,
-                                           timeout=self._auth_conf.toolbar_server_timeout,
-                                           context=self._ssl_context)
+        if self._toolbar_uses_ssl:
+            if self._ssl_context is not None:
+                return httplib.HTTPSConnection(self._toolbar_conf.server,
+                                               port=self._toolbar_conf.port,
+                                               timeout=self._auth_conf.toolbar_server_timeout,
+                                               context=self._ssl_context)
+            else:
+                return httplib.HTTPSConnection(self._toolbar_conf.server,
+                                               port=self._toolbar_conf.port,
+                                               timeout=self._auth_conf.toolbar_server_timeout)
         else:
             return httplib.HTTPConnection(self._toolbar_conf.server,
                                           port=self._toolbar_conf.port,

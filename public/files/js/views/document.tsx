@@ -585,7 +585,7 @@ export function init(
         };
 
         const getSubcName = () => {
-            if (props.origSubcorpName !== props.usesubcorp) {
+            if (props.origSubcorpName && props.origSubcorpName !== props.usesubcorp) {
                 return <>
                     <a className="subcorpus" title={he.translate('global__subcorpus')}
                                         onClick={handleSubcnameClick}>
@@ -653,7 +653,10 @@ export function init(
     // ------------------------ <AjaxLoaderImage /> --------------------------------
 
     const AjaxLoaderImage:React.SFC<CoreViews.AjaxLoaderImage.Props> = (props) => {
-        return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
+        return <img
+                    className={props.htmlClass ? props.htmlClass : undefined}
+                    src={he.createStaticUrl('img/ajax-loader.gif')}
+                    alt={he.translate('global__loading')} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
