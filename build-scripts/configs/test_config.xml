@@ -91,12 +91,14 @@
             <item>ovm_cs_w</item>
         </default_corpora>
         <use_db_whitelist>1</use_db_whitelist>
-        <fcs_search_attributes>
-		<item>lemma</item>
-		<item>lc</item>
-		<item>word</item>
-	</fcs_search_attributes>
     </corpora>
+    <fcs>
+        <search_attributes>
+		    <item>lemma</item>
+		    <item>lc</item>
+		    <item>word</item>
+	    </search_attributes>
+    </fcs>
     <plugins>
         <db>
             <module>lindat_db</module>

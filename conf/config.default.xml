@@ -74,6 +74,7 @@
         <left_interval_char/>
         <interval_char>±</interval_char>
     </corpora>
+    <fcs />
     <plugins>
         <application_bar/>
         <auth>
@@ -157,5 +158,6 @@
         <issue_reporting/>
         <token_connect />
         <kwic_connect />
+        <dispatch_hook />
     </plugins>
 </kontext>
