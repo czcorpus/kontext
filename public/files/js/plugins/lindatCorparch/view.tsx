@@ -406,7 +406,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-           this.state = {htmlClass: "corp-tree-sorted"};
+            this.state = {htmlClass: "corp-tree-sorted"};
         }
 
         _renderChildren() {

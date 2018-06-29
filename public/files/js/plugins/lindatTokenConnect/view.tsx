@@ -23,7 +23,6 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import * as VRD from './vallex';
-import { Button } from './vendor/reactstrap';
 
 
 export interface Views {
@@ -41,7 +40,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             return (
                 <div className="VallexJsonRenderer">
                     <VerbList list={props.data.result[1]} language={props.data.inputParameters.language} />
-                    <Button>OK</Button>
                 </div>
             );
         } else {
@@ -118,61 +116,91 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     // ------------- <TargetVerb /> -------------------------------
 
-    const TargetVerb:React.SFC<{
+    class TargetVerb extends React.Component<{
         verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
         verbTargetList:VRD.VtargetInfo;
-    }> = (props) => {
-        const renderTargetVerbsInfo = () => {
-            return props.verbTargetList.map((item, i) => {
-                return <Target key={i} verbTargetName={props.verbTargetName}
-                            verbSourceName={props.verbSourceName}
-                            verbSourceID={props.verbSourceID}
+    }> {
+        renderTargetVerbsInfo() {
+            return this.props.verbTargetList.map((item, i) => {
+                return <Target key={i} verbTargetName={this.props.verbTargetName}
+                            verbSourceName={this.props.verbSourceName}
+                            verbSourceID={this.props.verbSourceID}
                             verbTargetList={item} />
             });
 
-        };
-        return (
-            <div>{renderTargetVerbsInfo()}</div>
-        );
+        }
+
+        render() {
+            return (
+                <div>{this.renderTargetVerbsInfo()}</div>
+            );
+        }
     };
 
     // ------------- <Target /> -------------------------------
 
-    const Target:React.SFC<{
+    class Target extends React.Component<{
         verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
         verbTargetList:VRD.VtargetInfo;
-    }> = (props) => {
-        return (
-            <div className="vallexTargetBlock">
-                <div className="vallexTargetV">{props.verbTargetName}
-                    {props.verbTargetList[1][0].map((listValue, i) => {
-                        if (listValue.length !== 0) {
-                            return <span className="vallexFrame"  key={i}>&nbsp;{listValue}</span>;
-                        }
-                    })}
-                </div>
-                <div className="vallexExplInner">{props.verbTargetList[1][1]}</div>
-                <ul>
-                    {props.verbTargetList[1][2].map((listValue, i) => {
-                        if (listValue.length !== 0) {
-                            return <li key={i}>{listValue}</li>;
-                        }
-                    })}
-                </ul>
-                <div className="vallexFrameMap"><p>{`Argument mapping for "${props.verbSourceName}" (${props.verbSourceID}) and "${props.verbTargetName}" (${props.verbTargetList[0]}):`}</p></div>
-                <ul className="vallexHiddenBullets">
-                    {props.verbTargetList[2].map((listValue, i) => {
-                        return <li className="" key={i}>{listValue[0]}&nbsp;{'\u2192'}&nbsp;{listValue[1]}</li>;
+    }, {collapse: boolean}> {
 
-                    })}
-                </ul>
-            </div>
-        )
-    };
+        constructor(props) {
+            super(props);
+            this.state = {collapse: true};
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
+            this.setState({collapse: !this.state.collapse});
+        }
+
+        _textHandler() {
+            return this.state.collapse ? "Show details" : "Hide details";
+        }
+
+        _getStateDisplay() {
+            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+        }
+
+        render() {
+            return (
+                <div>
+                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div className="vallexTargetBlock" style={this._getStateDisplay()}>
+                    <div className="vallexTargetV">{this.props.verbTargetName}
+                        {this.props.verbTargetList[1][0].map((listValue, i) => {
+                            if (listValue.length !== 0) {
+                                return <span className="vallexFrame" key={i}>&nbsp;{listValue}</span>;
+                            }
+                        })}
+                    </div>
+                    <div className="vallexExplInner">{this.props.verbTargetList[1][1]}</div>
+                    <ul>
+                        {this.props.verbTargetList[1][2].map((listValue, i) => {
+                            if (listValue.length !== 0) {
+                                return <li key={i}>{listValue}</li>;
+                            }
+                        })}
+                    </ul>
+                    <div className="vallexFrameMap">
+                        <p>{`Argument mapping for "${this.props.verbSourceName}" (${this.props.verbSourceID}) and "${this.props.verbTargetName}" (${this.props.verbTargetList[0]}):`}</p>
+                    </div>
+                    <ul className="vallexHiddenBullets">
+                        {this.props.verbTargetList[2].map((listValue, i) => {
+                            return <li className="" key={i}>{listValue[0]}&nbsp;{'\u2192'}&nbsp;{listValue[1]}</li>;
+
+                        })}
+                    </ul>
+                </div>
+                </div>
+            );
+        }
+    }
 
     return {
         VallexJsonRenderer: VallexJsonRenderer
