@@ -84,7 +84,7 @@ Define a Celery Beat task to perform snapshotting:
     }
 },
 'logs-es-snapshot-info': {
-    'task': 'dispatch_hook.show_last_snapshot',
+    'task': 'dispatch_hook.show_todays_snapshot',
     'schedule': crontab(minute='55', hour='2', day='Mon'),
     'kwargs': {
         'url': 'http://my_es_server',
