@@ -24,10 +24,12 @@ into one:
 here in CentralAuth.UCNK_TOOLBAR_PATTERN)
 
 Because there is also a UCNK-specific plug-in "ucnk_appbar" which
-requires the HTML part of the response, the ucnk_remote_auth2 plug-in
-stores the received HTML code into user's session where it is available for
-later pick-up. (Please note that KonText plug-ins cannot send user/request
-data to each other). This prevents additional HTTP request from ucnk_appbar.
+requires the HTML part of the response, the ucnk_remote_auth3 plug-in
+stores the received HTML code into a special per-request/per-user storage
+where it is available for later pick-up by ucnk_appbar3. This must be done
+because there is no other way for plug-ins to communicate/exchange data with
+each other and at the same time, we do not want ucnk_appbar3 plug-in
+to perform another HTTP request to obtain the HTML.
 
 Required config.xml/plugins entries (RelaxNG compact format):
 
