@@ -54,6 +54,8 @@ export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
                 return this.views.DataMuseSimilarWords;
             case 'vallex-json':
                 return this.lindatViews.VallexJsonRenderer;
+            case 'pdt-vallex-json':
+                return this.lindatViews.PDTVallexJsonRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }
