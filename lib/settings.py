@@ -33,7 +33,7 @@ _meta = {}  # contains data of attributes of XML elements representing configura
 _help_links = {}
 _state = ConfState()
 
-SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora', 'logging', 'mailing')
+SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora', 'logging', 'mailing', 'fcs')
 
 DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -223,7 +223,8 @@ def parse_config(path):
                 _conf[section_id], _meta[section_id] = parse_config_section(section)
             else:
                 for item in section:
-                    _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_config_section(item)
+                    _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_config_section(
+                        item)
 
 
 def _load_help_links():

@@ -449,11 +449,45 @@
                             <text />
                         </element>
                     </optional>
+                </interleave>
+            </element>
+            <element name="fcs">
+                <interleave>
                     <optional>
-                        <element name="fcs_search_attributes">
+                        <element name="provider_heading">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="provider_website">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="template_css_url">
+                            <choice>
+                                <text />
+                                <oneOrMore>
+                                    <element name="item">
+                                        <text />
+                                    </element>
+                                </oneOrMore>
+                            </choice>
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="template_header_inject_file">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="search_attributes">
                             <oneOrMore>
                                 <element name="item">
-                                    <a:documentation>A positional attribute used for search</a:documentation>
+                                    <a:documentation>A positional attribute used for search. A list of
+                                        possible candidates is expected to satisfy any installed corpus.
+                                        From these candidates, first applicable value is always used.
+                                    </a:documentation>
                                     <text />
                                 </element>
                             </oneOrMore>

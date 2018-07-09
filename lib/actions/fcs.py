@@ -26,7 +26,7 @@ class Actions(Kontext):
         ui_lang -- a language code in which current action's result will be presented
         """
         super(Actions, self).__init__(request=request, ui_lang=ui_lang)
-        self.search_attrs = settings.get('corpora', 'fcs_search_attributes', ['word'])
+        self.search_attrs = settings.get('fcs', 'search_attributes', ['word'])
 
     def get_mapping_url_prefix(self):
         """
@@ -316,7 +316,17 @@ class Actions(Kontext):
             Returns XSL template for rendering FCS XML.
         """
         self._headers['Content-Type'] = 'text/xsl; charset=utf-8'
-        return {}
+        custom_hd_inject_path = settings.get('fcs', 'template_header_inject_file', None)
+        if custom_hd_inject_path:
+            with open(custom_hd_inject_path) as fr:
+                custom_hdr_inject = fr.read()
+        else:
+            custom_hdr_inject = None
+
+        return dict(fcs_provider_heading=settings.get('fcs', 'provider_heading', 'KonText FCS Data Provider'),
+                    fcs_provider_website=settings.get('fcs', 'provider_website', None),
+                    fcs_template_css_url=settings.get_list('fcs', 'template_css_url'),
+                    fcs_custom_hdr_inject=custom_hdr_inject)
 
 
 class Languages(object):

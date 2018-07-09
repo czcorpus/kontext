@@ -52,6 +52,32 @@ def update_3(doc):
         parent.insert(parent.index(srch) + 1, new_elm)
 
 
+def update_4(doc):
+    srch = doc.find('/corpora')
+    if srch is not None:
+        parent = srch.getparent()
+        new_elm = etree.Element('fcs')
+        new_elm.tail = '\n    '
+        srch.tail = '\n    '
+        parent.insert(parent.index(srch) + 1, new_elm)
+
+
+def update_5(doc):
+    srch2 = doc.find('/fcs')
+    srch2.tail = '\n    '
+    new_elm = etree.SubElement(srch2, 'search_attributes')
+    new_elm.tail = '\n    '
+    srch = doc.findall('/corpora/fcs_search_attributes/item')
+    for item in srch:
+        new_item = etree.SubElement(new_elm, 'item')
+        new_item.text = item.text
+        new_item.tail = '\n            '
+
+    rm_srch = doc.find('/corpora/fcs_search_attributes')
+    if rm_srch is not None:
+        rm_srch.getparent().remove(rm_srch)
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.11.x '
