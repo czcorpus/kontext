@@ -195,7 +195,6 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._max_page_size = max_page_size
         self._registry_lang = registry_lang
         self._corpus_info_cache = {}
-        self._all_featured_corpora = None
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
         self._descriptions = defaultdict(lambda: {})
@@ -430,11 +429,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         return {actions.user.User: [get_favorite_corpora]}
 
     def _export_featured(self, plugin_api):
-        if self._all_featured_corpora is None:
-            # let's cache featured list
-            self._all_featured_corpora = [x for x in self.list_corpora(plugin_api).values()
-                                          if x.featured]
-        return [x.to_dict() for x in self._all_featured_corpora]
+        return [dict(r) for r in self.backend.load_featured_corpora(plugin_api.user_lang)]
 
     def export(self, plugin_api):
         return dict(

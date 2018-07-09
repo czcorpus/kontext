@@ -45,6 +45,8 @@ CREATE TABLE kontext_corpus (
     bib_id_attr TEXT,
     featured INTEGER DEFAULT 0,
     ttdesc_id INTEGER,
+    description_cs TEXT,
+    description_en TEXT,
     CONSTRAINT kontext_corpus_pkey PRIMARY KEY (id),
     CONSTRAINT kontext_corpus_sentence_struct_fkey FOREIGN KEY (id, sentence_struct) REFERENCES corpus_structure(corpus_id, name),
     CONSTRAINT kontext_corpus_speech_segment_structattr_fkey FOREIGN KEY (id, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr(corpus_id, structure_name, name),
