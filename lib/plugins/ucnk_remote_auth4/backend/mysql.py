@@ -152,10 +152,19 @@ class Backend(DatabaseBackend):
         cursor.execute('SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY id')
         return cursor.fetchall()
 
-    def load_description(self, desc_id):
+    def load_ttdesc(self, desc_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
         return cursor.fetchall()
+
+    def load_corpora_descriptions(self, corp_ids, user_lang):
+        cursor = self._db.cursor()
+        placeholders = ', '.join(['%s'] * len(corp_ids))
+        col = 'description_{0}'.format(user_lang[:2])
+        cursor.execute('SELECT name AS corpname, {0} AS contents '
+                       'FROM corpora '
+                       'WHERE name IN ({1})'.format(col, placeholders), corp_ids)
+        return dict((r['corpname'], r['contents']) for r in cursor.fetchall())
 
     def load_corpus(self, corp_id):
         cursor = self._db.cursor()

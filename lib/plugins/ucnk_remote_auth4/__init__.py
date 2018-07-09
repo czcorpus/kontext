@@ -56,6 +56,9 @@ class AuthConf(object):
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
         self.toolbar_server_timeout = int(conf.get('plugins', 'auth')[
                                           'ucnk:toolbar_server_timeout'])
+        self.api_cookies = conf.get('plugins', 'auth', {}).get('ucnk:api_cookies', [])
+        self.unverified_ssl_cert = bool(int(conf.get('plugins', 'auth', {}).get(
+            'ucnk:toolbar_unverified_ssl_cert', '0')))
 
 
 class CentralAuth(AbstractRemoteAuth):
@@ -63,25 +66,26 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db, sessions, conf):
+    def __init__(self, db, sessions, conf, toolbar_conf):
         """
         arguments:
         db -- a key-value storage plug-in
         sessions -- a sessions plug-in
         conf -- a 'settings' module
         """
-        auth_conf = AuthConf(conf)
-        super(CentralAuth, self).__init__(auth_conf.anonymous_user_id)
+        super(CentralAuth, self).__init__(conf.anonymous_user_id)
         self._db = db
         self._sessions = sessions
-        self._toolbar_conf = ToolbarConf(conf)
-        self._auth_conf = auth_conf
+        self._toolbar_conf = toolbar_conf
         self._conf = conf
         try:
-            self._ssl_context = ssl.create_default_context() if self._toolbar_uses_ssl else None
+            if self._conf.unverified_ssl_cert:
+                self._ssl_context = ssl._create_unverified_context() if self._toolbar_uses_ssl else None
+            else:
+                self._ssl_context = ssl.create_default_context() if self._toolbar_uses_ssl else None
         except AttributeError:
             logging.getLogger(__name__).warning(
-                'Using fallback https client initialization. Reason: older Python ver.')
+                'Using fallback https client initialization due to older Python version.')
             self._ssl_context = None
 
     @staticmethod
@@ -97,16 +101,16 @@ class CentralAuth(AbstractRemoteAuth):
             if self._ssl_context is not None:
                 return httplib.HTTPSConnection(self._toolbar_conf.server,
                                                port=self._toolbar_conf.port,
-                                               timeout=self._auth_conf.toolbar_server_timeout,
+                                               timeout=self._conf.toolbar_server_timeout,
                                                context=self._ssl_context)
             else:
                 return httplib.HTTPSConnection(self._toolbar_conf.server,
                                                port=self._toolbar_conf.port,
-                                               timeout=self._auth_conf.toolbar_server_timeout)
+                                               timeout=self._conf.toolbar_server_timeout)
         else:
             return httplib.HTTPConnection(self._toolbar_conf.server,
                                           port=self._toolbar_conf.port,
-                                          timeout=self._auth_conf.toolbar_server_timeout)
+                                          timeout=self._conf.toolbar_server_timeout)
 
     def _fetch_toolbar_api_response(self, args):
         connection = self._create_connection()
@@ -131,10 +135,9 @@ class CentralAuth(AbstractRemoteAuth):
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-        api_cookies = self._conf.get('plugins', 'auth', {}).get('ucnk:api_cookies', [])
 
         api_args = map(lambda x: (x[0][len('cnc_toolbar_'):], x[1].value),
-                       filter(lambda x: x[0] in api_cookies, plugin_api.cookies.items()))
+                       filter(lambda x: x[0] in self._conf.api_cookies, plugin_api.cookies.items()))
         api_args.extend([('current',  'kontext'), ('continue', plugin_api.current_url)])
         api_response = self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
@@ -147,6 +150,9 @@ class CentralAuth(AbstractRemoteAuth):
             response_obj['user'] = {}
         if 'id' not in response_obj['user']:
             response_obj['user']['id'] = self._anonymous_id
+        else:
+            # just to make sure we work with proper type (the response_obj is a 3rd party stuff)
+            response_obj['user']['id'] = int(response_obj['user']['id'])
 
         if curr_user_id != response_obj['user']['id']:
             plugin_api.refresh_session_id()
@@ -199,13 +205,14 @@ class CentralAuth(AbstractRemoteAuth):
         return False
 
     def get_login_url(self, return_url=None):
-        return self._auth_conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
+        return self._conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
 
     def get_logout_url(self, return_url=None):
-        return self._auth_conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
+        return self._conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
 
 
 @inject(plugins.runtime.SESSIONS)
 def create_instance(conf, sessions):
     backend = Backend(MySQLConf(conf))
-    return CentralAuth(db=backend, sessions=sessions, conf=conf)
+    return CentralAuth(db=backend, sessions=sessions, conf=AuthConf(conf),
+                       toolbar_conf=ToolbarConf(conf))
