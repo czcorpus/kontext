@@ -458,3 +458,6 @@ msgstr "Nelze měnit status konkordance, která patří jinému uživateli"
 
 msgid "Access forbidden - please log-in."
 msgstr "Přístup zamítnut - přihlašte se prosím."
+
+msgid "Undo"
+msgstr "Zpět"
