@@ -171,6 +171,9 @@ class DatabaseBackend(object):
         """
         raise NotImplementedError()
 
+    def load_featured_corpora(self, user_lang):
+        raise NotImplementedError()
+
     def load_registry_table(self, corpus_id, variant):
         raise NotImplementedError()
 

@@ -122,6 +122,15 @@ class Backend(DatabaseBackend):
         c.execute(sql, values_cond)
         return c.fetchall()
 
+    def load_featured_corpora(self, user_lang):
+        cursor = self._db.cursor()
+        desc_col = 'c.description_{0}'.format(user_lang[:2])
+        cursor.execute('SELECT c.name AS corpus_id, ifnull(rc.name, c.name) AS name, {0} AS description, c.size '
+                       'FROM kontext_corpus AS c '
+                       'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+                       'WHERE c.active = 1 AND c.featured = 1'.format(desc_col))
+        return cursor.fetchall()
+
     def load_registry_table(self, corpus_id, variant):
         cols = (['rc.{0} AS {1}'.format(v, k) for k, v in self.REG_COLS_MAP.items()] +
                 ['rv.{0} AS {1}'.format(v, k) for k, v in self.REG_VAR_COLS_MAP.items()])
