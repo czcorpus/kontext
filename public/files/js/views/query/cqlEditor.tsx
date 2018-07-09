@@ -225,7 +225,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
             if (he.browserInfo.isFirefox()) {
                 this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
-                    if (evt.keyCode === 8 || evt.keyCode === 46) {
+                    console.log('key event ', evt.keyCode);
+                    if (evt.keyCode === 8 || evt.keyCode === 46) {  // 8: BACKSPACE, 46: DEL
                         const src = this.extractText(this.editorRoot);
                         const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                         const rawSrc = src.map(v => v[0]).join('');
@@ -238,8 +239,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                         rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                                         rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
                                     sourceId: this.props.sourceId,
-                                    rawAnchorIdx: 0, // TODO
-                                    rawFocusIdx: 0 // TODO
+                                    rawAnchorIdx: evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
+                                    rawFocusIdx: evt.keyCode === 8 ? rawFocusIdx - 1 : rawFocusIdx
                                 }
                             });
                             this.reapplySelection(
@@ -253,11 +254,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 props: {
                                     query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
                                     sourceId: this.props.sourceId,
-                                    rawAnchorIdx: 0, // TODO
-                                    rawFocusIdx: 0 // TODO
+                                    rawAnchorIdx: evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx,
+                                    rawFocusIdx: evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx,
                                 }
                             });
-                            this.reapplySelection(rawAnchorIdx, rawAnchorIdx);
+                            this.reapplySelection(
+                                evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx,
+                                evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx
+                            );
 
                         } else {
                             dispatcher.dispatch({
@@ -265,11 +269,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 props: {
                                     query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
                                     sourceId: this.props.sourceId,
-                                    rawAnchorIdx: 0, // TODO
-                                    rawFocusIdx: 0 // TODO
+                                    rawAnchorIdx: evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx,
+                                    rawFocusIdx: evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx,
                                 }
                             });
-                            this.reapplySelection(rawFocusIdx, rawFocusIdx);
+                            this.reapplySelection(
+                                evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx,
+                                evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx
+                            );
                         }
                         evt.preventDefault();
                     }
