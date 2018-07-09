@@ -48,7 +48,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             );
         } else {
             return (
-                <p>Nothing found</p>
+                <p>No match found in dictionaries.</p>
             );
         }
     };
@@ -176,7 +176,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             );
         } else {
             return (
-                <p>Nothing found</p>
+                <p>No match found in dictionaries.</p>
             );
         }
     };
