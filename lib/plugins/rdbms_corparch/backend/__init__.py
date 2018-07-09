@@ -158,7 +158,7 @@ class DatabaseBackend(object):
         """
         raise NotImplementedError()
 
-    def load_description(self, desc_id):
+    def load_ttdesc(self, desc_id):
         """
         """
         raise NotImplementedError()

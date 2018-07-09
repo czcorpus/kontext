@@ -211,6 +211,10 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
     def user_items(self):
         return self._user_items
 
+    @property
+    def backend(self):
+        return self._backend
+
     def _parse_color(self, code):
         code = code.lower()
         transparency = self.LABEL_OVERLAY_TRANSPARENCY
@@ -256,10 +260,11 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         return None
 
     def _export_untranslated_label(self, plugin_api, text):
-        if self._registry_lang[:2] == plugin_api.user_lang[:2]:
-            return text
-        else:
-            return u'{0} [{1}]'.format(text, _('translation not available'))
+        """
+        This plug-in is able to load multi-language descriptions
+        so here we don't have to add any stuff here
+        """
+        return text
 
     def corpus_list_item_from_row(self, plugin_api, row):
         keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else []) if x]
@@ -348,7 +353,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 elif art['role'] == 'other':
                     corp.citation_info.other_bibliography = art['entry']
             if row['ttdesc_id'] not in self._descriptions:
-                for drow in self._backend.load_description(row['ttdesc_id']):
+                for drow in self._backend.load_ttdesc(row['ttdesc_id']):
                     self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
                     self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
         return self._corpus_info_cache.get(corpus_id, None)

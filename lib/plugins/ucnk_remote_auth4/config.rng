@@ -49,6 +49,18 @@
                 <ref name="ucnk-custom" />
                 <data type="integer" />
             </element>
+            <element name="toolbar_unverified_ssl_cert">
+                <a:documentation>In case you use an unverified SSL certificate (e.g. for development or some internal
+                use) set this to 1/true - otherwise, the plug-in will refuse to communicate with central auth
+                server.</a:documentation>
+                <ref name="ucnk-custom" />
+                <choice>
+                    <value>0</value>
+                    <value>1</value>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
+            </element>
             <element name="sync_host">
                 <ref name="ucnk-custom" />
                 <text />

@@ -48,7 +48,7 @@ class Backend(DatabaseBackend):
         cursor.execute('SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY id')
         return cursor.fetchall()
 
-    def load_description(self, desc_id):
+    def load_ttdesc(self, desc_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = ?', (desc_id,))
         return cursor.fetchall()
