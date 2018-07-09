@@ -449,3 +449,6 @@ msgstr "informace o browseru"
 
 msgid "KWIC/Sentence"
 msgstr "KWIC/Věta"
+
+msgid "Undo"
+msgstr "Zpět"
