@@ -42,7 +42,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         if (props.data.result.length > 0) {
             return (
                 <div className="VallexJsonRenderer">
-                    <a className="toPDT" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.data.result[1][0][0]}>{props.data.result[1][0][0]}</a>
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.data.result[1][0][0]}>{props.data.result[1][0][0]}</a>
                     <PDTVerbList info={props.data.result[1][0]} />
                 </div>
             );
@@ -129,7 +129,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler() {
-            return this.state.collapse ? "Show details" : "Hide details";
+            return this.state.collapse ? "Show examples" : "Hide examples";
         }
 
         _getStateDisplay() {
