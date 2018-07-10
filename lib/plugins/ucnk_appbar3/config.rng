@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
-
     <start>
-        <element name="query_storage">
+        <element name="application_bar">
             <element name="module">
-                <value>default_query_storage</value>
+                <value>ucnk_appbar3</value>
             </element>
             <element name="js_module">
-                <value>defaultQueryStorage</value>
+                <value>ucnkAppBar3</value>
             </element>
-            <element name="page_num_records">
-                <data type="positiveInteger" />
-            </element>
-            <element name="ttl_days">
+            <element name="css_url">
                 <attribute name="extension-by">
-                    <value>default</value>
+                    <value>ucnk</value>
                 </attribute>
-                <data type="positiveInteger" />
+                <data type="anyURI" />
+            </element>
+            <element name="css_url_ie">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <data type="anyURI" />
             </element>
         </element>
     </start>

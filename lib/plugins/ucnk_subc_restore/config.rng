@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="subc_restore">
+            <element name="module">
+                <value>ucnk_subc_restore</value>
+            </element>
+            <element name="db_path">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
+            </element>
+        </element>
+    </start>
+</grammar>

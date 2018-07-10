@@ -16,12 +16,6 @@
                 </attribute>
                 <text />
             </element>
-            <element name="default_label">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <text />
-            </element>
             <element name="max_num_hints">
                 <attribute name="extension-by">
                     <value>ucnk</value>
@@ -33,6 +27,12 @@
                     <value>ucnk</value>
                 </attribute>
                 <data type="integer" />
+            </element>
+            <element name="default_label">
+                <attribute name="extension-by">
+                    <value>ucnk</value>
+                </attribute>
+                <text />
             </element>
             <element name="default_page_list_size">
                 <attribute name="extension-by">
@@ -62,49 +62,55 @@
                     </element>
                 </zeroOrMore>
             </element>
-            <element name="mysql_host">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <text />
-            </element>
-            <element name="mysql_db">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <text />
-            </element>
-            <element name="mysql_user">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <text />
-            </element>
-            <element name="mysql_passwd">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <text />
-            </element>
-            <element name="mysql_pool_size">
-                <a:documentation>1 should be OK in most cases</a:documentation>
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <data type="integer" />
-            </element>
-            <element name="mysql_retry_delay">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <data type="integer" />
-            </element>
-            <element name="mysql_retry_attempts">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <data type="integer" />
-            </element>
+            <optional>
+                <a:documentation>
+                    This can be omitted in case we want our plug-in to read mysql connection
+                    information from a compatible [auth] plug-in.
+                </a:documentation>
+                <element name="mysql_host">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="mysql_db">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="mysql_user">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="mysql_passwd">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="mysql_pool_size">
+                    <a:documentation>1 should be OK in most cases</a:documentation>
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <data type="integer" />
+                </element>
+                <element name="mysql_retry_delay">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <data type="integer" />
+                </element>
+                <element name="mysql_retry_attempts">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <data type="integer" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

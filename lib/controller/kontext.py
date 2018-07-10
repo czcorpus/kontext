@@ -326,13 +326,8 @@ class Kontext(Controller):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
     def _user_has_persistent_settings(self):
-        conf = settings.get('plugins', 'settings_storage')
-        excluded_users = conf.get('excluded_users', None)
-        if excluded_users is None:
-            excluded_users = []
-        else:
-            excluded_users = [int(x) for x in excluded_users]
-        return self.session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
+        with plugins.runtime.SETTINGS_STORAGE as sstorage:
+            return self.session_get('user', 'id') not in sstorage.get_excluded_users() and not self.user_is_anonymous()
 
     def get_current_aligned_corpora(self):
         return [self.args.corpname] + self.args.align

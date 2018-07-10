@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="syntax_viewer">
+            <element name="module">
+                <value>ucnk_syntax_viewer</value>
+            </element>
+            <element name="js_module">
+                <value>ucnkSyntaxViewer</value>
+            </element>
+            <element name="config_path">
+                <a:documentation>
+                    The plug-in expects its per-corpus configuration to be in a separate
+                    JSON file with the following structure:
+                    <![CDATA[
+                        {
+                          "corpora": {
+                            "syn2015": {
+                              "sentenceStruct": "s",
+                              "trees": [
+                                {
+                                  "id": "default",
+                                  "name": "Default",
+                                  "wordAttr": "word",
+                                  "parentAttr": "parent",
+                                  "labelTemplates": ["#{#009EE0}%s", "#{#F0680B}[%s]", "#{#010101}%s", "#{#E2007A}%s"],
+                                  "layerType": "t",
+                                  "detailAttrs": ["lc", "lemma", "lemma_lc", "tag", "pos", "case", "proc", "afun", "prep", "eparent"],
+                                  "attrRefs": {
+                                    "eparent": ["word"]
+                                  },
+                                  "nodeAttrs": ["word", "afun"],
+                                  "rootNode": {
+                                    "id": "root",
+                                    "word": "#",
+                                    "afun": "AuxS",
+                                    "parent": null
+                                  }
+                                }
+                              ]
+                            }
+                         }
+                        }
+                    ]]>
+                </a:documentation>
+                <attribute name="extension-by">
+                    <a:documentation>
+                        Please note that here we don't use 'ucnk' prefix but 'default' because the plug-in
+                        extends most of its server-side code from the 'default_syntax_viewer'.
+                    </a:documentation>
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+        </element>
+    </start>
+</grammar>

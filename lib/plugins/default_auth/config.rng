@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+
+    <start>
+        <element name="auth">
+            <element name="module">
+                <value>default_auth</value>
+            </element>
+            <element name="js_module">
+                <value>defaultAuth</value>
+            </element>
+            <element name="auth_cookie_name">
+                <text />
+            </element>
+            <element name="anonymous_user_id">
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="login_url">
+                <data type="anyURI" />
+            </element>
+            <element name="logout_url">
+                <data type="anyURI" />
+            </element>
+        </element>
+    </start>
+</grammar>

@@ -44,7 +44,8 @@
     </define>
 
     <define name="customPluginConfiguration">
-        <a:documentation>Non-core configuration of a plug-in</a:documentation>
+        <a:documentation>Non-core configuration of a plug-in. Each plug-in should come with its
+        custom config.rng file to validate its configuration subtree.</a:documentation>
         <zeroOrMore>
             <choice>
                 <ref name="customSimpleElement" />
@@ -505,20 +506,18 @@
                     <element name="auth">
                         <a:documentation>Authentication plug-in configuration</a:documentation>
                         <ref name="plugin_common" />
-                        <interleave>
-                            <element name="anonymous_user_id">
-                                <data type="integer" />
-                            </element>
-                            <element name="auth_cookie_name">
-                                <text />
-                            </element>
-                            <element name="login_url">
-                                <text />
-                            </element>
-                            <element name="logout_url">
-                                <text />
-                            </element>
-                        </interleave>
+                        <element name="anonymous_user_id">
+                            <data type="nonNegativeInteger" />
+                        </element>
+                        <element name="auth_cookie_name">
+                            <text />
+                        </element>
+                        <element name="login_url">
+                            <data type="anyURI" />
+                        </element>
+                        <element name="logout_url">
+                            <data type="anyURI" />
+                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="application_bar">
@@ -567,15 +566,6 @@
                     <element name="settings_storage">
                         <a:documentation>A plug-in to store and retrieve user settings</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="excluded_users">
-                            <a:documentation>A list of user IDs without persistent settings. Please
-                            note that anonymous user is always included automatically</a:documentation>
-                            <zeroOrMore>
-                                <element name="item">
-                                    <text />
-                                </element>
-                            </zeroOrMore>
-                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="sessions">
@@ -583,19 +573,13 @@
                         <ref name="plugin_common" />
                         <element name="ttl">
                             <a:documentation>number of seconds of inactivity</a:documentation>
-                            <data type="integer" />
+                            <data type="positiveInteger" />
                         </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="corparch">
                         <a:documentation>A plug-in for searching available corpora</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="file"> <!-- TODO: this is debatable -->
-                            <text />
-                        </element>
-                        <element name="root_elm_path">
-                            <text /> <!-- TODO: this is debatable as others may not need this -->
-                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="live_attributes">
