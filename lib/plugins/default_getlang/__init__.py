@@ -67,5 +67,6 @@ def create_instance(conf):
     fallback_lang = conf.get('plugins', 'getlang').get('default:fallback_lang', '')
     if fallback_lang is None:
         fallback_lang = ''
+    else:
+        fallback_lang = fallback_lang.replace('-', '_')
     return GetLang(cookie_name=cookie_name, fallback_lang=fallback_lang)
-

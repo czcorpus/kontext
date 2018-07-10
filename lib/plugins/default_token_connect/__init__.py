@@ -30,30 +30,7 @@ a set of providers where a provider always contains a backend, frontend and iden
 The JSON config file defines a template of an abstract path identifying a resource. It can be a URL path, SQL
 or a filesystem path. Such a template can use the following values: word, lemma, pos, ui_lang, other_lang.
 
-Required XML configuration:
-
-element token_connect {
-  element module { "default_token_connect" }
-  element js_module { "defaultTokenConnect" }
-  element providers_conf {
-    attribute extension-by { "default" }
-    { text } # a path to a JSON configuration file containing all available backends and frontends
-  }
-  optional {
-    element cache_db_path {
-      attribute extension-by { "default" }
-      { text } a path to sqlite3 file where all the cache data for all the providers will be stored
-    }
-    element cache_rows_limit {
-      attribute extension-by { "default" }
-      { xsd:integer }
-    }
-    element cache_ttl_days {
-      attribute extension-by { "default" }
-      { xsd:integer }
-    }
-  }
-}
+Required XML configuration: please see config.rng
 """
 
 import json

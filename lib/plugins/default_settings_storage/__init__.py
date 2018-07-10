@@ -23,13 +23,15 @@ from plugins import inject
 
 class SettingsStorage(AbstractSettingsStorage):
 
-    def __init__(self, db):
+    def __init__(self, db, excluded_users):
         """
         arguments:
         conf -- the 'settings' module (or a compatible object)
         db -- the default_db plug-in
+        excluded_users -- a list of user IDs to be excluded from storing settings
         """
         self.db = db
+        self._excluded_users = excluded_users
 
     def _mk_key(self, user_id):
         return 'settings:user:%d' % user_id
@@ -64,7 +66,16 @@ class SettingsStorage(AbstractSettingsStorage):
         else:
             return data
 
+    def get_excluded_users(self):
+        return self._excluded_users
+
 
 @inject(plugins.runtime.DB)
 def create_instance(conf, db):
-    return SettingsStorage(db)
+    conf = conf.get('plugins', 'settings_storage')
+    excluded_users = conf.get('default:excluded_users', None)
+    if excluded_users is None:
+        excluded_users = []
+    else:
+        excluded_users = [int(x) for x in excluded_users]
+    return SettingsStorage(db, excluded_users=excluded_users)

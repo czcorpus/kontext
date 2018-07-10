@@ -48,3 +48,9 @@ class AbstractSettingsStorage(object):
         new or updated settings dictionary provided as a parameter
         """
         raise NotImplementedError()
+
+    def get_excluded_users(self):
+        """
+        Returns a list of IDs of users whose settings should not be stored (e.g. anonymous user).
+        """
+        return []

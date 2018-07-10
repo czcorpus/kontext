@@ -18,6 +18,7 @@
 from lxml import etree
 import argparse
 import os
+import sys
 
 
 APP_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
@@ -34,19 +35,21 @@ def validate_config(schema, conf):
 
 
 def validate_main_config(conf_obj, schema_path):
-    ans = '\n'
+    ans = ''
+    ans_err = 0
     with open(schema_path, 'rb') as schema_f:
         if hasattr(conf_obj, 'docinfo'):
-            ans += 'Validating file "{0}"...'.format(conf_obj.docinfo.URL)
+            ans += 'Validating main configuration file "{0}"...'.format(conf_obj.docinfo.URL)
         else:
-            ans += 'Validating configuration of plug-in [{0}]...'.format(os.path.basename(os.path.dirname(schema_path)))
+            ans += '  {0} ...'.format(os.path.basename(os.path.dirname(schema_path)))
         schema = etree.parse(schema_f)
         err = validate_config(schema, conf_obj)
         if err:
-            ans += '\n> ERROR: {0}'.format(err)
+            ans_err = 1
+            ans += ' ERROR: {0}'.format(err)
         else:
-            ans += '\n> OK'
-    return ans
+            ans += ' OK'
+    return ans, ans_err
 
 
 def get_plugin_rng_path(plugin_id):
@@ -66,17 +69,27 @@ def find_plugins(conf):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Validates KonText XML configuration files against RelaxNG schemas')
+    parser = argparse.ArgumentParser(
+        description='Validates KonText XML configuration files against RelaxNG schemas')
     parser.add_argument('config_file', metavar='CONF_FILE', type=str,
                         help='a path to a config file to be validated')
     args = parser.parse_args()
+    total_errors = 0
     with open(args.config_file, 'rb') as conf_f:
         conf = etree.parse(conf_f)
-        ans = validate_main_config(conf, SCHEMA_PATH)
+        ans, err1 = validate_main_config(conf, SCHEMA_PATH)
+        total_errors += err1
         print(ans)
         plugins = find_plugins(conf)
 
+    print('Validating plug-in configurations:')
     for elm, schema_path in plugins:
-        ans = validate_main_config(elm, schema_path)
+        ans, err2 = validate_main_config(elm, schema_path)
+        total_errors += err2
         print(ans)
     print(80 * '=')
+    if total_errors > 0:
+        print('Validation finished with {0} error(s)'.format(total_errors))
+    else:
+        print('There were no errors')
+    sys.exit(1 if total_errors > 0 else 0)
