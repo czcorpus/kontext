@@ -28,12 +28,11 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const JS_PATH = path.resolve(__dirname, 'public/files/js');
-const DIST_PATH = path.resolve(__dirname, 'public/files/dist');
 const CSS_PATH = path.resolve(__dirname, 'public/files/css');
 const THEMES_PATH = path.resolve(__dirname, 'public/files/themes');
 const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, 'conf/config.xml'));
 
-module.exports = merge(common, {
+module.exports = (env) => merge(common(env), {
 	plugins: [
 		new OptimizeCssAssetsPlugin({
 			assetNameRegExp: /\.css/,
@@ -43,7 +42,9 @@ module.exports = merge(common, {
 				discardUnused: false
 			}
     	}),
-		new UglifyJSPlugin(),
+		new UglifyJSPlugin({
+			parallel: 4 /* this value is based on the fact that most todays CPUs have >= 4 cores */
+		}),
 		new kplugins.PreparePlugin({
             confDoc: CONF_DOC,
             jsPath: JS_PATH,

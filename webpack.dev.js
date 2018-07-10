@@ -25,12 +25,11 @@ const kplugins = require('./scripts/build/plugins');
 const path = require('path');
 
 const JS_PATH = path.resolve(__dirname, 'public/files/js');
-const DIST_PATH = path.resolve(__dirname, 'public/files/dist');
 const CSS_PATH = path.resolve(__dirname, 'public/files/css');
 const THEMES_PATH = path.resolve(__dirname, 'public/files/themes');
 const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, 'conf/config.xml'));
 
-module.exports = merge(common, {
+module.exports = (env) => merge(common(env), {
     plugins: [
         new kplugins.PreparePlugin({
             confDoc: CONF_DOC,
@@ -54,5 +53,5 @@ module.exports = merge(common, {
         publicPath: kontext.findActionPathPrefix(CONF_DOC) + '/files/dist/',
         inline: false
     },
-    devtool: "source-map"
+    devtool: "inline-source-map"
 });
