@@ -2,6 +2,15 @@
 
 [![Build status](https://travis-ci.org/czcorpus/kontext.svg?branch=master)](https://travis-ci.org/czcorpus/kontext)
 
+## Contents
+
+* [Introduction](#introduction)
+* [Features](#features)
+* [Requirements](#requirements)
+* [Build and installation](#build-and-installation)
+* [Customization and contribution](#customization-and-contribution)
+* [Notable installations](#notable-installations)
+
 ## Introduction
 
 KonText is an **advanced corpus query interface** for the [Manatee-open](http://nlp.fi.muni.cz/trac/noske)
@@ -82,3 +91,4 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 
 * [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
 * [LINDAT](https://ufal.mff.cuni.cz/lindat-kontext)
+* [Clarin-PL](https://kontext.clarin-pl.eu/)
