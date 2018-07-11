@@ -208,8 +208,8 @@ def create_instance(conf, user_items, auth):
     return UcnkCorpArch2(backend=backend,
                          auth=auth,
                          user_items=user_items,
-                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                         tag_prefix=conf.get('plugins', 'corparch')['ucnk:tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['ucnk:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get(
                              'default:default_page_list_size', None),
                          access_req_smtp_server=conf.get('plugins',
