@@ -21,7 +21,7 @@ from plugins.abstract import CorpusDependentPlugin
 
 class AbstractKwicConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, corpora, lang, provider_ids, word, lemma, **custom_args):
+    def fetch_data(self, provider_ids, corpora, lang, lemma):
         pass
 
     def gives_kwic_hints(self, corpora):

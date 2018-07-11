@@ -25,21 +25,31 @@ from plugins.abstract.token_connect import AbstractBackend
 from plugins.default_token_connect.backends import cached
 
 
-class HTTPBackend(AbstractBackend):
+class MockHTTPBackend(AbstractBackend):
+
     def __init__(self, conf, ident):
-        super(HTTPBackend, self).__init__(ident)
+        super(MockHTTPBackend, self).__init__(ident)
         self._conf = conf
 
     @cached
-    def fetch_data(self, corpora, lang, word, lemma, **custom_args):
-        if lemma == 'unicode':
+    def fetch_data(self, corpora, lang, query_args):
+        lemma = query_args.get('lemma', None)
+        word = query_args.get('word', None)
+        if lemma == u'unicode':
             return [u"mocked HTTP backend output - unicode characters: ěščřžýáíé", True]
-        if lemma == 'false':
+        if lemma == u'false':
             return ["mocked HTTP backend output - not found", False]
-        if lemma == 'exception':
+        if lemma == u'lemma1':
+            return ['Lemma 1 response', True]
+        if lemma == u'lemma2':
+            return ['Lemma 2 response', True]
+        if lemma == u'exception':
             raise Exception("Mocked exception")
         return ["mocked HTTP backend output - word: %s, lemma: %s" % (word, lemma), True]
 
     @staticmethod
     def get_path():
         return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'backends/__init__.py')
+
+    def get_required_posattrs(self):
+        return self._conf['posAttrs']

@@ -85,7 +85,7 @@ class AbstractBackend(object):
         self._cache_path = None
         self._provider_id = provider_id
 
-    def fetch_data(self, corpora, lang, word, lemma, **custom_args):
+    def fetch_data(self, corpora, lang, query_args):
         raise NotImplementedError()
 
     def set_cache_path(self, path):
@@ -105,6 +105,16 @@ class AbstractBackend(object):
         By default the method returns True for all.
         """
         return True
+
+    def get_required_posattrs(self):
+        """
+        Which positional attributes are needed to
+        perform a query against the provider.
+
+        This is typically configured in provider's
+        JSON configuration.
+        """
+        return []
 
 
 class AbstractFrontend(object):
@@ -163,10 +173,18 @@ def find_implementation(path):
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids, corpora, lang, word, lemma, **custom_args):
+    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id):
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
+
+        arguments:
+        provider_ids -- list of defined providers we want to search in
+        maincorp_obj -- corpus object used to fetch actual positional attributes used
+                        to query the providers
+        corpora -- list of involved corpora IDs
+        lang -- user interface language (so we know how to localize the returned stuff)
+        token_id -- internal token ID user ask information about
         """
         raise NotImplementedError()
 

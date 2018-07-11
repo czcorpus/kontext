@@ -20,6 +20,7 @@ from typing import Dict, Any, List, Tuple, ClassVar
 
 from plugins.abstract import CorpusDependentPlugin
 import kontext
+import manatee
 
 
 class Response(object):
@@ -37,8 +38,7 @@ class Response(object):
 
 class AbstractBackend(object):
 
-    def fetch_data(self, corpora:List[str], lang:str, word:basestring, lemma:basestring,
-                   **custom_args:Dict[str, basestring]) -> Tuple[Any, bool]: ...
+    def fetch_data(self, corpora:List[str], lang:str, query_args:Dict[str, basestring]) -> Tuple[Any, bool]: ...
 
 
 class AbstractFrontend(object):
@@ -53,8 +53,8 @@ class AbstractFrontend(object):
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids:List[str], corpora:List[str], lang:str, word:basestring,
-                   lemma:basestring, **custom_args:Dict[str, basestring]) -> List[[Any, bool]]: ...
+    def fetch_data(self, provider_ids:List[str], maincorp_obj:manatee.Corpus, corpora:List[str],
+                   lang:str, token_id:int) -> List[[Any, bool]]: ...
 
     def get_required_structattrs(self) -> List[str]: ...
 

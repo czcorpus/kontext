@@ -33,9 +33,9 @@ class SQLite3Backend(AbstractBackend):
         self._query_tpl = conf['query']
 
     @cached
-    def fetch_data(self, corpora, lang, word, lemma, **custom_args):
+    def fetch_data(self, corpora, lang, query_args):
         cur = self._db.cursor()
-        cur.execute(self._query_tpl, (word, lemma))
+        cur.execute(self._query_tpl, (query_args['word'], query_args['lemma']))
         ans = cur.fetchone()
         if ans:
             return ans[0], True
@@ -79,14 +79,17 @@ class HTTPBackend(AbstractBackend):
             return urllib.quote(s.encode('utf-8'))
         return urllib.quote(s)
 
+    def get_required_posattrs(self):
+        return self._conf.get('posAttrs', [])
+
     @cached
-    def fetch_data(self, corpora, lang, word, lemma, **custom_args):
+    def fetch_data(self, corpora, lang, query_args):
         connection = self.create_connection()
         try:
             args = dict(
-                word=self.enc_val(word), lemma=self.enc_val(lemma),
                 ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
-                corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''), **custom_args)
+                corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
+                **dict((k, self.enc_val(v) ) for k, v in query_args.items()))
             logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
             connection.request('GET', self._conf['path'].format(**args).encode('utf-8', 'replace'))
             return self.process_response(connection)

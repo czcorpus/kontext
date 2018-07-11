@@ -59,8 +59,8 @@ def fetch_external_kwic_info(self, request):
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
         provider_all = []
         for word in words:
-            resp_data = kc.fetch_data(corpus_info.kwic_connect.providers, [self.corp.corpname] + self.args.align,
-                                      self.ui_lang, word, word)
+            resp_data = kc.fetch_data(corpus_info.kwic_connect.providers,
+                                      [self.corp.corpname] + self.args.align, self.ui_lang, word)
             provider_all = merge_results(provider_all, resp_data, word)
         ans = []
         for provider in provider_all:
@@ -90,12 +90,12 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
     def export_actions(self):
         return {concordance.Actions: [fetch_external_kwic_info]}
 
-    def fetch_data(self, provider_ids, corpora, lang, word, lemma, **custom_args):
+    def fetch_data(self, provider_ids, corpora, lang, lemma):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
                 if backend.enabled_for_corpora(corpora):
-                    data, status = backend.fetch_data(corpora, lang, word, lemma, **custom_args)
+                    data, status = backend.fetch_data(corpora, lang, dict(lemma=lemma))
                     ans.append(frontend.export_data(data, status, lang).to_dict())
             except EnvironmentError as ex:
                 logging.getLogger(__name__).error(u'KwicConnect backend error: {0}'.format(ex))
