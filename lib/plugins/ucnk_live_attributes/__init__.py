@@ -15,16 +15,7 @@
 """
 Interactive (ad hoc) subcorpus selection.
 
-Required XML configuration:
-
-element live_attributes {
-  element module { "ucnk_live_attributes" }
-  element js_module { "ucnkLiveAttributes" }
-  element max_attr_visible_chars {
-    attribute extension-by { "ucnk" }
-    xsd:integer
-  }
-}
+Required XML configuration: please see config.rng
 """
 
 import re

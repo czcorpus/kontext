@@ -50,7 +50,6 @@ class ToolbarConf(object):
 
 class AuthConf(object):
     def __init__(self, conf):
-        self.admins = conf.get('plugins', 'auth').get('ucnk:administrators', [])
         self.login_url = conf.get('plugins', 'auth')['login_url']
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
-         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
     <start>
         <element name="live_attributes">
             <element name="module">
@@ -10,6 +11,9 @@
                 <value>ucnkLiveAttributes</value>
             </element>
             <element name="max_attr_visible_chars">
+                <a:documentation>
+                    Cut longer attribute values to a specified size
+                </a:documentation>
                 <attribute name="extension-by">
                     <value>ucnk</value>
                 </attribute>

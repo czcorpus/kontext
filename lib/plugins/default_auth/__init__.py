@@ -166,7 +166,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         """
         Tests whether the current user's name belongs to the 'administrators' group
         """
-        return True
+        return False
 
     def validate_new_password(self, password):
         """

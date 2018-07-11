@@ -78,6 +78,21 @@ def update_5(doc):
         rm_srch.getparent().remove(rm_srch)
 
 
+def update_6(doc):
+    srch = doc.find('plugins/settings_storage')
+    srch2 = srch.find('module')
+    if srch2.text == 'default_settings_storage':
+        srch3 = srch.find('excluded_users')
+        if srch3 is not None:
+            srch3.attrib['extension-by'] = 'default'
+
+
+def update_7(doc):
+    srch = doc.find('plugins/getlang/fallback_lang')
+    if srch is not None:
+        srch.text = srch.text.replace('_', '-')
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.11.x '
