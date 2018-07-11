@@ -52,6 +52,14 @@ def fetch_token_detail(self, request):
     This is a controller action used by client to obtain
     data for a token. Token is identified by its position id
     (i.e. the one translated via attr.pos2str(...)).
+
+    hint: to use PoS:
+    try:
+        ta = self.corp.get_attr('pos')
+        pos = ta.pos2str(int(token_id))
+    except manatee.AttrNotFound:
+        pos = ''
+
     """
     def import_str(s):
         return import_string(s, self.corp.get_conf('ENCODING'))
@@ -67,16 +75,10 @@ def fetch_token_detail(self, request):
     except manatee.AttrNotFound:
         lemma = ''
 
-    try:
-        ta = self.corp.get_attr('pos')
-        pos = ta.pos2str(int(token_id))
-    except manatee.AttrNotFound:
-        pos = ''
-
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
-        resp_data = td.fetch_data(corpus_info.token_connect.providers,
-                                  word, lemma, pos, [self.corp.corpname] + self.args.align, self.ui_lang)
+        resp_data = td.fetch_data(corpus_info.token_connect.providers, [self.corp.corpname] + self.args.align,
+                                  self.ui_lang, word, lemma)
     return dict(items=[item for item in resp_data])
 
 
@@ -99,11 +101,11 @@ class DefaultTokenConnect(ProviderWrapper):
         super(DefaultTokenConnect, self).__init__(providers)
         self._corparch = corparch
 
-    def fetch_data(self, provider_ids, word, lemma, pos, corpora, lang):
+    def fetch_data(self, provider_ids, corpora, lang, word, lemma, **custom_args):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
-                data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
+                data, status = backend.fetch_data(corpora, lang, word, lemma, **custom_args)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))

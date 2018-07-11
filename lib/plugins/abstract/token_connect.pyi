@@ -37,8 +37,8 @@ class Response(object):
 
 class AbstractBackend(object):
 
-    def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, corpora:List[str],
-                   lang:str) -> Tuple[Any, bool]: ...
+    def fetch_data(self, corpora:List[str], lang:str, word:basestring, lemma:basestring,
+                   **custom_args:Dict[str, basestring]) -> Tuple[Any, bool]: ...
 
 
 class AbstractFrontend(object):
@@ -53,8 +53,8 @@ class AbstractFrontend(object):
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, tag:basestring,
-                   corpora:List[str], lang:str) -> List[[Any, bool]]: ...
+    def fetch_data(self, provider_ids:List[str], corpora:List[str], lang:str, word:basestring,
+                   lemma:basestring, **custom_args:Dict[str, basestring]) -> List[[Any, bool]]: ...
 
     def get_required_structattrs(self) -> List[str]: ...
 

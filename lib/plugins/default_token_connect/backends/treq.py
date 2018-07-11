@@ -18,7 +18,6 @@
 
 import json
 import logging
-import urllib
 
 from plugins.default_token_connect.backends.cache import cached
 from plugins.default_token_connect.backends import HTTPBackend
@@ -105,7 +104,7 @@ class TreqBackend(HTTPBackend):
         return ('http://' + self._conf['server']).encode('utf-8')
 
     @cached
-    def fetch_data(self, word, lemma, pos, corpora, lang):
+    def fetch_data(self, corpora, lang, word, lemma, **custom_args):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -113,7 +112,7 @@ class TreqBackend(HTTPBackend):
         treq_link = None
         if translat_corp and translat_lang:
             common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
-            args = dict(word=self.enc_val(word), lemma=self.enc_val(lemma), pos=self.enc_val(pos),
+            args = dict(word=self.enc_val(word), lemma=self.enc_val(lemma),
                         lang1=self.enc_val(primary_lang), lang2=self.enc_val(translat_lang),
                         groups=[self.enc_val(s) for s in common_groups])
             treq_link = (self.mk_server_addr() + '/index.php', self.mk_page_args(**args))

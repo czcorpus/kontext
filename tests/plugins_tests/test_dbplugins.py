@@ -25,6 +25,7 @@ CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)
 import sqlite3
 import time
 import unittest
+import os
 
 import redis
 
@@ -35,7 +36,7 @@ from plugins.sqlite3_db import DefaultDb
 # set test parameters
 TEST_TTL_METHODS = True  # set to False to speed up by skipping ttl testing which involves time.sleep()
 VERBOSE = False  # set to True to get some additional details, e.g. list contents etc.
-REDIS_HOST = 'localhost'
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = 6379
 REDIS_DB = 0
 SQLITE3_DB = ':memory:'

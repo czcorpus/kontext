@@ -31,7 +31,7 @@ class HTTPBackend(AbstractBackend):
         self._conf = conf
 
     @cached
-    def fetch_data(self, word, lemma, pos, corpora, lang):
+    def fetch_data(self, corpora, lang, word, lemma, **custom_args):
         if lemma == 'unicode':
             return [u"mocked HTTP backend output - unicode characters: ěščřžýáíé", True]
         if lemma == 'false':
