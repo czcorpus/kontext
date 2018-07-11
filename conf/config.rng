@@ -330,7 +330,7 @@
                     </element>
                     <element name="num_files">
                         <a:documentation>Maximum number of log files (log rotation</a:documentation>
-                        <data type="integer" />
+                        <data type="positiveInteger" />
                     </element>
                     <element name="values">
                         <a:documentation>Specifies values written to the application log
@@ -404,12 +404,12 @@
                         <a:documentation>Number of seconds cached files for the collocations page page
                         remain available. This also depends on how often a respective clean-up procedure runs.
                         </a:documentation>
-                        <data type="integer" />
+                        <data type="nonNegativeInteger" />
                     </element>
                     <element name="colls_cache_min_lines">
                         <a:documentation>Specifies a minimum number of items collocations data must contain to
                         be cacheable.</a:documentation>
-                        <data type="integer" />
+                        <data type="positiveInteger" />
                     </element>
                     <element name="default_corpora">
                         <a:documentation>Specifies a default corpous to be offered to a user
