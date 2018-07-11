@@ -27,6 +27,7 @@ class CacheMan(object):
         self.cache_path = cache_path
         self.cache_rows_limit = cache_rows_limit
         self.cache_ttl = cache_ttl_days * 24 * 60 * 60
+        self._conn = None
 
     def prepare_cache(self):
         """
@@ -38,8 +39,8 @@ class CacheMan(object):
             os.mkdir(db_dir)
         if os.path.isfile(self.cache_path):
             os.remove(self.cache_path)
-        conn = sqlite3.connect(self.cache_path)
-        c = conn.cursor()
+        self._conn = sqlite3.connect(self.cache_path)
+        c = self._conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS cache ("
                   "key text, "
                   "provider text, "
@@ -47,35 +48,28 @@ class CacheMan(object):
                   "found integer, "
                   "last_access integer NOT NULL, "
                   "PRIMARY KEY (key))")
-        conn.commit()
-        conn.close()
+        self._conn.commit()
 
     def clear_expired(self):
         """
         delete all items older then ttl
         """
-        conn = sqlite3.connect(self.cache_path)
-        c = conn.cursor()
+        c = self._conn.cursor()
         c.execute("DELETE FROM cache WHERE last_access <= ?", (time.time() - self.cache_ttl,))
-        conn.commit()
-        conn.close()
+        self._conn.commit()
 
     def clear_extra_rows(self):
         """
         delete the oldest rows so that the cache table contains no more than <cache_rows_limit> rows
         """
-        conn = sqlite3.connect(self.cache_path)
-        c = conn.cursor()
+        c = self._conn.cursor()
         c.execute("DELETE FROM cache WHERE key NOT IN (SELECT key FROM cache ORDER BY last_access DESC LIMIT ?)",
                   (self.cache_rows_limit,))
-        conn.commit()
-        conn.close()
+        self._conn.commit()
 
     def get_numrows(self):
-        conn = sqlite3.connect(self.cache_path)
-        c = conn.cursor()
+        c = self._conn.cursor()
         res = c.execute("SELECT COUNT(*) FROM cache").fetchone()
-        conn.close()
         return res[0]
 
     def get_rows_limit(self):
@@ -83,3 +77,10 @@ class CacheMan(object):
 
     def get_cache_path(self):
         return self.cache_path
+
+    def close(self):
+        self._conn.close()
+
+    @property
+    def conn(self):
+        return self._conn

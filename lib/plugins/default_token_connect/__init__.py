@@ -52,31 +52,20 @@ def fetch_token_detail(self, request):
     This is a controller action used by client to obtain
     data for a token. Token is identified by its position id
     (i.e. the one translated via attr.pos2str(...)).
-    """
-    def import_str(s):
-        return import_string(s, self.corp.get_conf('ENCODING'))
 
-    token_id = request.args['token_id']
-
-    wa = self.corp.get_attr('word')
-    word = import_str(wa.pos2str(int(token_id)))
-
-    try:
-        la = self.corp.get_attr('lemma')
-        lemma = import_str(la.pos2str(int(token_id)))
-    except manatee.AttrNotFound:
-        lemma = ''
-
+    hint: to use PoS:
     try:
         ta = self.corp.get_attr('pos')
         pos = ta.pos2str(int(token_id))
     except manatee.AttrNotFound:
         pos = ''
 
+    """
+    token_id = request.args['token_id']
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
-        resp_data = td.fetch_data(corpus_info.token_connect.providers,
-                                  word, lemma, pos, [self.corp.corpname] + self.args.align, self.ui_lang)
+        resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
+                                  [self.corp.corpname] + self.args.align, self.ui_lang, token_id)
     return dict(items=[item for item in resp_data])
 
 
@@ -99,11 +88,21 @@ class DefaultTokenConnect(ProviderWrapper):
         super(DefaultTokenConnect, self).__init__(providers)
         self._corparch = corparch
 
-    def fetch_data(self, provider_ids, word, lemma, pos, corpora, lang):
+    @staticmethod
+    def fetch_attr(corp, attr, token_id):
+        try:
+            mattr = corp.get_attr(attr)
+            return import_string(mattr.pos2str(int(token_id)), corp.get_conf('ENCODING'))
+        except manatee.AttrNotFound:
+            return ''
+
+    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
+            args = dict((attr, self.fetch_attr(maincorp_obj, attr, token_id))
+                        for attr in backend.get_required_posattrs())
             try:
-                data, status = backend.fetch_data(word, lemma, pos, corpora, lang)
+                data, status = backend.fetch_data(corpora, lang, args)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))

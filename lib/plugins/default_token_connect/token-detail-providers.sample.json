@@ -11,7 +11,8 @@
       "server": "en.wiktionary.org",
       "path": "/w/index.php?title={lemma}&action=render",
       "ssl": true,
-      "port": 443
+      "port": 443,
+      "posAttrs": ["lemma"]
     }
   }
 ]
