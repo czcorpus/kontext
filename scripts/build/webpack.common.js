@@ -30,81 +30,83 @@ const extractLess = new ExtractTextPlugin({
 
 const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
 
-module.exports = {
-    entry: {
-        coll: mkpath('js/pages/coll.ts'),
-        corplist: mkpath('js/pages/corplist.ts'),
-        fcs: mkpath('js/pages/fcs.ts'),
-        firstForm: mkpath('js/pages/firstForm.ts'),
-        freq: mkpath('js/pages/freq.ts'),
-        message: mkpath('js/pages/message.ts'),
-        queryHistory: mkpath('js/pages/queryHistory.ts'),
-        subcorpForm: mkpath('js/pages/subcorpForm.ts'),
-        subcorpList: mkpath('js/pages/subcorpList.ts'),
-        view: mkpath('js/pages/view.ts'),
-        wordlist: mkpath('js/pages/wordlist.ts'),
-        wordlistForm: mkpath('js/pages/wordlistForm.ts'),
-        login: mkpath('js/pages/login.ts'),
-        userProfile: mkpath('js/pages/userProfile.ts')
-    },
-    output: {
-        filename: '[name].js',
-        path: mkpath('dist'),
-        libraryTarget: 'var',
-        library: '[name]Page'
+module.exports = (env) => {
 
-    },
-    resolve: {
-        alias: {}, // filled in dynamically
-        modules: [
-            mkpath('js/.compiled'),
-            'node_modules'
-        ],
-        extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.jsx', '.js', '.json', '.css', '.less']
-    },
-    module: {
-        rules: [
-            {
-                test: /\.css$/,
-                use: extractLess.extract(['css-loader'])
-            },
-            {
-                test: /\.less$/,
-                use: extractLess.extract(['css-loader', 'less-loader']),
-            },
-            {
-                test: /\.(png|jpg|gif|svg)$/,
-                use: [
-                    {
-                        loader: 'file-loader',
-                        options: {
-                            emitFile: false,
-                            name: '../img/[name].[ext]'
+    return {
+        entry: {
+            coll: mkpath('js/pages/coll.ts'),
+            corplist: mkpath('js/pages/corplist.ts'),
+            fcs: mkpath('js/pages/fcs.ts'),
+            firstForm: mkpath('js/pages/firstForm.ts'),
+            freq: mkpath('js/pages/freq.ts'),
+            message: mkpath('js/pages/message.ts'),
+            queryHistory: mkpath('js/pages/queryHistory.ts'),
+            subcorpForm: mkpath('js/pages/subcorpForm.ts'),
+            subcorpList: mkpath('js/pages/subcorpList.ts'),
+            view: mkpath('js/pages/view.ts'),
+            wordlist: mkpath('js/pages/wordlist.ts'),
+            wordlistForm: mkpath('js/pages/wordlistForm.ts'),
+            login: mkpath('js/pages/login.ts'),
+            userProfile: mkpath('js/pages/userProfile.ts')
+        },
+        output: {
+            filename: '[name].js',
+            path: mkpath('dist'),
+            libraryTarget: 'var',
+            library: '[name]Page'
+
+        },
+        resolve: {
+            alias: {}, // filled in dynamically
+            modules: [
+                mkpath('js/.compiled'),
+                'node_modules'
+            ],
+            extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.jsx', '.js', '.json', '.css', '.less']
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.css$/,
+                    use: extractLess.extract(['css-loader'])
+                },
+                {
+                    test: /\.less$/,
+                    use: extractLess.extract(['css-loader', 'less-loader']),
+                },
+                {
+                    test: /\.(png|jpg|gif|svg)$/,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                emitFile: false,
+                                name: '../img/[name].[ext]'
+                            }
                         }
-                    }
-                ]
-            },
-            {
-                test: /\.tsx?$/,
-                loader: 'ts-loader'
-            },
-            {
-                test: /\.jsx$/,
-                loader: 'babel-loader',
-                exclude: /node_modules/,
-                query: {
-                    presets: ['env', 'react']
+                    ]
+                },
+                {
+                    test: /\.tsx?$/,
+                    use: [
+                        {
+                            loader: 'ts-loader',
+                            options: {
+                                transpileOnly: env ? !!env.TS_TRANSPILE_ONLY : false
+                            }
+                        }
+                    ]
                 }
-            }
+            ]
+        },
+        externals: [], // KonText build script adds things here (plug-ins' build.json conf)
+        plugins: [
+            new webpack.optimize.CommonsChunkPlugin({
+                name: 'common',
+                filename: 'common.js'
+            }),
+            extractLess,
+            new ProgressBarPlugin()
         ]
-    },
-    externals: [], // KonText build script adds things here (plug-ins' build.json conf)
-    plugins: [
-        new webpack.optimize.CommonsChunkPlugin({
-            name: 'common',
-            filename: 'common.js'
-        }),
-        extractLess,
-        new ProgressBarPlugin()
-    ]
+    }
 };
