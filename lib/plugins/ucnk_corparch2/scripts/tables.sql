@@ -71,6 +71,7 @@ ALTER TABLE corpora
 	ADD COLUMN bib_label_attr VARCHAR(63),
 	ADD COLUMN bib_id_struct VARCHAR(63),
 	ADD COLUMN bib_id_attr VARCHAR(63),
+	ADD COLUMN bib_group_duplicates INTEGER DEFAULT 0,
 	ADD COLUMN featured INTEGER DEFAULT 0,
 	ADD COLUMN ttdesc_id INTEGER;
 

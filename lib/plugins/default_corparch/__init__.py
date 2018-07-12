@@ -562,7 +562,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.desc = self._parse_meta_desc(meta_elm)
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
-            ans.group_duplicates = True if meta_elm.find(
+            ans.metadata.group_duplicates = True if meta_elm.find(
                 self.GROUP_DUPLICATES_KEY) is not None else False
             ans.metadata.avg_label_attr_len = getattr(
                 meta_elm.find('avg_label_attr_len'), 'text', None)
