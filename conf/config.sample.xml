@@ -119,7 +119,6 @@
             <root_elm_path>/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
             <max_num_hints extension-by="default">10</max_num_hints>
-            <max_num_favorites extension-by="default">15</max_num_favorites>
             <default_page_list_size extension-by="default">30</default_page_list_size>
         </corparch>
         <db>
@@ -175,6 +174,7 @@
         </taghelper>
         <user_items>
             <module>default_user_items</module>
+            <max_num_favorites extension-by="default">15</max_num_favorites>
         </user_items>
         <chart_export>
             <module>default_chart_export</module>

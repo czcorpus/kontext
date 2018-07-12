@@ -20,32 +20,7 @@ are passed through via the 'export' method which is recognized by KonText and th
 interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 
-Required config.xml/plugins entries (RelaxNG compact format):
-------------------------------------------------------------
-
-element corparch {
-    element module { "default_corparch" }
-    element js_module { text }
-    element file { text }  # a path to a configuration XML file
-    element root_elm_path { text } # an XPath query leading to a root element where configuration can be found
-    element tag_prefix {
-        attribute extension-by { "default" }
-        text  # a spec. character specifying that the following string is a tag/label
-    }
-    element max_num_hints {
-        attribute extension-by { "default" }
-        text  # maximum number of hints corpus selection widget shows
-              # (even if there are more results available)
-    }
-    element default_page_list_size {
-        attribute extension-by { "default" }
-        text  # number of items to be shown on 'available corpora' page
-    }
-    element max_num_favorites {
-        attribute extension-by { "default" }
-        xsd:integer
-    }
-}
+Required config.xml/plugins entries: please see config.rng
 
 
 Corplist.xml entries:
@@ -756,8 +731,8 @@ def create_instance(conf, auth, user_items):
     """
     return CorpusArchive(auth=auth,
                          user_items=user_items,
-                         file_path=conf.get('plugins', 'corparch')['file'],
-                         root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+                         file_path=conf.get('plugins', 'corparch')['default:file'],
+                         root_xpath=conf.get('plugins', 'corparch')['default:root_elm_path'],
                          tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
