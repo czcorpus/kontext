@@ -77,20 +77,20 @@ class TreqBackend(HTTPBackend):
         return lang1 in self.AVAIL_LANG_MAPPINGS and lang2 in self.AVAIL_LANG_MAPPINGS[lang1]
 
     @staticmethod
-    def mk_api_args(lang1, lang2, groups, word, lemma, pos):
+    def mk_api_args(lang1, lang2, groups, lemma):
         return [('left', lang1), ('right', lang2), ('viceslovne', 'false'), ('regularni', 'true'),
-                ('lemma', 'true'), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', word),
+                ('lemma', 'true'), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', lemma),
                 ('order', 'percDesc')]
 
     @staticmethod
-    def mk_page_args(lang1, lang2, groups, word, lemma, pos):
+    def mk_page_args(lang1, lang2, groups, lemma):
         return [('jazyk1', lang1), ('jazyk2', lang2), ('lemma', 'true'), ('aJeA', 'true'),
-                ('hledejCo', word)] + [('hledejKde[]', g) for g in groups]
+                ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
 
-    def mk_api_path(self, lang1, lang2, groups, word, lemma, pos):
+    def mk_api_path(self, lang1, lang2, groups, lemma):
         groups = ','.join(groups)
         args = [u'{0}={1}'.format(k, v) for k, v in self.mk_api_args(
-            lang1, lang2, groups, word, lemma, pos)]
+            lang1, lang2, groups, lemma)]
         return '/api.php?api=true&' + (u'&'.join(args)).encode('utf-8')
 
     def find_lang_common_groups(self, lang1, lang2):
@@ -119,7 +119,8 @@ class TreqBackend(HTTPBackend):
             connection = self.create_connection()
             try:
                 logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))
-                connection.request('GET', self.mk_api_path(**args))
+                connection.request('GET', self.mk_api_path(
+                    lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma']))
                 data, status = self.process_response(connection)
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
