@@ -246,8 +246,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:CitationInfo;
 
     }> = (props) => {
-
-        if (props.data['article_ref'] || props.data['default_ref']
+        if (props.data['article_ref'].length > 0 || props.data['default_ref']
                 || props.data['other_bibliography']) {
             return (
                 <>
