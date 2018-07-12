@@ -19,21 +19,49 @@
  */
 
 const merge = require('webpack-merge');
-const common = require('./scripts/build/webpack.common.js');
-const kontext = require('./scripts/build/kontext');
-const kplugins = require('./scripts/build/plugins');
+const common = require('./scripts/build/webpack.common');
 const webpack = require('webpack');
-const path = require('path');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
-const JS_PATH = path.resolve(__dirname, 'public/files/js');
-const CSS_PATH = path.resolve(__dirname, 'public/files/css');
-const THEMES_PATH = path.resolve(__dirname, 'public/files/themes');
-const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, 'conf/config.xml'));
 
-module.exports = (env) => merge(common(env), {
+module.exports = (env) => merge(common.wpConf(env), {
+	mode: 'production',
+	module: {
+		rules: [
+			{
+				test: /\.css$/,
+				use: [
+					{
+						loader: MiniCssExtractPlugin.loader
+					},
+					{ loader: 'css-loader' }
+				]
+			},
+			{
+				test: /\.less$/,
+				use: [
+					{
+						loader: MiniCssExtractPlugin.loader
+					},
+					{ loader: 'css-loader' },
+					{
+						loader: 'less-loader',
+						options: {
+							strictMath: true,
+							noIeCompat: true
+						}
+					}
+				]
+			}
+		]
+	},
 	plugins: [
+		new MiniCssExtractPlugin({
+			filename: "[name].css",
+			chunkFilename: "common.css"
+		}),
 		new OptimizeCssAssetsPlugin({
 			assetNameRegExp: /\.css/,
 			cssProcessorOptions: {
@@ -41,19 +69,14 @@ module.exports = (env) => merge(common(env), {
 				reduceIdents: false,
 				discardUnused: false
 			}
-    	}),
-		new UglifyJSPlugin({
-			parallel: 4 /* this value is based on the fact that most todays CPUs have >= 4 cores */
 		}),
-		new kplugins.PreparePlugin({
-            confDoc: CONF_DOC,
-            jsPath: JS_PATH,
-            cssPath: CSS_PATH,
-            themesPath: THEMES_PATH,
-            isProduction: true
+		new UglifyJSPlugin({
+			sourceMap: true,
+			parallel: 4 // we assume that even consumer cpus contain 4+ cores
 		}),
 		new webpack.DefinePlugin({
 			'process.env.NODE_ENV': JSON.stringify('production')
 		}),
-	]
+	],
+	devtool: "source-map"
 });

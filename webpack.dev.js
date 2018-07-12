@@ -19,26 +19,11 @@
  */
 
 const merge = require('webpack-merge');
-const common = require('./scripts/build/webpack.common.js');
-const kontext = require('./scripts/build/kontext');
-const kplugins = require('./scripts/build/plugins');
+const common = require('./scripts/build/webpack.common');
 const path = require('path');
 
-const JS_PATH = path.resolve(__dirname, 'public/files/js');
-const CSS_PATH = path.resolve(__dirname, 'public/files/css');
-const THEMES_PATH = path.resolve(__dirname, 'public/files/themes');
-const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, 'conf/config.xml'));
-
-module.exports = (env) => merge(common(env), {
-    plugins: [
-        new kplugins.PreparePlugin({
-            confDoc: CONF_DOC,
-            jsPath: JS_PATH,
-            cssPath: CSS_PATH,
-            themesPath: THEMES_PATH,
-            isProduction: false
-        })
-    ],
+module.exports = (env) => merge(common.wpConf(env), {
+    mode: 'development',
     devServer: {
         /* for NFS etc. use:
         watchOptions: {
@@ -50,8 +35,18 @@ module.exports = (env) => merge(common(env), {
         port: 9000,
         host: 'localhost',
         public: 'kontext.korpus.test',
-        publicPath: kontext.findActionPathPrefix(CONF_DOC) + '/files/dist/',
-        inline: false
+        publicPath: common.PUBLIC_PATH + '/files/dist/',
+        inline: false,
+        before: function(app) {
+            // In the devel-server mode, all the css is delivered via Webpack
+            // but at the same time our hardcoded <link rel="stylesheet" ... />
+            // elements cause browser to load non-available styles.
+            // So we always return an empty stuff with proper content type.
+            app.get(common.PUBLIC_PATH + '/files/dist/*.css', function(req, res) {
+                res.set('Content-Type', 'text/css');
+                res.send('');
+            });
+          }
     },
     devtool: "inline-source-map"
 });
