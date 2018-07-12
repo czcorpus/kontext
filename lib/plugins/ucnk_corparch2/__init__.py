@@ -211,7 +211,7 @@ def create_instance(conf, user_items, auth):
                          tag_prefix=conf.get('plugins', 'corparch')['ucnk:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['ucnk:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get(
-                             'default:default_page_list_size', None),
+                             'ucnk:default_page_list_size', None),
                          access_req_smtp_server=conf.get('plugins',
                                                          'corparch')['ucnk:access_req_smtp_server'],
                          access_req_sender=conf.get('plugins', 'corparch')[
