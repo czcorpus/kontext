@@ -21,7 +21,6 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 import { CorplistItemUcnk } from './common';
-import { CorpusInfo } from '../../models/common/layout';
 import { CorplistTableModel, CorplistTableModelState } from './corplist';
 
 export interface ViewModuleArgs {
@@ -331,8 +330,9 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             if (this.state.detailData) {
                 return (
                     <layoutViews.PopupBox
-                        onCloseClick={this._detailCloseHandler}
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                            onCloseClick={this._detailCloseHandler}
+                            customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
+                            takeFocus={true}>
                         <CorpusInfoBox data={this.state.detailData} isWaiting={this.state.isBusy} />
                     </layoutViews.PopupBox>
                 );

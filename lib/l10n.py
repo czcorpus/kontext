@@ -62,75 +62,6 @@ _formats = {}  # contains lang_code -> Formatter() pairs
 _current = local()  # thread-local variable stores per-request formatter
 
 
-class Formatter(object):
-    """
-    Formatter handles miscellaneous conversions of values to strings.
-    """
-    def __init__(self, conf):
-        self.conf = conf
-
-    def format_number(self, v, mask=None):
-        """
-        Formats a number according to the current session locale. By default,
-        two decimal places are displayed in case of float numbers. This can be
-        modified ad-hoc using 'mask' parameter.
-
-        arguments:
-        v -- value to be converted; None is permitted (in such case, None is returned)
-        mask -- allows e.g. changing number of decimal places passed to the formatter (e.g. '%01.8f'); please note
-        that using some formatting masks may lead to unexpected results
-        """
-        if v is not None:
-            ans = ''
-
-            if type(v) in (int, long):
-                n1 = str(v)
-                n2 = ''
-            elif type(v) is float:
-                if mask is None:
-                    mask = '%01.2f'
-                n1, n2 = (mask % v).split('.')
-            else:
-                raise TypeError('format_number accepts only int and float types, %s obtained' % (type(v).__name__,))
-
-            for i, v in enumerate(n1[::-1]):
-                if i > 0 and i % self.conf['numbers']['numberGrouping'] == 0:
-                    ans += self.conf['numbers']['thousandSeparator']
-                ans += v
-            ans = ans[::-1]
-            if n2:
-                ans += '%s%s' % (self.conf['numbers']['decimalSeparator'], n2)
-        else:
-            ans = None
-        return ans
-
-
-def configure(languages):
-    """
-    Configures the package. You can call this only once (once the application starts).
-    It loads all supported languages and creates respective Formatter objects.
-
-    arguments:
-    languages -- list of lang codes (cs_CZ, en_US, ...)
-    """
-    root_dir = '%s/../locale' % os.path.dirname(__file__)
-    for item in os.listdir(root_dir):
-        if item in languages:
-            _formats[item] = Formatter(json.load(open('%s/%s/formats.json' % (root_dir, item))))
-    if not 'en_US' in _formats:
-        _formats['en_US'] = Formatter(json.load(open('%s/en_US/formats.json' % (root_dir, ))))
-
-
-def activate(lang):
-    """
-    Per-request activation of a specific formatting
-
-    arguments:
-    lang -- a language code (cs_CZ, en_US,...)
-    """
-    _current.formatter = _formats[lang]
-
-
 def import_string(s, from_encoding):
     """
     Imports a string from Manatee to KonText
@@ -164,18 +95,6 @@ def export_string(s, to_encoding):
         return s.decode('utf-8').encode(to_encoding)
 
 
-def format_number(v, mask=None):
-    """
-    Converts a number (float, int) to a string with respect
-    to configured formatting attached to current language.
-
-    arguments:
-    v -- int or float number to be converted
-    mask -- optional formatting string
-    """
-    return _current.formatter.format_number(v, mask)
-
-
 def sort(iterable, loc, key=None, reverse=False):
     """
     Creates new sorted list from passed list (or any iterable data) according to the passed locale.
@@ -190,48 +109,12 @@ def sort(iterable, loc, key=None, reverse=False):
     return sorted(iterable, cmp=collator.compare, key=key, reverse=reverse)
 
 
-def number_formatting(key=None):
-    """
-    Returns number formatting related configuration defined in respective formats.json file.
-    Both, a single value and all the values can be retrieved.
-
-    arguments:
-    key -- concrete value; if none specified then all the key->value pairs are returned
-
-    returns:
-    a string if a key is specified and the value exists
-    or a dict if no key is provided but the 'numbers' section still exists in formats.json
-    or None if nothing is found
-    """
-    ans = _current.formatter.conf.get('numbers')
-    if key is not None and ans is not None:
-        ans = ans.get(key)
-    return ans
-
-
 def time_formatting():
     """
     Returns a time formatting string (as used by time.strftime)
     according to the currently selected formats.json.
     """
     return _current.formatter.conf.get('time')
-
-
-def date_formatting():
-    """
-    Returns a date formatting string (as used by time.strftime)
-    according to the currently selected formats.json.
-    """
-    return _current.formatter.conf.get('date')
-
-
-def datetime_formatting(separator=' '):
-    """
-    Returns combined formatting for date and time:
-    [date format string][separator][time format string]
-    according to the currently selected formats.json
-    """
-    return '%s%s%s' % (date_formatting(), separator, time_formatting())
 
 
 def escape(s):

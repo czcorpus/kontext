@@ -160,13 +160,11 @@ class MaintenanceWsgiApp(WsgiApp):
     def __init__(self):
         super(MaintenanceWsgiApp, self).__init__()
         translation.load_translations(settings.get('global', 'translations'))
-        l10n.configure(settings.get('global', 'translations'))
 
     def __call__(self, environ, start_response):
         from controller.maintenance import MaintenanceController
         ui_lang = self.get_lang(environ)
         translation.activate(ui_lang)
-        l10n.activate(ui_lang)
         request = Request(environ)
         app = MaintenanceController(request=request, ui_lang=ui_lang)
         status, headers, sid_is_valid, body = app.run()
@@ -188,12 +186,10 @@ class KonTextWsgiApp(WsgiApp):
         os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
-        l10n.configure(settings.get('global', 'translations'))
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
         translation.activate(ui_lang)
-        l10n.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
         app_url_prefix = settings.get_str('global', 'action_path_prefix', '')
         if app_url_prefix and environ['PATH_INFO'].startswith(app_url_prefix):

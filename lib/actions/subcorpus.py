@@ -24,7 +24,7 @@ from main_menu import MainMenu
 from translation import ugettext as _
 import plugins
 import l10n
-from l10n import import_string, format_number
+from l10n import import_string
 import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings
@@ -347,9 +347,9 @@ class Subcorpus(Querying):
             corpusName=self._human_readable_corpname(),
             subCorpusName=subcname,
             origSubCorpusName=sc.orig_subcname if sc.is_published else subcname,
-            corpusSize=format_number(sc.size()),
-            subCorpusSize=format_number(sc.search_size()),
-            created=time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
+            corpusSize=sc.size(),
+            subCorpusSize=sc.search_size(),
+            created=time.mktime(sc.created.timetuple()),
             description=sc.description,
             extended_info={}
         )
