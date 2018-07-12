@@ -71,19 +71,19 @@ class Corpora(Kontext):
         ans = {
             'corpname': import_str(corpus_name),
             'description': import_str(corpus.get_info()),
-            'size': l10n.format_number(int(corpus.size())),
+            'size': int(corpus.size()),
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
             'citation_info': citation_info
         }
         try:
-            ans['attrlist'] = [{'name': item, 'size': l10n.format_number(int(corpus.get_attr(item).id_range()))}
+            ans['attrlist'] = [{'name': item, 'size': int(corpus.get_attr(item).id_range())}
                                for item in corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = {'error': _('Failed to load')}
-        ans['structlist'] = [{'name': item, 'size': l10n.format_number(int(corpus.get_struct(item).size()))}
+        ans['structlist'] = [{'name': item, 'size': int(corpus.get_struct(item).size())}
                              for item in corpus.get_conf('STRUCTLIST').split(',')]
         return ans
 

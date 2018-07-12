@@ -34,7 +34,7 @@ import plugins.abstract
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
-from l10n import format_number, corpus_get_conf
+from l10n import corpus_get_conf
 from translation import ugettext as _
 import scheduled
 import templating
@@ -1180,7 +1180,6 @@ class Kontext(Controller):
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         # util functions
-        result['format_number'] = partial(format_number)
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
         result['to_json'] = val_to_js

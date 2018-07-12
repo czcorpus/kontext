@@ -21,6 +21,7 @@ import time
 import smtplib
 from email.mime.text import MIMEText
 import json
+from datetime import datetime
 
 from plugins import inject
 import plugins
@@ -75,8 +76,8 @@ class DefaultErrorReporting(AbstractIssueReporting):
         s = smtplib.SMTP(self._smtp_server)
 
         msg = MIMEText(text, 'plain', 'utf-8')
-        msg['Subject'] = _('KonText feedback from user {0} for {1}').format(username,
-                                                                            time.strftime(l10n.datetime_formatting()))
+        msg['Subject'] = _('KonText feedback from user {0} for {1}').format(
+            username, datetime.now().isoformat().rsplit('.')[0])
         msg['From'] = self._mail_sender
         msg['To'] = ', '.join(self._mail_recipients)
         msg.add_header('Reply-To', user_email)

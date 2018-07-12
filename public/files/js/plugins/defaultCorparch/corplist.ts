@@ -20,7 +20,6 @@ import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatelessModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
