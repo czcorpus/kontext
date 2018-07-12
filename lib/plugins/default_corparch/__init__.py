@@ -308,7 +308,7 @@ class DeafultCorplistProvider(CorplistProvider):
                         tests.append(True)
                     elif s in (corp['desc'].lower() if corp['desc'] else ''):
                         tests.append(True)
-                        found_in.append(_('description'))
+                        found_in.append('defaultCorparch__found_in_desc')
                     else:
                         tests.append(False)
                 tests.append(self.matches_size(corp, min_size, max_size))

@@ -195,13 +195,13 @@ class Backend(DatabaseBackend):
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
-                where_cond.append('(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
-                values_cond.append('%{0}%'.format(substr))
-                values_cond.append('%{0}%'.format(substr))
-                values_cond.append('%{0}%'.format(substr))
+                where_cond.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
+                values_cond.append(u'%{0}%'.format(substr))
+                values_cond.append(u'%{0}%'.format(substr))
+                values_cond.append(u'%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
-            where_cond.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond.append(u'({0})'.format(' OR '.join(
+                u'kc.keyword_id = %s' for _ in range(len(keywords)))))
             for keyword in keywords:
                 values_cond.append(keyword)
         if min_size > 0:

@@ -130,8 +130,9 @@ class DeafultCorplistProvider(CorplistProvider):
         def get_found_in(corp, phrases):
             ans = []
             for phrase in phrases:
-                if phrase in corp.description.lower():
-                    ans.append(_('description'))
+                phrase = phrase.lower()
+                if phrase not in corp.name.lower() and phrase in corp.description.lower():
+                    ans.append('defaultCorparch__found_in_desc')
                     break
             return ans
 
