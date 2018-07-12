@@ -127,7 +127,8 @@ class Backend(DatabaseBackend):
     def load_featured_corpora(self, user_lang):
         cursor = self._db.cursor()
         desc_col = 'c.description_{0}'.format(user_lang[:2])
-        cursor.execute('SELECT c.name AS corpus_id, ifnull(rc.name, c.name) AS name, {0} AS description, c.size '
+        cursor.execute('SELECT c.id AS corpus_id, c.id, ifnull(rc.name, c.name) AS name, '
+                       '{0} AS description, c.size '
                        'FROM kontext_corpus AS c '
                        'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
                        'WHERE c.active = 1 AND c.featured = 1'.format(desc_col))
