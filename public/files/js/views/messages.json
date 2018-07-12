@@ -1152,7 +1152,7 @@
         "subclist__update_public_desc_btn": "Aktualizovat veřejný popis",
         "subclist__subc_desc_updated": "Popis subkorpusu byl upraven.",
         "subclist__ex_post_publish_warning": "Berte prosím na vědomí, že pouze vyhledávky provedené po tomto publikování budou veřejně přístupné (případné sdílené adresy před publikováním nebudou i nadále fungovat)",
-        "subclist__ex_post_desc_update_warning": "Zveřejněný subkorpus již není možno odpublikovat, ale je možné upravit veřejný popis dokud subkorpus u sebe nesmažete. Pokud subkorpus odstraníte, jeho veřejná kopie zůstane i nadále k dispozici, ale vy již nebudete mít možnost ji jakkoliv měnit.",
+        "subclist__ex_post_desc_update_warning": "Zveřejněný subkorpus již není možno odpublikovat, ale je možné upravovat veřejný popis dokud subkorpus u sebe nesmažete. Pokud subkorpus odstraníte, jeho veřejná kopie zůstane i nadále k dispozici, ale vy již nebudete mít možnost ji jakkoliv měnit.",
         "subclist__delete_subcorp": "Smazat",
         "subclist__subc_delete_confirm_{subc}": "Opravdu chcete smazat subkorpus {subc}?",
         "subclist__subc_deleted": "Subkorpus byl smazán",
