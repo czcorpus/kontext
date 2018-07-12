@@ -59,11 +59,13 @@ class Backend(DatabaseBackend):
             'SELECT c.id as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
             'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
             'c.requestable, c.featured, c.text_types_db AS `database`, '
-            '(CASE WHEN c.bib_label_attr THEN c.bib_label_struct || \'.\' || c.bib_label_attr ELSE NULL END) '
-            '  AS label_attr, '
-            '(CASE WHEN c.bib_id_attr THEN c.bib_id_struct || \'.\' || c.bib_id_attr ELSE NULL END) AS id_attr, '
-            '(CASE WHEN c.speech_segment_attr THEN c.speech_segment_struct || \'.\' || c.speech_segment_attr '
-            '  ELSE NULL END) AS speech_segment, '
+            '(CASE WHEN c.bib_label_attr IS NOT NULL THEN c.bib_label_struct || \'.\' || c.bib_label_attr '
+            '  ELSE NULL END) AS label_attr, '
+            '(CASE WHEN c.bib_id_attr IS NOT NULL THEN c.bib_id_struct || \'.\' || c.bib_id_attr ELSE NULL END) '
+            '  AS id_attr, '
+            '(CASE WHEN c.speech_segment_attr IS NOT NULL THEN c.speech_segment_struct || \'.\' || '
+            '  c.speech_segment_attr ELSE NULL END) AS speech_segment, '
+            'c.bib_group_duplicates, '
             'tc.id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
             'c.size, rc.info, rc.name, rc.rencoding AS encoding, rc.language '
             'FROM kontext_corpus AS c '
@@ -81,13 +83,13 @@ class Backend(DatabaseBackend):
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
-                where_cond.append('(rc.name LIKE ? OR c.id LIKE ? OR rc.info LIKE ?)')
-                values_cond.append('%{0}%'.format(substr))
-                values_cond.append('%{0}%'.format(substr))
-                values_cond.append('%{0}%'.format(substr))
+                where_cond.append(u'(rc.name LIKE ? OR c.id LIKE ? OR rc.info LIKE ?)')
+                values_cond.append(u'%{0}%'.format(substr))
+                values_cond.append(u'%{0}%'.format(substr))
+                values_cond.append(u'%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
-            where_cond.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = ?' for _ in range(len(keywords)))))
+            where_cond.append(u'({0})'.format(' OR '.join(
+                'ukc.keyword_id = ?' for _ in range(len(keywords)))))
             for keyword in keywords:
                 values_cond.append(keyword)
         if min_size > 0:
@@ -125,7 +127,8 @@ class Backend(DatabaseBackend):
     def load_featured_corpora(self, user_lang):
         cursor = self._db.cursor()
         desc_col = 'c.description_{0}'.format(user_lang[:2])
-        cursor.execute('SELECT c.name AS corpus_id, ifnull(rc.name, c.name) AS name, {0} AS description, c.size '
+        cursor.execute('SELECT c.id AS corpus_id, c.id, ifnull(rc.name, c.name) AS name, '
+                       '{0} AS description, c.size '
                        'FROM kontext_corpus AS c '
                        'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
                        'WHERE c.active = 1 AND c.featured = 1'.format(desc_col))

@@ -130,8 +130,9 @@ class DeafultCorplistProvider(CorplistProvider):
         def get_found_in(corp, phrases):
             ans = []
             for phrase in phrases:
-                if phrase in corp.description.lower():
-                    ans.append(_('description'))
+                phrase = phrase.lower()
+                if phrase not in corp.name.lower() and phrase in corp.description.lower():
+                    ans.append('defaultCorparch__found_in_desc')
                     break
             return ans
 
@@ -243,13 +244,15 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.speech_overlap_attr = row['speech_overlap_attr']
             ans.speech_overlap_val = row['speech_overlap_val']
             ans.use_safe_font = row['use_safe_font']
-            ans.metadata.id_attr = row['id_attr']
-            ans.metadata.label_attr = row['label_attr']
+            ans.metadata.id_attr = row['id_attr'].encode('utf-8') if row['id_attr'] else None
+            ans.metadata.label_attr = row['label_attr'].encode(
+                'utf-8') if row['label_attr'] else None
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = [x for x in (
                 row['keywords'].split(',') if row['keywords'] else []) if x]
             ans.metadata.desc = row['ttdesc_id']
+            ans.metadata.group_duplicates = bool(row['bib_group_duplicates'])
             ans.manatee.encoding = row['encoding']
             ans.manatee.description = row['info']
             ans.manatee.size = row['size']

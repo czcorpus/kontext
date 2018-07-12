@@ -43,6 +43,7 @@ CREATE TABLE kontext_corpus (
     bib_label_attr TEXT,
     bib_id_struct TEXT,
     bib_id_attr TEXT,
+    bib_group_duplicates INTEGER DEFAULT 0,
     featured INTEGER DEFAULT 0,
     ttdesc_id INTEGER,
     description_cs TEXT,

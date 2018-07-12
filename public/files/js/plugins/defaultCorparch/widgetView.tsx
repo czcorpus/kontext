@@ -391,16 +391,17 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 <a onClick={handleClick}>
                     {props.data.name}
                 </a>
-                {
-                    props.data.found_in ?
-                        <span className="found-in">({util.translate('defaultCorparch__found_in_{values}',
-                            {values: props.data.found_in.join(', ')})})</span> :
-                        null
-                }
                 {'\u00a0'}
                 <span className="num">
                     {props.data.size_info}
                 </span>
+                {
+                    props.data.found_in.length > 0 ?
+                        <span className="found-in">,{'\u00a0'}
+                            {props.data.found_in.map(foundIn => util.translate(foundIn))}
+                        </span>
+                    : null
+                }
             </p>
         );
     };
