@@ -22,12 +22,6 @@
                 </attribute>
                 <data type="integer" />
             </element>
-            <element name="max_num_favorites">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
-                <data type="integer" />
-            </element>
             <element name="default_label">
                 <attribute name="extension-by">
                     <value>ucnk</value>

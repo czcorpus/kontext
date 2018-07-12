@@ -21,12 +21,19 @@ def process_document(xml_doc, single_upd=None):
 
 
 def update_1(doc):
+    """
+    Redis_conc_cache is now the "default_conc_cache"
+    """
     srch = doc.find('/plugins/conc_cache/module')
     if srch is not None and srch.text == 'redis_conc_cache':
         srch.text = 'default_conc_cache'
 
 
 def update_2(doc):
+    """
+    For the 'query_storage' plug-in, remove deprecated
+    attribute num_kept_record and replace it with ttl_days.
+    """
     srch = doc.find('/plugins/query_storage/num_kept_records')
     if srch is not None:
         srch.getparent().remove(srch)
@@ -42,6 +49,10 @@ def update_2(doc):
 
 
 def update_3(doc):
+    """
+    Celery backend task time limit can be now configured
+    in KonText.
+    """
     srch = doc.find('/global/calc_backend')
     if srch is not None:
         parent = srch.getparent()
@@ -53,6 +64,9 @@ def update_3(doc):
 
 
 def update_4(doc):
+    """
+    We require a new top-level section "fcs" (can be empty)
+    """
     srch = doc.find('/corpora')
     if srch is not None:
         parent = srch.getparent()
@@ -63,6 +77,11 @@ def update_4(doc):
 
 
 def update_5(doc):
+    """
+    Thanks to the update (4) we should move fcs-related
+    existing config 'fcs_search_attributes' to the new
+    'fcs' section.
+    """
     srch2 = doc.find('/fcs')
     srch2.tail = '\n    '
     new_elm = etree.SubElement(srch2, 'search_attributes')
@@ -79,6 +98,11 @@ def update_5(doc):
 
 
 def update_6(doc):
+    """
+    For the 'settings_storage' plug-in, if there is
+    'excluded_users' then we add the 'extension-by'
+    attribute.
+    """
     srch = doc.find('plugins/settings_storage')
     srch2 = srch.find('module')
     if srch2.text == 'default_settings_storage':
@@ -88,9 +112,45 @@ def update_6(doc):
 
 
 def update_7(doc):
+    """
+    For the 'get_lang' plug-in, fallback_lang values
+    should be now properly formatted
+    (en_US --> en-US etc.)
+    """
     srch = doc.find('plugins/getlang/fallback_lang')
     if srch is not None:
         srch.text = srch.text.replace('_', '-')
+
+
+def update_8(doc):
+    """
+    Move 'max_num_favorites' from the 'corparch' plug-in
+    to the 'user_items' plug-in.
+    """
+    srch = doc.find('plugins/corparch/max_num_favorites')
+    if srch is not None:
+        srch.getparent().remove(srch)
+    srch2 = doc.find('plugins/user_items')
+    if srch2:
+        new_elm = etree.SubElement(srch2, 'max_num_favorites')
+        new_elm.attrib['extension-by'] = 'default'
+        new_elm.tail = '\n        '
+
+
+def update_9(doc):
+    """
+    For the 'corparch' plug-in (but only the 'default_corparch'
+    version) add extension-by=default to 'file' and 'root_elm_path'.
+    """
+    srch = doc.find('plugins/corparch')
+    srch2 = srch.find('module')
+    if srch2.text == 'default_corparch':
+        srch3 = srch.find('file')
+        if srch3 is not None:
+            srch3.attrib['extension-by'] = 'default'
+        srch4 = srch.find('root_elm_path')
+        if srch4 is not None:
+            srch4.attrib['extension-by'] = 'default'
 
 
 if __name__ == '__main__':
