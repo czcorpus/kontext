@@ -95,7 +95,7 @@ export class ConcDetailModel extends StatefulModel {
 
     private kwicTokenNum:number;
 
-    private tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+    private tokenConnectData:PluginInterfaces.TokenConnect.TCData;
 
     private kwicLength:number;
 
@@ -169,7 +169,10 @@ export class ConcDetailModel extends StatefulModel {
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.tokenConnectPlg = tokenConnectPlg;
-        this.tokenConnectData = Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>();
+        this.tokenConnectData = {
+            token: null,
+            renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>()
+        };
         this.concDetail = null;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -426,7 +429,10 @@ export class ConcDetailModel extends StatefulModel {
     }
 
     private resetTokenConnect():void {
-        this.tokenConnectData = this.tokenConnectData.clear();
+        this.tokenConnectData = {
+            token: null,
+            renders: this.tokenConnectData.renders.clear()
+        };
     }
 
     getPlayingRowIdx():number {
@@ -630,14 +636,15 @@ export class ConcDetailModel extends StatefulModel {
                 return this.tokenConnectPlg.fetchTokenConnect(corpusId, tokenNum);
 
             } else {
-                return new RSVP.Promise<Array<PluginInterfaces.TokenConnect.DataAndRenderer>>((resolve:(data)=>void, reject:(err)=>void) => {
-                    resolve(null);
-                });
+                return RSVP.resolve<PluginInterfaces.TokenConnect.TCData>(null);
             }
         })().then(
             (data) => {
                 if (data) {
-                    this.tokenConnectData = Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(data);
+                    this.tokenConnectData = {
+                        token: data.token,
+                        renders: data.renders
+                    };
                     this.lineIdx = lineIdx;
                     return true;
 
@@ -745,12 +752,12 @@ export class ConcDetailModel extends StatefulModel {
         return this.mode;
     }
 
-    getTokenConnectData():Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer> {
+    getTokenConnectData():PluginInterfaces.TokenConnect.TCData {
         return this.tokenConnectData;
     }
 
     hasTokenConnectData():boolean {
-        return this.tokenConnectData.size > 0;
+        return this.tokenConnectData.renders.size > 0;
     }
 
     getIsBusy():boolean {
