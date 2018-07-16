@@ -64,9 +64,9 @@ def fetch_token_detail(self, request):
     token_id = request.args['token_id']
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
-        resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
-                                  [self.corp.corpname] + self.args.align, self.ui_lang, token_id)
-    return dict(items=[item for item in resp_data])
+        token, resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
+                                         [self.corp.corpname] + self.args.align, self.ui_lang, token_id)
+    return dict(token=token, items=[item for item in resp_data])
 
 
 class ProviderWrapper(AbstractTokenConnect):
@@ -107,7 +107,8 @@ class DefaultTokenConnect(ProviderWrapper):
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
                 raise ex
-        return ans
+        word = self.fetch_attr(maincorp_obj, 'word', token_id)
+        return word, ans
 
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)

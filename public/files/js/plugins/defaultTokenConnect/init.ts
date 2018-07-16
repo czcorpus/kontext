@@ -45,7 +45,7 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
     }
 
-    fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<Array<PluginInterfaces.TokenConnect.DataAndRenderer>> {
+    fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<PluginInterfaces.TokenConnect.TCData> {
         const args = new MultiDict();
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
@@ -55,17 +55,19 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
             this.pluginApi.createActionUrl('fetch_token_detail'),
             args
 
-        ).then(
-            (data:PluginInterfaces.TokenConnect.Response) =>
-                data.items.map<PluginInterfaces.TokenConnect.DataAndRenderer>(x => {
-                    return {
+        ).then((data:PluginInterfaces.TokenConnect.Response) => {
+            return {
+                token: data.token,
+                renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(
+                    data.items.map(x => ({
                         renderer: this.selectRenderer(x.renderer),
                         contents: x.contents,
                         found: x.found,
                         heading: x.heading
-                    };
-                })
-        );
+                    }))
+                )
+            };
+        });
     }
 
     selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
