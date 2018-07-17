@@ -136,26 +136,49 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             return this.state.collapse ? {display: 'none'} : {display: 'block'};
         }
 
+        _getStateDisplayExamples() {
+            if (this.props.pdtEx.length === 0 && this.props.pcedtEx.length === 0) {
+                return {display: 'none'}
+            } else {
+                return {display: 'block'}
+            }
+        }
+
+        _getStateDisplayPDT() {
+            if (this.props.pdtEx.length === 0) {
+                return {display: 'none'}
+            } else {
+                return {display: 'block'}
+            }
+        }
+
+        _getStateDisplayPCEDT() {
+            if (this.props.pcedtEx.length === 0) {
+                return {display: 'none'}
+            } else {
+                return {display: 'block'}
+            }
+        }
+
         render() {
             return (
                 <div>
-                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    <a className="vallexExpand" style={this._getStateDisplayExamples()} onClick={this._clickHandler}>{this._textHandler()}
                     </a>
                     <div className="PDTVallexExtra" style={this._getStateDisplay()}>
-
-                        <ul className="PDTExamples">
+                        <ul className="PDTExamples" style={this._getStateDisplayPDT()}>
                             <li className="ExamplesH">Examples from PDT</li>
                             {this.props.pdtEx.map((listValue, i) => {
-                                if (listValue.length !== 0) {
-                                return <li className="PDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                if (listValue.length !== 0)
+                                {return <li className="PDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
                                 }
                             })}
                         </ul>
-                        <ul className="PCEDTExamples">
+                        <ul className="PCEDTExamples" style={this._getStateDisplayPCEDT()}>
                             <li className="ExamplesH">Examples from PCEDT</li>
                             {this.props.pcedtEx.map((listValue, i) => {
-                                if (listValue.length !== 0) {
-                                return <li className="PCEDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                if (listValue.length !== 0)
+                                {return <li className="PCEDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
                                 }
                             })}
                         </ul>
