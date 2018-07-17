@@ -130,8 +130,9 @@ class DeafultCorplistProvider(CorplistProvider):
         def get_found_in(corp, phrases):
             ans = []
             for phrase in phrases:
-                if phrase in corp.description.lower():
-                    ans.append(_('description'))
+                phrase = phrase.lower()
+                if phrase not in corp.name.lower() and phrase in corp.description.lower():
+                    ans.append('defaultCorparch__found_in_desc')
                     break
             return ans
 
@@ -195,7 +196,6 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._max_page_size = max_page_size
         self._registry_lang = registry_lang
         self._corpus_info_cache = {}
-        self._all_featured_corpora = None
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
         self._descriptions = defaultdict(lambda: {})
@@ -210,6 +210,10 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
     @property
     def user_items(self):
         return self._user_items
+
+    @property
+    def backend(self):
+        return self._backend
 
     def _parse_color(self, code):
         code = code.lower()
@@ -240,13 +244,15 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.speech_overlap_attr = row['speech_overlap_attr']
             ans.speech_overlap_val = row['speech_overlap_val']
             ans.use_safe_font = row['use_safe_font']
-            ans.metadata.id_attr = row['id_attr']
-            ans.metadata.label_attr = row['label_attr']
+            ans.metadata.id_attr = row['id_attr'].encode('utf-8') if row['id_attr'] else None
+            ans.metadata.label_attr = row['label_attr'].encode(
+                'utf-8') if row['label_attr'] else None
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = [x for x in (
                 row['keywords'].split(',') if row['keywords'] else []) if x]
             ans.metadata.desc = row['ttdesc_id']
+            ans.metadata.group_duplicates = bool(row['bib_group_duplicates'])
             ans.manatee.encoding = row['encoding']
             ans.manatee.description = row['info']
             ans.manatee.size = row['size']
@@ -256,10 +262,11 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         return None
 
     def _export_untranslated_label(self, plugin_api, text):
-        if self._registry_lang[:2] == plugin_api.user_lang[:2]:
-            return text
-        else:
-            return u'{0} [{1}]'.format(text, _('translation not available'))
+        """
+        This plug-in is able to load multi-language descriptions
+        so here we don't have to add any stuff here
+        """
+        return text
 
     def corpus_list_item_from_row(self, plugin_api, row):
         keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else []) if x]
@@ -348,7 +355,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 elif art['role'] == 'other':
                     corp.citation_info.other_bibliography = art['entry']
             if row['ttdesc_id'] not in self._descriptions:
-                for drow in self._backend.load_description(row['ttdesc_id']):
+                for drow in self._backend.load_ttdesc(row['ttdesc_id']):
                     self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
                     self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
         return self._corpus_info_cache.get(corpus_id, None)
@@ -425,11 +432,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         return {actions.user.User: [get_favorite_corpora]}
 
     def _export_featured(self, plugin_api):
-        if self._all_featured_corpora is None:
-            # let's cache featured list
-            self._all_featured_corpora = [x for x in self.list_corpora(plugin_api).values()
-                                          if x.featured]
-        return [x.to_dict() for x in self._all_featured_corpora]
+        return [dict(r) for r in self.backend.load_featured_corpora(plugin_api.user_lang)]
 
     def export(self, plugin_api):
         return dict(

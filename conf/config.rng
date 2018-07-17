@@ -44,7 +44,8 @@
     </define>
 
     <define name="customPluginConfiguration">
-        <a:documentation>Non-core configuration of a plug-in</a:documentation>
+        <a:documentation>Non-core configuration of a plug-in. Each plug-in should come with its
+        custom config.rng file to validate its configuration subtree.</a:documentation>
         <zeroOrMore>
             <choice>
                 <ref name="customSimpleElement" />
@@ -329,7 +330,7 @@
                     </element>
                     <element name="num_files">
                         <a:documentation>Maximum number of log files (log rotation</a:documentation>
-                        <data type="integer" />
+                        <data type="positiveInteger" />
                     </element>
                     <element name="values">
                         <a:documentation>Specifies values written to the application log
@@ -403,12 +404,12 @@
                         <a:documentation>Number of seconds cached files for the collocations page page
                         remain available. This also depends on how often a respective clean-up procedure runs.
                         </a:documentation>
-                        <data type="integer" />
+                        <data type="nonNegativeInteger" />
                     </element>
                     <element name="colls_cache_min_lines">
                         <a:documentation>Specifies a minimum number of items collocations data must contain to
                         be cacheable.</a:documentation>
-                        <data type="integer" />
+                        <data type="positiveInteger" />
                     </element>
                     <element name="default_corpora">
                         <a:documentation>Specifies a default corpous to be offered to a user
@@ -449,11 +450,45 @@
                             <text />
                         </element>
                     </optional>
+                </interleave>
+            </element>
+            <element name="fcs">
+                <interleave>
                     <optional>
-                        <element name="fcs_search_attributes">
+                        <element name="provider_heading">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="provider_website">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="template_css_url">
+                            <choice>
+                                <text />
+                                <oneOrMore>
+                                    <element name="item">
+                                        <text />
+                                    </element>
+                                </oneOrMore>
+                            </choice>
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="template_header_inject_file">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="search_attributes">
                             <oneOrMore>
                                 <element name="item">
-                                    <a:documentation>A positional attribute used for search</a:documentation>
+                                    <a:documentation>A positional attribute used for search. A list of
+                                        possible candidates is expected to satisfy any installed corpus.
+                                        From these candidates, first applicable value is always used.
+                                    </a:documentation>
                                     <text />
                                 </element>
                             </oneOrMore>
@@ -471,20 +506,18 @@
                     <element name="auth">
                         <a:documentation>Authentication plug-in configuration</a:documentation>
                         <ref name="plugin_common" />
-                        <interleave>
-                            <element name="anonymous_user_id">
-                                <data type="integer" />
-                            </element>
-                            <element name="auth_cookie_name">
-                                <text />
-                            </element>
-                            <element name="login_url">
-                                <text />
-                            </element>
-                            <element name="logout_url">
-                                <text />
-                            </element>
-                        </interleave>
+                        <element name="anonymous_user_id">
+                            <data type="nonNegativeInteger" />
+                        </element>
+                        <element name="auth_cookie_name">
+                            <text />
+                        </element>
+                        <element name="login_url">
+                            <data type="anyURI" />
+                        </element>
+                        <element name="logout_url">
+                            <data type="anyURI" />
+                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="application_bar">
@@ -533,15 +566,6 @@
                     <element name="settings_storage">
                         <a:documentation>A plug-in to store and retrieve user settings</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="excluded_users">
-                            <a:documentation>A list of user IDs without persistent settings. Please
-                            note that anonymous user is always included automatically</a:documentation>
-                            <zeroOrMore>
-                                <element name="item">
-                                    <text />
-                                </element>
-                            </zeroOrMore>
-                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="sessions">
@@ -549,19 +573,13 @@
                         <ref name="plugin_common" />
                         <element name="ttl">
                             <a:documentation>number of seconds of inactivity</a:documentation>
-                            <data type="integer" />
+                            <data type="positiveInteger" />
                         </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="corparch">
                         <a:documentation>A plug-in for searching available corpora</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="file"> <!-- TODO: this is debatable -->
-                            <text />
-                        </element>
-                        <element name="root_elm_path">
-                            <text /> <!-- TODO: this is debatable as others may not need this -->
-                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="live_attributes">

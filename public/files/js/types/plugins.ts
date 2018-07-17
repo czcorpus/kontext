@@ -371,6 +371,7 @@ export namespace PluginInterfaces {
 
 
         export interface Response {
+            token:string;
             items:Array<{
                 renderer:string;
                 contents:Array<[string, string]>;
@@ -392,9 +393,14 @@ export namespace PluginInterfaces {
             heading:string;
         }
 
+        export interface TCData {
+            token:string;
+            renders:Immutable.List<DataAndRenderer>;
+        }
+
         export interface IPlugin {
 
-            fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
+            fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<TCData>;
 
             selectRenderer(typeId:string):Renderer;
         }

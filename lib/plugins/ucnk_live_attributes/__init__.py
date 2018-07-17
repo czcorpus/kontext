@@ -15,16 +15,7 @@
 """
 Interactive (ad hoc) subcorpus selection.
 
-Required XML configuration:
-
-element live_attributes {
-  element module { "ucnk_live_attributes" }
-  element js_module { "ucnkLiveAttributes" }
-  element max_attr_visible_chars {
-    attribute extension-by { "ucnk" }
-    xsd:integer
-  }
-}
+Required XML configuration: please see config.rng
 """
 
 import re
@@ -357,7 +348,7 @@ class LiveAttributes(AbstractLiveAttributes):
                 ans[attr].add(k + (c,))
         # now each line contains: (shortened_label, identifier, label, num_grouped_items, num_positions)
         # where num_grouped_items is initialized to 1
-        if corpus_info.group_duplicates:
+        if corpus_info.metadata.group_duplicates:
             self._group_bib_items(ans, bib_label)
         tmp_ans.clear()
         return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,

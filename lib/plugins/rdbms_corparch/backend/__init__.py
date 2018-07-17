@@ -158,7 +158,7 @@ class DatabaseBackend(object):
         """
         raise NotImplementedError()
 
-    def load_description(self, desc_id):
+    def load_ttdesc(self, desc_id):
         """
         """
         raise NotImplementedError()
@@ -169,6 +169,9 @@ class DatabaseBackend(object):
     def load_all_corpora(self, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
         """
         """
+        raise NotImplementedError()
+
+    def load_featured_corpora(self, user_lang):
         raise NotImplementedError()
 
     def load_registry_table(self, corpus_id, variant):

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import {ActionDispatcher} from '../app/dispatcher';
 import {Kontext} from '../types/common';
-import { CorpusInfoModel, CorpusInfoType, AnyOverviewInfo, CorpusInfoResponse, SubcorpusInfo, CorpusInfo, CitationInfo } from '../models/common/layout';
+import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo } from '../models/common/layout';
 
 
 export interface OverviewAreaProps {
@@ -57,7 +57,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const ItemAndNumRow:React.SFC<{
         brackets:boolean;
         label:string;
-        value:string;
+        value:number;
 
     }> = (props) => {
 
@@ -65,7 +65,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <tr className="dynamic">
                     <th>&lt;{props.label}&gt;</th>
-                    <td className="numeric">{props.value}</td>
+                    <td className="numeric">{he.formatNumber(props.value, 0)}</td>
                 </tr>
             );
 
@@ -73,7 +73,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <tr className="dynamic">
                     <th>{props.label}</th>
-                    <td className="numeric">{props.value}</td>
+                    <td className="numeric">{he.formatNumber(props.value, 0)}</td>
                 </tr>
             );
         }
@@ -82,7 +82,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     // ---------------------------- <AttributeList /> -----------------------------
 
     const AttributeList:React.SFC<{
-        rows:Array<{name:string; size:string}>|{error:boolean};
+        rows:Array<{name:string; size:number}>|{error:boolean};
 
     }> = (props) => {
 
@@ -113,7 +113,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     // ---------------------------- <StructureList /> -----------------------------
 
     const StructureList:React.SFC<{
-        rows:Array<{name:string; size:string}>;
+        rows:Array<{name:string; size:number}>;
 
     }> = (props) => {
 
@@ -159,7 +159,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <dt>{he.translate('global__description')}:</dt>
                         <dd>{props.data.description}</dd>
                         <dt>{he.translate('global__size')}:</dt>
-                        <dd>{props.data.size} {he.translate('global__positions')}
+                        <dd>{he.formatNumber(props.data.size, 0)} {he.translate('global__positions')}
                         </dd>
                         <dt>{he.translate('global__website')}:</dt>
                         <dd>{renderWebLink()}</dd>
@@ -214,7 +214,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
                     <dd>{props.data.subCorpusSize}</dd>
                     <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                    <dd>{props.data.created}</dd>
+                    <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
                     {props.data.extended_info.cql ?
                         <>
                             <dt>{he.translate('global__subc_query')}:</dt>
@@ -246,8 +246,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:CitationInfo;
 
     }> = (props) => {
-
-        if (props.data['article_ref'] || props.data['default_ref']
+        if (props.data['article_ref'].length > 0 || props.data['default_ref']
                 || props.data['other_bibliography']) {
             return (
                 <>
@@ -255,7 +254,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}
                     </h4>
                     <div className="html" dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
-                    {props.data.article_ref ?
+                    {props.data.article_ref.length > 0 ?
                         (<>
                             <h4>{he.translate('global__references')}</h4>
                             {props.data.article_ref.map((item, i) => {

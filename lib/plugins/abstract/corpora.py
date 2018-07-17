@@ -70,6 +70,7 @@ class CorpusMetadata(DictLike):
         self.desc = {}
         self.keywords = {}
         self.interval_attrs = []
+        self.group_duplicates = False
 
 
 class CitationInfo(DictLike):

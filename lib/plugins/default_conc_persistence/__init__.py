@@ -20,23 +20,7 @@
 A simple implementation of conc_persistence plug-in based on KeyValueStorage
 as a back-end.
 
-required config.xml entries:
-
-element conc_persistence {
-  element module { "default_conc_persistence" }
-  element ttl_days {
-    attribute extension-by { "default" }
-    xsd:integer
-  }
-  # define the following if you want this plug-in to handle storing persistent
-  # concordances via a Sqlite3 database. This is very recommended in case you
-  # use redis_db as main key-value storage (in such case, the archived items
-  # would end-up in RAM which is not very effective).
-  element archive_dir {
-    attribute extension-by { "default" }
-    text
-  }*
-}
+required config.xml entries: please see config.rng
 """
 
 import hashlib

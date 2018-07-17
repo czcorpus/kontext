@@ -10,17 +10,14 @@
             <element name="js_module">
                 <value>defaultQueryStorage</value>
             </element>
-            <element name="page_append_records">
-                <data type="integer" />
-            </element>
             <element name="page_num_records">
-                <data type="integer" />
+                <data type="positiveInteger" />
             </element>
-            <element name="num_kept_records">
+            <element name="ttl_days">
                 <attribute name="extension-by">
                     <value>default</value>
                 </attribute>
-                <data type="integer" />
+                <data type="positiveInteger" />
             </element>
         </element>
     </start>

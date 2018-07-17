@@ -117,6 +117,18 @@ class UcnkCorpArch2(RDBMSCorparch):
                                                        min_size=min_size, max_size=max_size, offset=offset,
                                                        limit=limit if limit > -1 else 1000000000)
 
+    def export_favorite(self, plugin_api):
+        ans = []
+        favitems = plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api)
+        favitems_corpids = [x.corpora[0]['id'] for x in favitems]
+        descriptions = self.backend.load_corpora_descriptions(
+            favitems_corpids, plugin_api.user_lang)
+        for item in favitems:
+            tmp = item.to_dict()
+            tmp['description'] = descriptions.get(item.corpora[0]['id'], None)
+            ans.append(tmp)
+        return ans
+
     def export(self, plugin_api):
         ans = super(UcnkCorpArch2, self).export(plugin_api)
         ans['initial_keywords'] = plugin_api.session.get(
@@ -196,13 +208,14 @@ def create_instance(conf, user_items, auth):
     return UcnkCorpArch2(backend=backend,
                          auth=auth,
                          user_items=user_items,
-                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                         tag_prefix=conf.get('plugins', 'corparch')['ucnk:tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['ucnk:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get(
-                             'default:default_page_list_size', None),
+                             'ucnk:default_page_list_size', None),
                          access_req_smtp_server=conf.get('plugins',
                                                          'corparch')['ucnk:access_req_smtp_server'],
-                         access_req_sender=conf.get('plugins', 'corparch')['ucnk:access_req_sender'],
+                         access_req_sender=conf.get('plugins', 'corparch')[
+                             'ucnk:access_req_sender'],
                          access_req_recipients=conf.get('plugins',
                                                         'corparch')['ucnk:access_req_recipients'],
                          default_label=conf.get('plugins', 'corparch')['ucnk:default_label'],

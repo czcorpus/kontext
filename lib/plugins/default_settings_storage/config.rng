@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="settings_storage">
+            <element name="module">
+                <value>default_settings_storage</value>
+            </element>
+            <element name="excluded_users">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <zeroOrMore>
+                    <element name="item">
+                        <data type="nonNegativeInteger" />
+                    </element>
+                </zeroOrMore>
+            </element>
+        </element>
+    </start>
+</grammar>

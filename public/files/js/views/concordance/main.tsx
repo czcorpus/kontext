@@ -623,7 +623,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     ConcordanceDashboardProps['concViewProps'],
     {
         hasConcDetailData:boolean;
-        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        tokenConnectData:PluginInterfaces.TokenConnect.TCData;
         tokenConnectIsBusy:boolean;
         concDetailModelIsBusy:boolean;
         refsDetailData:Immutable.List<[RefsColumn, RefsColumn]>;
@@ -784,8 +784,10 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _shouldDisplayConcDetailBox() {
-            return this.state.hasConcDetailData || this.state.tokenConnectData.size > 0 ||
-                    this.state.concDetailModelIsBusy || this.state.tokenConnectIsBusy;
+            return this.state.hasConcDetailData
+                    || this.state.tokenConnectData.renders.size > 0
+                    || this.state.concDetailModelIsBusy
+                    || this.state.tokenConnectIsBusy;
         }
 
         render() {

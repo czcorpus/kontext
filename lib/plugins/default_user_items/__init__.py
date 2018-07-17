@@ -106,7 +106,7 @@ class UserItems(AbstractUserItems):
 
     @property
     def max_num_favorites(self):
-        return int(self._settings.get('plugins', 'corparch')['default:max_num_favorites'])
+        return int(self._settings.get('plugins', 'user_items')['default:max_num_favorites'])
 
     @staticmethod
     def _mk_key(user_id):

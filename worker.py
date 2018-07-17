@@ -62,6 +62,7 @@ initializer.init_plugin('sessions')
 initializer.init_plugin('user_items')
 initializer.init_plugin('corparch')
 initializer.init_plugin('live_attributes', optional=True)
+initializer.init_plugin('dispatch_hook', optional=True)
 
 translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization

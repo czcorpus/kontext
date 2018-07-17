@@ -18,11 +18,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import sqlite3
 import time
 import unittest
 
-from mock_http_backend import HTTPBackend
 from plugins.default_token_connect import DefaultTokenConnect, init_provider
 from plugins.default_token_connect.backends.cache import mk_token_connect_cache_key
 from plugins.default_token_connect.cache_man import CacheMan
@@ -30,51 +28,87 @@ from plugins.default_token_connect.cache_man import CacheMan
 logging.basicConfig()
 
 
+CACHE_DB_PATH = '/tmp/kontext_mock_tckc.sqlite3'
+
+
+class MockAttr(object):
+
+    def __init__(self, attr_mapping):
+        self._attr_mapping = attr_mapping
+
+    def pos2str(self, posid):
+        return self._attr_mapping.get(posid, None)
+
+
+class MockCorpus(object):
+
+    def __init__(self, attr_mapping=None):
+        self._attr_mapping = attr_mapping if attr_mapping is not None else {}
+
+    def get_attr(self, attr):
+        return MockAttr(self._attr_mapping)
+
+    def get_conf(self, v):
+        if v == 'ENCODING':
+            return 'UTF-8'
+        return None
+
+
 class CacheTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(CacheTest, self).__init__(*args, **kwargs)
         corparch = None
 
-        mocked_json = [{"ident": "wiktionary_for_ic_9_en", "heading": {"en_US": "Wiktionary", "cs_CZ": "Wiktionary"},
-                        "backend": "plugins.default_token_connect.mock_http_backend.HTTPBackend",
-                        "frontend": "plugins.default_token_connect.frontends.RawHtmlFrontend",
-                        "conf": {"server": "en.wiktionary.org", "path": "/w/index.php?title={lemma}&action=render",
-                                 "ssl": True, "port": 443}}]
+        mocked_json = [{
+            "ident": "wiktionary_for_ic_9_en",
+            "heading": {"en_US": "Wiktionary", "cs_CZ": "Wiktionary"},
+            "backend": "plugins.default_token_connect.mock_http_backend.MockHTTPBackend",
+            "frontend": "plugins.default_token_connect.frontends.RawHtmlFrontend",
+            "conf":
+                {
+                    "server": "en.wiktionary.org",
+                    "path": "/w/index.php?title={lemma}&action=render",
+                    "ssl": True,
+                    "port": 443,
+                    "posAttrs": ['lemma']
+                }
+        }]
 
         providers_conf = mocked_json
         self.tok_det = DefaultTokenConnect(dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf),
                                            corparch)
-        self.cache_path = '/tmp/token_cache/token_connect_cache.db'
+        self.cache_path = CACHE_DB_PATH
         cache_rows_limit = 10
         cache_ttl_days = 7
-        self.cacheMan = CacheMan(self.cache_path, cache_rows_limit, cache_ttl_days)
+        self.cache_man = CacheMan(self.cache_path, cache_rows_limit, cache_ttl_days)
         self.tok_det.set_cache_path(self.cache_path)
 
     def setUp(self):
         """
         create an empty cache db file with properly structured table
         """
-        self.cacheMan.prepare_cache()
+        self.cache_man.prepare_cache()
+
+    def tearDown(self):
+        self.cache_man.close()
 
     def raise_exc(self):
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "exception", "pos",
-                                "corpora", "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "corpora", "lang", dict(lemma=u"exception"))
 
     def test_get_path(self):
         """
         check whether the cache path set above using set_cache_path is returned using get_cache_path
         """
-        self.assertEqual(self.cacheMan.get_cache_path(), self.cache_path)
+        self.assertEqual(self.cache_man.get_cache_path(), self.cache_path)
 
     def test_cache_item(self):
         """
         fetch two items from http backend, check whether they get stored in cache by checking number of rows
         """
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
-                                "lemma", "pos", ["corpora"], "lang")
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
-                                "position", "pos", ["corpora"], "lang")
-        self.assertEqual(self.cacheMan.get_numrows(), 2)
+        mc = MockCorpus({1: u'lemma1', 2: u'lemma2'})
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
+        self.assertEqual(self.cache_man.get_numrows(), 2)
 
     def test_retrieve_cached_item(self):
         """
@@ -82,16 +116,13 @@ class CacheTest(unittest.TestCase):
         then fetch the same two items again and check whether they are retrieved correctly from cache
         and that the cache contains only two items
         """
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'],
-                                        "word", "lemma", "pos", ["corpora"], "lang")
-        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", ["corpora"],
-                                        "lang")
+        mc = MockCorpus({1: u'lemma1', 2: u'lemma2'})
+        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
+        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
 
-        cached1 = self.tok_det.fetch_data(
-            ['wiktionary_for_ic_9_en'], "word", "lemma", "pos", ["corpora"], "lang")
-        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", ["corpora"],
-                                          "lang")
-        self.assertEqual(self.cacheMan.get_numrows(), 2)
+        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
+        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
+        self.assertEqual(self.cache_man.get_numrows(), 2)
         self.assertEqual(orig1, cached1)
         self.assertEqual(orig2, cached2)
 
@@ -100,22 +131,17 @@ class CacheTest(unittest.TestCase):
         fetch two items from http backend to cache them, get their last access value from cache
         then fetch the same two items again after a time interval and check whether the last access values changed
         """
-        key1 = mk_token_connect_cache_key("word", "lemma", "pos", [
-            "corpora"], "lang", "wiktionary_for_ic_9_en")
-        key2 = mk_token_connect_cache_key("word", "position", "pos", [
-            "corpora"], "lang", "wiktionary_for_ic_9_en")
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
-                                "lemma", "pos", ["corpora"], "lang")
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
-                                "position", "pos", ["corpora"], "lang")
+        mc = MockCorpus({1: u'lemma1', 2: u'lemma2'})
+        key1 = mk_token_connect_cache_key("wiktionary_for_ic_9_en", ["corpora"], "lang", dict(lemma=u'lemma1'))
+        key2 = mk_token_connect_cache_key("wiktionary_for_ic_9_en", ["corpora"], "lang", dict(lemma=u'lemma2'))
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
         la1bef = self.get_last_access(key1)
         la2bef = self.get_last_access(key2)
         time.sleep(1)
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word",
-                                "lemma", "pos", ["corpora"], "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
         time.sleep(1)
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "position", "pos", ["corpora"],
-                                "lang")
+        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
         la1aft = self.get_last_access(key1)
         la2aft = self.get_last_access(key2)
         self.assertNotEqual(la1bef, la1aft)
@@ -126,21 +152,20 @@ class CacheTest(unittest.TestCase):
         fill the cache db with excessive number of rows, run cache maintenance, check whether size was decreased
         to the limit
         """
-        limit = self.cacheMan.get_rows_limit()
+        limit = self.cache_man.get_rows_limit()
         self.fill_cache(limit + 10)
-        self.cacheMan.clear_extra_rows()
-        self.assertEqual(self.cacheMan.get_numrows(), limit)
+        self.cache_man.clear_extra_rows()
+        self.assertEqual(self.cache_man.get_numrows(), limit)
 
     def test_unicode(self):
         """
         cache a unicode encoded string, check whether it gets returned correctly
         the unicode-encoded result is returned from the mocked backend when searching for lemma "unicode"
         """
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "unicode", "pos", ["corpora"],
-                                        "lang")
+        mc = MockCorpus({1: u'unicode'})
+        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
 
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "unicode", "pos", ["corpora"],
-                                          "lang")
+        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
         self.assertEqual(orig1, cached1)
 
     def test_status_true_false(self):
@@ -148,14 +173,11 @@ class CacheTest(unittest.TestCase):
         cache a "found" and a "not-found" result returned by the mocked backend, check whether
         the "found" / "not-found" information gets cached and retrieved correctly
         """
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "false", "pos", ["corpora"],
-                                        "lang")
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "false", "pos", ["corpora"],
-                                          "lang")
-        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", ["corpora"],
-                                        "lang")
-        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], "word", "lemma", "pos", ["corpora"],
-                                          "lang")
+        mc = MockCorpus()
+        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
+        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 1)
+        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
+        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ["corpora"], "lang", 2)
         self.assertEqual(orig1[0].get('contents')[0][1][1],
                          cached1[0].get('contents')[0][1][1], False)
         self.assertEqual(orig2[0].get('contents')[0][1][1],
@@ -169,33 +191,29 @@ class CacheTest(unittest.TestCase):
     # -----------
     def list_cached(self):
         print "--- cache contents: ---"
-        conn = sqlite3.connect(self.cacheMan.get_cache_path())
+        conn = self.cache_man.conn
         c = conn.cursor()
         for row in c.execute("SELECT * FROM cache"):
             print row
-        conn.close()
         print "------"
 
     def fill_cache(self, numrows=10):
-        conn = sqlite3.connect(self.cacheMan.get_cache_path())
+        conn = self.cache_man.conn
         c = conn.cursor()
         for i in range(0, numrows):
             c.execute("INSERT INTO cache VALUES (?, ?, ?, ?, ?)", (i, 'some-provider', i, True, i))
         conn.commit()
-        conn.close()
 
     def get_specific_row(self, key):
-        conn = sqlite3.connect(self.cacheMan.get_cache_path())
+        conn = self.cache_man.conn
         c = conn.cursor()
         res = c.execute("SELECT data FROM cache WHERE key = ?", (key,)).fetchone()
-        conn.close()
         return res
 
     def get_last_access(self, key):
-        conn = sqlite3.connect(self.cacheMan.get_cache_path())
+        conn = self.cache_man.conn
         c = conn.cursor()
         last_access = c.execute("SELECT last_access FROM cache WHERE key = ?", (key,)).fetchone()
-        conn.close()
         if last_access:
             return last_access[0]
         else:

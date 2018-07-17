@@ -21,10 +21,9 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { CorplistItem } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
-import { CorpusInfoType, CorpusInfo } from '../../models/common/layout';
+import { CorpusInfoType } from '../../models/common/layout';
 
 
 export interface CorplistTableProps {
@@ -245,8 +244,9 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             if (this.state.detailData) {
                 return (
                     <layoutViews.PopupBox
-                        onCloseClick={this._detailCloseHandler}
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                            onCloseClick={this._detailCloseHandler}
+                            customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
+                            takeFocus={true}>
                         <CorpusInfoBox data={{...this.state.detailData, type:CorpusInfoType.CORPUS}}
                                     isWaiting={this.state.isBusy} />
                     </layoutViews.PopupBox>

@@ -152,10 +152,19 @@ class Backend(DatabaseBackend):
         cursor.execute('SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY id')
         return cursor.fetchall()
 
-    def load_description(self, desc_id):
+    def load_ttdesc(self, desc_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
         return cursor.fetchall()
+
+    def load_corpora_descriptions(self, corp_ids, user_lang):
+        cursor = self._db.cursor()
+        placeholders = ', '.join(['%s'] * len(corp_ids))
+        col = 'description_{0}'.format(user_lang[:2])
+        cursor.execute('SELECT name AS corpname, {0} AS contents '
+                       'FROM corpora '
+                       'WHERE name IN ({1})'.format(col, placeholders), corp_ids)
+        return dict((r['corpname'], r['contents']) for r in cursor.fetchall())
 
     def load_corpus(self, corp_id):
         cursor = self._db.cursor()
@@ -163,10 +172,12 @@ class Backend(DatabaseBackend):
             'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
             'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
             'c.requestable, c.featured, c.text_types_db AS `database`, '
-            'IF (c.bib_label_attr, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) AS label_attr, '
-            'IF (c.bib_id_attr, CONCAT(c.bib_id_struct, \'.\', c.bib_id_attr), NULL) AS id_attr, '
-            'IF (c.speech_segment_attr, CONCAT(c.speech_segment_struct, \'.\', c.speech_segment_attr), NULL) '
-            '  AS speech_segment, '
+            'IF (c.bib_label_attr IS NOT NULL, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) '
+            '  AS label_attr, '
+            'IF (c.bib_id_attr IS NOT NULL, CONCAT(c.bib_id_struct, \'.\', c.bib_id_attr), NULL) AS id_attr, '
+            'IF (c.speech_segment_attr IS NOT NULL, CONCAT(c.speech_segment_struct, \'.\', c.speech_segment_attr), '
+            '  NULL) AS speech_segment, '
+            'bib_group_duplicates, '
             'c.ttdesc_id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
             'c.size, rc.info, rc.name, rc.rencoding AS encoding, rc.language '
             'FROM corpora AS c '
@@ -184,13 +195,13 @@ class Backend(DatabaseBackend):
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
-                where_cond.append('(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
-                values_cond.append('%{0}%'.format(substr))
-                values_cond.append('%{0}%'.format(substr))
-                values_cond.append('%{0}%'.format(substr))
+                where_cond.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
+                values_cond.append(u'%{0}%'.format(substr))
+                values_cond.append(u'%{0}%'.format(substr))
+                values_cond.append(u'%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
-            where_cond.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond.append(u'({0})'.format(' OR '.join(
+                u'kc.keyword_id = %s' for _ in range(len(keywords)))))
             for keyword in keywords:
                 values_cond.append(keyword)
         if min_size > 0:
@@ -224,6 +235,16 @@ class Backend(DatabaseBackend):
                'OFFSET %s').format(' AND '.join(where_cond))
         c.execute(sql, values_cond)
         return c.fetchall()
+
+    def load_featured_corpora(self, user_lang):
+        cursor = self._db.cursor()
+        desc_col = 'c.description_{0}'.format(user_lang[:2])
+        cursor.execute('SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
+                       '{0} AS description, c.size '
+                       'FROM corpora AS c '
+                       'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+                       'WHERE c.active = 1 AND c.featured = 1'.format(desc_col))
+        return cursor.fetchall()
 
     def load_registry_table(self, corpus_id, variant):
         cols = (['rc.{0} AS {1}'.format(v, k) for k, v in self.REG_COLS_MAP.items()] +

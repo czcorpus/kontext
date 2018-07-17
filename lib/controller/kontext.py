@@ -34,7 +34,7 @@ import plugins.abstract
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
-from l10n import format_number, corpus_get_conf
+from l10n import corpus_get_conf
 from translation import ugettext as _
 import scheduled
 import templating
@@ -326,13 +326,8 @@ class Kontext(Controller):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
     def _user_has_persistent_settings(self):
-        conf = settings.get('plugins', 'settings_storage')
-        excluded_users = conf.get('excluded_users', None)
-        if excluded_users is None:
-            excluded_users = []
-        else:
-            excluded_users = [int(x) for x in excluded_users]
-        return self.session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
+        with plugins.runtime.SETTINGS_STORAGE as sstorage:
+            return self.session_get('user', 'id') not in sstorage.get_excluded_users() and not self.user_is_anonymous()
 
     def get_current_aligned_corpora(self):
         return [self.args.corpname] + self.args.align
@@ -1185,7 +1180,6 @@ class Kontext(Controller):
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         # util functions
-        result['format_number'] = partial(format_number)
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
         result['to_json'] = val_to_js

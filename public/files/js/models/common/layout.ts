@@ -171,8 +171,8 @@ export interface CorpusInfoResponse {
     corpname:string;
     description:string;
     size:number;
-    attrlist:Array<{name:string; size:string}>;
-    structlist:Array<{name:string; size:string}>;
+    attrlist:Array<{name:string; size:number}>;
+    structlist:Array<{name:string; size:number}>;
     web_url:string;
     citation_info:CitationInfo;
 }
@@ -185,7 +185,7 @@ export interface SubcorpusInfoResponse {
     corpusId:string;
     corpusName:string;
     corpusSize:string; // formatted num
-    created:string;
+    created:number; // UNIX timestamp
     extended_info:{[key:string]:string};
     subCorpusName:string;
     origSubCorpusName:string;

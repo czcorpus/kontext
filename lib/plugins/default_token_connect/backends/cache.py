@@ -25,11 +25,12 @@ from functools import wraps
 from hashlib import md5
 
 
-def mk_token_connect_cache_key(word, lemma, pos, corpora, lang, provider_id):
+def mk_token_connect_cache_key(provider_id, corpora, lang, query_args):
     """
     Returns a hashed cache key based on the passed parameters.
     """
-    return md5('%r%r%r%r%r%r' % (word, lemma, pos, corpora, lang, provider_id)).hexdigest()
+    args = sorted(query_args.items(), key=lambda x: x[0])
+    return md5('%r%r%r%r' % (provider_id, corpora, lang, args)).hexdigest()
 
 
 def cached(f):
@@ -41,21 +42,20 @@ def cached(f):
     """
 
     @wraps(f)
-    def wrapper(self, word, lemma, pos, corpora, lang):
+    def wrapper(self, corpora, lang, query_args):
         """
         get full path to the cache_db_file using a method defined in the abstract class that reads the value from
         kontext's config.xml; if the cache path is not defined, do not use caching:
         """
         cache_path = self.get_cache_path()
         if cache_path:
-            key = mk_token_connect_cache_key(
-                word, lemma, pos, corpora, lang, self.get_provider_id())
+            key = mk_token_connect_cache_key(self.get_provider_id(), corpora, lang, query_args)
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()
             res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
             # if no result is found in the cache, call the backend function
             if res is None:
-                res = f(self, word, lemma, pos, corpora, lang)
+                res = f(self, corpora, lang, query_args)
                 # if a result is returned by the backend function, encode and zip its data part and store it in
                 # the cache along with the "found" parameter
                 if res:
@@ -63,8 +63,8 @@ def cached(f):
                     curs.execute("INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
                                  (key, self.get_provider_id(), zipped, 1 if res[1] else 0, int(round(time.time()))))
             else:
-                logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for ({1}, {2}, {3})'.format(
-                    key[:6], word, lemma, pos))
+                logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for args {1}'.format(
+                    key[:6], query_args))
                 # unzip and decode the cached result, convert the "found" parameter value back to boolean
                 res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
                 # update last access
@@ -73,7 +73,7 @@ def cached(f):
             conn.commit()
             conn.close()
         else:
-            res = f(self, word, lemma, pos, corpora, lang)
+            res = f(self, corpora, lang, query_args)
         return res if res else ('', False)
 
     return wrapper

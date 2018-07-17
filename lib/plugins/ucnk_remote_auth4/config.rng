@@ -14,8 +14,26 @@
             <element name="module">
                 <value>ucnk_remote_auth4</value>
             </element>
+            <element name="js_module">
+                <a:documentation>
+                    It should be possible for this plug-in to work with different
+                    client-side implementations.
+                </a:documentation>
+                <choice>
+                    <value>defaultAuth</value>
+                </choice>
+            </element>
+            <element name="anonymous_user_id">
+                <data type="nonNegativeInteger" />
+            </element>
             <element name="auth_cookie_name">
                 <text />
+            </element>
+            <element name="login_url">
+                <data type="anyURI" />
+            </element>
+            <element name="logout_url">
+                <data type="anyURI" />
             </element>
             <element name="api_cookies">
                 <ref name="ucnk-custom" />
@@ -25,21 +43,13 @@
                     </element>
                 </zeroOrMore>
             </element>
-            <element name="login_url">
-                <ref name="ucnk-custom" />
-                <text />
-            </element>
-            <element name="logout_url">
-                <ref name="ucnk-custom" />
-                <text />
-            </element>
             <element name="toolbar_server">
                 <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="toolbar_port">
                 <ref name="ucnk-custom" />
-                <data type="integer" />
+                <data type="positiveInteger" />
             </element>
             <element name="toolbar_path">
                 <ref name="ucnk-custom" />
@@ -47,7 +57,19 @@
             </element>
             <element name="toolbar_server_timeout">
                 <ref name="ucnk-custom" />
-                <data type="integer" />
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="toolbar_unverified_ssl_cert">
+                <a:documentation>In case you use an unverified SSL certificate (e.g. for development or some internal
+                use) set this to 1/true - otherwise, the plug-in will refuse to communicate with central auth
+                server.</a:documentation>
+                <ref name="ucnk-custom" />
+                <choice>
+                    <value>0</value>
+                    <value>1</value>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
             </element>
             <element name="sync_host">
                 <ref name="ucnk-custom" />

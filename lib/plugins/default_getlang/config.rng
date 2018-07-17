@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="getlang">
+            <element name="module">
+                <value>default_getlang</value>
+            </element>
+            <element name="cookie">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="fallback_lang">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="language" />
+            </element>
+        </element>
+    </start>
+</grammar>

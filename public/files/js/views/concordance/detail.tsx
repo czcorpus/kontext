@@ -235,7 +235,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     const TokenExternalInfo:React.SFC<{
         tokenConnectIsBusy:boolean;
-        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        tokenConnectData:PluginInterfaces.TokenConnect.TCData;
 
     }> = (props) => {
         if (props.tokenConnectIsBusy) {
@@ -248,10 +248,12 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         } else {
             return (
                 <div className="token-detail">
-                    {props.tokenConnectData.map((v, i) => {
+                    <h2 className="token">{'"'}{props.tokenConnectData.token}{'"'}</h2>
+                    {props.tokenConnectData.renders.map((v, i) => {
                         return (
                             <div key={`resource:${i}`}>
                                 {v.heading ? <h2 className="inhouse">{v.heading}</h2> : null}
+                                <hr />
                                 <layoutViews.ErrorBoundary>
                                     <v.renderer data={v.contents} />
                                 </layoutViews.ErrorBoundary>
@@ -339,7 +341,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         expandingSide:string;
         modelIsBusy:boolean;
         tokenConnectIsBusy:boolean;
-        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        tokenConnectData:PluginInterfaces.TokenConnect.TCData;
         hasTokenConnectData:boolean;
     }> {
 

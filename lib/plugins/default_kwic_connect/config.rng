@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="kwic_connect">
+            <element name="module">
+                <value>default_kwic_connect</value>
+            </element>
+            <element name="js_module">
+                <value>defaultKwicConnect</value>
+            </element>
+            <element name="max_kwic_words">
+                <a:documentation>
+                    The plug-in will take this number of most frequent
+                    KWIC items in concordance and performs a search for them.
+                    E.g. if we set this to 5 and user searches in InterCorp EN
+                    for [word="wor.+"], the plug-in
+                    takes [work, world, word, worry, worker] and performs
+                    queries for all these words.
+                </a:documentation>
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="positiveInteger" />
+            </element>
+            <element name="load_chunk_size">
+                <a:documentation>
+                    This parameter is to optimize number of individual request
+                    client sends for KWIC items (see max_kwic_words). For small
+                    values of max_kwic_words, load_chunk_size can be safely set
+                    to the same value (e.g. we search for 10 most frequent KWIC
+                    words and we want all the answers fetched in a single chunk).
+                </a:documentation>
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="positiveInteger" />
+            </element>
+        </element>
+    </start>
+</grammar>
