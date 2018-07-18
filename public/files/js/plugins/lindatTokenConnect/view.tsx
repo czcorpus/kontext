@@ -174,14 +174,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                                 }
                             })}
                         </ul>
-                        <ul className="PCEDTExamples" style={this._getStateDisplayPCEDT()}>
-                            <li className="ExamplesH">Examples from PCEDT</li>
-                            {this.props.pcedtEx.map((listValue, i) => {
-                                if (listValue.length !== 0)
-                                {return <li className="PCEDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
-                                }
-                            })}
-                        </ul>
+                        if (this.props.pcedtEx !== undefined) {
+                            <ul className="PCEDTExamples" style={this._getStateDisplayPCEDT()}>
+                                <li className="ExamplesH">Examples from PCEDT</li>
+                                {this.props.pcedtEx.map((listValue, i) => {
+                                    if (listValue.length !== 0) {
+                                        return <li className="PCEDTExamples"
+                                                   key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                    }
+                                })}
+                            </ul>
+                        }
                     </div>
                 </div>
             );
