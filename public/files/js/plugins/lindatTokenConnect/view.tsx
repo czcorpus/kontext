@@ -137,7 +137,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _getStateDisplayExamples() {
-            if (this.props.pdtEx.length === 0 && this.props.pcedtEx.length === 0) {
+            if (this.props.pdtEx.length === 0 && (this.props.pcedtEx === undefined || this.props.pcedtEx.length === 0)) {
                 return {display: 'none'}
             } else {
                 return {display: 'block'}
