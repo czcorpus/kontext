@@ -716,6 +716,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         });
     }
 
+    openWebSocket(args:MultiDict):WebSocket|null {
+        if (window['WebSocket'] !== undefined && this.getConf('webSocketUrl')) {
+            return new WebSocket(
+                    this.getConf('webSocketUrl') + '?' + this.encodeURLParameters(args)
+            );
+        }
+        return null;
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.
