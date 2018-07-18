@@ -160,6 +160,20 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             }
         }
 
+        _renderTheLast() {
+            if (this.props.pcedtEx !== undefined && this.props.pcedtEx.length !== 0) {
+                return <ul className="PCEDTExamples" >
+                         <li className="ExamplesH">Examples from PCEDT</li>
+                            {this.props.pcedtEx.map((listValue, i) => {
+                                if (listValue.length !== 0) {
+                                    return <li className="PCEDTExamples"
+                                               key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                }
+                            })}
+                        </ul>
+            }
+        }
+
         render() {
             return (
                 <div>
@@ -174,17 +188,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                                 }
                             })}
                         </ul>
-                        if (this.props.pcedtEx !== undefined) {
-                            <ul className="PCEDTExamples" style={this._getStateDisplayPCEDT()}>
-                                <li className="ExamplesH">Examples from PCEDT</li>
-                                {this.props.pcedtEx.map((listValue, i) => {
-                                    if (listValue.length !== 0) {
-                                        return <li className="PCEDTExamples"
-                                                   key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
-                                    }
-                                })}
-                            </ul>
-                        }
+                        {this._renderTheLast()}
                     </div>
                 </div>
             );
