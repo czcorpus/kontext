@@ -199,7 +199,7 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
         } else {
             const icase1 = ''; // TODO - optionally (?i)
             const begin1 = this.ctFcrit1;
-            const end1 = this.ctFcrit2;
+            const end1 = this.ctFcrit1;
             const [s2, a2] = this.attr2.split('.');
             args.set('q2', `p${begin1} ${end1} 0 [${this.attr1}="${icase1}${v1}"] within <${s2} ${a2}="${v2}" />`);
         }
