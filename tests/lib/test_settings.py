@@ -25,6 +25,7 @@ conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.
 class SettingsMockedDataTest(unittest.TestCase):
 
     def setUp(self):
+        reload(settings)
         settings._conf = {
             'global': {
                 'foo': 'bar',
@@ -171,4 +172,3 @@ class SettingsSampleTest(unittest.TestCase):
         self.assertTrue(settings.contains('plugins', 'syntax_viewer'))
         self.assertTrue(settings.contains('plugins', 'taghelper'))
         self.assertTrue(settings.contains('plugins', 'user_items'))
-

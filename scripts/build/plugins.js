@@ -20,27 +20,31 @@
 
 (function (module) {
 
-    const path = require('path');
-    const fs = require('fs');
-    const kontext = require('./kontext');
+const path = require('path');
+const fs = require('fs');
+const kontext = require('./kontext');
 
-    /**
-     * PreparePlugin configures dynamically Webpack's compiler object
-     * based on KonText config.xml configuration and enabled plug-ins'
-     * build.json config files. The result is a defined set of aliases
-     * and externals.
-     *
-     * @param {*} options
-     */
-    function PreparePlugin(options) {
+/**
+ * PreparePlugin configures dynamically Webpack's compiler object
+ * based on KonText config.xml configuration and enabled plug-ins'
+ * build.json config files. The result is a defined set of aliases
+ * and externals.
+ *
+ * @param {*} options
+ */
+class PreparePlugin {
+
+    constructor(options) {
         this._confDoc = options.confDoc;
         this._jsPath = options.jsPath;
         this._cssPath = options.cssPath;
         this._themesPath = options.themesPath;
         this._isProduction = options.isProduction;
     }
-    PreparePlugin.prototype.apply = function (compiler) {
-        compiler.plugin('after-plugins', (compilation) => {
+
+
+    apply(compiler) {
+        compiler.hooks.afterPlugins.tap('PreparePlugin', (compilation) => {
             const tmpJsDir = path.resolve(this._jsPath, '.compiled');
             if (fs.existsSync(tmpJsDir)) {
                 fs.readdirSync(tmpJsDir).forEach(item => {
@@ -54,7 +58,7 @@
                 this._confDoc, this._jsPath, this._cssPath, this._themesPath, this._isProduction);
             console.log("\x1b[44m", 'Defined aliases:', "\x1b[0m");
             Object.keys(compiler.options.resolve.alias).forEach(item => {
-                console.log("\x1b[32m", item, "\x1b[0m", ' ---> ', compiler.options.resolve.alias[item]);
+                console.log("\x1b[32m", item, "\x1b[0m", '\u21D2', compiler.options.resolve.alias[item]);
             });
             console.log("\x1b[44m", 'Defined external modules:', "\x1b[0m");
             const externals = kontext.findPluginExternalModules(this._confDoc, this._jsPath);
@@ -62,10 +66,12 @@
                 compiler.options.externals.push({[item[0]]: item[1]});
             });
             externals.forEach(item => {
-                console.log("\x1b[32m", item[0], "\x1b[0m", ' ---> ', item[1]);
+                console.log("\x1b[32m", item[0], "\x1b[0m", '\u21D2', item[1]);
             });
         });
-    };
-    module.exports.PreparePlugin = PreparePlugin;
+    }
+}
+
+module.exports.PreparePlugin = PreparePlugin;
 
 })(module);

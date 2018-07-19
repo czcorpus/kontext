@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
@@ -79,23 +78,11 @@ export class FreqDataRowsModel extends StatefulModel {
 
     private freqCrit:Array<[string, string]>;
 
-    private fttattr:Array<string>;
-
     private ftt_include_empty:boolean;
 
     private flimit:string;
 
-    private mlxattr:Array<string>;
-
-    private mlxicase:Array<boolean>;
-
-    private mlxctx:Array<string>;
-
-    private alignType:Array<string>;
-
     private saveModel:FreqResultsSaveModel;
-
-    private quickSaveRowLimit:number;
 
     constructor({dispatcher, pageModel, freqCrit, formProps, saveLinkFn,
                 quickSaveRowLimit}:FreqDataRowsModelArgs) {
@@ -105,13 +92,8 @@ export class FreqDataRowsModel extends StatefulModel {
         this.freqCrit = freqCrit;
         this.currentPage = null;
         this.sortColumn = formProps.freq_sort;
-        this.fttattr = formProps.fttattr;
         this.ftt_include_empty = formProps.ftt_include_empty;
         this.flimit = formProps.flimit || '0';
-        this.mlxattr = formProps.mlxattr;
-        this.mlxicase = formProps.mlxicase || [false];
-        this.mlxctx = formProps.mlxctx;
-        this.alignType = formProps.alignType;
         this.saveModel = new FreqResultsSaveModel({
             dispatcher: dispatcher,
             layoutModel: pageModel,
