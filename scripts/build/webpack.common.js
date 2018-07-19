@@ -18,21 +18,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const webpack = require('webpack');
 const path = require('path');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-
-const extractLess = new ExtractTextPlugin({
-    filename: '[name].css'
-});
+const kontext = require('./kontext');
+const kplugins = require('./plugins');
 
 const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
 
-module.exports = (env) => {
+const JS_PATH = mkpath('js');
+const CSS_PATH = mkpath('css');
+const THEMES_PATH = mkpath('themes');
+const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, '../../conf/config.xml'));
+const PUBLIC_PATH = kontext.findActionPathPrefix(CONF_DOC);
+const DIST_PATH = mkpath('dist');
 
-    return {
+module.exports = {
+    JS_PATH: JS_PATH,
+    CSS_PATH: CSS_PATH,
+    THEMES_PATH: THEMES_PATH,
+    CONF_DOC: CONF_DOC,
+    PUBLIC_PATH: PUBLIC_PATH,
+    DIST_PATH: DIST_PATH,
+    wpConf: (env) => ({
         entry: {
             coll: mkpath('js/pages/coll.ts'),
             corplist: mkpath('js/pages/corplist.ts'),
@@ -68,11 +75,24 @@ module.exports = (env) => {
             rules: [
                 {
                     test: /\.css$/,
-                    use: extractLess.extract(['css-loader'])
+                    use: [
+                        { loader: 'style-loader'},
+                        { loader: 'css-loader' }
+                    ]
                 },
                 {
                     test: /\.less$/,
-                    use: extractLess.extract(['css-loader', 'less-loader']),
+                    use: [
+                        { loader: 'style-loader'},
+                        { loader: 'css-loader' },
+                        {
+                            loader: 'less-loader',
+                            options: {
+                                strictMath: true,
+                                noIeCompat: true
+                            }
+                        }
+                    ]
                 },
                 {
                     test: /\.(png|jpg|gif|svg)$/,
@@ -81,7 +101,8 @@ module.exports = (env) => {
                             loader: 'file-loader',
                             options: {
                                 emitFile: false,
-                                name: '../img/[name].[ext]'
+                                name: '[name].[ext]',
+                                publicPath: PUBLIC_PATH + '/files/img',
                             }
                         }
                     ]
@@ -99,14 +120,22 @@ module.exports = (env) => {
                 }
             ]
         },
+        optimization: {
+            splitChunks: {
+                chunks: 'all',
+                name: 'common'
+            }
+        },
         externals: [], // KonText build script adds things here (plug-ins' build.json conf)
         plugins: [
-            new webpack.optimize.CommonsChunkPlugin({
-                name: 'common',
-                filename: 'common.js'
-            }),
-            extractLess,
-            new ProgressBarPlugin()
+            new ProgressBarPlugin(),
+            new kplugins.PreparePlugin({
+                confDoc: CONF_DOC,
+                jsPath: JS_PATH,
+                cssPath: CSS_PATH,
+                themesPath: THEMES_PATH,
+                isProduction: false
+            })
         ]
-    }
+    })
 };
