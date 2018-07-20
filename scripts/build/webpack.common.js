@@ -74,27 +74,6 @@ module.exports = {
         module: {
             rules: [
                 {
-                    test: /\.css$/,
-                    use: [
-                        { loader: 'style-loader'},
-                        { loader: 'css-loader' }
-                    ]
-                },
-                {
-                    test: /\.less$/,
-                    use: [
-                        { loader: 'style-loader'},
-                        { loader: 'css-loader' },
-                        {
-                            loader: 'less-loader',
-                            options: {
-                                strictMath: true,
-                                noIeCompat: true
-                            }
-                        }
-                    ]
-                },
-                {
                     test: /\.(png|jpg|gif|svg)$/,
                     use: [
                         {
