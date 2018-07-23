@@ -294,20 +294,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         </div>
                     </div>
                     <div className="row">
-                        <div className="corpus-main-info col-xs-9 col-md-10" onMouseOver={this._mouseOver} onMouseOut={this._mouseOut} onClick={this._clickHandler} title={"Search in " + this.props.name}>
+                        <div className="corpus-main-info col-xs-12 col-md-12">
                             <div className="row">
-                                <div className="col-xs-3 tokens">
+                                <div className="col-xs-2 tokens">
                                     Size
                                     <div className="corpus-details-info">
                                         {he.formatNumber(this.props.size) + " positions"}
                                     </div>
                                 </div>
-                                <div className="col-xs-9 details">
-                                    <h3 className="title">
-                                        {this._pmltq(this.props.pmltq)}
-                                        {this._download(this.props.repo)}
-                                        {this._access()}
-                                        {this._syntax()}
+                                <div className="col-xs-1 tokensIcons">
+                                    {this._pmltq(this.props.pmltq)}
+                                    {this._download(this.props.repo)}
+                                    {this._access()}
+                                    {this._syntax()}
+                                </div>
+                                <div className="col-xs-6 details">
+                                    <h3 className="title" onMouseOver={this._mouseOver} onMouseOut={this._mouseOut} onClick={this._clickHandler} title={"Search in " + this.props.name}>
                                         {this.props.name}
                                     </h3>
                                     <div className="desc">
