@@ -253,13 +253,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _download(repo:string) {
             if (repo !== 'no' && this.props.permitted) {
             return <a href={this.props.repo} className="md-transparent" title={"Download " + this.props.name}>
-                    <span className="glyphicon glyphicon-save"></span></a>
+                    <button className="btn btn-default">
+                    <span className="glyphicon glyphicon-save"></span></button></a>
             }
         }
 
         _access() {
             if (!this.props.permitted) {
-                return <span className="glyphicon glyphicon-lock"></span>;
+                return <button className="btn btn-default">
+                        <span className="glyphicon glyphicon-lock"></span>
+                        </button>
             }
         }
 
