@@ -246,21 +246,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _pmltq(pmltq:string) {
             if (pmltq !== 'no' && this.props.permitted) {
             return <a href={this.props.pmltq} className="md-transparent" title={"Inspect " + this.props.name + " in PML-TQ"}>
-                    <button className="btn btn-default"><span className="lindat-pmltq-logo"></span></button></a>
+                    <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                        <span className="lindat-pmltq-logo"></span>
+                    </button></a>
             }
         }
 
         _download(repo:string) {
             if (repo !== 'no' && this.props.permitted) {
             return <a href={this.props.repo} className="md-transparent" title={"Download " + this.props.name}>
-                    <button className="btn btn-default">
+                    <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
                     <span className="glyphicon glyphicon-save"></span></button></a>
             }
         }
 
         _access() {
             if (!this.props.permitted) {
-                return <button className="btn btn-default">
+                return <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
                         <span className="glyphicon glyphicon-lock"></span>
                         </button>
             }
