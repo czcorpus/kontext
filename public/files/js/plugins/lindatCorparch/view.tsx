@@ -302,7 +302,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                         {he.formatNumber(this.props.size) + " positions"}
                                     </div>
                                 </div>
-                                <div className="col-xs-1 tokensIcons">
+                                <div className="col-xs-1 icons">
                                     {this._pmltq(this.props.pmltq)}
                                     {this._download(this.props.repo)}
                                     {this._access()}
