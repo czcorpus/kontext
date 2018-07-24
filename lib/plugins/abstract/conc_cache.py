@@ -48,6 +48,7 @@ class CalcStatus(object):
         self.concsize = 0
         self.fullsize = 0
         self.relconcsize = 0
+        self.arf = None
         self.error = None
         self.finished = False
 
@@ -173,6 +174,7 @@ class AbstractCacheMappingFactory(object):
     that your module's 'create_instance' should return this factory and
     not the cache itself.
     """
+
     def get_mapping(self, corpus):
         """
         returns:
@@ -182,7 +184,7 @@ class AbstractCacheMappingFactory(object):
 
     def fork(self):
         """
-        Create a new instance with forked db plug-in. This is 
+        Create a new instance with forked db plug-in. This is
         used only in case 'multiprocessing' is defined for
         background/asynchronous tasks.
         """

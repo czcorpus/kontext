@@ -314,14 +314,18 @@ export class ViewPage {
             ws.onmessage = (evt:MessageEvent) => {
                 const dataSrc = <string>evt.data;
                 if (dataSrc) {
-                    const data = JSON.parse(evt.data);
-                    applyData(data);
+                    applyData(JSON.parse(evt.data));
                 }
             };
 
             ws.onclose = (x) => {
-                // TODO
-                console.log('ws close, x: ', x);
+                if (x.code > 1000) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                        props: {}
+                    });
+                    this.layoutModel.showMessage('error', x.reason);
+                }
             };
 
         } else {

@@ -718,9 +718,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     openWebSocket(args:MultiDict):WebSocket|null {
         if (window['WebSocket'] !== undefined && this.getConf('webSocketUrl')) {
-            return new WebSocket(
-                    this.getConf('webSocketUrl') + '?' + this.encodeURLParameters(args)
-            );
+            const ans = new WebSocket(this.getConf('webSocketUrl') + '?' + this.encodeURLParameters(args));
+            ans.onerror = (evt:Event) => {
+                this.showMessage('error', 'WebSocket error.');
+            };
+            return ans;
         }
         return null;
     }
