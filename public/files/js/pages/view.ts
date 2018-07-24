@@ -304,33 +304,59 @@ export class ViewPage {
                 }
             });
         };
-        const loop = (idx:number, delay:number, decay:number) => {
-            window.setTimeout(() => {
-                this.layoutModel.ajax(
-                    'GET',
-                    this.layoutModel.createActionUrl('get_cached_conc_sizes'),
-                    this.layoutModel.getConcArgs()
 
-                ).then(
-                    (data:AjaxResponse.ConcStatus) => {
-                        applyData(data);
-                        if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
-                            loop(idx + 1, delay * decay, decay);
+        const wsArgs = new MultiDict()
+        wsArgs.set('corpusId', this.layoutModel.getCorpusIdent().id);
+        wsArgs.set('cacheKey', this.layoutModel.getConf('ConcCacheKey'));
+        const ws = this.layoutModel.openWebSocket(wsArgs);
+
+        if (ws) {
+            ws.onmessage = (evt:MessageEvent) => {
+                const dataSrc = <string>evt.data;
+                if (dataSrc) {
+                    applyData(JSON.parse(evt.data));
+                }
+            };
+
+            ws.onclose = (x) => {
+                if (x.code > 1000) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                        props: {}
+                    });
+                    this.layoutModel.showMessage('error', x.reason);
+                }
+            };
+
+        } else {
+            const loop = (idx:number, delay:number, decay:number) => {
+                window.setTimeout(() => {
+                    this.layoutModel.ajax(
+                        'GET',
+                        this.layoutModel.createActionUrl('get_cached_conc_sizes'),
+                        this.layoutModel.getConcArgs()
+
+                    ).then(
+                        (data:AjaxResponse.ConcStatus) => {
+                            applyData(data);
+                            if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
+                                loop(idx + 1, delay * decay, decay);
+                            }
                         }
-                    }
 
-                ).catch(
-                    (err) => {
-                        this.layoutModel.dispatcher.dispatch({
-                            actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
-                            props: {}
-                        });
-                        this.layoutModel.showMessage('error', err);
-                    }
-                );
-            }, delay);
+                    ).catch(
+                        (err) => {
+                            this.layoutModel.dispatcher.dispatch({
+                                actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                                props: {}
+                            });
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                }, delay);
+            }
+            loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
         }
-        loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
     }
 
     /**

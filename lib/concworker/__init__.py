@@ -173,6 +173,7 @@ class ConcCalculation(GeneralWorker):
                         concsize=sizes['concsize'],
                         fullsize=sizes['fullsize'],
                         relconcsize=sizes['relconcsize'],
+                        arf=None,
                         task_id=self._task_id))
                 tmp_cachefile = initial_args['cachefile'] + '.tmp'
                 conc.save(tmp_cachefile)  # whole
@@ -184,6 +185,7 @@ class ConcCalculation(GeneralWorker):
                     concsize=sizes['concsize'],
                     fullsize=sizes['fullsize'],
                     relconcsize=sizes['relconcsize'],
+                    arf=round(conc.compute_ARF(), 2) if not is_subcorpus(corpus_obj) else None,
                     task_id=self._task_id))
                 # update size in map file
                 cache_map.add_to_map(subchash, query, conc.size())

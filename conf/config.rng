@@ -303,6 +303,16 @@
                             </a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="websocket_url">
+                            <data type="anyURI" />
+                            <a:documentation>In case kontext-atn WebSocket server (which is a separate optional
+                                application; see https://github.com/czcorpus/kontext-atn) is running,
+                                KonText can be set to perform some async checking via WebSockets to decrease
+                                load on Gunicorn workers and also to decrease number of requests.
+                            </a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <optional>
