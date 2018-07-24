@@ -523,10 +523,10 @@
                             <text />
                         </element>
                         <element name="login_url">
-                            <data type="anyURI" />
+                            <text />
                         </element>
                         <element name="logout_url">
-                            <data type="anyURI" />
+                            <text />
                         </element>
                         <ref name="customPluginConfiguration" />
                     </element>
