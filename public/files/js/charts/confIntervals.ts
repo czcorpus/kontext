@@ -177,7 +177,7 @@ export class ConfIntervals {
 
     private makeAxes(root:d3.Selection<any>, xScale:any):void {
         const xAxis = d3.axisBottom(xScale);
-        const formatNumber = d3.format('d');
+        const formatNumber = d3.format('.1f');
         root.append('g')
             .attr('transform', `translate(0, ${this.getRealHeight()})`)
             .call(xAxis.tickFormat(d => d >= 0 ? formatNumber(d) : '-'));
