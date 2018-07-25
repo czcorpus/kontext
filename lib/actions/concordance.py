@@ -281,7 +281,10 @@ class Actions(Querying):
         with plugins.runtime.CHART_EXPORT as ce:
             out['chart_export_formats'].extend(ce.get_supported_types())
         out['quick_save_row_limit'] = self.CONC_QUICK_SAVE_MAX_LINES
-        out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0] if conc.get_conc_file() else None
+        if conc is not None and conc.get_conc_file():
+            out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
+        else:
+            out['conc_cache_key'] = None
         return out
 
     @exposed(acess_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
