@@ -193,6 +193,7 @@ class Actions(Querying):
                 del self.args.q[i]
             i += 1
         out = self._create_empty_conc_result_dict()
+        conc = None
         try:
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
                                       samplesize=corpus_info.sample_size)
