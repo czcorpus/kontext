@@ -337,9 +337,12 @@ class Backend(DatabaseBackend):
         for result in cursor.stored_results():
             rows = result.fetchall()
         for row in rows:
-            cursor.execute(
-                'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
-                (user_id, row[3], 'omezeni' if row[2] else None))
+            try:
+                cursor.execute(
+                    'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
+                    (user_id, row[3].split('/')[-1], 'omezeni' if row[2] else None))
+            except mysql.connector.errors.IntegrityError:
+                pass  # we deliberately ignore this
         self._db.commit()
 
     def get_permitted_corpora(self, user_id):
