@@ -71,9 +71,9 @@ export class SubcMixerModel extends StatefulModel {
 
     private currentCalculationResult:CalculationResults;
 
-    getCurrentSubcnameFn:()=>string;
-
     getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
+
+    private subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel;
 
     private currentSubcname:string;
 
@@ -84,13 +84,14 @@ export class SubcMixerModel extends StatefulModel {
     private errorTolerance:number = SubcMixerModel.CATEGORY_SIZE_ERROR_TOLERANCE;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
-            textTypesModel:TextTypes.ITextTypesModel, getCurrentSubcnameFn:()=>string,
+            textTypesModel:TextTypes.ITextTypesModel,
+            subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
             getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>, corpusIdAttr:string) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.textTypesModel = textTypesModel;
+        this.subcFormModel = subcFormModel;
         this.shares = Immutable.List<SubcMixerExpression>();
-        this.getCurrentSubcnameFn = getCurrentSubcnameFn; // connects us with and old, non-React form
         this.getAlignedCorporaFn = getAlignedCorporaFn;
         this.corpusIdAttr = corpusIdAttr;
         this.dispatcher.register((payload:ActionPayload) => {
@@ -106,7 +107,7 @@ export class SubcMixerModel extends StatefulModel {
                     }
                 break;
                 case 'UCNK_SUBCMIXER_FETCH_CURRENT_SUBCNAME':
-                    this.currentSubcname = this.getCurrentSubcnameFn();
+                    this.currentSubcname = this.subcFormModel.getSubcName();
                     this.notifyChangeListeners();
                 break;
                 case 'UCNK_SUBCMIXER_SET_SUBCNAME':
@@ -211,6 +212,8 @@ export class SubcMixerModel extends StatefulModel {
         const args = {};
         args['corpname'] = this.pluginApi.getCorpusIdent().id;
         args['subcname'] = this.currentSubcname;
+        args['publish'] = this.subcFormModel.getIsPublic() ? '1' : '0';
+        args['description'] = this.subcFormModel.getDescription();
         args['idAttr'] = this.corpusIdAttr;
         args['ids'] = this.currentCalculationResult.ids.toArray().join(',');
         args['structs'] = this.currentCalculationResult.structs.toArray().join(',');
@@ -380,9 +383,12 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 
     private model:SubcMixerModel;
 
-    constructor(pluginApi:IPluginApi, model:SubcMixerModel) {
+    private subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel;
+
+    constructor(pluginApi:IPluginApi, model:SubcMixerModel, subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel) {
         this.pluginApi = pluginApi;
         this.model = model;
+        this.subcorpFormModel = subcorpFormModel;
     }
 
     refreshData():void {
@@ -393,28 +399,25 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            this.model
+            this.model,
+            this.subcorpFormModel
         ).Widget;
     }
 
 }
 
 
-const create:PluginInterfaces.SubcMixer.Factory = (
-        pluginApi:IPluginApi,
-        textTypesModel:TextTypes.ITextTypesModel,
-        getCurrentSubcnameFn:()=>string,
-        getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
-        corpusIdAttr:string) => {
+const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, subcorpFormModel,
+            getAlignedCorporaFn, corpusIdAttr) => {
     const model = new SubcMixerModel(
         pluginApi.dispatcher(),
         pluginApi,
         textTypesModel,
-        getCurrentSubcnameFn,
+        subcorpFormModel,
         getAlignedCorporaFn,
         corpusIdAttr
     );
-    return new SubcmixerPlugin(pluginApi, model);
+    return new SubcmixerPlugin(pluginApi, model, subcorpFormModel);
 }
 
 export default create;

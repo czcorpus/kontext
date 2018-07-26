@@ -21,6 +21,9 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, TextTypes} from '../../types/common';
 import {SubcMixerModel, SubcMixerExpression, CalculationResults} from './init';
+import {init as subcorpViewsInit} from '../../views/subcorp/forms';
+import {PluginInterfaces} from '../../types/plugins';
+import { SubcorpFormModel } from '../../models/subcorp/form';
 
 
 export interface WidgetProps {
@@ -34,9 +37,16 @@ export interface Views {
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
-            subcMixerModel:SubcMixerModel):Views {
+            subcMixerModel:SubcMixerModel, subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel):Views {
 
     const layoutViews = he.getLayoutViews();
+    const subcFormViews = subcorpViewsInit({
+        dispatcher: dispatcher,
+        he: he,
+        CorparchComponent: null,
+        subcorpFormModel: null,
+        subcorpWithinFormModel: null
+    });
 
     // ------------ <ValueShare /> -------------------------------------
 
@@ -178,6 +188,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         totalSize:number;
         numConditions:number;
         currentSubcname:string;
+        isPublic:boolean;
+        description:string;
 
     }> = (props) => {
 
@@ -237,6 +249,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                         onChange={handleSubcnameInputChange} />
                             </label>
                         </p>
+                        <div>
+                            <subcFormViews.SubcNamePublicCheckbox value={props.isPublic} />
+                            {props.isPublic ?
+                                (<div>
+                                    <h3>{he.translate('subcform__public_description')}:</h3>
+                                    <div>
+                                        <subcFormViews.SubcDescription value={props.description} />
+                                    </div>
+                                </div>) : null
+                            }
+                        </div>
                         <button className="default-button" type="button"
                                 onClick={handleCreateSubcorpClick}>
                             {he.translate('ucnk_subcm__create_subc')}
@@ -270,6 +293,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         numConditions:number;
         currentSubcname:string;
         usedAttributes:Immutable.Set<string>;
+        isPublic:boolean;
+        description:string;
+
         setWaitingFn:()=>void;
 
     }> = (props) => {
@@ -292,7 +318,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             totalSize={props.totalSize}
                             numErrors={props.numErrors}
                             numConditions={props.numConditions}
-                            currentSubcname={props.currentSubcname} />;
+                            currentSubcname={props.currentSubcname}
+                            isPublic={props.isPublic}
+                            description={props.description} />;
 
             } else {
                 return (
@@ -334,7 +362,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         closeClickHandler:()=>void;
     },
     {
-        isWaiting: boolean;
+        isWaiting:boolean;
+        isPublic:boolean;
+        description:string;
     }> {
 
         constructor(props) {
@@ -342,15 +372,27 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this._handleModelChange = this._handleModelChange.bind(this);
             this._setWaiting = this._setWaiting.bind(this);
             this._handleErrorToleranceChange = this._handleErrorToleranceChange.bind(this);
-            this.state = {isWaiting: false};
+            this.state = {
+                isWaiting: false,
+                isPublic: subcFormModel.getIsPublic(),
+                description: subcFormModel.getDescription()
+            };
         }
 
         _handleModelChange() {
-            this.setState({isWaiting: false});
+            this.setState({
+                isWaiting: false,
+                isPublic: subcFormModel.getIsPublic(),
+                description: subcFormModel.getDescription()
+            });
         }
 
         _setWaiting() {
-            this.setState({isWaiting: true});
+            this.setState({
+                isWaiting: true,
+                isPublic: subcFormModel.getIsPublic(),
+                description: subcFormModel.getDescription()
+            });
         }
 
         _handleErrorToleranceChange(evt) {
@@ -362,6 +404,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidMount() {
             subcMixerModel.addChangeListener(this._handleModelChange);
+            subcFormModel.addChangeListener(this._handleModelChange);
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_FETCH_CURRENT_SUBCNAME',
                 props: {}
@@ -370,6 +413,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentWillUnmount() {
             subcMixerModel.removeChangeListener(this._handleModelChange);
+            subcFormModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderAlignedCorpInfo() {
@@ -413,7 +457,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                     numErrors={this.props.numErrors}
                                     numConditions={this.props.selectedValues.size}
                                     currentSubcname={this.props.currentSubcname}
-                                    usedAttributes={this.props.usedAttributes} />
+                                    usedAttributes={this.props.usedAttributes}
+                                    isPublic={this.state.isPublic}
+                                    description={this.state.description} />
                         </div>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>

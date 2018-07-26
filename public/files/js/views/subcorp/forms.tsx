@@ -41,6 +41,8 @@ export interface SubcorpFormProps {
 
 export interface FormViews {
     SubcorpForm:React.ComponentClass<SubcorpFormProps>;
+    SubcNamePublicCheckbox:React.SFC<{value:boolean}>;
+    SubcDescription:React.SFC<{value:string}>;
 }
 
 export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
@@ -579,6 +581,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }
 
     return {
-        SubcorpForm: SubcorpForm
+        SubcorpForm: SubcorpForm,
+        SubcNamePublicCheckbox: SubcNamePublicCheckbox,
+        SubcDescription: SubcDescription
     };
 }
