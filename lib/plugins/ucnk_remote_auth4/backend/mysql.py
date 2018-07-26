@@ -158,6 +158,8 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def load_corpora_descriptions(self, corp_ids, user_lang):
+        if len(corp_ids) == 0:
+            return {}
         cursor = self._db.cursor()
         placeholders = ', '.join(['%s'] * len(corp_ids))
         col = 'description_{0}'.format(user_lang[:2])
