@@ -31,7 +31,7 @@ from database import Database
 import corplib
 
 
-@exposed(return_type='json', acess_level=1)
+@exposed(return_type='json', access_level=1)
 def subcmixer_run_calc(ctrl, request):
     try:
         with plugins.runtime.SUBCMIXER as sm:

@@ -31,7 +31,6 @@ import l10n
 from plugins.rdbms_corparch.backend import ManateeCorpora
 from plugins.rdbms_corparch.backend.sqlite import Backend
 from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
-from translation import ugettext as _
 
 
 def parse_query(tag_prefix, query):

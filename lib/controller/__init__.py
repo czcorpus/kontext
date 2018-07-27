@@ -46,31 +46,40 @@ import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
 from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
-                               ActionValidationException, CorpusForbiddenException)
+                               CorpusForbiddenException)
 from templating import CheetahResponseFile
 
 
-def exposed(**kwargs):
+def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=True, skip_corpus_init=False,
+            http_method='GET', accept_kwargs=None, apply_semi_persist_args=False, return_type='html'):
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
     always an implicit property '__exposed__' set to True.
 
-    Currently detected properties:
+    arguments:
     access_level -- 0,1,... (0 = public user, 1 = logged in user)
     template -- a Cheetah template source path
     vars -- deprecated; do not use
     page_model -- a JavaScript page module
-    legacy -- True/False
-    skip_corpus_init -- True/False
+    legacy -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
+    skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
     http_method -- required HTTP method (POST, GET, PUT,...)
     accept_kwargs -- True/False
-
-    arguments:
-    **kwargs -- all the keyword args will be converted into a dict
+    apply_semi_persist_args -- if True hen use session to initialize action args first
+    return_type -- {plain, json, html}
     """
     def wrapper(func):
-        func.__dict__.update(kwargs)
+        func.__dict__['access_level'] = access_level
+        func.__dict__['template'] = template
+        func.__dict__['vars'] = vars
+        func.__dict__['page_model'] = page_model
+        func.__dict__['legacy'] = legacy
+        func.__dict__['skip_corpus_init'] = skip_corpus_init
+        func.__dict__['http_method'] = http_method
+        func.__dict__['accept_kwargs'] = accept_kwargs
+        func.__dict__['apply_semi_persist_args'] = apply_semi_persist_args
+        func.__dict__['return_type'] = return_type
         func.__dict__['__exposed__'] = True
         return func
     return wrapper
@@ -448,8 +457,14 @@ class Controller(object):
         """
         for validator in self._validators:
             err = validator()
-            if isinstance(err, Exception):
-                raise ActionValidationException(err, validator)
+            if isinstance(err, UserActionException):
+                logging.getLogger(__name__).error(
+                    u'Pre-action validator {0}: {1}'.format(validator.__name__, err.internal_message))
+                raise err
+            elif isinstance(err, Exception):
+                logging.getLogger(__name__).error(
+                    u'Pre-action validator {0}: {1}'.format(validator.__name__, err))
+                raise err
 
     @staticmethod
     def _invoke_legacy_action(action, named_args):
@@ -523,8 +538,6 @@ class Controller(object):
             ans = {}
             if method_obj is not None:
                 ans.update(method_obj.__dict__)
-            if 'return_type' not in ans or not ans['return_type']:
-                ans['return_type'] = 'html'
         return ans
 
     def get_mapping_url_prefix(self):
@@ -736,7 +749,7 @@ class Controller(object):
         named_args = {}
         headers = []
         action_metadata = self._get_method_metadata(path[0])
-        return_type = action_metadata.get('return_type', 'html')
+        return_type = action_metadata['return_type']
         try:
             self.init_session()
             if self.is_action(path[0], action_metadata):
@@ -849,26 +862,18 @@ class Controller(object):
           1 = template name
           2 = template data dict
         """
-        # reload parameter returns user from a result page
-        # to a respective form preceding the result (by convention,
-        # this is usually encoded as [action] -> [action]_form
         action_metadata = self._get_method_metadata(methodname)
-
-        if getattr(self.args, 'reload', None):
-            self.args.reload = None
-            if methodname != 'subcorp':
-                reload_template = methodname + '_form'
-                if self._is_template(reload_template):
-                    return self.process_action(reload_template, named_args)
         method = getattr(self, methodname)
         try:
-            default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
-            if not action_metadata.get('legacy', False):
+            if not action_metadata['legacy']:
                 # new-style actions use werkzeug.wrappers.Request
                 method_ans = method(self._request)
             else:
                 method_ans = self._invoke_legacy_action(method, named_args)
-            return methodname, getattr(method, 'template', default_tpl_path), method_ans
+            tpl_path = action_metadata['template']
+            if not tpl_path:
+                tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
+            return methodname, tpl_path, method_ans
         except Exception as ex:
             return self.handle_action_error(ex, methodname, named_args)
 
@@ -911,12 +916,12 @@ class Controller(object):
         """
         from Cheetah.Template import Template
         # any result with custom serialization
-        if action_metadata.get('return_type') == 'plain':
+        if action_metadata['return_type'] == 'plain':
             outf.write(str(result))
         elif callable(result):
             outf.write(result())
         # JSON with simple serialization (dict -> string)
-        elif action_metadata.get('return_type') == 'json':
+        elif action_metadata['return_type'] == 'json':
             json.dump(result, outf)
         # Template
         elif type(result) is DictType:

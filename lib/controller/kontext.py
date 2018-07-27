@@ -28,9 +28,10 @@ import corplib
 import conclib
 from controller import Controller, convert_types, exposed
 from controller.errors import (UserActionException, ForbiddenException, CorpusForbiddenException,
-                               AlignedCorpusForbiddenException)
+                               AlignedCorpusForbiddenException, NotFoundException)
 import plugins
 import plugins.abstract
+from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
@@ -694,7 +695,7 @@ class Kontext(Controller):
 
         with plugins.runtime.AUTH as auth:
             allowed_corpora = auth.permitted_corpora(self.session_get('user'))
-            if not action_metadata.get('skip_corpus_init', False):
+            if not action_metadata['skip_corpus_init']:
                 corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
                 has_access, variant = validate_access(corpname, allowed_corpora)
                 if not has_access and callable(getattr(auth, 'refresh_user_permissions', None)):
@@ -751,7 +752,6 @@ class Kontext(Controller):
         # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
-    # TODO: decompose this method (phase 2)
     def pre_dispatch(self, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
@@ -766,15 +766,22 @@ class Kontext(Controller):
         def validate_corpus():
             if isinstance(self.corp, fallback_corpus.ErrorCorpus):
                 return self.corp.get_error()
+            info = self.get_corpus_info(self.args.corpname)
+            if isinstance(info, BrokenCorpusInfo):
+                return NotFoundException(_('Corpus \"{0}\" not available'.format(info.name)),
+                                         internal_message='Failed to fetch configuration for {0}'.format(info.name))
             return None
-        self.add_validator(validate_corpus)
+        if not action_metadata['skip_corpus_init']:
+            self.add_validator(validate_corpus)
 
         form = RequestArgsProxy(self._request.form, self._request.args)
 
         if not action_metadata:
+            def null(): pass
             action_metadata = {}
+            action_metadata.update(exposed()(null).__dict__)
 
-        if action_metadata.get('apply_semi_persist_args', False):
+        if action_metadata['apply_semi_persist_args']:
             self._apply_semi_persistent_args(form)
 
         options, corp_options = self._load_user_settings()
@@ -808,7 +815,7 @@ class Kontext(Controller):
                                                    '&'.join(['%s=%s' % (k, v)
                                                              for k, v in args.items()]))
         # by default, each action is public
-        access_level = action_metadata.get('access_level', 0)
+        access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
             raise ForbiddenException(_('Access forbidden - please log-in.'))
 
@@ -1128,7 +1135,7 @@ class Kontext(Controller):
             thecorp = corplib.open_corpus(self.args.maincorp)
         else:
             thecorp = self.corp
-        if not action_metadata.get('skip_corpus_init', False):
+        if not action_metadata['skip_corpus_init']:
             self._add_corpus_related_globals(result, thecorp)
             result['uses_corp_instance'] = True
         else:
@@ -1188,7 +1195,7 @@ class Kontext(Controller):
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
                 self._plugin_api).to_dict() if irp else None
-        page_model = action_metadata.get('page_model', l10n.camelize(methodname))
+        page_model = action_metadata['page_model'] if action_metadata['page_model'] else l10n.camelize(methodname)
         result['page_model'] = page_model
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
