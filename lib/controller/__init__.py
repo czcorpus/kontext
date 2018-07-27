@@ -50,7 +50,7 @@ from controller.errors import (UserActionException, NotFoundException, get_trace
 from templating import CheetahResponseFile
 
 
-def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=True, skip_corpus_init=False,
+def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=False, skip_corpus_init=False,
             http_method='GET', accept_kwargs=None, apply_semi_persist_args=False, return_type='html'):
     """
     This decorator allows more convenient way how to
