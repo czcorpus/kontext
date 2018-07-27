@@ -53,6 +53,8 @@ import re
 import json
 import sqlite3
 import uuid
+import os
+import logging
 
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
@@ -157,9 +159,13 @@ class ConcPersistence(AbstractConcPersistence):
         self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
         self.db = db
         self._auth = auth
-        self._archive = sqlite3.connect(settings.get(
-            'plugins')['conc_persistence']['ucnk:archive_db_path'])
+        self._db_path = settings.get('plugins')['conc_persistence']['ucnk:archive_db_path']
+        self._archives = self._open_archives()
         self._settings = settings
+
+    @property
+    def _archive(self):
+        return self._archives[0]
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -171,6 +177,16 @@ class ConcPersistence(AbstractConcPersistence):
             return 0
         else:
             return 1
+
+    def _open_archives(self):
+        root_dir = os.path.dirname(self._db_path)
+        dbs = []
+        for item in os.listdir(root_dir):
+            dbs.append((item, sqlite3.connect(os.path.join(root_dir, item))))
+        dbs = sorted(dbs, key=lambda x: x[0].rsplit('.', 1)[0])
+        logging.getLogger(__name__).info(
+            'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
+        return [x[1] for x in dbs]
 
     @property
     def ttl(self):
@@ -194,11 +210,6 @@ class ConcPersistence(AbstractConcPersistence):
             return self.anonymous_user_ttl
         return self._ttl_days
 
-    def _execute_sql(self, sql, args=()):
-        cursor = self._archive.cursor()
-        cursor.execute(sql, args)
-        return cursor
-
     def open(self, data_id):
         """
         Loads operation data according to the passed data_id argument.
@@ -212,13 +223,16 @@ class ConcPersistence(AbstractConcPersistence):
         """
         data = self.db.get(mk_key(data_id))
         if data is None:
-            tmp = self._execute_sql(
-                'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
-            if tmp:
-                data = json.loads(tmp[0])
-                self._execute_sql('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
-                                  (int(round(time.time())), data_id))
-                self._archive.commit()
+            for arch_db in self._archives:
+                cursor = arch_db.cursor()
+                tmp = cursor.execute(
+                    'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
+                if tmp:
+                    data = json.loads(tmp[0])
+                    cursor.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
+                        (int(round(time.time())), data_id))
+                    arch_db.commit()
+                    break
         return data
 
     def store(self, user_id, curr_data, prev_data=None):
