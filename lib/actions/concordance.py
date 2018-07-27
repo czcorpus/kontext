@@ -288,14 +288,14 @@ class Actions(Querying):
             out['conc_cache_key'] = None
         return out
 
-    @exposed(acess_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
+    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def archive_concordance(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
             revoke = bool(int(request.form['revoke']))
             cp.archive(self.session_get('user', 'id'), request.form['code'], revoke=revoke)
         return dict(revoked=revoke)
 
-    @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
+    @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def get_stored_conc_archived_status(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
             return dict(is_archived=cp.is_archived(request.args['code']))

@@ -112,7 +112,7 @@ def mk_short_id(s, min_length=6):
 
 def create_arch_conc_action(concdb, archdb):
 
-    @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
+    @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def archive_concordance(ctrl, request):
         conc_key = request.args.get('conc_key')
 
