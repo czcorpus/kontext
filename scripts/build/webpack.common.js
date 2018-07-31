@@ -30,6 +30,7 @@ const CSS_PATH = mkpath('css');
 const THEMES_PATH = mkpath('themes');
 const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, '../../conf/config.xml'));
 const PUBLIC_PATH = kontext.findActionPathPrefix(CONF_DOC);
+const STATIC_FILES_PATH = kontext.findStaticPathPrefix(CONF_DOC);
 const DIST_PATH = mkpath('dist');
 
 module.exports = {
@@ -81,7 +82,7 @@ module.exports = {
                             options: {
                                 emitFile: false,
                                 name: '[name].[ext]',
-                                publicPath: PUBLIC_PATH + '/files/img',
+                                publicPath: STATIC_FILES_PATH + '/img',
                             }
                         }
                     ]
