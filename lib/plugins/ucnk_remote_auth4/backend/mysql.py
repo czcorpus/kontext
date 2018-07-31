@@ -158,6 +158,8 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def load_corpora_descriptions(self, corp_ids, user_lang):
+        if len(corp_ids) == 0:
+            return {}
         cursor = self._db.cursor()
         placeholders = ', '.join(['%s'] * len(corp_ids))
         col = 'description_{0}'.format(user_lang[:2])
@@ -335,9 +337,12 @@ class Backend(DatabaseBackend):
         for result in cursor.stored_results():
             rows = result.fetchall()
         for row in rows:
-            cursor.execute(
-                'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
-                (user_id, row[3], 'omezeni' if row[2] else None))
+            try:
+                cursor.execute(
+                    'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
+                    (user_id, row[3].split('/')[-1], 'omezeni' if row[2] else None))
+            except mysql.connector.errors.IntegrityError:
+                pass  # we deliberately ignore this
         self._db.commit()
 
     def get_permitted_corpora(self, user_id):

@@ -252,7 +252,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                     {props.tokenConnectData.renders.map((v, i) => {
                         return (
                             <div key={`resource:${i}`}>
-                                {v.heading ? <h2 className="inhouse">{v.heading}</h2> : null}
+                                {v.heading ? <h2 className="inhouse">[ {v.heading} {'\uD83D\uDCD6'}]</h2> : null}
                                 <hr />
                                 <layoutViews.ErrorBoundary>
                                     <v.renderer data={v.contents} />
@@ -392,10 +392,13 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                                         hasExpandRight={this.state.hasExpandRight}
                                         data={this.state.data}
                                         canDisplayWholeDocument={this.state.canDisplayWholeDocument} /> :
-                        null}
-                    {this.state.hasConcDetailData && this.state.hasConcDetailData ? <hr /> : null}
-                    <TokenExternalInfo tokenConnectData={this.state.tokenConnectData}
-                            tokenConnectIsBusy={this.state.tokenConnectIsBusy} />
+                        null
+                    }
+                    {this.state.hasConcDetailData && (this.state.hasTokenConnectData || this.state.tokenConnectIsBusy) ?
+                        <hr /> : null}
+                    {this.state.hasTokenConnectData || this.state.tokenConnectIsBusy ?
+                        <TokenExternalInfo tokenConnectData={this.state.tokenConnectData}
+                                tokenConnectIsBusy={this.state.tokenConnectIsBusy} /> : null}
                 </div>
             );
         }

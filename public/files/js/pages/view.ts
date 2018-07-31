@@ -47,17 +47,14 @@ import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
 import {QueryContextModel} from '../models/query/context';
 import {ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../models/query/sort';
-import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
-import {Freq2DTableModel} from '../models/freqs/ctable';
-import {Freq2DFlatViewModel} from '../models/freqs/flatCtable';
 import {FirstHitsModel} from '../models/query/firstHits';
 import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/ctFreqForm';
 import {ConcSaveModel} from '../models/concordance/save';
 import {ConcDashboard} from '../models/concordance/dashboard';
 import {UserSettings} from '../app/userSettings';
-import {UserInfo} from '../models/user/info';
-import {TextTypesDistModel, TextTypesDistModelProps, TTCrit} from '../models/concordance/ttDistModel';
+import {TextTypesDistModel, TTCrit} from '../models/concordance/ttDistModel';
 import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/main';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
@@ -70,7 +67,6 @@ import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
-import * as applicationBar from 'plugins/applicationBar/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 
@@ -304,33 +300,59 @@ export class ViewPage {
                 }
             });
         };
-        const loop = (idx:number, delay:number, decay:number) => {
-            window.setTimeout(() => {
-                this.layoutModel.ajax(
-                    'GET',
-                    this.layoutModel.createActionUrl('get_cached_conc_sizes'),
-                    this.layoutModel.getConcArgs()
 
-                ).then(
-                    (data:AjaxResponse.ConcStatus) => {
-                        applyData(data);
-                        if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
-                            loop(idx + 1, delay * decay, decay);
+        const wsArgs = new MultiDict()
+        wsArgs.set('corpusId', this.layoutModel.getCorpusIdent().id);
+        wsArgs.set('cacheKey', this.layoutModel.getConf('ConcCacheKey'));
+        const ws = this.layoutModel.openWebSocket(wsArgs);
+
+        if (ws) {
+            ws.onmessage = (evt:MessageEvent) => {
+                const dataSrc = <string>evt.data;
+                if (dataSrc) {
+                    applyData(JSON.parse(evt.data));
+                }
+            };
+
+            ws.onclose = (x) => {
+                if (x.code > 1000) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                        props: {}
+                    });
+                    this.layoutModel.showMessage('error', x.reason);
+                }
+            };
+
+        } else {
+            const loop = (idx:number, delay:number, decay:number) => {
+                window.setTimeout(() => {
+                    this.layoutModel.ajax(
+                        'GET',
+                        this.layoutModel.createActionUrl('get_cached_conc_sizes'),
+                        this.layoutModel.getConcArgs()
+
+                    ).then(
+                        (data:AjaxResponse.ConcStatus) => {
+                            applyData(data);
+                            if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
+                                loop(idx + 1, delay * decay, decay);
+                            }
                         }
-                    }
 
-                ).catch(
-                    (err) => {
-                        this.layoutModel.dispatcher.dispatch({
-                            actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
-                            props: {}
-                        });
-                        this.layoutModel.showMessage('error', err);
-                    }
-                );
-            }, delay);
+                    ).catch(
+                        (err) => {
+                            this.layoutModel.dispatcher.dispatch({
+                                actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                                props: {}
+                            });
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                }, delay);
+            }
+            loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
         }
-        loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
     }
 
     /**

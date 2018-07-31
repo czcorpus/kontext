@@ -12,14 +12,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import TypeVar, Generic, List
+from typing import TypeVar, Generic, List, Tuple
 T = TypeVar('T')
 
 class Parameter(Generic[T]):
     pass
 
 
-class Args(object):
+ConcArgsMapping:Tuple[str]
+
+
+class GlobalArgs(object):
     format:str
     reload:int
 
@@ -194,3 +197,7 @@ class Args(object):
     fcrit:List[str]
 
     sort_linegroups:int
+
+
+class Args(GlobalArgs):
+    pass
