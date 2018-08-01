@@ -145,10 +145,10 @@ class Subcorpus(Querying):
             if result and publish_path:
                 corplib.mk_publish_links(path, publish_path, description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
-            backend, conf = settings.get_full('global', 'calc_backend')
+            backend = settings.get('calc_backend', 'type')
             if backend == 'celery':
-                import task
-                app = task.get_celery_app(conf['conf'])
+                import bgcalc
+                app = bgcalc.calc_backend_app(settings)
                 res = app.send_task('worker.create_subcorpus',
                                     (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
                                      tt_query, imp_cql, description),

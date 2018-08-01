@@ -131,7 +131,7 @@ def update_8(doc):
     if srch is not None:
         srch.getparent().remove(srch)
     srch2 = doc.find('plugins/user_items')
-    if srch2:
+    if srch2 is not None:
         new_elm = etree.SubElement(srch2, 'max_num_favorites')
         new_elm.attrib['extension-by'] = 'default'
         new_elm.tail = '\n        '
@@ -151,6 +151,51 @@ def update_9(doc):
         srch4 = srch.find('root_elm_path')
         if srch4 is not None:
             srch4.attrib['extension-by'] = 'default'
+
+
+def update_10(doc):
+    """
+    Create a new top-level configuration
+    for calculation backend
+    """
+    glb_srch = doc.find('/global')
+    root = glb_srch.getparent()
+    ce = etree.Element('calc_backend')
+    ce.tail = '\n    '
+    glb_srch.tail = '\n    '
+    root.insert(root.index(glb_srch) + 1, ce)
+
+    cb_srch = doc.find('global/calc_backend')
+    if cb_srch is not None:
+        type_elm = etree.SubElement(ce, 'type')
+        type_elm.text = cb_srch.text
+        conf_elm = etree.SubElement(ce, 'conf')
+        conf_elm.text = cb_srch.attrib['conf']
+        cb_srch.getparent().remove(cb_srch)
+        etree.SubElement(ce, 'status_service_url')
+    cbt_srch = doc.find('global/calc_backend_time_limit')
+    if cbt_srch is not None:
+        cbt_new = etree.SubElement(ce, 'time_limit')
+        cbt_new.text = cbt_srch.text
+        cbt_srch.getparent().remove(cbt_srch)
+    else:
+        cbt_new = etree.SubElement(ce, 'time_limit')
+        cbt_new.text = 300
+
+    glb_srch = doc.find('/calc_backend')
+    root = glb_srch.getparent()
+    js = etree.Element('job_scheduler')
+    js.tail = '\n    '
+    glb_srch.tail = '\n    '
+    root.insert(root.index(glb_srch) + 1, js)
+
+    pt_srch = doc.find('global/periodic_tasks')
+    if pt_srch is not None:
+        pt_new = etree.SubElement(js, 'type')
+        pt_new.text = pt_srch.text
+        pt_conf_new = etree.SubElement(js, 'conf')
+        pt_conf_new.text = pt_srch.attrib['conf']
+        pt_srch.getparent().remove(pt_srch)
 
 
 if __name__ == '__main__':

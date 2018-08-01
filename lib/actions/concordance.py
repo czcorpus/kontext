@@ -1666,14 +1666,14 @@ class Actions(Querying):
 
     @exposed(legacy=True, return_type='json')
     def wordlist_process(self, attrname='', worker_tasks=None):
-        backend, conf = settings.get_full('global', 'calc_backend')
+        backend = settings.get('calc_backend', 'type')
         if worker_tasks and backend == 'celery':
-            import task
-            app = task.get_celery_app(conf['conf'])
+            import bgcalc
+            app = bgcalc.calc_backend_app(settings)
             for t in worker_tasks:
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':
-                    raise task.ExternalTaskError('Task %s failed' % (t,))
+                    raise bgcalc.ExternalTaskError('Task %s failed' % (t,))
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl', return_type='plain')

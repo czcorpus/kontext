@@ -32,7 +32,8 @@ import corplib
 import conclib
 import settings
 import plugins
-from bgcalc import UnfinishedConcordanceError, is_celery_user_error
+from bgcalc import UnfinishedConcordanceError
+from bgcalc.celery import is_celery_user_error
 from translation import ugettext as _
 from controller.errors import UserActionException
 
@@ -175,10 +176,10 @@ def build_arf_db(corp, attrname):
             return curr_status
 
     subc_path = prepare_arf_calc_paths(corp, attrname)
-    backend, conf = settings.get_full('global', 'calc_backend')
+    backend = settings.get('calc_backend', 'type')
     if backend == 'celery':
-        import task
-        app = task.get_celery_app(conf['conf'])
+        import bgcalc
+        app = bgcalc.calc_backend_app(settings)
         task_ids = []
         for m in ('frq', 'arf', 'docf'):
             logfilename_m = create_log_path(base_path, m)
@@ -284,11 +285,11 @@ def calculate_freqs(args):
                                         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
                                         collator_locale=args.collator_locale)
     if calc_result is None:
-        backend, conf = settings.get_full('global', 'calc_backend')
+        backend = settings.get('calc_backend', 'type')
         if backend == 'celery':
-            import task
+            import bgcalc
             args.cache_path = cache_path
-            app = task.get_celery_app(conf['conf'])
+            app = bgcalc.calc_backend_app(settings)
             res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),),
                                 time_limit=TASK_TIME_LIMIT)
             # worker task caches the value AFTER the result is returned (see worker.py)
@@ -477,11 +478,11 @@ def calculate_freqs_ct(args):
     """
     note: this is called by webserver
     """
-    backend, conf = settings.get_full('global', 'calc_backend')
+    backend = settings.get('calc_backend', 'type')
     if backend == 'celery':
-        import task
+        import bgcalc
         try:
-            app = task.get_celery_app(conf['conf'])
+            app = bgcalc.calc_backend_app(settings)
             res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),),
                                 time_limit=TASK_TIME_LIMIT)
             calc_result = res.get()
