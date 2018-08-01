@@ -1197,7 +1197,8 @@ class Kontext(Controller):
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
                 self._plugin_api).to_dict() if irp else None
-        page_model = action_metadata['page_model'] if action_metadata['page_model'] else l10n.camelize(methodname)
+        page_model = action_metadata['page_model'] if action_metadata['page_model'] else l10n.camelize(
+            methodname)
         result['page_model'] = page_model
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
@@ -1395,7 +1396,7 @@ class Kontext(Controller):
         backend = settings.get('calc_backend', 'type')
         if backend in('celery', 'konserver'):
             import bgcalc
-            app = bgcalc.calc_backend_app(settings)
+            app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()
             for at in at_list:
                 r = app.AsyncResult(at.ident)

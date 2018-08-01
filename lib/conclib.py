@@ -112,7 +112,7 @@ def _cancel_async_task(cache_map, subchash, q):
         import bgcalc
         try:
             if status.task_id:
-                app = bgcalc.calc_backend_app(settings)
+                app = bgcalc.calc_backend_client(settings)
                 app.control.revoke(status.task_id, terminate=True, signal='SIGKILL')
         except IOError:
             pass
@@ -211,7 +211,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         mp.create_task(user_id, corp, subchash, q, samplesize).start()
     elif backend in ('celery', 'konserver'):
         import bgcalc
-        app = bgcalc.calc_backend_app(settings)
+        app = bgcalc.calc_backend_client(settings)
         ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
                                                      subchash, q, samplesize, TASK_TIME_LIMIT), time_limit=10)  # register should be fast
         ans.get()  # = wait for task registration

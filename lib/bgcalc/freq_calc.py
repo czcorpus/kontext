@@ -179,7 +179,7 @@ def build_arf_db(corp, attrname):
     backend = settings.get('calc_backend', 'type')
     if backend in ('celery', 'konserver'):
         import bgcalc
-        app = bgcalc.calc_backend_app(settings)
+        app = bgcalc.calc_backend_client(settings)
         task_ids = []
         for m in ('frq', 'arf', 'docf'):
             logfilename_m = create_log_path(base_path, m)
@@ -289,7 +289,7 @@ def calculate_freqs(args):
         if backend in ('celery', 'konserver'):
             import bgcalc
             args.cache_path = cache_path
-            app = bgcalc.calc_backend_app(settings)
+            app = bgcalc.calc_backend_client(settings)
             res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),),
                                 time_limit=TASK_TIME_LIMIT)
             # worker task caches the value AFTER the result is returned (see worker.py)
@@ -482,7 +482,7 @@ def calculate_freqs_ct(args):
     if backend in ('celery', 'konserver'):
         import bgcalc
         try:
-            app = bgcalc.calc_backend_app(settings)
+            app = bgcalc.calc_backend_client(settings)
             res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),),
                                 time_limit=TASK_TIME_LIMIT)
             calc_result = res.get()

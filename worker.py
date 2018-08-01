@@ -72,7 +72,7 @@ import bgcalc
 from bgcalc import (freq_calc, subc_calc, coll_calc)
 
 
-app = bgcalc.calc_backend_app(settings)
+app = bgcalc.calc_backend_server(settings, 'worker')
 
 
 def load_script_module(name, path):

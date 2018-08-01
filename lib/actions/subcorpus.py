@@ -148,7 +148,7 @@ class Subcorpus(Querying):
             backend = settings.get('calc_backend', 'type')
             if backend in ('celery', 'konserver'):
                 import bgcalc
-                app = bgcalc.calc_backend_app(settings)
+                app = bgcalc.calc_backend_client(settings)
                 res = app.send_task('worker.create_subcorpus',
                                     (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
                                      tt_query, imp_cql, description),
