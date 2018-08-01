@@ -238,7 +238,7 @@ class Subcorpus(Querying):
         ))
         return out
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', http_method='POST')
     def ajax_create_subcorpus(self, request):
         return self._create_subcorpus(request)
 
@@ -360,7 +360,7 @@ class Subcorpus(Querying):
                     ans['extended_info'].update(tmp)
         return ans
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', http_method='POST')
     def ajax_wipe_subcorpus(self, request):
         if plugins.runtime.SUBC_RESTORE.exists:
             corpus_id = request.form['corpname']

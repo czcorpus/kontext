@@ -1423,7 +1423,7 @@ class Actions(Querying):
             fw.write(bwlist.encode('utf-8'))
         return hash
 
-    @exposed(access_level=1, legacy=True)
+    @exposed(access_level=1, legacy=True, http_method='POST')
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
                  ref_usesubcorp='', paginate=True, wlhash='', blhash=''):
         """
@@ -1933,7 +1933,7 @@ class Actions(Querying):
             ans[item[2]] += 1
         return ans
 
-    @exposed(return_type='json', legacy=True)
+    @exposed(return_type='json', legacy=True, http_method='POST')
     def ajax_rename_line_group(self, from_num=0, to_num=-1):
         new_groups = filter(lambda v: v[2] != from_num or to_num != -1, self._lines_groups)
         if to_num > 0:
@@ -1956,7 +1956,7 @@ class Actions(Querying):
                     for x in data]
             return ce.export_pie_chart(data=data, title=request.args.get('title', '??'), format=format)
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', http_method='POST')
     def ajax_get_within_max_hits(self, request):
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
             # a faster solution based on liveattrs
