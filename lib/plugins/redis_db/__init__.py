@@ -49,7 +49,7 @@ class RedisDb(KeyValueStorage):
         parameters.
 
         This method is used only in case multiprocessing is configured
-        for asynchronous tasks (i.e. in case 'celery' is used, it is
+        for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used, it is
         never called).
         """
         return RedisDb({

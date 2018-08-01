@@ -176,7 +176,7 @@ def calculate_colls(coll_args):
         coll_args.num_fetch_items = num_fetch_items
 
         backend = settings.get('calc_backend', 'type')
-        if backend == 'celery':
+        if backend in ('celery', 'konserver'):
             import bgcalc
             app = bgcalc.calc_backend_app(settings)
             res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),

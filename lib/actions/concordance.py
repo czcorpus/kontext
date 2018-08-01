@@ -1667,7 +1667,7 @@ class Actions(Querying):
     @exposed(legacy=True, return_type='json')
     def wordlist_process(self, attrname='', worker_tasks=None):
         backend = settings.get('calc_backend', 'type')
-        if worker_tasks and backend == 'celery':
+        if worker_tasks and backend in ('celery', 'konserver'):
             import bgcalc
             app = bgcalc.calc_backend_app(settings)
             for t in worker_tasks:
