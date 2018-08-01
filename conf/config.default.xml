@@ -24,15 +24,22 @@
         </translations>
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
         <user_filter_files_dir>/var/local/corpora/user_filter_files</user_filter_files_dir>
-        <periodic_tasks conf="/opt/kontext/conf/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
-        <calc_backend conf="/opt/kontext/conf/celeryconfig.py">celery</calc_backend>
-        <calc_backend_time_limit>600</calc_backend_time_limit>
         <action_path_prefix/>
         <static_files_prefix>/files</static_files_prefix>
         <use_conc_toolbar>0</use_conc_toolbar>
         <anonymous_user_conc_login_prompt>0</anonymous_user_conc_login_prompt>
     </global>
+    <calc_backend>
+        <type>celery</type>
+        <conf>//opt/kontext/conf/celeryconfig.py</conf>
+        <status_service_url />
+        <time_limit>600</time_limit>
+    </calc_backend>
+    <job_scheduler>
+        <type>celery</type>
+        <conf>/opt/kontext/conf/beatconfig.py</conf>
+    </job_scheduler>
     <mailing/>
     <logging>
         <path>/var/log/kontext/application.log</path>
@@ -80,8 +87,8 @@
         <auth>
             <module>default_auth</module>
             <js_module>defaultAuth</js_module>
-            <auth_cookie_name>kontext_session</auth_cookie_name>
             <anonymous_user_id>1</anonymous_user_id>
+            <auth_cookie_name>kontext_session</auth_cookie_name>
             <login_url>/user/login?continue=%s</login_url>
             <logout_url>/user/logout?continue=%s</logout_url>
         </auth>
@@ -92,13 +99,13 @@
         <conc_persistence>
             <module>default_conc_persistence</module>
             <ttl_days extension-by="default">100</ttl_days>
-            <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
+            <archive_dir extension-by="default">/var/local/corpora/conc_persistence</archive_dir>
         </conc_persistence>
         <corparch>
             <module>default_corparch</module>
             <js_module>defaultCorparch</js_module>
-            <file>/opt/kontext/conf/corplist.xml</file>
-            <root_elm_path>/corplist</root_elm_path>
+            <file extension-by="default">/opt/kontext/conf/corplist.xml</file>
+            <root_elm_path extension-by="default">/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
             <max_num_hints extension-by="default">10</max_num_hints>
             <default_page_list_size extension-by="default">30</default_page_list_size>
@@ -120,7 +127,7 @@
         <getlang>
             <module>default_getlang</module>
             <cookie extension-by="default">kontext_toolbar_lang</cookie>
-            <fallback_lang extension-by="default">en_US</fallback_lang>
+            <fallback_lang extension-by="default">en-US</fallback_lang>
         </getlang>
         <live_attributes/>
         <menu_items>
@@ -131,11 +138,11 @@
             <module>default_query_storage</module>
             <js_module>defaultQueryStorage</js_module>
             <page_num_records>10</page_num_records>
-            <num_kept_records extension-by="default">10</num_kept_records>
+            <ttl_days extension-by="default">10</ttl_days>
         </query_storage>
         <settings_storage>
             <module>default_settings_storage</module>
-            <excluded_users>
+            <excluded_users extension-by="default">
                 <item>1</item>
                 <item>3</item>
             </excluded_users>

@@ -33,7 +33,8 @@ _meta = {}  # contains data of attributes of XML elements representing configura
 _help_links = {}
 _state = ConfState()
 
-SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora', 'logging', 'mailing', 'fcs')
+SECTIONS = (
+    'theme', 'global', 'calc_backend', 'job_scheduler', 'mailing', 'logging', 'corpora', 'fcs', 'plugins')
 
 DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 

@@ -200,16 +200,6 @@
                             </element>
                         </oneOrMore>
                     </element>
-                    <optional>
-                        <element name="periodic_tasks">
-                            <a:documentation>Configures Celery beat. This is not needed if
-                            respective plug-ins support scripts are run by Cron</a:documentation>
-                            <attribute name="conf">
-                                <text />
-                            </attribute>
-                            <text />
-                        </element>
-                    </optional>
                     <element name="upload_cache_dir">
                         <a:documentation>A path where uploaded file (e.g. whitelists/blacklists)
                         are temporarily stored before being processed</a:documentation>
@@ -219,22 +209,6 @@
                         <element name="conc_line_max_group_num">
                             <a:documentation>defines possible numbers from 0 to the one defined here
                             which can be used when manually grouping concordance lines</a:documentation>
-                            <data type="integer" />
-                        </element>
-                    </optional>
-                    <element name="calc_backend">
-                        <a:documentation>Selects a backend used to calculate miscellaneous task in the background</a:documentation>
-                        <attribute name="conf">
-                            <text />
-                        </attribute>
-                        <choice>
-                            <value>multiprocessing</value>
-                            <value>celery</value>
-                        </choice>
-                    </element>
-                    <optional>
-                        <element name="calc_backend_time_limit">
-                            <a:documentation>Number of seconds for backend tasks to run.</a:documentation>
                             <data type="integer" />
                         </element>
                     </optional>
@@ -313,6 +287,39 @@
                             </a:documentation>
                         </element>
                     </optional>
+                </interleave>
+            </element>
+            <element name="calc_backend">
+                <a:documentation>Selects a backend used to calculate miscellaneous task in the background</a:documentation>
+                <interleave>
+                    <element name="type">
+                        <choice>
+                            <value>celery</value>
+                            <value>multiprocessing</value>
+                        </choice>
+                    </element>
+                    <element name="conf">
+                        <text />
+                    </element>
+                    <element name="time_limit">
+                        <a:documentation>Number of seconds for backend tasks to run.</a:documentation>
+                        <data type="positiveInteger" />
+                    </element>
+                    <element name="status_service_url">
+                        <data type="anyURI" />
+                    </element>
+                </interleave>
+            </element>
+            <element name="job_scheduler">
+                <a:documentation>Configures Celery beat (or possibly other scheduler). This is not needed if
+                            respective plug-ins support scripts are run by Cron</a:documentation>
+                <interleave>
+                    <element name="type">
+                        <text />
+                    </element>
+                    <element name="conf">
+                        <text />
+                    </element>
                 </interleave>
             </element>
             <optional>

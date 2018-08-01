@@ -1390,10 +1390,10 @@ class Kontext(Controller):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request):
-        backend, conf = settings.get_full('global', 'calc_backend')
+        backend = settings.get('calc_backend', 'type')
         if backend == 'celery':
-            import task
-            app = task.get_celery_app(conf['conf'])
+            import bgcalc
+            app = bgcalc.calc_backend_app(settings)
             at_list = self.get_async_tasks()
             for at in at_list:
                 r = app.AsyncResult(at.ident)

@@ -46,7 +46,7 @@ import plugins
 import translation
 from bgcalc.stderr2f import stderr_redirector
 
-settings.load('%s/conf/config.xml' % CURR_PATH)
+settings.load(os.path.join(CURR_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 import manatee
@@ -68,14 +68,11 @@ translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization
 
 import concworker
-import task
-from bgcalc import freq_calc
-from bgcalc import subc_calc
-from bgcalc import coll_calc
+import bgcalc
+from bgcalc import (freq_calc, subc_calc, coll_calc)
 
 
-_, conf = settings.get_full('global', 'calc_backend')
-app = task.get_celery_app(conf['conf'])
+app = bgcalc.calc_backend_app(settings)
 
 
 def load_script_module(name, path):
