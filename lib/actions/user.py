@@ -37,7 +37,7 @@ class User(Kontext):
     def _is_anonymous_id(user_id):
         return plugins.runtime.AUTH.instance.is_anonymous(user_id)
 
-    @exposed(skip_corpus_init=True, template='user/login.tmpl')
+    @exposed(skip_corpus_init=True, template='user/login.tmpl', http_method='POST')
     def login(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         if request.method == 'GET':
