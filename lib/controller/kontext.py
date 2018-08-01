@@ -1391,7 +1391,7 @@ class Kontext(Controller):
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request):
         backend = settings.get('calc_backend', 'type')
-        if backend == 'celery':
+        if backend in('celery', 'konserver'):
             import bgcalc
             app = bgcalc.calc_backend_app(settings)
             at_list = self.get_async_tasks()

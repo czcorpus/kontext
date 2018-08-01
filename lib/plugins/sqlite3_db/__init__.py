@@ -90,8 +90,8 @@ class DefaultDb(KeyValueStorage):
         parameters.
 
         This method is used only in case multiprocessing is configured
-        for asynchronous tasks (i.e. in case 'celery' is used, it is
-        never called).
+        for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used,
+        it is never called).
         """
         return DefaultDb({
             'default:db_path': self.conf.get('default:db_path')

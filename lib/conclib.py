@@ -108,7 +108,7 @@ def _cancel_async_task(cache_map, subchash, q):
     backend = settings.get('calc_backend', 'type')
     if backend == 'multiprocessing':
         logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')
-    elif backend == 'celery' and status:
+    elif backend in ('celery', 'konserver') and status:
         import bgcalc
         try:
             if status.task_id:
@@ -209,7 +209,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     if backend == 'multiprocessing':
         from concworker import mp
         mp.create_task(user_id, corp, subchash, q, samplesize).start()
-    elif backend == 'celery':
+    elif backend in ('celery', 'konserver'):
         import bgcalc
         app = bgcalc.calc_backend_app(settings)
         ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),

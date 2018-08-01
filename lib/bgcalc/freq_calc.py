@@ -177,7 +177,7 @@ def build_arf_db(corp, attrname):
 
     subc_path = prepare_arf_calc_paths(corp, attrname)
     backend = settings.get('calc_backend', 'type')
-    if backend == 'celery':
+    if backend in ('celery', 'konserver'):
         import bgcalc
         app = bgcalc.calc_backend_app(settings)
         task_ids = []
@@ -286,7 +286,7 @@ def calculate_freqs(args):
                                         collator_locale=args.collator_locale)
     if calc_result is None:
         backend = settings.get('calc_backend', 'type')
-        if backend == 'celery':
+        if backend in ('celery', 'konserver'):
             import bgcalc
             args.cache_path = cache_path
             app = bgcalc.calc_backend_app(settings)
@@ -479,7 +479,7 @@ def calculate_freqs_ct(args):
     note: this is called by webserver
     """
     backend = settings.get('calc_backend', 'type')
-    if backend == 'celery':
+    if backend in ('celery', 'konserver'):
         import bgcalc
         try:
             app = bgcalc.calc_backend_app(settings)
