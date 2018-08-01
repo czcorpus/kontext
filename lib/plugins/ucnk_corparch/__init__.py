@@ -125,7 +125,7 @@ def get_favorite_corpora(ctrl, request):
     return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_api)
 
 
-@exposed(access_level=1, return_type='json', skip_corpus_init=True)
+@exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
 def ask_corpus_access(ctrl, request):
     ans = {}
     with plugins.runtime.CORPARCH as ca:
