@@ -26,6 +26,7 @@ import sys
 import argparse
 import time
 import json
+from datetime import datetime
 
 import redis
 import sqlite3
@@ -142,6 +143,32 @@ def run(conf, num_proc, dry_run):
     return archiver.run(num_proc, dry_run)
 
 
+def _create_archive(conf, dry_run):
+    arch_db_path = conf.get('plugins')['conc_persistence']['ucnk:archive_db_path']
+    if os.path.exists(arch_db_path):
+        arch_filename = os.path.splitext(os.path.basename(arch_db_path))[0]
+        dt = time.strftime('%Y-%m-%d', datetime.now().timetuple())
+        backed_up_arch_path = os.path.join(os.path.dirname(
+            arch_db_path), arch_filename + '.' + dt + '.db')
+        print('Archive {0} already exists'.format(arch_db_path))
+        print('Please rename the current file to {0} and the run the action again'.format(
+            backed_up_arch_path))
+        sys.exit(1)
+    sql = ('CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer '
+           'NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))')
+    if dry_run:
+        print(sql)
+    else:
+        to_db = SQLite3Ops(arch_db_path)
+        to_db.execute(sql, ())
+        to_db.commit()
+        print('Created a new concordance archive file {0}.'.format(arch_db_path))
+        print('Please do not forget to set proper ownership and read+write permissions')
+        print('for web server user (www-data on Ubuntu)')
+        print('When done, please restart KonText Gunicorn server and also worker server (Celery)')
+        print('')
+
+
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
     sys.path.insert(0, os.path.realpath('%s/../../../scripts/' %
@@ -156,10 +183,23 @@ if __name__ == '__main__':
     initializer.init_plugin('auth')
 
     parser = argparse.ArgumentParser(
-        description='Archive old records from Synchronize data from mysql db to redis')
-    parser.add_argument('num_proc', metavar='NUM_PROC', type=int)
-    parser.add_argument('-d', '--dry-run', action='store_true',
-                        help='allows running without affecting storage data (not 100% error prone as it reads/writes to Redis)')
+        description='Archive old records from Redis to a SQLite3 database')
+    parser.add_argument('action', metavar='ACTION', type=str, help='One of {new_archive, backup}')
+    parser.add_argument('-n', '--num_proc', type=int, default=1000,
+                        help='For backup, how many items to process. Default is 1000')
+    parser.add_argument('-d', '--dry-run', action='store_true', default=False,
+                        help=('allows running without affecting storage data '
+                              '(not 100%% error prone as it reads/writes to Redis)'))
     args = parser.parse_args()
-    ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
-    print(ans)
+    if args.action == 'backup':
+        ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
+        print(ans)
+    elif args.action == 'new_archive':
+        try:
+            _create_archive(conf=settings, dry_run=args.dry_run)
+        except Exception as ex:
+            print('{0}: {1}'.format(ex.__class__.__name__, ex))
+            sys.exit(1)
+    else:
+        print('Unknown action "{0}"'.format(args.action))
+        sys.exit(1)
