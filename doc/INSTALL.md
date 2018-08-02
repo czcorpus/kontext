@@ -20,8 +20,8 @@
 <a name="install_install_kontext"></a>
 ## Install KonText
 
-The easiest way to install and test-run KonText is to install it in an **LXC container** using the <a href="../scripts/install/install.sh">install.sh</a> script provided in this repository 
-that performs all the installation and configuration steps that are necessary to run KonText as a standalone server application for testing and development purposes. The installation has been 
+The easiest way to install and test-run KonText is to install it in an **LXC container** using the <a href="../scripts/install/install.sh">install.sh</a> script provided in this repository
+that performs all the installation and configuration steps that are necessary to run KonText as a standalone server application for testing and development purposes. The installation has been
 tested for Ubuntu 16.04.3 LTS.
 
 Set up and start an LXC container:
@@ -76,8 +76,8 @@ Now open "container_IP_address:port" (e.g. *http://10.0.3.100:5000*) in your bro
 
 Before you can build KonText, a proper configuration must be ready (especially the *plugins* section).
 
-KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one 
-from scratch, use a sample configuration *conf/config.sample.xml* as a starting point.
+KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one
+from scratch, use a sample configuration *conf/config.default.xml* as a starting point.
 
 :bulb: You can always check the configuration using *scripts/validate_setup.py*:
 
@@ -94,10 +94,8 @@ kontext configuration XML)
 ### Plug-ins
 
 Configuration section *plugins* is kind of specific as it contains a configuration for custom implementations of
-concrete KonText modules (i.e. it determines which objects are instantiated to serve 
-configurable/replaceable functions). To configure plug-ins properly please refer to *conf/config.sample.xml* and plug-ins
-source codes which should always contain configuration description in
-[RelaxNG compact syntax](http://www.relaxng.org/compact-tutorial-20030326.html).
+concrete KonText modules (i.e. it determines which objects are instantiated to serve
+configurable/replaceable functions). To configure plug-ins properly please refer to their *config.rng* schema files.
 
 For more information about plug-ins API and configuration please visit
 [our wiki](https://github.com/czcorpus/kontext/wiki/Plug-in-API).
@@ -143,7 +141,7 @@ for testing and development purposes. The application can be activated by the fo
 <a name="install_wsgi_application"></a>
 ## WSGI application within a dedicated web-server
 
-This is the recommended mode for production deployments. 
+This is the recommended mode for production deployments.
 
 <a name="install_gunicorn_plus_proxy"></a>
 ### Gunicorn + reverse proxy (Apache, Nginx)
@@ -266,8 +264,8 @@ systemctl start gunicorn-kontext
 <a name="install_apache_mod_wsgi"></a>
 ### Apache mod_wsgi
 
-Running KonText within *Apache* webserver is possible with some [limitations](#limitation_note). 
-We recommend considering [Gunicorn + Proxy](#wsgi_application) variant for serious 
+Running KonText within *Apache* webserver is possible with some [limitations](#limitation_note).
+We recommend considering [Gunicorn + Proxy](#wsgi_application) variant for serious
 production deployment.
 
 Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
@@ -304,7 +302,7 @@ possible. Please refer to the [Apache documentation](http://httpd.apache.org/doc
 <a name="install_celery_worker"></a>
 ## Celery worker
 
-KonText uses [Celery](http://www.celeryproject.org/) worker queue for many 
+KonText uses [Celery](http://www.celeryproject.org/) worker queue for many
 computing-intensive tasks (many of them asynchronous). It can run on the same
 machine as the main application but it can also run on a dedicated server
 (as long as the servers share a disk storage).
@@ -420,7 +418,7 @@ ExecStartPre=/bin/chown -R celery:root /var/run/celerybeat
 WantedBy=multi-user.target
 ```
 
-Then define a KonText-specific configuration 
+Then define a KonText-specific configuration
 */opt/kontext-production/conf/beatconfig.py*:
 
 ```
