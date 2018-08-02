@@ -19,7 +19,7 @@ import os
 import unittest
 import settings
 
-conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.sample.xml')
+conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.default.xml')
 
 
 class SettingsMockedDataTest(unittest.TestCase):
