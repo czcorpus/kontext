@@ -193,7 +193,7 @@ class Backend(DatabaseBackend):
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0,
                          limit=10000000000):
-        where_cond = ['c.active = %s', 'kcu.user_id = %s']
+        where_cond = ['c.active = %s', 'kcu.user_id = %s OR c.requestable = 1']
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
@@ -228,7 +228,7 @@ class Backend(DatabaseBackend):
                'FROM corpora AS c '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-               'JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
+               'LEFT JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
                'WHERE {0} '
                'GROUP BY c.name '
                'HAVING num_match_keys >= %s '
