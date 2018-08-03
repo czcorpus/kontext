@@ -579,6 +579,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         token_detail_elm = node.find('token_detail')
         if token_detail_elm is not None:
             ans.token_detail.providers = [p.text for p in token_detail_elm.findall('provider')]
+        self.customize_corpus_info(ans, node)
         data.append(ans)
 
     def _parse_corplist_node(self, root, path, lang, data):
