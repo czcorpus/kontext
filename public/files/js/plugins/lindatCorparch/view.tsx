@@ -246,8 +246,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _pmltq(pmltq:string) {
             if (pmltq !== 'no' && this.props.permitted) {
             return <a href={this.props.pmltq} className="md-transparent" title={"Inspect " + this.props.name + " in PML-TQ"}>
-                    <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
-                        <span className="lindat-pmltq-logo"></span>
+                    <button className="btn btn-default lindat-pmltq-logo" style={{background: this._myColor(), opacity: this._myOpacity()}}>
                     </button></a>
             }
         }
