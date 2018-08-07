@@ -214,7 +214,8 @@ class CentralAuth(AbstractRemoteAuth):
                     'id': int(response_obj['user']['id']),
                     'user': response_obj['user'].get('user'),  # TODO API unknown
                     'fullname': u'%s %s' % (response_obj['user'].get('firstName'),
-                                            response_obj['user'].get('surname'))  # TODO API unknown
+                                            response_obj['user'].get('surname')),
+                    'email': response_obj['user'].get('email', None)  # TODO API unknown
                 }
                 # reload available corpora from remote server
                 self.refresh_user_permissions(plugin_api)
@@ -259,14 +260,12 @@ class CentralAuth(AbstractRemoteAuth):
         cursor.close()
         src_db.close()
 
-    def get_user_info(self, user_id):
-        user_key = self._mk_user_key(user_id)
-        info = self._db.get(user_key)
-        if info is None:
-            raise ValueError('Failed to obtain information about user {0}'.format(user_key))
-        info.pop('pwd_hash', None)
-        info.pop('recovery_hash', None)
-        return info
+    def get_user_info(self, plugin_api):
+        ans = {}
+        ans.update(plugin_api.user_dict)
+        ans['username'] = ans['user']
+        del(ans['user'])
+        return ans
 
     def is_administrator(self, user_id):
         """
