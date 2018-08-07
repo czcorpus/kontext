@@ -246,9 +246,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _pmltq(pmltq:string) {
             if (pmltq !== 'no' && this.props.permitted) {
             return <a href={this.props.pmltq} className="md-transparent" title={"Inspect " + this.props.name + " in PML-TQ"}>
-                    <button className="btn btn-default lindat-pmltq-logo" style={{background: this._myColor(), opacity: this._myOpacity()}}>
-                        <span className="lindat-pmltq-logo"></span>
-                    </button></a>
+                    <button className="btn btn-default pmltq" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                        <span className="lindat-pmltq-logo"></span></button></a>
             }
         }
 
@@ -270,7 +269,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _syntax() {
             if (this.props.features.includes('syntax')) {
-                return <button className="btn btn-default lindat-pmltq-logo">&nbsp;</button>
+                return <button className="btn btn-default pmltq">
+                    <span className="lindat-pmltq-logo"></span>
+                </button>
             }
             return null;
         }
@@ -280,7 +281,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 data-features={this.props.features.join(',')}
                                 data-lang={this.props.language.join(',')} >
                     <div className="row">
-                        <div className="corpus-details col-xs-4">
+                        <div className="corpus-details col-xs-7">
                         Features:&nbsp;
                             {this.props.features.map((item, index) =>
                             (<div key={index} style={{display: "inline-block"}}>
@@ -296,18 +297,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 {this.props.language}
                             </span>
                             <span className="glyphicon glyphicon-remove search-selected clickable" onClick={this._searchLangDrop} style={{display: this._showLangSign(), fontSize: "10px"}}> </span>
+                            Size:&nbsp;
+                            <span className="corpus-details-info">
+                                {he.formatNumber(this.props.size) + " positions"}
+                            </span>
                         </div>
                     </div>
                     <div className="row">
                         <div className="corpus-main-info col-xs-12 col-md-12">
                             <div className="row">
-                                <div className="col-xs-2 tokens">
-                                    Size
-                                    <div className="corpus-details-info">
-                                        {he.formatNumber(this.props.size) + " positions"}
-                                    </div>
-                                </div>
-                                <div className="col-xs-1 icons">
+                                <div className="col-xs-2 icons">
                                     {this._pmltq(this.props.pmltq)}
                                     {this._download(this.props.repo)}
                                     {this._access()}
