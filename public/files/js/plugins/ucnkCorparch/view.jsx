@@ -57,12 +57,12 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
         render() {
             return (
                 <form>
-                    <img className="message-icon" src={this.createStaticUrl('img/message-icon.png')}
-                            alt={this.translate('ucnkCorparch__message_icon')} />
-                    <p>{this.translate('ucnkCorparch__please_give_me_access_{corpname}',
+                    <img className="message-icon" src={he.createStaticUrl('img/message-icon.png')}
+                            alt={he.translate('ucnkCorparch__message_icon')} />
+                    <p>{he.translate('ucnkCorparch__please_give_me_access_{corpname}',
                         {corpname: this.props.corpusName})}</p>
                     <label className="hint">
-                        {this.translate('ucnkCorparch__custom_message')}:
+                        {he.translate('ucnkCorparch__custom_message')}:
                     </label>
                     <div>
                         <textarea rows="3" cols="50"
@@ -71,7 +71,7 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
                     </div>
                     <div>
                         <button className="submit" type="button"
-                                onClick={this._submitHandler}>{this.translate('ucnkCorparch__send')}</button>
+                                onClick={this._submitHandler}>{he.translate('ucnkCorparch__send')}</button>
                     </div>
                 </form>
             );
@@ -154,13 +154,13 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
         render() {
             if (this.state.isUnlockable) {
-                const img = this.state.hasFocus ? <img src={this.createStaticUrl('img/unlocked.svg')} /> :
-                        <img src={this.createStaticUrl('img/locked.svg')} />;
+                const img = this.state.hasFocus ? <img src={he.createStaticUrl('img/unlocked.svg')} /> :
+                        <img src={he.createStaticUrl('img/locked.svg')} />;
 
                 return (
                     <div>
                         <div className="lock-status"
-                                title={this.translate('ucnkCorparch__click_to_ask_access')}
+                                title={he.translate('ucnkCorparch__click_to_ask_access')}
                                 onMouseOver={this._mouseOverHandler}
                                 onMouseOut={this._mouseOutHandler}
                                 onClick={this._clickHandler}>

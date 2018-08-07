@@ -244,28 +244,27 @@ class UcnkCorpArch(CorpusArchive):
         """
         cl = []
         for item in self._raw_list(plugin_api.user_lang).values():
-            corp_id, path, web = item['id'], item['path'], item['sentence_struct']
-            if corp_id in user_allowed_corpora:
-                try:
-                    corp_info = self._manatee_corpora.get_info(corp_id)
-                    cl.append({'id': corp_id,
-                               'canonical_id': corp_id,
-                               'name': l10n.import_string(corp_info.name,
-                                                          from_encoding=corp_info.encoding),
-                               'desc': l10n.import_string(corp_info.description,
-                                                          from_encoding=corp_info.encoding),
-                               'size': corp_info.size,
-                               'path': path,
-                               'requestable': item.get('requestable', False)
-                               })
-                except Exception as e:
-                    import logging
-                    logging.getLogger(__name__).warn(
-                        u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
-                                                                               type(e).__name__, e))
-                    cl.append({
-                        'id': corp_id, 'canonical_id': corp_id, 'name': corp_id,
-                        'path': path, 'desc': '', 'size': None})
+            corp_id, path, requestable = item['id'], item['path'], item['requestable']
+            try:
+                corp_info = self._manatee_corpora.get_info(corp_id)
+                cl.append({'id': corp_id,
+                           'canonical_id': corp_id,
+                           'name': l10n.import_string(corp_info.name,
+                                                      from_encoding=corp_info.encoding),
+                           'desc': l10n.import_string(corp_info.description,
+                                                      from_encoding=corp_info.encoding),
+                           'size': corp_info.size,
+                           'path': path,
+                           'requestable': item.get('requestable', False)
+                           })
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warn(
+                    u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
+                                                                           type(e).__name__, e))
+                cl.append({
+                    'id': corp_id, 'canonical_id': corp_id, 'name': corp_id,
+                    'path': path, 'desc': '', 'size': None})
         return cl
 
     def export_actions(self):
