@@ -285,7 +285,7 @@
         });
     }
 
-    module.exports.findActionPathPrefix = function (confDoc) {
+    function findPathPrefixNode(confDoc, nodeName) {
         let globalNode;
         const rootElm = confDoc.documentElement;
         for (let i = 0; i < rootElm.childNodes.length; i += 1) {
@@ -295,12 +295,20 @@
             }
         }
         if (globalNode) {
-            const elms = globalNode.getElementsByTagName('action_path_prefix');
+            const elms = globalNode.getElementsByTagName(nodeName);
             if (elms.length > 0 && elms[0].textContent) {
                 return elms[0].textContent.replace(/\/$/, '');
             }
         }
         return '';
+    }
+
+    module.exports.findActionPathPrefix = function (confDoc) {
+        return findPathPrefixNode(confDoc, 'action_path_prefix');
+    };
+
+    module.exports.findStaticPathPrefix = function (confDoc) {
+        return findPathPrefixNode(confDoc, 'static_files_prefix');
     };
 
 }(module));

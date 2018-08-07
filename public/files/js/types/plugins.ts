@@ -117,11 +117,19 @@ export namespace PluginInterfaces {
 
         export type View = React.ComponentClass<{isActive:boolean}>;
 
+        export interface ISubcorpFormModel {
+            getIsPublic():boolean;
+            getDescription():string;
+            getSubcName():string;
+            addChangeListener(fn:Kontext.ModelListener):void;
+            removeChangeListener(fn:Kontext.ModelListener):void;
+        }
+
         export interface Factory {
             (
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
-                getCurrentSubcnameFn:()=>string,
+                subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
                 getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
                 corpusIdAttr:string
             ):IPlugin;

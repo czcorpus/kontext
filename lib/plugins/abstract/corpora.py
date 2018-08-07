@@ -169,12 +169,13 @@ class BrokenCorpusInfo(CorpusInfo):
     An incomplete corpus information. It should be used in corpora lists/search
     results instead of None and similar solutions to prevent unwanted exceptions
     to be risen. Broken corpus information still does not mean that the corpus
-    cannot be used.
+    cannot be used - but KonText prevents this (in controller's pre_dispatch)
+    because missing configuration can break/disable many functions.
     """
 
     def __init__(self, name=None):
         super(BrokenCorpusInfo, self).__init__()
-        self.name = (name if name else 'undefined') + '(!)'
+        self.name = (name if name else 'undefined')
         self.metadata = CorpusMetadata()
         self.manatee = ManateeCorpusInfo()
 

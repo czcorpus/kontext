@@ -74,6 +74,7 @@ class PyConc(manatee.Concordance):
         self.corpus_encoding = corp.get_conf('ENCODING')
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
+        self._conc_file = None
 
         try:
             if action == 'q':
@@ -88,17 +89,20 @@ class PyConc(manatee.Concordance):
                     self, corp, self.export_string(query), sample_size, full_size)
             elif action == 'l':
                 # load from a file
-                manatee.Concordance.__init__(self, corp, params)
+                self._conc_file = params
+                manatee.Concordance.__init__(self, corp, self._conc_file)
             elif action == 's':
                 # stored in _conc_dir
-                manatee.Concordance.__init__(self, corp,
-                                             os.path.join(self.pycorp._conc_dir, corp.corpname,
-                                                          params + '.conc'))
+                self._conc_file = os.path.join(self.pycorp._conc_dir, corp.corpname, params + '.conc')
+                manatee.Concordance.__init__(self, corp, self._conc_file)
             else:
                 raise RuntimeError(_('Unknown concordance action: %s') % action)
         except UnicodeEncodeError:
             raise RuntimeError('Character encoding of this corpus ({0}) does not support one or more characters in the query.'
                                .format(self.corpus_encoding))
+
+    def get_conc_file(self):
+        return self._conc_file
 
     def exec_command(self, name, options):
         fn = getattr(self, 'command_{0}'.format(name), None)

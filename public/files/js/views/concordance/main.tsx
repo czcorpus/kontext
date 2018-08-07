@@ -355,7 +355,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     <span className="ipm-note">(
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
                         {he.translate('concview__ipm_rel_to_the_{subcname}',
-                        {subcname: props.subCorpName})}
+                        {subcname: props.origSubcorpName ? props.origSubcorpName : props.subCorpName})}
                     )</span>
                 );
 

@@ -193,6 +193,7 @@ class Actions(Querying):
                 del self.args.q[i]
             i += 1
         out = self._create_empty_conc_result_dict()
+        conc = None
         try:
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
                                       samplesize=corpus_info.sample_size)
@@ -281,16 +282,20 @@ class Actions(Querying):
         with plugins.runtime.CHART_EXPORT as ce:
             out['chart_export_formats'].extend(ce.get_supported_types())
         out['quick_save_row_limit'] = self.CONC_QUICK_SAVE_MAX_LINES
+        if conc is not None and conc.get_conc_file():
+            out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
+        else:
+            out['conc_cache_key'] = None
         return out
 
-    @exposed(acess_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
+    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def archive_concordance(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
             revoke = bool(int(request.form['revoke']))
             cp.archive(self.session_get('user', 'id'), request.form['code'], revoke=revoke)
         return dict(revoked=revoke)
 
-    @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
+    @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def get_stored_conc_archived_status(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
             return dict(is_archived=cp.is_archived(request.args['code']))
