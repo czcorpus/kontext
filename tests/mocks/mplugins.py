@@ -66,5 +66,5 @@ class MockAuth(AbstractAuth):
     def permitted_corpora(self, user_dict):
         raise NotImplementedError()
 
-    def get_user_info(self, user_id):
+    def get_user_info(self, plugin_api):
         raise NotImplementedError()

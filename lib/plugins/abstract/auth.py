@@ -78,7 +78,7 @@ class AbstractAuth(object):
         """
         raise NotImplementedError()
 
-    def get_user_info(self, user_id):
+    def get_user_info(self, plugin_api):
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions

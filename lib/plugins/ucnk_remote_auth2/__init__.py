@@ -230,8 +230,8 @@ class CentralAuth(AbstractRemoteAuth):
             corpora.append(IMPLICIT_CORPUS)
         return dict((self.canonical_corpname(c), self.variant_prefix(c)) for c in corpora)
 
-    def get_user_info(self, user_id):
-        user_key = self._mk_user_key(user_id)
+    def get_user_info(self, plugin_api):
+        user_key = self._mk_user_key(plugin_api.user_id)
         info = self._db.get(user_key)
         info.pop('pwd_hash', None)
         info.pop('recovery_hash', None)

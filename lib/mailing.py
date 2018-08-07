@@ -25,7 +25,7 @@ import settings
 
 def send_concordance_url(auth, plugin_api, recipient, url):
     user_id = plugin_api.session['user']['id']
-    user_info = auth.get_user_info(user_id)
+    user_info = auth.get_user_info(plugin_api)
     user_email = user_info['email']
     username = user_info['username']
     smtp_server = settings.get('mailing', 'smtp_server')
