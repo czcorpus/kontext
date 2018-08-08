@@ -20,7 +20,6 @@
 
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
-import * as SoundManager from 'vendor/SoundManager';
 import RSVP from 'rsvp';
 
 import {Kontext, TextTypes} from '../types/common';
@@ -34,8 +33,8 @@ import * as conclines from '../conclines';
 import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
 import {LineSelectionModel} from '../models/concordance/lineSelection';
 import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
-import {ConcLineModel, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
-import {QueryFormProperties, QueryFormUserEntries, QueryModel, QueryHintModel, fetchQueryFormArgs} from '../models/query/main';
+import {ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
+import {QueryFormProperties, QueryModel, QueryHintModel, fetchQueryFormArgs} from '../models/query/main';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {QueryReplayModel, LocalQueryFormData} from '../models/query/replay';
 import {FilterModel, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
