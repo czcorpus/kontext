@@ -649,6 +649,13 @@ header#topbar {
         border-collapse: collapse;
     }
 
+    table.attrib-list tr:nth-child(2) th,
+    table.attrib-list tr:nth-child(2) td,
+    table.struct-list tr:nth-child(2) th,
+    table.struct-list tr:nth-child(2) td {
+        padding-top: 0.7em;
+    }
+
     table.attrib-list th,
     table.struct-list th,
     table.attrib-list td,
@@ -660,7 +667,7 @@ header#topbar {
     table.struct-list th {
         color: @color-logo-pink;
         padding: 0.2em 1em;
-        text-align: center;
+        text-align: left;
         font-weight: normal;
     }
 
@@ -688,7 +695,7 @@ header#topbar {
     }
 
     .note {
-        margin: 0;
+        margin: 1em 0 0 0;
         padding: 0 5em 0 0;
         font-size: 70%;
         color: @color-default-text;
@@ -706,9 +713,9 @@ header#topbar {
     dd.references {
 
         h4 {
-            font-size: 1em;
-            font-weight: normal;
-            margin-bottom: 0.2em;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 0.7em;
         }
 
         .html {
