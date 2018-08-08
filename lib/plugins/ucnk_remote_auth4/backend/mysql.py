@@ -234,7 +234,7 @@ class Backend(DatabaseBackend):
                'HAVING num_match_keys >= %s '
                'ORDER BY c.group_name, c.version DESC, c.name '
                'LIMIT %s '
-               'OFFSET %s').format(' AND '.join(where_cond))
+               'OFFSET %s').format(' AND '.join('(' + wc + ')' for wc in where_cond))
         c.execute(sql, values_cond)
         return c.fetchall()
 
