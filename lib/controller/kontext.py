@@ -1127,6 +1127,8 @@ class Kontext(Controller):
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = templating.StateGlobals(global_var_val)
         result['Globals'].set('q', [q for q in result.get('Q')])
+        if corplib.is_subcorpus(self.corp):
+            result['Globals'].set('usesubcorp', self.corp.subcname)
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this

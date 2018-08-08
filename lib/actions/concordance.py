@@ -2025,7 +2025,7 @@ class Actions(Querying):
 
         ans = dict(
             corpname=self.args.corpname,
-            subcorpname=self.args.usesubcorp,
+            subcorpname=self.corp.subcname if corplib.is_subcorpus(self.corp) else None,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
             corpusIdent=dict(id=self.args.corpname, name=self._human_readable_corpname(),

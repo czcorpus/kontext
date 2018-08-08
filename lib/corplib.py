@@ -103,7 +103,7 @@ def subcorpus_from_conc(path, conc, struct=None):
 
 
 def is_subcorpus(corp_obj):
-    return type(corp_obj) == manatee.SubCorpus
+    return isinstance(corp_obj, manatee.SubCorpus)
 
 
 def create_str_vector():
