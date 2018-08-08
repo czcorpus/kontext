@@ -190,7 +190,7 @@ class UcnkCorpArch(CorpusArchive):
         errors = []
 
         user_id = plugin_api.session['user']['id']
-        user_info = self._auth.get_user_info(user_id)
+        user_info = self._auth.get_user_info(plugin_api)
         user_email = user_info['email']
         username = user_info['username']
 

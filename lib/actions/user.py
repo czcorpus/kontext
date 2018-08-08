@@ -165,7 +165,7 @@ class User(Kontext):
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self.session_get('user', 'id'))
+            user_info = auth.get_user_info(self._plugin_api)
             if not self.user_is_anonymous():
                 return {'user': user_info}
             else:
@@ -177,7 +177,7 @@ class User(Kontext):
         if not self._uses_internal_user_pages():
             raise UserActionException(_('This function is disabled.'))
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self.session_get('user', 'id'))
+            user_info = auth.get_user_info(self._plugin_api)
             if not self.user_is_anonymous():
                 return {'user': user_info}
             else:

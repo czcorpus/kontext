@@ -157,14 +157,13 @@ class UcnkCorpArch2(RDBMSCorparch):
         """
         errors = []
 
-        user_id = plugin_api.session['user']['id']
-        user_info = self._auth.get_user_info(user_id)
+        user_info = self._auth.get_user_info(plugin_api)
         user_email = user_info['email']
         username = user_info['username']
 
         text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
         text += u'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
-        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, user_id, user_email)
+        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, plugin_api.user_id, user_email)
         text += u'korpus ID: %s\n' % corpus_id
 
         if custom_message:

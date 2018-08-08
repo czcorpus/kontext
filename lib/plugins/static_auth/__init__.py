@@ -77,7 +77,7 @@ class StaticAuth(AbstractRemoteAuth):
         else:
             return dict((x, None) for x in self._corpora)
 
-    def get_user_info(self, user_id):
+    def get_user_info(self, plugin_api):
         return dict(id=self._anonymous_id + 1, user='apiuser', fullname='API user')
 
     def _validate_key(self, k):

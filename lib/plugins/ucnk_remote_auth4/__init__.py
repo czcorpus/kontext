@@ -188,14 +188,12 @@ class CentralAuth(AbstractRemoteAuth):
         self._db.refresh_user_permissions(
             user_id=plugin_api.session.get('user', {'id': None})['id'])
 
-    def get_user_info(self, user_id):
-        user_key = self._mk_user_key(user_id)
-        info = self._db.get(user_key)
-        if info is None:
-            raise ValueError('Failed to obtain information about user {0}'.format(user_key))
-        info.pop('pwd_hash', None)
-        info.pop('recovery_hash', None)
-        return info
+    def get_user_info(self, plugin_api):
+        ans = {}
+        ans.update(plugin_api.user_dict)
+        ans['username'] = ans['user']
+        del (ans['user'])
+        return ans
 
     def is_administrator(self, user_id):
         """
