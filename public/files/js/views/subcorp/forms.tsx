@@ -247,11 +247,11 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _renderStructLine(line, viewIdx) {
-            return <>
-                <ExpressionDescLine key ={'wl' + line.rowIdx} viewIdx={viewIdx} />
-                <StructLine key={'sl' + line.rowIdx} rowIdx={line.rowIdx}
+            return <React.Fragment key ={'wl' + line.rowIdx}>
+                <ExpressionDescLine viewIdx={viewIdx} />
+                <StructLine rowIdx={line.rowIdx}
                         lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
-            </>;
+            </React.Fragment>;
         }
 
         render() {
