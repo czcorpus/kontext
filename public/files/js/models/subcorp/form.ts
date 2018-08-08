@@ -166,16 +166,19 @@ export class SubcorpWithinFormModel extends StatefulModel {
 
     private lines:Immutable.List<WithinLine>;
 
+    private lineIdGen:number;
+
     constructor(dispatcher:ActionDispatcher, initialStructName:string,
             initialState:Array<{[key:string]:string}>) {
         super(dispatcher);
         this.lines = Immutable.List<WithinLine>();
+        this.lineIdGen = 0;
 
         (initialState || []).forEach((item) => {
             this.importLine(item);
         });
         if (this.lines.size === 0) {
-            this.lines = this.lines.push(new WithinLine(this.lines.size, false, initialStructName, ''));
+            this.lines = this.lines.push(new WithinLine(0, false, initialStructName, ''));
         }
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -203,43 +206,57 @@ export class SubcorpWithinFormModel extends StatefulModel {
         });
     }
 
-    updateWithinType(i, negated) {
-        this.lines = this.lines.set(i, new WithinLine(
-            i,
-            negated,
-            this.lines.get(i).structureName,
-            this.lines.get(i).attributeCql
-        ));
+    updateWithinType(rowIdx, negated) {
+        const srchIdx = this.lines.findIndex(v => v.rowIdx === rowIdx);
+        if (srchIdx > -1) {
+            this.lines = this.lines.set(srchIdx, new WithinLine(
+                srchIdx,
+                negated,
+                this.lines.get(srchIdx).structureName,
+                this.lines.get(srchIdx).attributeCql
+            ));
+        }
     }
 
-    updateStruct(i, structName) {
-        this.lines = this.lines.set(i, new WithinLine(
-            i,
-            this.lines.get(i).negated,
-            structName,
-            this.lines.get(i).attributeCql
-        ));
+    updateStruct(rowIdx, structName) {
+        const srchIdx = this.lines.findIndex(v => v.rowIdx === rowIdx);
+        if (srchIdx > -1) {
+            this.lines = this.lines.set(srchIdx, new WithinLine(
+                srchIdx,
+                this.lines.get(srchIdx).negated,
+                structName,
+                this.lines.get(srchIdx).attributeCql
+            ));
+        }
     }
 
-    updateCql(i, cql) {
-        this.lines = this.lines.set(i, new WithinLine(
-            i,
-            this.lines.get(i).negated,
-            this.lines.get(i).structureName,
-            cql
-        ));
+    updateCql(rowIdx, cql) {
+        const srchIdx = this.lines.findIndex(v => v.rowIdx === rowIdx);
+        if (srchIdx > -1) {
+            this.lines = this.lines.set(srchIdx, new WithinLine(
+                srchIdx,
+                this.lines.get(srchIdx).negated,
+                this.lines.get(srchIdx).structureName,
+                cql
+            ));
+        }
     }
 
     importLine(data) {
-        this.lines = this.lines.push(new WithinLine(this.lines.size, data['negated'], data['structure_name'], data['attribute_cql']));
+        this.lineIdGen += 1;
+        this.lines = this.lines.push(new WithinLine(this.lineIdGen, data['negated'], data['structure_name'], data['attribute_cql']));
     }
 
     addLine(data) {
-        this.lines = this.lines.push(new WithinLine(this.lines.size, data['negated'], data['structureName'], data['attributeCql']));
+        this.lineIdGen += 1;
+        this.lines = this.lines.push(new WithinLine(this.lineIdGen, data['negated'], data['structureName'], data['attributeCql']));
     }
 
-    removeLine(idx) {
-        this.lines = this.lines.remove(idx);
+    removeLine(rowIdx:number) {
+        const srch = this.lines.findIndex(v => v.rowIdx === rowIdx);
+        if (srch > -1) {
+            this.lines = this.lines.remove(srch);
+        }
     }
 
     getLines():Immutable.List<WithinLine> {
