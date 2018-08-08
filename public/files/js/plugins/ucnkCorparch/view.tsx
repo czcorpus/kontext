@@ -293,7 +293,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = listModel.getState()
+            this.state = listModel.getState();
         }
 
         _modelChangeHandler(state) {
@@ -328,10 +328,15 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
 
         _renderDetailBox() {
             if (this.state.detailData) {
+                const bcr = document.body.getBoundingClientRect();
                 return (
                     <layoutViews.PopupBox
                             onCloseClick={this._detailCloseHandler}
-                            customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
+                            customStyle={{
+                                position: 'absolute',
+                                left: '50pt',
+                                top: `${-1 * bcr.top + 150}px`
+                            }}
                             takeFocus={true}>
                         <CorpusInfoBox data={this.state.detailData} isWaiting={this.state.isBusy} />
                     </layoutViews.PopupBox>
