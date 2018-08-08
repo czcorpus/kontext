@@ -21,7 +21,6 @@
 import {Kontext} from '../../../types/common';
 import * as Immutable from 'immutable';
 import {StatelessModel} from '../../../models/base';
-import {GeneralQueryModel} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
@@ -75,10 +74,6 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
     private pageModel:PageModel;
 
     private attrHelper:AttrHelper;
-
-    private attrList:Immutable.List<Kontext.AttrItem>;
-
-    private structAttrList:Immutable.List<Kontext.AttrItem>;
 
     private actionPrefix:string;
 

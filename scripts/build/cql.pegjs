@@ -94,7 +94,7 @@ RepOpt =
     STAR / PLUS / QUEST / LBRACE NUMBER (COMMA NUMBER?)? RBRACE
 
 AttName =
-    ASCII_LETTERS / ATTR_CHARS /* this alternatives are here just to keep non terminal AttrName relevant */
+    ATTR_CHARS / ASCII_LETTERS /* this alternatives are here just to keep non terminal AttrName relevant */
 
 // ----------------- Phrase (a query input mode) ------------------------
 
