@@ -178,7 +178,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 </tbody>
                             </table>
                             <p className="note">
-                            {he.translate('global__remark_figures_denote_different_attributes')}
+                            <strong>{he.translate('global__corp_info_attrs_remark_label')}: </strong>
+                            {he.translate('global__corp_info_attrs_remark_text')}
                             </p>
                         </dd>
                         <dt>{he.translate('global__citation_info')}:</dt>
@@ -251,12 +252,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <>
                     <h4>
-                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}
+                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}:
                     </h4>
                     <div className="html" dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
                     {props.data.article_ref.length > 0 ?
                         (<>
-                            <h4>{he.translate('global__references')}</h4>
+                            <h4>{he.translate('global__references')}:</h4>
                             {props.data.article_ref.map((item, i) => {
                                 return <div key={i} className="html" dangerouslySetInnerHTML={{__html: item }} />;
                             })}
@@ -264,7 +265,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         null}
                     {props.data.other_bibliography ?
                         (<>
-                            <h4>{he.translate('global__general_references')}</h4>
+                            <h4>{he.translate('global__general_references')}:</h4>
                             <div className="html" dangerouslySetInnerHTML={{__html: props.data.other_bibliography}} />
                         </>) :
                         null}
