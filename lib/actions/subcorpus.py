@@ -292,7 +292,8 @@ class Subcorpus(Querying):
                         'created': time.mktime(sc.created.timetuple()),
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
-                        'usesubcorp': item['n'],
+                        'usesubcorp': sc.subcname,
+                        'orig_sucbcname': sc.orig_subcname,
                         'deleted': False,
                         'description': sc.description,
                         'published': corplib.subcorpus_is_published(sc.spath)

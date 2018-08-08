@@ -38,6 +38,7 @@ export namespace AjaxResponse {
     export interface ServerSubcorpListItem {
         deleted:boolean;
         usesubcorp:string;
+        orig_subcname:string;
         created:number;
         cql:string;
         human_corpname:string;

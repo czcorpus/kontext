@@ -40,6 +40,7 @@ export interface SubcorpListItem {
     name:string;
     corpname:string;
     usesubcorp:string;
+    origSubcName:string;
     deleted:boolean;
     created:Date;
     cql:string;
@@ -277,6 +278,7 @@ export class SubcorpListModel extends StatefulModel {
             name: data.name,
             corpname: data.corpname,
             usesubcorp: data.usesubcorp,
+            origSubcName: data.origSubcName,
             deleted: data.deleted,
             created: data.created,
             cql: data.cql,
@@ -311,6 +313,7 @@ export class SubcorpListModel extends StatefulModel {
                     name: data.name,
                     corpname: data.corpname,
                     usesubcorp: data.usesubcorp,
+                    origSubcName: data.origSubcName,
                     deleted: data.deleted,
                     created: data.created,
                     cql: data.cql,
@@ -390,6 +393,7 @@ export class SubcorpListModel extends StatefulModel {
                 name: decodeURIComponent(item.name),
                 corpname: item.corpname,
                 usesubcorp: decodeURIComponent(item.usesubcorp),
+                origSubcName: decodeURIComponent(item.orig_subcname),
                 deleted: item.deleted,
                 size: item.size,
                 cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
@@ -511,6 +515,7 @@ export class SubcorpListModel extends StatefulModel {
             name: line.name,
             size: line.size,
             usesubcorp: line.usesubcorp,
+            origSubcName: line.origSubcName,
             published: line.published,
             description: line.description
         });
