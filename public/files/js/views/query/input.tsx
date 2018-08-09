@@ -714,6 +714,7 @@ export function init({
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this._attachInputElementRef = this._attachInputElementRef.bind(this);
+            this._inputChangeHandler = this._inputChangeHandler.bind(this);
             this.state = {
                 query: queryModel.getQuery(this.props.sourceId),
                 historyVisible: false,
@@ -752,6 +753,8 @@ export function init({
                 evt.preventDefault();
             }
         }
+
+        _inputChangeHandler() {}
 
         _toggleHistoryWidget() {
             this.setState({
@@ -799,7 +802,7 @@ export function init({
                                 sourceId={this.props.sourceId}
                                 attachCurrInputElement={this._attachInputElementRef}
                                 inputKeyHandler={this._inputKeyHandler}
-                                inputChangeHandler={(_)=>undefined} /> :
+                                inputChangeHandler={this._inputChangeHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
                             sourceId={this.props.sourceId}
                             attachCurrInputElement={this._attachInputElementRef}

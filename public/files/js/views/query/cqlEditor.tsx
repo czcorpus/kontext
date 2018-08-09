@@ -20,7 +20,6 @@
 
 import {Kontext} from '../../types/common';
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {GeneralQueryModel} from '../../models/query/main';
@@ -225,7 +224,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
             if (he.browserInfo.isFirefox()) {
                 this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
-                    console.log('key event ', evt.keyCode);
                     if (evt.keyCode === 8 || evt.keyCode === 46) {  // 8: BACKSPACE, 46: DEL
                         const src = this.extractText(this.editorRoot);
                         const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);

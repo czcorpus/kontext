@@ -86,9 +86,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                 {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
                 {props.blocks.size > 0 ?
                     <p className="note">
-                        {he.translate('concview__using_min_freq_{value}', {value: props.minFreq})}.
+                        {he.translate('concview__charts_are_from_ipm')}{'\u00a0|\u00a0'}
+                        {he.translate('concview__using_min_freq_{value}', {value: props.minFreq})}
                         {props.sampleSize > 0 ?
-                            ' ' + he.translate('concview__using_sample_{value}', {value: props.sampleSize}) + '.' : ''
+                            '\u00a0|\u00a0' + he.translate('concview__using_sample_{value}', {value: props.sampleSize}) + '.' : ''
                         }
                     </p> : null
                 }
