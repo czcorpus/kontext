@@ -1669,7 +1669,7 @@ class Actions(Querying):
         backend = settings.get('calc_backend', 'type')
         if worker_tasks and backend in ('celery', 'konserver'):
             import bgcalc
-            app = bgcalc.calc_backend_app(settings)
+            app = bgcalc.calc_backend_client(settings)
             for t in worker_tasks:
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':

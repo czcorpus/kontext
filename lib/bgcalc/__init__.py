@@ -37,24 +37,32 @@ class UnfinishedConcordanceError(Exception):
     pass
 
 
-def load_config_module(path):
-    return imp.load_source('celeryconfig', path)
-
-
-def _init_backend_app(conf):
+def _init_backend_app(conf, fn_prefix):
     app_type = conf.get('calc_backend', 'type')
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
         import celery
-        return celery.Celery('tasks', config_source=load_config_module(app_conf))
+        return celery.Celery('bgcalc', config_source=imp.load_source('celeryconfig', app_conf))
+    elif app_type == 'konserver':
+        from bgcalc.konserver import KonserverApp
+        return KonserverApp(conf=imp.load_source('konserverconfig', app_conf), fn_prefix=fn_prefix)
     elif app_type == 'multiprocessing':  # legacy stuff
         return None
     else:
-        raise CalcBackendInitError('Failed to init calc backend {0} (conf: {1})'.format(app_type, app_conf))
+        raise CalcBackendInitError(
+            'Failed to init calc backend {0} (conf: {1})'.format(app_type, app_conf))
 
 
-def calc_backend_app(conf):
+def _calc_backend_app(conf, fn_prefix=''):
     global _backend_app
     if _backend_app is None:
-        _backend_app = _init_backend_app(conf)
+        _backend_app = _init_backend_app(conf, fn_prefix)
     return _backend_app
+
+
+def calc_backend_client(conf):
+    return _calc_backend_app(conf, '')
+
+
+def calc_backend_server(conf, fn_prefix):
+    return _calc_backend_app(conf, fn_prefix)

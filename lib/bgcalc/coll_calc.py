@@ -178,7 +178,7 @@ def calculate_colls(coll_args):
         backend = settings.get('calc_backend', 'type')
         if backend in ('celery', 'konserver'):
             import bgcalc
-            app = bgcalc.calc_backend_app(settings)
+            app = bgcalc.calc_backend_client(settings)
             res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
                                 time_limit=TASK_TIME_LIMIT)
             # worker task caches the value AFTER the result is returned (see worker.py)
