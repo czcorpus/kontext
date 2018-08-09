@@ -1197,7 +1197,7 @@
         "coll__save_form_from_val_err_msg": "Hodnota nalevo musí být větší nebo rovna 1 a menší než hodnota napravo (je-li definována).",
         "freq__h2_freq_distr": "Frekvenční distribuce",
         "freq__sel_form_type_ml": "Běžná",
-        "freq__sel_form_type_tt": "Podle typů textu",
+        "freq__sel_form_type_tt": "Podle typů textů",
         "freq__sel_form_type_ct": "Závislost dvou atributů",
         "freq__make_freq_list_btn": "Vytvořit frekvenční seznam",
         "freq__freq_limit_label": "Frekvenční limit",
