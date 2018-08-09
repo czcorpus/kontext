@@ -728,6 +728,17 @@ export function init(
         }
     };
 
+    const TabButton:CoreViews.TabButton.Component = (props) => {
+        const cls = props.htmlClass ? 'util-button ' + props.htmlClass : 'util-button';
+        return <span className="TabButton">
+                <button type="button" className={cls} onClick={props.onClick}>
+                    {props.label}
+                </button>
+                <br />
+                <span className={props.isActive ? 'underline' : 'underline hidden'}> </span>
+            </span>;
+    };
+
     // ------------------------------------------------------------------------------------
 
     return {
@@ -747,6 +758,7 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        VmodeIcon: VmodeIcon
+        VmodeIcon: VmodeIcon,
+        TabButton: TabButton
     };
 }

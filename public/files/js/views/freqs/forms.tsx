@@ -597,21 +597,21 @@ export function init(
         };
 
         return (
-            <ul className="FreqFormSelector">
+            <ul className="FreqFormSelector tabs">
                 <li>
-                    <a className={props.formType === "ml" ? 'util-button active' : 'util-button'} onClick={onItemClick('ml')}>
-                        {he.translate('freq__sel_form_type_ml')}
-                    </a>
+                    <layoutViews.TabButton onClick={onItemClick('ml')}
+                        label={he.translate('freq__sel_form_type_ml')}
+                        isActive={props.formType === "ml"} />
                 </li>
                 <li>
-                    <a className={props.formType === "tt" ? 'util-button active' : 'util-button'} onClick={onItemClick('tt')}>
-                        {he.translate('freq__sel_form_type_tt')}
-                    </a>
+                    <layoutViews.TabButton onClick={onItemClick('tt')}
+                        label={he.translate('freq__sel_form_type_tt')}
+                        isActive={props.formType === "tt"} />
                 </li>
                 <li>
-                    <a className={props.formType === "ct" ? 'util-button active' : 'util-button'} onClick={onItemClick('ct')}>
-                        {he.translate('freq__sel_form_type_ct')}
-                    </a>
+                    <layoutViews.TabButton onClick={onItemClick('ct')}
+                        label={he.translate('freq__sel_form_type_ct')}
+                        isActive={props.formType === "ct"} />
                 </li>
             </ul>
         );

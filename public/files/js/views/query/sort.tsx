@@ -591,16 +591,18 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         };
 
         return (
-            <ul className="SortFormSelector">
+            <ul className="SortFormSelector tabs">
                 <li>
-                    <a className={props.formType === "sortx" ? 'util-button active' : 'util-button'} onClick={onItemClick('sortx')}>
-                        {he.translate('query__sort_type_simple_hd')}
-                    </a>
+                    <layoutViews.TabButton
+                        isActive={props.formType === "sortx"}
+                        label={he.translate('query__sort_type_simple_hd')}
+                        onClick={onItemClick('sortx')} />
                 </li>
                 <li>
-                    <a className={props.formType === "mlsortx" ? 'util-button active' : 'util-button'} onClick={onItemClick('mlsortx')}>
-                        {he.translate('query__sort_type_multilevel_hd')}
-                    </a>
+                <layoutViews.TabButton
+                        isActive={props.formType === "mlsortx"}
+                        label={he.translate('query__sort_type_multilevel_hd')}
+                        onClick={onItemClick('mlsortx')} />
                 </li>
             </ul>
         );

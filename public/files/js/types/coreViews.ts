@@ -303,6 +303,18 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace TabButton {
+
+        export interface Props {
+            isActive:boolean;
+            label:string;
+            htmlClass?:string;
+            onClick:()=>void;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -323,6 +335,7 @@ export namespace CoreViews {
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
         VmodeIcon:VmodeIcon.Component;
+        TabButton:TabButton.Component;
     }
 }
 
