@@ -357,6 +357,7 @@ class Actions(Querying):
             qf_args.curr_default_attr_values[item] = request.args.get(
                 'default_attr_{0}'.format(item))
 
+        self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)

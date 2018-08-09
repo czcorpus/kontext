@@ -197,7 +197,7 @@ class Subcorpus(Querying):
             ans = self.subcorp_form(request)
         return ans
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, apply_semi_persist_args=True)
     def subcorp_form(self, request):
         """
         Displays a form to create a new subcorpus
