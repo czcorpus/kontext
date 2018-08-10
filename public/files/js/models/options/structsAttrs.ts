@@ -31,14 +31,12 @@ export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.Attr
     if (vmode === 'visible' && attrAllPos === 'all') {
         return ViewOptions.AttrViewMode.VISIBLE_ALL;
 
-    } else if (vmode === 'visible' && attrAllPos === 'kw') {
+    } else if (vmode === 'mixed' && attrAllPos === 'all' ||
+            vmode === 'visible' && attrAllPos === 'kw' /* legacy compatibility variant */) {
         return ViewOptions.AttrViewMode.VISIBLE_KWIC;
 
     } else if (vmode === 'mouseover' && attrAllPos === 'all') {
         return ViewOptions.AttrViewMode.MOUSEOVER;
-
-    } else if (vmode === 'mixed' && attrAllPos === 'all') {
-        return ViewOptions.AttrViewMode.MIXED;
 
     } else {
         throw new Error(`Unknown internal attribute viewing mode configuration: [${vmode}, ${attrAllPos}]`);
@@ -166,15 +164,11 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                 this.attrAllpos = 'all';
             break;
             case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                this.attrVmode = 'visible';
-                this.attrAllpos = 'kw';
+                this.attrVmode = 'mixed';
+                this.attrAllpos = 'all';
             break;
             case ViewOptions.AttrViewMode.MOUSEOVER:
                 this.attrVmode = 'mouseover';
-                this.attrAllpos = 'all';
-            break;
-            case ViewOptions.AttrViewMode.MIXED:
-                this.attrVmode = 'mixed';
                 this.attrAllpos = 'all';
             break;
         }

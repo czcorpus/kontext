@@ -696,40 +696,6 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
-    const VmodeIcon:CoreViews.VmodeIcon.Component = (props) => {
-        const vmodeMouseover = <img
-            src={he.createStaticUrl('img/vmode_mouseover.svg')}
-            title={`${he.translate('options__vmode_status_label')}: ` +
-                    `${he.translate('options__vmode_switch_mouseover_all')}.` +
-                    (props.mouseoverAttrs ? ' ' + he.translate('options__attribs_are_on_mouseover_{attrs}',
-                    {attrs: props.mouseoverAttrs.slice(1).join('/')}) : '')} />;
-
-        const vmodeAll = <img
-            src={he.createStaticUrl('img/vmode_all.svg')}
-            title={`${he.translate('options__vmode_status_label')}: ` +
-                    `${he.translate('options__vmode_switch_visible_all')}.`} />;
-
-        const vmodeKwic = <img
-            src={he.createStaticUrl('img/vmode_kwic.svg')}
-            title={`${he.translate('options__vmode_status_label')}: ` +
-                   `${he.translate('options__vmode_switch_visible_kwic')}.`} />;
-
-        switch (props.viewMode) {
-            case ViewOptions.AttrViewMode.MOUSEOVER:
-                return vmodeMouseover;
-            case ViewOptions.AttrViewMode.MIXED:
-                return <>{vmodeMouseover}<strong>+</strong>{vmodeKwic}</>;
-            case ViewOptions.AttrViewMode.VISIBLE_ALL:
-                return vmodeAll;
-            case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                return vmodeKwic;
-            default:
-                return <span />;
-        }
-    };
-
-    // ------------------------------------------------------------------------------------
-
     /**
      * This button is used along with [ul.tabs li] as a tab-like sub-forms and control
      * panels.
@@ -775,7 +741,6 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        VmodeIcon: VmodeIcon,
         TabButton: TabButton,
         PlusButton: PlusButton
     };

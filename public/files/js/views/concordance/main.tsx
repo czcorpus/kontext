@@ -452,14 +452,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         render() {
             return (
                 <div className="conc-toolbar">
-                    <span className="separ">|</span>
-                    <span className="mouseover-available">
-                        {he.translate('options__vmode_status_label')}
-                        {':\u00a0'}
-                        <layoutViews.VmodeIcon
-                                viewMode={this.props.viewMode}
-                                mouseoverAttrs={this.state.currViewAttrs} />
-                    </span>
                 </div>
             );
         }

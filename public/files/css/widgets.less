@@ -556,26 +556,6 @@ fieldset.FieldsetOutputOptions {
             }
         }
 
-        .icons {
-            display: inline-block;
-            width: 5.2em;
-            margin-left: 0.9em;
-        }
-
-        select.no-label,
-        .icons img,
-        .icons strong {
-            display: inline-block;
-            margin-top: 0.9em;
-            vertical-align: middle;
-        }
-
-        .icons strong {
-            font-size: 1.3em;
-            padding-left: 0.1em;
-            padding-right: 0.1em;
-        }
-
         h3.label {
             text-align: left;
             font-size: 1.0em;
@@ -1076,5 +1056,32 @@ table.MLSingleLevelFields {
 
     a:nth-child(2) {
         margin-top: 0.1em;
+    }
+}
+
+.AttributesTweaks {
+
+    h3 {
+        margin-bottom: 0.4em;
+    }
+
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+
+            margin: 0;
+            padding: 0.2em 0;
+
+            label {
+                input,
+                span {
+                    vertical-align: middle;
+                    display: inline-block;
+                }
+            }
+        }
     }
 }

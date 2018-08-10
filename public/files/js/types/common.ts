@@ -628,8 +628,7 @@ export namespace ViewOptions {
     export enum AttrViewMode {
         VISIBLE_ALL = 'visible-all',
         VISIBLE_KWIC = 'visible-kwic',
-        MOUSEOVER = 'mouseover',
-        MIXED = 'mixed'
+        MOUSEOVER = 'mouseover'
     }
 
     export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;

@@ -120,7 +120,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     }> = (props) => {
 
-        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLSelectElement>) => {
+        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
                 props: {
@@ -134,31 +134,32 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <h3 className="label">
                     {helpers.translate('options__attr_apply_header')}
                 </h3>
-                <div>
-                    <select name="attr_vmode"
-                            value={props.attrsVmode}
-                            onChange={handleSelectChangeFn}
-                            className="no-label">
-                        <option value={ViewOptions.AttrViewMode.VISIBLE_ALL}>
-                            {helpers.translate('options__vmode_switch_visible_all')}
-                        </option>
-                        <option value={ViewOptions.AttrViewMode.VISIBLE_KWIC}>
-                            {helpers.translate('options__vmode_switch_visible_kwic')}
-                        </option>
-                        <option value={ViewOptions.AttrViewMode.MOUSEOVER}>
-                            {helpers.translate('options__vmode_switch_mouseover_all')}
-                        </option>
-                        <option value={ViewOptions.AttrViewMode.MIXED}>
-                            {helpers.translate('options__vmode_switch_mixed')}
-                        </option>
-                    </select>
-                    <span className="icons">
-                        {props.showConcToolbar ?
-                            <layoutViews.VmodeIcon viewMode={props.attrsVmode} /> :
-                            null
-                        }
-                    </span>
-                </div>
+                <ul>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_ALL}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_KWIC}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_mixed')}</span>
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.MOUSEOVER}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.MOUSEOVER}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_mouseover_all')}</span>
+                        </label>
+                    </li>
+                </ul>
             </div>
         );
     };
