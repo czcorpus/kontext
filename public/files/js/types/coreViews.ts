@@ -293,16 +293,6 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
-    export namespace VmodeIcon {
-
-        export interface Props {
-            viewMode:ViewOptions.AttrViewMode;
-            mouseoverAttrs?:Array<string>;
-        }
-
-        export type Component = React.SFC<Props>;
-    }
-
     export namespace TabButton {
 
         export interface Props {
@@ -345,7 +335,6 @@ export namespace CoreViews {
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
-        VmodeIcon:VmodeIcon.Component;
         TabButton:TabButton.Component;
         PlusButton:PlusButton.Component;
     }
