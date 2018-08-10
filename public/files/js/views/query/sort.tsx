@@ -473,13 +473,6 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
     }
 
-    // -------------------------- <AddMLLevelButton /> ---------------------------------
-
-    const AddLevelButton = (props) => {
-        return  <button type="button" className="AddLevelButton util-button" onClick={props.onAddLevel}
-                    title={he.translate('query__sort_plus_btn_add_level')}>+</button>
-    };
-
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
 
     class MultiLevelSortForm extends React.Component<{
@@ -569,7 +562,12 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                         );
                     })}
                     {this.state.levels.size < this.state.maxNumLevels ?
-                        <li><AddLevelButton onAddLevel={this._addLevel} /></li> : null
+                        <li>
+                            <layoutViews.PlusButton
+                                onClick={this._addLevel}
+                                mouseOverHint={he.translate('query__sort_plus_btn_add_level')} />
+                        </li> :
+                        null
                     }
                 </ul>
             );

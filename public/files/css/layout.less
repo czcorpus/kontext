@@ -1258,6 +1258,23 @@ fieldset.colloc-metrics {
     100% { opacity: 1; }
 }
 
-ul.tabs li:not(:last-child) {
-    padding-right: 1em;
+ul.tabs {
+    list-style-type: none;
+    margin: 0 auto 1.1em auto;
+    padding: 0;
+    white-space: nowrap;
+
+    li {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+    }
+
+    li:not(:first-child) {
+        margin-left: 1em;
+    }
+
+    li:not(:last-child) {
+        padding-right: 1em;
+    }
 }

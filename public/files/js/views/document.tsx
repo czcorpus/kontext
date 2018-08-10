@@ -728,6 +728,12 @@ export function init(
         }
     };
 
+    // ------------------------------------------------------------------------------------
+
+    /**
+     * This button is used along with [ul.tabs li] as a tab-like sub-forms and control
+     * panels.
+     */
     const TabButton:CoreViews.TabButton.Component = (props) => {
         const cls = props.htmlClass ? 'util-button ' + props.htmlClass : 'util-button';
         return <span className="TabButton">
@@ -738,6 +744,17 @@ export function init(
                 <span className={props.isActive ? 'underline' : 'underline hidden'}> </span>
             </span>;
     };
+
+    // ------------------------------------------------------------------------------------
+
+    const PlusButton:CoreViews.PlusButton.Component = (props) => {
+        const cls = props.htmlClass ? 'PlusButton util-button ' + props.htmlClass : 'PlusButton util-button';
+        return <button type="button" className={cls} title={props.mouseOverHint}
+                    onClick={props.onClick}>
+                    <img src={he.createStaticUrl('img/plus.svg')} />
+                </button>
+    }
+
 
     // ------------------------------------------------------------------------------------
 
@@ -759,6 +776,7 @@ export function init(
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
         VmodeIcon: VmodeIcon,
-        TabButton: TabButton
+        TabButton: TabButton,
+        PlusButton: PlusButton
     };
 }
