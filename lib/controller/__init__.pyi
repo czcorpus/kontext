@@ -25,7 +25,7 @@ import werkzeug.wrappers
 def exposed(access_level:Optional[int], template:Optional[str], vars:Optional[Tuple[str]], page_model:Optional[str],
             legacy:Optional[bool], skip_corpus_init:Optional[bool], http_method:Optional[str],
             accept_kwargs:Optional[bool], apply_semi_persist_args:Optional[bool],
-            return_type:Optional[str]) -> Callable[[Any,...], Any]: ...
+            use_conc_session:Optional[bool], return_type:Optional[str]) -> Callable[[Any,...], Any]: ...
 
 def convert_types(args:Dict[str, Any], defaults:Dict[str, Any], del_nondef:Optional[int],
                   selector:Optional[int]) -> Dict[str, Any]: ...
@@ -59,7 +59,7 @@ class Controller(object):
     _status:int
     _system_messages:List[Tuple[str, str]]
     _proc_time:float
-    _validators:List[Callable[Exception]]
+    _validators:List[Callable[[],Exception]]
     _exceptmethod:str
     _template_dir:unicode
     args:Args

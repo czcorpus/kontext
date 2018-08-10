@@ -836,9 +836,11 @@ class Kontext(Controller):
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result)
 
         # create and store concordance query key
-        if type(result) is DictType:
+        if action_metadata['use_conc_session']:
             new_query_key = self._store_conc_params()
-            self._update_output_with_conc_params(new_query_key, result)
+        else:
+            new_query_key = None
+        self._update_output_with_conc_params(new_query_key, result)
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
