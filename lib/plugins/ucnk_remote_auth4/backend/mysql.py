@@ -172,7 +172,11 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
-            'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
+            'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
+            '  AS speaker_id_attr, '
+            'IF (c.speech_overlap_struct IS NOT NULL, CONCAT(c.speech_overlap_struct, \'.\', c.speech_overlap_attr), '
+            '  NULL) AS speech_overlap_attr, '
+            'c.speech_overlap_val, c.use_safe_font, '
             'c.requestable, c.featured, c.text_types_db AS `database`, '
             'IF (c.bib_label_attr IS NOT NULL, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) '
             '  AS label_attr, '
