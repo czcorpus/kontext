@@ -537,40 +537,56 @@ fieldset.FieldsetOutputOptions {
     width: initial;
 }
 
-.StructAttrsViewOptions .StructsAndAttrsForm {
+.StructAttrsViewOptions {
 
-    fieldset {
-        display: inline-block;
-        vertical-align: top;
-        margin-right: 1em;
+    .StructsAndAttrsForm {
 
-        legend {
-            font-weight: bold;
-        }
+        fieldset {
 
-        ul {
-            margin: 0;
-            padding: 0;
-            list-style-type: none;
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 1em;
 
-            li {
-                margin: 0 0 0 1em;
+            legend {
+                font-weight: bold;
+            }
+
+            ul {
+                margin: 0;
                 padding: 0;
+                list-style-type: none;
+
+                li {
+                    margin: 0 0 0 1em;
+                    padding: 0;
+                }
+            }
+
+            h3.label {
+                text-align: left;
+                font-size: 1.0em;
+                margin-top: 1.2em;
+                margin-bottom: 0.2em;
+            }
+
+            p.warning {
+                max-width: 20em;
+                white-space: normal;
+
+                img.icon {
+                    vertical-align: middle;
+                    padding-right: 0.4em;
+                    width: 1em;
+                }
             }
         }
 
-        h3.label {
-            text-align: left;
-            font-size: 1.0em;
-            margin-top: 1.2em;
-            margin-bottom: 0.2em;
+        .button-replace {
+            padding: 0.3em 2em;
+            background-color: transparent;
         }
     }
 
-    .button-replace {
-        padding: 0.3em 2em;
-        background-color: transparent;
-    }
 }
 
 .SyntaxViewPane {

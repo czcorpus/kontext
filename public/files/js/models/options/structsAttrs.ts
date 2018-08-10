@@ -246,7 +246,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                     n: item.n,
                     label: item.label,
                     locked: item.locked,
-                    selected: item.locked ? item.selected : this.selectAllAttrs
+                    selected: item.locked ? true : this.selectAllAttrs
                 }
             })
             .toList();
@@ -281,6 +281,18 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
             locked: currItem.locked,
             selected: !currItem.selected
         });
+        if (this.attrList.filter(v => v.selected).size === 0) {
+            const srchIdx = this.attrList.findIndex(v => v.locked);
+            if (srchIdx > -1) {
+                const tmp = this.attrList.get(srchIdx);
+                this.attrList = this.attrList.set(srchIdx, {
+                    n: tmp.n,
+                    label: tmp.label,
+                    locked: tmp.locked,
+                    selected: true
+                });
+            }
+        }
         this.selectAllAttrs = false;
     }
 
@@ -491,5 +503,9 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     getUserIsAnonymous():boolean {
         return this.userIsAnonymous;
+    }
+
+    lockedPosAttrNotSelected():boolean {
+        return !this.attrList.find(v => v.locked).selected;
     }
 }
