@@ -99,6 +99,8 @@ export class TextTypesDistModel extends StatefulModel {
     private static COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
                              "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
 
+    private static DEFAULT_MAX_BLOCK_ITEMS = 10;
+
     private layoutModel:PageModel;
 
     private ttCrit:TTCrit;
@@ -117,6 +119,8 @@ export class TextTypesDistModel extends StatefulModel {
 
     private lastArgs:string;
 
+    private maxBlockItems:number;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -125,6 +129,7 @@ export class TextTypesDistModel extends StatefulModel {
         this.blocks = Immutable.List<FreqBlock>();
         this.flimit = 100; // this is always recalculated according to data
         this.sampleSize = 0;
+        this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
         this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
         this.isBusy = this.concLineModel.isUnfinishedCalculation();
         this.dispatcherRegister((payload:ActionPayload) => {
@@ -135,6 +140,10 @@ export class TextTypesDistModel extends StatefulModel {
                 break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
                     this.performDataLoad();
+                break;
+                case 'REMOVE_CHART_ITEMS_LIMIT':
+                    this.maxBlockItems = -1;
+                    this.notifyChangeListeners();
                 break;
             }
         });
@@ -234,6 +243,18 @@ export class TextTypesDistModel extends StatefulModel {
 
     getBlocks():Immutable.List<FreqBlock> {
         return this.blocks;
+    }
+
+    getDisplayableBlocks():Immutable.List<FreqBlock> {
+        return this.blocks.filter(block => block.items.length <= this.maxBlockItems || this.maxBlockItems === -1).toList();
+    }
+
+    isDisplayedBlocksSubset():boolean {
+        return this.getBlocks().size > this.getDisplayableBlocks().size;
+    }
+
+    getMaxChartItems():number {
+        return this.maxBlockItems;
     }
 
     getIsBusy():boolean {

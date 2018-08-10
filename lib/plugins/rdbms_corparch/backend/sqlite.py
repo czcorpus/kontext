@@ -57,7 +57,11 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT c.id as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
-            'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
+            '(CASE WHEN c.speaker_id_struct IS NOT NULL '
+            '    THEN c.speaker_id_struct || \'.\' || c.speaker_id_attr ELSE NULL END) AS speaker_id_attr,  '
+            '(CASE WHEN c.speech_overlap_struct IS NOT NULL '
+            '    THEN c.speech_overlap_struct || \'.\' || c.speech_overlap_attr ELSE NULL END) AS speech_overlap_attr, '
+            'c.speech_overlap_val, c.use_safe_font, '
             'c.requestable, c.featured, c.text_types_db AS `database`, '
             '(CASE WHEN c.bib_label_attr IS NOT NULL THEN c.bib_label_struct || \'.\' || c.bib_label_attr '
             '  ELSE NULL END) AS label_attr, '
@@ -127,10 +131,10 @@ class Backend(DatabaseBackend):
     def load_featured_corpora(self, user_lang):
         cursor = self._db.cursor()
         desc_col = 'c.description_{0}'.format(user_lang[:2])
-        cursor.execute('SELECT c.id AS corpus_id, c.id, ifnull(rc.name, c.name) AS name, '
+        cursor.execute('SELECT c.id AS corpus_id, c.id, ifnull(rc.name, c.id) AS name, '
                        '{0} AS description, c.size '
                        'FROM kontext_corpus AS c '
-                       'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+                       'LEFT JOIN registry_conf AS rc ON rc.name = c.id '
                        'WHERE c.active = 1 AND c.featured = 1'.format(desc_col))
         return cursor.fetchall()
 
@@ -139,7 +143,7 @@ class Backend(DatabaseBackend):
                 ['rv.{0} AS {1}'.format(v, k) for k, v in self.REG_VAR_COLS_MAP.items()])
         if variant:
             sql = (
-                'SELECT {0} FROM registry_conf AS rc '
+                'SELECT {0} FROM rc. AS rc '
                 'JOIN registry_variable AS rv ON rv.corpus_id = rc.corpus_id AND rv.variant = ? '
                 'WHERE rc.corpus_id = ?').format(', '.join(cols))
             vals = (variant, corpus_id)
