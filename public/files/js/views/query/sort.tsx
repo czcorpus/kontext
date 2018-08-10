@@ -473,13 +473,6 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
     }
 
-    // -------------------------- <AddMLLevelButton /> ---------------------------------
-
-    const AddLevelButton = (props) => {
-        return  <button type="button" className="AddLevelButton util-button" onClick={props.onAddLevel}
-                    title={he.translate('query__sort_plus_btn_add_level')}>+</button>
-    };
-
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
 
     class MultiLevelSortForm extends React.Component<{
@@ -569,7 +562,12 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                         );
                     })}
                     {this.state.levels.size < this.state.maxNumLevels ?
-                        <li><AddLevelButton onAddLevel={this._addLevel} /></li> : null
+                        <li>
+                            <layoutViews.PlusButton
+                                onClick={this._addLevel}
+                                mouseOverHint={he.translate('query__sort_plus_btn_add_level')} />
+                        </li> :
+                        null
                     }
                 </ul>
             );
@@ -591,16 +589,18 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         };
 
         return (
-            <ul className="SortFormSelector">
+            <ul className="SortFormSelector tabs">
                 <li>
-                    <a className={props.formType === "sortx" ? 'util-button active' : 'util-button'} onClick={onItemClick('sortx')}>
-                        {he.translate('query__sort_type_simple_hd')}
-                    </a>
+                    <layoutViews.TabButton
+                        isActive={props.formType === "sortx"}
+                        label={he.translate('query__sort_type_simple_hd')}
+                        onClick={onItemClick('sortx')} />
                 </li>
                 <li>
-                    <a className={props.formType === "mlsortx" ? 'util-button active' : 'util-button'} onClick={onItemClick('mlsortx')}>
-                        {he.translate('query__sort_type_multilevel_hd')}
-                    </a>
+                <layoutViews.TabButton
+                        isActive={props.formType === "mlsortx"}
+                        label={he.translate('query__sort_type_multilevel_hd')}
+                        onClick={onItemClick('mlsortx')} />
                 </li>
             </ul>
         );

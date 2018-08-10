@@ -631,23 +631,6 @@ fieldset.FieldsetOutputOptions {
     }
 }
 
-ul.FreqFormSelector,
-ul.SortFormSelector {
-    list-style-type: none;
-    margin: 0 auto 2em auto;
-    padding: 0;
-
-    li {
-        display: inline-block;
-        margin: 0;
-        padding: 0;
-    }
-
-    li:not(:first-child) {
-        margin-left: 1em;
-    }
-}
-
 
 .CTFreqForm {
 
@@ -865,10 +848,6 @@ table.MLSingleLevelFields {
     display: grid;
     grid-template-columns: 1fr 1fr;
 
-    .AddLevelButton {
-        font-size: 2em;
-    }
-
     li {
         padding: 1em;
         margin: 0;
@@ -902,10 +881,6 @@ table.MLSingleLevelFields {
 
     .multilevel-freq-params {
 
-        #add-freq-level-button {
-            .plus-button;
-        }
-
         border-spacing: 0;
         border: 1px solid @color-light-frame;
         border-radius: @border-radius-default;
@@ -926,6 +901,11 @@ table.MLSingleLevelFields {
             background-color: @color-data-table-footer;
         }
 
+        tr:nth-child(2) td,
+        tr:nth-child(2) th {
+            padding-top: 0.7em;
+        }
+
         tr:nth-child(odd):not(:first-child):not(:last-child) {
             background-color: @color-light-green;
         }
@@ -934,6 +914,10 @@ table.MLSingleLevelFields {
             text-align: center;
             font-size: 120%;
             font-weight: bold;
+        }
+
+        .PlusButton {
+            margin-bottom: 0.3em;
         }
     }
 }
@@ -1036,5 +1020,61 @@ table.MLSingleLevelFields {
                 width: 1.2em;
             }
         }
+    }
+}
+
+.TabButton:not(:first-child) {
+    margin-left: 0.7em;
+}
+
+.TabButton {
+    display: inline-block;
+    text-align: center;
+
+    button {
+        display: inline;
+    }
+
+    .underline {
+        margin-top: 0.6em;
+        margin-left: 0.1em;
+        margin-right: 0.1em;
+        display: block;
+        height: 0.15em;
+        border-radius: @input-border-radius;
+        background-color: @color-logo-blue;
+    }
+
+    .underline.hidden {
+        visibility: hidden;
+    }
+}
+
+.PlusButton {
+
+    display: inline-block;
+
+    img {
+        display: block;
+        height: 1em;
+        width: 1em;
+        padding: 0.2em;
+    }
+}
+
+.MLMoveLevelControl {
+
+    a {
+        display: inline-block;
+
+        img {
+            width: 0.7em;
+            height: 0.7em;
+            display: block;
+        }
+    }
+
+    a:nth-child(2) {
+        margin-top: 0.1em;
     }
 }
