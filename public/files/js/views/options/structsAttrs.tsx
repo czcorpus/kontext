@@ -171,6 +171,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAll:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
+        lockedPosAttrNotSelected:boolean;
 
     }> = (props) => {
 
@@ -186,16 +187,20 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <legend>{helpers.translate('options__attributes_hd')}</legend>
                 <ul>
                 {props.attrList.map((item, i) => {
-                    if (item.locked) {
-                        return <LiFixedAttributeItem key={'atrr:' + item.n} n={item.n} label={item.label} />;
-
-                    } else {
-                        return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
+                    return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
                                         isSelected={item.selected} />;
-                    }
                 })}
                 </ul>
                 <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                {props.lockedPosAttrNotSelected ?
+                    <p className="warning">
+                        <img className="icon"
+                                src={helpers.createStaticUrl('img/info-icon.svg')}
+                                alt={helpers.translate('global__info_icon')} />
+                        {helpers.translate('options__remove_word_warning')}
+                    </p> :
+                    null
+                }
                 <hr />
                 <AttributesTweaks attrsVmode={props.attrsVmode}
                         showConcToolbar={props.showConcToolbar} />
@@ -407,6 +412,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         TehasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
+        lockedPosAttrNotSelected:boolean;
 
     }> = (props) => {
 
@@ -414,10 +420,12 @@ export function init({dispatcher, helpers, viewOptionsModel,
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <FieldsetAttributes  attrList={props.attrList}
+                        <FieldsetAttributes
+                                attrList={props.attrList}
                                 hasSelectAll={props.hasSelectAllAttrs}
                                 attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar} />
+                                showConcToolbar={props.showConcToolbar}
+                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
                         <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
                         <FieldsetMetainformation availRefs={props.availRefs}
                                 hasSelectAll={props.TehasSelectAllRefs} />
@@ -461,6 +469,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         isWaiting:boolean;
         isVisible:boolean;
         userIsAnonymous:boolean;
+        lockedPosAttrNotSelected:boolean;
     }> {
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
@@ -487,7 +496,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 showConcToolbar: viewOptionsModel.getShowConcToolbar(),
                 isWaiting: viewOptionsModel.getIsWaiting(),
                 isVisible: false,
-                userIsAnonymous: viewOptionsModel.getUserIsAnonymous()
+                userIsAnonymous: viewOptionsModel.getUserIsAnonymous(),
+                lockedPosAttrNotSelected: viewOptionsModel.lockedPosAttrNotSelected()
             };
         }
 
@@ -537,7 +547,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                             attrsVmode={this.state.attrsVmode}
                             showConcToolbar={this.state.showConcToolbar}
                             isWaiting={this.state.isWaiting}
-                            userIsAnonymous={this.state.userIsAnonymous} />
+                            userIsAnonymous={this.state.userIsAnonymous}
+                            lockedPosAttrNotSelected={this.state.lockedPosAttrNotSelected} />
                 </div>
             );
         }

@@ -668,6 +668,7 @@ export namespace ViewOptions {
         getShowConcToolbar():boolean;
         getIsWaiting():boolean;
         getUserIsAnonymous():boolean;
+        lockedPosAttrNotSelected():boolean;
     }
 
     export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
