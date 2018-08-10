@@ -164,7 +164,7 @@ class Actions(Querying):
                     concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
                     result_shuffled=False, finished=True)
 
-    @exposed(vars=('orig_query', ), legacy=True)
+    @exposed(vars=('orig_query', ), legacy=True, use_conc_session=True)
     def view(self):
         """
         KWIC view
@@ -398,7 +398,7 @@ class Actions(Querying):
                     relconcsize=1e6 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, use_conc_session=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
@@ -432,7 +432,7 @@ class Actions(Querying):
         self.args.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, use_conc_session=True)
     def mlsortx(self):
         """
         multiple level sort concordance
@@ -596,18 +596,6 @@ class Actions(Querying):
             raise FunctionNotSupported()
         return self._compile_basic_query(qtype, cname=cname)
 
-    @exposed(template='view.tmpl', page_model='view', legacy=True)
-    def query(self, qtype='cql'):
-        """
-        perform query
-        """
-        if self.args.default_attr:
-            qbase = 'a%s,' % self.args.default_attr
-        else:
-            qbase = 'q'
-        self.args.q = [qbase + self._compile_query()]
-        return self.view()
-
     def _set_first_query(self, fc_lemword_window_type='',
                          fc_lemword_wsize=0,
                          fc_lemword_type='',
@@ -712,7 +700,7 @@ class Actions(Querying):
                     self.args.q.append('p0 0 1 []')
                     self.args.q.append('x-%s' % self.args.corpname)
 
-    @exposed(template='view.tmpl', page_model='view')
+    @exposed(template='view.tmpl', page_model='view', use_conc_session=True)
     def first(self, request):
         self._clear_prev_conc_params()
         self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
@@ -758,7 +746,7 @@ class Actions(Querying):
         ans.update(self.view())
         return ans
 
-    @exposed(template='view.tmpl', page_model='view')
+    @exposed(template='view.tmpl', page_model='view', use_conc_session=True)
     def quick_filter(self, request):
         """
         A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
@@ -786,7 +774,7 @@ class Actions(Querying):
         self.add_conc_form_args(ksargs)
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
+    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view', use_conc_session=True)
     def filter(self, request):
         """
         Positive/Negative filter
@@ -851,7 +839,7 @@ class Actions(Querying):
             raise
 
     @exposed(access_level=0, template='view.tmpl', vars=('concsize',), page_model='view',
-             legacy=True)
+             legacy=True, use_conc_session=True)
     def reduce(self):
         """
         random sample
@@ -867,7 +855,8 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True,
+             use_conc_session=True)
     def shuffle(self):
         if len(self._lines_groups) > 0:
             self._exceptmethod = 'view'
@@ -876,7 +865,8 @@ class Actions(Querying):
         self.args.q.append('f')
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True,
+             use_conc_session=True)
     def filter_subhits(self):
         if len(self._lines_groups) > 0:
             self._exceptmethod = 'view'
@@ -885,7 +875,8 @@ class Actions(Querying):
         self.args.q.append('D')
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=False)
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=False,
+             use_conc_session=True)
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
             self._exceptmethod = 'view'
@@ -1870,7 +1861,7 @@ class Actions(Querying):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
-    @exposed(return_type='json', http_method='POST', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True, use_conc_session=True)
     def ajax_unset_lines_groups(self):
         pipeline = self.load_pipeline_ops(self._q_code)
         i = len(pipeline) - 1
@@ -1887,25 +1878,25 @@ class Actions(Querying):
         self.add_conc_form_args(pipeline[i])
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True, use_conc_session=True)
     def ajax_apply_lines_groups(self, rows=''):
         self._lines_groups = LinesGroups(data=json.loads(rows))
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True, use_conc_session=True)
     def ajax_remove_non_group_lines(self):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True, use_conc_session=True)
     def ajax_sort_group_lines(self):
         self._lines_groups.sorted = True
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True, use_conc_session=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
@@ -1920,7 +1911,7 @@ class Actions(Querying):
                                            request.form.get('url'))
         return dict(ok=ans)
 
-    @exposed(return_type='json', http_method='POST', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True, use_conc_session=True)
     def ajax_reedit_line_selection(self):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
@@ -1934,7 +1925,7 @@ class Actions(Querying):
             ans[item[2]] += 1
         return ans
 
-    @exposed(return_type='json', legacy=True, http_method='POST')
+    @exposed(return_type='json', legacy=True, http_method='POST', use_conc_session=True)
     def ajax_rename_line_group(self, from_num=0, to_num=-1):
         new_groups = filter(lambda v: v[2] != from_num or to_num != -1, self._lines_groups)
         if to_num > 0:

@@ -231,7 +231,7 @@ class GlobalArgs(object):
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter(u'kw')
-    attr_vmode = Parameter(u'visible', persistent=Parameter.PERSISTENT)
+    attr_vmode = Parameter(u'mouseover', persistent=Parameter.PERSISTENT)
     allpos = Parameter(u'kw')
     structs = Parameter(u'', persistent=Parameter.PERSISTENT)
     q = Parameter([])
