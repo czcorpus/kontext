@@ -22,7 +22,6 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
@@ -45,9 +44,7 @@ export interface WordlistFormProps {
     wltype:string;
     wlnums:string;
     wlminfreq:string
-    wlposattr1:string;
-    wlposattr2:string;
-    wlposattr3:string;
+    wlposattrs:[string, string, string];
     wlwords:string;
     blacklist:string;
     wlFileName:string;
@@ -84,11 +81,9 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     private wlnums:string; // frq/docf/arf
 
-    private wlposattr1:string;
+    private wlposattrs:[string, string, string];
 
-    private wlposattr2:string;
-
-    private wlposattr3:string;
+    private numWlPosattrLevels:number;
 
     private wltype:string; // simple/multilevel
 
@@ -123,9 +118,8 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.wltype = 'simple';
         this.wlminfreq = {value: '5', isInvalid: false, isRequired: true};
         this.wlsort = 'f';
-        this.wlposattr1 = '';
-        this.wlposattr2 = '';
-        this.wlposattr3 = '';
+        this.wlposattrs = ['', '', ''];
+        this.numWlPosattrLevels = 1;
         this.wlwords = '';
         this.blacklist = '';
         this.wlFileName = '';
@@ -160,17 +154,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SELECT_WLPOSATTR':
-                    switch (payload.props['position']) {
-                    case 1:
-                        this.wlposattr1 = payload.props['value'];
-                    break;
-                    case 2:
-                        this.wlposattr2 = payload.props['value'];
-                    break;
-                    case 3:
-                        this.wlposattr3 = payload.props['value'];
-                    break;
-                    }
+                    this.wlposattrs[payload.props['position'] - 1] = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_WLTYPE':
@@ -183,6 +167,10 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                 break;
                 case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
                     this.includeNonwords = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_FORM_ADD_POSATTR_LEVEL':
+                    this.numWlPosattrLevels += 1;
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_FILTER_FILE':
@@ -330,9 +318,9 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         }
         ans.set('include_nonwords', this.includeNonwords ? '1' : '0');
         if (this.wltype === 'multilevel') {
-            ans.set('wlposattr1', this.wlposattr1);
-            ans.set('wlposattr2', this.wlposattr2);
-            ans.set('wlposattr3', this.wlposattr3);
+            ans.set('wlposattr1', this.wlposattrs[0]);
+            ans.set('wlposattr2', this.wlposattrs[1]);
+            ans.set('wlposattr3', this.wlposattrs[2]);
         }
         return ans;
     }
@@ -355,9 +343,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
             wltype: this.wltype,
             wlnums: this.wlnums,
             wlminfreq: this.wlminfreq.value,
-            wlposattr1: '', // this is likely different between corpora
-            wlposattr2: '', // - dtto -
-            wlposattr3: '', // - dtto -
+            wlposattrs: ['', '', ''], // this is likely different between corpora
             wlwords: this.wlwords,
             blacklist: this.blacklist,
             wlFileName: this.wlFileName,
@@ -374,9 +360,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.wltype = state.wltype;
         this.wlnums = state.wlnums;
         this.wlminfreq = {value: state.wlminfreq, isInvalid: false, isRequired: true};
-        this.wlposattr1 = state.wlposattr1;
-        this.wlposattr2 = state.wlposattr2;
-        this.wlposattr3 = state.wlposattr3;
+        this.wlposattrs = state.wlposattrs;
         this.wlwords = state.wlwords;
         this.blacklist = state.blacklist;
         this.wlFileName = state.wlFileName;
@@ -416,16 +400,12 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         return this.wlnums;
     }
 
-    getWposattr1():string {
-        return this.wlposattr1;
+    getWposattrs():[string, string, string] {
+        return this.wlposattrs;
     }
 
-    getWposattr2():string {
-        return this.wlposattr2;
-    }
-
-    getWposattr3():string {
-        return this.wlposattr3;
+    getNumWlPosattrLevels():number {
+        return this.numWlPosattrLevels;
     }
 
     getWltype():string {
