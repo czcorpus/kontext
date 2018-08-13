@@ -63,6 +63,30 @@ class APIConnection(object):
                                       port=self._conf.PORT,
                                       timeout=self._conf.HTTP_CONNECTION_TIMEOUT)
 
+    def _get_task(self, task_id):
+        connection = self._create_connection()
+        logging.getLogger(__name__).debug('CONN : {0}'.format(connection))
+        logging.getLogger(__name__).debug(
+            'REQ: http://{0}:{1}{2}'.format(self._conf.SERVER, self._conf.PORT, self._conf.PATH + '/result/' + task_id))
+        try:
+            headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
+            connection.request('GET', self._conf.PATH + '/result/' + task_id, None, headers)
+            response = connection.getresponse()
+            logging.getLogger(__name__).debug('RESP_RESULT: {0}'.format(response))
+            if response and response.status == 200:
+                args = json.loads(response.read().decode('utf-8'))
+                logging.getLogger(__name__).debug('RESP_RESULT_E: {0}'.format(args))
+                return args
+            elif response and response.status == 404:
+                return None
+            else:
+                raise Exception('Failed sending API request: %s' % (
+                    'status %s' % response.status if response else 'unknown error'))
+        except Exception as ex:
+            logging.getLogger(__name__).error(ex)
+        finally:
+            connection.close()
+
     @property
     def conf(self):
         return self._conf
@@ -77,11 +101,18 @@ class Result(APIConnection):
     INITIAL_WAIT_STEP = 0.5
     WAIT_STEP_INCREASE_RATIO = 1.09
 
+    STATUS_PENDING = 'PENDING'
+    STATUS_STARTED = 'STARTED'
+    STATUS_SUCCESS = 'SUCCESS'
+    STATUS_FAILURE = 'FAILURE'
+
     def __init__(self, conf, data):
         """
         {u'status': 0, u'updated': 0, u'created': 1533630693, , u'error': u'', u'fn': u'worker.conc_register'}
         """
         super(Result, self).__init__(conf)
+        if data is None:
+            raise ResultException('Task not found')
         self._status = None
         self._created = None
         self._updated = None
@@ -93,9 +124,33 @@ class Result(APIConnection):
         self._result = None
         self._update(data)
 
+    @property
+    def status(self):
+        """
+        We must transform KonServer's statuses:
+        0 (idle), 1 (running), 2 (stopped) (plus info stored in 'error' attr)
+        to celery
+        """
+        if self._status == 0:
+            return self.STATUS_PENDING
+        elif self._status == 1:
+            return self.STATUS_STARTED
+        elif self._status == 2:
+            if self._error:
+                return self.STATUS_FAILURE
+            else:
+                return self.STATUS_SUCCESS
+        return None  # TODO what here?
+
+    @property
+    def id(self):
+        return self._task_id
+
+    @property
+    def result(self):
+        return self._result
+
     def _update(self, data):
-        if data is None:
-            raise ResultException('Failed to set result data for task {0}'.format(self._task_id))
         self._status = data.get('status', None)
         self._created = data.get('created', None)
         self._updated = data.get('updated', None)
@@ -105,28 +160,6 @@ class Result(APIConnection):
         self._error = data.get('error', None)
         self._traceback = data.get('traceback', [])
         self._fn = data.get('fn', None)
-
-    def _get_task(self):
-        connection = self._create_connection()
-        logging.getLogger(__name__).debug('CONN : {0}'.format(connection))
-        logging.getLogger(__name__).debug(
-            'REQ: http://{0}:{1}{2}'.format(self._conf.SERVER, self._conf.PORT, self._conf.PATH + '/result/' + self._task_id))
-        try:
-            headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
-            connection.request('GET', self._conf.PATH + '/result/' + self._task_id, None, headers)
-            response = connection.getresponse()
-            logging.getLogger(__name__).debug('RESP_RESULT: {0}'.format(response))
-            if response and response.status == 200:
-                args = json.loads(response.read().decode('utf-8'))
-                logging.getLogger(__name__).debug('RESP_RESULT_E: {0}'.format(args))
-                return args
-            else:
-                raise Exception('Failed sending task: %s' % (
-                    'status %s' % response.status if response else 'unknown error'))
-        except Exception as ex:
-            logging.getLogger(__name__).error(ex)
-        finally:
-            connection.close()
 
     def __repr__(self):
         return 'Result[task_id: {0}, status: {1}, error: {2}, result: {3}]'.format(
@@ -140,7 +173,10 @@ class Result(APIConnection):
         wait = Result.INITIAL_WAIT_STEP
         total_wait = 0
         while True:
-            self._update(self._get_task())
+            task_data = self._get_task(self._task_id)
+            if task_data is None:
+                raise ResultException('Task not found')
+            self._update(task_data)
             if self._status == 2:
                 break
             time.sleep(wait)
@@ -180,6 +216,12 @@ class KonserverApp(APIConnection):
         self._registered_tasks = {}
         self._arg_mapping = {}
         self._fn_prefix = fn_prefix + '.' if fn_prefix else ''
+
+    def AsyncResult(self, task_id):
+        task_data = self._get_task(task_id)
+        if task_data is None:
+            return Result(self._conf, dict(task_id=task_id, error='Task not found', status=2))
+        return Result(self._conf, task_data)
 
     def task(self, bind=False, base=None, name=None):
         """
