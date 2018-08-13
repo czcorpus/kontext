@@ -23,10 +23,11 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
-import {PageModel, PluginName} from '../../app/main';
+import {PageModel} from '../../app/main';
 import {StatefulModel} from '../base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import { MultiDict } from '../../util';
+import { AsyncTaskStatus } from '../asyncTask';
 
 
 
@@ -53,6 +54,7 @@ export interface UnfinishedSubcorp {
     ident:string;
     name:string;
     created:Date;
+    failed:boolean;
 }
 
 export interface SortKey {
@@ -96,7 +98,8 @@ export class SubcorpListModel extends StatefulModel {
         this.actionBoxActionType = 'pub';
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
-            if (itemList.filter(item => item.category == 'subcorpus').size > 0) {
+            const subcTasks = itemList.filter(item => item.category == 'subcorpus');
+            if (subcTasks.size > 0) {
                 this.reloadItems().then(
                     (data) => {
                         this.notifyChangeListeners();
@@ -166,35 +169,41 @@ export class SubcorpListModel extends StatefulModel {
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
+                                    this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_RESTORE_SUBCORPUS':
-                    this.createSubcorpus(payload.props['idx']).then(
+                    this.createSubcorpus(payload.props['idx'], true).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_REUSE_QUERY':
-                    this.createSubcorpus(payload.props['idx'], payload.props['newName'], payload.props['newCql']).then(
+                    this.createSubcorpus(payload.props['idx'], false, payload.props['newName'], payload.props['newCql']).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         },
                         (err) => {
+                            this.actionBoxVisibleRow = -1;
                             this.layoutModel.showMessage('error', err);
                             this.notifyChangeListeners();
                         }
@@ -212,11 +221,13 @@ export class SubcorpListModel extends StatefulModel {
                                 'info',
                                 this.layoutModel.translate('subclist__subc_published')
                             );
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         },
                         (err) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage('error', err);
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         }
                     );
@@ -242,11 +253,13 @@ export class SubcorpListModel extends StatefulModel {
                                 'info',
                                 this.layoutModel.translate('subclist__subc_desc_updated')
                             );
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         },
                         (err) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage('error', err);
+                            this.actionBoxVisibleRow = -1;
                             this.notifyChangeListeners();
                         }
                     );
@@ -325,13 +338,14 @@ export class SubcorpListModel extends StatefulModel {
         )
     }
 
-    private createSubcorpus(idx:number, subcname?:string, cql?:string):RSVP.Promise<any> {
+    private createSubcorpus(idx:number, removeOrig:boolean, subcname?:string, cql?:string):RSVP.Promise<any> {
         const srcRow = this.lines.get(idx);
-        const params = {
-            corpname: srcRow.corpname,
-            subcname: subcname !== undefined ? subcname : srcRow.usesubcorp,
-            cql: cql !== undefined ? cql : srcRow.cql
-        };
+        const params = new MultiDict();
+        params.set('corpname', srcRow.corpname);
+        params.set('subcname', subcname !== undefined ? subcname : srcRow.usesubcorp);
+        params.set('publish', '0'); // TODO do we want to user-editable?
+        params.set('cql', cql !== undefined ? cql : srcRow.cql);
+
         return this.layoutModel.ajax<AjaxResponse.CreateSubcorpus>(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
@@ -339,7 +353,7 @@ export class SubcorpListModel extends StatefulModel {
 
         ).then(
             (data) => {
-                data.unfinished_subc.forEach(item => {
+                data.processed_subc.forEach(item => {
                     this.layoutModel.registerTask({
                         ident: item.ident,
                         label: item.label,
@@ -352,11 +366,14 @@ export class SubcorpListModel extends StatefulModel {
                     this.unfinished = this.unfinished.push({
                         ident: item.ident,
                         name: item.label,
-                        created: new Date(item.created * 1000)
+                        created: new Date(item.created * 1000),
+                        failed: false
                     });
-                    this.lines = this.lines.remove(idx);
+                    if (removeOrig) {
+                        this.lines = this.lines.remove(idx);
+                    }
                 });
-                if (data.unfinished_subc.length > 0) {
+                if (data.processed_subc.length > 0) {
                     return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
                         resolve(null);
                     });
@@ -376,8 +393,7 @@ export class SubcorpListModel extends StatefulModel {
             {
                 corpname: delRow.corpname,
                 subcname: delRow.usesubcorp
-            },
-            {contentType : 'application/x-www-form-urlencoded'}
+            }
 
         ).then(
             (data) => {
@@ -410,7 +426,8 @@ export class SubcorpListModel extends StatefulModel {
             return {
                 ident: item.ident,
                 name: item.label,
-                created: new Date(item.created * 1000)
+                created: new Date(item.created * 1000),
+                failed: item.status === AsyncTaskStatus.FAILURE
             }
         }));
     }
@@ -445,13 +462,12 @@ export class SubcorpListModel extends StatefulModel {
         return this.layoutModel.ajax<AjaxResponse.SubcorpList>(
             'GET',
             this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
-            args,
-            { contentType : 'application/x-www-form-urlencoded' }
+            args
 
         ).then(
             (data) => {
                 this.importLines(data.subcorp_list);
-                this.importUnfinished(data.unfinished_subc);
+                this.importUnfinished(data.processed_subc);
                 this.relatedCorpora = Immutable.List<string>(data.related_corpora);
                 this.sortKey = {
                     name: data.sort_key.name,
@@ -488,13 +504,12 @@ export class SubcorpListModel extends StatefulModel {
         return this.layoutModel.ajax<AjaxResponse.SubcorpList>(
             'GET',
             this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
-            args,
-            { contentType : 'application/x-www-form-urlencoded' }
+            args
 
         ).then(
             (data) => {
                 this.importLines(data.subcorp_list);
-                this.importUnfinished(data.unfinished_subc);
+                this.importUnfinished(data.processed_subc);
                 this.relatedCorpora = Immutable.List<string>(data.related_corpora);
                 for (let p in filter) {
                     if (filter.hasOwnProperty(p)) {

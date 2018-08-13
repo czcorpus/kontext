@@ -182,7 +182,7 @@ class Subcorpus(Querying):
                                             _('Subcorpus created but there was a problem saving a backup copy.'))
             unfinished_corpora = filter(lambda at: not at.is_finished(),
                                         self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
-            return dict(unfinished_subc=[uc.to_dict() for uc in unfinished_corpora])
+            return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
         else:
             raise SubcorpusError(_('Empty subcorpus!'))
 
@@ -327,14 +327,14 @@ class Subcorpus(Querying):
         else:
             full_list = l10n.sort(full_list, loc=self.ui_lang,
                                   key=lambda x: x[sort_key], reverse=rev)
-        unfinished_corpora = filter(lambda at: not at.is_finished(),
-                                    self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
+
         ans = dict(
             SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
             subcorp_list=full_list,
             sort_key=dict(name=sort_key, reverse=rev),
             filter=filter_args,
-            unfinished_subc=[uc.to_dict() for uc in unfinished_corpora],
+            processed_subc=[v.to_dict() for v in self.get_async_tasks(
+                category=AsyncTaskStatus.CATEGORY_SUBCORPUS)],
             related_corpora=sorted(related_corpora),
             uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
         )

@@ -1414,7 +1414,7 @@ class Kontext(Controller):
         else:
             return {'data': []}  # other backends are not supported
 
-    @exposed(return_type='json', skip_corpus_init=True)
+    @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request):
         task_ids = request.form.getlist('tasks')
         self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
