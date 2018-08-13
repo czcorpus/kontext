@@ -128,10 +128,11 @@ class UCNKSubcRestore(AbstractSubcRestore):
         subc_queries = self.list_queries(plugin_api.user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
-            subc_queries_map[u'%s:%s' % (x['corpname'], x['subcname'])] = x
+            subc_queries_map[(x['corpname'], x['subcname'])] = x
 
         if filter_args.get('show_deleted', False):
-            deleted_keys = set(subc_queries_map.keys()) - (set([x['name'] for x in subc_list]))
+            deleted_keys = set(subc_queries_map.keys()) - \
+                (set((x['corpname'], x['usesubcorp']) for x in subc_list))
         else:
             deleted_keys = []
 
@@ -160,10 +161,10 @@ class UCNKSubcRestore(AbstractSubcRestore):
                         'published': False})
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
-
         for subc in subc_list:
-            if subc['name'] in subc_queries_map:
-                subc['cql'] = urllib.quote(subc_queries_map[subc['name']]['cql'].encode('utf-8'))
+            key = (subc['corpname'], subc['usesubcorp'])
+            if key in subc_queries_map:
+                subc['cql'] = urllib.quote(subc_queries_map[key]['cql'].encode('utf-8'))
             else:
                 subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])

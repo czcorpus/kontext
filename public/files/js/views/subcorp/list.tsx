@@ -48,14 +48,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         return (
             <tr>
-                <td />
                 <td>
                     {props.item.name}
                 </td>
                 <td className="processing">
-                    {he.translate('global__processing')}
+                    {props.item.failed ?
+                        he.translate('subclist__failed_item') :
+                        he.translate('global__processing')
+                    }
                 </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
+                <td />
+                <td />
                 <td />
             </tr>
         );
@@ -277,7 +281,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <th>{he.translate('subclist__col_backed_up')}</th>
                             <th />
                         </tr>
-                        {this.state.unfinished.map(item => <TrUnfinishedLine key={item.name} item={item} /> )}
+                        {this.state.unfinished.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} /> )}
                         {this.state.lines.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')}
@@ -418,16 +422,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <textarea id="inp_zBuJi" defaultValue={this.props.data.cql}
                                 onChange={this._handleCqlChange} rows={4} />
                     </div>
+                    <p>
+                        <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning')}
+                                style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
+                        {he.translate('subclist__reuse_query_warn')}
+                    </p>
                     <div>
                         <button type="button" className="default-button"
                             onClick={this._handleSubmit}>{he.translate('subcform__create_subcorpus')}</button>
                     </div>
-                    <p>
-                        (<img src={he.createStaticUrl('img/warning-icon.svg')}
-                                alt={he.translate('global__warning')}
-                                style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
-                        {he.translate('subclist__reuse_query_warn')})
-                    </p>
                 </FormActionTemplate>
             );
         }
@@ -501,32 +505,32 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         const mkClass = (action) => `util-button${action === props.activeTab ? ' active' : ''}`;
 
         return (
-            <ul className="ActionMenu">
+            <ul className="ActionMenu tabs">
                 {!props.isDeletedCorp ?
                     <li>
-                        <a className={mkClass('pub')} onClick={props.onSelect('pub')}>
-                            {he.translate('subclist__public_access_btn')}
-                        </a>
+                        <layoutViews.TabButton onClick={props.onSelect('pub')}
+                            isActive={props.activeTab === 'pub'}
+                            label={he.translate('subclist__public_access_btn')} />
                     </li> : null
                 }
                 {props.hasCQLBackup ?
                     <li>
-                        <a className={mkClass('reuse')} onClick={props.onSelect('reuse')}>
-                            {he.translate('subclist__action_reuse')}
-                        </a>
+                        <layoutViews.TabButton onClick={props.onSelect('reuse')}
+                            isActive={props.activeTab === 'reuse'}
+                            label={he.translate('subclist__action_reuse')} />
                     </li> : null
                 }
                 {props.hasCQLBackup && props.isDeletedCorp ?
                 <>
                     <li>
-                        <a className={mkClass('restore')} onClick={props.onSelect('restore')}>
-                            {he.translate('subclist__action_restore')}
-                        </a>
+                        <layoutViews.TabButton onClick={props.onSelect('restore')}
+                                isActive={props.activeTab === 'restore'}
+                                label={he.translate('subclist__action_restore')} />
                     </li>
                     <li>
-                        <a className={mkClass('wipe')} onClick={props.onSelect('wipe')}>
-                            {he.translate('subclist__action_wipe')}
-                        </a>
+                        <layoutViews.TabButton onClick={props.onSelect('wipe')}
+                                isActive={props.activeTab === 'wipe'}
+                                label={he.translate('subclist__action_wipe')} />
                     </li>
                 </> : null}
             </ul>
@@ -598,6 +602,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return <FormActionTemplate>
+                <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
+                <textarea id="inp_3IDJH" cols={60} rows={10}
+                        onChange={this.handleTextAreaChange}
+                        value={this.props.description || ''} />
+                <p className="note">({he.translate('global__markdown_supported')})</p>
                 <p style={{width: '40em'}}>
                     <img src={he.createStaticUrl('img/warning-icon.svg')}
                         alt="warning-icon.svg" style={{width: '1.3em', verticalAlign: 'middle', marginRight: '0.3em'}} />
@@ -607,11 +616,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             he.translate('subclist__ex_post_publish_warning')
                     }
                 </p>
-                <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
-                <textarea id="inp_3IDJH" cols={60} rows={10}
-                        onChange={this.handleTextAreaChange}
-                        value={this.props.description || ''} />
-                <p className="note">({he.translate('global__markdown_supported')})</p>
                 <div>
                     <PublishSubmitButton onSubmit={this.props.published ? this.handleSubmitUpdateDesc :
                                             this.handleSubmitPublish} published={this.props.published} />

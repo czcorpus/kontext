@@ -85,7 +85,7 @@ class SubcorpListPage {
                     this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
                     this.layoutModel.getConf<SortKey>('SortKey'),
                     this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
-                    this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('UnfinishedSubcorpora'),
+                    this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
                     this.layoutModel.getConf<SubcListFilter>('Filter')
                 );
                 this.renderView();
