@@ -1579,7 +1579,7 @@ class Actions(Querying):
             qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
         self.args.q = [u'q[' + '&'.join(qparts) + ']']
 
-    @exposed(template='freqs.tmpl', page_model='freq', legacy=True)
+    @exposed(template='freqs.tmpl', page_model='freq', legacy=True, http_method='POST')
     def struct_wordlist(self):
         self._exceptmethod = 'wordlist_form'
         if self.args.fcrit:

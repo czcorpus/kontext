@@ -647,8 +647,8 @@
         "wordlist__freq_fig_radio_arf": "ARF",
         "wordlist__output_type_title": "Output type",
         "wordlist__filter_wordlist_by_legend": "Filter wordlist by",
-        "wordlist__out_type_single_label": "Single attribute",
-        "wordlist__out_type_multi_label": "Multiple attributes",
+        "wordlist__out_type_single_label": "Attribute used for search",
+        "wordlist__out_type_multi_label": "Custom attributes",
         "wordlist__curr_wlattr_hint": "currently",
         "wordlist__multiattr_warning": "Please note that selecting more attributes at once causes the calculation to take more time compared with the single attribute variant",
         "wordlist__min_freq_label": "Minimum frequency",
@@ -664,7 +664,8 @@
         "wordlist__filter_not_avail": "Filter not available",
         "wordlist__save_form_heading": "Save word list",
         "wordlist__minfreq_err": "A number greater that zero must be used",
-        "wordlist__ml_not_avail": "Not available"
+        "wordlist__ml_not_avail": "Not available",
+        "wordlist__add_attr": "Add attribute"
     },
     "cs-CZ" : {
         "global__save": "Uložit",
@@ -1314,8 +1315,8 @@
         "wordlist__freq_fig_radio_arf": "ARF",
         "wordlist__output_type_title": "Typ výstupu",
         "wordlist__filter_wordlist_by_legend": "Vlastnosti filtru",
-        "wordlist__out_type_single_label": "Jeden atribut",
-        "wordlist__out_type_multi_label": "Více atributů",
+        "wordlist__out_type_single_label": "Atribut použitý pro hledání",
+        "wordlist__out_type_multi_label": "Volitelné atributy",
         "wordlist__curr_wlattr_hint": "aktuálně",
         "wordlist__multiattr_warning": "Berte prosím na vědomí, že vybráním více atributů současně bude výpočet probíhat déle ve srovnání s použitím jediného atributu.",
         "wordlist__min_freq_label": "minimální frekvence",
@@ -1331,6 +1332,7 @@
         "wordlist__filter_not_avail": "Filtr není k dispozici",
         "wordlist__save_form_heading": "Uložit seznam slov",
         "wordlist__minfreq_err": "Musí být použito číslo větší než nula.",
-        "wordlist__ml_not_avail": "Není k dispozici"
+        "wordlist__ml_not_avail": "Není k dispozici",
+        "wordlist__add_attr": "Přidat atribut"
     }
 }
