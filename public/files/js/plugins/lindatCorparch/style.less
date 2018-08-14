@@ -68,13 +68,12 @@
     background: url('../../../img/syntax-tree-icon.svg');
     background-size: 1.7em;
     background-repeat: no-repeat;
-    background-position: 0em 0.3em;
-    padding-right: 0.5em;
-    padding-bottom: 0;
-    margin-right: 0.5em;
-    margin-top: -0.5em;
-    border-width: 0.11em;
-    border-color: #337ab7;
+    background-position: center;
+    padding: 16px 18px;
+  }
+
+  .pmltq {
+    padding: 6px 0px;
   }
 
   .corp-tree-sorted {
@@ -97,6 +96,12 @@
       .tokens {
         padding-top: 0em;
         text-align: right;
+        border-right: 0.07em solid #00a1db;
+        min-height: 5em;
+      }
+      .icons {
+        padding-top: 1.25em;
+        text-align: center;
         border-right: 0.07em solid #00a1db;
         min-height: 5em;
       }
@@ -209,6 +214,12 @@
           border-right: 0.07em solid #00a1db;
           min-height: 5em;
         }
+        .icons {
+        padding-top: 1.25em;
+        text-align: center;
+        border-right: 0.07em solid #00a1db;
+        min-height: 5em;
+        }
         .tokens > a {
           font-size: 90%;
           color: #e92381;
@@ -242,9 +253,14 @@
           -khtml-opacity: 1.0;
           opacity: 1.0;
         }
-        .lindat-pmltq-logo:hover {
-          background-color: #9cc2e3;
-          border-color: #23527c;
+        .btn-default:hover {
+          box-shadow: 1px 1px 2px #888888;
+          background: #d8eff7;
+          margin-right: 0.5em;
+        }
+        .btn-default {
+          box-shadow: 1px 1px 2px #cccccc;
+          margin-right: 0.5em;
         }
         .corpus-details {
           margin-bottom: 0.35em;
@@ -261,16 +277,23 @@
     }
   }
   .glyphicon-lock {
-     color: #337ab7;
-     font-size: 0.8em;
-     padding-right: 0.5%;
+    color: #337ab7;
+    font-size: 0.8em;
+    padding-right: 0.5%;
   }
   .glyphicon-lock:hover {
     color: #23527c;
   }
   .glyphicon-save {
-     padding-right: 0.5%;
+    color: #337ab7;
+    font-size: 0.8em;
+    padding-right: 0.5%;
   }
+
+  .glyphicon-save:hover {
+    color: #23527c;
+  }
+
   .clickable:hover {
     cursor: pointer;
   }
