@@ -193,20 +193,20 @@ class TreeNodeEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, TreeNode):
-            data = {'id': obj.id}
-            data.update(obj.data)
-            return {
-                'parent': obj.parent.id if obj.parent else None,
-                'hint': None,
-                'labels': obj.node_labels,
-                'firstson': obj.children[0].id if len(obj.children) > 0 else None,
-                'id': obj.id,
-                'rbrother': obj.rbrother.id if obj.rbrother else None,
-                'lbrother': obj.lbrother.id if obj.lbrother else None,
-                'depth': obj.depth,
-                'data': data,
-                'order': obj.idx
-            }
+            ans = dict(
+                parent=obj.parent.id if obj.parent else None,
+                hint=None,
+                labels=obj.node_labels,
+                firstson=obj.children[0].id if len(obj.children) > 0 else None,
+                id=obj.id,
+                rbrother=obj.rbrother.id if obj.rbrother else None,
+                lbrother=obj.lbrother.id if obj.lbrother else None,
+                depth=obj.depth,
+                data=[('id',  obj.id)] + obj.data,
+                order=obj.idx)
+            if obj.hidden:
+                ans['hidden'] = True
+            return ans
         else:
             return obj
 
@@ -228,14 +228,15 @@ class TreeNode(object):
         depth (int): depth of the node
     """
 
-    def __init__(self, idx, data, node_labels, word, parent):
+    def __init__(self, idx, data, node_labels, word, parent, hidden):
         """
         Args:
             idx (int): node order in the list (zero based)
-            data (dict of str:any): a dict containing detailed information about the node
+            data (List[Tuple[str, Any]]): a dict containing detailed information about the node
             node_labels (list of str): a list of labels for the nodes
             word (str): a "word" value of the node (i.e. the actual word the node represents)
             parent (int): parent node
+            hidden: if True then client should not render the node (this applies mainly for root)
         """
         self.id = 'n%d' % idx
         self.idx = idx
@@ -247,6 +248,7 @@ class TreeNode(object):
         self.depth = None
         self.node_labels = node_labels
         self.word = word
+        self.hidden = hidden
 
     def __repr__(self):
         return 'Node[%d] (parent: %s, children: %s)' % (self.idx, self.parent, [c.idx for c in self.children])
@@ -333,10 +335,11 @@ class TreeBuilder(object):
             return [k % (v if v is not None else '') for k, v in zip(tree_conf.label_templates, values)]
 
         nodes = [TreeNode(idx=i,
-                          data=dict(self._dict_portion(d, tree_conf.detail_attrs)),
+                          data=self._dict_portion(d, tree_conf.detail_attrs),
                           node_labels=export_labels(d),
                           parent=d[tree_conf.parent_attr],
-                          word=d[tree_conf.word_attr])
+                          word=d[tree_conf.word_attr],
+                          hidden=d.get('hidden', False))
                  for i, d in enumerate(data)]
         for n in nodes:
             if n.parent is not None:

@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import RSVP from 'rsvp';
-import {createGenerator} from './ucnkTreeView';
+import {createGenerator, SourceData} from './ucnkTreeView';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -37,7 +35,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
 
     private waitingStatus:boolean;
 
-    private data:any; // TODO type
+    private data:Array<SourceData.Data>; // TODO type
 
     private target:HTMLElement; // the value changes on each render() call
 
@@ -53,7 +51,6 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
         const treexFrame = window.document.createElement('div');
         treexFrame.style.width = '90%';
         this.target.appendChild(treexFrame);
-
         createGenerator(this.pluginApi.getComponentHelpers()).call(
             null,
             this.data,
