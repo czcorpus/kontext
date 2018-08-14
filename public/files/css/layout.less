@@ -779,22 +779,19 @@ section #result-mount .ktx-pagination {
     vertical-align: middle;
 
     .curr-page {
-
-        background-color: #ffffff;
         display: inline-block;
-        width: 3em;
         line-height: 1.4em;
-        border: @input-border-style;
-        border-radius: @input-border-radius;
         padding: 0;
         text-align: left;
+        width: 3em;
+        box-sizing: border-box;
 
         input {
             width: 3em;
-            border: none;
             padding-right: 0.4em;
             padding-left: 0.4em;
-            border-radius: 0;
+            border: @input-border-style;
+            border-radius: @input-border-radius;
             box-sizing: border-box;
         }
 
@@ -807,16 +804,22 @@ section #result-mount .ktx-pagination {
 
 .ktx-pagination-left {
     display: inline-block;
-    padding-right: 6px;
+    vertical-align: middle;
+    padding-right: 0.3em;
 }
 
 .ktx-pagination-right {
     display: inline-block;
-    padding-left: 6px;
-}
+    padding-left: 0.3em;
 
-.ktx-pagination a {
-    vertical-align: middle;
+    > a {
+
+        display: inline-block;
+
+        > img {
+            vertical-align: middle;
+        }
+    }
 }
 
 .ktx-pagination a > img {

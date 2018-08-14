@@ -92,7 +92,7 @@ export interface FreqBlock {
 
 export class TextTypesDistModel extends StatefulModel {
 
-    private static SAMPLE_SIZE = 10000;
+    private static SAMPLE_SIZE = 100000;
 
     private static IPM_BAR_WIDTH = 400;
 
@@ -143,6 +143,10 @@ export class TextTypesDistModel extends StatefulModel {
                 break;
                 case 'REMOVE_CHART_ITEMS_LIMIT':
                     this.maxBlockItems = -1;
+                    this.notifyChangeListeners();
+                break;
+                case 'RESTORE_CHART_ITEMS_LIMIT':
+                    this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
                     this.notifyChangeListeners();
                 break;
             }
@@ -251,6 +255,10 @@ export class TextTypesDistModel extends StatefulModel {
 
     isDisplayedBlocksSubset():boolean {
         return this.getBlocks().size > this.getDisplayableBlocks().size;
+    }
+
+    shouldDisplayBlocksSubset():boolean {
+        return this.blocks.find(block => block.items.length > this.maxBlockItems) !== undefined;
     }
 
     getMaxChartItems():number {

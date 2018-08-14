@@ -38,6 +38,7 @@ interface TextTypesState {
     blockedByAsyncConc:boolean;
     getMaxChartItems:number;
     isDisplayedBlocksSubset:boolean;
+    shouldDisplayBlocksSubset:boolean;
 }
 
 export interface TtOverviewViews {
@@ -51,7 +52,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     const FreqBar = (props:{items:Array<FreqItem>, label:string}) => {
 
-        const mkTitle = (v:FreqItem) => he.translate('concview__abs_ipm_bar_title_{abs}{ipm}', {abs: v.abs, ipm: v.ipm});
+        const mkTitle = (v:FreqItem) => he.translate('concview__abs_ipm_bar_title_{abs}{ipm}',
+                            {abs: he.formatNumber(v.abs), ipm: he.formatNumber(v.ipm)});
 
         return (
             <div className="FreqBar">
@@ -82,12 +84,20 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         sampleSize:number;
         maxChartItems:number;
         isDisplayedBlocksSubset:boolean;
+        shouldDisplayBlocksSubset:boolean;
 
     }> = (props) => {
 
         const handleLimitRemove = () => {
             dispatcher.dispatch({
                 actionType: 'REMOVE_CHART_ITEMS_LIMIT',
+                props: {}
+            });
+        };
+
+        const handleLimitRestore = () => {
+            dispatcher.dispatch({
+                actionType: 'RESTORE_CHART_ITEMS_LIMIT',
                 props: {}
             });
         };
@@ -102,13 +112,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                         {props.isDisplayedBlocksSubset ?
                             <>
                                 {'\u00a0|\u00a0'}
-                                {he.translate('concview__displaying_charts_up_to_{num_items}', {num_items: props.maxChartItems})}
+                                {he.translate('concview__displaying_charts_up_to_{num_items}',
+                                    {num_items: props.maxChartItems})}
                                 {'\u00a0'}(<a onClick={handleLimitRemove}>{he.translate('concview__display_all_tt_charts')}</a>)
                             </> :
                             null
                         }
+                        {!props.isDisplayedBlocksSubset && props.shouldDisplayBlocksSubset ?
+                            <>
+                                {'\u00a0|\u00a0'}
+                                {he.translate('concview__display_limited_tt_charts')}{'\u00a0'}
+                                <a onClick={handleLimitRestore}>{he.translate('global__yes')}</a>
+                            </> :
+                            null
+                        }
                         {props.sampleSize > 0 ?
-                            '\u00a0|\u00a0' + he.translate('concview__using_sample_{value}', {value: props.sampleSize}) + '.' : ''
+                            '\u00a0|\u00a0' + he.translate('concview__using_sample_{value}',
+                                    {value: props.sampleSize}) + '.' : ''
                         }
                     </p> : null
                 }
@@ -135,7 +155,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                 sampleSize: ttDistModel.getSampleSize(),
                 blockedByAsyncConc: ttDistModel.getBlockedByAsyncConc(),
                 getMaxChartItems: ttDistModel.getMaxChartItems(),
-                isDisplayedBlocksSubset: ttDistModel.isDisplayedBlocksSubset()
+                isDisplayedBlocksSubset: ttDistModel.isDisplayedBlocksSubset(),
+                shouldDisplayBlocksSubset: ttDistModel.shouldDisplayBlocksSubset()
             };
         }
 
@@ -166,7 +187,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                             <FreqsView blocks={this.state.blocks} minFreq={this.state.minFreq}
                                 sampleSize={this.state.sampleSize}
                                 maxChartItems={this.state.getMaxChartItems}
-                                isDisplayedBlocksSubset={this.state.isDisplayedBlocksSubset} />
+                                isDisplayedBlocksSubset={this.state.isDisplayedBlocksSubset}
+                                shouldDisplayBlocksSubset={this.state.shouldDisplayBlocksSubset} />
                         }
                     </div>
                 </div>
