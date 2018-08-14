@@ -26,6 +26,7 @@ import * as RSVP from 'vendor/rsvp';
 import {createGenerator} from './ucnkTreeView';
 import {SimplePageStore} from '../../stores/base';
 
+
 declare var require:any;
 require('./style.less'); // webpack
 
@@ -54,7 +55,6 @@ class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISynt
         const treexFrame = window.document.createElement('div');
         treexFrame.style.width = '90%';
         this.target.appendChild(treexFrame);
-
         createGenerator(this.pluginApi.getComponentHelpers()).call(
             null,
             this.data,
