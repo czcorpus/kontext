@@ -95,11 +95,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                         <div>
                             {providerOutput.data.map((item, j) =>
                                 <providerOutput.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
-                            {providerOutput.note ?
-                                <p className="note">{providerOutput.note}</p> : null}
+                            <p className="note">
+                                {providerOutput.note ? providerOutput.note + '\u00a0|\u00a0' : null}
+                                {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
+                                    {attr: this.state.freqType})}
+                            </p>
                         </div>
-                        <p className="note">{he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
-                                {attr: this.state.freqType})}</p>
                     </div>
                 );
 
