@@ -46,7 +46,8 @@ export namespace SourceData {
         lbrother:string;
         order:number;
         depth:number;
-        data:{[key:string]:DetailValue};
+        data:Array<[string, DetailValue]>;
+        hidden?:boolean;
     }
 
     export interface Tree {
@@ -118,9 +119,10 @@ interface TreeNode {
     labels:Array<Label>;
     parent:string;
     depth:number;
-    data:{[key:string]:DetailValue},
+    data:Array<[string, DetailValue]>,
     x:number;
     y:number;
+    hidden:boolean;
 }
 
 type TreeNodeMap = {[ident:string]:TreeNode};
@@ -256,9 +258,10 @@ class TreeGenerator {
 
     generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement):void {
         const nodes = data[0].zones[zone].trees[tree].nodes;
-        const tokens:Sentence = this.importSentence(data[0]);
-
         const nodeMap = this.generateNodeMap(nodes);
+        const tokens:Sentence = this.importSentence(data[0]).filter(t => !nodeMap[t.id].hidden);
+
+
         this.calcViewSize(tokens, nodeMap);
         this.generateNodeCoords(tokens, nodeMap);
         const edges = this.generateEdges(nodeMap);
@@ -280,7 +283,6 @@ class TreeGenerator {
      * (widht/height if set to auto, y-step, x-step)
      */
     private calcViewSize(tokens:Sentence, nodeMap:TreeNodeMap):void {
-        const totalNumLetters = tokens.reduce((prev, curr) => prev + curr.value.length, 0);
         const maxDepth = Object.keys(nodeMap).map(k => nodeMap[k].depth).reduce((p, c) => c > p ? c : p, 0);
 
         if (!this.params.width) {
@@ -339,10 +341,11 @@ class TreeGenerator {
                 hint: item.hint,
                 labels: item.labels.map(b => this.parseLabel(b)),
                 parent: item.parent,
-                depth: item.depth,
+                depth: nodes[0].hidden ? item.depth - 1 : item.depth,
                 data: item.data,
                 x: 0,
-                y: 0
+                y: 0,
+                hidden: item.hidden !== undefined ? item.hidden : false
             }
         });
         return map;
@@ -351,7 +354,7 @@ class TreeGenerator {
     private generateEdges(nodeMap:TreeNodeMap):Array<Edge> {
         const ans:Array<Edge> = [];
         for (let k in nodeMap) {
-            if (nodeMap.hasOwnProperty(k) && nodeMap[k].parent) {
+            if (nodeMap.hasOwnProperty(k) && nodeMap[k].parent && !nodeMap[nodeMap[k].parent].hidden) {
                 ans.push({
                     x1: nodeMap[k].x,
                     y1: nodeMap[k].y,
@@ -372,7 +375,7 @@ class TreeGenerator {
     }
 
     private parseLabel(s:string):Label {
-        const srch = /#\{([^}]+)\}\[([^\]]+)/.exec(s);
+        const srch = /^#\{(#[0-9a-fA-F]{6})\}\[?([^\]]*)/.exec(s);
         if (srch !== null) {
             return {
                 color: srch[1],
@@ -417,14 +420,8 @@ class TreeGenerator {
             });
     }
 
-    private handleDetailClick(target:d3.Selection<Token>):void {
-
-    }
-
-
     private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any>, group:d3.Selection<Token>) {
         const foreignObj = group.append('foreignObject');
-
         foreignObj
             .attr('x', (d, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
             .attr('y', d => this.params.paddingTop + nodeMap[d.id].depth * this.params.depthStep)
@@ -491,14 +488,15 @@ class TreeGenerator {
                         .attr('title', this.componentHelpers.translate('global__close'));
 
                     const data = nodeMap[datum.id].data;
-                    Object.keys(data).filter(k => k !== 'id').forEach(k => {
+                    data.filter(k => k[0] !== 'id').forEach(item => {
+                        const [k, value] = item;
                         const tr = tbody.append('tr');
                         tr
                             .append('th')
                             .text(k + ':');
                         const td = tr.append('td')
-                        if (data[k] !== null && typeof data[k] === 'object') {
-                            (<ReferencedValues>data[k]).forEach((item, i) => {
+                        if (value !== null && typeof value === 'object') {
+                            (<ReferencedValues>value).forEach((item, i) => {
                                 const refData = group.filter((_, j) => j === item[0]).datum();
                                 if (refData) {
                                     if (i > 0) {
@@ -519,8 +517,8 @@ class TreeGenerator {
                                 }
                             });
 
-                        } else if (typeof data[k] === 'string') {
-                            td.text(<string>data[k]);
+                        } else if (typeof value === 'string') {
+                            td.text(<string>value);
                         }
                     });
                     this.detailedId = datum.id;
@@ -545,7 +543,7 @@ class TreeGenerator {
             .attr('width', this.params.width)
             .attr('height', this.params.height);
 
-        const edge = svg
+        svg
             .selectAll('line')
             .data(edges)
             .enter()
@@ -564,7 +562,7 @@ class TreeGenerator {
             .append('g');
         group
             .append('ellipse')
-            .attr('cx', (d, i) => nodeMap[d.id].x)
+            .attr('cx', (d, _) => nodeMap[d.id].x)
             .attr('cy', (d) => nodeMap[d.id].y)
             .attr('ry', this.params.nodeWidth)
             .attr('rx', this.params.nodeHeight)
