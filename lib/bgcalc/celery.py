@@ -13,6 +13,15 @@
 # GNU General Public License for more details.
 
 
+class Config(object):
+    BROKER_URL = None
+    CELERY_RESULT_BACKEND = None
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TIMEZONE = None
+
+
 def is_celery_error(err):
     """
     Because Celery when using json serialization cannot (de)serialize original exceptions,

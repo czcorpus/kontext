@@ -42,10 +42,32 @@ def _init_backend_app(conf, fn_prefix):
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
         import celery
-        return celery.Celery('bgcalc', config_source=imp.load_source('celeryconfig', app_conf))
+        from bgcalc.celery import Config
+
+        if app_conf:
+            cconf = imp.load_source('celeryconfig', app_conf)
+        else:
+            cconf = Config()
+            cconf.BROKER_URL = conf.get('calc_backend', 'celery_broker_url')
+            cconf.CELERY_RESULT_BACKEND = conf.get('calc_backend', 'celery_result_backend')
+            cconf.CELERY_TASK_SERIALIZER = conf.get('calc_backend', 'celery_task_serializer')
+            cconf.CELERY_RESULT_SERIALIZER = conf.get('calc_backend', 'celery_result_serializer')
+            cconf.CELERY_ACCEPT_CONTENT = conf.get('calc_backend', 'celery_accept_content')
+            cconf.CELERY_TIMEZONE = conf.get('calc_backend', 'celery_timezone')
+        return celery.Celery('bgcalc', config_source=cconf)
     elif app_type == 'konserver':
-        from bgcalc.konserver import KonserverApp
-        return KonserverApp(conf=imp.load_source('konserverconfig', app_conf), fn_prefix=fn_prefix)
+        from bgcalc.konserver import KonserverApp, Config
+
+        if app_conf:
+            kconf = imp.load_source('konserverconfig', app_conf)
+        else:
+            kconf = Config()
+            kconf.SERVER = conf.get('calc_backend', 'konserver_server')
+            kconf.PORT = conf.get_int('calc_backend', 'konserver_port')
+            kconf.PATH = conf.get('calc_backend', 'konserver_path')
+            kconf.HTTP_CONNECTION_TIMEOUT = conf.get_int('calc_backend', 'konserver_http_connection_timeout')
+            kconf.RESULT_WAIT_MAX_TIME = conf.get_int('calc_backend', 'konserver_result_wait_max_time')
+        return KonserverApp(conf=kconf, fn_prefix=fn_prefix)
     elif app_type == 'multiprocessing':  # legacy stuff
         return None
     else:
