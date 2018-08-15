@@ -40,7 +40,6 @@ import plugins
 import plugins.export
 import settings
 import translation
-import l10n
 from controller import KonTextCookie
 from initializer import setup_plugins
 

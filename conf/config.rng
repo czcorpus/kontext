@@ -277,16 +277,6 @@
                             </a:documentation>
                         </element>
                     </optional>
-                    <optional>
-                        <element name="websocket_url">
-                            <data type="anyURI" />
-                            <a:documentation>In case kontext-atn WebSocket server (which is a separate optional
-                                application; see https://github.com/czcorpus/kontext-atn) is running,
-                                KonText can be set to perform some async checking via WebSockets to decrease
-                                load on Gunicorn workers and also to decrease number of requests.
-                            </a:documentation>
-                        </element>
-                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">
@@ -295,19 +285,74 @@
                     <element name="type">
                         <choice>
                             <value>celery</value>
+                            <value>konserver</value>
                             <value>multiprocessing</value>
                         </choice>
                     </element>
-                    <element name="conf">
-                        <text />
-                    </element>
-                    <element name="time_limit">
-                        <a:documentation>Number of seconds for backend tasks to run.</a:documentation>
-                        <data type="positiveInteger" />
-                    </element>
                     <element name="status_service_url">
+                        <a:documentation>In case a bgcalc module supports realtime status update,
+                                KonText can be set to perform some async checking via WebSockets to decrease
+                                load on Gunicorn workers and also to decrease number of requests.
+                        </a:documentation>
                         <data type="anyURI" />
                     </element>
+                    <optional>
+                        <choice>
+                            <element name="conf">
+                                <text />
+                            </element>
+                            <group>
+                                <element name="konserver_server">
+                                    <text />
+                                </element>
+                                <element name="konserver_port">
+                                    <data type="positiveInteger" />
+                                </element>
+                                <element name="konserver_path">
+                                    <text />
+                                </element>
+                                <element name="konserver_http_connection_timeout">
+                                    <data type="positiveInteger" />
+                                </element>
+                                <element name="konserver_result_wait_max_time">
+                                    <data type="positiveInteger" />
+                                </element>
+                                <element name="konserver_worker_log">
+                                    <text />
+                                </element>
+                            </group>
+                            <group>
+                                <element name="celery_broker_url">
+                                    <data type="anyURI" />
+                                </element>
+                                <element name="celery_result_backend">
+                                    <data type="anyURI" />
+                                </element>
+                                <element name="celery_task_serializer">
+                                    <choice>
+                                        <value>json</value>
+                                    </choice>
+                                </element>
+                                <element name="celery_result_serializer">
+                                    <choice>
+                                        <value>json</value>
+                                    </choice>
+                                </element>
+                                <element name="celery_accept_content">
+                                    <oneOrMore>
+                                        <element name="item">
+                                            <choice>
+                                                <value>json</value>
+                                            </choice>
+                                        </element>
+                                    </oneOrMore>
+                                </element>
+                                <element name="celery_timezone">
+                                    <text />
+                                </element>
+                            </group>
+                        </choice>
+                    </optional>
                 </interleave>
             </element>
             <element name="job_scheduler">

@@ -36,6 +36,29 @@ import json
 import httplib
 import inspect
 import time
+import os
+
+
+def setup_logger(log_path, is_debug, logger):
+    """
+    """
+    try:
+        from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
+    except ImportError:
+        from logging.handlers import RotatingFileHandler as HandlerClass
+    handler = HandlerClass(log_path.format(pid=os.getpid()), maxBytes=8000000, backupCount=10)
+    handler.setFormatter(logging.Formatter(
+        fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG if is_debug else logging.INFO)
+
+
+class Config(object):
+    SERVER = None
+    PORT = None
+    PATH = None
+    HTTP_CONNECTION_TIMEOUT = None
+    RESULT_WAIT_MAX_TIME = None
 
 
 class Request(object):
@@ -327,9 +350,11 @@ class KonserverApp(APIConnection):
 
     def listen(self):
         command = ''
+        logging.getLogger(__name__).debug('konserver worker is listening...')
         while True:
             command += sys.stdin.read(1)
             if command.endswith('\n'):
+                logging.getLogger(__name__).debug('received command: {0}'.format(command))
                 task_data = None
                 try:
                     task_data = json.loads(command)
@@ -349,7 +374,9 @@ class KonserverApp(APIConnection):
 
 if __name__ == '__main__':  # here we operate in worker mode
     import imp
-    import os
+    logger = logging.getLogger('')
     worker_path = os.path.join(os.path.dirname(__file__), '..', '..', 'worker.py')
     worker = imp.load_source('worker', worker_path)
+    setup_logger(worker.settings.get('calc_backend', 'konserver_worker_log'),
+                 worker.settings.get_bool('global', 'debug'), logger)
     worker.app.listen()
