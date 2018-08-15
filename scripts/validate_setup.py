@@ -250,21 +250,15 @@ def test_5(finfo):
             yield finfo.file_exists(os.path.join(APP_PATH, 'locale/%s/LC_MESSAGES/kontext.mo' % tr))
 
 
-@test('Test formats.json localizations are set-up and present')
-def test_5(finfo):
-    translations = settings.get_list('global', 'translations')
-    for tr in translations:
-        yield finfo.file_exists(os.path.join(APP_PATH, 'locale/%s/formats.json' % tr))
-
-
 @test('Test <calc_backend> is set-up properly')
 def test_6(finfo):
     bck_type = settings.get('calc_backend', 'type')
     conf = settings.get('calc_backend', 'conf')
-    if bck_type in ('celery', 'konserver'):
-        return finfo.file_exists(os.path.join(conf))
-    elif bck_type != 'multiprocessing':
-        return False, UnsupportedValue('/global/calc_backend', bck_type)
+    if conf:  # otherwise user uses direct configuration which is taken care of by RelaxNG validation
+        if bck_type in ('celery', 'konserver'):
+            return finfo.file_exists(os.path.join(conf))
+        elif bck_type != 'multiprocessing':
+            return False, UnsupportedValue('/global/calc_backend', bck_type)
     return True, None
 
 

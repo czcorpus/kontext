@@ -32,8 +32,8 @@
     </global>
     <calc_backend>
         <type>celery</type>
-        <celery_broker_url>redis://10.0.3.149:6379/2</celery_broker_url>
-        <celery_result_backend>redis://10.0.3.149:6379/2</celery_result_backend>
+        <celery_broker_url>redis://127.0.0.1:6379/2</celery_broker_url>
+        <celery_result_backend>redis://127.0.0.1:6379/2</celery_result_backend>
         <celery_task_serializer>json</celery_task_serializer>
         <celery_result_serializer>json</celery_result_serializer>
         <celery_accept_content>
@@ -129,7 +129,10 @@
         <export_freq2d>
             <xlsx>default_xlsx</xlsx>
         </export_freq2d>
-        <footer_bar/>
+        <footer_bar>
+            <module>default_footer_bar</module>
+            <js_module>defaultFooterBar</js_module>
+        </footer_bar>
         <getlang>
             <module>default_getlang</module>
             <cookie extension-by="default">kontext_toolbar_lang</cookie>

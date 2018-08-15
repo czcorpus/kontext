@@ -18,19 +18,19 @@
   * [Systemd configuration](#install_celery_beat_systemd_configuration)
 
 <a name="install_install_kontext"></a>
-## Install KonText
+## Install KonText (Ubuntu)
 
-The easiest way to install and test-run KonText is to install it in an **LXC container** using the <a href="../scripts/install/install.sh">install.sh</a> script provided in this repository
-that performs all the installation and configuration steps that are necessary to run KonText as a standalone server application for testing and development purposes. The installation has been
-tested for Ubuntu 16.04.3 LTS.
+The easiest way to install and test-run KonText is to install it in an **LXC container** using 
+the <a href="../scripts/install/install.ubuntu.sh">install.ubuntu.sh</a> script provided in this repository
+that performs all the installation and configuration steps that are necessary to run KonText as a standalone 
+server application for testing and development purposes. The installation has been
+tested in Ubuntu 18.04 LTS.
 
-Set up and start an LXC container:
+Set up and start an LXC container (Ubuntu variant):
 
 ```
 sudo apt-get install lxc
-
 sudo lxc-create -t download -n kontext-container -- -d ubuntu -r xenial -a amd64
-
 sudo lxc-start -n kontext-container
 ```
 
@@ -65,10 +65,13 @@ By default, the script installs Manatee and Finlib from the deb packages. If you
 Once the installation is complete, you can start KonText by entering the following command in the install root directory you specified above (*/opt/kontext*):
 
 ```
-python public/app.py --address [container_IP_address] --port [optional, default TCP port number is 5000]
+python public/app.py --address 127.0.0.1 --port 8080
 ```
 
-Now open "container_IP_address:port" (e.g. *http://10.0.3.100:5000*) in your browser on the host. You should see KonText's first_page and be able to enter a query to search in the sample Susanne corpus.
+(this address and port are configured by the installation script for Nginx web server so it will proxy
+all the external requests to your *app.py*).
+
+Now open `[container_IP_address]`  in your browser on the host. You should see KonText's first_page and be able to enter a query to search in the sample Susanne corpus.
 
 
 <a name="install_configure_kontext"></a>
