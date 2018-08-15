@@ -4,11 +4,11 @@
 # ----------------------------------------
 
 distro=""
-# check if Ubuntu 16.04
+# check if Ubuntu 18.04
 file="/etc/lsb-release"
 if [ -f "$file" ]
 then
-    distroDetail="Ubuntu 16.04"
+    distroDetail="Ubuntu 18.04"
     if grep -Fq "$distroDetail" $file
     then
         distro="Ubuntu"
@@ -86,9 +86,7 @@ then
     sudo locale-gen en_US.UTF-8
 
     # install nodejs
-    sudo apt-get install -y ca-certificates curl
-    curl https://deb.nodesource.com/setup_6.x | sudo -E bash
-    sudo apt-get install -y nodejs
+    sudo apt-get install -y ca-certificates curl nodejs npm
     npm install -g webpack
 
     # install general & manatee prerequisites
@@ -284,6 +282,8 @@ hash=${response:9}
 # set the "kontext" user in redis
 redis-cli -n 1 hset user_index "kontext" "\"user:2\""
 redis-cli -n 1 set user:2 "{\"username\": \"kontext\", \"firstname\": \"Kontext\", \"lastname\": \"Test\", \"id\": 2, \"pwd_hash\": \"$hash\", \"email\": \"test@example.com\"}"
+redis-cli -n 1 set corplist:user:1 "[\"susanne\"]"
+redis-cli -n 1 set corplist:user:2 "[\"susanne\"]"
 
 # print final info
 echo "KonText installation successfully completed."

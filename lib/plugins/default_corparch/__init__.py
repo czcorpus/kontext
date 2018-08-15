@@ -407,6 +407,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 ans = False
         return ans
 
+    def customize_corpus_info(self, corpus_info, node):
+        pass
+
     def get_list(self, plugin_api, user_allowed_corpora):
         """
         arguments:
