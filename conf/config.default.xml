@@ -32,9 +32,15 @@
     </global>
     <calc_backend>
         <type>celery</type>
-        <conf>//opt/kontext/conf/celeryconfig.py</conf>
+        <celery_broker_url>redis://10.0.3.149:6379/2</celery_broker_url>
+        <celery_result_backend>redis://10.0.3.149:6379/2</celery_result_backend>
+        <celery_task_serializer>json</celery_task_serializer>
+        <celery_result_serializer>json</celery_result_serializer>
+        <celery_accept_content>
+            <item>json</item>
+        </celery_accept_content>
+        <celery_timezone>Europe/Prague</celery_timezone>
         <status_service_url />
-        <time_limit>600</time_limit>
     </calc_backend>
     <job_scheduler>
         <type>celery</type>
