@@ -22,7 +22,7 @@ else
         distroDetail="CentOS Linux release 7.4"
         if grep -Fq "$distroDetail" $file
         then
-            distro="CentOS"            
+            distro="CentOS"
             userName="apache"
         fi
     fi
@@ -63,7 +63,7 @@ case $key in
     -t|--type)
     if [ $2 == 'ucnk' ]
     then
-        INSTALL_TYPE='ucnk'    
+        INSTALL_TYPE='ucnk'
     fi
     echo Installation type $INSTALL_TYPE
     shift
@@ -94,7 +94,7 @@ then
 
     # install general & manatee prerequisites
     sudo apt-get install -y openssh-server net-tools nginx redis-server build-essential openssl libssl-dev pkg-config wget
-    sudo apt-get install -y python python-dev python-pip python-lxml python-cheetah python-simplejson 
+    sudo apt-get install -y python python-dev python-pip python-lxml python-cheetah python-simplejson
     sudo apt-get install -y libltdl7 libpcre3 libpcre++-dev libxml2-dev libxslt-dev libltdl-dev
 
     sudo pip install --upgrade pip
@@ -106,11 +106,11 @@ then
     # -------------------------------------
     # install & set up finlib, manatee etc.
     # -------------------------------------
-    # python signal fd common for both scenarios    
+    # python signal fd common for both scenarios
     cd /usr/local/bin
     wget https://corpora.fi.muni.cz/noske/deb/1604/python-signalfd/python-signalfd_0.1-1ubuntu1_amd64.deb
     sudo dpkg -i python-signalfd_0.1-1ubuntu1_amd64.deb
-else 
+else
     # ------------------------------------
     # Install prerequisites for CentOS 7.4
     # ------------------------------------
@@ -121,19 +121,19 @@ else
     # nodejs etc.
     curl https://rpm.nodesource.com/setup_6.x | sudo -E bash -
     sudo yum install -y nodejs
-    sudo yum install -y gcc-c++ make 
+    sudo yum install -y gcc-c++ make
     # create symlink for nodejs, will need it along with node for KonText install
     nodeLink=/usr/bin/nodejs
     if [ ! -L $nodeLink ]
     then
-      sudo ln -s "$(which node)" $nodeLink      
+      sudo ln -s "$(which node)" $nodeLink
     fi
-    
+
     npm install -g webpack
-    
+
     sudo yum install -y epel-release
     sudo yum install -y openssh-server net-tools nginx openssl wget openssl-devel redis pkgconfig pcre httpd m4 parallel patch bzip2
-    sudo yum install -y python python-devel python-pip python-lxml python-cheetah python-simplejson 
+    sudo yum install -y python python-devel python-pip python-lxml python-cheetah python-simplejson
     sudo yum install -y libxml2 libxslt-devel libxml2-devel libxslt libicu-devel libtool-ltdl libtool-ltdl-devel
 
     sudo pip install --upgrade pip
@@ -154,10 +154,10 @@ else
     sudo rpm -ivh --replacepkgs python-signalfd-0.1-5.el7.centos.x86_64.rpm
 fi
 
-case $INSTALL_TYPE in 
+case $INSTALL_TYPE in
     ucnk)
         if [ $distro == 'CentOS' ]
-        then 
+        then
             cd /etc/ld.so.conf.d/
             printf "/usr/local/lib\n" > /etc/ld.so.conf.d/libc.conf
             ldconfig
@@ -208,28 +208,28 @@ case $INSTALL_TYPE in
         ;;
 
     *)
-        # default: install from binary packages         
+        # default: install from binary packages
         cd /usr/local/bin
         if [ $distro == 'Ubuntu' ]
-        then 
+        then
             wget https://corpora.fi.muni.cz/noske/deb/1604/finlib/finlib_$FINLIB_VER-1_amd64.deb
             wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open_$MANATEE_VER-1ubuntu1_amd64.deb
-            wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-python_$MANATEE_VER-1ubuntu1_amd64.deb    
+            wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-python_$MANATEE_VER-1ubuntu1_amd64.deb
             wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-susanne_$MANATEE_VER-1ubuntu1_amd64.deb
             sudo dpkg -i finlib_$FINLIB_VER-1_amd64.deb
             sudo dpkg -i manatee-open_$MANATEE_VER-1ubuntu1_amd64.deb
             sudo dpkg -i manatee-open-python_$MANATEE_VER-1ubuntu1_amd64.deb
-            sudo dpkg -i manatee-open-susanne_$MANATEE_VER-1ubuntu1_amd64.deb  
+            sudo dpkg -i manatee-open-susanne_$MANATEE_VER-1ubuntu1_amd64.deb
         else
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/finlib/finlib-$FINLIB_VER-1.el7.centos.x86_64.rpm
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/manatee-open/manatee-open-$MANATEE_VER-1.el7.centos.x86_64.rpm
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/manatee-open/manatee-open-python-$MANATEE_VER-1.el7.centos.x86_64.rpm
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/manatee-open/manatee-open-susanne-$MANATEE_VER-1.el7.centos.noarch.rpm
-            sudo rpm -ivh finlib-$FINLIB_VER-1.el7.centos.x86_64.rpm 
-            sudo rpm -ivh manatee-open-$MANATEE_VER-1.el7.centos.x86_64.rpm 
+            sudo rpm -ivh finlib-$FINLIB_VER-1.el7.centos.x86_64.rpm
+            sudo rpm -ivh manatee-open-$MANATEE_VER-1.el7.centos.x86_64.rpm
             sudo rpm -ivh manatee-open-python-$MANATEE_VER-1.el7.centos.x86_64.rpm
             sudo rpm -ivh manatee-open-susanne-$MANATEE_VER-1.el7.centos.noarch.rpm
-        fi        
+        fi
         ;;
 
 esac
@@ -242,7 +242,6 @@ cd $INSTALL_DIR/conf
 cp config.default.xml config.xml
 cp corplist.default.xml corplist.xml
 cp beatconfig.sample.py beatconfig.py
-cp celeryconfig.sample.py celeryconfig.py
 
 # update config.xml with current install path
 sed -i s%/opt/kontext%$INSTALL_DIR% config.xml
