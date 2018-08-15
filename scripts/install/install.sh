@@ -39,8 +39,7 @@ fi
 # ---------------------
 # set version constants
 # ---------------------
-FINLIB_VER=2.36.5
-MANATEE_VER=2.151.5
+MANATEE_VER=2.158.8
 
 # -------------------------
 # set install path constant
@@ -104,7 +103,7 @@ then
     sudo pip install -r $INSTALL_DIR/requirements.txt
 
     # -------------------------------------
-    # install & set up finlib, manatee etc.
+    # install & set up manatee etc.
     # -------------------------------------
     # python signal fd common for both scenarios
     cd /usr/local/bin
@@ -145,7 +144,7 @@ else
     sudo pip install -r $INSTALL_DIR/requirements.txt
 
     # -------------------------------------
-    # install & set up finlib, manatee etc.
+    # install & set up manatee etc.
     # -------------------------------------
     # python signal fd common for both scenarios
     # cd /var/cache/yum
@@ -163,13 +162,6 @@ case $INSTALL_TYPE in
             ldconfig
         fi
         # build from sources, use ucnk manatee patch
-        # Finlib
-        cd /usr/local/src
-        wget http://corpora.fi.muni.cz/noske/src/finlib/finlib-$FINLIB_VER.tar.gz
-        tar xzvf finlib-$FINLIB_VER.tar.gz
-        cd finlib-$FINLIB_VER
-        ./configure --with-pcre; make
-        sudo make install; ldconfig
 
         # Manatee
         cd /usr/local/src
@@ -212,20 +204,16 @@ case $INSTALL_TYPE in
         cd /usr/local/bin
         if [ $distro == 'Ubuntu' ]
         then
-            wget https://corpora.fi.muni.cz/noske/deb/1604/finlib/finlib_$FINLIB_VER-1_amd64.deb
             wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open_$MANATEE_VER-1ubuntu1_amd64.deb
             wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-python_$MANATEE_VER-1ubuntu1_amd64.deb
             wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-susanne_$MANATEE_VER-1ubuntu1_amd64.deb
-            sudo dpkg -i finlib_$FINLIB_VER-1_amd64.deb
             sudo dpkg -i manatee-open_$MANATEE_VER-1ubuntu1_amd64.deb
             sudo dpkg -i manatee-open-python_$MANATEE_VER-1ubuntu1_amd64.deb
             sudo dpkg -i manatee-open-susanne_$MANATEE_VER-1ubuntu1_amd64.deb
         else
-            wget https://corpora.fi.muni.cz/noske/rpm/centos7/finlib/finlib-$FINLIB_VER-1.el7.centos.x86_64.rpm
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/manatee-open/manatee-open-$MANATEE_VER-1.el7.centos.x86_64.rpm
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/manatee-open/manatee-open-python-$MANATEE_VER-1.el7.centos.x86_64.rpm
             wget https://corpora.fi.muni.cz/noske/rpm/centos7/manatee-open/manatee-open-susanne-$MANATEE_VER-1.el7.centos.noarch.rpm
-            sudo rpm -ivh finlib-$FINLIB_VER-1.el7.centos.x86_64.rpm
             sudo rpm -ivh manatee-open-$MANATEE_VER-1.el7.centos.x86_64.rpm
             sudo rpm -ivh manatee-open-python-$MANATEE_VER-1.el7.centos.x86_64.rpm
             sudo rpm -ivh manatee-open-susanne-$MANATEE_VER-1.el7.centos.noarch.rpm

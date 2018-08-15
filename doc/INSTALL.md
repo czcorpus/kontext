@@ -302,10 +302,13 @@ possible. Please refer to the [Apache documentation](http://httpd.apache.org/doc
 <a name="install_celery_worker"></a>
 ## Celery worker
 
-KonText uses [Celery](http://www.celeryproject.org/) worker queue for many
-computing-intensive tasks (many of them asynchronous). It can run on the same
-machine as the main application but it can also run on a dedicated server
+KonText uses a backend worker queue for many computing-intensive tasks (many of them asynchronous). 
+It can run on the same machine as the main application but it can also run on a dedicated server
 (as long as the servers share a disk storage).
+
+Although it is possible to choose a backend calculation server from several 
+variants, for production use, [Celery](http://www.celeryproject.org/) is currently 
+the recommended way to go.
 
 ```
 sudo pip install Celery
@@ -342,15 +345,22 @@ CELERY_CREATE_DIRS=1
 CELERYD_OPTS="--time-limit=480 --concurrency=8"
 ```
 
-Also define a KonText-specific configuration */opt/kontext-production/conf/celeryconfig.py*:
+Also define a KonText-specific configuration in your *config.xml* (*config.default.xml* already
+contains this):
 
-```
-BROKER_URL = 'redis://127.0.0.1:6379/2'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/2'
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TIMEZONE = 'Europe/Prague'
+```xml
+<calc_backend>
+    <type>celery</type>
+    <celery_broker_url>redis://10.0.3.149:6379/2</celery_broker_url>
+    <celery_result_backend>redis://10.0.3.149:6379/2</celery_result_backend>
+    <celery_task_serializer>json</celery_task_serializer>
+    <celery_result_serializer>json</celery_result_serializer>
+    <celery_accept_content>
+        <item>json</item>
+    </celery_accept_content>
+    <celery_timezone>Europe/Prague</celery_timezone>
+    <status_service_url />
+</calc_backend>
 ```
 
 <a name="install_celery_systemd_configuration"></a>
