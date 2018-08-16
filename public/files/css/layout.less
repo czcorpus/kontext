@@ -76,8 +76,7 @@ img {
 }
 
 input[type="text"],
-input[type="password"],
-span.input-like {
+input[type="password"] {
     border: @input-border-style;
     border-radius: @input-border-radius;
     display: inline-block;
@@ -87,12 +86,6 @@ span.input-like {
 
 input[readonly][type="text"] {
     background-color: @color-light-green;
-}
-
-span.input-like {
-    background-color: #FFFFFF;
-    display: inline-block;
-    text-align: center;
 }
 
 input[type="number"] {
@@ -780,32 +773,44 @@ section #result-mount .ktx-pagination {
 
     .curr-page {
         display: inline-block;
-        line-height: 1.4em;
         padding: 0;
         text-align: left;
         width: 3em;
-        box-sizing: border-box;
 
         input {
+            display: block;
             width: 3em;
-            padding-right: 0.4em;
-            padding-left: 0.4em;
             border: @input-border-style;
             border-radius: @input-border-radius;
             box-sizing: border-box;
         }
 
+        .overlay {
+            position: absolute;
+        }
+
         img.ajax-loader-bar {
-            display: inline-block;
-            vertical-align: middle;
+            margin-top: 0.2em;
+            margin-left: 0.2em;
+            display: block;
         }
     }
 }
 
 .ktx-pagination-left {
     display: inline-block;
-    vertical-align: middle;
     padding-right: 0.3em;
+
+    > a {
+        display: inline-block;
+        vertical-align: middle;
+        margin-top: -0.1em;
+
+        > img {
+            display: block;
+            height: @navig-icon-size;
+        }
+    }
 }
 
 .ktx-pagination-right {
@@ -813,19 +818,15 @@ section #result-mount .ktx-pagination {
     padding-left: 0.3em;
 
     > a {
-
         display: inline-block;
+        vertical-align: middle;
+        margin-top: -0.1em;
 
         > img {
-            vertical-align: middle;
+            display: block;
+            height: @navig-icon-size;
         }
     }
-}
-
-.ktx-pagination a > img {
-    display: inline-block;
-    vertical-align: middle;
-    height: @navig-icon-size;
 }
 
 .ktx-pagination a:last-of-type img {
