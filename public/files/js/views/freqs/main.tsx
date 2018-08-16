@@ -208,14 +208,12 @@ export function init(
         };
 
         return (
-            <form action="freqs">
+            <form className="FilterForm" action="freqs">
                 <MinFreqInput minFreqVal={props.minFreqVal} setLoadingFlag={props.setLoadingFlag} />
                 {'\u00a0'}
-                <p>
-                    <button type="button" className="util-button" onClick={handleApplyClick}>
-                        {he.translate('global__apply_btn')}
-                    </button>
-                </p>
+                <button type="button" className="util-button" onClick={handleApplyClick}>
+                    {he.translate('global__apply_btn')}
+                </button>
             </form>
         );
     };
@@ -273,7 +271,7 @@ export function init(
 
         render() {
             return (
-                <div>
+                <div className="FreqResultView">
                     {this.state.currentPage !== null ?
                         <Paginator currentPage={this.state.currentPage}
                             hasNextPage={this.state.hasNextPage} hasPrevPage={this.state.hasPrevPage}
