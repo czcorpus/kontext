@@ -752,6 +752,10 @@ class Controller(object):
         named_args = {}
         headers = []
         action_metadata = self._get_method_metadata(path[0])
+        if not action_metadata:
+            def null(): pass
+            action_metadata = {}
+            action_metadata.update(exposed()(null).__dict__)
         return_type = action_metadata['return_type']
         try:
             self.init_session()

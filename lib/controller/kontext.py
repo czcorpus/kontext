@@ -776,11 +776,6 @@ class Kontext(Controller):
 
         form = RequestArgsProxy(self._request.form, self._request.args)
 
-        if not action_metadata:
-            def null(): pass
-            action_metadata = {}
-            action_metadata.update(exposed()(null).__dict__)
-
         if action_metadata['apply_semi_persist_args']:
             self._apply_semi_persistent_args(form)
 
