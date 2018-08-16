@@ -83,6 +83,10 @@ section.corplist {
     margin-left: 1em;
     padding: 0.3em 1em 0.3em 1em;
 
+    .tt-suggestion.focus a {
+        background-color: @color-green-bg-highlighted;
+    }
+
     .tt-suggestion {
 
         margin: 0;
@@ -97,13 +101,16 @@ section.corplist {
 
         a {
             display: inline-block;
-            padding-right: 1em;
+            padding-left: 0.4em;
+            padding-top: 0.2em;
+            padding-bottom: 0.2em;
+            padding-right: 0.4em;
             text-decoration: none;
             color: inherit;
         }
 
         a:hover {
-            background-color: #FFF9ED;
+            background-color: @color-green-bg-highlighted;
         }
 
         .found-in {
