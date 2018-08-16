@@ -833,10 +833,10 @@ class Kontext(Controller):
         # create and store concordance query key
         if type(result) is DictType:
             if action_metadata['use_conc_session']:
-                new_query_key = self._store_conc_params()
+                next_query_key = self._store_conc_params()
             else:
-                new_query_key = None
-            self._update_output_with_conc_params(new_query_key, result)
+                next_query_key = self._prev_q_data.get('id', None) if self._prev_q_data else None
+            self._update_output_with_conc_params(next_query_key, result)
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
