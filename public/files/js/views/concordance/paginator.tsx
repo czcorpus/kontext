@@ -189,7 +189,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
         const renderCurrentPage = (totalPages) => {
             if (props.loader) {
-                return <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')} />;
+                return <>
+                    <span className="overlay">
+                        <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')} />
+                    </span>
+                    <input type="text" value="" />
+                </>;
 
             } else if (totalPages > 1) {
                 return <input type="text" value={props.currentPageInput}

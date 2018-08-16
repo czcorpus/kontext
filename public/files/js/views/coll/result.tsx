@@ -211,8 +211,13 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         return (
             <span className="curr-page">
                 {props.isWaiting ?
-                    <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={utils.translate('global__loading')} /> :
+                    <>
+                        <span className="overlay">
+                            <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={utils.translate('global__loading')} />
+                        </span>
+                        <input type="text" value="" />
+                    </> :
                     <input type="text" value={props.currPageInput}
                         onChange={handleInputChange}
                         title={utils.translate('global__hit_enter_to_confirm')} />

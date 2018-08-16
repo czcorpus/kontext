@@ -38,6 +38,7 @@ interface FreqResultViewState {
     sortColumn:string;
     hasNextPage:boolean;
     hasPrevPage:boolean;
+    totalPages:number;
     saveFormIsActive:boolean;
     isLoading:boolean;
 }
@@ -86,6 +87,7 @@ export function init(
         currentPage:string;
         hasNextPage:boolean;
         hasPrevPage:boolean;
+        totalPages:number;
         setLoadingFlag:()=>void;
     }
 
@@ -109,12 +111,13 @@ export function init(
 
         const renderPageNum = () => {
             if (props.isLoading) {
-                return (
-                    <span className="input-like" style={{width: '3em'}}>
-                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={he.translate('global__loading')} />
-                    </span>
-                );
+                return <>
+                        <span className="overlay">
+                            <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={he.translate('global__loading')} />
+                        </span>
+                        <input type="text" value="" />
+                </>;
 
             } else {
                 return <input type="text" value={props.currentPage}
@@ -136,9 +139,9 @@ export function init(
                                             alt="další" title="další" />
                                 </a>) : null}
                         </div>
-                        {renderPageNum()}
+                        <span className="curr-page">{renderPageNum()}</span>
+                        <span className="numofpages">{'\u00a0/\u00a0'}{props.totalPages}</span>
                         <div className="ktx-pagination-right">
-                            {props.currentPage}
                             {props.hasNextPage ?
                                 (<a onClick={(e) => handlePageChangeByClick(props.currentPage, 1)}>
                                     <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
@@ -237,6 +240,7 @@ export function init(
                 sortColumn: freqDataRowsModel.getSortColumn(),
                 hasNextPage: freqDataRowsModel.hasNextPage(),
                 hasPrevPage: freqDataRowsModel.hasPrevPage(),
+                totalPages: freqDataRowsModel.getTotalPages(),
                 saveFormIsActive: freqDataRowsModel.getSaveModel().getFormIsActive(),
                 isLoading: false
             };
@@ -274,7 +278,9 @@ export function init(
                 <div className="FreqResultView">
                     {this.state.currentPage !== null ?
                         <Paginator currentPage={this.state.currentPage}
-                            hasNextPage={this.state.hasNextPage} hasPrevPage={this.state.hasPrevPage}
+                            hasNextPage={this.state.hasNextPage}
+                            hasPrevPage={this.state.hasPrevPage}
+                            totalPages={this.state.totalPages}
                             setLoadingFlag={this._setLoadingFlag}
                             isLoading={this.state.isLoading} /> : null}
                     <div className="freq-blocks">

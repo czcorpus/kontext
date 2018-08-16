@@ -116,6 +116,7 @@ export class FreqDataRowsModel extends StatefulModel {
                 case 'FREQ_RESULT_APPLY_MIN_FREQ':
                     this.loadPage().then(
                         (data) => {
+                            this.currentPage = '1';
                             this.pushStateToHistory();
                             this.notifyChangeListeners();
 
@@ -278,6 +279,10 @@ export class FreqDataRowsModel extends StatefulModel {
 
     hasNextPage():boolean {
         return Number(this.currentPage) < this.data.get(0).TotalPages;
+    }
+
+    getTotalPages():number {
+        return this.data.get(0).TotalPages;
     }
 
     hasPrevPage():boolean {
