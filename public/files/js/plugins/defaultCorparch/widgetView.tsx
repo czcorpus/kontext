@@ -361,10 +361,36 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             });
         };
 
+        const handleKeyDown = (evt) => {
+            switch (evt.keyCode) {
+                case 40: // down arrow
+                case 38: // up arrow
+                    dispatcher.dispatch({
+                        actionType: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
+                        props: {
+                            inc: evt.keyCode === 40 ? 1 : -1
+                        }
+                    });
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                break;
+                case 13: // ENTER
+                    dispatcher.dispatch({
+                        actionType: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
+                        props: {}
+                    });
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                break;
+            }
+        };
+
         return <input type="text" className="tt-input"
-                onChange={handleInput} value={props.value}
-                placeholder={util.translate('defaultCorparch__name_or_description')}
-                ref={item => item ? item.focus() : null} />;
+                    onChange={handleInput}
+                    onKeyDown={handleKeyDown}
+                    value={props.value}
+                    placeholder={util.translate('defaultCorparch__name_or_description')}
+                    ref={item => item ? item.focus() : null} />;
     };
 
     /**
@@ -372,6 +398,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
      */
     const SearchResultRow:React.SFC<{
         data:SearchResultRow;
+        hasFocus:boolean;
 
     }> = (props) => {
 
@@ -387,7 +414,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         };
 
         return (
-            <p className="tt-suggestion">
+            <p className={`tt-suggestion${props.hasFocus ? ' focus' : ''}`}>
                 <a onClick={handleClick}>
                     {props.data.name}
                 </a>
@@ -435,6 +462,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         currSearchResult:Immutable.List<SearchResultRow>;
         currSearchPhrase:string;
         hasSelectedKeywords:boolean;
+        focusedRowIdx:number;
 
     }> = (props) => {
         return (
@@ -451,7 +479,9 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
                     {props.currSearchResult.size > 0 ?
                         (<div className="tt-menu">
-                            {props.currSearchResult.map(item => <SearchResultRow key={item.id} data={item} />)}
+                            {props.currSearchResult.map((item, i) =>
+                                    <SearchResultRow key={item.id} data={item}
+                                            hasFocus={i === props.focusedRowIdx} />)}
                         </div>) : null}
                 </div>
             </div>
@@ -596,7 +626,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                                 isWaitingForSearchResults={this.state.isWaitingForSearchResults}
                                 currSearchResult={this.state.currSearchResult}
                                 currSearchPhrase={this.state.currSearchPhrase}
-                                hasSelectedKeywords={this.state.availSearchKeywords.find(x => x.selected) !== undefined} />
+                                hasSelectedKeywords={this.state.availSearchKeywords.find(x => x.selected) !== undefined}
+                                focusedRowIdx={this.state.focusedRowIdx} />
                     }
                     <div className="footer">
                         <span>
