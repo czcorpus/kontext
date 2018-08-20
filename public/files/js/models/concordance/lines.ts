@@ -111,8 +111,19 @@ export interface ViewConfiguration {
 
     mainCorp:string;
 
+    /**
+     * For private subcorpus this is just what user entered
+     * as a subc. name. In the current corpus is published, a
+     * special code is used here instead and the original
+     * name is moved to the 'origSubCorpName' attribute.
+     */
     subCorpName:string;
 
+    /**
+     * The original name user entered for a subcorpus.
+     * The value is non-empty only if a respective corpus
+     * is published.
+     */
     origSubCorpName:string;
 
     pagination:ServerPagination;

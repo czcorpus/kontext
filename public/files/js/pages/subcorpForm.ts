@@ -19,13 +19,11 @@
  */
 import * as Immutable from 'immutable';
 import * as React from 'react';
-import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
-import {UserSettings} from '../app/userSettings';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
@@ -140,10 +138,21 @@ export class SubcorpForm {
                         liveAttrsPlugin.hasSelectedLanguages());
             });
         }
+        console.log('using ', this.subcorpFormModel);
         const subcmixerPlg = subcMixer(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            () => this.subcorpFormModel.getSubcname(),
+            {
+                getIsPublic: () => this.subcorpFormModel.getIsPublic(),
+                getDescription: () => this.subcorpFormModel.getDescription(),
+                getSubcName: () => this.subcorpFormModel.getSubcname(),
+                addChangeListener: (fn:Kontext.ModelListener) => {
+                    this.subcorpFormModel.addChangeListener(fn);
+                },
+                removeChangeListener: (fn:Kontext.ModelListener) => {
+                    this.subcorpFormModel.removeChangeListener(fn);
+                }
+            },
             () => liveAttrsPlugin.getAlignedCorpora(),
             this.layoutModel.getConf<string>('CorpusIdAttr')
         );
@@ -198,14 +207,11 @@ export class SubcorpForm {
     }
 
     init():void {
-        const getModeldAlignedCorp = () => {
-            return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
-        };
 
         this.layoutModel.init().then(
             () => {
                 const ttComponent = this.createTextTypesComponents();
-                    this.subcorpWithinFormModel = new SubcorpWithinFormModel(
+                this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')

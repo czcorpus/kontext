@@ -28,9 +28,10 @@ from metadata_model import MetadataModel
 from controller import exposed
 import actions.subcorpus
 from database import Database
+import corplib
 
 
-@exposed(return_type='json', acess_level=1)
+@exposed(return_type='json', access_level=1)
 def subcmixer_run_calc(ctrl, request):
     try:
         with plugins.runtime.SUBCMIXER as sm:
@@ -57,7 +58,9 @@ def subcmixer_create_subcorpus(ctrl, request):
         ctrl.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        subc_path = ctrl.prepare_subc_path(request.form['corpname'], request.form['subcname'])
+        publish = bool(int(request.form.get('publish')))
+        subc_path = ctrl.prepare_subc_path(
+            request.form['corpname'], request.form['subcname'], publish=False)
         struct_indices = sorted([int(x) for x in request.form['ids'].split(',')])
         id_attr = request.form['idAttr'].split('.')
         attr = ctrl.corp.get_struct(id_attr[0])
@@ -65,6 +68,12 @@ def subcmixer_create_subcorpus(ctrl, request):
             for idx in struct_indices:
                 fw.write(struct.pack('<q', attr.beg(idx)))
                 fw.write(struct.pack('<q', attr.end(idx)))
+
+        pub_path = ctrl.prepare_subc_path(
+            request.form['corpname'], request.form['subcname'], publish=publish) if publish else None
+        if pub_path:
+            corplib.mk_publish_links(subc_path, pub_path, request.form['description'])
+
         return dict(status=True)
 
 

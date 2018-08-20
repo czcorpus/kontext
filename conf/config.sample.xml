@@ -39,6 +39,7 @@
         <static_files_prefix>/files</static_files_prefix>
         <use_conc_toolbar>0</use_conc_toolbar>
         <anonymous_user_conc_login_prompt>0</anonymous_user_conc_login_prompt>
+        <websocket_url>ws://localhost:8083/ws</websocket_url>
     </global>
     <mailing />
     <logging>

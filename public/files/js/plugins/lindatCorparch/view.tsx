@@ -246,26 +246,32 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _pmltq(pmltq:string) {
             if (pmltq !== 'no' && this.props.permitted) {
             return <a href={this.props.pmltq} className="md-transparent" title={"Inspect " + this.props.name + " in PML-TQ"}>
-                    <button className="btn btn-default lindat-pmltq-logo">&nbsp;</button></a>
+                    <button className="btn btn-default pmltq" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                        <span className="lindat-pmltq-logo"></span></button></a>
             }
         }
 
         _download(repo:string) {
             if (repo !== 'no' && this.props.permitted) {
             return <a href={this.props.repo} className="md-transparent" title={"Download " + this.props.name}>
-                    <span className="glyphicon glyphicon-save"></span></a>
+                    <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                    <span className="glyphicon glyphicon-save"></span></button></a>
             }
         }
 
         _access() {
             if (!this.props.permitted) {
-                return <span className="glyphicon glyphicon-lock"></span>;
+                return <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                        <span className="glyphicon glyphicon-lock"></span>
+                        </button>
             }
         }
 
         _syntax() {
             if (this.props.features.includes('syntax')) {
-                return <button className="btn btn-default lindat-pmltq-logo">&nbsp;</button>
+                return <button className="btn btn-default pmltq">
+                    <span className="lindat-pmltq-logo"></span>
+                </button>
             }
             return null;
         }
@@ -275,7 +281,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 data-features={this.props.features.join(',')}
                                 data-lang={this.props.language.join(',')} >
                     <div className="row">
-                        <div className="corpus-details col-xs-4">
+                        <div className="corpus-details col-xs-7">
                         Features:&nbsp;
                             {this.props.features.map((item, index) =>
                             (<div key={index} style={{display: "inline-block"}}>
@@ -291,23 +297,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 {this.props.language}
                             </span>
                             <span className="glyphicon glyphicon-remove search-selected clickable" onClick={this._searchLangDrop} style={{display: this._showLangSign(), fontSize: "10px"}}> </span>
+                            Size:&nbsp;
+                            <span className="corpus-details-info">
+                                {he.formatNumber(this.props.size) + " positions"}
+                            </span>
                         </div>
                     </div>
                     <div className="row">
-                        <div className="corpus-main-info col-xs-9 col-md-10" onMouseOver={this._mouseOver} onMouseOut={this._mouseOut} onClick={this._clickHandler} title={"Search in " + this.props.name}>
+                        <div className="corpus-main-info col-xs-12 col-md-12">
                             <div className="row">
-                                <div className="col-xs-3 tokens">
-                                    Size
-                                    <div className="corpus-details-info">
-                                        {he.formatNumber(this.props.size) + " positions"}
-                                    </div>
+                                <div className="col-xs-2 icons">
+                                    {this._pmltq(this.props.pmltq)}
+                                    {this._download(this.props.repo)}
+                                    {this._access()}
+                                    {this._syntax()}
                                 </div>
-                                <div className="col-xs-9 details">
-                                    <h3 className="title">
-                                        {this._pmltq(this.props.pmltq)}
-                                        {this._download(this.props.repo)}
-                                        {this._access()}
-                                        {this._syntax()}
+                                <div className="col-xs-6 details">
+                                    <h3 className="title" onMouseOver={this._mouseOver} onMouseOut={this._mouseOut} onClick={this._clickHandler} title={"Search in " + this.props.name}>
                                         {this.props.name}
                                     </h3>
                                     <div className="desc">

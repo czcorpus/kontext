@@ -17,7 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import time
 import smtplib
 from email.mime.text import MIMEText
 import json
@@ -29,7 +28,6 @@ from plugins.abstract.issue_reporting import AbstractIssueReporting, DynamicRepo
 import actions.user
 from controller import exposed
 from translation import ugettext as _
-import l10n
 
 
 @exposed(return_type='json', http_method='POST', skip_corpus_init=True)

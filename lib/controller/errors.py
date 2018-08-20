@@ -54,11 +54,12 @@ class UserActionException(Exception):
     This exception should cover general errors occurring in Controller's action methods'
     """
 
-    def __init__(self, message, code=400, error_code=None, error_args=None):
+    def __init__(self, message, code=400, error_code=None, error_args=None, internal_message=None):
         super(UserActionException, self).__init__(message)
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
+        self._internal_message = internal_message
 
     def __repr__(self):
         return self.message
@@ -66,14 +67,18 @@ class UserActionException(Exception):
     def __str__(self):
         return self.message
 
+    @property
+    def internal_message(self):
+        return self._internal_message if self._internal_message else self.message
+
 
 class NotFoundException(UserActionException):
     """
     Raised in case user requests non-exposed/non-existing action
     """
 
-    def __init__(self, message):
-        super(NotFoundException, self).__init__(message, 404)
+    def __init__(self, message, internal_message=None):
+        super(NotFoundException, self).__init__(message, 404, internal_message=internal_message)
 
 
 class ForbiddenException(UserActionException):
@@ -81,20 +86,8 @@ class ForbiddenException(UserActionException):
     Raised in case user access is forbidden
     """
 
-    def __init__(self, message):
-        super(ForbiddenException, self).__init__(message, 403)
-
-
-class ActionValidationException(UserActionException):
-
-    def __init__(self, orig_err, validator_fn):
-        super(ActionValidationException, self).__init__(
-            'Validator [{0}]: {1}'.format(validator_fn.__name__, orig_err))
-        self._orig_err = orig_err
-        self._validator_fn = validator_fn
-
-    def __repr__(self):
-        return self.message
+    def __init__(self, message, internal_message=None):
+        super(ForbiddenException, self).__init__(message, 403, internal_message=internal_message)
 
 
 class CorpusForbiddenException(ForbiddenException):
