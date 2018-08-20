@@ -14,7 +14,7 @@
 import settings
 from controller import exposed
 from controller.kontext import Kontext, MainMenu
-from translation import ugettext as _
+from translation import ugettext as translate
 import corplib
 from argmapping import WidectxArgsMapping
 
@@ -33,7 +33,7 @@ class Options(Kontext):
         if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
             if not newctxsize.isdigit():
                 raise Exception(
-                    _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
+                    translate('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.args.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
         self.args.line_numbers = line_numbers
@@ -53,8 +53,8 @@ class Options(Kontext):
             self.args.ctxattrs = 'word'
         self.args.structattrs = setstructattrs
 
-    @exposed(access_level=0, vars=('concsize', ), legacy=True, return_type='json')
-    def viewattrs(self):
+    @exposed(access_level=0, vars=('concsize', ), return_type='json')
+    def viewattrs(self, _):
         """
         attrs, refs, structs form
         """
@@ -91,7 +91,7 @@ class Options(Kontext):
             if ref_is_allowed(item):
                 k, v = item.split('.', 1)
                 structattrs[k].append(v)
-        out['Availrefs'] = [dict(n='#', label=_('Token number'),
+        out['Availrefs'] = [dict(n='#', label=translate('Token number'),
                                  sel='selected' if '#' in reflist else '')]
         for n in availref:
             if ref_is_allowed(n):
@@ -100,7 +100,7 @@ class Options(Kontext):
 
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:
-            out['Availrefs'].insert(1, dict(n=doc, label=_('Document number'),
+            out['Availrefs'].insert(1, dict(n=doc, label=translate('Document number'),
                                             sel=(doc in reflist and 'selected' or '')))
         out['newctxsize'] = self.args.kwicleftctx[1:]
         out['structattrs'] = structattrs

@@ -143,7 +143,7 @@ export class WordlistSaveModel extends StatefulModel {
         }
         this.saveLinkFn(
             `word-list.${this.saveFormat}`,
-            this.layoutModel.createActionUrl('savewl', args.items())
+            this.layoutModel.createActionUrl('wordlist/savewl', args.items())
         );
     }
 

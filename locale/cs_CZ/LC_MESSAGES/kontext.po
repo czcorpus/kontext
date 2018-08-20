@@ -132,21 +132,6 @@ msgstr "Korpus %s nelze s touto funkcionalitou použít."
 msgid "no description"
 msgstr "Popis není k dispozici."
 
-msgid "Invalid range - cannot select rows from an empty list."
-msgstr "Neplatný rozsah - nelze vybrat řádky z prázdného seznamu."
-
-#, python-format
-msgid "Range [%s, %s] is invalid. It must be non-empty and within [%s, %s]."
-msgstr "Rozsah [%s, %s] je neplatný. Musí být neprázdný a z rozsahu [%s, %s]."
-
-#, python-format
-msgid ""
-"Range [%s, %s] is invalid. It must be non-empty and left value must be "
-"greater or equal than %s"
-msgstr ""
-"Rozsah [%s, %s] je neplatný. Musí být neprázdný a levá hodnota musí být "
-"větší nebo rovna %s."
-
 msgid "whole corpus"
 msgstr "celý korpus"
 

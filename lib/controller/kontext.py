@@ -36,7 +36,7 @@ from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
 from l10n import corpus_get_conf
-from translation import ugettext as _
+from translation import ugettext as translate
 import scheduled
 import templating
 import fallback_corpus
@@ -483,7 +483,7 @@ class Kontext(Controller):
                     self._lines_groups = LinesGroups.deserialize(
                         self._prev_q_data.get('lines_groups', []))
                 else:
-                    raise UserActionException(_('Invalid or expired query'))
+                    raise UserActionException(translate('Invalid or expired query'))
 
     def get_saveable_conc_data(self):
         """
@@ -768,7 +768,7 @@ class Kontext(Controller):
                 return self.corp.get_error()
             info = self.get_corpus_info(self.args.corpname)
             if isinstance(info, BrokenCorpusInfo):
-                return NotFoundException(_('Corpus \"{0}\" not available'.format(info.name)),
+                return NotFoundException(translate('Corpus \"{0}\" not available'.format(info.name)),
                                          internal_message='Failed to fetch configuration for {0}'.format(info.name))
             return None
         if not action_metadata['skip_corpus_init']:
@@ -812,7 +812,7 @@ class Kontext(Controller):
         # by default, each action is public
         access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
-            raise ForbiddenException(_('Access forbidden - please log-in.'))
+            raise ForbiddenException(translate('Access forbidden - please log-in.'))
 
         # plugins setup
         for p in plugins.runtime:
@@ -1079,7 +1079,7 @@ class Kontext(Controller):
             logo_href = self.get_root_url()
 
         if theme_name == 'default':
-            logo_title = _('Click to enter a new query')
+            logo_title = translate('Click to enter a new query')
         else:
             logo_title = unicode(logo_href)
 
@@ -1254,29 +1254,6 @@ class Kontext(Controller):
         else:
             return ''
 
-    @staticmethod
-    def _validate_range(actual_range, max_range):
-        """
-        arguments:
-        actual_range -- 2-tuple
-        max_range -- 2-tuple (if second value is None, that validation of the value is omitted
-
-        returns:
-        None if everything is OK else UserActionException instance
-        """
-        if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
-                or actual_range[0] > actual_range[1]:
-            if max_range[0] > max_range[1]:
-                msg = _('Invalid range - cannot select rows from an empty list.')
-            elif max_range[1] is not None:
-                msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
-                    % (actual_range + max_range)
-            else:
-                msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal '
-                        'than %s' % (actual_range[0], actual_range[1], max_range))
-            return UserActionException(msg)
-        return None
-
     def _get_struct_opts(self):
         """
         Returns structures and structural attributes the current concordance should display.
@@ -1322,6 +1299,26 @@ class Kontext(Controller):
                                                                                             ans[id_attr]))
         return ans, bib_mapping
 
+    def _export_subcorpora_list(self, corpname, out):
+        """
+        Updates passed dictionary by information about available sub-corpora.
+        Listed values depend on current user and corpus.
+        If there is a list already present in 'out' then it is extended
+        by the new values.
+
+        arguments:
+        corpname -- corpus id
+        out -- a dictionary used by templating system
+        """
+        basecorpname = corpname.split(':')[0]
+        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
+                                 loc=self.ui_lang, key=lambda x: x['n'])
+        if len(subcorp_list) > 0:
+            subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
+        if out.get('SubcorpList', None) is None:
+            out['SubcorpList'] = []
+        out['SubcorpList'].extend(subcorp_list)
+
     @staticmethod
     def _uses_internal_user_pages():
         return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
@@ -1352,8 +1349,8 @@ class Kontext(Controller):
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
 
-    @exposed(return_type='json', legacy=True)
-    def concdesc_json(self):
+    @exposed(return_type='json')
+    def concdesc_json(self, _=None):
         out = {'Desc': []}
         conc_desc = conclib.get_conc_desc(corpus=self.corp, q=self.args.q,
                                           subchash=getattr(self.corp, 'subchash', None))

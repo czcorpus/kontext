@@ -19,7 +19,7 @@ from controller.kontext import Kontext
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 import l10n
-from translation import ugettext as _
+from translation import ugettext as translate
 
 
 class Corpora(Kontext):
@@ -82,13 +82,13 @@ class Corpora(Kontext):
                                for item in corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
-            ans['attrlist'] = {'error': _('Failed to load')}
+            ans['attrlist'] = {'error': translate('Failed to load')}
         ans['structlist'] = [{'name': item, 'size': int(corpus.get_struct(item).size())}
                              for item in corpus.get_conf('STRUCTLIST').split(',')]
         return ans
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_get_structattrs_details(self):
+    @exposed(return_type='json')
+    def ajax_get_structattrs_details(self, _):
         """
         Provides a map (struct_name=>[list of attributes]). This is used
         by 'insert within' widget.
@@ -101,7 +101,7 @@ class Corpora(Kontext):
                 ans[k].append(v)
         return dict(structattrs=dict((k, v) for k, v in ans.items() if len(v) > 0))
 
-    @exposed(return_type='json', legacy=True)
-    def bibliography(self, id=''):
+    @exposed(return_type='json')
+    def bibliography(self, request):
         with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
-            return dict(bib_data=liveatt.get_bibliography(self._plugin_api, self.corp, item_id=id))
+            return dict(bib_data=liveatt.get_bibliography(self._plugin_api, self.corp, item_id=request.args.get('id')))

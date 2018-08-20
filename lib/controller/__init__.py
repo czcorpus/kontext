@@ -43,7 +43,7 @@ import werkzeug.exceptions
 
 import plugins
 import settings
-from translation import ugettext as _
+from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
 from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException)
@@ -215,8 +215,8 @@ class Controller(object):
                 except Exception as ex:
                     self._session['user'] = auth.anonymous_user()
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
-                    self.add_system_message('error', _('User authentication error. Please try to reload the page or '
-                                                       'contact system administrator.'))
+                    self.add_system_message('error', translate('User authentication error. Please try to reload the page or '
+                                                               'contact system administrator.'))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self):
@@ -449,7 +449,7 @@ class Controller(object):
     def _validate_http_method(self, action_metadata):
         if 'http_method' in action_metadata and (self.get_http_method().lower() !=
                                                  action_metadata['http_method'].lower()):
-            raise UserActionException(_('Unknown action'), code=404)
+            raise UserActionException(translate('Unknown action'), code=404)
 
     def _pre_action_validate(self):
         """
@@ -711,21 +711,21 @@ class Controller(object):
         if 'syntax error' in text.lower():
             srch = re.match(r'.+ position (\d+)', text)
             if srch:
-                text = _('Query failed: Syntax error at position %s.') % srch.groups()[0]
+                text = translate('Query failed: Syntax error at position %s.') % srch.groups()[0]
             else:
-                text = _('Query failed: Syntax error.')
+                text = translate('Query failed: Syntax error.')
             new_err = UserActionException(
-                _('%s Please make sure the query and selected query type are correct.') % text)
+                translate('%s Please make sure the query and selected query type are correct.') % text)
         elif 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
-                text = _('Attribute "%s" not found.') % srch.groups()[0]
+                text = translate('Attribute "%s" not found.') % srch.groups()[0]
             else:
-                text = _('Attribute not found.')
+                text = translate('Attribute not found.')
             new_err = UserActionException(text)
         elif 'EvalQueryException' in text:
             new_err = UserActionException(
-                _('Failed to evaluate the query. Please check the syntax and used attributes.'))
+                translate('Failed to evaluate the query. Please check the syntax and used attributes.'))
         else:
             new_err = err
         return new_err
@@ -735,13 +735,13 @@ class Controller(object):
         Run a special action displaying a message (typically an error one) to properly
         finish a broken regular action which raised an Exception.
         """
+        self.add_system_message(message_type, message)
         if action_metadata['return_type'] == 'json':
             tpl_path, method_ans = self.process_action('message_json', named_args)
             action_metadata.update(self._get_method_metadata('message_json'))
         else:
             tpl_path, method_ans = self.process_action('message', named_args)
             action_metadata.update(self._get_method_metadata('message'))
-            self.add_system_message(message_type, message)
         return tpl_path, method_ans
 
     def _create_user_action_err_result(self, ex, return_type):
@@ -754,8 +754,8 @@ class Controller(object):
         if settings.is_debug_mode() or isinstance(e2, UserActionException):
             user_msg = fetch_exception_msg(e2)
         else:
-            user_msg = _('Failed to process your request. '
-                         'Please try again later or contact system support.')
+            user_msg = translate('Failed to process your request. '
+                                 'Please try again later or contact system support.')
         if return_type == 'json':
             return dict(messages=[user_msg],
                         error_code=getattr(ex, 'error_code', None),
@@ -794,7 +794,7 @@ class Controller(object):
             else:
                 orig_method = methodname
                 methodname = 'message'
-                raise NotFoundException(_('Unknown action [%s]') % orig_method)
+                raise NotFoundException(translate('Unknown action [%s]') % orig_method)
         except CorpusForbiddenException as ex:
             self._status = ex.code
             tmpl, result = self._run_message_action(
@@ -817,7 +817,7 @@ class Controller(object):
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)
             else:
-                message = _(
+                message = translate(
                     'Failed to process your request. Please try again later or contact system support.')
             tmpl, result = self._run_message_action(named_args, action_metadata, 'error', message)
 
