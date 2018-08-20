@@ -62,8 +62,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         const renderEngVerbInfo = () => {
             return props.info[1].map((item, i) => {
                 return <OneEngFrame key={i} id={item[0]}
-                                info={item[1]} pdtEx={item[2]}
-                                pcedtEx={item[3]}
+                                info={item[1]}
+                                pcedtEx={item[2]}
                                 verb={props.info[0]}/>
             });
 
