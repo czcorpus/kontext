@@ -42,7 +42,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         if (props.data.result.length > 0) {
             return (
                 <div className="VallexJsonRenderer">
-                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.data.result[1][0][0]}>{props.data.result[1][0][0]}</a>
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.data.result[1][0][0]} target="_blank">{props.data.result[1][0][0]}</a>
                     <PDTVerbList info={props.data.result[1][0]} />
                 </div>
             );
