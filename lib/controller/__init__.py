@@ -188,7 +188,6 @@ class Controller(object):
         self._proc_time = None
         # a list of functions which must pass (= return None) before any action is performed
         self._validators = []
-        self._exceptmethod = None
         self._template_dir = os.path.realpath(os.path.join(
             os.path.dirname(__file__), '..', '..', 'cmpltmpl'))
         self.args = Args()
@@ -731,10 +730,38 @@ class Controller(object):
             new_err = err
         return new_err
 
-    def _run_message_action(self, named_args, return_type):
+    def _run_message_action(self, named_args, action_metadata, message_type, message):
+        """
+        Run a special action displaying a message (typically an error one) to properly
+        finish a broken regular action which raised an Exception.
+        """
+        if action_metadata['return_type'] == 'json':
+            tpl_path, method_ans = self.process_action('message_json', named_args)
+            action_metadata.update(self._get_method_metadata('message_json'))
+        else:
+            tpl_path, method_ans = self.process_action('message', named_args)
+            action_metadata.update(self._get_method_metadata('message'))
+            self.add_system_message(message_type, message)
+        return tpl_path, method_ans
+
+    def _create_user_action_err_result(self, ex, return_type):
+        """
+        arguments:
+        ex -- a risen exception
+        return_type --
+        """
+        e2 = self._normalize_error(ex)
+        if settings.is_debug_mode() or isinstance(e2, UserActionException):
+            user_msg = fetch_exception_msg(e2)
+        else:
+            user_msg = _('Failed to process your request. '
+                         'Please try again later or contact system support.')
         if return_type == 'json':
-            return self.process_action('message_json', named_args)
-        return self.process_action('message', named_args)
+            return dict(messages=[user_msg],
+                        error_code=getattr(ex, 'error_code', None),
+                        error_args=getattr(ex, 'error_args', {}))
+        else:
+            return dict(messages=[user_msg])
 
     def run(self, path=None):
         """
@@ -749,9 +776,10 @@ class Controller(object):
         self._install_plugin_actions()
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
+        methodname = path[0]
         named_args = {}
         headers = []
-        action_metadata = self._get_method_metadata(path[0])
+        action_metadata = self._get_method_metadata(methodname)
         if not action_metadata:
             def null(): pass
             action_metadata = {}
@@ -759,37 +787,39 @@ class Controller(object):
         return_type = action_metadata['return_type']
         try:
             self.init_session()
-            if self.is_action(path[0], action_metadata):
+            if self.is_action(methodname, action_metadata):
                 named_args = self.pre_dispatch(named_args, action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_action(path[0], named_args)
+                tmpl, result = self.process_action(methodname, named_args)
             else:
-                raise NotFoundException(_('Unknown action [%s]') % path[0])
-        except CorpusForbiddenException:
-            methodname, tmpl, result = self._run_message_action(named_args, return_type)
+                orig_method = methodname
+                methodname = 'message'
+                raise NotFoundException(_('Unknown action [%s]') % orig_method)
+        except CorpusForbiddenException as ex:
+            self._status = ex.code
+            tmpl, result = self._run_message_action(
+                named_args, action_metadata, 'error', ex.message)
         except UserActionException as ex:
             self._status = ex.code
-            self.add_system_message('error', fetch_exception_msg(ex))
-            methodname, tmpl, result = self._run_message_action(named_args, return_type)
+            msg_args = self._create_user_action_err_result(ex, return_type)
+            named_args.update(msg_args)
+            tmpl, result = self._run_message_action(
+                named_args, action_metadata, 'error', ex.message)
         except werkzeug.exceptions.BadRequest as ex:
             self._status = ex.code
-            self.add_system_message('error', '{0}: {1}'.format(ex.name, ex.description))
-            methodname, tmpl, result = self._run_message_action(named_args, return_type)
+            tmpl, result = self._run_message_action(named_args, action_metadata,
+                                                    'error', '{0}: {1}'.format(ex.name, ex.description))
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
             logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
+            self._status = 500
             if settings.is_debug_mode():
-                self._status = 500
-                self.add_system_message('error', fetch_exception_msg(ex))
+                message = fetch_exception_msg(ex)
             else:
-                self.handle_dispatch_error(ex)
-            methodname, tmpl, result = self._run_message_action(named_args, return_type)
-
-        # Let's test whether process_method actually invoked requested method.
-        # If not (e.g. there was an error and a fallback has been used) then reload action metadata
-        if methodname != path[0]:
-            action_metadata = self._get_method_metadata(methodname)
+                message = _(
+                    'Failed to process your request. Please try again later or contact system support.')
+            tmpl, result = self._run_message_action(named_args, action_metadata, 'error', message)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self.post_dispatch(methodname, action_metadata, tmpl, result)
@@ -801,56 +831,6 @@ class Controller(object):
         ans_body = output.getvalue()
         output.close()
         return self._export_status(), headers, self._uses_valid_sid, ans_body
-
-    def handle_action_error(self, ex, action_name, named_args):
-        """
-        arguments:
-        ex -- a risen exception
-        action_name -- a name of the original processed method
-        named_args -- key=>value arguments of the action method
-        """
-        e2 = self._normalize_error(ex)
-        if not isinstance(e2, UserActionException):
-            logging.getLogger(__name__).error(''.join(get_traceback()))
-            self._status = 500
-        else:
-            self._status = getattr(e2, 'code', 500)
-        if settings.is_debug_mode() or isinstance(e2, UserActionException):
-            user_msg = e2.message if type(e2.message) is unicode else str(e2).decode('utf-8')
-        else:
-            user_msg = _('Failed to process your request. '
-                         'Please try again later or contact system support.')
-        return_type = self._get_method_metadata(action_name, 'return_type')
-        if return_type == 'json':
-            return (
-                action_name,
-                None,
-                dict(messages=[user_msg],
-                     error_code=getattr(ex, 'error_code', None),
-                     error_args=getattr(ex, 'error_args', {}))
-            )
-        else:
-            if not self._exceptmethod and self._is_template(action_name + '_form'):
-                self._exceptmethod = action_name + '_form'
-            if not self._exceptmethod:  # let general error handlers in run() handle the error
-                raise e2
-            else:
-                self.add_system_message('error', user_msg)
-
-            self.pre_dispatch(self._exceptmethod, self._get_method_metadata(self._exceptmethod))
-            em, self._exceptmethod = self._exceptmethod, None
-            return self.process_action(em, named_args)
-
-    def handle_dispatch_error(self, ex):
-        """
-        Handles error in a production-ready manner which means that
-        user-understandable errors should be presented while the internal
-        ones should be hidden behind "server error, please contact admin".
-        """
-        self._status = 500
-        self.add_system_message('error',
-                                _('Failed to process your request. '
-                                  'Please try again later or contact system support.'))
 
     def process_action(self, methodname, named_args):
         """
@@ -865,24 +845,21 @@ class Controller(object):
             named_args -- named args for the method (legacy actions)
 
         returns: tuple of 3 elements
-          0 = method name actually used (it may have changed e.g. due to an error)
-          1 = template name
-          2 = template data dict
+          0 = template name
+          1 = template data dict
         """
         action_metadata = self._get_method_metadata(methodname)
         method = getattr(self, methodname)
-        try:
-            if not action_metadata['legacy']:
-                # new-style actions use werkzeug.wrappers.Request
-                method_ans = method(self._request)
-            else:
-                method_ans = self._invoke_legacy_action(method, named_args)
-            tpl_path = action_metadata['template']
-            if not tpl_path:
-                tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
-            return methodname, tpl_path, method_ans
-        except Exception as ex:
-            return self.handle_action_error(ex, methodname, named_args)
+
+        if not action_metadata['legacy']:
+            # new-style actions use werkzeug.wrappers.Request
+            method_ans = method(self._request)
+        else:
+            method_ans = self._invoke_legacy_action(method, named_args)
+        tpl_path = action_metadata['template']
+        if not tpl_path:
+            tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
+        return tpl_path, method_ans
 
     def urlencode(self, key_val_pairs):
         """

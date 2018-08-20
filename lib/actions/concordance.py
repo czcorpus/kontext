@@ -406,7 +406,6 @@ class Actions(Querying):
         self.disabled_menu_items = ()
 
         if len(self._lines_groups) > 0:
-            self._exceptmethod = 'view'
             raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
 
         qinfo = SortFormArgs(persist=True)
@@ -780,7 +779,6 @@ class Actions(Querying):
         Positive/Negative filter
         """
         if len(self._lines_groups) > 0:
-            self._exceptmethod = 'view'
             raise UserActionException('Cannot apply a filter once a group of lines has been saved')
 
         pnfilter = request.args.get('pnfilter', '')
@@ -845,7 +843,6 @@ class Actions(Querying):
         random sample
         """
         if len(self._lines_groups) > 0:
-            self._exceptmethod = 'view'
             raise UserActionException(
                 'Cannot apply a random sample once a group of lines has been saved')
         qinfo = SampleFormArgs(persist=True)
@@ -859,7 +856,6 @@ class Actions(Querying):
              use_conc_session=True)
     def shuffle(self):
         if len(self._lines_groups) > 0:
-            self._exceptmethod = 'view'
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
@@ -869,7 +865,6 @@ class Actions(Querying):
              use_conc_session=True)
     def filter_subhits(self):
         if len(self._lines_groups) > 0:
-            self._exceptmethod = 'view'
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
         self.args.q.append('D')
@@ -879,7 +874,6 @@ class Actions(Querying):
              use_conc_session=True)
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
-            self._exceptmethod = 'view'
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(FirstHitsFilterFormArgs(
             persist=True, doc_struct=self.corp.get_conf('DOCSTRUCTURE')))
@@ -1153,7 +1147,6 @@ class Actions(Querying):
     @exposed(access_level=1, template='freqs.tmpl', page_model='freq', legacy=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
-            self._exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
@@ -1581,7 +1574,6 @@ class Actions(Querying):
 
     @exposed(template='freqs.tmpl', page_model='freq', legacy=True, http_method='POST')
     def struct_wordlist(self):
-        self._exceptmethod = 'wordlist_form'
         if self.args.fcrit:
             self._make_wl_query()
             return self.freqs(self.args.fcrit, self.args.flimit, self.args.freq_sort, 1)
