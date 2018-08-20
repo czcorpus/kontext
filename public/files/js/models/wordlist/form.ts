@@ -327,7 +327,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     private submit():void {
         const args = this.createSubmitArgs();
-        const action = this.wltype === 'multilevel' ? 'struct_wordlist' : 'wordlist';
+        const action = this.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/result';
         this.layoutModel.setLocationPost(
             this.layoutModel.createActionUrl(action),
             args.items()

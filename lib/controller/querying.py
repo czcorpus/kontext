@@ -158,26 +158,6 @@ class Querying(Kontext):
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 tpl_out['input_languages'][al] = self.get_corpus_info(al).collator_locale
 
-    def _export_subcorpora_list(self, corpname, out):
-        """
-        Updates passed dictionary by information about available sub-corpora.
-        Listed values depend on current user and corpus.
-        If there is a list already present in 'out' then it is extended
-        by the new values.
-
-        arguments:
-        corpname -- corpus id
-        out -- a dictionary used by templating system
-        """
-        basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
-                                 loc=self.ui_lang, key=lambda x: x['n'])
-        if len(subcorp_list) > 0:
-            subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
-        if out.get('SubcorpList', None) is None:
-            out['SubcorpList'] = []
-        out['SubcorpList'].extend(subcorp_list)
-
     def export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
         """
         Collects aligned corpora-related arguments with dynamic names

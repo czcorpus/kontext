@@ -329,7 +329,7 @@ class MenuGenerator(object):
         )
 
         self.word_list = (
-            HideOnCustomCondItem(MainMenu.NEW_QUERY('wordlist'), te('Word List'), 'wordlist_form')
+            HideOnCustomCondItem(MainMenu.NEW_QUERY('wordlist'), te('Word List'), 'wordlist/form')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('include_nonwords', 1))
