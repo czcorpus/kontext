@@ -22,24 +22,11 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import {CollFormModel} from '../../models/coll/collForm';
+import {CollFormModel, CollFormModelState} from '../../models/coll/collForm';
 
 
 export interface CollFormProps {
 
-}
-
-
-interface CollFormState {
-    attrList:Immutable.List<Kontext.AttrItem>;
-    cattr:string;
-    cfromw:Kontext.FormValue<string>;
-    ctow:Kontext.FormValue<string>;
-    cminfreq:Kontext.FormValue<string>;
-    cminbgr:Kontext.FormValue<string>;
-    cbgrfns:Immutable.Set<string>;
-    availCbgrfns:Immutable.OrderedMap<string, string>;
-    csortfn:string;
 }
 
 
@@ -168,37 +155,82 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
     };
 
+    //
+
+    const CollMetricsTermTh:React.SFC<{
+        value:string;
+        code:string;
+
+    }> = (props) => {
+        const term = he.getHelpLink('term_coll_' + props.code);
+        return <th className="measure">
+            {
+                term ?
+                <layoutViews.Abbreviation
+                    value={props.value} url={term}
+                    desc={he.translate(`coll__form_help_term_${props.code}`)} /> :
+                props.value
+            }
+            </th>;
+    }
+
 
     // -------------------- <CollMetricsSelection /> --------------------------------------------
 
     const CollMetricsSelection:React.SFC<{
         availCbgrfns:Immutable.OrderedMap<string, string>;
         cbgrfns:Immutable.Set<string>;
+        csortfn:string;
 
     }> = (props) => {
 
-        const handleCheckboxClick = (evt) => {
+        const handleDisplayCheckboxClick = (value) => (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CBGRFNS',
                 props: {
-                    value: evt.target.value
+                    value: value
                 }
             });
+            evt.stopPropagation();
+        };
+
+        const handleCheckboxClick = (value) => (evt) => {
+            dispatcher.dispatch({
+                actionType: 'COLL_FORM_SET_CSORTFN',
+                props: {
+                    value: value
+                }
+            });
+            evt.stopPropagation();
         };
 
         return (
-            <table>
+            <table className="CollMetricsSelection">
                 <tbody>
+                    <tr>
+                        <td />
+                        <th>
+                            {he.translate('coll__show_measures_th')}
+                        </th>
+                        <th>
+                            {he.translate('coll__sort_by_th')}
+                        </th>
+                    </tr>
                     {props.availCbgrfns.map((item, k) => {
                         return (
-                            <tr key={`v_${k}`}>
-                                <td>
-                                    <label htmlFor={`cbgrfns_input_${k}`}>{item}</label>
+                            <tr key={`v_${k}`} className={props.cbgrfns.includes(k) ? 'selected' : null}>
+                                <CollMetricsTermTh value={item} code={k} />
+                                <td className="display-chk"
+                                        onClick={handleDisplayCheckboxClick(k)}>
+                                    <input type="checkbox" value={k}
+                                            checked={props.cbgrfns.includes(k)}
+                                            readOnly={true} />
                                 </td>
-                                <td>
-                                    <input id={`cbgrfns_input_${k}`} type="checkbox" value={k}
-                                        checked={props.cbgrfns.includes(k)}
-                                        onChange={handleCheckboxClick} />
+                                <td className={props.csortfn === k ? 'sort-sel is-sort' : 'sort-sel'}
+                                        onClick={handleCheckboxClick(k)}>
+                                    <input type="radio" value={k}
+                                            checked={props.csortfn === k}
+                                            readOnly={true} />
                                 </td>
                             </tr>
                         );
@@ -208,72 +240,19 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
         );
     };
 
-    // -------------------- <CollSortBySelection /> --------------------------------------------
-
-    const CollSortBySelection:React.SFC<{
-        csortfn:string;
-        availCbgrfns:Immutable.OrderedMap<string, string>;
-
-    }> = (props) => {
-
-        const handleCheckboxClick = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CSORTFN',
-                props: {
-                    value: evt.target.value
-                }
-            });
-        };
-
-        return (
-            <table>
-                <tbody>
-                    {props.availCbgrfns.map((item, k) => {
-                        return (
-                            <tr key={`v_${k}`}>
-                                <td>
-                                    <label htmlFor={`csortfn_input_${k}`}>{item}</label>
-                                </td>
-                                <td>
-                                    <input id={`csortfn_input_${k}`} type="radio" value={k}
-                                        checked={props.csortfn === k} onChange={handleCheckboxClick} />
-                                </td>
-                            </tr>
-                        )
-                    }).toList()}
-                </tbody>
-            </table>
-        );
-    };
-
-
     // -------------------- <CollocationsForm /> --------------------------------------------
 
-    class CollForm extends React.Component<CollFormProps, CollFormState> {
+    class CollForm extends React.Component<CollFormProps, CollFormModelState> {
 
         constructor(props) {
             super(props);
             this._modelChangeListener = this._modelChangeListener.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this.state = this._getModelState();
+            this.state = collFormModel.getState();
         }
 
-        _getModelState() {
-            return {
-                attrList: collFormModel.getAttrList(),
-                cattr: collFormModel.getCattr(),
-                cfromw: collFormModel.getCfromw(),
-                ctow: collFormModel.getCtow(),
-                cminfreq: collFormModel.getCminfreq(),
-                cminbgr: collFormModel.getCminbgr(),
-                cbgrfns: collFormModel.getCbgrfns(),
-                availCbgrfns: collFormModel.getAvailCbgrfns(),
-                csortfn: collFormModel.getCsortfn()
-            };
-        }
-
-        _modelChangeListener() {
-            this.setState(this._getModelState());
+        _modelChangeListener(state:CollFormModelState) {
+            this.setState(state);
         }
 
         _handleSubmitClick() {
@@ -293,7 +272,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         render() {
             return (
-                <form className="collocations-form">
+                <form className="CollForm">
                     <table className="form">
                         <tbody>
                             <tr>
@@ -323,21 +302,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
                                 </td>
                             </tr>
                             <tr>
+                                <th>{he.translate('coll__measures_heading')}:</th>
+                                <td />
+                            </tr>
+                            <tr>
                                 <td colSpan={2}>
-                                    <fieldset className="colloc-metrics">
-                                        <legend>
-                                            {he.translate('coll__show_measures_legend')}
-                                        </legend>
-                                        <CollMetricsSelection cbgrfns={this.state.cbgrfns}
-                                                availCbgrfns={this.state.availCbgrfns} />
-                                    </fieldset>
-                                    <fieldset className="colloc-metrics">
-                                        <legend>
-                                            {he.translate('coll__sort_by_legend')}
-                                        </legend>
-                                        <CollSortBySelection csortfn={this.state.csortfn}
-                                                availCbgrfns={this.state.availCbgrfns} />
-                                    </fieldset>
+                                    <CollMetricsSelection cbgrfns={this.state.cbgrfns}
+                                                availCbgrfns={this.state.availCbgrfns}
+                                                csortfn={this.state.csortfn} />
                                 </td>
                             </tr>
                         </tbody>

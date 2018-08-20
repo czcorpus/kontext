@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as initSaveViews} from './save';
-import { CollResultModel, CollResultRow, CollResultHeading, CollResultHeadingCell, CollResultData } from '../../models/coll/result';
+import { CollResultModel, CollResultRow, CollResultHeadingCell } from '../../models/coll/result';
 
 
 export interface CollResultViewProps {
@@ -121,7 +121,6 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         label:string;
 
     }> = (props) => {
-
         const handleClick = () => {
             dispatcher.dispatch({
                 actionType: 'COLL_RESULT_SORT_BY_COLUMN',

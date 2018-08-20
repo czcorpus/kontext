@@ -1227,7 +1227,8 @@ class Actions(Querying):
                                     MainMenu.CONCORDANCE('query-overview'))
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
         if self.args.csortfn == '':
-            self.args.csortfn = 'f'
+            self.args.csortfn = 't'
+        logging.getLogger(__name__).debug('self.args.csortfn: {0}'.format(self.args.csortfn))
 
         calc_args = coll_calc.CollCalcArgs()
         calc_args.corpus_encoding = self.corp.get_conf('ENCODING')
