@@ -58,7 +58,7 @@ from actions import corpora
 def ajax_get_tag_variants(ctrl, request):
     """
     """
-    pattern = request.args.get('pattern')
+    pattern = request.args.get('pattern', '')
     try:
         tag_loader = plugins.runtime.TAGHELPER.instance.loader(
             ctrl.args.corpname,

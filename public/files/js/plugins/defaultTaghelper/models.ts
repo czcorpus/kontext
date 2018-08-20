@@ -129,9 +129,9 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 }
             break;
             case 'TAGHELPER_GET_INITIAL_DATA_DONE':
+                newState.isBusy = false;
                 if (!action.error) {
                     this.importData(newState, action.props['labels'], action.props['tags']);
-                    newState.isBusy = false;
                     if (newState.presetPattern) {
                         this.applyPresetPattern(newState);
                     }
@@ -188,7 +188,10 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                         (err) => {
                             dispatch({
                                 actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                props: {},
+                                props: {
+                                    labels: [],
+                                    tags: []
+                                },
                                 error: err
                             });
                         }

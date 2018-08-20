@@ -735,13 +735,13 @@ class Controller(object):
         Run a special action displaying a message (typically an error one) to properly
         finish a broken regular action which raised an Exception.
         """
+        self.add_system_message(message_type, message)
         if action_metadata['return_type'] == 'json':
             tpl_path, method_ans = self.process_action('message_json', named_args)
             action_metadata.update(self._get_method_metadata('message_json'))
         else:
             tpl_path, method_ans = self.process_action('message', named_args)
             action_metadata.update(self._get_method_metadata('message'))
-            self.add_system_message(message_type, message)
         return tpl_path, method_ans
 
     def _create_user_action_err_result(self, ex, return_type):
@@ -817,7 +817,7 @@ class Controller(object):
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)
             else:
-                message = _(
+                message = translate(
                     'Failed to process your request. Please try again later or contact system support.')
             tmpl, result = self._run_message_action(named_args, action_metadata, 'error', message)
 
