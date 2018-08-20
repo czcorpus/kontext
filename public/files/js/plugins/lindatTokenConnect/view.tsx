@@ -106,7 +106,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                         }
                     })}
                 </ul>
-                <EngExamples pdtEx={props.pdtEx} pcedtEx={props.pcedtEx}/>
+                <EngExamples pcedtEx={props.pcedtEx}/>
             </div>
         )
     };
