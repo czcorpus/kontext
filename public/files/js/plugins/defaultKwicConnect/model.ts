@@ -191,7 +191,9 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     (err) => {
                         dispatch({
                             actionType: Actions.FETCH_INFO_DONE,
-                            props: {},
+                            props: {
+                                data: Immutable.List<ProviderWordMatch>()
+                            },
                             error: err
                         });
                     }

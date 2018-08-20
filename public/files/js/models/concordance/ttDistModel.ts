@@ -154,21 +154,23 @@ export class TextTypesDistModel extends StatefulModel {
     }
 
     private performDataLoad():void {
-        const args = this.layoutModel.getConcArgs();
-        if (this.lastArgs !== args.getFirst('q')) {
-            this.isBusy = true;
-            this.notifyChangeListeners();
-            this.loadData(args).then(
-                (ans) => {
-                    this.isBusy = false;
-                    this.notifyChangeListeners();
-                },
-                (err) => {
-                    this.isBusy = false;
-                    this.layoutModel.showMessage('error', err);
-                    this.notifyChangeListeners();
-                }
-            );
+        if (this.getConcSize() > 0) {
+            const args = this.layoutModel.getConcArgs();
+            if (this.lastArgs !== args.getFirst('q')) {
+                this.isBusy = true;
+                this.notifyChangeListeners();
+                this.loadData(args).then(
+                    (ans) => {
+                        this.isBusy = false;
+                        this.notifyChangeListeners();
+                    },
+                    (err) => {
+                        this.isBusy = false;
+                        this.layoutModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+                    }
+                );
+            }
         }
     }
 
