@@ -45,7 +45,22 @@ class LinesGroups(object):
 
 class AsyncTaskStatus(object):
 
-    def __init__(self, status:int, ident:str, category:str, label:str, args:Dict[str, Any]): ...
+    ident:str
+
+    label:str
+
+    status:int
+
+    category:str
+
+    created:int  # timestamp
+
+    args:Dict[str, Any]
+
+    error:unicode
+
+    def __init__(self, status:int, ident:str, category:str, created:int, label:str, args:Dict[str, Any],
+                 error:unicode): ...
 
     def is_finished(self) -> bool: ...
 
@@ -62,6 +77,8 @@ class Kontext(Controller):
     _curr_corpus:Corpus
 
     _corpus_variant:str
+
+    _request:werkzeug.wrappers.Request
 
     return_url:str
 
@@ -125,6 +142,8 @@ class Kontext(Controller):
 
     def _save_options(self, optlist:Optional[Iterable], selector:str): ...
 
+    def _clear_prev_conc_params(self): ...
+
     def _redirect_to_conc(self): ...
 
     def _get_struct_opts(self) -> str: ...
@@ -136,6 +155,14 @@ class Kontext(Controller):
     def _attach_aligned_query_params(self, out:Dict[str, Any]): ...
 
     def _export_subcorpora_list(self, corpname:str, out:Dict[str, Any]): ...
+
+    def _get_attrs(self, attr_names:Iterable[str], force_values:bool) -> List[Tuple[str, str]]: ...
+
+    def _set_async_tasks(self, tasks:Iterable[AsyncTaskStatus]): ...
+
+    def _get_save_excluded_attributes(self) -> Tuple[str,...]: ...
+
+    def _user_has_persistent_settings(self) -> bool: ...
 
 
 class PluginApi(object):

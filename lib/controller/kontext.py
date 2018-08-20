@@ -832,7 +832,7 @@ class Kontext(Controller):
 
         # create and store concordance query key
         if type(result) is DictType:
-            if action_metadata['use_conc_session']:
+            if action_metadata['mutates_conc']:
                 next_query_key = self._store_conc_params()
             else:
                 next_query_key = self._prev_q_data.get('id', None) if self._prev_q_data else None
@@ -1405,9 +1405,9 @@ class Kontext(Controller):
                     else:
                         at.error = str(r.result)
             self._set_async_tasks(at_list)
-            return {'data': [d.to_dict() for d in at_list]}
+            return dict(data=[d.to_dict() for d in at_list])
         else:
-            return {'data': []}  # other backends are not supported
+            return dict(data=[])  # other backends are not supported
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request):
