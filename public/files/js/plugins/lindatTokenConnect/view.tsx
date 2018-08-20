@@ -44,7 +44,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             return (
                 <div className="VallexJsonRenderer">
                     <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/EngVallex.html?verb=' + props.data.result[1][0][0]} target="_blank">{props.data.result[1][0][0]}</a>
-                    <PDTVerbList info={props.data.result[1][0]} />
+                    <EngVerbList info={props.data.result[1][0]} />
                 </div>
             );
         } else {
@@ -56,12 +56,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         // ------------- <EngVerbList /> -------------------------------
 
-    const PDTVerbList:React.SFC<{
-        info:PDTVRD.VerbAndInfo;
+    const EngVerbList:React.SFC<{
+        info:ENGVRD.VerbAndInfo;
     }> = (props) => {
-        const renderVerbInfo = () => {
+        const renderEngVerbInfo = () => {
             return props.info[1].map((item, i) => {
-                return <OneFrame key={i} id={item[0]}
+                return <OneEngFrame key={i} id={item[0]}
                                 info={item[1]} pdtEx={item[2]}
                                 pcedtEx={item[3]}
                                 verb={props.info[0]}/>
@@ -69,18 +69,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         };
         return (
-            <div>{renderVerbInfo()}</div>
+            <div>{renderEngVerbInfo()}</div>
         );
     };
 
-        // ------------- <OneFrame /> -------------------------------
+        // ------------- <OneEngFrame /> -------------------------------
 
-    const OneFrame:React.SFC<{
+    const OneEngFrame:React.SFC<{
         key:any;
-        id:PDTVRD.FrameID;
-        info:PDTVRD.Info;
-        pdtEx:PDTVRD.PDTExamples;
-        pcedtEx:PDTVRD.PCEDTExamples;
+        id:ENGVRD.FrameID;
+        info:ENGVRD.Info;
+        pcedtEx:ENGVRD.PCEDTExamples;
         verb:string;
     }> = (props) => {
 
@@ -107,16 +106,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                         }
                     })}
                 </ul>
-                <Examples pdtEx={props.pdtEx} pcedtEx={props.pcedtEx}/>
+                <EngExamples pdtEx={props.pdtEx} pcedtEx={props.pcedtEx}/>
             </div>
         )
     };
 
     // ------------- <Examples /> -------------------------------
 
-    class Examples extends React.Component<{
-        pdtEx:PDTVRD.PDTExamples;
-        pcedtEx:PDTVRD.PCEDTExamples;
+    class EngExamples extends React.Component<{
+        pcedtEx:ENGVRD.PCEDTExamples;
     }, {collapse: boolean}> {
 
         constructor(props) {
@@ -138,15 +136,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _getStateDisplayExamples() {
-            if (this.props.pdtEx.length === 0 && (this.props.pcedtEx === undefined || this.props.pcedtEx.length === 0)) {
-                return {display: 'none'}
-            } else {
-                return {display: 'block'}
-            }
-        }
-
-        _getStateDisplayPDT() {
-            if (this.props.pdtEx.length === 0) {
+            if ( this.props.pcedtEx.length === 0) {
                 return {display: 'none'}
             } else {
                 return {display: 'block'}
@@ -159,11 +149,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                     <a className="vallexExpand" style={this._getStateDisplayExamples()} onClick={this._clickHandler}>{this._textHandler()}
                     </a>
                     <div className="PDTVallexExtra" style={this._getStateDisplay()}>
-                        <ul className="PDTExamples" style={this._getStateDisplayPDT()}>
+                        <ul className="PCEDTExamples" style={this._getStateDisplayExamples()}>
                             <li className="ExamplesH">Examples from PCEDT</li>
-                            {this.props.pdtEx.map((listValue, i) => {
+                            {this.props.pcedtEx.map((listValue, i) => {
                                 if (listValue.length !== 0)
-                                {return <li className="PDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                {return <li className="PCEDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
                                 }
                             })}
                         </ul>
