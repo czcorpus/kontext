@@ -36,7 +36,7 @@ import plugins
 from kwiclib import Kwic, KwicPageArgs
 import l10n
 from l10n import import_string, corpus_get_conf
-from translation import ugettext as _
+from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from main_menu import MenuGenerator, MainMenu
@@ -137,7 +137,7 @@ class Actions(Querying):
         corpus_name = l10n.import_string(self.corp.get_conf('NAME'),
                                          from_encoding=self.corp.get_conf('ENCODING'))
         if contains_within:
-            return _('related to the subset defined by the selected text types')
+            return translate('related to the subset defined by the selected text types')
         elif hasattr(self.corp, 'subcname'):
             return (_(u'related to the whole %s') % (corpus_name,)) + \
                 ':%s' % self.corp.subcname
@@ -164,8 +164,8 @@ class Actions(Querying):
                     concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
                     result_shuffled=False, finished=True)
 
-    @exposed(vars=('orig_query', ), legacy=True, mutates_conc=True)
-    def view(self):
+    @exposed(vars=('orig_query', ), mutates_conc=True)
+    def view(self, _=None):
         """
         KWIC view
         """
@@ -225,22 +225,23 @@ class Actions(Querying):
         if self.args.align and not self.args.maincorp:
             self.args.maincorp = self.args.corpname
         if len(out['Lines']) == 0:
-            msg = _('No result. Please make sure the query and selected query type are correct.')
+            msg = translate(
+                'No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
 
         self._add_save_menu_item('CSV', save_format='csv',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item('XLSX', save_format='xlsx',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item('XML', save_format='xml',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item('TXT', save_format='text',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
-        self._add_save_menu_item(_('Custom'))
+        self._add_save_menu_item(translate('Custom'))
 
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
@@ -368,8 +369,8 @@ class Actions(Querying):
                                  for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',') if n]
         return out
 
-    @exposed(return_type='json', legacy=True)
-    def get_cached_conc_sizes(self):
+    @exposed(return_type='json')
+    def get_cached_conc_sizes(self, _):
         from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
         return self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
@@ -431,8 +432,8 @@ class Actions(Querying):
         self.args.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, mutates_conc=True)
-    def mlsortx(self):
+    @exposed(access_level=1, template='view.tmpl', page_model='view', mutates_conc=True)
+    def mlsortx(self, _):
         """
         multiple level sort concordance
         """
@@ -501,7 +502,7 @@ class Actions(Querying):
                 elif suff:
                     return ''
                 else:
-                    raise ConcError(_('No query entered.'))
+                    raise ConcError(translate('No query entered.'))
         if qtype:
             return queries[qtype] % self.clone_args()
         thecorp = cname and self.cm.get_Corpus(cname) or self.corp
@@ -547,7 +548,7 @@ class Actions(Querying):
                     if not lpos in lposlist.values():
                         lpos = lposlist[lpos]
                 except KeyError:
-                    raise ConcError(_('Undefined lemma PoS') + ' "%s"' % lpos)
+                    raise ConcError(translate('Undefined lemma PoS') + ' "%s"' % lpos)
                 return '[lempos="%s%s"]' % (lemma, lpos)
             else:  # XXX WTF?
                 try:
@@ -556,7 +557,7 @@ class Actions(Querying):
                     else:
                         wpos = wposlist[lpos]
                 except KeyError:
-                    raise ConcError(_('Undefined word form PoS')
+                    raise ConcError(translate('Undefined word form PoS')
                                     + ' "%s"' % lpos)
                 return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
         elif queryselector == 'phraserow':
@@ -578,11 +579,11 @@ class Actions(Querying):
                 if not wpos in wposlist.values():
                     wpos = wposlist[wpos]
             except KeyError:
-                raise ConcError(_('Undefined word form PoS') + ' "%s"' % wpos)
+                raise ConcError(translate('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
         elif queryselector == 'charrow':
             if not char:
-                raise ConcError(_('No char entered'))
+                raise ConcError(translate('No char entered'))
             return '[word=".*%s.*"]' % char
         elif queryselector == 'tag':
             return '[tag="%s"]' % self.args.tag
@@ -805,7 +806,7 @@ class Actions(Querying):
 
         self._store_semi_persistent_attrs(('queryselector', 'filfpos', 'filtpos'))
         if pnfilter not in ('p', 'n'):
-            raise ConcError(_('Select Positive or Negative filter type'))
+            raise ConcError(translate('Select Positive or Negative filter type'))
         if not int(inclkwic):
             pnfilter = pnfilter.upper()
         rank = dict(f=1, l=-1).get(filfl, 1)
@@ -818,7 +819,7 @@ class Actions(Querying):
                 filfpos = '0'
                 filtpos = '0'
             else:
-                raise ConcError(_('No query entered.'))
+                raise ConcError(translate('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
         query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
         if int(within):
@@ -836,9 +837,8 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(access_level=0, template='view.tmpl', vars=('concsize',), page_model='view',
-             legacy=True, mutates_conc=True)
-    def reduce(self):
+    @exposed(access_level=0, template='view.tmpl', vars=('concsize',), page_model='view', mutates_conc=True)
+    def reduce(self, _):
         """
         random sample
         """
@@ -852,18 +852,16 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True,
-             mutates_conc=True)
-    def shuffle(self):
+    @exposed(access_level=0, template='view.tmpl', page_model='view', mutates_conc=True)
+    def shuffle(self, _):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True,
-             mutates_conc=True)
-    def filter_subhits(self):
+    @exposed(access_level=0, template='view.tmpl', page_model='view', mutates_conc=True)
+    def filter_subhits(self, _):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
@@ -951,7 +949,7 @@ class Actions(Querying):
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
             result.update(
-                message=('error', _('Empty list')),
+                message=('error', translate('Empty list')),
                 Blocks=[],
                 paging=0,
                 quick_from_line=None,
@@ -1038,18 +1036,18 @@ class Actions(Querying):
                      'norel': 1, 'fbar': 0})
 
             self._add_save_menu_item('CSV', save_format='csv',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.CONC_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item('XLSX', save_format='xlsx',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.CONC_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item('XML', save_format='xml',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.CONC_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item('TXT', save_format='text',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.CONC_QUICK_SAVE_MAX_LINES)))
-            self._add_save_menu_item(_('Custom'))
+            self._add_save_menu_item(translate('Custom'))
 
         result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
@@ -1147,7 +1145,7 @@ class Actions(Querying):
     @exposed(access_level=1, template='freqs.tmpl', page_model='freq', legacy=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
-            raise ConcError(_('No text type selected'))
+            raise ConcError(translate('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
     @exposed(access_level=1, page_model='freq', template='freqs.tmpl')
@@ -1242,18 +1240,18 @@ class Actions(Querying):
         calc_args.collpage = self.args.collpage
 
         self._add_save_menu_item('CSV', save_format='csv',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item('XLSX', save_format='xlsx',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item('XML', save_format='xml',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item('TXT', save_format='text',
-                                 hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
-        self._add_save_menu_item(_('Custom'))
+        self._add_save_menu_item(translate('Custom'))
 
         ans = coll_calc.calculate_colls(calc_args)
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
@@ -1324,11 +1322,12 @@ class Actions(Querying):
         result = self.widectx(pos)
         return result
 
-    @exposed(access_level=0, legacy=True)
-    def widectx(self, pos=0):
+    @exposed(access_level=0)
+    def widectx(self, request):
         """
         display a hit in a wider context
         """
+        pos = int(request.args.get('pos', '0'))
         p_attrs = self.args.attrs.split(',')
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
@@ -1341,23 +1340,23 @@ class Actions(Querying):
                                                   dict(structs=self._get_struct_opts()))
         return data
 
-    @exposed(access_level=0, return_type='json', legacy=True)
-    def fullref(self, pos=0):
+    @exposed(access_level=0, return_type='json')
+    def fullref(self, request):
         """
         display a full reference
         """
+        pos = int(request.args.get('pos', '0'))
         return self.call_function(conclib.get_full_ref, (self.corp, pos))
 
-    @exposed(access_level=1, vars=('LastSubcorp',), legacy=True)
-    def wordlist_form(self, ref_corpname=''):
+    @exposed(access_level=1, vars=('LastSubcorp',))
+    def wordlist_form(self, request):
         """
         Word List Form
         """
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
-        if not ref_corpname:
-            ref_corpname = self.args.corpname
+        ref_corpname = request.args.get('ref_corpname', self.args.corpname)
         refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
@@ -1378,7 +1377,7 @@ class Actions(Querying):
 
     def _wlnums2structattr(self, wlnums):
         if wlnums == 'arf':
-            raise ConcError(_('ARF cannot be used with text types'))
+            raise ConcError(translate('ARF cannot be used with text types'))
         elif wlnums == 'frq':
             return 'doc sizes'
         elif wlnums == 'docf':
@@ -1516,18 +1515,18 @@ class Actions(Querying):
                 wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
 
             self._add_save_menu_item('CSV', save_format='csv',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.WORDLIST_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item('XLSX', save_format='xlsx',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.WORDLIST_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item('XML', save_format='xml',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.WORDLIST_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item('TXT', save_format='text',
-                                     hint=_('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.WORDLIST_QUICK_SAVE_MAX_LINES)))
-            self._add_save_menu_item(_('Custom'))
+            self._add_save_menu_item(translate('Custom'))
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
             result['SubcorpList'] = []
@@ -1572,8 +1571,8 @@ class Actions(Querying):
             qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
         self.args.q = [u'q[' + '&'.join(qparts) + ']']
 
-    @exposed(template='freqs.tmpl', page_model='freq', legacy=True, http_method='POST')
-    def struct_wordlist(self):
+    @exposed(template='freqs.tmpl', page_model='freq', http_method='POST')
+    def struct_wordlist(self, _):
         if self.args.fcrit:
             self._make_wl_query()
             return self.freqs(self.args.fcrit, self.args.flimit, self.args.freq_sort, 1)
@@ -1584,14 +1583,14 @@ class Actions(Querying):
             raise ConcError('Multilevel lists are limited to Word counts frequencies')
         level = 3
         if not self.args.wlposattr1:
-            raise ConcError(_('No output attribute specified'))
+            raise ConcError(translate('No output attribute specified'))
         if not self.args.wlposattr3:
             level = 2
         if not self.args.wlposattr2:
             level = 1
         if not self.args.wlpat and not self.args.wlwords:
             raise ConcError(
-                _('You must specify either a pattern or a file to get the multilevel wordlist'))
+                translate('You must specify either a pattern or a file to get the multilevel wordlist'))
         self._make_wl_query()
         self.args.flimit = self.args.wlminfreq
         return self.freqml(flimit=self.args.wlminfreq, freqlevel=level,
@@ -1754,7 +1753,7 @@ class Actions(Querying):
                         kwic_key = 'Kwic'
                         right_key = 'Sen_Right'
                     else:
-                        raise ConcError(_('Invalid data'))
+                        raise ConcError(translate('Invalid data'))
 
                     aligned_corpora = [self.corp] + \
                                       [self.cm.get_Corpus(c) for c in self.args.align if c]
@@ -1773,7 +1772,7 @@ class Actions(Querying):
 
                         doc_struct = self.corp.get_conf('DOCSTRUCTURE')
                         refs_args = [x.strip('=') for x in self.args.refs.split(',')]
-                        used_refs = ([('#', _('Token number')), (doc_struct, _('Document number'))] +
+                        used_refs = ([('#', translate('Token number')), (doc_struct, translate('Document number'))] +
                                      [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
                         used_refs = [x[1] for x in used_refs if x[0] in refs_args]
                         writer.write_ref_headings(used_refs)
@@ -1793,7 +1792,7 @@ class Actions(Querying):
                         writer.writerow(row_num, *lang_rows)
                 output = writer.raw_content()
             else:
-                raise UserActionException(_('Unknown export data type'))
+                raise UserActionException(translate('Unknown export data type'))
             return output
         except Exception as e:
             self._headers['Content-Type'] = 'text/html'
@@ -1801,13 +1800,14 @@ class Actions(Querying):
                 del (self._headers['Content-Disposition'])
             raise e
 
-    @exposed(access_level=0, legacy=True)
-    def audio(self, chunk=''):
+    @exposed(access_level=0)
+    def audio(self, request):
         """
         Provides access to audio-files containing speech segments.
         Access rights are per-corpus (i.e. if a user has a permission to
         access corpus 'X' then all related audio files are accessible).
         """
+        chunk = request.args.get('chunk', '')
         path = os.path.join(settings.get('corpora', 'speech_files_path'), self.args.corpname, chunk)
         rpath = os.path.realpath(path)
         if os.path.isfile(rpath) and rpath.startswith(settings.get('corpora', 'speech_files_path')):
@@ -1853,8 +1853,8 @@ class Actions(Querying):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
-    @exposed(return_type='json', http_method='POST', legacy=True, mutates_conc=True)
-    def ajax_unset_lines_groups(self):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_unset_lines_groups(self, _):
         pipeline = self.load_pipeline_ops(self._q_code)
         i = len(pipeline) - 1
         # we have to go back before the current block
@@ -1870,26 +1870,29 @@ class Actions(Querying):
         self.add_conc_form_args(pipeline[i])
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True, mutates_conc=True)
-    def ajax_apply_lines_groups(self, rows=''):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_apply_lines_groups(self, request):
+        rows = request.form.get('rows')
         self._lines_groups = LinesGroups(data=json.loads(rows))
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True, mutates_conc=True)
-    def ajax_remove_non_group_lines(self):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_remove_non_group_lines(self, _):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True, mutates_conc=True)
-    def ajax_sort_group_lines(self):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_sort_group_lines(self, _):
         self._lines_groups.sorted = True
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=True, mutates_conc=True)
-    def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_remove_selected_lines(self, request):
+        pnfilter = request.form.get('pnfilter', 'p')
+        rows = request.form.get('rows', '')
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
         self.add_conc_form_args(LockedOpFormsArgs(persist=True))
@@ -1903,22 +1906,24 @@ class Actions(Querying):
                                            request.form.get('url'))
         return dict(ok=ans)
 
-    @exposed(return_type='json', http_method='POST', legacy=True, mutates_conc=True)
-    def ajax_reedit_line_selection(self):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_reedit_line_selection(self, _):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return dict(selection=ans)
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_get_line_groups_stats(self):
+    @exposed(return_type='json')
+    def ajax_get_line_groups_stats(self, _):
         ans = defaultdict(lambda: 0)
         for item in self._lines_groups:
             ans[item[2]] += 1
         return ans
 
-    @exposed(return_type='json', legacy=True, http_method='POST', mutates_conc=True)
-    def ajax_rename_line_group(self, from_num=0, to_num=-1):
+    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    def ajax_rename_line_group(self, request):
+        from_num = int(request.form.get('from_num', '0'))
+        to_num = int(request.form.get('to_num', '-1'))
         new_groups = filter(lambda v: v[2] != from_num or to_num != -1, self._lines_groups)
         if to_num > 0:
             new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
@@ -2044,6 +2049,6 @@ class Actions(Querying):
         return ans
 
     @exposed(http_method='GET', return_type='json')
-    def load_query_pipeline(self, request):
+    def load_query_pipeline(self, _):
         pipeline = self.load_pipeline_ops(self._q_code)
         return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])

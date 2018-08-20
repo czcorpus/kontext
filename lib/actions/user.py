@@ -157,8 +157,8 @@ class User(Kontext):
             limit=limit
         )
 
-    @exposed(return_type='html', legacy=True, skip_corpus_init=True)
-    def ajax_get_toolbar(self):
+    @exposed(return_type='html', skip_corpus_init=True)
+    def ajax_get_toolbar(self, _):
         with plugins.runtime.APPLICATION_BAR as ab:
             return ab.get_contents(plugin_api=self._plugin_api, return_url=self.return_url)
 

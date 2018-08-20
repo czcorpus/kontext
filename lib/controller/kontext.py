@@ -1352,8 +1352,8 @@ class Kontext(Controller):
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
 
-    @exposed(return_type='json', legacy=True)
-    def concdesc_json(self):
+    @exposed(return_type='json')
+    def concdesc_json(self, _=None):
         out = {'Desc': []}
         conc_desc = conclib.get_conc_desc(corpus=self.corp, q=self.args.q,
                                           subchash=getattr(self.corp, 'subchash', None))

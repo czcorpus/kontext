@@ -54,10 +54,11 @@ from plugins.abstract.taghelper import AbstractTaghelper
 from actions import corpora
 
 
-@exposed(return_type='json', legacy=True)
-def ajax_get_tag_variants(ctrl, pattern=''):
+@exposed(return_type='json')
+def ajax_get_tag_variants(ctrl, request):
     """
     """
+    pattern = request.args.get('pattern')
     try:
         tag_loader = plugins.runtime.TAGHELPER.instance.loader(
             ctrl.args.corpname,

@@ -21,7 +21,7 @@ from controller.errors import FunctionNotSupported, UserActionException
 from controller.kontext import AsyncTaskStatus
 from controller.querying import Querying
 from main_menu import MainMenu
-from translation import ugettext as _
+from translation import ugettext as translate
 import plugins
 import l10n
 from l10n import import_string
@@ -132,7 +132,7 @@ class Subcorpus(Querying):
 
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
-            raise UserActionException(_('No subcorpus name specified!'))
+            raise UserActionException(translate('No subcorpus name specified!'))
         path = self.prepare_subc_path(basecorpname, subcname, publish=False)
         publish_path = self.prepare_subc_path(
             basecorpname, subcname, publish=True) if publish else None
@@ -168,7 +168,7 @@ class Subcorpus(Querying):
                     worker.run, tt_query, imp_cql, path, publish_path, description)).start()
                 result = {}
         else:
-            raise UserActionException(_('Nothing specified!'))
+            raise UserActionException(translate('Nothing specified!'))
         if result is not False:
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
@@ -179,12 +179,12 @@ class Subcorpus(Querying):
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
-                                            _('Subcorpus created but there was a problem saving a backup copy.'))
+                                            translate('Subcorpus created but there was a problem saving a backup copy.'))
             unfinished_corpora = filter(lambda at: not at.is_finished(),
                                         self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
             return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
         else:
-            raise SubcorpusError(_('Empty subcorpus!'))
+            raise SubcorpusError(translate('Empty subcorpus!'))
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
              http_method='POST')
@@ -340,8 +340,9 @@ class Subcorpus(Querying):
         )
         return ans
 
-    @exposed(access_level=1, return_type='json', legacy=True)
-    def ajax_subcorp_info(self, subcname=''):
+    @exposed(access_level=1, return_type='json')
+    def ajax_subcorp_info(self, request):
+        subcname = request.args.get('subcname', '')
         sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
         ans = dict(
             corpusId=self.args.corpname,
@@ -369,9 +370,10 @@ class Subcorpus(Querying):
             with plugins.runtime.SUBC_RESTORE as sr:
                 sr.delete_query(self.session_get('user', 'id'), corpus_id, subcorp_name)
             self.add_system_message('info',
-                                    _('Subcorpus %s has been deleted permanently.') % subcorp_name)
+                                    translate('Subcorpus %s has been deleted permanently.') % subcorp_name)
         else:
-            self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
+            self.add_system_message('error', translate(
+                'Unsupported operation (plug-in not present)'))
         return {}
 
     @exposed(access_level=1, return_type='json', http_method='POST')

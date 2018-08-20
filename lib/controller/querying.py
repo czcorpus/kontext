@@ -28,7 +28,7 @@ import plugins
 import l10n
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               FirstHitsFilterFormArgs, build_conc_form_args)
-from translation import ugettext as _
+from translation import ugettext as translate
 from controller import exposed
 
 
@@ -131,7 +131,8 @@ class Querying(Kontext):
             sort=SortFormArgs(persist=False).to_dict(),
             sample=SampleFormArgs(persist=False).to_dict(),
             shuffle=ShuffleFormArgs(persist=False).to_dict(),
-            firsthits=FirstHitsFilterFormArgs(persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
+            firsthits=FirstHitsFilterFormArgs(
+                persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
         )
 
     def _attach_aligned_query_params(self, tpl_out):
@@ -172,7 +173,7 @@ class Querying(Kontext):
         subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
                                  loc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
-            subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
+            subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []
         out['SubcorpList'].extend(subcorp_list)
@@ -206,7 +207,7 @@ class Querying(Kontext):
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
         except (IndexError, KeyError):
-            self.add_system_message('error', _('Operation not found in the storage'))
+            self.add_system_message('error', translate('Operation not found in the storage'))
             return {}
 
     @staticmethod
