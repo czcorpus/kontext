@@ -445,13 +445,17 @@ class ManateeBackend(SearchBackend):
             attr_refs (dict of str:list): configured indirect values
 
         """
+        if data[0].get('hidden', False):
+            corr = -1
+        else:
+            corr = 0
         for ident, keys in attr_refs.items():
             abs_refs = self._get_abs_reference(curr_idx, data[curr_idx], ident)
             data[curr_idx][ident] = []
             for abs_ref in abs_refs:
                 ref_item = data[abs_ref]
                 ref_label = ' '.join(map(lambda k: ref_item[k], keys))
-                data[curr_idx][ident].append((abs_ref, ref_label))
+                data[curr_idx][ident].append((abs_ref + corr, ref_label))
 
     def _decode_tree_data(self, data, parent_attr, attr_refs):
         """
