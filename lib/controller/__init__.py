@@ -51,7 +51,7 @@ from templating import CheetahResponseFile
 
 
 def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=False, skip_corpus_init=False,
-            use_conc_session=False, http_method='GET', accept_kwargs=None, apply_semi_persist_args=False,
+            mutates_conc=False, http_method='GET', accept_kwargs=None, apply_semi_persist_args=False,
             return_type='html'):
     """
     This decorator allows more convenient way how to
@@ -65,7 +65,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
     page_model -- a JavaScript page module
     legacy -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
     skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
-    use_conc_session -- store a new conc action under a new key to a conc_peristence db
+    mutates_conc -- store a new conc action under a new key to a conc_peristence db
     http_method -- required HTTP method (POST, GET, PUT,...)
     accept_kwargs -- True/False
     apply_semi_persist_args -- if True hen use session to initialize action args first
@@ -78,7 +78,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
         func.__dict__['page_model'] = page_model
         func.__dict__['legacy'] = legacy
         func.__dict__['skip_corpus_init'] = skip_corpus_init
-        func.__dict__['use_conc_session'] = use_conc_session
+        func.__dict__['mutates_conc'] = mutates_conc
         func.__dict__['http_method'] = http_method
         func.__dict__['accept_kwargs'] = accept_kwargs
         func.__dict__['apply_semi_persist_args'] = apply_semi_persist_args
