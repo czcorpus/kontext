@@ -24,16 +24,154 @@ import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import * as VRD from './vallex';
 import * as PDTVRD from './pdt-vallex';
+import * as ENGVRD from './eng-vallex';
 
 
 export interface Views {
     VallexJsonRenderer:React.SFC<{data: VRD.VallexResponseData}>;
     PDTVallexJsonRenderer:React.SFC<{data: PDTVRD.PDTVallexResponseData}>;
+    EngVallexJsonRenderer:React.SFC<{data: ENGVRD.EngVallexResponseData}>;
 }
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
+
+        // ------------- <EngVallexJsonRenderer /> -------------------------------
+
+    const EngVallexJsonRenderer:Views['EngVallexJsonRenderer'] = (props) => {
+        if (props.data.result.length > 0) {
+            return (
+                <div className="VallexJsonRenderer">
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/EngVallex.html?verb=' + props.data.result[1][0][0]} target="_blank">{props.data.result[1][0][0]}</a>
+                    <PDTVerbList info={props.data.result[1][0]} />
+                </div>
+            );
+        } else {
+            return (
+                <p>No match found in dictionaries.</p>
+            );
+        }
+    };
+
+        // ------------- <EngVerbList /> -------------------------------
+
+    const PDTVerbList:React.SFC<{
+        info:PDTVRD.VerbAndInfo;
+    }> = (props) => {
+        const renderVerbInfo = () => {
+            return props.info[1].map((item, i) => {
+                return <OneFrame key={i} id={item[0]}
+                                info={item[1]} pdtEx={item[2]}
+                                pcedtEx={item[3]}
+                                verb={props.info[0]}/>
+            });
+
+        };
+        return (
+            <div>{renderVerbInfo()}</div>
+        );
+    };
+
+        // ------------- <OneFrame /> -------------------------------
+
+    const OneFrame:React.SFC<{
+        key:any;
+        id:PDTVRD.FrameID;
+        info:PDTVRD.Info;
+        pdtEx:PDTVRD.PDTExamples;
+        pcedtEx:PDTVRD.PCEDTExamples;
+        verb:string;
+    }> = (props) => {
+
+        return (
+            <div>
+                <div className="vallexSourceV">{props.verb}
+                    {props.info[0].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                        }
+                    })}
+                </div>
+                <ul className="vallexHiddenBullets">
+                    {props.info[1].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <li className="pdtvallexExpl" key={i}>{listValue}</li>;
+                        }
+                    })}
+                </ul>
+                <ul className="pdtvallexExamples">
+                    {props.info[2].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <li className="pdtvallexExamples" key={i}>{listValue}</li>;
+                        }
+                    })}
+                </ul>
+                <Examples pdtEx={props.pdtEx} pcedtEx={props.pcedtEx}/>
+            </div>
+        )
+    };
+
+    // ------------- <Examples /> -------------------------------
+
+    class Examples extends React.Component<{
+        pdtEx:PDTVRD.PDTExamples;
+        pcedtEx:PDTVRD.PCEDTExamples;
+    }, {collapse: boolean}> {
+
+        constructor(props) {
+            super(props);
+            this.state = {collapse: true};
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
+            this.setState({collapse: !this.state.collapse});
+        }
+
+        _textHandler() {
+            return this.state.collapse ? "Show examples" : "Hide examples";
+        }
+
+        _getStateDisplay() {
+            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+        }
+
+        _getStateDisplayExamples() {
+            if (this.props.pdtEx.length === 0 && (this.props.pcedtEx === undefined || this.props.pcedtEx.length === 0)) {
+                return {display: 'none'}
+            } else {
+                return {display: 'block'}
+            }
+        }
+
+        _getStateDisplayPDT() {
+            if (this.props.pdtEx.length === 0) {
+                return {display: 'none'}
+            } else {
+                return {display: 'block'}
+            }
+        }
+
+        render() {
+            return (
+                <div>
+                    <a className="vallexExpand" style={this._getStateDisplayExamples()} onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div className="PDTVallexExtra" style={this._getStateDisplay()}>
+                        <ul className="PDTExamples" style={this._getStateDisplayPDT()}>
+                            <li className="ExamplesH">Examples from PCEDT</li>
+                            {this.props.pdtEx.map((listValue, i) => {
+                                if (listValue.length !== 0)
+                                {return <li className="PDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                }
+                            })}
+                        </ul>
+                    </div>
+                </div>
+            );
+        }
+    }
 
 
     // ------------- <PDTVallexJsonRenderer /> -------------------------------
@@ -146,14 +284,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         _getStateDisplayPDT() {
             if (this.props.pdtEx.length === 0) {
-                return {display: 'none'}
-            } else {
-                return {display: 'block'}
-            }
-        }
-
-        _getStateDisplayPCEDT() {
-            if (this.props.pcedtEx.length === 0) {
                 return {display: 'none'}
             } else {
                 return {display: 'block'}
@@ -366,6 +496,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     return {
         VallexJsonRenderer: VallexJsonRenderer,
-        PDTVallexJsonRenderer: PDTVallexJsonRenderer
+        PDTVallexJsonRenderer: PDTVallexJsonRenderer,
+        EngVallexJsonRenderer: EngVallexJsonRenderer
     }
 }
