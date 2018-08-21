@@ -6,7 +6,6 @@
 public/files/.settings
 
 # local development
-doc/
 log/
 tmp/
 *.db
