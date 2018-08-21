@@ -47,6 +47,11 @@ export namespace Kontext {
 
     }
 
+    export var isFormValue = <T>(v:any):v is FormValue<T> => {
+        return v.hasOwnProperty('value') && v.hasOwnProperty('isRequired') &&
+                v.hasOwnProperty('isInvalid');
+    }
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
