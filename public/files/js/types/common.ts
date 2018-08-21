@@ -48,8 +48,8 @@ export namespace Kontext {
     }
 
     export var isFormValue = <T>(v:any):v is FormValue<T> => {
-        return v.hasOwnProperty('value') && v.hasOwnProperty('isRequired') &&
-                v.hasOwnProperty('isInvalid');
+        return v !== null && v !== undefined && v.hasOwnProperty('value') &&
+                v.hasOwnProperty('isRequired') && v.hasOwnProperty('isInvalid');
     }
 
     /**
