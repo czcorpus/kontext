@@ -10,7 +10,7 @@
 * [Standalone server application](#install_standalone_server_application)
 * [WSGI application within a dedicated web-server](#install_wsgi_application)
   * [Gunicorn + reverse proxy](#install_gunicorn_plus_proxy)
-  * [Apache mod_wsgi](#install_apache_mod_wsgi)
+  * [uWSGI](#install_uwsgi)
 * [Celery worker](#install_celery_worker)
   * [Celery configuration](#install_celery_configuration)
   * [Systemd configuration](#install_celery_systemd_configuration)
@@ -264,42 +264,11 @@ or
 systemctl start gunicorn-kontext
 ```
 
-<a name="install_apache_mod_wsgi"></a>
-### Apache mod_wsgi
+<a name="install_uwsgi"></a>
+### uWSGI
 
-Running KonText within *Apache* webserver is possible with some [limitations](#limitation_note).
-We recommend considering [Gunicorn + Proxy](#wsgi_application) variant for serious
-production deployment.
-
-Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
-configuration file for your Apache 2 installation (e.g. in Debian and derived GNU/Linux distributions it
-is */etc/apache2/sites-enabled/my_config*):
-
-```
-<VirtualHost *:80>
-    ServerName my.domain
-    DocumentRoot /opt/kontext-production/public
-
-    Alias /files /opt/kontext-production/public/files
-    <Directory /opt/kontext-production/public/files>
-        Order deny,allow
-        Allow from all
-    </Directory>
-
-    WSGIScriptAlias / /opt/kontext-production/public/app.py
-    WSGIDaemonProcess kontext_app processes=2 threads=15 display-name=%{GROUP}
-    WSGIProcessGroup %{GLOBAL}
-</VirtualHost>
-```
-
-<a name="limitation_note"></a>
-**Important note**: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this
-concrete form as in other case you may experience occasional error responses from Apache server
-(see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API)
-for details). Also note that such a configuration does not provide the best performance *mod_wsgi* can offer.
-
-Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also
-possible. Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
+uWSGI server can be used instead of Gunicorn. For more 
+information please see [uWSGI.md](uWSGI.md).
 
 
 <a name="install_celery_worker"></a>

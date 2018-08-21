@@ -61,9 +61,10 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ## Requirements
 
-* a WSGI-compatible server
-    * recommended setup: [Gunicorn](http://gunicorn.org/) + a reverse proxy (e.g. [Nginx](http://nginx.org/) or Apache2)
-    * supported setup: Apache2 with [mod_wsgi](https://code.google.com/p/modwsgi/)
+* WSGI-compatible server
+    * [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested),...
+* Rerverse proxy server        
+  + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested),...
 * Python *2.7* and:
     * [Cheetah](http://www.cheetahtemplate.org/) Template Engine
     * [lxml](http://lxml.de/) library
