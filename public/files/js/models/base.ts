@@ -210,23 +210,35 @@ export abstract class StatelessModel<T> implements IReducer<T> {
     }
 
     /**
-     * A helper function to create a shallow copy
+     * A helper function to create a shallow (except for
+     * Kontext.FormValue<T> values - see below) copy
      * of a provided state. It is expected that
      * all the values inside are immutable.
+     *
+     * The only value with a special treatment is
+     * Kontext.FormValue which is expected to be used
+     * a lot (basically any form value should be wrapped
+     * in Kontext.FormValue) and thus the method copies it
+     * in an immutable way to prevent messed state.
      */
     copyState(state:T):T {
-        if (Object.assign) {
-            return <T>Object.assign({}, state);
+        const ans:{[key:string]:any} = {};
+        for (let p in state) {
+            if (state.hasOwnProperty(p)) {
+                const v = state[p];
+                if (Kontext.isFormValue(v)) {
+                    ans[p] = {
+                        value: v.value,
+                        isRequired: v.isRequired,
+                        isInvalid: v.isInvalid
+                    };
 
-        } else {
-            const ans:{[key:string]:any} = {};
-            for (let p in state) {
-                if (state.hasOwnProperty(p)) {
-                    ans[p] = state[p];
+                } else {
+                    ans[p] = v;
                 }
             }
-            return <T>ans;
         }
+        return <T>ans;
     }
 }
 
