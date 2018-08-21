@@ -56,6 +56,8 @@ export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
                 return this.lindatViews.VallexJsonRenderer;
             case 'pdt-vallex-json':
                 return this.lindatViews.PDTVallexJsonRenderer;
+            case 'eng-vallex-json':
+                return this.lindatViews.EngVallexJsonRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }
