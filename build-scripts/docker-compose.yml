@@ -1,0 +1,15 @@
+version: '2'
+services:
+    kontext:
+        build: .
+        ports:
+            - "5000:5000"
+        volumes:
+            - .:/opt/kontext/installation/
+            - .:/opt/kontext/log/
+            - ../test-corpora:/opt/lindat/lindat-test-corpora
+            - ../test-corpora/registry:/opt/kontext/data/registry
+        links:
+            - redis
+    redis:
+        image: "redis:alpine"    

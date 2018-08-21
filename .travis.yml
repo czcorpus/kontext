@@ -8,16 +8,14 @@ python:
 env:
   global:
     - PORT=5000
-    - COMPLETE_BUILD=false
     - INTEGRATIONTEST=false
     - UNITTEST=false
-    - MANATEE_FROM_PACKAGES=false
   matrix:
-    - PYTHONPATH="/opt/kontext/lib/python2.7/site-packages:$PYTHONPATH" COMPLETE_BUILD=true INTEGRATIONTEST=true
+    - BUILDBACKEND=docker INTEGRATIONTEST=true
     - UNITTEST=true
 
 install:
-  - if [[ "x$COMPLETE_BUILD" == "xtrue" ]]; then ./build-scripts/setup.sh; fi
+  - if [[ "x$BUILDBACKEND" != "x" ]]; then ./build-scripts/setup.sh; fi
   - pip install -r dev-requirements.txt
 
 script:
