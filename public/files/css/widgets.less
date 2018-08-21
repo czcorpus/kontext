@@ -1104,3 +1104,51 @@ table.MLSingleLevelFields {
         }
     }
 }
+
+.CollForm {
+    margin-bottom: 2em;
+}
+
+table.CollMetricsSelection {
+    margin-left: 2em;
+    border-spacing: 0;
+    border-collapse: collapse;
+
+    td.display-chk,
+    td.sort-sel {
+        cursor: pointer;
+
+        input {
+            cursor: pointer;
+        }
+    }
+
+    tr:nth-child(1) th,
+    tr:nth-child(1) td, {
+        border: none;
+    }
+
+    tr:nth-child(1) th {
+        color: @color-light-text;
+    }
+
+    th, td {
+        border: 1px solid @color-light-text;
+        padding: 0.3em 1em 0.3em 0.6em;
+    }
+
+    tr:nth-child(2n) {
+        background-color: @table-even-bg;
+    }
+
+    tr.selected {
+        td.display-chk {
+            background-color: @color-green-bg-highlighted;
+        }
+    }
+
+    tr td.is-sort {
+        background-color: @color-logo-blue-shining;
+    }
+
+}

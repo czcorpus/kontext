@@ -382,7 +382,7 @@ export class CollResultModel extends StatefulModel {
         this.isWaiting = false;
         this.pageSize = pageSize;
         this.hasNextPage = true; // we do not know in advance in case of collocations
-        this.sortFn = resultHeading.length > 1 && resultHeading[1].s ? resultHeading[1].s : 'f'; // [0] = token column
+        this.sortFn = this.formModel.getState().csortfn;
         this.saveModel = new CollResultsSaveModel({
             dispatcher: dispatcher,
             layoutModel: layoutModel,
@@ -479,7 +479,7 @@ export class CollResultModel extends StatefulModel {
     }
 
     private getSubmitArgs():MultiDict {
-        const args = this.formModel.getSubmitArgs();
+        const args = this.formModel.getSubmitArgs(this.formModel.getState());
         args.set('format', 'json');
         args.set('collpage', this.currPage);
         args.set('csortfn', this.sortFn);
@@ -547,7 +547,7 @@ export class CollResultModel extends StatefulModel {
     }
 
     getCattr():string {
-        return this.formModel.getCattr();
+        return this.formModel.getState().cattr;
     }
 
     getSaveModel():CollResultsSaveModel {

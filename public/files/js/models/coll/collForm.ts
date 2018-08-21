@@ -20,8 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
-import {StatefulModel} from '../base';
+import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
@@ -46,119 +45,156 @@ export interface CollFormProps extends CollFormInputs {
     attrList:Array<Kontext.AttrItem>;
 }
 
+export interface CollFormModelState {
+    availCbgrfns:Immutable.OrderedMap<string, string>;
+    attrList:Immutable.List<Kontext.AttrItem>;
+    cattr:string;
+    cfromw:Kontext.FormValue<string>;
+    ctow:Kontext.FormValue<string>;
+    cminfreq:Kontext.FormValue<string>;
+    cminbgr:Kontext.FormValue<string>;
+    cbgrfns:Immutable.Set<string>;
+    csortfn:string;
+}
+
 /**
  *
  */
-export class CollFormModel extends StatefulModel {
+export class CollFormModel extends StatelessModel<CollFormModelState> {
 
     private pageModel:PageModel;
 
-    private attrList:Immutable.List<Kontext.AttrItem>;
-
-    private cattr:string;
-
-    private cfromw:Kontext.FormValue<string>;
-
-    private ctow:Kontext.FormValue<string>;
-
-    private cminfreq:Kontext.FormValue<string>;
-
-    private cminbgr:Kontext.FormValue<string>;
-
-    private cbgrfns:Immutable.Set<string>;
-
-    private csortfn:string;
-
-
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CollFormProps) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.cattr = props.cattr;
-        this.cfromw = {value: props.cfromw, isRequired: true, isInvalid: false};
-        this.ctow = {value: props.ctow, isRequired: true, isInvalid: false};
-        this.cminfreq = {value: props.cminfreq, isRequired: true, isInvalid: false};
-        this.cminbgr = {value: props.cminbgr, isRequired: true, isInvalid: false};
-        this.cbgrfns = Immutable.Set<string>(props.cbgrfns);
-        this.csortfn = props.csortfn;
-
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
-                case 'COLL_FORM_SET_CATTR':
-                    this.cattr = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SET_CFROMW':
-                    this.cfromw.value = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SET_CTOW':
-                    this.ctow.value = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SET_CMINFREQ':
-                    this.cminfreq.value = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SET_CMINBGR':
-                    this.cminbgr.value = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SET_CBGRFNS':
-                    if (this.cbgrfns.contains(payload.props['value'])) {
-                        this.cbgrfns = this.cbgrfns.remove(payload.props['value']);
-
-                    } else {
-                        this.cbgrfns = this.cbgrfns.add(payload.props['value']);
-                    }
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SET_CSORTFN':
-                    this.csortfn = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'COLL_FORM_SUBMIT':
-                    const err = this.validateForm();
-                    if (err) {
-                        this.pageModel.showMessage('error', err);
-                        this.notifyChangeListeners();
-
-                    } else {
-                        this.submit();
-                        // we leave the page here => no need to notify anybody
-                    }
-                break;
+        super(
+            dispatcher,
+            {
+                availCbgrfns: Immutable.OrderedMap<string, string>([
+                    ['t', 'T-score'],
+                    ['m', 'MI'],
+                    ['3', 'MI3'],
+                    ['l', 'log likelihood'],
+                    ['s', 'min. sensitivity'],
+                    ['d', 'logDice'],
+                    ['p', 'MI.log_f'],
+                    ['r', 'relative freq.']
+                ]),
+                attrList: Immutable.List<Kontext.AttrItem>(props.attrList),
+                cattr: props.cattr,
+                cfromw: {value: props.cfromw, isRequired: true, isInvalid: false},
+                ctow: {value: props.ctow, isRequired: true, isInvalid: false},
+                cminfreq: {value: props.cminfreq, isRequired: true, isInvalid: false},
+                cminbgr: {value: props.cminbgr, isRequired: true, isInvalid: false},
+                cbgrfns: Immutable.Set<string>(props.cbgrfns),
+                csortfn: props.csortfn
             }
-        });
+        );
+        this.pageModel = pageModel;
     }
 
-    private validateForm():Error|null {
-        if (this.validateNumber(this.cfromw.value)) {
-            this.cfromw.isInvalid = false;
+    reduce(state, action):CollFormModelState {
+        let newState:CollFormModelState;
+
+        switch (action.actionType) {
+            case 'COLL_FORM_SET_CATTR':
+                newState = this.copyState(state);
+                newState.cattr = action.props['value'];
+                return newState;
+            case 'COLL_FORM_SET_CFROMW':
+                newState = this.copyState(state);
+                newState.cfromw.value = action.props['value'];
+                return newState;
+            case 'COLL_FORM_SET_CTOW':
+                newState = this.copyState(state);
+                newState.ctow.value = action.props['value'];
+                return newState;
+            case 'COLL_FORM_SET_CMINFREQ':
+                newState = this.copyState(state);
+                newState.cminfreq.value = action.props['value'];
+                return newState;
+            case 'COLL_FORM_SET_CMINBGR':
+                newState = this.copyState(state);
+                newState.cminbgr.value = action.props['value'];
+                return newState;
+            case 'COLL_FORM_SET_CBGRFNS':
+                newState = this.copyState(state);
+                if (newState.cbgrfns.contains(action.props['value'])) {
+                    if (newState.csortfn === action.props['value']) {
+                        this.pageModel.showMessage(
+                            'error',
+                            this.pageModel.translate('coll__form_sort_col_must_be_displayed')
+                        );
+
+                    } else {
+                        newState.cbgrfns = newState.cbgrfns.remove(action.props['value']);
+                    }
+
+                } else {
+                    newState.cbgrfns = newState.cbgrfns.add(action.props['value']);
+                }
+                return newState;
+            case 'COLL_FORM_SET_CSORTFN':
+                newState = this.copyState(state);
+                newState.csortfn = action.props['value'];
+                if (!newState.cbgrfns.contains(newState.csortfn)) {
+                    newState.cbgrfns = newState.cbgrfns.add(newState.csortfn);
+                }
+                return newState;
+            case 'COLL_FORM_SUBMIT':
+                newState = this.copyState(state);
+                const err = this.validateForm(newState);
+                if (err) {
+                    this.pageModel.showMessage('error', err);
+                    return newState;
+
+                } else {
+                    this.submit(newState);
+                    // we leave the page here => no need to notify anybody
+                }
+            default:
+                return state;
+        }
+    }
+
+    private validateForm(state:CollFormModelState):Error|null {
+        if (this.validateNumber(state.cfromw.value)) {
+            state.cfromw.isInvalid = false;
 
         } else {
-            this.cfromw.isInvalid = true;
+            state.cfromw.isInvalid = true;
             return new Error(this.pageModel.translate('coll__invalid_number_value'));
         }
-        if (this.validateNumber(this.ctow.value)) {
-            this.ctow.isInvalid = false;
+
+        if (this.validateNumber(state.ctow.value)) {
+            state.ctow.isInvalid = false;
 
         } else {
-            this.ctow.isInvalid = true;;
+            state.ctow.isInvalid = true;
             return new Error(this.pageModel.translate('coll__invalid_number_value'));
         }
-        if (this.validateGzNumber(this.cminfreq.value)) {
-            this.cminfreq.isInvalid = false;
+
+        if (parseInt(state.cfromw.value) <= parseInt(state.ctow.value)) {
+            state.cfromw.isInvalid = false;
+            state.ctow.isInvalid = false;
 
         } else {
-            this.cminfreq.isInvalid = true;
+            state.cfromw.isInvalid = true;
+            state.ctow.isInvalid = true;
+            return new Error(this.pageModel.translate('coll__invalid_context_range'));
+        }
+
+        if (this.validateGzNumber(state.cminfreq.value)) {
+            state.cminfreq.isInvalid = false;
+
+        } else {
+            state.cminfreq.isInvalid = true;
             return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
         }
-        if (this.validateGzNumber(this.cminbgr.value)) {
-            this.cminbgr.isInvalid = false;
+
+        if (this.validateGzNumber(state.cminbgr.value)) {
+            state.cminbgr.isInvalid = false;
 
         } else {
-            this.cminbgr.isInvalid = true;
+            state.cminbgr.isInvalid = true;
             return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
         }
     }
@@ -171,64 +207,19 @@ export class CollFormModel extends StatefulModel {
         return !!/^([1-9]\d*)?$/.exec(s);
     }
 
-    getSubmitArgs():MultiDict {
+    getSubmitArgs(state:CollFormModelState):MultiDict {
         const args = this.pageModel.getConcArgs();
-        args.set('cattr', this.cattr);
-        args.set('cfromw', this.cfromw.value);
-        args.set('ctow', this.ctow.value);
-        args.set('cminfreq', this.cminfreq.value);
-        args.set('cminbgr', this.cminbgr.value);
-        args.replace('cbgrfns', this.cbgrfns.toArray());
-        args.set('csortfn', this.csortfn);
+        args.set('cattr', state.cattr);
+        args.set('cfromw', state.cfromw.value);
+        args.set('ctow', state.ctow.value);
+        args.set('cminfreq', state.cminfreq.value);
+        args.set('cminbgr', state.cminbgr.value);
+        args.replace('cbgrfns', state.cbgrfns.toArray());
+        args.set('csortfn', state.csortfn);
         return args;
     }
 
-    private submit():void {
-        window.location.href = this.pageModel.createActionUrl('collx', this.getSubmitArgs().items());
-    }
-
-    getAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.attrList;
-    }
-
-    getCattr():string {
-        return this.cattr;
-    }
-
-    getCfromw():Kontext.FormValue<string> {
-        return this.cfromw;
-    }
-
-    getCtow():Kontext.FormValue<string> {
-        return this.ctow;
-    }
-
-    getCminfreq():Kontext.FormValue<string> {
-        return this.cminfreq;
-    }
-
-    getCminbgr():Kontext.FormValue<string> {
-        return this.cminbgr;
-    }
-
-    getCbgrfns():Immutable.Set<string> {
-        return this.cbgrfns;
-    }
-
-    getCsortfn():string {
-        return this.csortfn;
-    }
-
-    getAvailCbgrfns():Immutable.OrderedMap<string, string> {
-        return Immutable.OrderedMap<string, string>([
-            ['t', 'T-score'],
-            ['m', 'MI'],
-            ['3', 'MI3'],
-            ['l', 'log likelihood'],
-            ['s', 'min. sensitivity'],
-            ['d', 'logDice'],
-            ['p', 'MI.log_f'],
-            ['r', 'relative freq.']
-        ]);
+    private submit(state:CollFormModelState):void {
+        window.location.href = this.pageModel.createActionUrl('collx', this.getSubmitArgs(state).items());
     }
 }
