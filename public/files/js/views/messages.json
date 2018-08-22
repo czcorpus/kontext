@@ -414,7 +414,7 @@
         "concview__click_to_see_external_token_info": "Click to see word details",
         "concview__text_types_ratios_head": "Occurrences within texts (i.p.m.)",
         "concview__using_min_freq": "min. frequency",
-        "concview__using_sample_{value}": "Due to a large concordance size, the overview is based on a random sample of size {value, plural, one{# position}, other{# positions}}",
+        "concview__using_sample_{value}": "Due to a large concordance size, the overview is based on a random sample of size {value, plural, one{# position} other{# positions}}",
         "concview__charts_units_are": "units",
         "concview__displaying_charts_up_to_{num_items}": "Displaying only charts with at most {num_items, plural, one{# item} other{# items}}",
         "concview__display_all_tt_charts": "display all",
