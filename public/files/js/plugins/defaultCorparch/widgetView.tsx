@@ -19,7 +19,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
@@ -248,17 +248,29 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         onItemClick:(v:number)=>void;
 
     }> = (props) => {
+
+        const handleKeyDown = (evt:React.KeyboardEvent) => {
+            if (evt.keyCode === KeyCodes.TAB) {
+                props.onItemClick(1 - props.activeTab);
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
+        };
+
         return (
             <div className="menu">
-                <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
-                        onClick={() => props.onItemClick(0)}>
-                    {util.translate('defaultCorparch__my_list')}
-                </a>
-                {'\u00a0|\u00a0'}
-                <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
-                        onClick={() => props.onItemClick(1)}>
-                    {util.translate('defaultCorparch__other_corpora')}
-                </a>
+                <span tabIndex={-1} ref={item => item ? item.focus() : null}
+                            onKeyDown={handleKeyDown}>
+                    <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
+                            onClick={() => props.onItemClick(0)}>
+                        {util.translate('defaultCorparch__my_list')}
+                    </a>
+                    {'\u00a0|\u00a0'}
+                    <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
+                            onClick={() => props.onItemClick(1)}>
+                        {util.translate('defaultCorparch__other_corpora')}
+                    </a>
+                </span>
             </div>
         );
     };
@@ -349,6 +361,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
      */
     const SearchInput:React.SFC<{
         value:string;
+        handleTab:()=>void;
 
     }> = (props) => {
 
@@ -363,24 +376,27 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleKeyDown = (evt) => {
             switch (evt.keyCode) {
-                case 40: // down arrow
-                case 38: // up arrow
+                case KeyCodes.DOWN_ARROW:
+                case KeyCodes.UP_ARROW:
                     dispatcher.dispatch({
                         actionType: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
                         props: {
-                            inc: evt.keyCode === 40 ? 1 : -1
+                            inc: evt.keyCode === KeyCodes.DOWN_ARROW ? 1 : -1
                         }
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case 13: // ENTER
+                case KeyCodes.ENTER:
                     dispatcher.dispatch({
                         actionType: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
                         props: {}
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
+                break;
+                case KeyCodes.TAB:
+                    props.handleTab();
                 break;
             }
         };
@@ -463,6 +479,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         currSearchPhrase:string;
         hasSelectedKeywords:boolean;
         focusedRowIdx:number;
+        handleTab:()=>void;
 
     }> = (props) => {
         return (
@@ -475,7 +492,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     </div>
                 </div>
                 <div className="autocomplete-wrapper">
-                    <SearchInput value={props.currSearchPhrase} />
+                    <SearchInput value={props.currSearchPhrase} handleTab={props.handleTab} />
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
                     {props.currSearchResult.size > 0 ?
                         (<div className="tt-menu">
@@ -494,13 +511,23 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
     const CorpusButton:React.SFC<{
         isWaitingToSwitch:boolean;
         corpusIdent:Kontext.FullCorpusIdent;
+        isWidgetVisible:boolean;
         onClick:()=>void;
 
     }> = (props) => {
+
+        const handleKeyDown = (evt:React.KeyboardEvent) => {
+            if (evt.keyCode === KeyCodes.ENTER || evt.keyCode === KeyCodes.ESC) {
+                props.onClick();
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
+        };
+
         return (
             <button type="button"
                     className={`util-button${props.isWaitingToSwitch ? ' waiting': ''}`}
-                    onClick={props.onClick}>
+                    onClick={props.onClick} onKeyDown={handleKeyDown}>
                 {props.isWaitingToSwitch ? <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> : null }
                 <span className="corpus-name" title={props.corpusIdent.name}>{props.corpusIdent.id}</span>
             </button>
@@ -550,25 +577,29 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
      */
     class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
 
+        private _buttonElm:HTMLButtonElement;
+
         constructor(props) {
             super(props);
             this.state = widgetModel.getState();
+            this._buttonElm = null;
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleOnShow = this._handleOnShow.bind(this);
             this._handleKeypress = this._handleKeypress.bind(this);
+            this._handleWidgetButtonClick = this._handleWidgetButtonClick.bind(this);
         }
 
         _handleKeypress(evt) {
             if (this.state.isVisible) {
                 switch (evt.keyCode) {
-                    case 9:
+                    case KeyCodes.TAB:
                         this._handleTabSwitch(1 - this.state.activeTab);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
-                    case 27:
+                    case KeyCodes.ESC:
                         this._handleCloseClick();
                         evt.preventDefault();
                         evt.stopPropagation();
@@ -591,6 +622,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             });
         }
 
+        _handleWidgetButtonClick() {
+            if (this.state.isVisible) {
+                this._handleCloseClick();
+
+            } else {
+                this._handleOnShow();
+            }
+        }
+
         _handleTabSwitch(v) {
             dispatcher.dispatch({
                 actionType: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
@@ -606,12 +646,10 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         componentDidMount() {
             widgetModel.addChangeListener(this._handleModelChange);
-            util.addGlobalKeyEventHandler(this._handleKeypress);
         }
 
         componentWillUnmount() {
             widgetModel.removeChangeListener(this._handleModelChange);
-            util.removeGlobalKeyEventHandler(this._handleKeypress);
         }
 
         _renderWidget() {
@@ -627,7 +665,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                                 currSearchResult={this.state.currSearchResult}
                                 currSearchPhrase={this.state.currSearchPhrase}
                                 hasSelectedKeywords={this.state.availSearchKeywords.find(x => x.selected) !== undefined}
-                                focusedRowIdx={this.state.focusedRowIdx} />
+                                focusedRowIdx={this.state.focusedRowIdx}
+                                handleTab={this._handleCloseClick} />
                     }
                     <div className="footer">
                         <span>
@@ -645,7 +684,9 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 <div className="CorplistWidget">
                     <div>
                         <CorpusButton isWaitingToSwitch={this.state.isBusy}
-                                corpusIdent={this.state.corpusIdent} onClick={this._handleOnShow} />
+                                corpusIdent={this.state.corpusIdent} onClick={this._handleWidgetButtonClick}
+                                isWidgetVisible={this.state.isVisible} />
+                        {this.state.isVisible ? this._renderWidget() : null}
                         {this.state.availableSubcorpora.size > 0 ?
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
@@ -660,7 +701,6 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                             null
                         }
                     </div>
-                    {this.state.isVisible ? this._renderWidget() : null}
                 </div>
             );
         }

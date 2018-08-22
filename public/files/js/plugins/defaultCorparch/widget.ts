@@ -213,6 +213,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 return newState;
             case 'DEFAULT_CORPARCH_WIDGET_HIDE':
                 newState = this.copyState(state);
+                newState.activeTab = 0;
                 newState.isVisible = false;
                 return newState;
             case 'DEFAULT_CORPARCH_SET_ACTIVE_TAB':

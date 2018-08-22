@@ -25,7 +25,7 @@ import {init as keyboardInit} from './keyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {GeneralQueryModel, QueryHintModel} from '../../models/query/main';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
@@ -742,15 +742,21 @@ export function init({
 
         _inputKeyHandler(evt) {
             if (this.props.widgets.indexOf('history') > -1 &&
-                    evt.keyCode === 40 && !this.state.historyVisible) {
+                    evt.keyCode === KeyCodes.DOWN_ARROW && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
                 evt.preventDefault();
 
-            } else if (evt.keyCode === 13 && !evt.shiftKey) {
+            } else if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 this.props.onEnterKey();
                 evt.stopPropagation();
                 evt.preventDefault();
+
+            } else if (evt.keyCode === KeyCodes.ESC) {
+                const firstButton = document.querySelector('.query-form button');
+                if (firstButton instanceof HTMLButtonElement) {
+                    firstButton.focus();
+                }
             }
         }
 
@@ -781,6 +787,9 @@ export function init({
 
         _attachInputElementRef(elm) {
             this._queryInputElement = elm;
+            if (elm) {
+                elm.focus();
+            }
         }
 
         _renderInput() {
