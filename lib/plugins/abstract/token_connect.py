@@ -144,6 +144,10 @@ class AbstractFrontend(object):
                 value = getattr(self, prop).get('en_US', '')
         return value
 
+    @property
+    def headings(self):
+        return self._headings
+
     def export_data(self, data, status, lang):
         return Response(contents='', renderer='', status=status,
                         heading=self._fetch_localized_prop('_headings', lang),

@@ -280,8 +280,8 @@ export class ConcDetailModel extends StatefulModel {
                     ).catch(
                         (err) => {
                             this.tokenConnectIsBusy = false;
-                            this.layoutModel.showMessage('error', err);
                             this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
 

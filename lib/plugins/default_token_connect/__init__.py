@@ -44,6 +44,7 @@ from l10n import import_string
 from actions import concordance
 from controller import exposed
 from plugins.default_token_connect.cache_man import CacheMan
+from plugins.default_token_connect.frontends import ErrorFrontend
 
 
 @exposed(return_type='json')
@@ -106,7 +107,10 @@ class DefaultTokenConnect(ProviderWrapper):
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
-                raise ex
+                err_frontend = ErrorFrontend(dict(heading=frontend.headings))
+                ans.append(err_frontend.export_data(
+                    dict(error=u'{0}'.format(ex)), False, lang).to_dict())
+
         word = self.fetch_attr(maincorp_obj, 'word', token_id)
         return word, ans
 

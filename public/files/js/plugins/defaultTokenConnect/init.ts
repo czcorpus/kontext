@@ -80,6 +80,8 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                 return this.views.DescriptionListRenderer;
             case 'datamuse-json':
                 return this.views.DataMuseSimilarWords;
+            case 'error':
+                return this.views.ErrorRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }
