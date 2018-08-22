@@ -35,7 +35,6 @@ interface TextTypesState {
     minFreq:number;
     isBusy:boolean;
     sampleSize:number;
-    blockedByAsyncConc:boolean;
     getMaxChartItems:number;
     isDisplayedBlocksSubset:boolean;
     shouldDisplayBlocksSubset:boolean;
@@ -153,7 +152,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                 isBusy: ttDistModel.getIsBusy(),
                 minFreq: ttDistModel.getMinFreq(),
                 sampleSize: ttDistModel.getSampleSize(),
-                blockedByAsyncConc: ttDistModel.getBlockedByAsyncConc(),
                 getMaxChartItems: ttDistModel.getMaxChartItems(),
                 isDisplayedBlocksSubset: ttDistModel.isDisplayedBlocksSubset(),
                 shouldDisplayBlocksSubset: ttDistModel.shouldDisplayBlocksSubset()
@@ -166,12 +164,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         componentDidMount() {
             ttDistModel.addChangeListener(this._handleModelChange);
-            if (!this.state.blockedByAsyncConc) {
-                dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-                    props: {}
-                });
-            }
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+                props: {}
+            });
+
         }
 
         componentWillUnmount() {

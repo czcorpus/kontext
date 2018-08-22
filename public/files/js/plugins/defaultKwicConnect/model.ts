@@ -68,6 +68,7 @@ export interface KwicConnectState {
     corpora:Immutable.List<string>;
     freqType:FreqDistType;
     data:Immutable.List<ProviderWordMatch>;
+    blockedByAsyncConc:boolean;
 }
 
 export enum Actions {
@@ -119,7 +120,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 visibleProviderIdx: 0,
                 data: Immutable.List<ProviderWordMatch>(),
                 corpora: Immutable.List<string>(corpora),
-                freqType: FreqDistType.LEMMA
+                freqType: FreqDistType.LEMMA,
+                blockedByAsyncConc: concLinesProvider.isUnfinishedCalculation()
             }
         );
         this.pluginApi = pluginApi;
@@ -130,30 +132,46 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     }
 
     reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
-        const newState = this.copyState(state);
+        let newState:KwicConnectState;
         switch (action.actionType) {
             case Actions.SET_VISIBLE_PROVIDER:
+                newState = this.copyState(state);
                 newState.visibleProviderIdx = action.props['value'];
-            break;
+                return newState
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
+                newState = this.copyState(state);
                 newState.data = Immutable.List<ProviderWordMatch>();
                 newState.isBusy = true;
-            break;
+                return newState;
             case Actions.FETCH_PARTIAL_INFO_DONE:
+                newState = this.copyState(state);
                 this.mergeDataOfProviders(newState, action.props['data']);
-            break;
+                return newState;
             case Actions.FETCH_INFO_DONE:
+                newState = this.copyState(state);
                 newState.isBusy = false;
                 newState.freqType = action.props['freqType'];
                 this.mergeDataOfProviders(newState, action.props['data']);
-            break;
+                return newState;
+            case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+                // Please note that this action breaks (de facto) the 'no side effect chain'
+                // rule (it is produced by async action of a StatefulModel and triggers a side
+                // effect here). But currently we have no solution to this.
+                newState = this.copyState(state);
+                newState.blockedByAsyncConc = action.props['isUnfinished'];
+                return newState;
+            default:
+                return state;
         }
-        return newState;
     }
 
     sideEffects(state:KwicConnectState, action:ActionPayload, dispatch:SEDispatcher) {
         switch (action.actionType) {
-            case PluginInterfaces.KwicConnect.Actions.FETCH_INFO: {
+            case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
+            case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED': {
+                if (state.blockedByAsyncConc) {
+                    return;
+                }
                 const freqType = this.selectFreqType();
                 this.fetchUniqValues(freqType).then(
                     (data) => {

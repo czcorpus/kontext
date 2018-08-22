@@ -307,8 +307,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     private origSubcorpName:string;
 
-    private mainCorp:string;
-
     private audioPlayer:AudioPlayer;
 
     private playerAttachedChunk:string;
@@ -358,7 +356,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         this.baseCorpname = lineViewProps.baseCorpname;
         this.subCorpName = lineViewProps.subCorpName;
         this.origSubcorpName = lineViewProps.origSubCorpName;
-        this.mainCorp = lineViewProps.mainCorp;
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;

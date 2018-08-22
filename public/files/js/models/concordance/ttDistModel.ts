@@ -154,7 +154,7 @@ export class TextTypesDistModel extends StatefulModel {
     }
 
     private performDataLoad():void {
-        if (this.getConcSize() > 0) {
+        if (!this.blockedByAsyncConc && this.getConcSize() > 0) {
             const args = this.layoutModel.getConcArgs();
             if (this.lastArgs !== args.getFirst('q')) {
                 this.isBusy = true;
@@ -277,9 +277,5 @@ export class TextTypesDistModel extends StatefulModel {
 
     getSampleSize():number {
         return this.sampleSize;
-    }
-
-    getBlockedByAsyncConc():boolean {
-        return this.blockedByAsyncConc;
     }
 }
