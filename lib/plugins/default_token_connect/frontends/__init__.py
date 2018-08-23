@@ -26,6 +26,18 @@ import json
 from plugins.abstract.token_connect import AbstractFrontend
 
 
+class ErrorFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super(ErrorFrontend, self).__init__(conf)
+
+    def export_data(self, data, status, lang):
+        response = super(ErrorFrontend, self).export_data(data, status, lang)
+        response.renderer = 'error'
+        response.contents = data
+        return response
+
+
 class RawHtmlFrontend(AbstractFrontend):
 
     def __init__(self, conf):
