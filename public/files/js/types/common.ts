@@ -1111,4 +1111,6 @@ export namespace KeyCodes {
     export const UP_ARROW = 38;
     export const LEFT_ARROW = 37;
     export const RIGHT_ARROW = 39;
+    export const BACKSPACE = 8;
+    export const DEL = 46;
 }
