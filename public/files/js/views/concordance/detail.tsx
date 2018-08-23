@@ -254,8 +254,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                             <div key={`resource:${i}`}>
                                 {v.heading ?
                                     <h2 className="inhouse">
-                                        [ {v.heading} <img src={he.createStaticUrl('img/book.svg')}
-                                                alt={he.translate('global__icon_book')} /> ]</h2> :
+                                        {v.heading} <img src={he.createStaticUrl('img/book.svg')}
+                                                alt={he.translate('global__icon_book')} /></h2> :
                                     null
                                 }
                                 <hr />
