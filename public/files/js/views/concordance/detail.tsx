@@ -252,7 +252,12 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                     {props.tokenConnectData.renders.map((v, i) => {
                         return (
                             <div key={`resource:${i}`}>
-                                {v.heading ? <h2 className="inhouse">[ {v.heading} {'\uD83D\uDCD6'}]</h2> : null}
+                                {v.heading ?
+                                    <h2 className="inhouse">
+                                        [ {v.heading} <img src={he.createStaticUrl('img/book.svg')}
+                                                alt={he.translate('global__icon_book')} /> ]</h2> :
+                                    null
+                                }
                                 <hr />
                                 <layoutViews.ErrorBoundary>
                                     <v.renderer data={v.contents} />
