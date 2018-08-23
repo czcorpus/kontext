@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -224,7 +224,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
             if (he.browserInfo.isFirefox()) {
                 this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
-                    if (evt.keyCode === 8 || evt.keyCode === 46) {  // 8: BACKSPACE, 46: DEL
+                    if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
                         const src = this.extractText(this.editorRoot);
                         const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                         const rawSrc = src.map(v => v[0]).join('');
@@ -233,17 +233,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             dispatcher.dispatch({
                                 actionType: 'CQL_EDITOR_SET_RAW_QUERY',
                                 props: {
-                                    query: evt.keyCode === 8 ?
+                                    query: evt.keyCode === KeyCodes.BACKSPACE ?
                                         rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                                         rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
                                     sourceId: this.props.sourceId,
-                                    rawAnchorIdx: evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
-                                    rawFocusIdx: evt.keyCode === 8 ? rawFocusIdx - 1 : rawFocusIdx
+                                    rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
+                                    rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
                                 }
                             });
                             this.reapplySelection(
-                                evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
-                                evt.keyCode === 8 ? rawFocusIdx - 1 : rawFocusIdx
+                                evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
+                                evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
                             );
 
                         } else if (rawAnchorIdx < rawFocusIdx) {
@@ -252,13 +252,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 props: {
                                     query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
                                     sourceId: this.props.sourceId,
-                                    rawAnchorIdx: evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx,
-                                    rawFocusIdx: evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx,
+                                    rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                                    rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
                                 }
                             });
                             this.reapplySelection(
-                                evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx,
-                                evt.keyCode === 8 ? rawAnchorIdx : rawAnchorIdx
+                                evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                                evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx
                             );
 
                         } else {
@@ -267,13 +267,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 props: {
                                     query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
                                     sourceId: this.props.sourceId,
-                                    rawAnchorIdx: evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx,
-                                    rawFocusIdx: evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx,
+                                    rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                                    rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
                                 }
                             });
                             this.reapplySelection(
-                                evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx,
-                                evt.keyCode === 8 ? rawFocusIdx : rawFocusIdx
+                                evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                                evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx
                             );
                         }
                         evt.preventDefault();

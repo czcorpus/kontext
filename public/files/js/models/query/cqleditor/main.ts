@@ -19,9 +19,8 @@
  */
 
 import {Kontext} from '../../../types/common';
-import {parse as parseQuery, SyntaxError, TracerItem} from 'cqlParser/parser';
-import * as Immutable from 'immutable';
-import {IAttrHelper, AttrHelper, NullAttrHelper} from './attrs';
+import {parse as parseQuery} from 'cqlParser/parser';
+import {IAttrHelper, NullAttrHelper} from './attrs';
 
 /**
  * CharsRule represents a pointer to the original
@@ -363,7 +362,7 @@ class ParserStack {
     private lastPos:number;
 
 
-    constructor(query:string, rcMap:RuleCharMap) {
+    constructor(rcMap:RuleCharMap) {
         this.stack = [];
         this.rcMap = rcMap;
         this.lastPos = 0;
@@ -402,16 +401,36 @@ class ParserStack {
     }
 }
 
-function escapeString(v:string):string {
+
+const escapeQuery = (v:string):string => {
     return v.replace('<', '&lt;').replace('>', '&gt;');
+};
+
+
+interface HSArgs {
+    query:string;
+    applyRules:Array<string>;
+    he:Kontext.ComponentHelpers;
+    ignoreErrors:boolean;
+    attrHelper:IAttrHelper;
+    parserRecoverIdx:number;
+    onHintChange:(message:string)=>void;
 }
 
 
-export function _highlightSyntax(query:string, applyRules:Array<string>, he:Kontext.ComponentHelpers, ignoreErrors:boolean,
-        attrHelper:IAttrHelper, onHintChange:(message:string)=>void):string {
+function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx, onHintChange}:HSArgs):string {
 
     const rcMap = new RuleCharMap(query, he, attrHelper, onHintChange);
-    const stack = new ParserStack(query, rcMap);
+    const stack = new ParserStack(rcMap);
+
+    const wrapUnrecognizedPart = (v:string, numParserRecover:number):string => {
+        const title = he.translate('query__unrecognized_input');
+        const style = 'text-decoration: underline dotted red';
+        if (numParserRecover === 0) {
+            return `<span title="${title}" style="${style}">` + escapeQuery(v) + '</span>';
+        }
+        return escapeQuery(v);
+    }
 
     try {
         parseQuery(query + (applyRules[0] === 'Query' ? ';' : ''), {
@@ -449,18 +468,20 @@ export function _highlightSyntax(query:string, applyRules:Array<string>, he:Kont
         // try to apply a partial rule to the rest of the query
         const srch = /^([^\s]+|)(\s+)(.+)$/.exec(query.substr(lastPos));
         if (srch !== null) {
-            const partial = _highlightSyntax(
-                srch[3],
-                srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
-                he,
-                true,
-                attrHelper,
-                onHintChange
-            );
-            return ans + escapeString(srch[1] + srch[2]) + partial;
+            const partial = _highlightSyntax({
+                query: srch[3],
+                applyRules: srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
+                he: he,
+                ignoreErrors: true,
+                attrHelper: attrHelper,
+                onHintChange: onHintChange,
+                parserRecoverIdx: parserRecoverIdx + 1
+            });
+
+            return ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx) + partial;
         }
     }
-    return ans + escapeString(query.substr(lastPos));
+    return ans + wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx);
 }
 
 function getApplyRules(queryType:string):Array<string> {
@@ -488,16 +509,25 @@ export function highlightSyntax(
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         onHintChange:(message:string)=>void):string {
-    return _highlightSyntax(
-        query,
-        getApplyRules(queryType),
-        he,
-        true,
-        attrHelper ? attrHelper : new NullAttrHelper(),
-        onHintChange ? onHintChange : _ => undefined
-    );
+    return _highlightSyntax({
+        query: query,
+        applyRules: getApplyRules(queryType),
+        he: he,
+        ignoreErrors: true,
+        attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
+        onHintChange: onHintChange ? onHintChange : _ => undefined,
+        parserRecoverIdx: 0
+    });
 }
 
 export function highlightSyntaxStrict(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
-    return _highlightSyntax(query, getApplyRules(queryType), he, false, new NullAttrHelper(), _ => undefined);
+    return _highlightSyntax({
+        query: query,
+        applyRules: getApplyRules(queryType),
+        he: he,
+        ignoreErrors: false,
+        attrHelper: new NullAttrHelper(),
+        onHintChange: _ => undefined,
+        parserRecoverIdx: 0
+    });
 }
