@@ -282,9 +282,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const KeyboardShortcuts:React.SFC<{}> = (props) => {
         return (
             <div className="KeyboardShortcuts">
+                <h1>{he.translate('global__keyboard_shortcuts')}</h1>
                 <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
                 <table>
                     <tbody>
+                        <tr>
+                            <th><span className="key-button">k</span> - </th>
+                            <td>{he.translate('global__key_shortcut_shortuts')}</td>
+                        </tr>
                         <tr>
                             <th><span className="key-button">s</span> - </th>
                             <td>{he.translate('global__key_shortcut_save')}</td>
@@ -302,8 +307,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             <td>{he.translate('global__key_shortcut_sample')}</td>
                         </tr>
                         <tr>
+                            <th><span className="key-button">v</span> - </th>
+                            <td>{he.translate('global__key_shortcut_options')}</td>
+                        </tr>
+                        <tr>
                             <th><span className="key-button">o</span> - </th>
                             <td>{he.translate('global__key_shortcut_options')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">g</span> - </th>
+                            <td>{he.translate('global__key_shortcut_global_options')}</td>
                         </tr>
                         <tr>
                             <th><span className="key-button">f</span> - </th>

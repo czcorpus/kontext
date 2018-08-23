@@ -493,7 +493,7 @@ class MenuGenerator(object):
 
         self.view_mode_switch = (
             EventTriggeringItem(MainMenu.VIEW('kwic-sent-switch'), te('KWIC/Sentence'),
-                                'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=75)  # key = 'k'
+                                'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=86)  # key = 'v'
         )
 
         self.view_structs_attrs = (
@@ -505,7 +505,7 @@ class MenuGenerator(object):
 
         self.view_global = (
             EventTriggeringItem(MainMenu.VIEW('global-options'), te('General view options'),
-                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS')
+                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS', key_code=71)  # key = 'g'
             .mark_indirect()
         )
 
@@ -521,7 +521,7 @@ class MenuGenerator(object):
 
         self.keyboard_shortcuts = (
             EventTriggeringItem(MainMenu.HELP('keyboard-shortcuts'), 'global__keyboard_shortcuts',
-                                'OVERVIEW_SHOW_KEY_SHORTCUTS')
+                                'OVERVIEW_SHOW_KEY_SHORTCUTS', key_code=75)  # key = 'k')
         )
 
         # -------------------------------------------------------------------------------
