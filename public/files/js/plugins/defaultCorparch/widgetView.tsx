@@ -46,6 +46,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
     const layoutViews = util.getLayoutViews();
 
+    // ----------------------- <FavStar /> --------------------------------------
+
     const FavStar:React.SFC<{
         ident:string;
         trashTTL:number;
@@ -77,11 +79,11 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // -------------------------- <TRFavoriteItem /> ----------------------------------
+
     const TRFavoriteItem:React.SFC<{
         data:FavListItem;
+        isActive:boolean;
 
     }> = (props) => {
 
@@ -94,8 +96,16 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             });
         };
 
+        const htmlClasses = ['data-item'];
+        if (props.isActive) {
+            htmlClasses.push('active');
+        }
+        if (props.data.trashTTL !== null) {
+            htmlClasses.push('in-trash')
+        }
+
         return (
-            <tr className={`data-item${props.data.trashTTL !== null ? ' in-trash' : null}`}>
+            <tr className={htmlClasses.join(' ')}>
                 <td>
                     <a className="corplist-item"
                             title={props.data.trashTTL === null ?
@@ -115,15 +125,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     }
 
-    /**
-     *
-     * @param {*} props
-     */
+    // -------------------------- <FavoritesBox /> ---------------------
+
     const FavoritesBox:React.SFC<{
         data:Immutable.List<FavListItem>;
         anonymousUser:boolean;
+        activeIdx:number;
 
     }> = (props) => {
+
         return (
             <table className="favorite-list">
                 <tbody>
@@ -138,18 +148,19 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                         <tr>
                             <td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td>
                         </tr> :
-                        props.data.map(item => <TRFavoriteItem key={item.id} data={item} />)
+                        props.data.map((item, i) =>
+                            <TRFavoriteItem key={item.id} data={item} isActive={i === props.activeIdx} />)
                     }
                 </tbody>
             </table>
         );
     };
 
-    /**
-     *
-     */
+    // --------------------------- <TRFeaturedItem /> --------------------------------
+
     const TRFeaturedItem:React.SFC<{
         data:CorplistItem;
+        isActive:boolean;
 
     }> = (props) => {
 
@@ -164,7 +175,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
 
         return (
-            <tr className="data-item">
+            <tr className={`data-item${props.isActive ? ' active' : ''}`}>
                 <td>
                     <a className="featured-item" title={props.data.description}
                             onClick={handleItemClick}>
@@ -178,11 +189,11 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // ---------------------------------- <FeaturedBox /> --------------------------------
+
     const FeaturedBox:React.SFC<{
         data:Immutable.List<CorplistItem>;
+        activeIdx:number;
 
     }> = (props) => {
         return (
@@ -193,15 +204,16 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                             {util.translate('defaultCorparch__featured_corpora')}
                         </th>
                     </tr>
-                    {props.data.map(item => <TRFeaturedItem key={item.id} data={item} />)}
+                    {props.data.map((item, i) =>
+                            <TRFeaturedItem key={item.id} data={item}
+                                    isActive={i === props.activeIdx} />)}
                 </tbody>
             </table>
         );
     }
 
-    /**
-     *
-     */
+    // ------------------------- <StarComponent /> ------------------------
+
     const StarComponent:React.SFC<{
         currFavitemId:string;
 
@@ -240,34 +252,31 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // --------------------------- <TabMenu /> ------------------------------
+
     const TabMenu:React.SFC<{
         activeTab:number;
         onItemClick:(v:number)=>void;
+        onEscKey:()=>void;
 
     }> = (props) => {
 
-        const handleKeyDown = (evt:React.KeyboardEvent) => {
-            if (evt.keyCode === KeyCodes.TAB) {
-                props.onItemClick(1 - props.activeTab);
-                evt.stopPropagation();
-                evt.preventDefault();
-            }
+        const clickHandler = (tabIdx:number) => (evt:React.MouseEvent) => {
+            props.onItemClick(tabIdx);
+            evt.stopPropagation();
+            evt.preventDefault();
         };
 
         return (
             <div className="menu">
-                <span tabIndex={-1} ref={item => item ? item.focus() : null}
-                            onKeyDown={handleKeyDown}>
+                <span>
                     <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
-                            onClick={() => props.onItemClick(0)}>
+                            onClick={clickHandler(0)}>
                         {util.translate('defaultCorparch__my_list')}
                     </a>
                     {'\u00a0|\u00a0'}
                     <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
-                            onClick={() => props.onItemClick(1)}>
+                            onClick={clickHandler(1)}>
                         {util.translate('defaultCorparch__other_corpora')}
                     </a>
                 </span>
@@ -275,27 +284,62 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**CorplistItem
-     *
-     */
+    // ----------------------------- <ListsTab /> -------------------------------
+
     const ListsTab:React.SFC<{
         dataFav:Immutable.List<FavListItem>;
         dataFeat:Immutable.List<CorplistItem>;
         anonymousUser:boolean;
+        activeListItem:[number, number];
 
     }> = (props) => {
+
+        const handleKeyDown = (evt:React.KeyboardEvent) => {
+            const argMap = {
+                [KeyCodes.DOWN_ARROW]: [0, 1],
+                [KeyCodes.UP_ARROW]: [0, -1],
+                [KeyCodes.LEFT_ARROW]: [-1, 0],
+                [KeyCodes.RIGHT_ARROW]: [1, 0]
+            };
+            switch (evt.keyCode) {
+                case KeyCodes.DOWN_ARROW:
+                case KeyCodes.UP_ARROW:
+                case KeyCodes.LEFT_ARROW:
+                case KeyCodes.RIGHT_ARROW:
+                    dispatcher.dispatch({
+                        actionType: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
+                        props: {
+                            change: argMap[evt.keyCode]
+                        }
+                    });
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                break;
+                case KeyCodes.ENTER:
+                    dispatcher.dispatch({
+                        actionType: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
+                        props: {}
+                    });
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                break;
+            }
+        };
+
         return (
-            <div className="tables">
+            <div className="tables" onKeyDown={handleKeyDown}
+                    tabIndex={-1} ref={item => item ? item.focus() : null}>
                 <FavoritesBox data={props.dataFav}
-                            anonymousUser={props.anonymousUser} />
-                <FeaturedBox data={props.dataFeat} />
+                        anonymousUser={props.anonymousUser}
+                        activeIdx={props.activeListItem[0] === 0 ? props.activeListItem[1] : null} />
+                <FeaturedBox data={props.dataFeat}
+                        activeIdx={props.activeListItem[0] === 1 ? props.activeListItem[1] : null} />
             </div>
         );
     };
 
-    /**
-     *
-     */
+    // -------------------------- <SearchKeyword /> ---------------------
+
     const SearchKeyword:React.SFC<{
         key:string;
         id:string;
@@ -334,10 +378,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
+   // ----------------------------- <ResetKeyword /> ----------------------------------
+
     const ResetKeyword:React.SFC<{}> = (props) => {
 
         const handleClick = (evt) => {
@@ -356,9 +398,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // ------------------------- <SearchInput /> ---------------------------------------
+
     const SearchInput:React.SFC<{
         value:string;
         handleTab:()=>void;
@@ -375,6 +416,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         };
 
         const handleKeyDown = (evt) => {
+
             switch (evt.keyCode) {
                 case KeyCodes.DOWN_ARROW:
                 case KeyCodes.UP_ARROW:
@@ -409,9 +451,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     ref={item => item ? item.focus() : null} />;
     };
 
-    /**
-     *
-     */
+    // ------------------------- <SearchResultRow /> ------------------------
+
     const SearchResultRow:React.SFC<{
         data:SearchResultRow;
         hasFocus:boolean;
@@ -449,9 +490,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // ---------------------------- <SearchLoaderBar /> --------------------------
+
     const SearchLoaderBar:React.SFC<{
         isActive:boolean;
 
@@ -469,9 +509,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         }
     };
 
-    /**
-     *
-     */
+    // ---------------------------- <SearchTab /> -----------------------------------
+
     const SearchTab:React.SFC<{
         availSearchKeywords:Immutable.List<SearchKeyword>;
         isWaitingForSearchResults:boolean;
@@ -505,9 +544,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // ----------------------------- <CorpusButton /> --------------------------
+
     const CorpusButton:React.SFC<{
         isWaitingToSwitch:boolean;
         corpusIdent:Kontext.FullCorpusIdent;
@@ -534,9 +572,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         );
     };
 
-    /**
-     *
-     */
+    // ------------------------------- <SubcorpSelection /> -----------------------------
+
     const SubcorpSelection:React.SFC<{
         currSubcorpus:string;
         origSubcorpName:string;
@@ -572,23 +609,20 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         )
     };
 
-    /**
-     *
-     */
-    class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
+    // ------------------------- <CorplistWidget /> -------------------------------
 
-        private _buttonElm:HTMLButtonElement;
+    class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
 
         constructor(props) {
             super(props);
             this.state = widgetModel.getState();
-            this._buttonElm = null;
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleOnShow = this._handleOnShow.bind(this);
             this._handleKeypress = this._handleKeypress.bind(this);
             this._handleWidgetButtonClick = this._handleWidgetButtonClick.bind(this);
+            this._handleAreaClick = this._handleAreaClick.bind(this);
         }
 
         _handleKeypress(evt) {
@@ -640,6 +674,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             });
         }
 
+        _handleAreaClick() {
+            dispatcher.dispatch({
+                actionType: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+                props: {
+                    value: this.state.activeTab
+                }
+            });
+        }
+
         _handleModelChange(state:CorplistWidgetModelState) {
             this.setState(state);
         }
@@ -655,11 +698,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         _renderWidget() {
             return (
                 <layoutViews.PopupBox customClass="corplist-widget"
-                        onCloseClick={this._handleCloseClick}>
-                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.state.activeTab} />
+                        onCloseClick={this._handleCloseClick}
+                        onAreaClick={this._handleAreaClick}
+                        keyPressHandler={this._handleKeypress}>
+                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.state.activeTab}
+                                onEscKey={this._handleCloseClick} />
                     {this.state.activeTab === 0 ?
                         <ListsTab dataFav={this.state.dataFav} dataFeat={this.state.dataFeat}
-                                anonymousUser={this.state.anonymousUser} /> :
+                                anonymousUser={this.state.anonymousUser}
+                                activeListItem={this.state.activeListItem} /> :
                         <SearchTab availSearchKeywords={this.state.availSearchKeywords}
                                 isWaitingForSearchResults={this.state.isWaitingForSearchResults}
                                 currSearchResult={this.state.currSearchResult}

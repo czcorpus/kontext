@@ -65,6 +65,12 @@ export namespace CoreViews {
              */
             onCloseClick:()=>void;
 
+            /**
+             * An optional handler triggered in case user clicks anywhere
+             * within PopupBox. This can be used e.g. to regain focus.
+             */
+            onAreaClick?:()=>void;
+
             status?:string;
 
             /**

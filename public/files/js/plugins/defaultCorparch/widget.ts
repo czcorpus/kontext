@@ -114,6 +114,7 @@ export interface CorpusSwitchPreserved {
 export interface CorplistWidgetModelState {
     isVisible:boolean;
     activeTab:number;
+    activeListItem:[number, number];
     corpusIdent:Kontext.FullCorpusIdent;
     dataFav:Immutable.List<FavListItem>;
     dataFeat:Immutable.List<common.CorplistItem>;
@@ -174,6 +175,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         super(dispatcher, {
             isVisible: false,
             activeTab: 0,
+            activeListItem: [null, null],
             corpusIdent: corpusIdent,
             currentSubcorp: corpSelection.getCurrentSubcorpus(),
             origSubcorpName: corpSelection.getCurrentSubcorpusOrigName(),
@@ -399,6 +401,26 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 } else {
                     return state;
                 }
+            case 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM':
+                newState = this.copyState(state);
+                const [colInc, rowInc] = action.props['change'];
+                const [col, row] = newState.activeListItem;
+                if (col === null || row === null) {
+                    newState.activeListItem = [0, 0];
+
+                } else {
+                    const newCol = Math.abs((col + colInc) % 2);
+                    const rotationLen = newCol === 0 ? newState.dataFav.size : newState.dataFeat.size;
+                    newState.activeListItem = [
+                        newCol,
+                        colInc !== 0 ? 0 : (row + rowInc) >= 0 ? Math.abs((row + rowInc) % rotationLen) : rotationLen - 1
+                    ];
+                }
+                return newState;
+            case 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM':
+                newState = this.copyState(state);
+                newState.isBusy = false;
+                return newState;
             default:
                 return state;
         }
@@ -406,6 +428,42 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     sideEffects(state:CorplistWidgetModelState, action:ActionPayload, dispatch:SEDispatcher) {
         switch (action.actionType) {
+            case 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM':
+                if (state.activeListItem[0] === 0) {
+                    this.handleFavItemClick(state, state.dataFav.get(state.activeListItem[1]).id).then(
+                        (_) => {
+                            dispatch({
+                                actionType: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
+                                props: {}
+                            });
+                        },
+                        (err) => {
+                            dispatch({
+                                actionType: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
+                                props: {}
+                            });
+                            this.pluginApi.showMessage('error', err);
+                        }
+                    );
+
+                } else {
+                    this.handleFeatItemClick(state, state.dataFeat.get(state.activeListItem[1]).id).then(
+                        () => {
+                            dispatch({
+                                actionType: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
+                                props: {}
+                            });
+                        },
+                        (err) => {
+                            dispatch({
+                                actionType: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
+                                props: {}
+                            });
+                            this.pluginApi.showMessage('error', err);
+                        }
+                    );
+                }
+            break;
             case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
                 this.handleFavItemClick(state, action.props['itemId']).then(
                     (_) => {
