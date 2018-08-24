@@ -30,6 +30,11 @@ section.corplist {
         display: inline-block;
         vertical-align: middle;
         margin-left: 0.7em;
+
+        img {
+            display: inline-block;
+            vertical-align: middle;
+        }
     }
 
     div.autocomplete-wrapper {
@@ -84,7 +89,7 @@ section.corplist {
     padding: 0.3em 1em 0.3em 1em;
 
     .tt-suggestion.focus a {
-        background-color: @color-green-bg-highlighted;
+        background-color: @color-whitelike-blue;
     }
 
     .tt-suggestion {
@@ -312,11 +317,24 @@ section.corplist {
         tr.data-item.in-trash a {
             color: @color-superlight-text;
         }
+
+        tr.active {
+            background-color: @color-whitelike-blue;
+        }
     }
 
     table.featured-list {
         margin-left: @corplist-widget-table-spacing;
         margin-right: 1em;
+
+        tr.active {
+            background-color: @color-whitelike-blue;
+        }
+    }
+
+    div.tables:focus {
+        border: none;
+        outline: none;
     }
 
     div.tables > table tr {

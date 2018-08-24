@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, ViewOptions} from '../types/common';
+import {Kontext, KeyCodes} from '../types/common';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -95,7 +95,7 @@ export function init(
         }
 
         _keyPressHandler(evt) {
-            if (evt.keyCode === 27 && typeof this.props.onCloseKey === 'function') {
+            if (evt.keyCode === KeyCodes.ESC && typeof this.props.onCloseKey === 'function') {
                 this.props.onCloseKey();
             }
         }
@@ -230,8 +230,6 @@ export function init(
             if (typeof this.props.keyPressHandler === 'function') {
                 this.props.keyPressHandler(evt);
             }
-            evt.preventDefault();
-            evt.stopPropagation();
         }
 
         _renderCloseButton() {
@@ -255,7 +253,9 @@ export function init(
             }
 
             return (
-                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}>
+                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}
+                        onClick={this.props.onAreaClick ? this.props.onAreaClick : null}
+                        onKeyDown={this._handleKeyPress}>
                     <div className="header">
                         {this._renderCloseButton()}
                         <StatusIcon status={this.props.status} />
@@ -425,6 +425,7 @@ export function init(
         }
     }
 
+    // ------------------------------ <Abbreviation /> -----------------------------------
 
     class Abbreviation extends React.Component<CoreViews.Abbreviation.Props, {helpVisible:boolean}> {
 
