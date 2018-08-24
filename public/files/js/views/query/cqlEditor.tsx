@@ -292,7 +292,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             onInput={(evt) => this.handleInputChange()}
                             onClick={this.handleEditorClick}
                             className="cql-input"
-                            style={{width: '100%', height: '5em'}}
+                            style={{width: '100%', minWidth: '40em', height: '5em'}}
                             ref={(item) => this.refFn(item)}
                             dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
                             onKeyDown={this.props.inputKeyHandler} />;

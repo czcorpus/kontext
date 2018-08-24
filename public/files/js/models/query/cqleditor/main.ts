@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../../../types/common';
-import {parse as parseQuery} from 'cqlParser/parser';
+import {parse as parseQuery, SyntaxError} from 'cqlParser/parser';
 import {IAttrHelper, NullAttrHelper} from './attrs';
 
 /**
@@ -403,7 +403,7 @@ class ParserStack {
 
 
 const escapeQuery = (v:string):string => {
-    return v.replace('<', '&lt;').replace('>', '&gt;');
+    return v.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 };
 
 
@@ -423,15 +423,22 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
     const rcMap = new RuleCharMap(query, he, attrHelper, onHintChange);
     const stack = new ParserStack(rcMap);
 
-    const wrapUnrecognizedPart = (v:string, numParserRecover:number):string => {
-        const title = he.translate('query__unrecognized_input');
-        const style = 'text-decoration: underline dotted red';
-        if (numParserRecover === 0) {
-            return `<span title="${title}" style="${style}">` + escapeQuery(v) + '</span>';
+    const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
+        if (numParserRecover === 0 && error) {
+            const title = he.translate(
+                'query__unrecognized_input_{wrongChar}{position}',
+                {
+                    wrongChar: error.found,
+                    position: error.location.start.column
+                }
+            );
+            const style = 'text-decoration: underline dotted red';
+            return `<span title="${escapeQuery(title)}" style="${style}">` + escapeQuery(v) + '</span>';
         }
         return escapeQuery(v);
     }
 
+    let parseError:SyntaxError = null;
     try {
         parseQuery(query + (applyRules[0] === 'Query' ? ';' : ''), {
             startRule: applyRules[0],
@@ -453,6 +460,7 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
         });
 
     } catch (e) {
+        parseError = e;
         if (!ignoreErrors) {
             throw e;
         }
@@ -478,10 +486,10 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
                 parserRecoverIdx: parserRecoverIdx + 1
             });
 
-            return ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx) + partial;
+            return ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial;
         }
     }
-    return ans + wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx);
+    return ans + wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError);
 }
 
 function getApplyRules(queryType:string):Array<string> {
