@@ -440,8 +440,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             this.setState({collapse: !this.state.collapse});
         }
 
-        _textHandler(id) {
-            return this.state.collapse ? "Show details for " + {id} : "Hide details";
+        _textHandler(props) {
+            return this.state.collapse ? `Show details for ${props.verbTargetList[0]}` : "Hide details";
         }
 
         _getStateDisplay() {
@@ -451,7 +451,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler(this.props.verbTargetList[0][0])}
+                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler(this.props)}
                     </a>
                     <div className="vallexTargetBlock" style={this._getStateDisplay()}>
                     <div className="vallexTargetV">{this.props.verbTargetName}
