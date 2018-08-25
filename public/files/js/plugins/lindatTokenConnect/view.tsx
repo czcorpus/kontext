@@ -451,7 +451,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler(this.props.verbTargetList[0])}
+                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler(this.props.verbTargetList[0][0])}
                     </a>
                     <div className="vallexTargetBlock" style={this._getStateDisplay()}>
                     <div className="vallexTargetV">{this.props.verbTargetName}
