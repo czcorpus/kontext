@@ -214,6 +214,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         return (
             <div>
                 <div className="vallexSourceV">{props.verb}
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.verb + '#' + props.id} target="_blank">{props.verb}</a>
                     {props.info[0].map((listValue, i) => {
                         if (listValue.length !== 0) {
                             return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
