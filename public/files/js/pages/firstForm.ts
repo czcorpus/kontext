@@ -191,8 +191,7 @@ export class FirstFormPage {
             tagHelperView: null,
             queryStorageView: null,
             allowCorpusSelection: null,
-            actionPrefix: null,
-            onEnterKey: null
+            actionPrefix: null
         };
     }
 

@@ -245,8 +245,7 @@ class FreqPage {
                     queryStorageView: null,
                     liveAttrsView: null,
                     liveAttrsCustomTT: null,
-                    attributes: [],
-                    onEnterKey:()=>undefined
+                    attributes: []
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
