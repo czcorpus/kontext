@@ -326,7 +326,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
                                 actionPrefix={this.props.actionPrefix}
                                 onEnterKey={this._handleSubmit}
-                                useCQLEditor={this.state.useCQLEditor} />
+                                useCQLEditor={this.state.useCQLEditor}
+                                takeFocus={true} />
                         </tbody>
                     </table>
                     {this.state.supportsParallelCorpora ?

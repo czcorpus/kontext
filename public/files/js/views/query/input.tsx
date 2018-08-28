@@ -66,6 +66,7 @@ export interface TRQueryInputFieldProps {
     matchCaseValue:boolean;
     tagsetDocUrl:string;
     onEnterKey:()=>void;
+    takeFocus?:boolean;
 }
 
 
@@ -772,6 +773,9 @@ export function init({
 
         componentDidMount() {
             cqlEditorModel.addChangeListener(this._handleModelChange);
+            if (this.props.takeFocus) {
+                this._queryInputElement.current.focus();
+            }
         }
 
         componentWillUnmount() {

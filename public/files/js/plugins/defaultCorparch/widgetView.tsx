@@ -439,6 +439,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 break;
                 case KeyCodes.TAB:
                     props.handleTab();
+                    evt.stopPropagation();
                 break;
             }
         };
