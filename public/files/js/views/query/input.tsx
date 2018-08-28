@@ -773,7 +773,7 @@ export function init({
 
         componentDidMount() {
             cqlEditorModel.addChangeListener(this._handleModelChange);
-            if (this.props.takeFocus) {
+            if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
@@ -783,7 +783,8 @@ export function init({
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (prevState.historyVisible && !this.state.historyVisible) {
+            if (prevState.historyVisible && !this.state.historyVisible &&
+                    this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
