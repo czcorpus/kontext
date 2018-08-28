@@ -378,6 +378,7 @@ export class ConcDetailModel extends StatefulModel {
                     );
                 break;
                 case 'CONCORDANCE_RESET_DETAIL':
+                case 'CONCORDANCE_SHOW_REF_DETAIL':
                     this.resetKwicDetail();
                     this.resetTokenConnect();
                     this.notifyChangeListeners();
@@ -830,6 +831,9 @@ export class RefsDetailModel extends StatefulModel {
                     );
                 break;
                 case 'CONCORDANCE_REF_RESET_DETAIL':
+                case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
+                case 'CONCORDANCE_SHOW_KWIC_DETAIL':
+                case 'CONCORDANCE_SHOW_TOKEN_DETAIL':
                     if (this.lineIdx !== null) {
                         this.linesModel.setLineFocus(this.lineIdx, false);
                         this.lineIdx = null;
