@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as initView, Views as DefaultTokenConnectRenderers} from './view';
 import RSVP from 'rsvp';
@@ -45,10 +44,11 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
     }
 
-    fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<PluginInterfaces.TokenConnect.TCData> {
+    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):RSVP.Promise<PluginInterfaces.TokenConnect.TCData> {
         const args = new MultiDict();
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
+        args.set('num_tokens', numTokens);
         args.replace('align', this.alignedCorpora.toArray());
         return this.pluginApi.ajax<PluginInterfaces.TokenConnect.Response>(
             'GET',
