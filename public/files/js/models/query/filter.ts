@@ -28,7 +28,7 @@ import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/attrValues';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
-import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery} from './main';
+import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery, WidgetsMap} from './main';
 
 
 /**
@@ -56,11 +56,6 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     hasLemma:Array<[string, boolean]>;
     tagsetDoc:Array<[string, string]>;
 }
-
-/**
- *
- */
-export type FilterWidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
 /**
  *import {GeneralViewOptionsModel} from '../options/general';
@@ -166,6 +161,7 @@ export class FilterModel extends GeneralQueryModel {
         this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDoc);
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
+        this.supportedWidgets = this.determineSupportedWidgets();
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -447,7 +443,7 @@ export class FilterModel extends GeneralQueryModel {
         return this.withinArgs;
     }
 
-    getSupportedWidgets():FilterWidgetsMap {
+    private determineSupportedWidgets():WidgetsMap {
         const getWidgets = (filterId:string):Array<string> => {
             switch (this.queryTypes.get(filterId)) {
                 case 'iquery':

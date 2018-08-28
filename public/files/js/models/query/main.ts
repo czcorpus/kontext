@@ -24,7 +24,6 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import * as Rx from '@reactivex/rxjs';
 import {SynchronizedModel, StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -160,6 +159,9 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
 
     private widgetArgs:Kontext.GeneralProps;
 
+    protected supportedWidgets:Immutable.Map<string, Immutable.List<string>>;
+
+
     // -------
 
 
@@ -213,6 +215,10 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
     abstract getQueryTypes():Immutable.Map<string, string>;
 
     /// ---------
+
+    getSupportedWidgets():WidgetsMap {
+        return this.supportedWidgets;
+    }
 
     getWidgetArgs():Kontext.GeneralProps {
         return this.widgetArgs;
@@ -389,6 +395,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
         this.currentAction = 'first_form';
+        this.supportedWidgets = this.determineSupportedWidgets();
 
         this.dispatcher.register(payload => {
             switch (payload.actionType) {
@@ -606,6 +613,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
             if (!this.defaultAttrValues.has(corpname)) {
                 this.defaultAttrValues = this.defaultAttrValues.set(corpname, 'word');
             }
+            this.supportedWidgets = this.determineSupportedWidgets();
 
         } else {
             // TODO error
@@ -703,6 +711,25 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         return args;
     }
 
+    private determineSupportedWidgets():WidgetsMap {
+        const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
+        const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
+            const ans = ['keyboard'];
+            if (!userIsAnonymous()) {
+                ans.push('history');
+            }
+            if (queryType === 'cql') {
+                ans.push('within');
+                if (this.tagBuilderSupport.get(corpname)) {
+                    ans.push('tag');
+                }
+            }
+            return ans;
+        }
+        return Immutable.Map<string, Immutable.List<string>>(this.corpora.map(corpname =>
+                [corpname, Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))]));
+    }
+
     submitQuery():void {
         const args = this.createSubmitArgs().items();
         const url = this.pageModel.createActionUrl('first', args);
@@ -751,27 +778,6 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
     supportsParallelCorpora():boolean {
         return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
-    }
-
-    getSupportedWidgets():WidgetsMap {
-        const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
-        const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
-            const ans = ['keyboard'];
-            if (!userIsAnonymous()) {
-                ans.push('history');
-            }
-            if (queryType === 'cql') {
-                ans.push('within');
-                if (this.tagBuilderSupport.get(corpname)) {
-                    ans.push('tag');
-                }
-            }
-            return ans;
-        }
-        const ans = Immutable.Map<string, Immutable.List<string>>();
-        return Immutable.Map<string, Immutable.List<string>>(this.corpora.map(corpname => {
-            return [corpname, Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))];
-        }));
     }
 
     getPcqPosNegValues():Immutable.Map<string, string> {

@@ -71,8 +71,18 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         withinBuilderModel, virtualKeyboardModel, cqlEditorModel}:AlignedModuleArgs):AlignedViews {
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
-
-    const AlignedCorpBlock:React.SFC<{
+    /*
+     TODO, important note: I had to define this component as stateful
+     even if it has no state to prevent problems with React production
+     build where React always re-render this component (even if props
+     were the same, incl. object references). This has been causing
+     loss of input/select/etc. focus when interacting with form elements
+     inside this component. And this almost "formal" change helped.
+     Maybe it's a React bug. It would be nice to isolate the error
+     but the logic behind query form is already quite complicated so
+     it would take same time.
+     */
+    class AlignedCorpBlock extends React.Component<{
         corpname:string;
         label:string;
         pcqPosNegValue:string;
@@ -92,71 +102,79 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
 
-    }> = (props) => {
+    }, {}> {
 
-        const handleCloseClick = () => {
+        constructor(props) {
+            super(props);
+            this.handleCloseClick = this.handleCloseClick.bind(this);
+            this.handleMakeMainClick = this.handleMakeMainClick.bind(this);
+        }
+
+        handleCloseClick() {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
                 props: {
-                    corpname: props.corpname
+                    corpname: this.props.corpname
                 }
             });
-        };
+        }
 
-        const handleMakeMainClick = () => {
+        handleMakeMainClick() {
             dispatcher.dispatch({
                 actionType: 'QUERY_MAKE_CORPUS_PRIMARY',
                  props: {
-                    corpname: props.corpname
+                    corpname: this.props.corpname
                 }
             });
-        };
+        }
 
-        return (
-            <div className="AlignedCorpBlock">
-                <div className="heading">
-                    <a className="make-primary" title={he.translate('query__make_corpus_primary')}
-                            onClick={handleMakeMainClick}>
-                        <img src={he.createStaticUrl('img/make-main.svg')}
-                            alt={he.translate('query__make_corpus_primary')} />
-                    </a>
-                    <h3>{props.label}</h3>
-                    <a className="close-button" title={he.translate('query__remove_corpus')}
-                            onClick={handleCloseClick}>
-                        <img src={he.createStaticUrl('img/close-icon.svg')}
-                                alt={he.translate('query__close_icon')} />
-                    </a>
-                </div>
-                <table className="form">
-                    <tbody>
-                        <inputViews.TRPcqPosNegField sourceId={props.corpname}
-                                value={props.pcqPosNegValue} actionPrefix="" />
-                        <inputViews.TRQueryTypeField queryType={props.queryType}
-                                sourceId={props.corpname}
+        render() {
+            return (
+                <div className="AlignedCorpBlock">
+                    <div className="heading">
+                        <a className="make-primary" title={he.translate('query__make_corpus_primary')}
+                                >
+                            <img src={he.createStaticUrl('img/make-main.svg')}
+                                alt={he.translate('query__make_corpus_primary')} />
+                        </a>
+                        <h3>{this.props.label}</h3>
+                        <a className="close-button" title={he.translate('query__remove_corpus')}
+                                >
+                            <img src={he.createStaticUrl('img/close-icon.svg')}
+                                    alt={he.translate('query__close_icon')} />
+                        </a>
+                    </div>
+                    <table className="form">
+                        <tbody>
+                            <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
+                                    value={this.props.pcqPosNegValue} actionPrefix="" />
+                            <inputViews.TRQueryTypeField queryType={this.props.queryType}
+                                    sourceId={this.props.corpname}
+                                    actionPrefix=""
+                                    hasLemmaAttr={this.props.hasLemmaAttr} />
+                            <inputViews.TRQueryInputField
+                                sourceId={this.props.corpname}
+                                queryType={this.props.queryType}
+                                widgets={this.props.widgets}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValue}
+                                matchCaseValue={this.props.matchCaseValue}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttr}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocUrl}
+                                inputLanguage={this.props.inputLanguage}
+                                queryStorageView={this.props.queryStorageView}
                                 actionPrefix=""
-                                hasLemmaAttr={props.hasLemmaAttr} />
-                        <inputViews.TRQueryInputField
-                            sourceId={props.corpname}
-                            queryType={props.queryType}
-                            widgets={props.widgets}
-                            wPoSList={props.wPoSList}
-                            lposValue={props.lposValue}
-                            matchCaseValue={props.matchCaseValue}
-                            forcedAttr={props.forcedAttr}
-                            defaultAttr={props.defaultAttr}
-                            attrList={props.attrList}
-                            tagsetDocUrl={props.tagsetDocUrl}
-                            inputLanguage={props.inputLanguage}
-                            queryStorageView={props.queryStorageView}
-                            actionPrefix=""
-                            useCQLEditor={props.useCQLEditor}
-                            onEnterKey={props.onEnterKey}
-                            tagHelperView={props.tagHelperView} />
-                    </tbody>
-                </table>
-            </div>
-        );
-    };
+                                useCQLEditor={this.props.useCQLEditor}
+                                onEnterKey={this.props.onEnterKey}
+                                tagHelperView={this.props.tagHelperView} />
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+    }
 
     // ------------------ <AlignedCorpora /> -----------------------------
 
@@ -196,28 +214,27 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                             })}
                     </select>
                 </div>
-                {props.alignedCorpora.map(item => {
-                    return <AlignedCorpBlock
-                            key={item}
-                            label={findCorpusLabel(item)}
-                            corpname={item}
-                            queryType={props.queryTypes.get(item)}
-                            widgets={props.supportedWidgets.get(item)}
-                            wPoSList={props.wPoSList}
-                            lposValue={props.lposValues.get(item)}
-                            matchCaseValue={props.matchCaseValues.get(item)}
-                            forcedAttr={props.forcedAttr}
-                            defaultAttr={props.defaultAttrValues.get(item)}
-                            attrList={props.attrList}
-                            tagsetDocUrl={props.tagsetDocUrls.get(item)}
-                            tagHelperView={props.tagHelperView}
-                            pcqPosNegValue={props.pcqPosNegValues.get(item)}
-                            inputLanguage={props.inputLanguages.get(item)}
-                            queryStorageView={props.queryStorageView}
-                            hasLemmaAttr={props.hasLemmaAttr.get(item)}
-                            useCQLEditor={props.useCQLEditor}
-                            onEnterKey={props.onEnterKey} />;
-                })}
+                {props.alignedCorpora.map(item => <AlignedCorpBlock
+                        key={item}
+                        label={findCorpusLabel(item)}
+                        corpname={item}
+                        queryType={props.queryTypes.get(item)}
+                        widgets={props.supportedWidgets.get(item)}
+                        wPoSList={props.wPoSList}
+                        lposValue={props.lposValues.get(item)}
+                        matchCaseValue={props.matchCaseValues.get(item)}
+                        forcedAttr={props.forcedAttr}
+                        defaultAttr={props.defaultAttrValues.get(item)}
+                        attrList={props.attrList}
+                        tagsetDocUrl={props.tagsetDocUrls.get(item)}
+                        tagHelperView={props.tagHelperView}
+                        pcqPosNegValue={props.pcqPosNegValues.get(item)}
+                        inputLanguage={props.inputLanguages.get(item)}
+                        queryStorageView={props.queryStorageView}
+                        hasLemmaAttr={props.hasLemmaAttr.get(item)}
+                        useCQLEditor={props.useCQLEditor}
+                        onEnterKey={props.onEnterKey} />
+                )}
             </fieldset>
         );
     };

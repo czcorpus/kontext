@@ -59,7 +59,6 @@ export interface QueryFormProps {
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
     attributes:any; // TODO type once text types JSX->TSX
-    onEnterKey:()=>void;
 }
 
 
@@ -349,7 +348,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 hasLemmaAttr={this.state.hasLemmaAttr}
                                 useCQLEditor={this.state.useCQLEditor}
                                 tagHelperView={this.props.tagHelperView}
-                                onEnterKey={this.props.onEnterKey} />
+                                onEnterKey={this._handleSubmit} />
                         : null
                     }
                     <fieldset id="specify-context">

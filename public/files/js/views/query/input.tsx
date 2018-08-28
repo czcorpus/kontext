@@ -704,16 +704,15 @@ export function init({
 
     class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
 
-        private _queryInputElement:HTMLInputElement;
+        private _queryInputElement:React.RefObject<HTMLInputElement>;
 
         constructor(props) {
             super(props);
-            this._queryInputElement = null;
+            this._queryInputElement = React.createRef();
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
-            this._attachInputElementRef = this._attachInputElementRef.bind(this);
             this._inputChangeHandler = this._inputChangeHandler.bind(this);
             this.state = {
                 query: queryModel.getQuery(this.props.sourceId),
@@ -753,6 +752,7 @@ export function init({
                 evt.preventDefault();
 
             } else if (evt.keyCode === KeyCodes.ESC) {
+                // TODO - use a React way
                 const firstButton = document.querySelector('.query-form button');
                 if (firstButton instanceof HTMLButtonElement) {
                     firstButton.focus();
@@ -779,16 +779,8 @@ export function init({
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (this._queryInputElement
-                    && prevState.historyVisible && !this.state.historyVisible) {
-                this._queryInputElement.focus();
-            }
-        }
-
-        _attachInputElementRef(elm) {
-            this._queryInputElement = elm;
-            if (elm) {
-                elm.focus();
+            if (prevState.historyVisible && !this.state.historyVisible) {
+                this._queryInputElement.current.focus();
             }
         }
 
@@ -801,7 +793,7 @@ export function init({
                 case 'char':
                     return <input className="simple-input" type="text"
                                 spellCheck={false}
-                                ref={this._attachInputElementRef}
+                                ref={this._queryInputElement}
                                 onChange={this._handleInputChange}
                                 value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
@@ -809,12 +801,10 @@ export function init({
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
-                                attachCurrInputElement={this._attachInputElementRef}
                                 inputKeyHandler={this._inputKeyHandler}
                                 inputChangeHandler={this._inputChangeHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
                             sourceId={this.props.sourceId}
-                            attachCurrInputElement={this._attachInputElementRef}
                             inputKeyHandler={this._inputKeyHandler}
                             inputChangeHandler={this._handleInputChange} />;
             }

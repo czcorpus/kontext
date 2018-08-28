@@ -27,7 +27,6 @@ import {GeneralQueryModel} from '../../models/query/main';
 
 export interface CQLEditorProps {
     sourceId:string;
-    attachCurrInputElement:(elm:HTMLElement)=>void;
     inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
@@ -46,10 +45,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class CQLEditorFallback extends React.PureComponent<CQLEditorProps, {query:string}> {
 
+        private _queryInputElement:React.RefObject<HTMLTextAreaElement>;
+
         constructor(props) {
             super(props);
             this.state = {query: ''};
             this.handleModelChange = this.handleModelChange.bind(this);
+            this._queryInputElement = React.createRef();
         }
 
         private handleModelChange() {
@@ -66,7 +68,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
-                                ref={item => this.props.attachCurrInputElement(item)}
+                                ref={this._queryInputElement}
                                 value={this.state.query}
                                 onKeyDown={this.props.inputKeyHandler}
                                 onChange={this.props.inputChangeHandler}
@@ -80,12 +82,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private editorRoot:Node;
 
+        private _queryInputElement:React.RefObject<HTMLPreElement>;
+
         constructor(props:CQLEditorProps) {
             super(props);
             this.editorRoot = null;
             this.state = editorModel.getState();
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
+            this._queryInputElement = React.createRef();
         }
 
         private handleModelChange(state:CQLEditorModelState) {
@@ -208,11 +213,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
-        private refFn(item) {
-            this.props.attachCurrInputElement(item);
-            this.editorRoot = item;
-        }
-
         componentDidUpdate(prevProps, prevState) {
             if (this.state.rawAnchorIdx !== null && this.state.rawFocusIdx !== null) {
                 this.reapplySelection(this.state.rawAnchorIdx, this.state.rawFocusIdx);
@@ -220,6 +220,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
+            this.editorRoot = this._queryInputElement.current;
             editorModel.addChangeListener(this.handleModelChange);
 
             if (he.browserInfo.isFirefox()) {
@@ -293,7 +294,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             onClick={this.handleEditorClick}
                             className="cql-input"
                             style={{width: '100%', minWidth: '40em', height: '5em'}}
-                            ref={(item) => this.refFn(item)}
+                            ref={this._queryInputElement}
                             dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
                             onKeyDown={this.props.inputKeyHandler} />;
         }
