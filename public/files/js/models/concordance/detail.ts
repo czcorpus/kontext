@@ -240,13 +240,20 @@ export class ConcDetailModel extends StatefulModel {
                             this.linesModel.setLineFocus(payload.props['lineIdx'], true);
                             this.linesModel.notifyChangeListeners();
                             this.notifyChangeListeners();
-
-                            return this.loadTokenConnect(
-                                payload.props['corpusId'],
-                                payload.props['tokenNumber'],
-                                payload.props['lineIdx']
-                            );
                         }
+                    ).catch(
+                        (err) => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+
+                    this.loadTokenConnect(
+                        payload.props['corpusId'],
+                        payload.props['tokenNumber'],
+                        payload.props['kwicLength'],
+                        payload.props['lineIdx']
 
                     ).then(
                         () => {
@@ -255,7 +262,6 @@ export class ConcDetailModel extends StatefulModel {
                         }
                     ).catch(
                         (err) => {
-                            this.isBusy = false;
                             this.tokenConnectIsBusy = false;
                             this.notifyChangeListeners();
                             this.layoutModel.showMessage('error', err);
@@ -269,6 +275,7 @@ export class ConcDetailModel extends StatefulModel {
                     this.loadTokenConnect(
                         payload.props['corpusId'],
                         payload.props['tokenNumber'],
+                        1,
                         payload.props['lineIdx']
 
                     ).then(
@@ -631,10 +638,10 @@ export class ConcDetailModel extends StatefulModel {
         return this.loadSpeechDetail(this.corpusId, this.kwicTokenNum, this.kwicLength, this.lineIdx);
     }
 
-    private loadTokenConnect(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<boolean> {
+    private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number, lineIdx:number):RSVP.Promise<boolean> {
         return (() => {
             if (this.tokenConnectPlg) {
-                return this.tokenConnectPlg.fetchTokenConnect(corpusId, tokenNum);
+                return this.tokenConnectPlg.fetchTokenConnect(corpusId, tokenNum, numTokens);
 
             } else {
                 return RSVP.resolve<PluginInterfaces.TokenConnect.TCData>(null);

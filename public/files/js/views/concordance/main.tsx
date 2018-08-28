@@ -701,7 +701,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         }
                     });
 
-                } else if (kwicLength === -1) {
+                } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
                     dispatcher.dispatch({
                         actionType: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
                         props: {
