@@ -171,11 +171,15 @@ export function init(
 
         private resize:(ref:HTMLElement)=>void;
 
+        private closeBtnRef:React.RefObject<HTMLButtonElement>;
+
         constructor(props) {
             super(props);
             this._handleKeyPress = this._handleKeyPress.bind(this);
             this._closeClickHandler = this._closeClickHandler.bind(this);
             this._windowResizeHandler = this._windowResizeHandler.bind(this);
+            this._handleAreaClick = this._handleAreaClick.bind(this);
+            this.closeBtnRef = React.createRef();
 
             this.customCss = {};
             this._createStyle();
@@ -199,6 +203,9 @@ export function init(
         }
 
         componentDidMount() {
+            if (this.props.takeFocus) {
+                this.closeBtnRef.current.focus();
+            }
             if (this.props.onReady) {
                 this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
             }
@@ -232,18 +239,11 @@ export function init(
             }
         }
 
-        _renderCloseButton() {
-             if (this.props.takeFocus) {
-                return <button className="close-link"
-                            onClick={this._closeClickHandler}
-                            onKeyDown={this._handleKeyPress}
-                            ref={item => item ? item.focus() : null} />;
-
-             } else {
-                 return <button type="button" className="close-link"
-                            onClick={this._closeClickHandler}
-                            onKeyDown={this._handleKeyPress} />;
-             }
+        _handleAreaClick():void {
+            this.closeBtnRef.current.focus();
+            if (this.props.onAreaClick) {
+                this.props.onAreaClick();
+            }
         }
 
         render() {
@@ -254,10 +254,14 @@ export function init(
 
             return (
                 <div className={classes.join(' ')} style={this.customCss} ref={this.resize}
-                        onClick={this.props.onAreaClick ? this.props.onAreaClick : null}
+                        onClick={this._handleAreaClick}
                         onKeyDown={this._handleKeyPress}>
                     <div className="header">
-                        {this._renderCloseButton()}
+                        <button type="button" className="close-link"
+                                onClick={this._closeClickHandler}
+                                onKeyDown={this._handleKeyPress}
+                                ref={this.closeBtnRef}
+                                title={he.translate('global__click_or_esc_to_close')} />
                         <StatusIcon status={this.props.status} />
                     </div>
                     {this.props.children}
