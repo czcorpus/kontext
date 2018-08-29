@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, List, Tuple, ClassVar
+from typing import Dict, Any, List, Tuple, ClassVar, Iterable
 
 from plugins.abstract import CorpusDependentPlugin
 import kontext
@@ -38,7 +38,19 @@ class Response(object):
 
 class AbstractBackend(object):
 
+    _cache_path:str
+
+    provider_id:str
+
     def fetch_data(self, corpora:List[str], lang:str, query_args:Dict[str, basestring]) -> Tuple[Any, bool]: ...
+
+    def set_cache_path(self, path:str): ...
+
+    def get_cache_path(self) -> str: ...
+
+    def enabled_for_corpora(self, corpora:Iterable[str]) -> bool: ...
+
+    def get_required_posattrs(self) -> List[str]: ...
 
 
 class AbstractFrontend(object):
@@ -49,6 +61,8 @@ class AbstractFrontend(object):
     def _fetch_localized_prop(self, prop:str, lang:str) -> unicode: ...
 
     def export_data(self, data:Any, status:bool, lang:str) -> Response: ...
+
+    def get_heading(self, lang:str) -> unicode: ...
 
 
 class AbstractTokenConnect(CorpusDependentPlugin):

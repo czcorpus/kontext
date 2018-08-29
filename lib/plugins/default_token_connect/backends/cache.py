@@ -49,7 +49,7 @@ def cached(f):
         """
         cache_path = self.get_cache_path()
         if cache_path:
-            key = mk_token_connect_cache_key(self.get_provider_id(), corpora, lang, query_args)
+            key = mk_token_connect_cache_key(self.provider_id, corpora, lang, query_args)
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()
             res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
@@ -61,7 +61,7 @@ def cached(f):
                 if res:
                     zipped = buffer(zlib.compress(res[0].encode('utf-8')))
                     curs.execute("INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
-                                 (key, self.get_provider_id(), zipped, 1 if res[1] else 0, int(round(time.time()))))
+                                 (key, self.provider_id, zipped, 1 if res[1] else 0, int(round(time.time()))))
             else:
                 logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for args {1}'.format(
                     key[:6], query_args))

@@ -45,8 +45,12 @@ export interface ProviderOutputResponse {
     }>;
 }
 
-interface AjaxResponse extends Kontext.AjaxResponse {
+interface AjaxResponseFetchData extends Kontext.AjaxResponse {
     data:Array<ProviderOutputResponse>;
+}
+
+interface AjaxResponseListProviders extends Kontext.AjaxResponse {
+    providers:Array<{id:string, label:string}>;
 }
 
 export interface ProviderOutput {
@@ -177,24 +181,45 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     (data) => {
                         const procData = this.makeStringGroups(data.slice(0, this.maxKwicWords),
                                 this.loadChunkSize);
-                        return procData.reduce(
-                            (prev, curr) => {
-                                return prev.then(
-                                    (data) => {
-                                        if (data !== null) {
-                                            dispatch({
-                                                actionType: Actions.FETCH_PARTIAL_INFO_DONE,
-                                                props: {
-                                                    data: data
-                                                }
-                                            });
+                        if (procData.length > 0) {
+                            return procData.reduce(
+                                (prev, curr) => {
+                                    return prev.then(
+                                        (data) => {
+                                            if (data !== null) {
+                                                dispatch({
+                                                    actionType: Actions.FETCH_PARTIAL_INFO_DONE,
+                                                    props: {
+                                                        data: data
+                                                    }
+                                                });
+                                            }
+                                            return this.fetchKwicInfo(state, curr);
                                         }
-                                        return this.fetchKwicInfo(state, curr);
-                                    }
-                                );
-                            },
-                            RSVP.Promise.resolve(Immutable.List<ProviderWordMatch>())
-                        );
+                                    );
+                                },
+                                RSVP.Promise.resolve(Immutable.List<ProviderWordMatch>())
+                            );
+
+                        } else {
+                            return this.pluginApi.ajax<AjaxResponseListProviders>(
+                                'GET',
+                                'get_corpus_kc_providers',
+                                {corpname: state.corpora.get(0)}
+
+                            ).then(
+                                (data) => {
+                                    return Immutable.List<ProviderWordMatch>(data.providers.map(p => {
+                                        return {
+                                            heading: p.label,
+                                            note: null,
+                                            renderer: null,
+                                            data: Immutable.List<ProviderOutput>()
+                                        };
+                                    }));
+                                }
+                            );
+                        }
                     }
                 ).then(
                     (data) => {
@@ -279,7 +304,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         args.set('corpname', state.corpora.get(0));
         args.replace('align', state.corpora.slice(1).toArray());
         items.slice(0, 10).forEach(v => args.add('w', v));
-        return this.pluginApi.ajax<AjaxResponse>(
+        return this.pluginApi.ajax<AjaxResponseFetchData>(
             'GET',
             this.pluginApi.createActionUrl('fetch_external_kwic_info'),
             args
@@ -308,7 +333,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         const args = this.pluginApi.getConcArgs();
         args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
-        args.set('flimit', 10);
+        args.set('flimit', this.concLinesProvider.getRecommOverviewMinFreq());
         args.set('freq_sort', 'freq');
         args.set('pagesize', 10);
         args.set('format', 'json');
