@@ -115,7 +115,7 @@ class DefaultTokenConnect(ProviderWrapper):
                 ans.append(err_frontend.export_data(
                     dict(error=u'{0}'.format(ex)), False, lang).to_dict())
 
-        word = self.fetch_attr(maincorp_obj, 'word', token_id, num_tokens   )
+        word = self.fetch_attr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans
 
     def is_enabled_for(self, plugin_api, corpname):
