@@ -70,4 +70,5 @@ export class Line {
 export interface IConcLinesProvider {
     getLines():Immutable.List<Line>;
     isUnfinishedCalculation():boolean;
+    getRecommOverviewMinFreq():number;
 }

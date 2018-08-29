@@ -80,6 +80,15 @@ def fetch_external_kwic_info(self, request):
     return dict(data=ans)
 
 
+@exposed(return_type='json')
+def get_corpus_kc_providers(self, _):
+    with plugins.runtime.CORPARCH as ca, plugins.runtime.KWIC_CONNECT as kc:
+        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        mp = kc.map_providers(corpus_info.kwic_connect.providers)
+        return dict(corpname=self.corp.corpname,
+                    providers=[dict(id=b.provider_id, label=f.get_heading(self.ui_lang)) for b, f in mp])
+
+
 class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
 
     def __init__(self, providers, corparch, max_kwic_words, load_chunk_size):
@@ -96,7 +105,7 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
         return dict(max_kwic_words=self._max_kwic_words, load_chunk_size=self._load_chunk_size)
 
     def export_actions(self):
-        return {concordance.Actions: [fetch_external_kwic_info]}
+        return {concordance.Actions: [fetch_external_kwic_info, get_corpus_kc_providers]}
 
     def fetch_data(self, provider_ids, corpora, lang, lemma):
         ans = []

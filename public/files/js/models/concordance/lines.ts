@@ -858,5 +858,16 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
     getIsBusy():boolean {
         return this.isBusy;
     }
+
+    // TODO pick a good heuristics here
+    getRecommOverviewMinFreq():number {
+        if (this.concSummary.concSize > 10000) {
+            return 100;
+
+        } else if (this.concSummary.concSize > 1000) {
+            return 10;
+        }
+        return 1;
+    }
 }
 

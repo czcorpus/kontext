@@ -25,6 +25,8 @@ from .abstract.chart_export import AbstractChartExportPlugin
 from .abstract.issue_reporting import AbstractIssueReporting
 from .abstract.dispatch_hook import AbstractDispatchHook
 from ..kontext import PluginApi
+from .abstract.token_connect import AbstractTokenConnect
+from .abstract.kwic_connect import AbstractKwicConnect
 
 T = TypeVar('T')
 
@@ -82,6 +84,8 @@ class _Names(object):
     CHART_EXPORT:_ID[AbstractChartExportPlugin]
     ISSUE_REPORTING: _ID[AbstractIssueReporting]
     DISPATCH_HOOK: _ID[AbstractDispatchHook]
+    TOKEN_CONNECT: _ID[AbstractTokenConnect]
+    KWIC_CONNECT: _ID[AbstractKwicConnect]
 
     def __iter__(self) -> Iterator[_ID]: ...
 

@@ -89,20 +89,26 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
         renderWidget() {
             const providerOutput = this.state.data.get(this.state.visibleProviderIdx);
             if (providerOutput) {
-                return (
-                    <div className="KwicConnectWidget">
-                        <ProviderSwitch visibleIdx={0} providers={this.state.data.map(p => p.heading)} />
-                        <div>
-                            {providerOutput.data.map((item, j) =>
+                return <div className="KwicConnectWidget">
+                    <ProviderSwitch visibleIdx={0} providers={this.state.data.map(p => p.heading)} />
+                    <div>
+                        {providerOutput.data.size > 0 ?
+                            <>
+                                {providerOutput.data.map((item, j) =>
                                 <providerOutput.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
-                            <p className="note">
-                                {providerOutput.note ? providerOutput.note + '\u00a0|\u00a0' : null}
-                                {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
-                                    {attr: this.state.freqType})}
+                                <p className="note">
+                                    {providerOutput.note ? providerOutput.note + '\u00a0|\u00a0' : null}
+                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
+                                        {attr: this.state.freqType})}
+                                </p>
+                            </> :
+                            <p className="data-not-avail">
+                                <img src={he.createStaticUrl('img/info-icon.svg')} />
+                                {he.translate('global__no_data_avail')}
                             </p>
-                        </div>
+                            }
                     </div>
-                );
+                </div>;
 
             } else {
                 return null;

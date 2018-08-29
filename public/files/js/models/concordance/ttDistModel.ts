@@ -178,16 +178,6 @@ export class TextTypesDistModel extends StatefulModel {
         return this.concLineModel.getConcSummary().concSize;
     }
 
-    private calcMinFreq():number {
-        if (this.getConcSize() > 1000) {
-            return 100;
-
-        } else if (this.getConcSize() > 100) {
-            return 10;
-        }
-        return 1;
-    }
-
     private loadData(args:MultiDict):RSVP.Promise<boolean> {
 
         return (() => {
@@ -208,7 +198,7 @@ export class TextTypesDistModel extends StatefulModel {
             (reduceAns:Response.Reduce) => {
                 const args = this.layoutModel.getConcArgs();
                 this.ttCrit.forEach(v => args.add(v[0], v[1]));
-                this.flimit = this.calcMinFreq();
+                this.flimit = this.concLineModel.getRecommOverviewMinFreq();
                 args.set('ml', 0);
                 args.set('flimit', this.flimit);
                 args.set('force_cache', '1');

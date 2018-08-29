@@ -85,6 +85,10 @@ class AbstractBackend(object):
         self._cache_path = None
         self._provider_id = provider_id
 
+    @property
+    def provider_id(self):
+        return self._provider_id
+
     def fetch_data(self, corpora, lang, query_args):
         raise NotImplementedError()
 
@@ -93,9 +97,6 @@ class AbstractBackend(object):
 
     def get_cache_path(self):
         return self._cache_path
-
-    def get_provider_id(self):
-        return self._provider_id
 
     def enabled_for_corpora(self, corpora):
         """
@@ -147,6 +148,9 @@ class AbstractFrontend(object):
     @property
     def headings(self):
         return self._headings
+
+    def get_heading(self, lang):
+        return self._fetch_localized_prop('_headings', lang)
 
     def export_data(self, data, status, lang):
         return Response(contents='', renderer='', status=status,
