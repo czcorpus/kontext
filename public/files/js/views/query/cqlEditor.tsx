@@ -27,6 +27,7 @@ import {GeneralQueryModel} from '../../models/query/main';
 
 export interface CQLEditorProps {
     sourceId:string;
+    takeFocus:boolean;
     inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
@@ -60,6 +61,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidMount() {
             queryModel.addChangeListener(this.handleModelChange);
+            if (this.props.takeFocus && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
         }
 
         componentWillUnmount() {
@@ -80,13 +84,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class CQLEditor extends React.Component<CQLEditorProps, CQLEditorModelState> {
 
-        private editorRoot:Node;
-
         private _queryInputElement:React.RefObject<HTMLPreElement>;
 
         constructor(props:CQLEditorProps) {
             super(props);
-            this.editorRoot = null;
             this.state = editorModel.getState();
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
@@ -115,9 +116,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
             const sel = window.getSelection();
-            const src = this.extractText(this.editorRoot);
-            let anchorNode = this.editorRoot;
-            let focusNode = this.editorRoot;
+            const src = this.extractText(this._queryInputElement.current);
+            let anchorNode = this._queryInputElement.current;
+            let focusNode = this._queryInputElement.current;
             let currIdx = 0;
             let anchorIdx = 0;
             let focusIdx = 0;
@@ -126,11 +127,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const nodeStartIdx = currIdx;
                 const nodeEndIdx = nodeStartIdx + text.length;
                 if (nodeStartIdx <= rawAnchorIdx && rawAnchorIdx <= nodeEndIdx) {
-                    anchorNode = node;
+                    anchorNode = node as HTMLPreElement;
                     anchorIdx = rawAnchorIdx - nodeStartIdx;
                 }
                 if (nodeStartIdx <= rawFocusIdx && rawFocusIdx <= nodeEndIdx) {
-                    focusNode = node;
+                    focusNode = node as HTMLPreElement;
                     focusIdx = rawFocusIdx - nodeStartIdx;
                 }
                 currIdx += text.length;
@@ -157,7 +158,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleInputChange() {
-            const src = this.extractText(this.editorRoot);
+            const src = this.extractText(this._queryInputElement.current);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
 
             dispatcher.dispatch({
@@ -173,7 +174,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
             let curr = elm;
-            while (curr !== this.editorRoot) {
+            while (curr !== this._queryInputElement.current) {
                 if (curr.nodeName === 'A') {
                     return curr;
                 }
@@ -235,13 +236,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            this.editorRoot = this._queryInputElement.current;
             editorModel.addChangeListener(this.handleModelChange);
+            if (this.props.takeFocus && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
 
             if (he.browserInfo.isFirefox()) {
-                this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
+                this._queryInputElement.current.addEventListener('keydown', (evt:KeyboardEvent) => {
                     if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
-                        const src = this.extractText(this.editorRoot);
+                        const src = this.extractText(this._queryInputElement.current);
                         const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                         const rawSrc = src.map(v => v[0]).join('');
 
