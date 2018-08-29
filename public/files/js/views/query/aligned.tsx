@@ -133,13 +133,13 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                 <div className="AlignedCorpBlock">
                     <div className="heading">
                         <a className="make-primary" title={he.translate('query__make_corpus_primary')}
-                                >
+                                onClick={this.handleMakeMainClick}>
                             <img src={he.createStaticUrl('img/make-main.svg')}
                                 alt={he.translate('query__make_corpus_primary')} />
                         </a>
                         <h3>{this.props.label}</h3>
                         <a className="close-button" title={he.translate('query__remove_corpus')}
-                                >
+                                onClick={this.handleCloseClick}>
                             <img src={he.createStaticUrl('img/close-icon.svg')}
                                     alt={he.translate('query__close_icon')} />
                         </a>
