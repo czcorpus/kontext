@@ -78,7 +78,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.PureComponent<CQLEditorProps, CQLEditorModelState> {
+    class CQLEditor extends React.Component<CQLEditorProps, CQLEditorModelState> {
 
         private editorRoot:Node;
 
@@ -213,9 +213,24 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
+        shouldComponentUpdate(nextProps, nextState) {
+            return this.state.rawAnchorIdx.get(this.props.sourceId) !== nextState.rawAnchorIdx.get(this.props.sourceId) ||
+                    this.state.rawFocusIdx.get(this.props.sourceId) !== nextState.rawFocusIdx.get(this.props.sourceId) ||
+                    this.state.rawCode.get(this.props.sourceId) !== nextState.rawCode.get(this.props.sourceId) ||
+                    this.state.richCode.get(this.props.sourceId) !== nextState.richCode.get(this.props.sourceId) ||
+                    // we want non-strict comparison below because message map is initialized as empty
+                    // but even  editor interaction without generated message writes a [corp]=>null which
+                    // changes the object
+                    this.state.message.get(this.props.sourceId) != nextState.message.get(this.props.sourceId) ||
+                    this.state.isEnabled !== nextState.isEnabled;
+        }
+
         componentDidUpdate(prevProps, prevState) {
             if (this.state.rawAnchorIdx !== null && this.state.rawFocusIdx !== null) {
-                this.reapplySelection(this.state.rawAnchorIdx, this.state.rawFocusIdx);
+                this.reapplySelection(
+                    this.state.rawAnchorIdx.get(this.props.sourceId),
+                    this.state.rawFocusIdx.get(this.props.sourceId)
+                );
             }
         }
 
