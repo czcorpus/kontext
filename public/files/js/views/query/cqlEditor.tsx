@@ -27,6 +27,7 @@ import {GeneralQueryModel} from '../../models/query/main';
 
 export interface CQLEditorProps {
     sourceId:string;
+    takeFocus:boolean;
     inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
@@ -60,6 +61,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidMount() {
             queryModel.addChangeListener(this.handleModelChange);
+            if (this.props.takeFocus && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
         }
 
         componentWillUnmount() {
@@ -78,15 +82,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.PureComponent<CQLEditorProps, CQLEditorModelState> {
-
-        private editorRoot:Node;
+    class CQLEditor extends React.Component<CQLEditorProps, CQLEditorModelState> {
 
         private _queryInputElement:React.RefObject<HTMLPreElement>;
 
         constructor(props:CQLEditorProps) {
             super(props);
-            this.editorRoot = null;
             this.state = editorModel.getState();
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
@@ -115,9 +116,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
             const sel = window.getSelection();
-            const src = this.extractText(this.editorRoot);
-            let anchorNode = this.editorRoot;
-            let focusNode = this.editorRoot;
+            const src = this.extractText(this._queryInputElement.current);
+            let anchorNode = this._queryInputElement.current;
+            let focusNode = this._queryInputElement.current;
             let currIdx = 0;
             let anchorIdx = 0;
             let focusIdx = 0;
@@ -126,11 +127,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const nodeStartIdx = currIdx;
                 const nodeEndIdx = nodeStartIdx + text.length;
                 if (nodeStartIdx <= rawAnchorIdx && rawAnchorIdx <= nodeEndIdx) {
-                    anchorNode = node;
+                    anchorNode = node as HTMLPreElement;
                     anchorIdx = rawAnchorIdx - nodeStartIdx;
                 }
                 if (nodeStartIdx <= rawFocusIdx && rawFocusIdx <= nodeEndIdx) {
-                    focusNode = node;
+                    focusNode = node as HTMLPreElement;
                     focusIdx = rawFocusIdx - nodeStartIdx;
                 }
                 currIdx += text.length;
@@ -157,7 +158,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleInputChange() {
-            const src = this.extractText(this.editorRoot);
+            const src = this.extractText(this._queryInputElement.current);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
 
             dispatcher.dispatch({
@@ -173,7 +174,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
             let curr = elm;
-            while (curr !== this.editorRoot) {
+            while (curr !== this._queryInputElement.current) {
                 if (curr.nodeName === 'A') {
                     return curr;
                 }
@@ -213,20 +214,37 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
+        shouldComponentUpdate(nextProps, nextState) {
+            return this.state.rawAnchorIdx.get(this.props.sourceId) !== nextState.rawAnchorIdx.get(this.props.sourceId) ||
+                    this.state.rawFocusIdx.get(this.props.sourceId) !== nextState.rawFocusIdx.get(this.props.sourceId) ||
+                    this.state.rawCode.get(this.props.sourceId) !== nextState.rawCode.get(this.props.sourceId) ||
+                    this.state.richCode.get(this.props.sourceId) !== nextState.richCode.get(this.props.sourceId) ||
+                    // we want non-strict comparison below because message map is initialized as empty
+                    // but even  editor interaction without generated message writes a [corp]=>null which
+                    // changes the object
+                    this.state.message.get(this.props.sourceId) != nextState.message.get(this.props.sourceId) ||
+                    this.state.isEnabled !== nextState.isEnabled;
+        }
+
         componentDidUpdate(prevProps, prevState) {
             if (this.state.rawAnchorIdx !== null && this.state.rawFocusIdx !== null) {
-                this.reapplySelection(this.state.rawAnchorIdx, this.state.rawFocusIdx);
+                this.reapplySelection(
+                    this.state.rawAnchorIdx.get(this.props.sourceId),
+                    this.state.rawFocusIdx.get(this.props.sourceId)
+                );
             }
         }
 
         componentDidMount() {
-            this.editorRoot = this._queryInputElement.current;
             editorModel.addChangeListener(this.handleModelChange);
+            if (this.props.takeFocus && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
 
             if (he.browserInfo.isFirefox()) {
-                this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
+                this._queryInputElement.current.addEventListener('keydown', (evt:KeyboardEvent) => {
                     if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
-                        const src = this.extractText(this.editorRoot);
+                        const src = this.extractText(this._queryInputElement.current);
                         const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                         const rawSrc = src.map(v => v[0]).join('');
 
