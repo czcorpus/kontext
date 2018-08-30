@@ -131,7 +131,7 @@ class Controller(object):
 
     def get_http_method(self) -> str: ...
 
-    def pre_dispatch(self, args:Dict[str, Any], action_metadata:Optional[Dict[str, Any]]
+    def pre_dispatch(self, action_name:str, args:Dict[str, Any], action_metadata:Optional[Dict[str, Any]]
                      ) -> Dict[str, Any]: ...
 
     def post_dispatch(self, methodname:str, action_metadata:Dict[str, Any],
