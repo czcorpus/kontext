@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2013 Charles University, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +21,6 @@
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginApi} from '../app/main';
-import * as corplist from 'plugins/corparch/init';
 import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
 import {init as listViewInit} from '../views/subcorp/list';
 

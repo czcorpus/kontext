@@ -350,6 +350,11 @@ class MenuGenerator(object):
             .mark_indirect()
         )
 
+        self.public_subcorpora = (
+            MenuItemInternal(MainMenu.CORPORA('public-subcorpora'),
+                             te('Public subcorpora'), 'subcorpus/list_published')
+        )
+
         self.create_subcorpus = (
             MenuItemInternal(MainMenu.CORPORA('create-subcorpus'),
                              te('Create new subcorpus'), 'subcorpus/subcorp_form')
@@ -580,7 +585,7 @@ class MenuGenerator(object):
                 label=te('Corpora'),
                 fallback_action='corpora/corplist',
                 items=exp(MainMenu.CORPORA, self.avail_corpora,
-                          self.my_subcorpora, self.create_subcorpus),
+                          self.my_subcorpora, self.public_subcorpora, self.create_subcorpus),
                 disabled=is_disabled(MainMenu.CORPORA)
             )),
             (MainMenu.SAVE.name, dict(
