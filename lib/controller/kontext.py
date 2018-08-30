@@ -679,9 +679,10 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
         self._fix_interdependent_attrs()
 
-    def _check_corpus_access(self, form, action_metadata):
+    def _check_corpus_access(self, action_name, form, action_metadata):
         """
         Args:
+            action_name:
             form:
             action_metadata:
 
@@ -703,7 +704,7 @@ class Kontext(Controller):
                     has_access, variant = validate_access(
                         corpname, auth.permitted_corpora(self.session_get('user')))
                 if has_access and redirect:
-                    self.redirect(self.create_url('first_form', dict(corpname=corpname)))
+                    self.redirect(self.create_url(action_name, dict(corpname=corpname)))
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                     raise CorpusForbiddenException(corpname, variant)
@@ -752,13 +753,13 @@ class Kontext(Controller):
         # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
-    def pre_dispatch(self, named_args, action_metadata=None):
+    def pre_dispatch(self, action_name, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
         options, validating corpus access rights, scheduled actions.
         """
-        super(Kontext, self).pre_dispatch(named_args, action_metadata)
+        super(Kontext, self).pre_dispatch(action_name, named_args, action_metadata)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.pre_dispatch(self._plugin_api, named_args, action_metadata)
@@ -789,7 +790,7 @@ class Kontext(Controller):
 
         self._restore_prev_conc_params(form)
         # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, corpus_variant = self._check_corpus_access(form, action_metadata)
+        corpname, corpus_variant = self._check_corpus_access(action_name, form, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known

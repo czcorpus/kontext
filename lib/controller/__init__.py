@@ -656,7 +656,7 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def pre_dispatch(self, args, action_metadata=None):
+    def pre_dispatch(self, action_name, args, action_metadata=None):
         """
         Allows specific operations to be performed before the action itself is processed.
         """
@@ -788,7 +788,7 @@ class Controller(object):
         try:
             self.init_session()
             if self.is_action(methodname, action_metadata):
-                named_args = self.pre_dispatch(named_args, action_metadata)
+                named_args = self.pre_dispatch(methodname, named_args, action_metadata)
                 self._pre_action_validate()
                 tmpl, result = self.process_action(methodname, named_args)
             else:
