@@ -556,9 +556,9 @@ export class ConcLineStore extends SimplePageStore {
         } else {
             mode = {'sen': 'kwic', 'kwic': 'sen'}[this.viewMode];
         }
-        const args = this.layoutModel.getConcArgs();
         this.viewMode = mode;
-        args.set('viewmode', this.viewMode);
+        this.layoutModel.replaceConcArg('viewmode', [this.viewMode]);
+        const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
 
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
