@@ -56,7 +56,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return <select value={props.value} onChange={handleChange}>
-            <option>---</option>
+            <option value="">---</option>
             {props.corpora.map(item =>
                 <option key={item.ident} value={item.ident}>{item.label}</option>)
             }
@@ -65,21 +65,42 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <CodePrefixInput /> ----------------
 
-    const CodePrefixInput:React.SFC<{
+    class CodePrefixInput extends React.PureComponent<{
         value:string;
 
-    }> = (props) => {
+    }, {}> {
 
-        const handleChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        private inputRef:React.RefObject<HTMLInputElement>;
+
+        constructor(props) {
+            super(props);
+            this.handleChange = this.handleChange.bind(this);
+            this.inputRef = React.createRef();
+        }
+
+        handleChange(evt:React.ChangeEvent<HTMLInputElement>) {
             dispatcher.dispatch({
                 actionType: Actions.SET_CODE_PREFIX,
                 props: {
                     value: evt.target.value
                 }
             });
-        };
+        }
 
-        return <input type="text" value={props.value} onChange={handleChange} />;
+        componentDidMount() {
+            if (this.inputRef.current) {
+                this.inputRef.current.focus();
+            }
+        }
+
+        render() {
+            return <input className="CodePrefixInput"
+                        type="text"
+                        value={this.props.value}
+                        onChange={this.handleChange}
+                        ref={this.inputRef} />;
+        }
+
     }
 
     // -------------------------- <Filter /> -------------------------
@@ -90,17 +111,36 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         codePrefix:string;
 
     }> = (props) => {
-        return <fieldset>
-            <label>
-                {he.translate('pubsubclist__corpus')}:{'\u00a0'}
-                <CorpusSelect corpora={props.corpora} value={props.currCorpus} />
-            </label>
 
-            <label>
-                {he.translate('pubsubclist__enter_code_prefix')}:{'\u00a0'}
-                <CodePrefixInput value={props.codePrefix} />
-            </label>
-        </fieldset>;
+        const handleFilterReset = () => {
+            dispatcher.dispatch({
+                actionType: Actions.RESET_FILTER,
+                props: {}
+            });
+        };
+
+        return (
+            <fieldset className="Filter">
+                <legend>{he.translate('pubsubclist__filter_legend')}</legend>
+                <label>
+                    {he.translate('pubsubclist__corpus')}:{'\u00a0'}
+                    <CorpusSelect corpora={props.corpora} value={props.currCorpus} />
+                </label>
+                <label>
+                    {he.translate('pubsubclist__enter_code_prefix')}:{'\u00a0'}
+                    <CodePrefixInput value={props.codePrefix} />
+                </label>
+                <p>
+                    {props.currCorpus || props.codePrefix ?
+                        <button type="button" className="util-button cancel"
+                                onClick={handleFilterReset}>
+                            {he.translate('pubsubclist__reset_filter')}
+                        </button> :
+                        null
+                    }
+                </p>
+            </fieldset>
+        );
     };
 
     // -------------------------- <DetailExpandSwitch /> -----------------------
@@ -140,20 +180,37 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             super(props);
             this.state = {expanded: false};
             this._handleExpandAction = this._handleExpandAction.bind(this);
+            this._handleUseInQueryButton = this._handleUseInQueryButton.bind(this);
         }
 
         private _handleExpandAction():void {
             this.setState({expanded: !this.state.expanded});
         }
 
+        private _handleUseInQueryButton():void {
+            dispatcher.dispatch({
+                actionType: Actions.USE_IN_QUERY,
+                props: {
+                    corpname: this.props.item.corpname,
+                    id: this.props.item.ident
+                }
+            });
+        }
+
         render() {
             return <li className="DataRow">
-                <h3>{`${this.props.item.corpname} / ${this.props.item.origName}`}</h3>
+                <button type="button" className="util-button use-in-query"
+                        onClick={this._handleUseInQueryButton}>
+                    {he.translate('pubsubclist__use_in_query')}
+                </button>
+                <h3>
+                    {`${this.props.item.corpname} / ${this.props.item.origName}`}
+                    {'\u00a0'}<span className="code">({this.props.item.ident})</span>
+                </h3>
                 <DetailExpandSwitch expanded={this.state.expanded}
                     onClick={this._handleExpandAction} />
                 {this.state.expanded ?
                         <div className="description">
-                            <p>({this.props.item.ident})</p>
                             <div dangerouslySetInnerHTML={{__html: this.props.item.description}} />
                         </div> :
                     null
@@ -170,7 +227,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
         return (
             <ul className="DataList">
-                {props.data.map(item => <DataRow key={item.ident} item={item} />)}
+                {props.data.size > 0 ?
+                    props.data.map(item => <DataRow key={item.ident} item={item} />) :
+                    <li><p className="no-result">{he.translate('pubsubclist__no_result')}</p></li>
+                }
             </ul>
         );
     };
@@ -206,7 +266,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             currCorpus={this.state.corpname}
                             codePrefix={this.state.codePrefix} />
                     </form>
-                    <DataList data={this.state.data} />
+                    {this.state.isBusy ?
+                        <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                        <DataList data={this.state.data} />
+                    }
                 </div>
             );
         }

@@ -4,21 +4,63 @@
 
     margin-top: 1em;
 
+    .Filter {
+
+        margin-bottom: 1.5em;
+
+        label {
+            display :inline-block;
+        }
+
+        label:not(:last-child) {
+            margin-right: 2em;
+        }
+
+        .CodePrefixInput {
+            font-size: 120%;
+        }
+    }
+
+    .loader {
+        background-color: @color-white-text;
+        text-align: center;
+        border: 1px solid @color-default-green;
+        padding: 0.7em 1em 0.3em 1em;
+
+        img {
+            display: inline-block;
+        }
+    }
+
     .DataList {
 
-        margin-top: 1.5em 0 0 0;
+        margin: 0;
         padding: 0;
         list-style-type: none;
+        border: 1px solid @color-default-green;
+        background-color: @color-white-text;
+
+        .no-result {
+            text-align: center;
+        }
 
         li.DataRow {
 
             margin: 0;
-            padding: 0.4em 0;
+            padding: 0.7em 1em 0.3em 1em;
+
+            button.use-in-query {
+                float: right;
+            }
 
             h3 {
                 font-size: 1.3em;
                 font-weight: normal;
                 margin: 0;
+
+                .code {
+                    color: @color-light-text;
+                }
             }
 
 
@@ -41,12 +83,20 @@
             }
 
             .description {
+                font-family: @condensed-font-family;
                 margin-top: 0.7em;
-                padding: 0.7em;
-                background-color: @color-light-green;
-                border: 1px solid #d8e7ed;
+                margin-left: 0.25em;
+                margin-bottom: 0.7em;
+                padding: 0.7em 1em;
+                border-color: @color-light-text;
+                border-style: dashed;
+                border-width: 0 0 0 1px;
             }
 
+        }
+
+        li.DataRow:nth-child(2n) {
+            background-color: @table-even-bg;
         }
 
     }

@@ -51,13 +51,17 @@ export interface PublicSubcorpListState {
     corpora:Immutable.List<CorpusItem>;
     corpname:string;
     codePrefix:string;
+    codePrefixThrottleTimer:number;
 }
 
 export enum Actions {
     SET_CORPUS_NAME = 'PUBSUBC_SET_CORPUS_NAME',
     SET_CODE_PREFIX = 'PUBSUBC_SET_CODE_PREFIX',
+    SET_CODE_PREFIX_THROTTLE = 'PUBSUBC_SET_CODE_PREFIX_THROTTLE',
+    SET_CODE_PREFIX_DONE = 'PUBSUBC_SET_CODE_PREFIX_DONE',
     DATA_LOAD_DONE = 'PUBSUBC_DATA_LOAD_DONE',
-    RESET_FILTER = 'PUBSUBC_RESET_FILTER'
+    RESET_FILTER = 'PUBSUBC_RESET_FILTER',
+    USE_IN_QUERY = 'PUBSUBC_USE_IN_QUERY'
 }
 
 
@@ -73,7 +77,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 data: Immutable.List<DataItem>(data),
                 corpora: Immutable.List<CorpusItem>(corpora),
                 corpname: '',
-                codePrefix: ''
+                codePrefix: '',
+                codePrefixThrottleTimer: -1
             }
         );
         this.pageModel = pageModel;
@@ -90,8 +95,24 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 return newState;
             case Actions.SET_CODE_PREFIX:
                 newState = this.copyState(state);
-                newState.isBusy = true;
                 newState.codePrefix = action.props['value'];
+                if (newState.codePrefixThrottleTimer) {
+                    window.clearTimeout(newState.codePrefixThrottleTimer);
+                }
+                return newState;
+            case Actions.SET_CODE_PREFIX_THROTTLE:
+                newState = this.copyState(state);
+                newState.codePrefixThrottleTimer = action.props['timerId'];
+                return newState;
+            case Actions.SET_CODE_PREFIX_DONE:
+                newState = this.copyState(state);
+                newState.isBusy = true;
+                return newState;
+            case Actions.RESET_FILTER:
+                newState = this.copyState(state);
+                newState.isBusy = true;
+                newState.corpname = '';
+                newState.codePrefix = '';
                 return newState;
             case Actions.DATA_LOAD_DONE:
                 newState = this.copyState(state);
@@ -106,7 +127,27 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
     sideEffects(state:PublicSubcorpListState, action:ActionPayload, dispatch:SEDispatcher):void {
 
         switch (action.actionType) {
+            case Actions.SET_CODE_PREFIX:
+                const timerId = window.setTimeout(
+                    () => {
+                        dispatch({
+                            actionType: Actions.SET_CODE_PREFIX_DONE,
+                            props: {}
+                        });
+                        window.clearTimeout(state.codePrefixThrottleTimer);
+                    },
+                    250
+                );
+                dispatch({
+                    actionType: Actions.SET_CODE_PREFIX_THROTTLE,
+                    props: {
+                        timerId: timerId
+                    }
+                });
+            break;
+            case Actions.SET_CODE_PREFIX_DONE:
             case Actions.SET_CORPUS_NAME:
+            case Actions.RESET_FILTER:
                 this.loadData(state).then(
                     (data) => {
                         dispatch({
@@ -126,11 +167,16 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                             error: err
                         });
                     }
-                )
-                //
+                );
             break;
-            case Actions.SET_CODE_PREFIX:
-                //
+            case Actions.USE_IN_QUERY:
+                const args = new MultiDict();
+                args.set('corpname', action.props['corpname']);
+                args.set('usesubcorp', action.props['id']);
+                window.location.href = this.pageModel.createActionUrl(
+                    'first_form',
+                    args
+                );
             break;
         }
     }
