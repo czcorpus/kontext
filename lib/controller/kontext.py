@@ -704,7 +704,10 @@ class Kontext(Controller):
                     has_access, variant = validate_access(
                         corpname, auth.permitted_corpora(self.session_get('user')))
                 if has_access and redirect:
-                    self.redirect(self.create_url(action_name, dict(corpname=corpname)))
+                    url_pref = self.get_mapping_url_prefix()
+                    if len(url_pref) > 0:
+                        url_pref = url_pref[1:]
+                    self.redirect(self.create_url(url_pref + action_name, dict(corpname=corpname)))
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                     raise CorpusForbiddenException(corpname, variant)

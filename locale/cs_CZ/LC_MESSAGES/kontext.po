@@ -446,3 +446,9 @@ msgstr "Přístup zamítnut - přihlašte se prosím."
 
 msgid "Undo"
 msgstr "Zpět"
+
+msgid "Public subcorpora"
+msgstr "Veřejné subkorpusy"
+
+msgid "List of published subcorpora"
+msgstr "Seznam publikovaných subkorpusů"

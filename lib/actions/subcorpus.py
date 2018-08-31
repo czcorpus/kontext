@@ -395,3 +395,13 @@ class Subcorpus(Querying):
             raise UserActionException('Corpus is not published - cannot change description')
         corplib.rewrite_subc_desc(self.corp.spath, request.form['description'])
         return {}
+
+    @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
+    def list_published(self, request):
+        corpus = request.args.get('corpname')
+        code_prefix = request.args.get('code_prefix')
+        offset = int(request.args.get('offset', '0'))
+        limit = int(request.args.get('limit', '20'))
+        corpora, subclist = corplib.list_public_subcorpora(self.subcpath[-1], self.cm, corpus=corpus,
+                                                           code_prefix=code_prefix, offset=offset, limit=limit)
+        return dict(corpora=corpora, data=subclist)

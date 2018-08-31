@@ -65,6 +65,48 @@ def corp_mtime(corpus):
     return max(reg_mtime, data_mtime)
 
 
+def _list_public_corp_dir(corpname, path, code_prefix):
+    ans = []
+    subc_root = os.path.dirname(os.path.dirname(path))
+    for item in glob.glob(path + '/*.subc'):
+        full_path = os.path.join(path, item)
+        orig_path, info = get_subcorp_pub_info(full_path)
+        if orig_path is None or info is None:
+            logging.getLogger(__name__).warning(
+                'Missing .name file for published subcorpus {0}'.format(item))
+        else:
+            try:
+                ident = os.path.splitext(os.path.basename(item))[0]
+                if not code_prefix or ident.startswith(code_prefix):
+                    ans.append(dict(
+                        ident=ident,
+                        origName=os.path.splitext(os.path.basename(orig_path))[0],
+                        corpname=corpname,
+                        description=markdown(info),
+                        userId=int(orig_path.lstrip(subc_root).split(os.path.sep, 1)[0])
+                    ))
+            except Exception as ex:
+                logging.getLogger(__name__).warning(
+                    'Broken published subcorpus {0}: {1}'.format(full_path, ex))
+    return ans
+
+
+def list_public_subcorpora(subcpath, corp_manager, corpus=None, code_prefix=None, offset=0, limit=20):
+    corpora = []
+    data = []
+    for corp in os.listdir(subcpath):
+        try:
+            corp_obj = corp_manager.get_Corpus(corp)
+            corpora.append(dict(ident=corp, label=corp_obj.get_conf('NAME')))
+            if corpus and corp == corpus or not corpus:
+                data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), code_prefix=code_prefix)
+                if len(data) >= offset + limit:
+                    break
+        except Exception as ex:
+            logging.getLogger(__name__).warning(ex)
+    return corpora, data[offset:limit]
+
+
 def open_corpus(*args, **kwargs):
     """
     Creates a manatee.Corpus instance
