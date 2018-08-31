@@ -161,15 +161,7 @@ class Actions(Querying):
                     concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
                     result_shuffled=False, finished=True)
 
-    @exposed(vars=('orig_query', ), legacy=True)
-    def view(self):
-        """
-        KWIC view
-        """
-        corpus_info = self.get_corpus_info(self.args.corpname)
-        if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
-            self.args.refs = self.corp.get_conf('SHORTREF')
-
+    def _apply_viewmode(self, sentence_struct):
         self.args.righttoleft = False
         if self.corp.get_conf('RIGHTTOLEFT'):
             self.args.righttoleft = True
@@ -180,9 +172,19 @@ class Actions(Querying):
             self.args.leftctx = 'a,%s' % os.path.basename(self.args.corpname)
             self.args.rightctx = 'a,%s' % os.path.basename(self.args.corpname)
         else:
-            sentence_struct = corpus_info['sentence_struct']
             self.args.leftctx = self.args.senleftctx_tpl % sentence_struct
             self.args.rightctx = self.args.senrightctx_tpl % sentence_struct
+
+    @exposed(vars=('orig_query', ), legacy=True)
+    def view(self):
+        """
+        KWIC view
+        """
+        corpus_info = self.get_corpus_info(self.args.corpname)
+        if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
+            self.args.refs = self.corp.get_conf('SHORTREF')
+
+        self._apply_viewmode(corpus_info['sentence_struct'])
 
         i = 0
         while i < len(self.args.q):
@@ -1586,6 +1588,7 @@ class Actions(Querying):
 
         try:
             corpus_info = self.get_corpus_info(self.args.corpname)
+            self._apply_viewmode(corpus_info['sentence_struct'])
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id'),
                                                          corpus_info.sample_size))
             self._apply_linegroups(conc)
@@ -1608,8 +1611,8 @@ class Actions(Querying):
             kwic_args.labelmap = {}
             kwic_args.align = ()
             kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
-            kwic_args.leftctx = self.args.kwicleftctx
-            kwic_args.rightctx = self.args.kwicrightctx
+            kwic_args.leftctx = self.args.leftctx
+            kwic_args.rightctx = self.args.rightctx
             kwic_args.structs = self._get_struct_opts()
 
             data = kwic.kwicpage(kwic_args)
