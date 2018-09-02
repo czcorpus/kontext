@@ -445,7 +445,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler(props) {
-            return this.state.collapse ? `Show details for ${props.verbTargetList[0]}` : "Hide details";
+            return this.state.collapse ? `Show details for pair ${props.key}` : "Hide details";
         }
 
         _getStateDisplay() {
