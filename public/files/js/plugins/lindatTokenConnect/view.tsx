@@ -371,26 +371,30 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         return (
             <div>
                 <a className="vallexSense" href={toVallex(props)} target="_blank">{props.name}</a>
-                <div className="vallexSourceV">{props.name.split(' : ')[0]}
-                    {props.detail[0][1][0].map((listValue, i) => {
-                        if (listValue.length !== 0) {
-                            return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
-                        }
-                    })}
-                </div>
+                {props.detail.map((sourcevalue, j) => {
+                    <div key={j}>
+                    <div className="vallexSourceV">{props.name.split(' : ')[0]}
+                        {sourcevalue[1][0].map((listValue, i) => {
+                            if (listValue.length !== 0) {
+                                return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                            }
+                        })}
+                    </div>
 
-                <div className="vallexExpl">{props.detail[0][1][1]}</div>
-                <ul className="vallexExamples">
-                    {props.detail[0][1][2].map((listValue, i) => {
-                        if (listValue.length !== 0) {
-                            return <li className="vallexExamples" key={i}>{listValue}</li>;
-                        }
-                    })}
-                </ul>
-                <TargetVerb verbSourceName={props.name.split(' : ')[0]}
-                            verbTargetName={props.name.split(' : ')[1]}
-                            verbSourceID={props.detail[0][0]}
-                            verbTargetList={props.detail[0][2]}/>
+                    <div className="vallexExpl">{props.detail[0][1][1]}</div>
+                    <ul className="vallexExamples">
+                        {sourcevalue[1][2].map((listValue, i) => {
+                            if (listValue.length !== 0) {
+                                return <li className="vallexExamples" key={i}>{listValue}</li>;
+                            }
+                        })}
+                    </ul>
+                    <TargetVerb verbSourceName={props.name.split(' : ')[0]}
+                                verbTargetName={props.name.split(' : ')[1]}
+                                verbSourceID={sourcevalue[0]}
+                                verbTargetList={sourcevalue[2]}/>
+                    </div>
+                })}
             </div>
 
         )
