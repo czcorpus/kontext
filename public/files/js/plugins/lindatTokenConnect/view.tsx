@@ -410,7 +410,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> {
         renderTargetVerbsInfo() {
             return this.props.verbTargetList.map((item, i) => {
-                return <Target key={i} num={i} verbTargetName={this.props.verbTargetName}
+                return <Target key={i} verbTargetName={this.props.verbTargetName}
                             verbSourceName={this.props.verbSourceName}
                             verbSourceID={this.props.verbSourceID}
                             verbTargetList={item} />
@@ -428,6 +428,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <Target /> -------------------------------
 
     class Target extends React.Component<{
+        key:number;
         verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
@@ -445,7 +446,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler(props) {
-            return this.state.collapse ? `Show details for pair ${props.num}` : "Hide details";
+            return this.state.collapse ? `Show details for pair ${props.key}` : "Hide details";
         }
 
         _getStateDisplay() {
