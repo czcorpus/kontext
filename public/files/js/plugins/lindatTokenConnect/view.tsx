@@ -371,33 +371,40 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         return (
             <div>
                 <a className="vallexSense" href={toVallex(props)} target="_blank">{props.name}</a>
-                {props.detail.map((sourcevalue, j) => {
-                    <div key={j}>
-                    <div className="vallexSourceV">{props.name.split(' : ')[0]}
-                        {sourcevalue[1][0].map((listValue, i) => {
-                            if (listValue.length !== 0) {
-                                return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
-                            }
-                        })}
-                    </div>
-
-                    <div className="vallexExpl">{props.detail[0][1][1]}</div>
-                    <ul className="vallexExamples">
-                        {sourcevalue[1][2].map((listValue, i) => {
-                            if (listValue.length !== 0) {
-                                return <li className="vallexExamples" key={i}>{listValue}</li>;
-                            }
-                        })}
-                    </ul>
-                    <TargetVerb verbSourceName={props.name.split(' : ')[0]}
-                                verbTargetName={props.name.split(' : ')[1]}
-                                verbSourceID={sourcevalue[0]}
-                                verbTargetList={sourcevalue[2]}/>
-                    </div>
+                {props.detail.map((sourceValue, j) => {
+                    return (
+                        <div key={j}>
+                            <div className="vallexSourceV">{props.name.split(' : ')[0]}
+                                {sourceValue[1][0].map((listValue, i) => {
+                                    if (listValue.length !== 0) {
+                                        return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                                    }
+                                })}
+                            </div>
+                            <div className="vallexExpl">{sourceValue[1][1]}</div>
+                            <ul className="vallexExamples">
+                            {sourceValue[1][2].map((listValue, i) => {
+                                if (listValue.length !== 0) {
+                                    return <li className="vallexExamples" key={i}>{listValue}</li>;
+                                }
+                            })}
+                            </ul>
+                            <ul className="vallexExamples">
+                                {sourceValue[1][2].map((listValue, i) => {
+                                    if (listValue.length !== 0) {
+                                        return <li className="vallexExamples" key={i}>{listValue}</li>;
+                                    }
+                                })}
+                            </ul>
+                            <TargetVerb verbSourceName={props.name.split(' : ')[0]}
+                                        verbTargetName={props.name.split(' : ')[1]}
+                                        verbSourceID={sourceValue[0]}
+                                        verbTargetList={sourceValue[2]}/>
+                        </div>
+                    );
                 })}
             </div>
-
-        )
+        );
     };
 
     // ------------- <TargetVerb /> -------------------------------
