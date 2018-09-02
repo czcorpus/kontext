@@ -392,7 +392,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                             <TargetVerb verbSourceName={props.name.split(' : ')[0]}
                                         verbTargetName={props.name.split(' : ')[1]}
                                         verbSourceID={sourceValue[0]}
-                                        verbTargetList={sourceValue[2]}/>
+                                        verbTargetList={sourceValue[2]}
+                                        num={h}/>
                         </div>
                     );
                 })}
@@ -410,7 +411,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> {
         renderTargetVerbsInfo() {
             return this.props.verbTargetList.map((item, i) => {
-                return <Target key={i} num={i} verbTargetName={this.props.verbTargetName}
+                return <Target key={i} num={this.props.num} verbTargetName={this.props.verbTargetName}
                             verbSourceName={this.props.verbSourceName}
                             verbSourceID={this.props.verbSourceID}
                             verbTargetList={item} />
