@@ -410,7 +410,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> {
         renderTargetVerbsInfo() {
             return this.props.verbTargetList.map((item, i) => {
-                return <Target key={i} verbTargetName={this.props.verbTargetName}
+                return <Target key={i} number={i} verbTargetName={this.props.verbTargetName}
                             verbSourceName={this.props.verbSourceName}
                             verbSourceID={this.props.verbSourceID}
                             verbTargetList={item} />
@@ -445,7 +445,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler(props) {
-            return this.state.collapse ? `Show details for pair ${props.key}` : "Hide details";
+            return this.state.collapse ? `Show details for pair ${props.number}` : "Hide details";
         }
 
         _getStateDisplay() {
