@@ -410,7 +410,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> {
         renderTargetVerbsInfo() {
             return this.props.verbTargetList.map((item, i) => {
-                return <Target key={i} num={i} verbTargetName={this.props.verbTargetName}
+                return <Target key={i} num={i + 1} verbTargetName={this.props.verbTargetName}
                             verbSourceName={this.props.verbSourceName}
                             verbSourceID={this.props.verbSourceID}
                             verbTargetList={item} />
