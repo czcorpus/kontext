@@ -404,6 +404,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <TargetVerb /> -------------------------------
 
     class TargetVerb extends React.Component<{
+        num:number;
         verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
