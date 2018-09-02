@@ -371,9 +371,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         return (
             <div>
                 <a className="vallexSense" href={toVallex(props)} target="_blank">{props.name}</a>
-                {props.detail.map((sourceValue, j) => {
+                {props.detail.map((sourceValue, h) => {
                     return (
-                        <div key={j}>
+                        <div key={h}>
                             <div className="vallexSourceV">{props.name.split(' : ')[0]}
                                 {sourceValue[1][0].map((listValue, i) => {
                                     if (listValue.length !== 0) {
@@ -383,18 +383,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                             </div>
                             <div className="vallexExpl">{sourceValue[1][1]}</div>
                             <ul className="vallexExamples">
-                            {sourceValue[1][2].map((listValue, i) => {
-                                if (listValue.length !== 0) {
-                                    return <li className="vallexExamples" key={i}>{listValue}</li>;
+                            {sourceValue[1][2].map((example, j) => {
+                                if (example.length !== 0) {
+                                    return <li className="vallexExamples" key={j}>{example}</li>;
                                 }
                             })}
-                            </ul>
-                            <ul className="vallexExamples">
-                                {sourceValue[1][2].map((listValue, i) => {
-                                    if (listValue.length !== 0) {
-                                        return <li className="vallexExamples" key={i}>{listValue}</li>;
-                                    }
-                                })}
                             </ul>
                             <TargetVerb verbSourceName={props.name.split(' : ')[0]}
                                         verbTargetName={props.name.split(' : ')[1]}
