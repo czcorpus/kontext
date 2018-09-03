@@ -361,11 +361,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
             } else {
                 return (
-                    <span className="ipm-note">(
-                        <img src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')} />
-                        {he.translate('concview__ipm_rel_to_the_{corpname}',
-                            {corpname: props.corpname})}
-                    )</span>
+                    <span className="ipm-note">({he.translate('concview__ipm_rel_to_the_whole_corp')})</span>
                 );
             }
         };
