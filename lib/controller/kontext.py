@@ -854,7 +854,7 @@ class Kontext(Controller):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
             self._save_menu.append(
-                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83,
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
                                     hint=hint).mark_indirect())  # key = 's'
 
         else:

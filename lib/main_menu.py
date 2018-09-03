@@ -290,16 +290,18 @@ class EventTriggeringItem(HideOnCustomCondItem):
     that keys with multiple values are not supported.
     """
 
-    def __init__(self, ident, label, message, key_code=None, hint=None):
+    def __init__(self, ident, label, message, key_code=None, key_mod=None, hint=None):
         super(EventTriggeringItem, self).__init__(ident, label, None, hint)
         self._message = message
         self._key_code = key_code
+        self._key_mod = key_mod
 
     def create(self, out_data):
         ans = super(EventTriggeringItem, self).create(out_data)
         ans['message'] = self._message
         ans['args'] = dict(ans['args'])
         ans['keyCode'] = self._key_code
+        ans['keyMod'] = self._key_mod
         ans.pop('action')
         return ans
 
@@ -377,7 +379,7 @@ class MenuGenerator(object):
 
         self.sorting = (
             EventTriggeringItem(MainMenu.CONCORDANCE('sorting'), te('Sorting'),
-                                'MAIN_MENU_SHOW_SORT', key_code=82).mark_indirect()
+                                'MAIN_MENU_SHOW_SORT', key_code=83).mark_indirect()
         )
 
         self.shuffle = (
@@ -416,7 +418,7 @@ class MenuGenerator(object):
 
         self.filter_pos = (
             EventTriggeringItem(MainMenu.FILTER('positive'), te('Positive'), 'MAIN_MENU_SHOW_FILTER',
-                                key_code=73)  # key = 'i'
+                                key_code=70)  # key = 'f'
             .add_args(('pnfilter', 'p'))
             .mark_indirect()
         )
@@ -482,7 +484,7 @@ class MenuGenerator(object):
 
         self.freq_custom = (
             EventTriggeringItem(MainMenu.FREQUENCY('custom'), te('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM',
-                                key_code=70)  # key = 'f'
+                                key_code=70, key_mod='shift')  # key = 'f'
             .mark_indirect()
         )
 
@@ -490,7 +492,7 @@ class MenuGenerator(object):
 
         self.colloc_custom = (
             EventTriggeringItem(MainMenu.COLLOCATIONS('custom'), te('Custom'),
-                                'MAIN_MENU_SHOW_COLL_FORM', key_code=67)  # key = 'c'
+                                'MAIN_MENU_SHOW_COLL_FORM', key_code=67, key_mod='shift')  # key = 'c'
             .mark_indirect()
         )
 
@@ -510,7 +512,7 @@ class MenuGenerator(object):
 
         self.view_global = (
             EventTriggeringItem(MainMenu.VIEW('global-options'), te('General view options'),
-                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS', key_code=71)  # key = 'g'
+                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS', key_code=79, key_mod='shift')  # key = 'o'
             .mark_indirect()
         )
 
@@ -526,7 +528,7 @@ class MenuGenerator(object):
 
         self.keyboard_shortcuts = (
             EventTriggeringItem(MainMenu.HELP('keyboard-shortcuts'), 'global__keyboard_shortcuts',
-                                'OVERVIEW_SHOW_KEY_SHORTCUTS', key_code=75)  # key = 'k')
+                                'OVERVIEW_SHOW_KEY_SHORTCUTS', key_code=75, key_mod='shift')  # key = 'k')
         )
 
         # -------------------------------------------------------------------------------

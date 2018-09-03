@@ -942,8 +942,8 @@ export class ViewPage {
         const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
         this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
             if (document.activeElement === document.body &&
-                    !evt.ctrlKey && !evt.altKey && !evt.shiftKey && !evt.metaKey) {
-                const action = actionMap.get(evt.keyCode);
+                    !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
+                const action = actionMap.get(evt.keyCode, evt.shiftKey ? 'shift' : null);
                 if (action) {
                     this.layoutModel.dispatcher.dispatch({
                         actionType: action.message,

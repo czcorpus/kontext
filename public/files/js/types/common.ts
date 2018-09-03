@@ -197,6 +197,7 @@ export namespace Kontext {
         message:string; // a dispatcher action type
         args:GeneralProps;
         keyCode:number;
+        keyMod:string;
         indirect:boolean;
     }
 
@@ -208,6 +209,13 @@ export namespace Kontext {
     }
 
     export type MenuEntry = [string, MenuItem];
+
+    /**
+     *
+     */
+    export interface IMainMenuShortcutMapper {
+        get(keyCode:number, keyMod:string):EventTriggeringSubmenuItem;
+    }
 
     /**
      * A model watched by components which are
@@ -236,7 +244,7 @@ export namespace Kontext {
          */
         removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
 
-        exportKeyShortcutActions():Immutable.Map<number, EventTriggeringSubmenuItem>
+        exportKeyShortcutActions():IMainMenuShortcutMapper;
 
         /**
          * Bind a custom event handler (typically a one dispatching a custom
