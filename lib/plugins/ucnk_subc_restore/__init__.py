@@ -147,7 +147,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
                 if corpname_matches(corpus_name):
                     corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpus_name)
                     deleted_items.append({
-                        'name': '{0}:{1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
+                        'name': '{0} / {1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
                         'size': None,
                         'created': subc_queries_map[dk]['timestamp'],
                         'human_corpname': corpus_info.name,
