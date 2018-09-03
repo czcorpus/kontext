@@ -37,6 +37,7 @@ export interface StaticSubmenuItem extends Kontext.SubmenuItem {
     action:string;
     args:{[key:string]:any};
     keyCode:number;
+    keyMod:string;
     currConc:boolean;
     indirect:boolean;
     openInBlank:boolean;
@@ -86,6 +87,25 @@ function importMenuData(data:InitialMenuData):Immutable.List<Kontext.MenuEntry> 
             }
         ];
     }).toList();
+}
+
+
+/**
+ *
+ */
+class MenuShortcutMapper implements Kontext.IMainMenuShortcutMapper {
+
+    private shortcuts:Immutable.List<Kontext.EventTriggeringSubmenuItem>;
+
+    constructor(shortcuts:Immutable.List<Kontext.EventTriggeringSubmenuItem>) {
+        this.shortcuts = shortcuts;
+    }
+
+    get(keyCode:number, keyMod:string):Kontext.EventTriggeringSubmenuItem {
+        return this.shortcuts.find(x => {
+            return x.keyCode === keyCode && x.keyMod === keyMod;
+        });
+    }
 }
 
 
@@ -213,6 +233,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                             hint: item.hint,
                             args: item.args,
                             keyCode: item.keyCode,
+                            keyMod: item.keyMod,
                             currConc: item.currConc,
                             indirect: item.indirect,
                             label: item.label,
@@ -226,6 +247,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                             hint: item.hint,
                             args: item.args,
                             keyCode: item.keyCode,
+                            keyMod: item.keyMod,
                             message: item.message,
                             indirect: item.indirect,
                             label: item.label,
@@ -313,14 +335,14 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         return this.data;
     }
 
-    exportKeyShortcutActions():Immutable.Map<number, Kontext.EventTriggeringSubmenuItem> {
-        return Immutable.Map<number, Kontext.EventTriggeringSubmenuItem>(
-            this.data
-                .flatMap(v => Immutable.List<Kontext.SubmenuItem>(v[1].items))
-                .filter(v => isEventTriggeringItem(v) && !!v.keyCode)
-                .map((v:Kontext.EventTriggeringSubmenuItem) => [v.keyCode, v])
-                .toList()
-        );
+    exportKeyShortcutActions():Kontext.IMainMenuShortcutMapper {
+        return new MenuShortcutMapper(
+                    this.data
+                        .flatMap(v => Immutable.List<Kontext.SubmenuItem>(v[1].items))
+                        .filter(v => isEventTriggeringItem(v) && !!v.keyCode)
+                        .map<Kontext.EventTriggeringSubmenuItem>(v => v as Kontext.EventTriggeringSubmenuItem)
+                        .toList());
+
     }
 
     getConcArgs():MultiDict {
