@@ -71,7 +71,24 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     tagsetDocs:{[corpname:string]:boolean};
 }
 
-export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
+/**
+ *
+ */
+export class WidgetsMap {
+
+    private data:Immutable.Map<string, Immutable.List<string>>;
+
+    constructor(data:Immutable.List<[string, Immutable.List<string>]>) {
+        this.data = Immutable.Map<string, Immutable.List<string>>(data);
+    }
+
+    get(key:string):Immutable.List<string> {
+        if (this.data.has(key)) {
+            return this.data.get(key);
+        }
+        return Immutable.List<string>();
+    }
+}
 
 
 export function appendQuery(origQuery:string, query:string, prependSpace:boolean):string {
@@ -159,7 +176,7 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
 
     private widgetArgs:Kontext.GeneralProps;
 
-    protected supportedWidgets:Immutable.Map<string, Immutable.List<string>>;
+    protected supportedWidgets:WidgetsMap;
 
 
     // -------
@@ -409,6 +426,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                         this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
                     }
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], qType);
+                    this.supportedWidgets = this.determineSupportedWidgets();
                     this.notifyChangeListeners();
                 break;
                 case 'CORPARCH_FAV_ITEM_CLICK':
@@ -726,8 +744,14 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
             }
             return ans;
         }
-        return Immutable.Map<string, Immutable.List<string>>(this.corpora.map(corpname =>
-                [corpname, Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))]));
+        return new WidgetsMap(
+                this.corpora.map<[string, Immutable.List<string>]>(corpname =>
+                    [
+                        corpname,
+                        Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))
+                    ]
+                )
+                .toList());
     }
 
     submitQuery():void {
@@ -832,7 +856,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
  */
 export class QueryHintModel extends StatefulModel {
 
-    private hints:Array<string>;
+    private hints:Array<string>;Itera
 
     private currentHint:number;
 
