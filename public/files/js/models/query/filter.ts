@@ -144,7 +144,13 @@ export class FilterModel extends GeneralQueryModel {
 
         this.maincorps = Immutable.Map<string, string>(props.maincorps);
         this.queries = Immutable.Map<string, string>(props.currQueries);
+        if (!this.queries.has('__new__')) {
+            this.queries = this.queries.set('__new__', '');
+        }
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
+        if (!this.queryTypes.has('__new__')) {
+            this.queryTypes = this.queries.set('__new__', 'iquery');
+        }
         this.lposValues = Immutable.Map<string, string>(props.currLposValues);
         this.matchCaseValues = Immutable.Map<string, boolean>(props.currQmcaseValues);
         this.defaultAttrValues = Immutable.Map<string, string>(props.currDefaultAttrValues);
@@ -170,6 +176,7 @@ export class FilterModel extends GeneralQueryModel {
                 break;
                 case 'FILTER_QUERY_INPUT_SELECT_TYPE':
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
+                    this.supportedWidgets = this.determineSupportedWidgets();
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
@@ -460,11 +467,12 @@ export class FilterModel extends GeneralQueryModel {
                     return ans;
             }
         }
-        return Immutable.Map<string, Immutable.List<string>>(
-            this.queries.keySeq().map(filterId => {
-                return [filterId, Immutable.List<string>(
-                getWidgets(filterId))];
-            })
+
+        return new WidgetsMap(
+            this.queries.keySeq()
+            .map<[string, Immutable.List<string>]>(filterId =>
+                [filterId, Immutable.List<string>(getWidgets(filterId))])
+            .toList()
         );
     }
 
