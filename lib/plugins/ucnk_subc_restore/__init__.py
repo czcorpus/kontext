@@ -24,14 +24,8 @@ CREATE TABLE subc_archive (
   timestamp INTEGER NOT NULL
 );
 
-required entry in config.xml:
+required entry in config.xml: please see config.rng
 
-element subc_restore {
-    element module { "ucnk_subc_restore" }
-    element db_path {
-    { text } # a path to a respective SQLite3 database
-    attribute extension-by { "ucnk" }
-}
 """
 
 import time
@@ -125,6 +119,9 @@ class UCNKSubcRestore(AbstractSubcRestore):
         Returns:
             list of dict: a new list containing both the original subc_list and also the extended part
         """
+        def get_user_subcname(rec):
+            return rec.get('orig_subcname') if rec.get('orig_subcname') else rec.get('usesubcorp')
+
         subc_queries = self.list_queries(plugin_api.user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
@@ -132,7 +129,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
 
         if filter_args.get('show_deleted', False):
             deleted_keys = set(subc_queries_map.keys()) - \
-                (set((x['corpname'], x['usesubcorp']) for x in subc_list))
+                (set((x['corpname'], get_user_subcname(x)) for x in subc_list))
         else:
             deleted_keys = []
 
@@ -162,7 +159,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
         for subc in subc_list:
-            key = (subc['corpname'], subc['usesubcorp'])
+            key = (subc['corpname'], get_user_subcname(subc))
             if key in subc_queries_map:
                 subc['cql'] = urllib.quote(subc_queries_map[key]['cql'].encode('utf-8'))
             else:
