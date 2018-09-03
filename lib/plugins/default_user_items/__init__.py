@@ -69,8 +69,8 @@ def set_favorite_item(ctrl, request):
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     subcorpus_id = request.form['subcorpus_id']
     item = FavoriteItem(dict(
-        name=' + '.join(c['name'] for c in corpora) +
-        (' : ' + subcorpus_id if subcorpus_id else ''),
+        name=' || '.join(c['name'] for c in corpora) +
+        (' / ' + subcorpus_id if subcorpus_id else ''),
         corpora=corpora,
         subcorpus_id=request.form['subcorpus_id'],
         size=main_size,
