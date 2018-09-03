@@ -293,7 +293,7 @@ class Subcorpus(Querying):
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': sc.subcname,
-                        'orig_sucbcname': sc.orig_subcname,
+                        'orig_subcname': sc.orig_subcname,
                         'deleted': False,
                         'description': sc.description,
                         'published': corplib.subcorpus_is_published(sc.spath)
