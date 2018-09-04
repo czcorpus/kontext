@@ -277,14 +277,6 @@ export class AppNavigation implements Kontext.IURLHandler {
             return ans.join('&');
         }
 
-        const decodeArgs = (s:string) => {
-            let ans = {};
-            s.split('&').map((s2)=>s2.split('=').map((s3)=>decodeURIComponent(s3))).forEach((item) => {
-                ans[item[0]] = item[1];
-            });
-            return ans;
-        };
-
         let body;
 
         if (args instanceof MultiDict) {
