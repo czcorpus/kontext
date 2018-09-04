@@ -16,12 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {ActionDispatcher, Action, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
