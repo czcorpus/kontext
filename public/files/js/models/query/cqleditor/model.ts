@@ -202,7 +202,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                     actionType: `@${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     props: {
                         sourceId: args.sourceId,
-                        query: args.query
+                        query: state.rawCode.get(args.sourceId)
                     }
                 });
             }
