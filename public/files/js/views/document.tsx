@@ -239,9 +239,13 @@ export function init(
             }
         }
 
-        _handleAreaClick():void {
-            this.closeBtnRef.current.focus();
-            if (this.props.onAreaClick) {
+        _handleAreaClick(evt:React.MouseEvent):void {
+            const targetElm = evt.target as HTMLElement;
+            const isInteractiveActive = (elm:HTMLElement) =>
+                ['INPUT', 'SELECT', 'BUTTON', 'A', 'LABEL', 'TEXTAREA'].indexOf(elm.nodeName) > -1 ||
+                elm.getAttribute('tabindex') !== null;
+            if (this.props.onAreaClick && !isInteractiveActive(targetElm)) {
+                this.closeBtnRef.current.focus();
                 this.props.onAreaClick();
             }
         }
