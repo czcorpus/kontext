@@ -186,11 +186,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
                                 <ttDistViews.TextTypesDist />
                             </div>
                             <div className="box">
-                                {this.hasKwicConnectView() ?
-                                    <layoutViews.ErrorBoundary>
-                                        <this.props.kwicConnectView />
-                                    </layoutViews.ErrorBoundary> : null
-                                }
+                                {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
                             </div>
                         </div>
                     }

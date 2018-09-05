@@ -54,7 +54,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
     }
 
     getView():React.ComponentClass<{}>|React.SFC<{}> {
-        return this.views.KwicConnectWidget;
+        return this.views.KwicConnectContainer;
     }
 
     selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {

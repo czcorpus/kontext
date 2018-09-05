@@ -253,7 +253,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                         return (
                             <div key={`resource:${i}`}>
                                 {v.heading ?
-                                    <h2 className="inhouse">
+                                    <h2 className="tckc-provider">
                                         {v.heading} <img src={he.createStaticUrl('img/book.svg')}
                                                 alt={he.translate('global__icon_book')} /></h2> :
                                     null

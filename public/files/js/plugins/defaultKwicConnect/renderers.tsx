@@ -27,7 +27,7 @@ import { MultiDict } from '../../util';
 export interface Views {
     RawHtmlRenderer:React.SFC<{
         corpora: Immutable.List<string>;
-        data: Array<[string, string]>;
+        data: {contents: Array<[string, string]>};
     }>;
     DataMuseSimilarWords:React.SFC<{
         corpora: Immutable.List<string>;
@@ -49,7 +49,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
     const RawHtmlRenderer:Views['RawHtmlRenderer'] = (props) => {
         return (
             <div>
-                {props.data.map((v, i) => <div key={`block:${i}`} dangerouslySetInnerHTML={{__html: v[1]}} />)}
+                {props.data.contents.map((v, i) => <div key={`block:${i}`} dangerouslySetInnerHTML={{__html: v[1]}} />)}
             </div>
         );
     };
