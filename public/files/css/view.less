@@ -3,6 +3,12 @@
 
 #conc-dashboard-mount {
 
+    .ConcordanceDashboard {
+        display: grid;
+        grid-template-columns: minmax(auto, 35em) auto;
+        grid-column-gap: 1em;
+    }
+
     .ktx-pagination {
         float: right;
         text-align: right;
@@ -125,7 +131,6 @@
 
         > .contents {
             display: grid;
-            grid-template-columns: 60% 40%;
 
             > div.box {
                 align-self: start;

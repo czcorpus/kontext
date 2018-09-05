@@ -35,6 +35,8 @@ import subcMixer from 'plugins/subcmixer/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/subcorpForm.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 
 export interface TTInitData {

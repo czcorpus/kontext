@@ -19,12 +19,11 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel, PluginApi} from '../app/main';
+import {PageModel} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {StatefulModel} from '../models/base';
 import {WordlistFormModel} from '../models/wordlist/form';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import createCorparch from 'plugins/corparch/init';
@@ -32,6 +31,8 @@ import createCorparch from 'plugins/corparch/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/wordlistForm.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 /**
  *

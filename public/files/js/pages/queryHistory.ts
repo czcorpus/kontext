@@ -18,13 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
-import {MultiDict} from '../util';
 import {init as initQueryHistoryViews} from '../views/query/history';
-import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
@@ -33,9 +30,12 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/queryHistory.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
-
-
+/**
+ *
+ */
 class QueryHistoryPage {
 
     private layoutModel:PageModel;

@@ -18,18 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import {init as messageViewsInit, MessageViewProps} from '../views/message';
-import { MessageModel } from '../models/common/layout';
 
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/message.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
+/**
+ *
+ */
 class MessagePage {
 
     private layoutModel:PageModel;

@@ -23,22 +23,22 @@ import {PluginInterfaces} from '../types/plugins';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
 import {PageModel, DownloadType} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
-import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
 import {Freq2DTableModel} from '../models/freqs/ctable';
 import {Freq2DFlatViewModel} from '../models/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
-import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay';
+import {IndirectQueryReplayModel} from '../models/query/replay';
 import {QuerySaveAsFormModel} from '../models/query/save';
 import {fetchQueryFormArgs} from '../models/query/main';
 import {init as freqFormFactory} from '../views/freqs/forms';
 import {init as collFormFactory} from '../views/coll/forms';
-import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../views/analysis';
-import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
+import {init as analysisFrameInit} from '../views/analysis';
+import {init as queryOverviewInit} from '../views/query/overview';
 import {init as resultViewFactory} from '../views/freqs/main';
 import {init as ctResultViewInit} from '../views/freqs/ctResult';
-import {FreqDataRowsModel, ResultBlock} from '../models/freqs/dataRows';
-import {FreqResultsSaveModel, FreqCTResultsSaveModel} from '../models/freqs/save';
+import {FreqDataRowsModel} from '../models/freqs/dataRows';
+import {FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
@@ -46,6 +46,8 @@ import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/freq.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 /**
  *
