@@ -323,7 +323,7 @@ class MenuGenerator(object):
         )
 
         self.recent_queries = (
-            HideOnCustomCondItem(MainMenu.NEW_QUERY('history'), _(
+            HideOnCustomCondItem(MainMenu.NEW_QUERY('history'), te(
                 'Recent queries'), 'user/query_history')
             .add_args(
                 ('corpname', self._args['corpname']))
@@ -409,7 +409,7 @@ class MenuGenerator(object):
         ) if self._args['explicit_conc_persistence_ui'] else None
 
         self.query_undo = (
-            EventTriggeringItem(MainMenu.CONCORDANCE('undo'), _(
+            EventTriggeringItem(MainMenu.CONCORDANCE('undo'), te(
                 'Undo'), 'MAIN_MENU_UNDO_LAST_QUERY_OP')
             .enable_if(lambda d: len(d.get('undo_q', [])) > 0)
         )
@@ -449,13 +449,6 @@ class MenuGenerator(object):
                 ('fcrit', 'lemma/e 0~0>0'),
                 ('ml', 0))
             .enable_if(lambda d: 'tag' in [x['n'] for x in self._args.get('AttrList', ())])
-        )
-
-        self.freq_node_forms = (
-            ConcMenuItem(MainMenu.FREQUENCY('node-forms'), te('Node forms'), 'freqs')
-            .add_args(
-                ('fcrit', 'word/e 0~0>0'),
-                ('ml', 0))
         )
 
         self.freq_node_forms_i = (
@@ -609,7 +602,7 @@ class MenuGenerator(object):
             )),
             (MainMenu.FREQUENCY.name, dict(
                 label=te('Frequency'),
-                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms, self.freq_node_forms_i,
+                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms_i,
                           self.freq_doc_ids, self.freq_text_types, self.freq_custom),
                 disabled=is_disabled(MainMenu.FREQUENCY)
             )),

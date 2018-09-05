@@ -853,7 +853,8 @@ section #result-mount .ktx-pagination {
 }
 
 a.disabled,
-.disabled {
+input.disabled,
+button.disabled {
     color: @color-light-text;
 }
 
@@ -1213,7 +1214,12 @@ p.boxed-par {
 
 .sh-value-clickable {
     text-decoration: none;
-    background-color: rgb(236, 243, 250);
+    background-color: rgb(236, 239, 250);
+}
+
+.sh-value-clickable:hover {
+    color: @color-logo-blue;
+    text-decoration: underline;
 }
 
 @keyframes fadein {
