@@ -1106,10 +1106,10 @@ export class ViewPage {
         this.viewModels.dashboardModel = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.layoutModel.getModels().generalViewOptionsModel,
             {
-                showTTOverview: !!this.layoutModel.getConf<number>('ShowTTOverview'),
-                hasTTCrit: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
+                showFreqInfo: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
+                                    this.layoutModel.getConf<Array<string>>('ConcDashboardModules').indexOf('freqs') > -1,
+                hasKwicConnect: this.layoutModel.pluginIsActive('kwic_connect')
             }
         );
         this.viewModels.ttDistModel = new TextTypesDistModel(
@@ -1136,7 +1136,6 @@ export class ViewPage {
                 this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
                     (optsModel) => {
                         this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
-                        this.viewModels.dashboardModel.updateOnGlobalViewOptsChange(optsModel);
                     }
                 );
                 const ttModel = this.initTextTypesModel();

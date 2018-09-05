@@ -23,7 +23,7 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as ttOverviewInit} from './ttOverview';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import {ConcDashboard} from '../../models/concordance/dashboard';
+import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashboard';
 import { PluginInterfaces } from '../../types/plugins';
 
 
@@ -48,27 +48,6 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
     const layoutViews = he.getLayoutViews();
     const ttDistViews = ttOverviewInit(dispatcher, he, ttDistModel);
 
-    // ------------------------- <CloseIcon /> ---------------------------
-
-    const CloseIcon:React.SFC<{}> = (props) => {
-
-        const handleClick = () => {
-            if (window.confirm(
-                    he.translate('concview__close_tt_overview_confirm_msg'))) {
-                dispatcher.dispatch({
-                    actionType: 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY',
-                    props: {
-                        value: false
-                    }
-                });
-            }
-        };
-
-        return <a className="CloseIcon" onClick={handleClick} title={he.translate('global__close')}>
-            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')} />
-        </a>;
-    };
-
     // ------------------------- <MinimizeIcon /> ---------------------------
 
     const MinimizeIcon:React.SFC<{
@@ -89,7 +68,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
             return <a className="MinimizeIcon" onClick={handleClick} title={he.translate('global__restore')}>
                 <layoutViews.ImgWithMouseover
                         src={he.createStaticUrl('img/maximize-icon.svg')}
-                        alt={he.translate('global__restore')} />
+                        alt={he.translate('global__restore_dashboard')} />
             </a>;
 
         } else {
@@ -102,52 +81,18 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
 
     }
 
-    // ---------------------- <Menu /> ----------------------------------------
-
-    const Menu:React.SFC<{
-        activeTab:string;
-        hasKwicConnectView:boolean;
-        clickHandler:(v:string)=>void;
-
-    }> = (props) => {
-        return(
-            <div className="Menu">
-                <ul>
-                    <li className={props.activeTab === 'tt-overview' ? 'active' : ''}>
-                        <a onClick={() => props.clickHandler('tt-overview')}>{he.translate('concview__text_types_ratios_head')}</a>
-                    </li>
-                    {props.hasKwicConnectView ?
-                        <li className={props.activeTab === 'kwic-connect' ? 'active' : ''}>
-                            <a onClick={() => props.clickHandler('kwic-connect')}>Extended kwic info</a>
-                        </li> :
-                        null
-                    }
-                </ul>
-            </div>
-        );
-    };
-
     // ---------------------- <ConcExtendedInfo /> ----------------------------------------
 
-    class ConcExtendedInfo extends React.Component<ConcExtendedInfoProps, {
-        extendedInfoMinimized:boolean;
-
-    }> {
+    class ConcExtendedInfo extends React.Component<ConcExtendedInfoProps, ConcDashboardState> {
 
         constructor(props) {
             super(props);
-            this.state = this.fetchStoreState();
+            this.state = dashboardModel.getState();
             this.handleStoreChange = this.handleStoreChange.bind(this);
         }
 
-        private fetchStoreState() {
-            return {
-                extendedInfoMinimized: dashboardModel.getIsExtendedInfoMinimized()
-            }
-        }
-
-        private handleStoreChange() {
-            this.setState(this.fetchStoreState());
+        private handleStoreChange(state) {
+            this.setState(state);
         }
 
         private hasKwicConnectView() {
@@ -156,7 +101,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
 
         componentDidMount() {
             dashboardModel.addChangeListener(this.handleStoreChange);
-            if (this.state.extendedInfoMinimized) { // we are doing a pre-load here
+            if (!this.state.expanded) { // we are doing a pre-load here
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
                     props: {}
@@ -171,24 +116,25 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
         render() {
             return (
                 <div className="ConcExtendedInfo">
-                    <div>
-                        <CloseIcon />
-                        <MinimizeIcon minimized={this.state.extendedInfoMinimized} />
-                        <h2 className={`${this.state.extendedInfoMinimized ? 'minimized' : null}`}>
-                            {he.translate('concview__extended_info')}
-                            {this.state.extendedInfoMinimized ? '\u2026' : ''}
+                    <header>
+                        <h2>
+                            {this.state.expanded ? he.translate('concview__extended_info') : '\u00a0'}
                         </h2>
-                    </div>
-                    {this.state.extendedInfoMinimized ?
-                        <div className="minimized-contents"></div> :
+                        <MinimizeIcon minimized={!this.state.expanded} />
+                    </header>
+                    {this.state.expanded ?
                         <div className="contents">
-                            <div className="box">
-                                <ttDistViews.TextTypesDist />
-                            </div>
+                            {this.state.showFreqInfo ?
+                                <div className="box">
+                                    <ttDistViews.TextTypesDist />
+                                </div> :
+                                null
+                            }
                             <div className="box">
                                 {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
                             </div>
-                        </div>
+                        </div> :
+                        <div></div>
                     }
                 </div>
             );

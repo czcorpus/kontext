@@ -29,6 +29,9 @@
         <static_files_prefix>/files</static_files_prefix>
         <use_conc_toolbar>0</use_conc_toolbar>
         <anonymous_user_conc_login_prompt>0</anonymous_user_conc_login_prompt>
+        <conc_dashboard_modules>
+            <item>freqs</item>
+        </conc_dashboard_modules>
     </global>
     <calc_backend>
         <type>celery</type>

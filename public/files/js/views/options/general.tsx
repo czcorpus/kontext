@@ -166,36 +166,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------ <TRShowTextTypesOverview /> ----------------------------
-
-    const TRShowTextTypesOverview:React.SFC<{
-        value:boolean;
-
-    }> = (props) => {
-
-        const handleCheckbox = () => {
-            dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_SHOW_TT_OVERVIEW',
-                props: {
-                    value: !props.value
-                }
-            });
-        };
-
-        return (
-            <tr>
-                <th>
-                    <label htmlFor="show-tt-overview">
-                        {he.translate('options__conc_show_tt_overview')}:
-                    </label>
-                </th>
-                <td>
-                    <input id="show-tt-overview" type="checkbox" onChange={handleCheckbox} checked={props.value} />
-                </td>
-            </tr>
-        );
-    };
-
     // ------------- <TRUseCQLEditor /> ---------------------
 
     const TRUseCQLEditor:React.SFC<{
@@ -233,7 +203,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         newCtxSize:Kontext.FormValue<string>;
         lineNumbers:boolean;
         shuffle:boolean;
-        showTTOverview:boolean;
         useCQLEditor:boolean;
 
     }> = (props) => {
@@ -248,7 +217,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <TRKwicContextSize value={props.newCtxSize} />
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
                         <TRAlwaysShuffleCheckbox value={props.shuffle} />
-                        <TRShowTextTypesOverview value={props.showTTOverview} />
                         <TRUseCQLEditor value={props.useCQLEditor} />
                     </tbody>
                 </table>
@@ -449,7 +417,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         wlPageSize:Kontext.FormValue<string>;
         fmaxItems:Kontext.FormValue<string>;
         citemsPerPage:Kontext.FormValue<string>;
-        showTTOverview:boolean;
         modelIsBusy:boolean;
         useCQLEditor:boolean;
         userIsAnonymous:boolean;
@@ -470,7 +437,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 wlPageSize: generalOptionsModel.getWlPageSize(),
                 fmaxItems: generalOptionsModel.getFmaxItems(),
                 citemsPerPage: generalOptionsModel.getCitemsPerPage(),
-                showTTOverview: generalOptionsModel.getShowTTOverview(),
                 modelIsBusy: generalOptionsModel.getIsBusy(),
                 useCQLEditor: generalOptionsModel.getUseCQLEditor(),
                 userIsAnonymous: generalOptionsModel.getUserIsAnonymous()
@@ -500,7 +466,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 newCtxSize={this.state.newCtxSize}
                                 lineNumbers={this.state.lineNumbers}
                                 shuffle={this.state.shuffle}
-                                showTTOverview={this.state.showTTOverview}
                                 useCQLEditor={this.state.useCQLEditor} />
                         <FieldsetWordlist wlPageSize={this.state.wlPageSize}  />
                         <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />

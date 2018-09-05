@@ -109,6 +109,7 @@ class Actions(Querying):
         result['globals'] += '&' + self.urlencode(args)
         result['Globals'] = result['Globals'].update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
+        result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         if len(result['query_overview']) > 0:
             result['page_title'] = u'{0} / {1}'.format(self._human_readable_corpname(),
                                                        result['query_overview'][0].get('nicearg'))
