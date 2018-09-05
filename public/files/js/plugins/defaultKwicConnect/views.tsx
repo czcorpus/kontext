@@ -18,51 +18,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import { ActionDispatcher } from '../../app/dispatcher';
 import { Kontext } from '../../types/common';
-import { KwicConnectModel, KwicConnectState, Actions } from './model';
-import { Component } from 'react';
+import { KwicConnectModel, KwicConnectState } from './model';
 import {PluginInterfaces} from '../../types/plugins';
 
-export interface KwicConnectWidgetProps {
+export interface KwicConnectContainerProps {
 
 }
 
 
 export interface View {
-    KwicConnectWidget:React.ComponentClass<KwicConnectWidgetProps>;
+    KwicConnectContainer:React.ComponentClass<KwicConnectContainerProps>;
 }
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, model:KwicConnectModel):View {
 
     const layoutViews = he.getLayoutViews();
 
-    // --------------------- <ProviderSwitch /> ------------------------------------
+    // --------------------- <KwicConnectContainer /> ------------------------------------
 
-    const ProviderSwitch:React.SFC<{
-        visibleIdx:number;
-        providers:Immutable.Iterable<number, string>;
-
-    }> = (props) => {
-
-        const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch({
-                actionType: Actions.SET_VISIBLE_PROVIDER,
-                props: {value: evt.target.value}
-            });
-        };
-
-        return <select onChange={handleChange}>
-                {props.providers.map((provider, i) => {
-                    return <option key={`opt${i}`} value={i}>{provider}</option>
-                })}
-            </select>;
-    };
-
-    // --------------------- <KwicConnectWidget /> ------------------------------------
-
-    class KwicConnectWidget extends React.Component<KwicConnectWidgetProps, KwicConnectState> {
+    class KwicConnectContainer extends React.Component<KwicConnectContainerProps, KwicConnectState> {
 
         constructor(props) {
             super(props);
@@ -86,46 +62,49 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
             model.removeChangeListener(this.stateChangeHandler);
         }
 
-        renderWidget() {
-            const providerOutput = this.state.data.get(this.state.visibleProviderIdx);
-            if (providerOutput) {
-                return <div className="KwicConnectWidget">
-                    <ProviderSwitch visibleIdx={0} providers={this.state.data.map(p => p.heading)} />
-                    <div>
-                        {providerOutput.data.size > 0 ?
-                            <>
-                                {providerOutput.data.map((item, j) =>
-                                <providerOutput.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
-                                <p className="note">
-                                    {providerOutput.note ? providerOutput.note + '\u00a0|\u00a0' : null}
-                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
-                                        {attr: this.state.freqType})}
-                                </p>
-                            </> :
-                            <p className="data-not-avail">
-                                <img src={he.createStaticUrl('img/info-icon.svg')} />
-                                {he.translate('global__no_data_avail')}
-                            </p>
-                            }
-                    </div>
-                </div>;
-
-            } else {
-                return null;
-            }
-        }
-
         render() {
+            const outList = this.state.data.filter(output => !!output);
             return (
-                <div>
-                    {this.renderWidget()}
-                    {this.state.isBusy ? <layoutViews.AjaxLoaderImage /> : null}
+                <div className="KwicConnectContainer">
+                    {outList.map(output => (
+                        <React.Fragment key={output.heading}>
+                            <div className="KwicConnectWidget">
+                                <h3 className="tckc-provider">{output.heading}
+                                <img src={he.createStaticUrl('img/book.svg')}
+                                                alt={he.translate('global__icon_book')} /></h3>
+                                <hr />
+                                <layoutViews.ErrorBoundary>
+                                    <div className="contents">
+                                        {output.data.size > 0 ?
+                                            <>
+                                                {output.data.map((item, j) =>
+                                                <output.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
+                                                <p className="note">
+                                                    {output.note ? output.note + '\u00a0|\u00a0' : null}
+                                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
+                                                        {attr: this.state.freqType})}
+                                                </p>
+                                            </> :
+                                            <p className="data-not-avail">
+                                                <img src={he.createStaticUrl('img/info-icon.svg')} />
+                                                {he.translate('global__no_data_avail')}
+                                            </p>
+                                        }
+                                    </div>
+                                </layoutViews.ErrorBoundary>
+                            </div>
+                        </React.Fragment>
+                    ))}
+                    {this.state.isBusy ?
+                        <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                        null
+                    }
                 </div>
             );
         }
     }
 
     return {
-        KwicConnectWidget: KwicConnectWidget
+        KwicConnectContainer: KwicConnectContainer
     };
 }

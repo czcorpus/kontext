@@ -18,14 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginName} from '../app/main';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import {TextTypesModel} from '../models/textTypes/attrValues';
-import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
+import {QueryModel, QueryHintModel} from '../models/query/main';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
@@ -33,7 +32,6 @@ import {QueryContextModel} from '../models/query/context';
 import {init as queryFormInit, QueryFormProps} from '../views/query/main';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import { CQLEditorProps } from '../views/query/cqlEditor';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
@@ -42,6 +40,8 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/firstForm.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 /**
  *

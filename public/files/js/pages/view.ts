@@ -72,6 +72,8 @@ import kwicConnectInit from 'plugins/kwicConnect/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/view.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 export class QueryModels {
     queryModel:QueryModel;
@@ -118,8 +120,6 @@ export class ViewPage {
 
     private queryModels:QueryModels;
 
-    private hasLockedGroups:boolean;
-
     private concViews:ConcViews;
 
     private analysisViews:AnalysisFrameViews;
@@ -155,10 +155,9 @@ export class ViewPage {
      * @param layoutModel
      * @param hasLockedGroups
      */
-    constructor(layoutModel:PageModel, hasLockedGroups:boolean) {
+    constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
         this.queryModels = new QueryModels();
-        this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
         this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
         this.lineGroupsChart = new LineSelGroupsRatiosChart(
@@ -1229,8 +1228,7 @@ export class ViewPage {
 export function init(conf):void {
     const layoutModel = new PageModel(conf);
     const pageModel = new ViewPage(
-        layoutModel,
-        layoutModel.getConf<number>('NumLinesInGroups') > 0
+        layoutModel
     );
     pageModel.init();
 };

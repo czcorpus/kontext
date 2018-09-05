@@ -24,8 +24,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import RSVP from 'rsvp';
-import * as Rx from '@reactivex/rxjs';
-
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
 import {CoreViews} from '../types/coreViews';
@@ -55,8 +53,6 @@ import issueReportingPlugin from 'plugins/issueReporting/init';
 declare var require:any; // webpack's require
 require('styles/layout.less');
 require('styles/widgets.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 
 export enum DownloadType {

@@ -867,7 +867,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         render() {
             return (
-                <div>
+                <div className="ConcordanceDashboard">
                     {this.state.showTTOverview ?
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null

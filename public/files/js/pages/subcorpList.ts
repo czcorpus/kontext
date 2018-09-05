@@ -20,13 +20,15 @@
 
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel, PluginApi} from '../app/main';
+import {PageModel} from '../app/main';
 import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
 import {init as listViewInit} from '../views/subcorp/list';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/subcorpList.less');
+require('custom-styles/theme.less');
+require('styles/layoutMobile.less');
 
 /**
  * Server-defined data (subcorpus/ajax_subcorp_info)
@@ -41,18 +43,8 @@ interface SubcorpusExtendedInfo {
 }
 
 /**
- * Server-defined data (subcorpus/ajax_subcorp_info)
+ *
  */
-interface SubcorpusInfo {
-    corpusName:string;
-    subCorpusName:string;
-    corpusSize:string;
-    subCorpusSize:string;
-    created:string;
-    extended_info:SubcorpusExtendedInfo
-}
-
-
 class SubcorpListPage {
 
     private layoutModel:PageModel;
