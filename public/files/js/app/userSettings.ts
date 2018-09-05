@@ -124,7 +124,8 @@ export class UserSettings implements Kontext.IUserSettings {
      */
     static createInstance(conf:Kontext.IConfHandler):UserSettings {
         return new UserSettings(
-            (typeof window.localStorage === 'object' && false) ? window.localStorage : new TransientStorage(),
+            typeof window.localStorage === 'object' ?
+                window.localStorage : new TransientStorage(),
             'kontext_ui',
             '__timestamp__'
         );

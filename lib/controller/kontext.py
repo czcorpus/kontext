@@ -217,7 +217,7 @@ class Kontext(Controller):
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
                        'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
-                       'tt_overview', 'cql_editor')
+                       'cql_editor')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 

@@ -277,6 +277,15 @@
                             </a:documentation>
                         </element>
                     </optional>
+                    <element name="conc_dashboard_modules">
+                        <zeroOrMore>
+                            <element name="item">
+                                <choice>
+                                    <value>freqs</value>
+                                </choice>
+                            </element>
+                        </zeroOrMore>
+                    </element>
                 </interleave>
             </element>
             <element name="calc_backend">

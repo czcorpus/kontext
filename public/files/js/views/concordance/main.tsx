@@ -34,7 +34,7 @@ import { ConcLineModel, ConcSummary as LinesConcSummary } from '../../models/con
 import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/concordance/detail';
 import { CollFormModel } from '../../models/coll/collForm';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import { ConcDashboard } from '../../models/concordance/dashboard';
+import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
 
 
 export class ViewPageModels {
@@ -74,11 +74,6 @@ export interface ConcordanceDashboardProps {
         onReady:()=>void;
     };
     kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
-}
-
-
-interface ConcordanceDashboardState {
-    showTTOverview:boolean;
 }
 
 
@@ -839,22 +834,16 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
 
-    class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcordanceDashboardState> {
+    class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcDashboardState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
+            this.state = dashboardModel.getState();
             this._modelChangeListener = this._modelChangeListener.bind(this);
         }
 
-        _modelChangeListener() {
-            this.setState(this._fetchModelState());
-        }
-
-        _fetchModelState() {
-            return {
-                showTTOverview: dashboardModel.getShowTTOverview()
-            };
+        _modelChangeListener(state) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -865,10 +854,19 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             dashboardModel.removeChangeListener(this._modelChangeListener);
         }
 
+        private getModClass():string {
+            if (this.state.showFreqInfo || this.state.showKwicConnect) {
+                return this.state.expanded ? '' : ' collapsed';
+
+            } else {
+                return ' disabled';
+            }
+        }
+
         render() {
             return (
-                <div className="ConcordanceDashboard">
-                    {this.state.showTTOverview ?
+                <div className={`ConcordanceDashboard${this.getModClass()}`}>
+                    {this.state.showFreqInfo || this.state.showKwicConnect ?
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
                     }

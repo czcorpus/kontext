@@ -693,7 +693,6 @@ export namespace ViewOptions {
         getFmaxItems():Kontext.FormValue<string>;
         getCitemsPerPage():Kontext.FormValue<string>;
         getIsBusy():boolean;
-        getShowTTOverview():boolean;
         addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
         getUseCQLEditor():boolean;
         getUserIsAnonymous():boolean;

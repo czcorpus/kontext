@@ -5,19 +5,23 @@
 
     .ConcordanceDashboard {
         display: grid;
+        align-items: flex-start;
         grid-template-columns: minmax(auto, 35em) auto;
         grid-column-gap: 1em;
+    }
+
+    .ConcordanceDashboard.collapsed {
+        grid-template-columns: 3em auto;
+    }
+
+    .ConcordanceDashboard.disabled {
+        grid-template-columns: auto;
     }
 
     .ktx-pagination {
         float: right;
         text-align: right;
         width: 20%;
-    }
-
-    .ConcExtendedInfo {
-        display: flex;
-        flex-direction: column;
     }
 
     .ConcordanceView,
@@ -27,17 +31,6 @@
         margin-bottom: 1em;
         margin-top: 1em;
         box-shadow: @portal-box-shadow;
-
-        .CloseIcon,
-        .MinimizeIcon {
-            margin-right: 0.6em;
-            margin-top: 0.5em;
-            float: right;
-
-            img {
-                width: 1.2em;
-            }
-        }
 
         > .contents {
 
@@ -84,19 +77,34 @@
     }
 
     .ConcExtendedInfo {
+        display: flex;
+        flex-direction: column;
+
+        header {
+            display: flex;
+            flex-direction: row;
+            background-color: @color-default-green;
+            padding: 0.3em 0.7em;
+
+            .MinimizeIcon {
+                display: inline-block;
+                margin-right: 0;
+
+                img {
+                    display: inline-block;
+                    vertical-align: middle;
+                    width: 1.3em;
+                }
+            }
+
+            h2 {
+                flex-grow: 9;
+                margin: 0;
+            }
+
+        }
 
         background-color: #FFFFFF;
-
-        h2 {
-            margin: 0;
-            padding: 0.4em 1em;
-            background-color: @color-default-green;
-            font-size: 1.2em;
-        }
-
-        h2.minimized {
-            color: @color-light-text;
-        }
 
         p.note {
             max-width: 30em;
@@ -128,10 +136,6 @@
 
                 }
             }
-        }
-
-        > .minimized-contents {
-
         }
 
         > .contents {

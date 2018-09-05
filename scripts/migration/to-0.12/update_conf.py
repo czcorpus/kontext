@@ -198,6 +198,14 @@ def update_10(doc):
         pt_srch.getparent().remove(pt_srch)
 
 
+def update_11(doc):
+    srch = doc.find('/global')
+    elm = etree.SubElement(srch, 'conc_dashboard_modules')
+    elm2 = etree.SubElement(elm, 'item')
+    elm2.text = 'freqs'
+    elm.tail = '\n        '
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.11.x '

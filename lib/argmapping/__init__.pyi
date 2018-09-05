@@ -139,7 +139,6 @@ class GlobalArgs(object):
     wlsendmail:str
     cup_hl:str
     structattrs:List[str]
-    tt_overview:int
     cql_editor:int
 
     flimit:int

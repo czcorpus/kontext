@@ -18,67 +18,63 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {ViewOptions} from '../../types/common';
-import {StatefulModel} from '../base';
+import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 
-
-export interface ConcDashboardProps {
-    showTTOverview:boolean;
-    hasTTCrit:boolean;
+export interface ConcDashboardConf {
+    showFreqInfo:boolean;
+    hasKwicConnect:boolean;
 }
 
 
-export class ConcDashboard extends StatefulModel {
+export interface ConcDashboardState {
+    expanded:boolean;
+    showKwicConnect:boolean;
+    showFreqInfo:boolean;
+}
+
+
+export class ConcDashboard extends StatelessModel<ConcDashboardState> {
 
     private layoutModel:PageModel;
 
-    private showTTOverview:boolean;
+    private static EXTENDED_INFO_MINIMIZED_LOCAL_KEY = 'dashboardExpanded';
 
-    private globalOpts:ViewOptions.IGeneralViewOptionsModel;
-
-    private hasTTCrit:boolean;
-
-    private extendedInfoMinimized:boolean;
-
-    private static EXTENDED_INFO_MINIMIZED_LOCAL_KEY = 'extendedInfoMinimized';
-
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
-                globalOpts:ViewOptions.IGeneralViewOptionsModel, props:ConcDashboardProps) {
-        super(dispatcher);
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, conf:ConcDashboardConf) {
+        super(
+            dispatcher,
+            {
+                expanded: layoutModel.getLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, true),
+                showKwicConnect: conf.hasKwicConnect,
+                showFreqInfo: conf.showFreqInfo
+            });
         this.layoutModel = layoutModel;
-        this.extendedInfoMinimized = this.layoutModel.getLocal(
-                    ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, false);
-        this.showTTOverview = props.showTTOverview;
-        this.hasTTCrit = props.hasTTCrit;
-
-        dispatcher.register((action:ActionPayload) => {
-            switch (action.actionType) {
-                case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
-                    this.extendedInfoMinimized = true;
-                    this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, true);
-                    this.notifyChangeListeners();
-                break;
-                case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
-                    this.extendedInfoMinimized = false;
-                    this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, false);
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
     }
 
-    updateOnGlobalViewOptsChange(model:ViewOptions.IGeneralViewOptionsModel):void {
-        this.showTTOverview = model.getShowTTOverview();
-        this.notifyChangeListeners();
+    reduce(state:ConcDashboardState, action:ActionPayload) {
+        let newState:ConcDashboardState;
+        switch (action.actionType) {
+            case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
+                newState = this.copyState(state);
+                newState.expanded = false;
+                this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, true);
+                return newState;
+            case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
+                newState = this.copyState(state);
+                newState.expanded = true;
+                return newState;
+            default:
+                return state;
+        }
     }
 
-    getShowTTOverview():boolean {
-        return this.showTTOverview && this.hasTTCrit;
-    }
-
-    getIsExtendedInfoMinimized():boolean {
-        return this.extendedInfoMinimized;
+    sideEffects(state:ConcDashboardState, action:ActionPayload, dispatch:SEDispatcher) {
+        switch (action.actionType) {
+            case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
+            case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
+                this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, state.expanded);
+            break;
+        }
     }
 }

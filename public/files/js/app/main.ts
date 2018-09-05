@@ -697,7 +697,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     getLocal<T = string|number|boolean>(k:string, dflt:T=undefined):T {
-        return this.userSettings.get<T>(k) || dflt;
+        const ans = this.userSettings.get<T>(k);
+        return ans !== undefined ? ans : dflt;
     }
 
     restoreModelsDataAfterSwitch():void {
