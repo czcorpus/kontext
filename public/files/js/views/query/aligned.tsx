@@ -21,14 +21,14 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
-import {init as inputInit} from './input';
 import {InputModuleViews} from './input';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {QueryModel, QueryHintModel, WidgetsMap} from '../../models/query/main';
+import {QueryModel, WidgetsMap} from '../../models/query/main';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import {PluginInterfaces} from '../../types/plugins';
+import { UsageTipsModel } from '../../models/usageTips';
 
 
 export interface AlignedModuleArgs {
@@ -36,7 +36,7 @@ export interface AlignedModuleArgs {
     he:Kontext.ComponentHelpers;
     inputViews:InputModuleViews;
     queryModel:QueryModel;
-    queryHintModel:QueryHintModel;
+    queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     cqlEditorModel:CQLEditorModel;

@@ -23,13 +23,14 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
 import {FilterModel} from '../../models/query/filter';
-import {QueryHintModel, WidgetsMap} from '../../models/query/main';
+import {WidgetsMap} from '../../models/query/main';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {FirstHitsModel} from '../../models/query/firstHits';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {PluginInterfaces} from '../../types/plugins';
+import { UsageTipsModel } from '../../models/usageTips';
 
 
 
@@ -108,7 +109,7 @@ export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         filterModel:FilterModel,
-        queryHintModel:QueryHintModel,
+        queryHintModel:UsageTipsModel,
         withinBuilderModel:WithinBuilderModel,
         virtualKeyboardModel:VirtualKeyboardModel,
         firstHitsModel:FirstHitsModel,

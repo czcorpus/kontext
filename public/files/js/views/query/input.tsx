@@ -26,7 +26,8 @@ import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
 import {Kontext, KeyCodes} from '../../types/common';
-import {GeneralQueryModel, QueryHintModel} from '../../models/query/main';
+import {GeneralQueryModel} from '../../models/query/main';
+import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 
@@ -35,7 +36,7 @@ export interface InputModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
     queryModel:GeneralQueryModel;
-    queryHintModel:QueryHintModel;
+    queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     cqlEditorModel:CQLEditorModel;
@@ -110,20 +111,17 @@ export function init({
 
     class QueryHints extends React.Component<{
         actionPrefix:string;
-    },
-    {
-        hintText:string;
-    }> {
+    }, UsageTipsState> {
 
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
             this._clickHandler = this._clickHandler.bind(this);
-            this.state = {hintText: queryHintModel.getHint()};
+            this.state = queryHintModel.getState();
         }
 
-        _changeListener() {
-            this.setState({hintText: queryHintModel.getHint()});
+        _changeListener(state) {
+            this.setState(state);
         }
 
         _clickHandler() {
@@ -144,7 +142,7 @@ export function init({
         render() {
             return (
                 <div>
-                    <span className="hint">{this.state.hintText}</span>
+                    <span className="hint">{this.state.currentHints.get(UsageTipCategory.QUERY)}</span>
                     <span className="next-hint">
                         (<a onClick={this._clickHandler}>{he.translate('global__next_tip')}</a>)
                     </span>
