@@ -450,5 +450,5 @@ msgstr "Zpět"
 msgid "Public subcorpora"
 msgstr "Veřejné subkorpusy"
 
-msgid "List of published subcorpora"
-msgstr "Seznam publikovaných subkorpusů"
+msgid "Find a published subcorpus"
+msgstr "Najít publikovaný subkorpus"
