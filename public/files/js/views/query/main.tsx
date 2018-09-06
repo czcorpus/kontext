@@ -28,7 +28,8 @@ import {init as ttViewsInit} from '../textTypes';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
-import {QueryModel, QueryHintModel, WidgetsMap} from '../../models/query/main';
+import {QueryModel, WidgetsMap} from '../../models/query/main';
+import {UsageTipsModel} from '../../models/usageTips';
 import {TextTypesModel} from '../../models/textTypes/attrValues';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
@@ -42,7 +43,7 @@ export interface MainModuleArgs {
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
     queryModel:QueryModel;
     textTypesModel:TextTypesModel;
-    queryHintModel:QueryHintModel;
+    queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
