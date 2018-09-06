@@ -31,8 +31,6 @@ import createCorparch from 'plugins/corparch/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/wordlistForm.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 /**
  *

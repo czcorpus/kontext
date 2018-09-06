@@ -24,8 +24,6 @@ import {PageModel} from '../app/main';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/userProfile.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 
 export function init(conf:Kontext.Conf):void {

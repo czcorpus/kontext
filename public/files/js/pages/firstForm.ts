@@ -40,8 +40,6 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/firstForm.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 /**
  *

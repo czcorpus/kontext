@@ -72,8 +72,6 @@ import kwicConnectInit from 'plugins/kwicConnect/init';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/view.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 export class QueryModels {
     queryModel:QueryModel;

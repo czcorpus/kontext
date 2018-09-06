@@ -24,8 +24,6 @@ import {PublicSubcorpListModel, DataItem, CorpusItem} from '../models/subcorp/li
 
 declare var require:any;
 require('styles/pubSubcorpList.less'); // webpack
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 
 class PubSubcorpPage {

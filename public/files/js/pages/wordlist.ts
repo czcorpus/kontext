@@ -32,8 +32,6 @@ import {WordlistSaveModel} from '../models/wordlist/save';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/wordlist.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 /**
  *
