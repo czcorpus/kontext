@@ -618,46 +618,48 @@ export class QueryReplayStore extends QueryInfoStore {
      */
     private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        if (queryKey !== undefined) { // cache hit
-            return this.queryStore.syncFrom(() => {
-                return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
-                    resolve(this.concArgsCache.get(queryKey));
+        (() => {
+            if (queryKey !== undefined) { // cache hit
+                return this.queryStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    });
                 });
-            });
 
-        } else {
-            return this.queryStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
-                    'GET',
-                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                    {
-                        corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
-                        idx: opIdx
-                    }
+            } else {
+                return this.queryStore.syncFrom(() => {
+                    return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
+                        'GET',
+                        this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                        {
+                            corpname: this.getActualCorpname(),
+                            last_key: this.getCurrentQueryKey(),
+                            idx: opIdx
+                        }
 
-                ).then(
-                    (data) => {
-                        this.concArgsCache = this.concArgsCache.set(
-                            data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
-                    }
+                    ).then(
+                        (data) => {
+                            this.concArgsCache = this.concArgsCache.set(
+                                data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+                        }
 
-                ).then(
-                    (data) => {
-                        // syncFrom
-                        return this.textTypesStore.syncFrom(() => {
-                            return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
-                                (resolve:(d)=>void, reject:(err)=>void) => {
-                                    resolve(data);
-                                }
-                            );
-                        });
-                    }
-                );
-            });
-        }
+                    )
+                });
+            }
+        })().then(
+            (data) => {
+                // syncFrom
+                return this.textTypesStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
+                        (resolve:(d)=>void, reject:(err)=>void) => {
+                            resolve(data);
+                        }
+                    );
+                });
+            }
+        );
     }
 
     /**
