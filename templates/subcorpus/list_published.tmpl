@@ -18,9 +18,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #from cmpltmpl.document import document
 #extends document
+#from translation import ugettext as _
 
 #def title
-KonText - $_("List of published subcorpora")#slurp
+KonText - $_("Find a published subcorpus")#slurp
 #end def
 
 #def bodyonload
@@ -31,7 +32,7 @@ pubSubcorpListPage.init(__conf);
 
 #def main
 <section>
-    <h2>$_('List of published subcorpora')</h2>
+    <h2>$_('Find a published subcorpus')</h2>
     <div id="published-subcorpora-mount"></di>
 </section>
 #end def
