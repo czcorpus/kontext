@@ -730,21 +730,23 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                             return data;
                         }
 
-                    ).then(
-                        (data) => {
-                            // syncFrom
-                            return this.textTypesModel.syncFrom(() => {
-                                return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
-                                    (resolve:(d)=>void, reject:(err)=>void) => {
-                                        resolve(data);
-                                    }
-                                );
-                            });
+                    );
+                });
+            }
+
+        })().then(
+            (data) => {
+                // syncFrom
+                return this.textTypesModel.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
+                        (resolve:(d)=>void, reject:(err)=>void) => {
+                            resolve(data);
                         }
                     );
                 });
             }
-        })().then(
+
+        ).then(
             (data) => {
                 this.synchronize(
                     'EDIT_QUERY_OPERATION',
