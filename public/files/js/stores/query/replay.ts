@@ -618,7 +618,7 @@ export class QueryReplayStore extends QueryInfoStore {
      */
     private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        (() => {
+        return (() => {
             if (queryKey !== undefined) { // cache hit
                 return this.queryStore.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
