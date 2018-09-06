@@ -618,46 +618,48 @@ export class QueryReplayStore extends QueryInfoStore {
      */
     private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        if (queryKey !== undefined) { // cache hit
-            return this.queryStore.syncFrom(() => {
-                return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
-                    resolve(this.concArgsCache.get(queryKey));
+        (() => {
+            if (queryKey !== undefined) { // cache hit
+                return this.queryStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    });
                 });
-            });
 
-        } else {
-            return this.queryStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
-                    'GET',
-                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                    {
-                        corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
-                        idx: opIdx
-                    }
+            } else {
+                return this.queryStore.syncFrom(() => {
+                    return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
+                        'GET',
+                        this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                        {
+                            corpname: this.getActualCorpname(),
+                            last_key: this.getCurrentQueryKey(),
+                            idx: opIdx
+                        }
 
-                ).then(
-                    (data) => {
-                        this.concArgsCache = this.concArgsCache.set(
-                            data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
-                    }
+                    ).then(
+                        (data) => {
+                            this.concArgsCache = this.concArgsCache.set(
+                                data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+                        }
 
-                ).then(
-                    (data) => {
-                        // syncFrom
-                        return this.textTypesStore.syncFrom(() => {
-                            return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
-                                (resolve:(d)=>void, reject:(err)=>void) => {
-                                    resolve(data);
-                                }
-                            );
-                        });
-                    }
-                );
-            });
-        }
+                    )
+                });
+            }
+        })().then(
+            (data) => {
+                // syncFrom
+                return this.textTypesStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
+                        (resolve:(d)=>void, reject:(err)=>void) => {
+                            resolve(data);
+                        }
+                    );
+                });
+            }
+        );
     }
 
     /**
@@ -703,64 +705,63 @@ export class QueryReplayStore extends QueryInfoStore {
      */
     private syncSortForm(opIdx:number):RSVP.Promise<AjaxResponse.SortFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        return (() => {
-            if (queryKey !== undefined) {
-                return this.sortStore.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.SortFormArgs>(
-                        (resolve:(data)=>void, reject:(err)=>void) => {
-                            resolve(this.concArgsCache.get(queryKey));
-                        }
-                    );
-                }).then<AjaxResponse.SortFormArgs>(
-                    (data) => {
-                        return this.mlSortStore.syncFrom(() => {
-                            return new RSVP.Promise<AjaxResponse.SortFormArgs>(
-                                (resolve:(data)=>void, reject:(err)=>void) => {
-                                    resolve(data);
-                                }
-                            );
-                        });
+        if (queryKey !== undefined) {
+            return this.sortStore.syncFrom(() => {
+                return new RSVP.Promise<AjaxResponse.SortFormArgs>(
+                    (resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
                     }
                 );
-
-            } else {
-                return this.sortStore.syncFrom(() => {
-                    return this.pageModel.ajax<AjaxResponse.SortFormArgsResponse>(
-                        'GET',
-                        this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                        {
-                            corpname: this.getActualCorpname(),
-                            last_key: this.getCurrentQueryKey(),
-                            idx: opIdx
-                        }
-
-                    ).then<AjaxResponse.SortFormArgsResponse>(
-                        (data) => {
-                            if (!data.contains_errors) {
-                                this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                                this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                                return data;
-
-                            } else {
-                                throw new Error(data.messages[0]);
+            }).then<AjaxResponse.SortFormArgs>(
+                (data) => {
+                    return this.mlSortStore.syncFrom(() => {
+                        return new RSVP.Promise<AjaxResponse.SortFormArgs>(
+                            (resolve:(data)=>void, reject:(err)=>void) => {
+                                resolve(data);
                             }
-                        }
-                    );
-                });
-            }
-        })().then<AjaxResponse.SortFormArgs>(
-            (data) => {
-                const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
-                return this.mlSortStore.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.SortFormArgs>(
-                        (resolve:(data)=>void, reject:(err)=>void) => {
-                            resolve(this.concArgsCache.get(queryKey));
-                        }
-                    );
-                });
+                        );
+                    });
+                }
+            );
 
-            }
-        );
+        } else {
+            return this.sortStore.syncFrom(() => {
+                return this.pageModel.ajax<AjaxResponse.SortFormArgsResponse>(
+                    'GET',
+                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
+
+                ).then<AjaxResponse.SortFormArgsResponse>(
+                    (data) => {
+                        if (!data.contains_errors) {
+                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+
+                        } else {
+                            throw new Error(data.messages[0]);
+                        }
+                    }
+                )
+
+            }).then<AjaxResponse.SortFormArgs>(
+                (data) => {
+                    const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
+                    return this.mlSortStore.syncFrom(() => {
+                        return new RSVP.Promise<AjaxResponse.SortFormArgs>(
+                            (resolve:(data)=>void, reject:(err)=>void) => {
+                                resolve(this.concArgsCache.get(queryKey));
+                            }
+                        );
+                    });
+
+                }
+            );
+        }
     }
 
     private syncSampleForm(opIdx:number):RSVP.Promise<any> {
