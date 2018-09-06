@@ -27,8 +27,6 @@ import {init as messageViewsInit, MessageViewProps} from '../views/message';
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/message.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 /**
  *

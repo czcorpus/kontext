@@ -38,8 +38,6 @@ import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 declare var require:any;
 // weback - ensure an individual style (even empty one) is created for the page
 require('styles/coll.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 /**
  *

@@ -23,8 +23,6 @@ import corparch from 'plugins/corparch/init';
 declare var require:any;
  // weback - ensure a style (even empty one) is created for the page
 require('styles/corplist.less');
-require('custom-styles/theme.less');
-require('styles/layoutMobile.less');
 
 /**
  * Initializes a corplist.tmpl page model.
