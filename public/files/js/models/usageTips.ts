@@ -40,7 +40,9 @@ const tipsDef = Immutable.List<UsageTip>([
     {messageId: 'query__tip_01', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_02', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_03', category: UsageTipCategory.QUERY},
-    {messageId: 'query__tip_04', category: UsageTipCategory.QUERY}
+    {messageId: 'query__tip_04', category: UsageTipCategory.QUERY},
+    {messageId: 'concview__tip_01', category: UsageTipCategory.CONCORDANCE},
+    {messageId: 'concview__tip_02', category: UsageTipCategory.CONCORDANCE}
 ]);
 
 export interface UsageTipsState {
@@ -94,6 +96,10 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
             case 'NEXT_QUERY_HINT':
                 newState = this.copyState(state);
                 this.setNextHint(newState, UsageTipCategory.QUERY);
+                return newState;
+            case 'NEXT_CONC_HINT':
+                newState = this.copyState(state);
+                this.setNextHint(newState, UsageTipCategory.CONCORDANCE);
                 return newState;
             default:
                 return state;

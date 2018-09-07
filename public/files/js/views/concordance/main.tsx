@@ -35,6 +35,7 @@ import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/conco
 import { CollFormModel } from '../../models/coll/collForm';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
+import { UsageTipsModel } from '../../models/usageTips';
 
 
 export class ViewPageModels {
@@ -47,6 +48,7 @@ export class ViewPageModels {
     mainMenuModel:Kontext.IMainMenuModel;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
+    usageTipsModel:UsageTipsModel;
 }
 
 
@@ -83,7 +85,7 @@ export interface MainViews {
 
 
 export function init({dispatcher, he, lineSelectionModel, lineViewModel,
-    concDetailModel, refsDetailModel, userInfoModel, collFormModel, mainMenuModel,
+    concDetailModel, refsDetailModel, usageTipsModel,
     ttDistModel, dashboardModel}:MainModuleArgs):MainViews
  {
 
@@ -109,7 +111,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         lineModel: lineViewModel
     });
     const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
-    const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, dashboardModel});
+    const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, usageTipsModel, dashboardModel});
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------

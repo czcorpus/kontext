@@ -24,6 +24,7 @@ import {Kontext} from '../../types/common';
 import {init as ttOverviewInit} from './ttOverview';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashboard';
+import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import { PluginInterfaces } from '../../types/plugins';
 
 
@@ -41,9 +42,10 @@ export interface ExtendedInfoViewsInitArgs {
     he:Kontext.ComponentHelpers;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
+    usageTipsModel:UsageTipsModel;
 }
 
-export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoViewsInitArgs):ExtendedInfoViews {
+export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsModel}:ExtendedInfoViewsInitArgs):ExtendedInfoViews {
 
     const layoutViews = he.getLayoutViews();
     const ttDistViews = ttOverviewInit(dispatcher, he, ttDistModel);
@@ -78,7 +80,44 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
                         alt={he.translate('global__minimize')} />
             </a>;
         }
+    }
 
+    // ---------------------- <UsageTips /> ----------------------------------------
+
+    class UsageTips extends React.PureComponent<{}, UsageTipsState> {
+
+        constructor(props) {
+            super(props);
+            this.state = usageTipsModel.getState();
+            this.handleModelChange = this.handleModelChange.bind(this);
+            this.handleNextClick = this.handleNextClick.bind(this);
+        }
+
+        private handleModelChange(state) {
+            this.setState(state);
+        }
+
+        componentDidMount() {
+            usageTipsModel.addChangeListener(this.handleModelChange);
+        }
+
+        componentWillUnmount() {
+            usageTipsModel.removeChangeListener(this.handleModelChange);
+        }
+
+        handleNextClick(e:React.MouseEvent<HTMLAnchorElement>) {
+            dispatcher.dispatch({
+                actionType: 'NEXT_CONC_HINT',
+                props: {}
+            });
+        }
+
+        render() {
+            return <div>
+                {this.state.currentHints.get(UsageTipCategory.CONCORDANCE)}
+                {'\u00a0'}(<a onClick={this.handleNextClick}>{he.translate('global__next_tip')}</a>)
+            </div>
+        };
     }
 
     // ---------------------- <ConcExtendedInfo /> ----------------------------------------
@@ -118,7 +157,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
                 <div className="ConcExtendedInfo">
                     <header>
                         <h2>
-                            {this.state.expanded ? he.translate('concview__extended_info') : '\u00a0'}
+                            {this.state.expanded ? he.translate('concview__extended_info') : ''}
                         </h2>
                         <MinimizeIcon minimized={!this.state.expanded} />
                     </header>
@@ -132,6 +171,14 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
                             }
                             <div className="box">
                                 {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
+                            </div>
+                            <div className="box">
+                                <h3 className="block">
+                                    {he.translate('concview__tips_heading')}
+                                    <img src={he.createStaticUrl('img/lightbulb.svg')} alt={he.translate('global__lightbulb_icon')} />
+                                </h3>
+                                <hr />
+                                <UsageTips />
                             </div>
                         </div> :
                         <div></div>
