@@ -26,7 +26,8 @@ KonText - $_("Find a published subcorpus")#slurp
 
 #def bodyonload
 __conf.Data = $to_json($data);
-__conf.Corpora = $to_json($corpora);
+__conf.MinAuthorPrefix = $to_json($min_author_prefix);
+__conf.MinCodePrefix = $to_json($min_code_prefix);
 pubSubcorpListPage.init(__conf);
 #end def
 

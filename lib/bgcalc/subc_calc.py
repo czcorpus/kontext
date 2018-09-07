@@ -20,10 +20,12 @@ class EmptySubcorpusException(Exception):
 
 class CreateSubcorpusTask(object):
 
-    def __init__(self, user_id, corpus_id):
+    def __init__(self, user_id, corpus_id, author, description):
         self._user_id = user_id
         self._cm = corplib.CorpusManager()
         self._corp = self._cm.get_Corpus(corpus_id)
+        self._author = author
+        self._description = description
 
     def run(self, tt_query, cql, path, publish_path):
         """
@@ -36,5 +38,5 @@ class CreateSubcorpusTask(object):
         if ans is False:
             raise EmptySubcorpusException('Empty subcorpus')
         if publish_path:
-            corplib.mk_publish_links(path, publish_path)
+            corplib.mk_publish_links(path, publish_path, self._author, self._description)
         return ans

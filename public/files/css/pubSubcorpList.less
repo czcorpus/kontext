@@ -4,7 +4,9 @@
 
     margin-top: 1em;
 
-    .Filter {
+    fieldset.Filter {
+
+        border: none;
 
         margin-bottom: 1.5em;
 
@@ -12,12 +14,21 @@
             display :inline-block;
         }
 
-        label:not(:last-child) {
-            margin-right: 2em;
-        }
-
         .CodePrefixInput {
             font-size: 120%;
+        }
+    }
+
+    .disclaimer {
+
+        max-width: 50em;
+        padding: 0.7em;
+
+        img {
+            display: inline-block;
+            width: 1em;
+            vertical-align: middle;
+            margin-right: 0.4em;
         }
     }
 
@@ -56,17 +67,16 @@
             h3 {
                 font-size: 1.3em;
                 font-weight: normal;
-                margin: 0;
+                margin: 0 0 0.2em 0;
 
                 .code {
                     color: @color-light-text;
                 }
             }
 
-
             a.DetailExpandSwitch {
                 display: inline-block;
-                margin-top: 0.2em;
+                margin-top: 0.7em;
                 text-decoration: none;
                 color: @color-light-text;
 

@@ -36,6 +36,7 @@ export interface DataItem {
     ident:string;
     origName:string;
     corpname:string;
+    author:string;
     description:string;
     userId:number;
 }
@@ -45,42 +46,52 @@ export interface CorpusItem {
     label:string;
 }
 
+export enum SearchTypes {
+    BY_CODE = 'code',
+    BY_AUTHOR = 'author'
+}
+
 export interface PublicSubcorpListState {
     isBusy:boolean;
     data:Immutable.List<DataItem>;
-    corpora:Immutable.List<CorpusItem>;
-    corpname:string;
-    codePrefix:string;
-    codePrefixThrottleTimer:number;
+    searchQuery:string;
+    minQuerySize:number;
+    searchType:SearchTypes;
+    inputPrefixThrottleTimer:number;
 }
 
 export enum Actions {
-    SET_CORPUS_NAME = 'PUBSUBC_SET_CORPUS_NAME',
-    SET_CODE_PREFIX = 'PUBSUBC_SET_CODE_PREFIX',
-    SET_CODE_PREFIX_THROTTLE = 'PUBSUBC_SET_CODE_PREFIX_THROTTLE',
+    SET_SEARCH_TYPE = 'PUBSUBC_SET_SEARCH_TYPE',
+    SET_SEARCH_QUERY = 'PUBSUBC_SET_SEARCH_QUERY',
+    SET_INPUT_PREFIX_THROTTLE = 'PUBSUBC_SET_INPUT_PREFIX_THROTTLE',
     SET_CODE_PREFIX_DONE = 'PUBSUBC_SET_CODE_PREFIX_DONE',
     DATA_LOAD_DONE = 'PUBSUBC_DATA_LOAD_DONE',
-    RESET_FILTER = 'PUBSUBC_RESET_FILTER',
     USE_IN_QUERY = 'PUBSUBC_USE_IN_QUERY'
 }
 
-
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
+
+    minCodePrefix:number;
+
+    minAuthorPrefix:number; // after how many entered chars we start to search
 
     private pageModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, data:Array<DataItem>, corpora:Array<CorpusItem>) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, data:Array<DataItem>,
+                minCodePrefix:number, minAuthorPrefix:number) {
         super(
             dispatcher,
             {
                 isBusy: false,
                 data: Immutable.List<DataItem>(data),
-                corpora: Immutable.List<CorpusItem>(corpora),
-                corpname: '',
-                codePrefix: '',
-                codePrefixThrottleTimer: -1
+                searchQuery: '',
+                minQuerySize: minCodePrefix,
+                searchType: SearchTypes.BY_CODE,
+                inputPrefixThrottleTimer: -1
             }
         );
+        this.minCodePrefix = minCodePrefix;
+        this.minAuthorPrefix = minAuthorPrefix;
         this.pageModel = pageModel;
     }
 
@@ -88,31 +99,24 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         let newState:PublicSubcorpListState;
 
         switch (action.actionType) {
-            case Actions.SET_CORPUS_NAME:
+            case Actions.SET_SEARCH_TYPE:
                 newState = this.copyState(state);
-                newState.isBusy = true;
-                newState.corpname = action.props['value'];
+                newState.searchType = action.props['value'];
                 return newState;
-            case Actions.SET_CODE_PREFIX:
+            case Actions.SET_SEARCH_QUERY:
                 newState = this.copyState(state);
-                newState.codePrefix = action.props['value'];
-                if (newState.codePrefixThrottleTimer) {
-                    window.clearTimeout(newState.codePrefixThrottleTimer);
+                newState.searchQuery = action.props['value'];
+                if (newState.inputPrefixThrottleTimer) {
+                    window.clearTimeout(newState.inputPrefixThrottleTimer);
                 }
                 return newState;
-            case Actions.SET_CODE_PREFIX_THROTTLE:
+            case Actions.SET_INPUT_PREFIX_THROTTLE:
                 newState = this.copyState(state);
-                newState.codePrefixThrottleTimer = action.props['timerId'];
+                newState.inputPrefixThrottleTimer = action.props['timerId'];
                 return newState;
             case Actions.SET_CODE_PREFIX_DONE:
                 newState = this.copyState(state);
                 newState.isBusy = true;
-                return newState;
-            case Actions.RESET_FILTER:
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                newState.corpname = '';
-                newState.codePrefix = '';
                 return newState;
             case Actions.DATA_LOAD_DONE:
                 newState = this.copyState(state);
@@ -127,27 +131,28 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
     sideEffects(state:PublicSubcorpListState, action:ActionPayload, dispatch:SEDispatcher):void {
 
         switch (action.actionType) {
-            case Actions.SET_CODE_PREFIX:
+            case Actions.SET_SEARCH_TYPE:
+            case Actions.SET_SEARCH_QUERY:
                 const timerId = window.setTimeout(
                     () => {
-                        dispatch({
-                            actionType: Actions.SET_CODE_PREFIX_DONE,
-                            props: {}
-                        });
-                        window.clearTimeout(state.codePrefixThrottleTimer);
+                        if (state.searchQuery.length >= state.minQuerySize) {
+                            dispatch({
+                                actionType: Actions.SET_CODE_PREFIX_DONE,
+                                props: {}
+                            });
+                        }
+                        window.clearTimeout(state.inputPrefixThrottleTimer);
                     },
                     250
                 );
                 dispatch({
-                    actionType: Actions.SET_CODE_PREFIX_THROTTLE,
+                    actionType: Actions.SET_INPUT_PREFIX_THROTTLE,
                     props: {
                         timerId: timerId
                     }
                 });
             break;
             case Actions.SET_CODE_PREFIX_DONE:
-            case Actions.SET_CORPUS_NAME:
-            case Actions.RESET_FILTER:
                 this.loadData(state).then(
                     (data) => {
                         dispatch({
@@ -185,8 +190,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         // TODO
         const args = new MultiDict();
         args.set('format', 'json');
-        args.set('corpname', state.corpname);
-        args.set('code_prefix', state.codePrefix);
+        args.set('query', state.searchQuery);
+        args.set('search_type', state.searchType);
         args.set('offset', 0); // TODO
         args.set('limit', 20); // TODO
         return this.pageModel.ajax<LoadDataResponse>(

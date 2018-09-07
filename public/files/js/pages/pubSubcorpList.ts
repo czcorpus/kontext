@@ -20,7 +20,7 @@
 
 import { PageModel } from '../app/main';
 import {init as viewInit} from '../views/subcorp/listPublic';
-import {PublicSubcorpListModel, DataItem, CorpusItem} from '../models/subcorp/listPublic';
+import {PublicSubcorpListModel, DataItem} from '../models/subcorp/listPublic';
 
 declare var require:any;
 require('styles/pubSubcorpList.less'); // webpack
@@ -41,7 +41,8 @@ class PubSubcorpPage {
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Array<DataItem>>('Data'),
-                    this.layoutModel.getConf<Array<CorpusItem>>('Corpora')
+                    this.layoutModel.getConf<number>('MinCodePrefix'),
+                    this.layoutModel.getConf<number>('MinAuthorPrefix')
                 );
                 const views = viewInit(
                     this.layoutModel.dispatcher,

@@ -47,8 +47,8 @@ class Subcorpus(Querying):
 
     def prepare_subc_path(self, corpname, subcname, publish):
         if publish:
-            code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
-                'user', 'id'), corpname, subcname)).hexdigest()[:10]
+            code = hashlib.md5(u'{0} {1} {2}'.format(self.session_get(
+                'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
             path = os.path.join(self.subcpath[1], corpname)
             if not os.path.isdir(path):
                 os.makedirs(path)
@@ -143,7 +143,7 @@ class Subcorpus(Querying):
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
-                corplib.mk_publish_links(path, publish_path, description)
+                corplib.mk_publish_links(path, publish_path, self.session_get('user', 'fullname'), description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
             backend = settings.get('calc_backend', 'type')
             if backend in ('celery', 'konserver'):
@@ -384,7 +384,7 @@ class Subcorpus(Querying):
         curr_subc = os.path.join(self.subcpath[0], corpname, subcname + '.subc')
         public_subc = self.prepare_subc_path(corpname, subcname, True)
         if os.path.isfile(curr_subc):
-            corplib.mk_publish_links(curr_subc, public_subc, description)
+            corplib.mk_publish_links(curr_subc, public_subc, self.session_get('user', 'fullname'), description)
             return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
         else:
             raise UserActionException('Subcorpus {0} not found'.format(subcname))
@@ -398,10 +398,18 @@ class Subcorpus(Querying):
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
     def list_published(self, request):
-        corpus = request.args.get('corpname')
-        code_prefix = request.args.get('code_prefix')
+        min_author_prefix = 4
+        min_code_prefix = 2
+        query = request.args.get('query', '')
+        search_type = request.args.get('search_type', '')
         offset = int(request.args.get('offset', '0'))
         limit = int(request.args.get('limit', '20'))
-        corpora, subclist = corplib.list_public_subcorpora(self.subcpath[-1], self.cm, corpus=corpus,
-                                                           code_prefix=code_prefix, offset=offset, limit=limit)
-        return dict(corpora=corpora, data=subclist)
+        if search_type == 'author' and len(query) >= min_author_prefix:
+            subclist = corplib.list_public_subcorpora(self.subcpath[-1], author_prefix=query,
+                                                      code_prefix=None, offset=offset, limit=limit)
+        elif search_type == 'code' and len(query) >= min_code_prefix:
+            subclist = corplib.list_public_subcorpora(self.subcpath[-1], author_prefix=None,
+                                                      code_prefix=query, offset=offset, limit=limit)
+        else:
+            subclist = []
+        return dict(data=subclist, min_author_prefix=min_author_prefix, min_code_prefix=min_code_prefix)

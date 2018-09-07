@@ -72,7 +72,8 @@ def subcmixer_create_subcorpus(ctrl, request):
         pub_path = ctrl.prepare_subc_path(
             request.form['corpname'], request.form['subcname'], publish=publish) if publish else None
         if pub_path:
-            corplib.mk_publish_links(subc_path, pub_path, request.form['description'])
+            corplib.mk_publish_links(subc_path, pub_path, ctrl.session_get('user', 'fullname'),
+                                     request.form['description'])
 
         return dict(status=True)
 
