@@ -26,7 +26,7 @@ import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {QueryModel, WidgetsMap} from '../../models/query/main';
 import {UsageTipsModel} from '../../models/usageTips';
@@ -103,6 +103,7 @@ interface QueryFormLiteState extends GeneralQueryFormState {
 interface QueryFormState extends GeneralQueryFormState {
     tagAttr:string;
     textTypesFormVisible:boolean;
+    hasSelectedTextTypes:boolean;
     textTypesNotes:string;
     structAttrList:Immutable.List<Kontext.AttrItem>;
     availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
@@ -149,6 +150,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     const AdvancedFormLegend:React.SFC<{
         formVisible:boolean;
         title:string;
+        hintWhenClosed:string;
         handleClick:()=>void;
 
     }> = (props) => {
@@ -161,6 +163,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         onClick={props.handleClick}>
                     {props.title}
                 </a>
+                {!props.formVisible && props.hintWhenClosed ?
+                    <span title={props.hintWhenClosed}>{'\u2713'}</span> : null}
             </legend>
         );
     };
@@ -239,6 +243,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 wPoSList: queryModel.getwPoSList(),
                 contextFormVisible: false, // TODO use data from session?
                 textTypesFormVisible: textTypesModel.hasSelectedItems(),
+                hasSelectedTextTypes: textTypesModel.hasSelectedItems(),
                 inputLanguages: queryModel.getInputLanguages(),
                 textTypesNotes: queryModel.getTextTypesNotes(),
                 useCQLEditor: queryModel.getUseCQLEditor(),
@@ -273,7 +278,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === 13 && !evt.shiftKey) {
+            if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
                     dispatcher.dispatch({
                         actionType: 'QUERY_INPUT_SUBMIT',
@@ -357,7 +362,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <AdvancedFormLegend
                                 formVisible={this.state.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
-                                title={he.translate('query__specify_context')} />
+                                title={he.translate('query__specify_context')}
+                                hintWhenClosed={null} />
                         {this.state.contextFormVisible ?
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.state.lemmaWindowSizes}
@@ -370,7 +376,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <AdvancedFormLegend
                                 formVisible={this.state.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
-                                title={he.translate('query__specify_tt')} />
+                                title={he.translate('query__specify_tt')}
+                                hintWhenClosed={this.state.hasSelectedTextTypes ? he.translate('query__contains_selected_text_types') : null} />
                         {this.state.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
@@ -536,7 +543,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <AdvancedFormLegend
                                 formVisible={this.state.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
-                                title={he.translate('query__specify_context')} />
+                                title={he.translate('query__specify_context')}
+                                hintWhenClosed={null} />
                         {this.state.contextFormVisible ?
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.state.lemmaWindowSizes}
