@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PublicSubcorpListState, PublicSubcorpListModel,
-    CorpusItem, DataItem, Actions} from '../../models/subcorp/listPublic';
+    CorpusItem, DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
 
 export interface Views {
     List:React.ComponentClass<ListProps, PublicSubcorpListState>;
@@ -38,35 +38,42 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     const layoutViews = he.getLayoutViews();
 
-    // -------------------------- <CorpusSelect /> -------------------
+    // -------------------------- <SearchTypeSelect /> -------------------
 
-    const CorpusSelect:React.SFC<{
-        corpora:Immutable.List<CorpusItem>;
+    const SearchTypeSelect:React.SFC<{
         value:string;
 
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
             dispatcher.dispatch({
-                actionType: Actions.SET_CORPUS_NAME,
+                actionType: Actions.SET_SEARCH_TYPE,
                 props: {
                     value: evt.target.value
                 }
             });
         };
 
-        return <select value={props.value} onChange={handleChange}>
-            <option value="">---</option>
-            {props.corpora.map(item =>
-                <option key={item.ident} value={item.ident}>{item.label}</option>)
-            }
-        </select>;
+        return (
+            <label>
+                {he.translate('pubsubclist__search_type')}{'\u00a0'}
+                <select value={props.value} onChange={handleChange}>
+                    <option value={SearchTypes.BY_CODE}>
+                        {he.translate('pubsubclist__search_by_code')}
+                    </option>
+                    <option value={SearchTypes.BY_AUTHOR}>
+                        {he.translate('pubsubclist__search_by_author')}
+                    </option>
+                </select>
+            </label>
+        );
     };
 
-    // -------------------------- <CodePrefixInput /> ----------------
+    // -------------------------- <PropertyPrefixInput /> ----------------
 
-    class CodePrefixInput extends React.PureComponent<{
+    class QueryInput extends React.PureComponent<{
         value:string;
+        minPrefixSize:number;
 
     }, {}> {
 
@@ -80,7 +87,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         handleChange(evt:React.ChangeEvent<HTMLInputElement>) {
             dispatcher.dispatch({
-                actionType: Actions.SET_CODE_PREFIX,
+                actionType: Actions.SET_SEARCH_QUERY,
                 props: {
                     value: evt.target.value
                 }
@@ -94,51 +101,34 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
-            return <input className="CodePrefixInput"
-                        type="text"
-                        value={this.props.value}
-                        onChange={this.handleChange}
-                        ref={this.inputRef} />;
+            return (
+                <label>
+                    <input className="CodePrefixInput"
+                            type="text"
+                            value={this.props.value}
+                            onChange={this.handleChange}
+                            ref={this.inputRef} />
+                        {'\u00a0'}<span className="note">
+                        ({he.translate('pubsubclist__input_prefix_warn_{min_size}', {min_size: this.props.minPrefixSize})})
+                        </span>
+                </label>
+            );
         }
-
     }
 
     // -------------------------- <Filter /> -------------------------
 
     const Filter:React.SFC<{
-        corpora:Immutable.List<CorpusItem>;
-        currCorpus:string;
-        codePrefix:string;
+        query:string;
+        searchType:SearchTypes;
+        minQuerySize:number;
 
     }> = (props) => {
 
-        const handleFilterReset = () => {
-            dispatcher.dispatch({
-                actionType: Actions.RESET_FILTER,
-                props: {}
-            });
-        };
-
         return (
             <fieldset className="Filter">
-                <legend>{he.translate('pubsubclist__filter_legend')}</legend>
-                <label>
-                    {he.translate('pubsubclist__corpus')}:{'\u00a0'}
-                    <CorpusSelect corpora={props.corpora} value={props.currCorpus} />
-                </label>
-                <label>
-                    {he.translate('pubsubclist__enter_code_prefix')}:{'\u00a0'}
-                    <CodePrefixInput value={props.codePrefix} />
-                </label>
-                <p>
-                    {props.currCorpus || props.codePrefix ?
-                        <button type="button" className="util-button cancel"
-                                onClick={handleFilterReset}>
-                            {he.translate('pubsubclist__reset_filter')}
-                        </button> :
-                        null
-                    }
-                </p>
+                <SearchTypeSelect value={props.searchType} />{'\u00a0'}:{'\u00a0'}
+                <QueryInput value={props.query} minPrefixSize={props.minQuerySize} />
             </fieldset>
         );
     };
@@ -207,6 +197,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     {`${this.props.item.corpname} / ${this.props.item.origName}`}
                     {'\u00a0'}<span className="code">({this.props.item.ident})</span>
                 </h3>
+                <span className="author">
+                    {he.translate('pubsubclist__author')}:{'\u00a0'}
+                    <strong>{this.props.item.author}</strong><br />
+                </span>
                 <DetailExpandSwitch expanded={this.state.expanded}
                     onClick={this._handleExpandAction} />
                 {this.state.expanded ?
@@ -222,17 +216,27 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------- <DataTable /> -------------------------
 
     const DataList:React.SFC<{
-        data:Immutable.List<DataItem>
+        hasQuery:boolean;
+        data:Immutable.List<DataItem>;
 
     }> = (props) => {
-        return (
-            <ul className="DataList">
-                {props.data.size > 0 ?
-                    props.data.map(item => <DataRow key={item.ident} item={item} />) :
-                    <li><p className="no-result">{he.translate('pubsubclist__no_result')}</p></li>
-                }
-            </ul>
-        );
+        if (props.hasQuery) {
+            return (
+                <ul className="DataList">
+                    {props.data.size > 0 ?
+                        props.data.map(item => <DataRow key={item.ident} item={item} />) :
+                        <li>
+                            <p className="no-result">
+                                {he.translate('pubsubclist__no_result')}
+                            </p>
+                        </li>
+                    }
+                </ul>
+            );
+
+        } else {
+            return null;
+        }
     };
 
     // -------------------------- <List /> -------------------------
@@ -261,15 +265,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <div className="List">
                     <form>
-                        <Filter
-                            corpora={this.state.corpora}
-                            currCorpus={this.state.corpname}
-                            codePrefix={this.state.codePrefix} />
+                        <Filter searchType={this.state.searchType}
+                                query={this.state.searchQuery}
+                                minQuerySize={this.state.minQuerySize} />
                     </form>
                     {this.state.isBusy ?
                         <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                        <DataList data={this.state.data} />
+                        <DataList data={this.state.data} hasQuery={this.state.searchQuery.length > 0} />
                     }
+                    <p className="disclaimer">
+                        <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
+                        {he.translate('pubsubclist__operator_disclaimer')}
+                    </p>
                 </div>
             );
         }

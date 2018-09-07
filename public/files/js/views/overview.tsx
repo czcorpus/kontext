@@ -200,7 +200,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const getAccess = () => {
             if (props.data.subCorpusName !== props.data.origSubCorpusName) {
-                return he.translate('global__published_subcorp');
+                return <>
+                    {he.translate('global__published_subcorp')}
+                    {'\u00a0'}
+                    <span className="note">({he.translate('global__published_subcorp_id')}{':\u00a0'}
+                    {props.data.subCorpusName})</span>
+                </>;
             }
             return he.translate('global__subc_info_access_private');
         };

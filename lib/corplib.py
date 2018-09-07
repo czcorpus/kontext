@@ -25,8 +25,19 @@ from datetime import datetime
 import logging
 try:
     from markdown import markdown
+    from markdown.extensions import Extension
+
+    class EscapeHtml(Extension):
+        def extendMarkdown(self, md, md_globals):
+            del md.preprocessors['html_block']
+            del md.inlinePatterns['html']
+
+    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
+
 except ImportError:
-    def markdown(s): return s
+    import cgi
+
+    def k_markdown(s): return cgi.escape(s)
 
 import l10n
 from l10n import import_string, export_string
@@ -65,24 +76,28 @@ def corp_mtime(corpus):
     return max(reg_mtime, data_mtime)
 
 
-def _list_public_corp_dir(corpname, path, code_prefix):
+def _list_public_corp_dir(corpname, path, code_prefix, author_prefix):
     ans = []
     subc_root = os.path.dirname(os.path.dirname(path))
     for item in glob.glob(path + '/*.subc'):
         full_path = os.path.join(path, item)
-        orig_path, info = get_subcorp_pub_info(full_path)
+        orig_path, author, info = get_subcorp_pub_info(full_path)
         if orig_path is None or info is None:
             logging.getLogger(__name__).warning(
                 'Missing .name file for published subcorpus {0}'.format(item))
         else:
             try:
                 ident = os.path.splitext(os.path.basename(item))[0]
-                if not code_prefix or ident.startswith(code_prefix):
+                author_rev = ' '.join(reversed(author.split(' ') if author else [])).lower()
+                author_prefix = author_prefix.lower() if author_prefix else None
+                if (code_prefix and ident.startswith(code_prefix) or author_prefix and
+                        author_rev.startswith(author_prefix)):
                     ans.append(dict(
                         ident=ident,
                         origName=os.path.splitext(os.path.basename(orig_path))[0],
                         corpname=corpname,
-                        description=markdown(info),
+                        author=author,
+                        description=k_markdown(info),
                         userId=int(orig_path.lstrip(subc_root).split(os.path.sep, 1)[0])
                     ))
             except Exception as ex:
@@ -91,20 +106,17 @@ def _list_public_corp_dir(corpname, path, code_prefix):
     return ans
 
 
-def list_public_subcorpora(subcpath, corp_manager, corpus=None, code_prefix=None, offset=0, limit=20):
-    corpora = []
+def list_public_subcorpora(subcpath, author_prefix=None, code_prefix=None, offset=0, limit=20):
     data = []
     for corp in os.listdir(subcpath):
         try:
-            corp_obj = corp_manager.get_Corpus(corp)
-            corpora.append(dict(ident=corp, label=corp_obj.get_conf('NAME')))
-            if corpus and corp == corpus or not corpus:
-                data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), code_prefix=code_prefix)
-                if len(data) >= offset + limit:
-                    break
+            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), code_prefix=code_prefix,
+                                          author_prefix=author_prefix)
+            if len(data) >= offset + limit:
+                break
         except Exception as ex:
             logging.getLogger(__name__).warning(ex)
-    return corpora, data[offset:limit]
+    return data[offset:limit]
 
 
 def open_corpus(*args, **kwargs):
@@ -171,6 +183,7 @@ def subcorpus_is_published(subcpath):
 def get_subcorp_pub_info(spath):
     orig_path = None
     desc = None
+    author = None
     namepath = os.path.splitext(spath)[0] + '.name'
 
     if os.path.isfile(namepath):
@@ -179,19 +192,21 @@ def get_subcorp_pub_info(spath):
             for i, line in enumerate(nf):
                 if i == 0:
                     orig_path = line.strip()
+                elif i == 1 and line.strip() != '':
+                    author = line.strip()
                 elif i > 1:
                     desc += line
-    return orig_path, desc.decode('utf-8') if desc else None
+    return orig_path, author.decode('utf-8') if author else None, desc.decode('utf-8') if desc else None
 
 
 def rewrite_subc_desc(publicpath, desc):
-    orig_path, _ = get_subcorp_pub_info(publicpath)
+    orig_path, _, _ = get_subcorp_pub_info(publicpath)
     with open(os.path.splitext(publicpath)[0] + '.name', 'w') as fw:
         fw.write(orig_path + '\n\n')
         fw.write(desc.encode('utf-8'))
 
 
-def mk_publish_links(subcpath, publicpath, desc):
+def mk_publish_links(subcpath, publicpath, author, desc):
     orig_cwd = os.getcwd()
     os.chdir(os.path.dirname(subcpath))
     os.link(subcpath, publicpath)
@@ -204,7 +219,8 @@ def mk_publish_links(subcpath, publicpath, desc):
     link_elms = (['..'] * (len(link_elms) - 1)) + link_elms
     os.symlink(os.path.join(*link_elms), os.path.splitext(subcpath)[0] + '.pub')
     with open(os.path.splitext(publicpath)[0] + '.name', 'w') as namefile:
-        namefile.write(subcpath + '\n\n')
+        namefile.write(subcpath + '\n')
+        namefile.write(author.encode('utf-8') + '\n\n')
         namefile.write(desc.encode('utf-8'))
     os.chdir(orig_cwd)
 
@@ -240,15 +256,16 @@ class CorpusManager(object):
         subc.subchash = md5(open(spath).read()).hexdigest()
         subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
         subc.is_published = subcorpus_is_published(spath)
-        orig_path, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
+        orig_path, author, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
         if orig_path:
             subc.orig_spath = orig_path
             subc.orig_subcname = os.path.splitext(os.path.basename(orig_path))[0]
         else:
             subc.orig_spath = None
             subc.orig_subcname = None
+        subc.author = author
         if desc:
-            subc.description = markdown(desc) if decode_desc else desc
+            subc.description = k_markdown(desc) if decode_desc else desc
         else:
             subc.description = None
         return subc
@@ -682,7 +699,7 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
             frq.fromfile(open(filename), id_range)
         except IOError as ex:
             raise MissingSubCorpFreqFile(corp, ex)
-        except exceptions.EOFError:
+        except exceptions.EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             raise MissingSubCorpFreqFile(corp, ex)
     else:
