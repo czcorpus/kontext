@@ -1065,6 +1065,10 @@ export class ViewPage {
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
+        this.viewModels.usageTipsModel = new UsageTipsModel(
+            this.layoutModel.dispatcher,
+            s => this.layoutModel.translate(s)
+        );
         this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
             (_) => this.viewModels.lineViewModel.updateOnCorpViewOptsChange());
         this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
