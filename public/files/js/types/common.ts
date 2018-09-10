@@ -215,6 +215,7 @@ export namespace Kontext {
      */
     export interface IMainMenuShortcutMapper {
         get(keyCode:number, keyMod:string):EventTriggeringSubmenuItem;
+        register(keyCode:number, keyMod:string, message:string, args:GeneralProps):void;
     }
 
     /**

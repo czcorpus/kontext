@@ -165,10 +165,6 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
                         <div className="contents">
                             {this.state.showFreqInfo ?
                                 <div className="box">
-                                    <h3 className="block">
-                                        {he.translate('concview__freqs_overview_heading')}
-                                    </h3>
-                                    <hr />
                                     <ttDistViews.TextTypesDist />
                                 </div> :
                                 null

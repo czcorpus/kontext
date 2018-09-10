@@ -69,9 +69,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                     {outList.map(output => (
                         <React.Fragment key={output.heading}>
                             <div className="KwicConnectWidget">
-                                <h3 className="tckc-provider">{output.heading}
+                                <h3 className="tckc-provider block">{output.heading}
                                 <img src={he.createStaticUrl('img/book.svg')}
                                                 alt={he.translate('global__icon_book')} /></h3>
+<p className="note">
+                                                    {output.note ? output.note + '\u00a0|\u00a0' : null}
+                                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
+                                                        {attr: this.state.freqType})}
+                                                </p>
                                 <hr />
                                 <layoutViews.ErrorBoundary>
                                     <div className="contents">
@@ -79,11 +84,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                                             <>
                                                 {output.data.map((item, j) =>
                                                 <output.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
-                                                <p className="note">
-                                                    {output.note ? output.note + '\u00a0|\u00a0' : null}
-                                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
-                                                        {attr: this.state.freqType})}
-                                                </p>
                                             </> :
                                             <p className="data-not-avail">
                                                 <img src={he.createStaticUrl('img/info-icon.svg')} />
@@ -96,7 +96,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                         </React.Fragment>
                     ))}
                     {this.state.isBusy ?
-                        <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                        <div className="loader">
+                            <hr />
+                            <layoutViews.AjaxLoaderImage />
+                        </div> :
                         null
                     }
                 </div>

@@ -299,13 +299,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             </th>
                             <td>{he.translate('global__key_shortcut_shortuts')}</td>
                         </tr>
-                        <tr>
-                            <th>
-                                <span className="key-button">{'\u21E7'}</span>
-                                <span className="key-button">s</span>
-                                -
-                            </th>
-                            <td>{he.translate('global__key_shortcut_save')}</td>
+                        <tr className="separ">
+                            <td colSpan={2}><hr /></td>
                         </tr>
                         <tr>
                             <th>
@@ -328,27 +323,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             </th>
                             <td>{he.translate('global__key_shortcut_sample')}</td>
                         </tr>
-                        <tr>
-                            <th>
-                                <span className="key-button">v</span>
-                                -
-                            </th>
-                            <td>{he.translate('global__key_shortcut_vmode')}</td>
-                        </tr>
-                        <tr>
-                            <th>
-                                <span className="key-button">o</span>
-                                -
-                            </th>
-                            <td>{he.translate('global__key_shortcut_options')}</td>
-                        </tr>
-                        <tr>
-                            <th>
-                                <span className="key-button">{'\u21E7'}</span>
-                                <span className="key-button">o</span>
-                                -
-                            </th>
-                            <td>{he.translate('global__key_shortcut_global_options')}</td>
+                        <tr className="separ">
+                        <td colSpan={2}><hr /></td>
                         </tr>
                         <tr>
                             <th>
@@ -365,6 +341,49 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 -
                             </th>
                             <td>{he.translate('global__key_shortcut_colls')}</td>
+                        </tr>
+                        <tr className="separ">
+                            <td colSpan={2}><hr /></td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">v</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_vmode')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">e</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_toggle_extended_info')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">s</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_save')}</td>
+                        </tr>
+                        <tr className="separ">
+                            <td colSpan={2}><hr /></td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">o</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_options')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">o</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_global_options')}</td>
                         </tr>
                     </tbody>
                 </table>

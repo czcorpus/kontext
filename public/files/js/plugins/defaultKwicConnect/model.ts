@@ -241,13 +241,9 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     }
 
     /**
-     * Based on most typical (average) kwic length we use either lemma (for single
-     * word kwics) or word.
      */
     private selectFreqType():FreqDistType {
-        const kwicLen = ~~Math.round(this.concLinesProvider.getLines().reduce(
-            (acc, curr) => acc + curr.kwicLength, 0) /  this.concLinesProvider.getLines().size);
-        return kwicLen === 1 ? FreqDistType.LEMMA : FreqDistType.WORD;
+        return FreqDistType.LEMMA;
     }
 
     /**
