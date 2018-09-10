@@ -17,20 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-
-Required XML configuration:
-
-element token_connect {
-  element module { "default_kwic_connect" }
-  element js_module { "defaultKwicConnect" }
-  element max_kwic_words {   # how many unique kwic words to explore (at most)
-    attribute extension-by { "default" }
-    { xsd:integer }
-  }
-  element load_chunk_size {  # how many kwic words' responses to load at once (0 ... max_kwic_words)
-    attribute extension-by { "default" }
-    { xsd:integer }
-  }
+Required XML configuration: please see ./config.rng
 """
 
 from plugins.abstract.kwic_connect import AbstractKwicConnect
