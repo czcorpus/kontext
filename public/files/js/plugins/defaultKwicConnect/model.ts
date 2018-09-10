@@ -137,8 +137,9 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         switch (action.actionType) {
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
                 newState = this.copyState(state);
-                newState.data = Immutable.List<ProviderWordMatch>();
-                newState.isBusy = true;
+                if (newState.data.size === 0) {
+                    newState.isBusy = true;
+                }
                 return newState;
             case Actions.FETCH_PARTIAL_INFO_DONE:
                 newState = this.copyState(state);
@@ -166,7 +167,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         switch (action.actionType) {
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
             case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED': {
-                if (state.blockedByAsyncConc) {
+                if (state.blockedByAsyncConc || state.data.size > 0) {
                     return;
                 }
                 const freqType = this.selectFreqType();
