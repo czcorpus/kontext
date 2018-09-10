@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -12,9 +14,11 @@
 
 """
 A UCNK-specific plug-in which provides an HTML code for page's top 'toolbar'.
-This plug-in is highly dependent on another UCNK-specific plug-in - "ucnk_remote_auth3"
-as it expects to find toolbar's code in user session which is exactly what
-ucnk_remote_auth3 does (among others).
+This plug-in is highly dependent on:
+ - UCNK internal authentication service and its API
+ - another UCNK-specific plug-in - "ucnk_remote_auth4" (or the older version ucnk_remote_auth3)
+   as it expects to find toolbar's code in user session which is exactly what ucnk_remote_auth3/4
+   does (among others).
 
 Required config.xml/plugin entries:
 
