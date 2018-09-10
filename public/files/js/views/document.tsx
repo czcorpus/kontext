@@ -665,7 +665,8 @@ export function init(
         return <img
                     className={props.htmlClass ? props.htmlClass : undefined}
                     src={he.createStaticUrl('img/ajax-loader.gif')}
-                    alt={he.translate('global__loading')} />;
+                    alt={he.translate('global__loading')}
+                    title={props.title} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
@@ -674,7 +675,8 @@ export function init(
         return <img
                 className={props.htmlClass ? props.htmlClass : undefined}
                 src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                alt={he.translate('global__loading')} />;
+                alt={he.translate('global__loading')}
+                title={props.title} />;
     };
 
     // ------------------------------------------------------------------------------------
