@@ -74,16 +74,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         );
     };
 
-    /**
-     *
-     */
-    const FreqsView:React.SFC<{
+    // ------------------------- <FreqsNotes /> ----------------------------------
+
+    const FreqsNotes:React.SFC<{
         blocks:Immutable.List<FreqBlock>;
-        minFreq:number;
-        sampleSize:number;
-        maxChartItems:number;
         isDisplayedBlocksSubset:boolean;
         shouldDisplayBlocksSubset:boolean;
+        maxChartItems:number;
+        sampleSize:number;
+        minFreq:number;
 
     }> = (props) => {
 
@@ -101,38 +100,32 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             });
         };
 
-        return (
-            <div>
-                {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
-                {props.blocks.size > 0 ?
-                    <p className="note">
-                        {he.translate('concview__charts_units_are')}: <strong>i.p.m.</strong>{'\u00a0|\u00a0'}
-                        {he.translate('concview__using_min_freq')}: <strong>{props.minFreq}</strong>
-                        {props.isDisplayedBlocksSubset ?
-                            <>
-                                {'\u00a0|\u00a0'}
-                                {he.translate('concview__displaying_charts_up_to_{num_items}',
-                                    {num_items: props.maxChartItems})}
-                                {'\u00a0'}(<a onClick={handleLimitRemove}>{he.translate('concview__display_all_tt_charts')}</a>)
-                            </> :
-                            null
-                        }
-                        {!props.isDisplayedBlocksSubset && props.shouldDisplayBlocksSubset ?
-                            <>
-                                {'\u00a0|\u00a0'}
-                                {he.translate('concview__display_limited_tt_charts')}{'\u00a0'}
-                                <a onClick={handleLimitRestore}>{he.translate('global__yes')}</a>
-                            </> :
-                            null
-                        }
-                        {props.sampleSize > 0 ?
-                            '\u00a0|\u00a0' + he.translate('concview__using_sample_{value}',
-                                    {value: props.sampleSize}) + '.' : ''
-                        }
-                    </p> : null
-                }
-            </div>
-        );
+        return props.blocks.size > 0 ?
+                <p className="note">
+                    {he.translate('concview__charts_units_are')}: <strong>i.p.m.</strong>{'\u00a0|\u00a0'}
+                    {he.translate('concview__using_min_freq')}: <strong>{props.minFreq}</strong>
+                    {props.isDisplayedBlocksSubset ?
+                        <>
+                            {'\u00a0|\u00a0'}
+                            {he.translate('concview__displaying_charts_up_to_{num_items}',
+                                {num_items: props.maxChartItems})}
+                            {'\u00a0'}(<a onClick={handleLimitRemove}>{he.translate('concview__display_all_tt_charts')}</a>)
+                        </> :
+                        null
+                    }
+                    {!props.isDisplayedBlocksSubset && props.shouldDisplayBlocksSubset ?
+                        <>
+                            {'\u00a0|\u00a0'}
+                            {he.translate('concview__display_limited_tt_charts')}{'\u00a0'}
+                            (<a onClick={handleLimitRestore}>{he.translate('global__yes')}</a>)
+                        </> :
+                        null
+                    }
+                    {props.sampleSize > 0 ?
+                        '\u00a0|\u00a0' + he.translate('concview__using_sample_{value}',
+                                {value: props.sampleSize}) + '.' : ''
+                    }
+                </p> : null;
     };
 
     /**
@@ -178,14 +171,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         render() {
             return (
                 <div className="TextTypesDist">
-                    <div className="contents">
-                        {this.state.isBusy ?
-                            <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                            <FreqsView blocks={this.state.blocks} minFreq={this.state.minFreq}
+                    <h3 className="block">
+                        {he.translate('concview__freqs_overview_heading')}
+                    </h3>
+                    <FreqsNotes blocks={this.state.blocks}
+                                minFreq={this.state.minFreq}
                                 sampleSize={this.state.sampleSize}
                                 maxChartItems={this.state.getMaxChartItems}
                                 isDisplayedBlocksSubset={this.state.isDisplayedBlocksSubset}
                                 shouldDisplayBlocksSubset={this.state.shouldDisplayBlocksSubset} />
+                    <hr />
+                    <div className="contents">
+                        {this.state.isBusy ?
+                            <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                            <div>
+                                {this.state.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
+                            </div>
                         }
                     </div>
                 </div>

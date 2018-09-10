@@ -139,7 +139,9 @@ export class TextTypesDistModel extends StatefulModel {
                     this.performDataLoad();
                 break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
-                    this.performDataLoad();
+                    if (this.blocks.size === 0) {
+                        this.performDataLoad();
+                    }
                 break;
                 case 'REMOVE_CHART_ITEMS_LIMIT':
                     this.maxBlockItems = -1;

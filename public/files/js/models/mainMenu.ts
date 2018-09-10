@@ -106,6 +106,20 @@ class MenuShortcutMapper implements Kontext.IMainMenuShortcutMapper {
             return x.keyCode === keyCode && x.keyMod === keyMod;
         });
     }
+
+    register(keyCode:number, keyMod:string, message:string, args:Kontext.GeneralProps):void {
+        this.shortcuts = this.shortcuts.push({
+            ident: `${keyCode}_${keyMod}_${message}`,
+            label: '',
+            hint: null,
+            message: message,
+            args: args,
+            keyCode: keyCode,
+            keyMod: keyMod,
+            indirect: false,
+            disabled: false
+        });
+    }
 }
 
 

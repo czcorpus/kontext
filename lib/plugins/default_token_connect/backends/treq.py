@@ -18,6 +18,7 @@
 
 import json
 import logging
+import urllib
 
 from plugins.default_token_connect.backends.cache import cached
 from plugins.default_token_connect.backends import HTTPBackend
@@ -36,6 +37,8 @@ class TreqBackend(HTTPBackend):
         hledejKde[]:SYNDICATE
         hledejCo:obnova
         searchGo:
+        viceslovne:
+        lemma:
     """
 
     DEFAULT_MAX_RESULT_LINES = 10
@@ -78,20 +81,22 @@ class TreqBackend(HTTPBackend):
 
     @staticmethod
     def mk_api_args(lang1, lang2, groups, lemma):
-        return [('left', lang1), ('right', lang2), ('viceslovne', 'false'), ('regularni', 'true'),
+        multi_word = 'true' if ' ' in lemma else 'false'
+        return [('left', lang1), ('right', lang2), ('viceslovne', multi_word), ('regularni', 'true'),
                 ('lemma', 'true'), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', lemma),
                 ('order', 'percDesc')]
 
     @staticmethod
     def mk_page_args(lang1, lang2, groups, lemma):
-        return [('jazyk1', lang1), ('jazyk2', lang2), ('lemma', 'true'), ('aJeA', 'true'),
-                ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
+        multi_word = '1' if ' ' in lemma else '0'
+        return [('jazyk1', lang1), ('jazyk2', lang2), ('viceslovne', multi_word), ('regularni', '1'),
+                ('lemma', '1'), ('caseInsen', '1'), ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
 
     def mk_api_path(self, lang1, lang2, groups, lemma):
         groups = ','.join(groups)
-        args = [u'{0}={1}'.format(k, v) for k, v in self.mk_api_args(
+        args = ['{0}={1}'.format(k, urllib.quote(v.encode('utf-8'))) for k, v in self.mk_api_args(
             lang1, lang2, groups, lemma)]
-        return '/api.php?api=true&' + (u'&'.join(args)).encode('utf-8')
+        return '/api.php?api=true&' + '&'.join(args)
 
     def find_lang_common_groups(self, lang1, lang2):
         g1 = set(self.AVAIL_GROUPS.get(lang1, []))
@@ -115,10 +120,11 @@ class TreqBackend(HTTPBackend):
             args = dict(lang1=self.enc_val(primary_lang), lang2=self.enc_val(translat_lang),
                         groups=[self.enc_val(s) for s in common_groups],
                         **query_args)
-            treq_link = (self.mk_server_addr() + '/index.php', self.mk_page_args(**args))
+            t_args = self.mk_page_args(**args)
+            treq_link = (self.mk_server_addr() + '/index.php', t_args)
             connection = self.create_connection()
             try:
-                logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(args))
+                logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(t_args))
                 connection.request('GET', self.mk_api_path(
                     lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma']))
                 data, status = self.process_response(connection)

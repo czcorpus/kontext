@@ -937,6 +937,12 @@ export class ViewPage {
 
     private initKeyShortcuts():void {
         const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
+        actionMap.register(
+            69,
+            null,
+            'DASHBOARD_TOGGLE_EXTENDED_INFO',
+            {}
+        );
         this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
             if (document.activeElement === document.body &&
                     !evt.ctrlKey && !evt.altKey && !evt.metaKey) {

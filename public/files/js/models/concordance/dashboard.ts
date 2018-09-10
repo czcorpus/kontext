@@ -64,6 +64,10 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
                 newState = this.copyState(state);
                 newState.expanded = true;
                 return newState;
+            case 'DASHBOARD_TOGGLE_EXTENDED_INFO':
+                newState = this.copyState(state);
+                newState.expanded = !newState.expanded;
+                return newState;
             default:
                 return state;
         }
