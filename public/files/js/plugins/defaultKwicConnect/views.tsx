@@ -72,11 +72,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                                 <h3 className="tckc-provider block">{output.heading}
                                 <img src={he.createStaticUrl('img/book.svg')}
                                                 alt={he.translate('global__icon_book')} /></h3>
-<p className="note">
-                                                    {output.note ? output.note + '\u00a0|\u00a0' : null}
-                                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
-                                                        {attr: this.state.freqType})}
-                                                </p>
+                                <p className="note">
+                                    {output.note ? output.note + '\u00a0|\u00a0' : null}
+                                    {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
+                                        {attr: this.state.freqType})}
+                                </p>
                                 <hr />
                                 <layoutViews.ErrorBoundary>
                                     <div className="contents">
