@@ -156,9 +156,6 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
             return (
                 <div className="ConcExtendedInfo">
                     <header>
-                        <h2>
-                            {this.state.expanded ? he.translate('concview__extended_info') : ''}
-                        </h2>
                         <MinimizeIcon minimized={!this.state.expanded} />
                     </header>
                     {this.state.expanded ?

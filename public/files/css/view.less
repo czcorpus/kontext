@@ -6,12 +6,27 @@
     .ConcordanceDashboard {
         display: grid;
         align-items: flex-start;
-        grid-template-columns: minmax(auto, 35em) auto;
+        grid-template-columns: minmax(auto, 32em) auto;
         grid-column-gap: 1em;
     }
 
     .ConcordanceDashboard.collapsed {
-        grid-template-columns: 3em auto;
+        grid-template-columns: 1.3em auto;
+        grid-column-gap: 0.5em;
+
+        .ConcExtendedInfo {
+
+            border-radius: 3px;
+
+            header {
+                padding: 0;
+
+                a {
+                    display: block;
+                    margin: 0 auto;
+                }
+            }
+        }
     }
 
     .ConcordanceDashboard.disabled {
@@ -27,7 +42,7 @@
     .ConcordanceView,
     .ConcExtendedInfo {
         overflow: hidden;
-        border-radius: 9px;
+        border-radius: 7px;
         margin-bottom: 1em;
         margin-top: 1em;
         box-shadow: @portal-box-shadow;
@@ -84,7 +99,7 @@
             display: flex;
             flex-direction: row;
             background-color: @color-default-green;
-            padding: 0.3em 0.7em;
+            padding: 0.4em 0.7em;
 
             .MinimizeIcon {
                 display: inline-block;
