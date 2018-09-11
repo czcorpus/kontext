@@ -55,6 +55,20 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
     };
 
     const DataMuseSimilarWords:Views['DataMuseSimilarWords'] = (props) => {
+        const generateLink = (word:string) => {
+            const args = new MultiDict();
+            args.set('corpname', props.corpora.get(0));
+            props.corpora.rest().forEach(v => {
+                args.set('align', v);
+                // currently we have to ignore aligned kwics (the are not that easy to fetch)
+                // so we just set a key for query type and ignore the aligned query
+                args.set(`queryselector_${v}`, 'iquery');
+            });
+            args.set('queryselector', 'phraserow');
+            args.set('phrase', word);
+            return he.createActionLink('first', args);
+        };
+
         return (
             <div className="provider-block">
                 <strong className="base-word">{props.data.kwic}:</strong>
@@ -62,7 +76,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
                     {props.data.contents.length > 0 ? '' : '\u2014'}
                     {props.data.contents.map((value, i) => {
                         return <React.Fragment key={value.word}>
-                            <a className="word" href={he.createActionLink('first')}
+                            <a className="word" href={generateLink(value.word)}
                                     target="_blank" title={he.translate('global__search_link')}>
                                 {value.word}
                             </a>

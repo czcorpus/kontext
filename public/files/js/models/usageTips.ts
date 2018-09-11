@@ -43,7 +43,8 @@ const tipsDef = Immutable.List<UsageTip>([
     {messageId: 'query__tip_04', category: UsageTipCategory.QUERY},
     {messageId: 'concview__tip_01', category: UsageTipCategory.CONCORDANCE},
     {messageId: 'concview__tip_02', category: UsageTipCategory.CONCORDANCE},
-    {messageId: 'concview__tip_03', category: UsageTipCategory.CONCORDANCE}
+    {messageId: 'concview__tip_03', category: UsageTipCategory.CONCORDANCE},
+    {messageId: 'concview__tip_04', category: UsageTipCategory.CONCORDANCE}
 ]);
 
 export interface UsageTipsState {
