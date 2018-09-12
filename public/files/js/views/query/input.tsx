@@ -804,11 +804,13 @@ export function init({
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
+                                initialValue={this.state.query}
                                 takeFocus={this.props.takeFocus}
                                 inputKeyHandler={this._inputKeyHandler}
                                 inputChangeHandler={this._inputChangeHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
                             sourceId={this.props.sourceId}
+                            initialValue={this.state.query}
                             takeFocus={this.props.takeFocus}
                             inputKeyHandler={this._inputKeyHandler}
                             inputChangeHandler={this._handleInputChange} />;
