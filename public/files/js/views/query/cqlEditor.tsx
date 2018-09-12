@@ -28,6 +28,7 @@ import {GeneralQueryModel} from '../../models/query/main';
 export interface CQLEditorProps {
     sourceId:string;
     takeFocus:boolean;
+    initialValue:string;
     inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
@@ -50,7 +51,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-            this.state = {query: ''};
+            this.state = {query: this.props.initialValue};
             this.handleModelChange = this.handleModelChange.bind(this);
             this._queryInputElement = React.createRef();
         }
@@ -239,6 +240,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             editorModel.addChangeListener(this.handleModelChange);
             if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
+            }
+
+            if (this.props.initialValue) {
+                dispatcher.dispatch({
+                    actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                    props: {
+                        query: this.props.initialValue,
+                        sourceId: this.props.sourceId,
+                        rawAnchorIdx: this.props.initialValue.length,
+                        rawFocusIdx: this.props.initialValue.length
+                    }
+                });
             }
 
             if (he.browserInfo.isFirefox()) {
