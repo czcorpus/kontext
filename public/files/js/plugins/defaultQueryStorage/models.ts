@@ -22,11 +22,11 @@ import {ActionPayload} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel, cloneRecord} from '../../models/base';
+import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
-import {highlightSyntax} from '../../models/query/cqleditor/main';
+import {highlightSyntaxStatic} from '../../models/query/cqleditor/main';
 
 
 export interface InputBoxHistoryItem {
@@ -39,12 +39,14 @@ export interface InputBoxHistoryItem {
 const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) => {
     if (item.query_type === 'cql' || item.query_type === 'word' ||
             item.query_type === 'phrase' || item.query_type === 'lemma') {
-        item.query_sh = highlightSyntax(item.query, item.query_type, he, null, null);
+        item.query_sh = highlightSyntaxStatic(item.query, item.query_type, he);
     }
     return item;
 };
 
-
+/**
+ *
+ */
 export class QueryStorageModel extends StatefulModel implements PluginInterfaces.QueryStorage.IModel {
 
     private pluginApi:IPluginApi;

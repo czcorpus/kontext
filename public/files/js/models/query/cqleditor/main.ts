@@ -71,17 +71,24 @@ class RuleCharMap {
 
     private he:Kontext.ComponentHelpers;
 
+    private wrapLongQuery:boolean;
+
     private attrHelper:IAttrHelper;
+
+    private posCounter:number;
 
     private onHintChange:(message:string)=>void;
 
-    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper, onHintChange:(message:string)=>void) {
+    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper,
+                wrapLongQuery:boolean, onHintChange:(message:string)=>void) {
         this.query = query;
         this.data = {};
         this.nonTerminals = [];
         this.he = he;
         this.attrHelper = attrHelper;
+        this.wrapLongQuery = wrapLongQuery;
         this.onHintChange = onHintChange;
+        this.posCounter = 0;
     }
 
     private mkKey(i:number, j:number):string {
@@ -230,6 +237,11 @@ class RuleCharMap {
                             }
                         });
                     });
+                    if (this.wrapLongQuery && this.posCounter % 3 == 0) {
+                        const range = this.convertRange(v.from, v.to, chunks);
+                        inserts[range[0]].push('<br />');
+                    }
+                    this.posCounter += 1;
                 break;
                 case 'Structure':
                     const attrNamesInStruct = this.findSubRuleIn('AttName', v.from, v.to);
@@ -255,6 +267,12 @@ class RuleCharMap {
                             errors.push(`${this.he.translate('query__structattr_does_not_exist')}: <strong>${structName}.${structAttrName}</strong>`);
                         }
                     });
+                break;
+                case 'WithinContainingPart':
+                    if (this.wrapLongQuery) {
+                        const range = this.convertRange(v.from, v.to, chunks);
+                        inserts[range[0]].push('<br />');
+                    }
                 break;
             }
         });
@@ -414,13 +432,15 @@ interface HSArgs {
     ignoreErrors:boolean;
     attrHelper:IAttrHelper;
     parserRecoverIdx:number;
+    wrapLongQuery:boolean;
     onHintChange:(message:string)=>void;
 }
 
 
-function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx, onHintChange}:HSArgs):string {
+function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx,
+            wrapLongQuery, onHintChange}:HSArgs):string {
 
-    const rcMap = new RuleCharMap(query, he, attrHelper, onHintChange);
+    const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, onHintChange);
     const stack = new ParserStack(rcMap);
 
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
@@ -482,6 +502,7 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
                 he: he,
                 ignoreErrors: true,
                 attrHelper: attrHelper,
+                wrapLongQuery: false,
                 onHintChange: onHintChange,
                 parserRecoverIdx: parserRecoverIdx + 1
             });
@@ -523,18 +544,23 @@ export function highlightSyntax(
         he: he,
         ignoreErrors: true,
         attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
+        wrapLongQuery: false,
         onHintChange: onHintChange ? onHintChange : _ => undefined,
         parserRecoverIdx: 0
     });
 }
 
-export function highlightSyntaxStrict(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
+export function highlightSyntaxStatic(
+        query:string,
+        queryType:string,
+        he:Kontext.ComponentHelpers):string {
     return _highlightSyntax({
         query: query,
         applyRules: getApplyRules(queryType),
         he: he,
-        ignoreErrors: false,
+        ignoreErrors: true,
         attrHelper: new NullAttrHelper(),
+        wrapLongQuery: true,
         onHintChange: _ => undefined,
         parserRecoverIdx: 0
     });
