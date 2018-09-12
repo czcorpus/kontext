@@ -19,17 +19,20 @@ multiple applications and provide an access menu to switch
 between them. Or if your applications all share some
 organization-specific heading.
 
-What you need:
+What is required:
 
-1) a static html file accessible via file-system (e.g. a file
-located in KonText's "conf" directory).
+1) a directory where localized HTML files are stored. The name format
+is as follows:
+[some name].[two character lang code].html
 
-This is configured as <html_path extension-by="default">/path/to/the/file</html_path>
+(e.g.: appbar.cs.html, appbar.en.html, appbar.pl.html)
+
+This is configured as <html_dir extension-by="default">/path/to/the/directory</html_dir>
 
 2) (optional) one or more URLs where CSS files are located.
 
 This is configured as
-    <css_urls extension-by="default"><item>http://somedomain/somedir/some.css</item><item>...</item></css_url>
+    <css_urls extension-by="default"><item>http://somedomain/somedir/some.css</item><item>...</item></css_urls>
 
 Please note that KonText does not serve CSS for you via this plug-in. To provide a CSS,
 you can e.g. use an existing URL from your other website (e.g. your organization).
@@ -40,6 +43,17 @@ location /kontext/custom/ {
     alias /var/www/kontext-custom/;
 }
 
+3) (optional) one or more URLs where JavaScripts are located.
+
+This is configured as
+<js_urls extension-by="default"><item>http://somedomain/somedir/some.js</item><item>...</item></js_urls>
+
+There are the same rules applied for serving JS as for serving CSS. I.e. you must provide a working HTTP address
+for KonText to load from.
+
+Please see "example" directory to see a working example.
+
+
 It is also possible to use Python format strings within your static
 HTML page source with the following keys KonText automatically fills-in:
 
@@ -48,28 +62,42 @@ username, firstname, lastname, email, id
 e.g.: <p>you're logged in as <strong>{username}</strong></p>
 """
 
+import os
+import os.path
 from plugins.abstract.appbar import AbstractApplicationBar
 import plugins
 
 
 class StaticApplicationBar(AbstractApplicationBar):
 
-    def __init__(self, html_path, css_urls, auth):
+    def __init__(self, html_dir, css_urls, js_urls, default_lang, auth):
         super(StaticApplicationBar, self).__init__()
         self._css_urls = css_urls
+        self._js_urls = js_urls
         self._auth = auth
-        with open(html_path) as fr:
-            self._html = fr.read()
+        self._default_lang = default_lang
+        self._html_files = self._load_html(html_dir)
+
+    def _load_html(self, dir_path):
+        ans = {}
+        for fname in os.listdir(dir_path):
+            tmp = fname.split('.')
+            if len(tmp) == 3 and len(tmp[1]) == 2 and tmp[2] == 'html':
+                with open(os.path.join(dir_path, fname)) as fr:
+                    ans[tmp[1]] = fr.read()
+        return ans
 
     def get_styles(self, plugin_api):
         return tuple(dict(url=u) for u in self._css_urls)
 
     def get_scripts(self, plugin_api):
-        return []
+        return tuple(self._js_urls)
 
     def get_contents(self, plugin_api, return_url):
         user_info = self._auth.get_user_info(plugin_api)
-        return self._html.format(**user_info)
+        lang = plugin_api.user_lang.split('_')[0]
+        html = self._html_files.get(lang, self._default_lang)
+        return html.format(**user_info)
 
     def get_fallback_content(self):
         return '<p>Application bar HTML not loaded.</p>'
@@ -78,4 +106,6 @@ class StaticApplicationBar(AbstractApplicationBar):
 @plugins.inject(plugins.runtime.AUTH)
 def create_instance(settings, auth):
     plg_conf = settings.get('plugins', 'application_bar')
-    return StaticApplicationBar(plg_conf['default:html_path'], plg_conf.get('default:css_urls', []), auth)
+    return StaticApplicationBar(html_dir=plg_conf['default:html_dir'], css_urls=plg_conf.get('default:css_urls', []),
+                                js_urls=plg_conf.get('default:js_urls', []),
+                                default_lang=plg_conf['default:default_lang'], auth=auth)
