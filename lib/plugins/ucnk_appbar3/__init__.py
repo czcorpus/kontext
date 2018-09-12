@@ -20,11 +20,7 @@ This plug-in is highly dependent on:
    as it expects to find toolbar's code in user session which is exactly what ucnk_remote_auth3/4
    does (among others).
 
-Required config.xml/plugin entries:
-
-element application_bar {
-  element module { "ucnk_appbar" }
-}
+Required config.xml/plugin entries: please see ./config.rng
 
 
 dependencies info structure:

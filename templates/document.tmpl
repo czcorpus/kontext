@@ -37,6 +37,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end for
 #end filter
 
+<link rel="stylesheet" type="text/css" href="$files_path/dist/common.css${deployment_suff}" />
+<link rel="stylesheet" type="text/css" href="$files_path/dist/${page_model}.css${deployment_suff}" />
 #for $item in $app_bar_css
 <link rel="stylesheet" type="text/css" href="$item.url" />
 #end for
@@ -44,8 +46,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <link rel="stylesheet" type="text/css" href="$footer_bar_css" />
 #end if
 
-<link rel="stylesheet" type="text/css" href="$files_path/dist/common.css${deployment_suff}" />
-<link rel="stylesheet" type="text/css" href="$files_path/dist/${page_model}.css${deployment_suff}" />
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
