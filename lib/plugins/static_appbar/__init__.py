@@ -29,7 +29,12 @@ is as follows:
 
 This is configured as <html_dir extension-by="default">/path/to/the/directory</html_dir>
 
-2) (optional) one or more URLs where CSS files are located.
+2) define a default language. Please note that a file from (1) must exist for this
+language - otherwise KonText will fail to run.
+
+This is configured as (e.g. for English): <default_lang extension-by="default">en</default_lang>
+
+3) (optional) one or more URLs where CSS files are located.
 
 This is configured as
     <css_urls extension-by="default"><item>http://somedomain/somedir/some.css</item><item>...</item></css_urls>
@@ -43,7 +48,7 @@ location /kontext/custom/ {
     alias /var/www/kontext-custom/;
 }
 
-3) (optional) one or more URLs where JavaScripts are located.
+4) (optional) one or more URLs where JavaScripts are located.
 
 This is configured as
 <js_urls extension-by="default"><item>http://somedomain/somedir/some.js</item><item>...</item></js_urls>
