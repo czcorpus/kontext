@@ -1021,6 +1021,7 @@ class Kontext(Controller):
             settings.get('corpora', 'interval_char', None),
             settings.get('corpora', 'right_interval_char', None),
         )
+        result['righttoleft'] = True if self.corp.get_conf('RIGHTTOLEFT') else False
 
     def _setup_optional_plugins_js(self, result):
         """

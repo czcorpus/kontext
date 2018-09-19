@@ -218,6 +218,7 @@ export namespace AjaxResponse {
         CurrentSubcorp:string;
         SubcorpList:Array<{v:string; n:string}>;
         TextTypesNotes:string;
+        TextDirectionRTL:boolean;
     }
 }
 

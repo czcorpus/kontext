@@ -683,6 +683,7 @@ export namespace ViewOptions {
         getIsWaiting():boolean;
         getUserIsAnonymous():boolean;
         lockedPosAttrNotSelected():boolean;
+        getCorpusUsesRTLText():boolean;
     }
 
     export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {

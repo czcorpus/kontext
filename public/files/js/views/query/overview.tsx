@@ -349,7 +349,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         };
 
         return (
-            <li>
+            <li className="QueryOpInfo">
                 {renderLabel()}{':\u00a0'}
                 {props.item.nicearg ?
                     (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
