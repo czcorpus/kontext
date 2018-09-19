@@ -164,9 +164,6 @@ class Actions(Querying):
                     result_shuffled=False, finished=True)
 
     def _apply_viewmode(self, sentence_struct):
-        self.args.righttoleft = False
-        if self.corp.get_conf('RIGHTTOLEFT'):
-            self.args.righttoleft = True
         if self.args.viewmode == 'kwic':
             self.args.leftctx = self.args.kwicleftctx
             self.args.rightctx = self.args.kwicrightctx
@@ -1742,7 +1739,8 @@ class Actions(Querying):
             ConcFormsArgs=tmp_out['conc_forms_args'],
             CurrentSubcorp=self.args.usesubcorp,
             SubcorpList=tmp_out['SubcorpList'],
-            TextTypesNotes=corpus_info.metadata.desc
+            TextTypesNotes=corpus_info.metadata.desc,
+            TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False
         )
         self._configure_auth_urls(ans)
         return ans

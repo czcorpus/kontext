@@ -78,6 +78,8 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
+    private corpusUsesRTLText:boolean;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             userIsAnonymous:boolean) {
         super(dispatcher);
@@ -87,6 +89,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
         this.updateHandlers = Immutable.List<()=>void>();
         this.isWaiting = false;
+        this.corpusUsesRTLText = layoutModel.getConf<boolean>('TextDirectionRTL');
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -507,5 +510,9 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     lockedPosAttrNotSelected():boolean {
         return !this.attrList.find(v => v.locked).selected;
+    }
+
+    getCorpusUsesRTLText():boolean {
+        return this.corpusUsesRTLText;
     }
 }

@@ -30,9 +30,16 @@ KonText - $getVar('page_title', '') ($_('Concordance').lower())#slurp
 
 #if $righttoleft
 <style>
-.lc {direction: rtl}
-.kw {direction: rtl}
-.rc {direction: rtl}
+#conclines .lc, #conclines .kw, #conclines .rc, #conclines  .rtl, #conclines .par {
+    unicode-bidi: embed;
+    direction: rtl;
+}
+#conclines .strc {
+    direction: ltr;
+}
+.QueryOpInfo .args {
+   unicode-bidi: embed;
+}
 </style>
 #end if
 #end def

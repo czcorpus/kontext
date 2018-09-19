@@ -195,8 +195,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 {props.lockedPosAttrNotSelected ?
                     <p className="warning">
                         <img className="icon"
-                                src={helpers.createStaticUrl('img/info-icon.svg')}
-                                alt={helpers.translate('global__info_icon')} />
+                                src={helpers.createStaticUrl('img/warning-icon.svg')}
+                                alt={helpers.translate('global__warning_icon')} />
                         {helpers.translate('options__remove_word_warning')}
                     </p> :
                     null
@@ -243,6 +243,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
     const FieldsetStructures:React.SFC<{
         availStructs:Immutable.List<ViewOptions.AttrDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
+        corpusUsesRTLText:boolean;
 
     }> = (props) => {
 
@@ -271,6 +272,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
         return (
             <fieldset className="FieldsetStructures">
                 <legend>{helpers.translate('options__structures_hd')}</legend>
+                {props.corpusUsesRTLText ?
+                    <p className="warning">
+                        <img className="icon"
+                                src={helpers.createStaticUrl('img/warning-icon.svg')}
+                                alt={helpers.translate('global__warning_icon')} />
+                        {helpers.translate('options__rtl_text_warning')}
+                    </p> :
+                    null}
                 <ul>
                     {props.availStructs.map((item) => {
                         return (
@@ -413,6 +422,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         isWaiting:boolean;
         userIsAnonymous:boolean;
         lockedPosAttrNotSelected:boolean;
+        corpusUsesRTLText:boolean;
 
     }> = (props) => {
 
@@ -426,7 +436,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 attrsVmode={props.attrsVmode}
                                 showConcToolbar={props.showConcToolbar}
                                 lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
-                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
+                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
+                                    corpusUsesRTLText={props.corpusUsesRTLText} />
                         <FieldsetMetainformation availRefs={props.availRefs}
                                 hasSelectAll={props.TehasSelectAllRefs} />
                         {props.userIsAnonymous ?
@@ -470,6 +481,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         isVisible:boolean;
         userIsAnonymous:boolean;
         lockedPosAttrNotSelected:boolean;
+        corpusUsesRTLText:boolean;
     }> {
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
@@ -497,7 +509,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 isWaiting: viewOptionsModel.getIsWaiting(),
                 isVisible: false,
                 userIsAnonymous: viewOptionsModel.getUserIsAnonymous(),
-                lockedPosAttrNotSelected: viewOptionsModel.lockedPosAttrNotSelected()
+                lockedPosAttrNotSelected: viewOptionsModel.lockedPosAttrNotSelected(),
+                corpusUsesRTLText: viewOptionsModel.getCorpusUsesRTLText()
             };
         }
 
@@ -548,7 +561,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                             showConcToolbar={this.state.showConcToolbar}
                             isWaiting={this.state.isWaiting}
                             userIsAnonymous={this.state.userIsAnonymous}
-                            lockedPosAttrNotSelected={this.state.lockedPosAttrNotSelected} />
+                            lockedPosAttrNotSelected={this.state.lockedPosAttrNotSelected}
+                            corpusUsesRTLText={this.state.corpusUsesRTLText} />
                 </div>
             );
         }
