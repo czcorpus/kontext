@@ -51,5 +51,31 @@
     "ucnk_subc__ratios_th_orig_ratio": "Původní podíl",
     "ucnk_subcm__there_are_aligned_corpora_msg": "Výpočet proběhne pouze na položkách, které jsou zarovnané s následujícími korpusy",
     "ucnk_subcm__failed_to_find_suiteable_mix": "Nepodařilo se najít vyhovující mix textů. Zkuste omezit počet podmínek a/nebo nastavit podíly blíže jejich původním hodnotám."
+  },
+  "szl": {
+    "ucnk_subcm__define_proportions": "Włŏsne proporcyje typu tekstu",
+    "ucnk_subcm__widget_header": "Proporcyje ôbranych typōw tekstōw we wynikowym podkorpusie",
+    "ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}": "Suma proporcyji we {struct_name} musi być 100% (rōżnica: {over_val}%)",
+    "ucnk_subcm__invalid_value": "Niynŏleżnŏ werta",
+    "ucnk_subcm__set_shares": "Miyszej dokumynta, żeby sztymowały ze proporcyjami typu włŏsnego tekstu",
+    "ucnk_subcm__calculate": "Znojdź ôdpowiadajōnce zaznaczynie",
+    "ucnk_subcm__create_subc": "Stwōrz podkorpus",
+    "ucnk_subcm__new_subc_name": "Nowŏ nazwa podkorpusu",
+    "ucnk_subc__subc_found_{size}": "Wymŏgany podkorpus znaleziōny. Rachowanŏ srogość: {size} symboli.",
+    "ucnk_subc__subc_found_with_errors{size}{num_errors}": "Znaleziōny bliski podkorpus ze {num_errors, plural, one{# niyspołniōnym warōnkym} other{# niyspołniōnymi warōnkami}}. Rachowanŏ srogość: {size} symboli.",
+    "ucnk_subc__subc_not_found": "Niy szło znojś ôdpednigo podkorpusu - żŏdyn warōnek niy sztymuje.",
+    "ucnk_subc__missing_subc_name": "Brakuje nazwy podkorpusu",
+    "ucnk_subc__multiple_attrs_mixing_warning{attrs}": "Pamiyntej, iże używanie wiyncyj jak jednego strukturalnego atrybutu (terŏz: {attrs}) może kludzić do zadaniŏ, co go niy idzie społnić.",
+    "ucnk_subc__condition_fulfilled_{actual_val}": "Warōnek społniōny (rachowanŏ proporcyjŏ: {actual_val}%)",
+    "ucnk_subc__condition_failed_{actual_val}": "Warōnek niyspołniōny (rachowanŏ proporcyjŏ: {actual_val}%)",
+    "ucnk_subc__modify_params_btn": "Zmiyń parametry",
+    "ucnk_subc__error_tolerance": "Tolerowany zakres wyniku",
+    "ucnk_subcm__currently_disabled_refine_to_enable": "Knefel niyaktywny. Zakuratnij zaznaczynie typu tekstu, żeby go uaktywnić.",
+    "ucnk_subc__ratios_th_expression": "Typ tekstu",
+    "ucnk_subc__ratios_th_required_ratio": "Wymŏgany spōłczynnik",
+    "ucnk_subc__ratios_th_status": "Status",
+    "ucnk_subc__ratios_th_orig_ratio": "Ôryginalny spōłczynnik",
+    "ucnk_subcm__there_are_aligned_corpora_msg": "Rachowanie bydzie przekludzōne ino we elymyntach wyrōwnanych do nastympnych korpusōw",
+    "ucnk_subcm__failed_to_find_suiteable_mix": "Niy szło znojś ôdpednigo miszōngu tekstōw. Sprōbuj zmyńszyć wielość warōnkōw i/abo nasztaluj spōłczynniki bliżyj jejich ôryginalnyj werty."
   }
 }

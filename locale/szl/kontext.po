@@ -1,0 +1,448 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-09-16 14:57+0200\n"
+"PO-Revision-Date: 2018-09-17 00:13+0200\n"
+"Last-Translator: Grzegorz Kulik\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7.1\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language-Team: \n"
+"Language: szl\n"
+
+msgid "anonymous"
+msgstr "anōnimowy"
+
+msgid "The string must be at least 5 characters long."
+msgstr "Fraza musi mieć aby piyńć znakōw."
+
+msgid "Unknown concordance action: %s"
+msgstr "Niyznōmŏ akcyjŏ kōnkordancyje: %s"
+
+msgid "instances per million positions (refers to the respective category)"
+msgstr "wystōmpiyń na milijōn pozycyjōw (ôdnosi sie do ôdpednij kategoryje)"
+
+msgid "enabled"
+msgstr "włōnczōne"
+
+msgid "Token number"
+msgstr "Elymynt numer"
+
+msgid "Failed to process your request. Please try again later or contact system support."
+msgstr ""
+"Niy szło przerobić twojigo żōndaniŏ. Sprōbuj zaś niyskorzij abo skōntaktuj sie ze administracyjōm."
+
+#, python-format
+msgid "Subcorpus \"%s\" not found"
+msgstr "Niy szło znojś podkorpusu \"%s\""
+
+msgid "This function is disabled."
+msgstr "Ta funcyjŏ je zastawiōnŏ."
+
+msgid "Invalid user or password"
+msgstr "Niyznōmy używŏcz abo hasło"
+
+msgid "New password and its confirmation do not match."
+msgstr "Nowe hasło i jego potwierdzynie niy sztymujōm."
+
+msgid "Incorrect username or password"
+msgstr "Niynŏleżne miano ôd używŏcza abo hasło"
+
+msgid "No result. Please make sure the query and selected query type are correct."
+msgstr "Żŏdnych wynikōw. Wejzdrzij, jeźli zapytanie i ôbranŏ zorta zapytaniŏ sōm nŏleżne."
+
+msgid "Custom"
+msgstr "Włŏsne"
+
+msgid "Document number"
+msgstr "Numer dokumyntu"
+
+#, python-format
+msgid "Value [%s] cannot be used as a context width. Please use numbers 0,1,2,..."
+msgstr "Werta [%s] niy może być użytŏ za szyrokość kōntekstu. Użyj numerōw 0, 1, 2,..."
+
+msgid "No query entered."
+msgstr "Zapytanie niy było wkludzōne."
+
+msgid "Undefined lemma PoS"
+msgstr "Niyôkryślōnŏ zorta mŏwy ôd lymmy"
+
+msgid "Undefined word form PoS"
+msgstr "Niyôkryślōnŏ zorta mŏwy ôd formy wyrazowyj"
+
+msgid "No char entered"
+msgstr "Zŏdyn znak niy bōł wkludzōny"
+
+msgid "Select Positive or Negative filter type"
+msgstr "Ôbier pozytywny abo negatywny typ filtra"
+
+msgid "Empty list"
+msgstr "Prōznŏ lista"
+
+msgid "No text type selected"
+msgstr "Niy bōł ôbrany żŏdyn typ tekstu"
+
+msgid "Text types are limited to Simple output"
+msgstr "Typy tekstu sōm ôgraniczōne to prostego wyjściŏ"
+
+msgid "No output attribute specified"
+msgstr "Niy bōł ôkryślōny atrybut wyjściŏ"
+
+msgid "Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF)."
+msgstr "Brakuje kōnfiguracyje pokazowaniŏ atrybutōw strukturalnych (SUBCORPATTRS abo FULLREF)."
+
+msgid "Document counts"
+msgstr "Liczby dokumyntu"
+
+msgid "Tokens"
+msgstr "Symbole"
+
+msgid "Word counts"
+msgstr "Liczby słōw"
+
+msgid "No subcorpus name specified!"
+msgstr "Niy była ôbranŏ nazwa podkorpusu!"
+
+msgid "Nothing specified!"
+msgstr "Nic niy było ôbrane!"
+
+msgid "Empty subcorpus!"
+msgstr "Prōzny podkorpus!"
+
+msgid "Invalid data"
+msgstr "Niynŏleżne dane"
+
+msgid "Unknown export data type"
+msgstr "Niyznany typ eksportu danych"
+
+msgid "Failed to load"
+msgstr "Ladowanie sie niy podarziło"
+
+#, python-format
+msgid "Corpus %s is not supported by this widget."
+msgstr "Korpus %s niyma spiyrany ôd tego widżetu."
+
+msgid "no description"
+msgstr "brak ôpisu"
+
+msgid "whole corpus"
+msgstr "cołki korpus"
+
+msgid "tokens"
+msgstr "symbole"
+
+msgid "New subcorpus"
+msgstr "Nowy podkorpus"
+
+msgid "Text Types"
+msgstr "Typy tekstu"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "positive"
+msgstr "pozytywny"
+
+msgid "negative"
+msgstr "negatywny"
+
+msgid ""
+"After a successful password update, you will be logged out and prompted to enter your new credentials."
+msgstr ""
+"Po podarzōnyj aktualizacyji hasła używŏcz bydzie wylogowany i poproszōny ô wkludzynie swojich nowych "
+"danych."
+
+msgid "Save"
+msgstr "Spamiyntej"
+
+msgid "Word list"
+msgstr "Wykŏz słōw"
+
+msgid "Login options"
+msgstr "Ôpcyje logowaniŏ"
+
+msgid "username"
+msgstr "miano ôd używŏcza"
+
+msgid "password"
+msgstr "hasło"
+
+msgid "Search in the corpus"
+msgstr "Szukej we korpusie"
+
+msgid "Collocations"
+msgstr "Kolokacyje"
+
+msgid "Collocation candidates"
+msgstr "Kandydaty do kolokacyje"
+
+msgid "List of my subcorpora"
+msgstr "Wykŏz mojich podkorpusōw"
+
+msgid "My subcorpora"
+msgstr "Moje podkorpusy"
+
+msgid "Word List Form"
+msgstr "Formular wykŏzu słōw"
+
+msgid "View"
+msgstr "Widok"
+
+msgid "General view options"
+msgstr "Ôgōlne ôpcyje widoku"
+
+msgid "Query"
+msgstr "Zapytanie"
+
+msgid ""
+"Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input "
+"expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all "
+"its word forms are searched as well."
+msgstr ""
+"Typ zapytaniŏ <em>podstawowy</em> je ôdpedni do poznŏwaniŏ korpusu. Szukŏ frazy jako formy wyrazowyj "
+"i niy dŏwŏ pozōr na wielkość liter; jak to je tyż kanōnicznŏ forma słownikowŏ (lymma), to wszyjske "
+"jeji formy tyż sōm szukane."
+
+msgid "logout"
+msgstr "wyloguj"
+
+msgid "Enter new query"
+msgstr "Wkludź nowe zapytanie"
+
+msgid "Recent queries"
+msgstr "Ôstatnie zapytania"
+
+msgid "Word List"
+msgstr "Wykŏz słōw"
+
+msgid "Concordance"
+msgstr "Kōnkordancyjŏ"
+
+msgid "Current concordance"
+msgstr "Terŏźnŏ kōnkordancyjŏ"
+
+msgid "Sorting"
+msgstr "Porzōndkowanie"
+
+msgid "Shuffle"
+msgstr "Miynszanie"
+
+msgid "Sample"
+msgstr "Prōbka"
+
+msgid "Query overview"
+msgstr "Przeglōnd zapytania"
+
+msgid "Positive"
+msgstr "Pozytywne"
+
+msgid "Negative"
+msgstr "Negatywne"
+
+msgid "Frequency"
+msgstr "Frekwyncyjŏ"
+
+msgid "Node forms"
+msgstr "Formy wynzłōw"
+
+msgid "Doc IDs"
+msgstr "ID ôd dokumyntōw"
+
+msgid "Corpus-specific settings"
+msgstr "Sztelōnki korpusōw"
+
+msgid "Help"
+msgstr "Pōmoc"
+
+msgid "Available corpora"
+msgstr "Dostympne korpusy"
+
+msgid "user interface languages"
+msgstr "mŏwy interfejsu używŏcza"
+
+msgid "version"
+msgstr "wersyjŏ"
+
+msgid "Random sample"
+msgstr "Losowŏ prōbka"
+
+msgid "T-score"
+msgstr "T-score"
+
+msgid "MI"
+msgstr "MI"
+
+msgid "MI3"
+msgstr "MI3"
+
+msgid "log likelihood"
+msgstr "log likelihood"
+
+msgid "min. sensitivity"
+msgstr "min. czułość"
+
+msgid "logDice"
+msgstr "logDice"
+
+msgid "MI.log_f"
+msgstr "MI.log_f"
+
+msgid "Corpora"
+msgstr "Korpusy"
+
+msgid "Loading..."
+msgstr "Ladowanie..."
+
+msgid "Create new subcorpus"
+msgstr "Stwōrz nowy podkorpus"
+
+msgid "Click to enter a new query"
+msgstr "Kliknij, żeby wkludzić nowe zapytanie"
+
+msgid "Application outage"
+msgstr "Przestōj aplikacyje"
+
+msgid "The application is under maintenance. Sorry for inconvenience."
+msgstr "Aplikacyjŏ je sprawianŏ. Wybŏczcie niyprzileżytość."
+
+msgid "Report an error"
+msgstr "Dej znać ô felerze"
+
+msgid "Unknown action [%s]"
+msgstr "Niyznanŏ akcyjŏ [%s]"
+
+msgid "Invalid or expired query"
+msgstr "Niynŏleżne abo przedŏwniōne zapytanie"
+
+msgid "new subcorpora in your library: %s"
+msgstr "nowe podkorpusy we twojij bibliotece: %s"
+
+msgid "Lemmas"
+msgstr "Lymmy"
+
+msgid "frequency distribution"
+msgstr "rozkłŏd frekwyncyji"
+
+msgid "Query failed: Syntax error at position %s."
+msgstr "Zapytanie sie niy podarziło: feler składnie we pozycyji %s."
+
+msgid "Query failed: Syntax error."
+msgstr "Zapytanie sie niy podarziło: feler składnie."
+
+msgid "Failed to evaluate the query. Please check the syntax and used attributes."
+msgstr "Niy szło ôkryślić zapytaniŏ. Wejzdrzij na składniã i użyte atrybuty."
+
+msgid "Attribute \"%s\" not found."
+msgstr "Niy szło znojś atrybutu \"%s\"."
+
+msgid "Attribute not found."
+msgstr "Niy szło znojś atrybutu."
+
+msgid "%s Please make sure the query and selected query type are correct."
+msgstr "%s Dej pozōr, jeźli zapytanie i jego typ sōm nŏleżne."
+
+msgid "Subcorpus created but there was a problem saving a backup copy."
+msgstr "Podkorpus je stworzōny, ale bōł problym ze zŏpisym kopije zapasowyj."
+
+msgid "Subcorpus %s has been deleted permanently."
+msgstr "Podkorpus %s bōł permanynt skasowany."
+
+msgid "Positive filter"
+msgstr "Pozytywny filter"
+
+msgid "Negative filter"
+msgstr "Negatywny filter"
+
+msgid "Negative filter (excluding KWIC)"
+msgstr "Negatywny filter (bez KWIC)"
+
+msgid "Positive filter (excluding KWIC)"
+msgstr "Pozytywny filter (ze KWIC)"
+
+msgid "Switch KWIC"
+msgstr "Umiyń KWIC"
+
+msgid "No alignment available for the selected languages"
+msgstr "Do ôbranych jynzykōw niy je dostympne wyrōwnowanie."
+
+msgid "Failed to get the syntax tree due to limited KWIC context (too long sentence)."
+msgstr "Niy szło wyczytać składnie skuli ôgraniczyniŏ kōntekstu KWIC (za duge zdanie)."
+
+msgid "Character encoding of this corpus ({0}) does not support one or more characters in the query."
+msgstr "Kodowanie znakōw tego korpusu ({0}) niy spiyrŏ jednego abo wiyncyj znakōw  we tym zapytaniu."
+
+msgid "translation not available"
+msgstr "przekłŏd niydostympny"
+
+msgid "Failed to open corpus {0}"
+msgstr "Niy szło ôtworzić korpusu {0}"
+
+msgid "Two-attribute interrelationship"
+msgstr "Wzjymnŏ zależność dwōch atrybutōw"
+
+msgid "Frequency list"
+msgstr "Lista frekwyncyjnŏ"
+
+msgid "Archive query"
+msgstr "Archiwuj zapytanie"
+
+msgid "Cannot calculate yet - source concordance not finished. Please try again later."
+msgstr ""
+"Niy idzie jeszcze porachować - kōnkordancyjŏ zdrzōdła jeszcze sie niy skōńczyła. Sprōbuj niyskorzij."
+
+msgid "KonText feedback from user {0}"
+msgstr "Uwŏgi ô KonTekście ôd używŏcza {0}"
+
+msgid "KonText feedback from user {0} for {1}"
+msgstr "Uwŏgi ô KonTekście ôd używŏcza {0} z {1}"
+
+msgid "browser info"
+msgstr "info ô przeglōndarce"
+
+msgid "KWIC/Sentence"
+msgstr "KWIC/Zdanie"
+
+msgid "Remove nested matches"
+msgstr "Skasuj zagniyżdżōne wyniki"
+
+msgid "First hits in documents"
+msgstr "Piyrsze trefiynia we dokumyntach"
+
+msgid "Open login form"
+msgstr "Ôtwōrz formular logowaniŏ"
+
+msgid "Continue as anonymous user"
+msgstr "Kōntynuuj jako  anōnimowy użytkownik"
+
+msgid "Corpus \"{0}\" not available"
+msgstr "Korpus \"{0}\" niy je dostympny"
+
+msgid "No corpus selected"
+msgstr "Żŏdyn korpus niy bōł ôbrany"
+
+msgid "Saves at most {0} items. Use \"Custom\" for more options."
+msgstr "Zapisuje nojwiyncyj {0} elymyntōw. Użyj \"Włŏsnego\" po wiyncyj ôpcyji."
+
+msgid "case insensitive"
+msgstr "wielkość liter bez znaczyniŏ"
+
+msgid "Permanent link"
+msgstr "Permanyntny link"
+
+msgid "Cannot change status of a concordance belonging to another user"
+msgstr "Niy idzie umiynić statusu kōnkordancyje, co należy do inkszego używŏcza"
+
+msgid "Access forbidden - please log-in."
+msgstr "Brak dostympu - zaloguj sie."
+
+msgid "Undo"
+msgstr "Cŏfnij"
+
+msgid "Public subcorpora"
+msgstr "Publiczne podkorpusy"
+
+msgid "List of published subcorpora"
+msgstr "Lista ôpublikowanych podkorpusōw"

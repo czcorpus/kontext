@@ -8,5 +8,10 @@
         "defaultTD__unsupported_renderer": "Požadovaný zobrazovací modul nebyl nalezen",
         "defaultTD__original_data": "Data",
         "defaultTD__failed_to_fetch_external_information": "Nepodařilo se načíst informaci ze zdroje třetí strany"
+    },
+    "szl": {
+       "defaultTD__unsupported_renderer": "Wymŏgany moduł rynderera niy bōł znaleziōny",
+       "defaultTD__original_data": "Dane",
+       "defaultTD__failed_to_fetch_external_information": "Niy szło zaladować informacyji ze zewnyntrznego zdrzōdła"
     }
 }
