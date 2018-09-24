@@ -23,6 +23,10 @@ import kontext
 import manatee
 
 
+class BackendException(Exception):
+    pass
+
+
 class Response(object):
 
     contents:basestring
