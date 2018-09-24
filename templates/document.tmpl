@@ -194,10 +194,8 @@ __conf.TextDirectionRTL = $to_json($getVar('righttoleft', False));
         <div id="switch-language-box">$_("user interface languages"):
             #set $i = 0
             <form id="language-switch-form" action="${root_url}user/switch_language" method="POST">
-                <input class="language" type="hidden" name="language" />
-                <input class="continue" type="hidden" name="continue" />
                 #for $lang in $avail_languages
-                <a data-lang="$lang[0]">$lang[1].get('label', $lang[0])</a>#if $i < $len($avail_languages) - 1# | #end if#
+                <button class="switch" type="submit" name="language" value="$lang[0]">$lang[1].get('label', $lang[0])</button>#if $i < $len($avail_languages) - 1# | #end if#
                 #set $i = $i + 1
                 #end for
             </form>
