@@ -6,5 +6,9 @@
     "cs-CZ": {
         "ucnkQS__recent_queries": "Předchozí dotazy",
         "ucnkQS__only_current_corpus": "Pouze dotazy do aktuálního korpusu"
+    },
+    "szl": {
+        "ucnkQS__recent_queries": "Ôstatnie zapytania",
+        "ucnkQS__only_current_corpus": "Ino zapytania we terŏźnym korpusie"
     }
 }

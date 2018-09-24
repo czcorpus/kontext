@@ -38,5 +38,25 @@
         "ucnkLA__aligned_lang_cannot_be_set_here": "Seznam zarovnaných korpusů v tomto poli je dán automaticky korpusy přidanými do formuláře dotazu.",
         "ucnkLA__the_selection_is_empty_msg": "Aktuální výběr neposkytuje žádné položky.",
         "ucnkLA__are_you_sure_to_reset": "Celý výběr textů bude ztracen. Chcete provést?"
-	}
+	},
+    "szl": {
+        "ucnkLA__bib_list_warning": "Skuli wielości ôdpowiadajōncych elymyntōw lista indywidualnych tytułōw bydzie pokŏzanŏ po zakuratniyniu zaznaczyniŏ.",
+        "ucnkLA__num_positions":"{num_pos, number} pozycyji",
+        "ucnkLA__num_of_matching_items": "wielość ôdpowiadajōncych elymyntōw",
+        "ucnkLA__nothing_selected": "Żŏdne ôdpowiadajōnce elymynta niy były znaleziōne.",
+        "ucnkLA__at_least_one_required": "Wymŏganŏ je aby jedna werta numerycznŏ.",
+        "ucnkLA__no_matching_data": "Żŏdne ôdpowiadajōnce dane niy były znelziōne.",
+        "ucnkLA__failed_to_calc_range": "Niy szło porachować zakresu. Sprōbuj zaś niyskorzij abo skōntaktuj sie ze administratorym systymu.",
+        "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Pamiyntej, iże podkorpusy słożōne podle wyrōwnaniŏ jynzyka bierōm wiyncyj czasu do przetworzyniŏ (do pŏru minut). Zadanie bydzie fungować ze zadku, a jak skōńczy, dostaniesz ô tym wiadōmość. Bez tyn czas możesz normalnie używać KonTekstu.",
+        "ucnkLA__aligned_corpora": "Wyrōwnane korpusy",
+        "ucnkLA__subcorp_consider_aligned_corpora_auto": "Ino teksty znaleziōne tyż we tych korpusach bydōm przeszukane.",
+        "ucnkLA__subcorp_consider_aligned_corpora_manual": "Ino teksty znaleziōne tyż we zaznaczōnych korpusach bydōm wrażōne do podkorpusu.",
+        "ucnkLA__refine_selection_btn": "Zakuratnij zaznaczynie",
+        "ucnkLA__undo_selection_btn": "Cŏfnij",
+        "ucnkLA__reset_selection_btn": "Wysnŏż zaznaczynie",
+        "ucnkLA__start_writing_for_suggestions": "Weź pisać\u2026",
+        "ucnkLA__aligned_lang_cannot_be_set_here": "Lista wyrōwnanych korpusōw we tym polu je ôkryślōnŏ autōmatycznie ôd korpusōw dodanych do formulara zapytaniŏ",
+        "ucnkLA__the_selection_is_empty_msg": "Terŏźne zaznaczynie niy przinosi żŏdnego wyniku.",
+        "ucnkLA__are_you_sure_to_reset": "Cołke zaznaczynie typu tekstu bydzie stracōne. Na isto chcesz wysnŏżyć?"
+    }
 }

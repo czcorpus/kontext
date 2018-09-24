@@ -10,5 +10,11 @@
         "defaultIR__report_issue_link": "Ohlásit chybu/problém",
         "defaultIR__submit_btn": "Odeslat",
         "defaultIR__message_sent": "Vaše zpráva byla odeslána."
+    },
+    "szl": {
+        "defaultIR__report_issue_heading": "Dej znać ô problymie",
+        "defaultIR__report_issue_link": "Dej znać ô problymie",
+        "defaultIR__submit_btn": "Wyslij",
+        "defaultIR__message_sent": "Twoja wiadōmośc była wysłanŏ."
     }
 }
