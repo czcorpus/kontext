@@ -392,8 +392,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                             <TargetVerb verbSourceName={props.name.split(' : ')[0]}
                                         verbTargetName={props.name.split(' : ')[1]}
                                         verbSourceID={sourceValue[0]}
-                                        verbTargetList={sourceValue[2]}
-                                        num={h}/>
+                                        verbTargetList={sourceValue[2]}/>
                         </div>
                     );
                 })}
@@ -404,7 +403,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <TargetVerb /> -------------------------------
 
     class TargetVerb extends React.Component<{
-        num:number;
         verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
