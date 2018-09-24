@@ -41,3 +41,14 @@ class PDTVallexFrontend(AbstractFrontend):
         response.renderer = 'pdt-vallex-json'
         response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
         return response
+
+class ENGVallexFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super(ENGVallexFrontend, self).__init__(conf)
+
+    def export_data(self, data, status, lang):
+        response = super(ENGVallexFrontend, self).export_data(data, status, lang)
+        response.renderer = 'eng-vallex-json'
+        response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
+        return response

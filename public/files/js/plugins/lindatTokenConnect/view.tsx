@@ -24,16 +24,144 @@ import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import * as VRD from './vallex';
 import * as PDTVRD from './pdt-vallex';
+import * as ENGVRD from './eng-vallex';
 
 
 export interface Views {
     VallexJsonRenderer:React.SFC<{data: VRD.VallexResponseData}>;
     PDTVallexJsonRenderer:React.SFC<{data: PDTVRD.PDTVallexResponseData}>;
+    EngVallexJsonRenderer:React.SFC<{data: ENGVRD.EngVallexResponseData}>;
 }
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
+
+        // ------------- <EngVallexJsonRenderer /> -------------------------------
+
+    const EngVallexJsonRenderer:Views['EngVallexJsonRenderer'] = (props) => {
+        if (props.data.result.length > 0) {
+            return (
+                <div className="VallexJsonRenderer">
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/EngVallex.html?verb=' + props.data.result[1][0][0]} target="_blank">{props.data.result[1][0][0]}</a>
+                    <EngVerbList info={props.data.result[1][0]} />
+                </div>
+            );
+        } else {
+            return (
+                <p>No match found in dictionaries.</p>
+            );
+        }
+    };
+
+        // ------------- <EngVerbList /> -------------------------------
+
+    const EngVerbList:React.SFC<{
+        info:ENGVRD.VerbAndInfo;
+    }> = (props) => {
+        const renderEngVerbInfo = () => {
+            return props.info[1].map((item, i) => {
+                return <OneEngFrame key={i} id={item[0]}
+                                info={item[1]}
+                                pcedtEx={item[2]}
+                                verb={props.info[0]}/>
+            });
+
+        };
+        return (
+            <div>{renderEngVerbInfo()}</div>
+        );
+    };
+
+        // ------------- <OneEngFrame /> -------------------------------
+
+    const OneEngFrame:React.SFC<{
+        key:any;
+        id:ENGVRD.FrameID;
+        info:ENGVRD.Info;
+        pcedtEx:ENGVRD.PCEDTExamples;
+        verb:string;
+    }> = (props) => {
+
+        return (
+            <div>
+                <div className="vallexSourceV">{props.verb}
+                    {props.info[0].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                        }
+                    })}
+                </div>
+                <ul className="vallexHiddenBullets">
+                    {props.info[1].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <li className="pdtvallexExpl" key={i}>{listValue}</li>;
+                        }
+                    })}
+                </ul>
+                <ul className="pdtvallexExamples">
+                    {props.info[2].map((listValue, i) => {
+                        if (listValue.length !== 0) {
+                            return <li className="pdtvallexExamples" key={i}>{listValue}</li>;
+                        }
+                    })}
+                </ul>
+                <EngExamples pcedtEx={props.pcedtEx}/>
+            </div>
+        )
+    };
+
+    // ------------- <Examples /> -------------------------------
+
+    class EngExamples extends React.Component<{
+        pcedtEx:ENGVRD.PCEDTExamples;
+    }, {collapse: boolean}> {
+
+        constructor(props) {
+            super(props);
+            this.state = {collapse: true};
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
+            this.setState({collapse: !this.state.collapse});
+        }
+
+        _textHandler() {
+            return this.state.collapse ? "Show examples" : "Hide examples";
+        }
+
+        _getStateDisplay() {
+            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+        }
+
+        _getStateDisplayExamples() {
+            if ( this.props.pcedtEx.length === 0) {
+                return {display: 'none'}
+            } else {
+                return {display: 'block'}
+            }
+        }
+
+        render() {
+            return (
+                <div>
+                    <a className="vallexExpand" style={this._getStateDisplayExamples()} onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div className="PDTVallexExtra" style={this._getStateDisplay()}>
+                        <ul className="PCEDTExamples" style={this._getStateDisplayExamples()}>
+                            <li className="ExamplesH">Examples from PCEDT</li>
+                            {this.props.pcedtEx.map((listValue, i) => {
+                                if (listValue.length !== 0)
+                                {return <li className="PCEDTExamples" key={i}>{listValue.toString().split(' ').slice(1).join(' ')}</li>;
+                                }
+                            })}
+                        </ul>
+                    </div>
+                </div>
+            );
+        }
+    }
 
 
     // ------------- <PDTVallexJsonRenderer /> -------------------------------
@@ -42,7 +170,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         if (props.data.result.length > 0) {
             return (
                 <div className="VallexJsonRenderer">
-                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.data.result[1][0][0]}>{props.data.result[1][0][0]}</a>
                     <PDTVerbList info={props.data.result[1][0]} />
                 </div>
             );
@@ -85,7 +212,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         return (
             <div>
-                <div className="vallexSourceV">{props.verb}
+                <div className="vallexSourceV">
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.verb + '#' + props.id} target="_blank">{props.verb}</a>
                     {props.info[0].map((listValue, i) => {
                         if (listValue.length !== 0) {
                             return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
@@ -146,14 +274,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         _getStateDisplayPDT() {
             if (this.props.pdtEx.length === 0) {
-                return {display: 'none'}
-            } else {
-                return {display: 'block'}
-            }
-        }
-
-        _getStateDisplayPCEDT() {
-            if (this.props.pcedtEx.length === 0) {
                 return {display: 'none'}
             } else {
                 return {display: 'block'}
@@ -250,30 +370,34 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         return (
             <div>
-                <a className="vallexSense" href={toVallex(props)}>{props.name}</a>
-                <div className="vallexSourceV">{props.name.split(' : ')[0]}
-                    {props.detail[0][1][0].map((listValue, i) => {
-                        if (listValue.length !== 0) {
-                            return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
-                        }
-                    })}
-                </div>
-
-                <div className="vallexExpl">{props.detail[0][1][1]}</div>
-                <ul className="vallexExamples">
-                    {props.detail[0][1][2].map((listValue, i) => {
-                        if (listValue.length !== 0) {
-                            return <li className="vallexExamples" key={i}>{listValue}</li>;
-                        }
-                    })}
-                </ul>
-                <TargetVerb verbSourceName={props.name.split(' : ')[0]}
-                            verbTargetName={props.name.split(' : ')[1]}
-                            verbSourceID={props.detail[0][0]}
-                            verbTargetList={props.detail[0][2]}/>
+                <a className="vallexSense" href={toVallex(props)} target="_blank">{props.name}</a>
+                {props.detail.map((sourceValue, h) => {
+                    return (
+                        <div key={h}>
+                            <div className="vallexSourceV">{props.name.split(' : ')[0]}
+                                {sourceValue[1][0].map((listValue, i) => {
+                                    if (listValue.length !== 0) {
+                                        return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                                    }
+                                })}
+                            </div>
+                            <div className="vallexExpl">{sourceValue[1][1]}</div>
+                            <ul className="vallexExamples">
+                            {sourceValue[1][2].map((example, j) => {
+                                if (example.length !== 0) {
+                                    return <li className="vallexExamples" key={j}>{example}</li>;
+                                }
+                            })}
+                            </ul>
+                            <TargetVerb verbSourceName={props.name.split(' : ')[0]}
+                                        verbTargetName={props.name.split(' : ')[1]}
+                                        verbSourceID={sourceValue[0]}
+                                        verbTargetList={sourceValue[2]}/>
+                        </div>
+                    );
+                })}
             </div>
-
-        )
+        );
     };
 
     // ------------- <TargetVerb /> -------------------------------
@@ -286,7 +410,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> {
         renderTargetVerbsInfo() {
             return this.props.verbTargetList.map((item, i) => {
-                return <Target key={i} verbTargetName={this.props.verbTargetName}
+                return <Target key={i} num={i} verbTargetName={this.props.verbTargetName}
                             verbSourceName={this.props.verbSourceName}
                             verbSourceID={this.props.verbSourceID}
                             verbTargetList={item} />
@@ -304,6 +428,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     // ------------- <Target /> -------------------------------
 
     class Target extends React.Component<{
+        num:number;
         verbSourceName:string;
         verbTargetName:string;
         verbSourceID:VRD.VsourceID;
@@ -320,8 +445,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             this.setState({collapse: !this.state.collapse});
         }
 
-        _textHandler() {
-            return this.state.collapse ? "Show details" : "Hide details";
+        _textHandler(props) {
+            return this.state.collapse ? `Show details for pair ${props.num + 1}` : "Hide details";
         }
 
         _getStateDisplay() {
@@ -331,7 +456,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    <a className="vallexExpand" onClick={this._clickHandler}>{this._textHandler(this.props)}
                     </a>
                     <div className="vallexTargetBlock" style={this._getStateDisplay()}>
                     <div className="vallexTargetV">{this.props.verbTargetName}
@@ -366,6 +491,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     return {
         VallexJsonRenderer: VallexJsonRenderer,
-        PDTVallexJsonRenderer: PDTVallexJsonRenderer
+        PDTVallexJsonRenderer: PDTVallexJsonRenderer,
+        EngVallexJsonRenderer: EngVallexJsonRenderer
     }
 }
