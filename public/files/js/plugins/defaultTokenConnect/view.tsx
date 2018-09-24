@@ -130,11 +130,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                 <img className="error-icon"
                         src={he.createStaticUrl('img/error-icon.svg')}
                         alt={he.translate('global__error_icon')} />
-                <strong>
-                    {he.translate('defaultTD__failed_to_fetch_external_information')}:
-                </strong>
+                {he.translate('defaultTD__failed_to_fetch_external_information')}.
+
             </p>
-            <pre>{props.data.error}</pre>
+            <p className="gear">
+                <img src={he.createStaticUrl('img/gear.svg')} alt={he.translate('defaultTD__plug_in_error_symbol_alt')}
+                        style={{width: '3em'}} title={props.data.error} />
+            </p>
         </div>
     };
 

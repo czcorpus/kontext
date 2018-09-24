@@ -92,21 +92,18 @@ class DefaultTokenConnect(ProviderWrapper):
 
     @staticmethod
     def fetch_attr(corp, attr, token_id, num_tokens):
-        try:
-            mattr = corp.get_attr(attr)
-            ans = []
-            for i in range(num_tokens):
-                ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
-            return ' '.join(ans)
-        except manatee.AttrNotFound:
-            return ''
+        mattr = corp.get_attr(attr)
+        ans = []
+        for i in range(num_tokens):
+            ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
+        return ' '.join(ans)
 
     def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id, num_tokens):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
-            args = dict((attr, self.fetch_attr(maincorp_obj, attr, token_id, num_tokens))
-                        for attr in backend.get_required_posattrs())
             try:
+                args = dict((attr, self.fetch_attr(maincorp_obj, attr, token_id, num_tokens))
+                            for attr in backend.get_required_posattrs())
                 data, status = backend.fetch_data(corpora, lang, args)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:

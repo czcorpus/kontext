@@ -48,6 +48,10 @@ import importlib
 from plugins.abstract import CorpusDependentPlugin
 
 
+class BackendException(Exception):
+    pass
+
+
 class Response(object):
     """
     A response as returned by server-side frontend (where server-side
