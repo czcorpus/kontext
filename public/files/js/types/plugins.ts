@@ -408,7 +408,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
 
-            fetchTokenConnect(corpusId:string, tokenId:number):RSVP.Promise<TCData>;
+            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):RSVP.Promise<TCData>;
 
             selectRenderer(typeId:string):Renderer;
         }

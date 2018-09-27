@@ -1,0 +1,7 @@
+#common-bar {
+  background-color: #abcdef;
+}
+
+#common-bar .lang {
+  color: red;
+}

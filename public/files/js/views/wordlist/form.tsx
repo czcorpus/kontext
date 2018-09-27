@@ -53,9 +53,8 @@ export interface WordListFormState {
     wlattr:string;
     wlpat:string;
     wlnums:string;
-    wposattr1:string;
-    wposattr2:string;
-    wposattr3:string;
+    wposattrs:[string, string, string];
+    numWlPosattrLevels:number;
     wlminfreq:Kontext.FormValue<string>;
     filterEditorData:WLFilterEditorData;
     hasWlwords:boolean;
@@ -229,7 +228,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     const OutTypeAttrSel:React.SFC<{
         position:number;
         attrList:Immutable.List<Kontext.AttrItem>;
-        disabled:boolean;
+        enabled:boolean;
+        value:string;
 
     }> = (props) => {
 
@@ -244,11 +244,63 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         return (
-            <select onChange={handleChange} disabled={props.disabled}>
-                <option value="">---</option>
+            <select onChange={handleChange} disabled={!props.enabled}>
+                <option value={props.value}>---</option>
                 {props.attrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
             </select>
         );
+    }
+
+    // --------------------- <TROutputType /> -------------------------------
+
+    const MultiLevelPosAttr:React.SFC<{
+        attrList:Immutable.List<Kontext.AttrItem>;
+        enabled:boolean;
+        numWlPosattrLevels:number;
+        wposattrs:[string, string, string];
+
+    }> = (props) => {
+
+        const handleAddPosAttrLevelBtn = () => {
+            dispatcher.dispatch({
+                actionType: 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
+                props: {}
+            });
+        };
+
+        return <ul className="MultiLevelPosAttr">
+                <li>
+                    <OutTypeAttrSel attrList={props.attrList} position={1}
+                            enabled={props.enabled} value={props.wposattrs[0]} />
+                </li>
+            {props.numWlPosattrLevels >= 2 ?
+                <li>
+                    <OutTypeAttrSel attrList={props.attrList} position={2}
+                        enabled={props.enabled} value={props.wposattrs[1]} />
+                </li> :
+                null
+            }
+            {props.numWlPosattrLevels >= 3 ?
+                <li>
+                    <OutTypeAttrSel attrList={props.attrList} position={3}
+                        enabled={props.enabled} value={props.wposattrs[2]} />
+                </li> :
+                null
+            }
+            {props.numWlPosattrLevels < 3 && props.enabled ?
+                <li>
+                    <layoutViews.PlusButton onClick={handleAddPosAttrLevelBtn}
+                        mouseOverHint={he.translate('wordlist__add_attr')} />
+                </li> :
+                null
+            }
+            {props.enabled ?
+                (<p className="hint">
+                    <img src={he.createStaticUrl('img/info-icon.svg')}
+                            alt={he.translate('global__info_icon')}
+                            style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
+                    {he.translate('wordlist__multiattr_warning')}</p>) : null}
+        </ul>;
     }
 
     // --------------------- <TROutputType /> -------------------------------
@@ -258,9 +310,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         allowsMultilevelWltype:boolean;
         wlattr:string;
         attrList:Immutable.List<Kontext.AttrItem>;
-        wposattr1:string;
-        wposattr2:string;
-        wposattr3:string;
+        wposattrs:[string, string, string];
+        numWlPosattrLevels:number;
 
     }> = (props) => {
 
@@ -297,21 +348,10 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                             onChange={handleOutTypeChange} />
                                     {he.translate('wordlist__out_type_multi_label')}
                                 </label>:
-                                {'\u00a0'}
-                                <OutTypeAttrSel attrList={props.attrList} position={1}
-                                        disabled={props.wltype !== 'multilevel'} />
-                                {'\u00a0'}
-                                <OutTypeAttrSel attrList={props.attrList} position={2}
-                                        disabled={props.wltype !== 'multilevel'} />
-                                {'\u00a0'}
-                                <OutTypeAttrSel attrList={props.attrList} position={3}
-                                        disabled={props.wltype !== 'multilevel'} />
-                                {props.wltype === 'multilevel' ?
-                                    (<p className="hint">
-                                        <img src={he.createStaticUrl('img/info-icon.svg')}
-                                                alt={he.translate('global__info_icon')}
-                                                style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
-                                        {he.translate('wordlist__multiattr_warning')}</p>) : null}
+                                <MultiLevelPosAttr enabled={props.wltype === 'multilevel'}
+                                        attrList={props.attrList}
+                                        wposattrs={props.wposattrs}
+                                        numWlPosattrLevels={props.numWlPosattrLevels} />
                             </li>) :
                             (<li>
                                 <label>
@@ -333,9 +373,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     const FieldsetOutputOptions:React.SFC<{
         wlnums:string;
         attrList:Immutable.List<Kontext.AttrItem>;
-        wposattr1:string;
-        wposattr2:string;
-        wposattr3:string;
+        wposattrs:[string, string, string];
+        numWlPosattrLevels:number;
         wltype:string;
         wlattr:string;
         allowsMultilevelWltype:boolean;
@@ -349,8 +388,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 <table>
                     <tbody>
                         <TRFrequencyFigures wlnums={props.wlnums} />
-                        <TROutputType attrList={props.attrList} wposattr1={props.wposattr1}
-                                    wposattr2={props.wposattr2} wposattr3={props.wposattr3}
+                        <TROutputType attrList={props.attrList} wposattrs={props.wposattrs}
+                                    numWlPosattrLevels={props.numWlPosattrLevels}
                                     wltype={props.wltype} wlattr={props.wlattr}
                                     allowsMultilevelWltype={props.allowsMultilevelWltype} />
                     </tbody>
@@ -634,9 +673,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 wlattr: wordlistFormModel.getWlattr(),
                 wlpat: wordlistFormModel.getWlpat(),
                 wlnums: wordlistFormModel.getWlnums(),
-                wposattr1: wordlistFormModel.getWposattr1(),
-                wposattr2: wordlistFormModel.getWposattr2(),
-                wposattr3: wordlistFormModel.getWposattr3(),
+                wposattrs: wordlistFormModel.getWposattrs(),
+                numWlPosattrLevels: wordlistFormModel.getNumWlPosattrLevels(),
                 wlminfreq: wordlistFormModel.getWlminfreq(),
                 filterEditorData: wordlistFormModel.getFilterEditorData(),
                 hasWlwords: wordlistFormModel.hasWlwords(),
@@ -713,8 +751,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             </tbody>
                         </table>
                     </fieldset>
-                    <FieldsetOutputOptions wlnums={this.state.wlnums} wposattr1={this.state.wposattr1}
-                            wposattr2={this.state.wposattr2} wposattr3={this.state.wposattr3}
+                    <FieldsetOutputOptions wlnums={this.state.wlnums} wposattrs={this.state.wposattrs}
+                            numWlPosattrLevels={this.state.numWlPosattrLevels}
                             attrList={this.state.attrList} wltype={this.state.wltype} wlattr={this.state.wlattr}
                             allowsMultilevelWltype={this.state.allowsMultilevelWltype} />
                     <div className="buttons">

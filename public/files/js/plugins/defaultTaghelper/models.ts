@@ -16,12 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {ActionDispatcher, Action, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -129,9 +128,9 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 }
             break;
             case 'TAGHELPER_GET_INITIAL_DATA_DONE':
+                newState.isBusy = false;
                 if (!action.error) {
                     this.importData(newState, action.props['labels'], action.props['tags']);
-                    newState.isBusy = false;
                     if (newState.presetPattern) {
                         this.applyPresetPattern(newState);
                     }
@@ -188,7 +187,10 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                         (err) => {
                             dispatch({
                                 actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                props: {},
+                                props: {
+                                    labels: [],
+                                    tags: []
+                                },
                                 error: err
                             });
                         }

@@ -48,6 +48,10 @@ import importlib
 from plugins.abstract import CorpusDependentPlugin
 
 
+class BackendException(Exception):
+    pass
+
+
 class Response(object):
     """
     A response as returned by server-side frontend (where server-side
@@ -85,6 +89,10 @@ class AbstractBackend(object):
         self._cache_path = None
         self._provider_id = provider_id
 
+    @property
+    def provider_id(self):
+        return self._provider_id
+
     def fetch_data(self, corpora, lang, query_args):
         raise NotImplementedError()
 
@@ -93,9 +101,6 @@ class AbstractBackend(object):
 
     def get_cache_path(self):
         return self._cache_path
-
-    def get_provider_id(self):
-        return self._provider_id
 
     def enabled_for_corpora(self, corpora):
         """
@@ -144,6 +149,13 @@ class AbstractFrontend(object):
                 value = getattr(self, prop).get('en_US', '')
         return value
 
+    @property
+    def headings(self):
+        return self._headings
+
+    def get_heading(self, lang):
+        return self._fetch_localized_prop('_headings', lang)
+
     def export_data(self, data, status, lang):
         return Response(contents='', renderer='', status=status,
                         heading=self._fetch_localized_prop('_headings', lang),
@@ -173,7 +185,7 @@ def find_implementation(path):
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id):
+    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id, num_tokens):
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
@@ -185,6 +197,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         corpora -- list of involved corpora IDs
         lang -- user interface language (so we know how to localize the returned stuff)
         token_id -- internal token ID user ask information about
+        num_tokens -- how many tokens from the token_id to include in query (multi-word queries); min is 1
         """
         raise NotImplementedError()
 

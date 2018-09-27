@@ -125,7 +125,7 @@ def get_favorite_corpora(ctrl, request):
     return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_api)
 
 
-@exposed(access_level=1, return_type='json', skip_corpus_init=True)
+@exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
 def ask_corpus_access(ctrl, request):
     ans = {}
     with plugins.runtime.CORPARCH as ca:
@@ -190,7 +190,7 @@ class UcnkCorpArch(CorpusArchive):
         errors = []
 
         user_id = plugin_api.session['user']['id']
-        user_info = self._auth.get_user_info(user_id)
+        user_info = self._auth.get_user_info(plugin_api)
         user_email = user_info['email']
         username = user_info['username']
 

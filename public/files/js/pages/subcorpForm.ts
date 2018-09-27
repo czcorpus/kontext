@@ -138,7 +138,7 @@ export class SubcorpForm {
                         liveAttrsPlugin.hasSelectedLanguages());
             });
         }
-        console.log('using ', this.subcorpFormModel);
+
         const subcmixerPlg = subcMixer(
             this.layoutModel.pluginApi(),
             this.textTypesModel,

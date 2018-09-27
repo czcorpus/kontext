@@ -56,7 +56,7 @@ def import_record(obj):
         return FavoriteItem(data=obj)
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+@exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
 def set_favorite_item(ctrl, request):
     """
     """
@@ -69,8 +69,8 @@ def set_favorite_item(ctrl, request):
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     subcorpus_id = request.form['subcorpus_id']
     item = FavoriteItem(dict(
-        name=' + '.join(c['name'] for c in corpora) +
-        (' : ' + subcorpus_id if subcorpus_id else ''),
+        name=' || '.join(c['name'] for c in corpora) +
+        (' / ' + subcorpus_id if subcorpus_id else ''),
         corpora=corpora,
         subcorpus_id=request.form['subcorpus_id'],
         size=main_size,
@@ -81,7 +81,7 @@ def set_favorite_item(ctrl, request):
         return item.to_dict()
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+@exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
 def unset_favorite_item(ctrl, request):
     with plugins.runtime.USER_ITEMS as uit:
         uit.delete_user_item(ctrl._plugin_api, request.form['id'])

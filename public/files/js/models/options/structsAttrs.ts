@@ -31,14 +31,12 @@ export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.Attr
     if (vmode === 'visible' && attrAllPos === 'all') {
         return ViewOptions.AttrViewMode.VISIBLE_ALL;
 
-    } else if (vmode === 'visible' && attrAllPos === 'kw') {
+    } else if (vmode === 'mixed' && attrAllPos === 'all' ||
+            vmode === 'visible' && attrAllPos === 'kw' /* legacy compatibility variant */) {
         return ViewOptions.AttrViewMode.VISIBLE_KWIC;
 
     } else if (vmode === 'mouseover' && attrAllPos === 'all') {
         return ViewOptions.AttrViewMode.MOUSEOVER;
-
-    } else if (vmode === 'mixed' && attrAllPos === 'all') {
-        return ViewOptions.AttrViewMode.MIXED;
 
     } else {
         throw new Error(`Unknown internal attribute viewing mode configuration: [${vmode}, ${attrAllPos}]`);
@@ -80,6 +78,8 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
+    private corpusUsesRTLText:boolean;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             userIsAnonymous:boolean) {
         super(dispatcher);
@@ -89,6 +89,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
         this.updateHandlers = Immutable.List<()=>void>();
         this.isWaiting = false;
+        this.corpusUsesRTLText = layoutModel.getConf<boolean>('TextDirectionRTL');
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -166,15 +167,11 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                 this.attrAllpos = 'all';
             break;
             case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                this.attrVmode = 'visible';
-                this.attrAllpos = 'kw';
+                this.attrVmode = 'mixed';
+                this.attrAllpos = 'all';
             break;
             case ViewOptions.AttrViewMode.MOUSEOVER:
                 this.attrVmode = 'mouseover';
-                this.attrAllpos = 'all';
-            break;
-            case ViewOptions.AttrViewMode.MIXED:
-                this.attrVmode = 'mixed';
                 this.attrAllpos = 'all';
             break;
         }
@@ -252,7 +249,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                     n: item.n,
                     label: item.label,
                     locked: item.locked,
-                    selected: item.locked ? item.selected : this.selectAllAttrs
+                    selected: item.locked ? true : this.selectAllAttrs
                 }
             })
             .toList();
@@ -287,6 +284,18 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
             locked: currItem.locked,
             selected: !currItem.selected
         });
+        if (this.attrList.filter(v => v.selected).size === 0) {
+            const srchIdx = this.attrList.findIndex(v => v.locked);
+            if (srchIdx > -1) {
+                const tmp = this.attrList.get(srchIdx);
+                this.attrList = this.attrList.set(srchIdx, {
+                    n: tmp.n,
+                    label: tmp.label,
+                    locked: tmp.locked,
+                    selected: true
+                });
+            }
+        }
         this.selectAllAttrs = false;
     }
 
@@ -497,5 +506,13 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     getUserIsAnonymous():boolean {
         return this.userIsAnonymous;
+    }
+
+    lockedPosAttrNotSelected():boolean {
+        return !this.attrList.find(v => v.locked).selected;
+    }
+
+    getCorpusUsesRTLText():boolean {
+        return this.corpusUsesRTLText;
     }
 }

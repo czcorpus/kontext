@@ -14,7 +14,7 @@
 import settings
 from controller import exposed
 from controller.kontext import Kontext, MainMenu
-from translation import ugettext as _
+from translation import ugettext as translate
 import corplib
 from argmapping import WidectxArgsMapping
 
@@ -27,18 +27,16 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0, cql_editor=0):
+    def _set_new_viewopts(self, newctxsize='', ctxunit='', line_numbers=0, cql_editor=0):
         if ctxunit == '@pos':
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
             if not newctxsize.isdigit():
-                self._exceptmethod = 'viewattrs'
                 raise Exception(
-                    _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
+                    translate('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.args.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
         self.args.line_numbers = line_numbers
-        self.args.tt_overview = tt_overview
         self.args.cql_editor = cql_editor
 
     def _set_new_viewattrs(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
@@ -54,8 +52,8 @@ class Options(Kontext):
             self.args.ctxattrs = 'word'
         self.args.structattrs = setstructattrs
 
-    @exposed(access_level=0, vars=('concsize', ), legacy=True, return_type='json')
-    def viewattrs(self):
+    @exposed(access_level=0, vars=('concsize', ), return_type='json')
+    def viewattrs(self, _):
         """
         attrs, refs, structs form
         """
@@ -92,7 +90,7 @@ class Options(Kontext):
             if ref_is_allowed(item):
                 k, v = item.split('.', 1)
                 structattrs[k].append(v)
-        out['Availrefs'] = [dict(n='#', label=_('Token number'),
+        out['Availrefs'] = [dict(n='#', label=translate('Token number'),
                                  sel='selected' if '#' in reflist else '')]
         for n in availref:
             if ref_is_allowed(n):
@@ -101,7 +99,7 @@ class Options(Kontext):
 
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:
-            out['Availrefs'].insert(1, dict(n=doc, label=_('Document number'),
+            out['Availrefs'].insert(1, dict(n=doc, label=translate('Document number'),
                                             sel=(doc in reflist and 'selected' or '')))
         out['newctxsize'] = self.args.kwicleftctx[1:]
         out['structattrs'] = structattrs
@@ -140,18 +138,16 @@ class Options(Kontext):
             wlpagesize=self.args.wlpagesize,
             fmaxitems=self.args.fmaxitems,
             citemsperpage=self.args.citemsperpage,
-            tt_overview=self.args.tt_overview,
             cql_editor=self.args.cql_editor
         )
 
     @exposed(access_level=0, return_type='json', http_method='POST', legacy=True, skip_corpus_init=True)
-    def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0, cql_editor=0):
+    def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, cql_editor=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
-                               tt_overview=tt_overview, cql_editor=cql_editor)
+                               cql_editor=cql_editor)
         self._save_options(self.GENERAL_OPTIONS)
         return {}
 
-    @exposed(access_level=1, return_type='json', http_method='POST')
-    def set_tt_overview(self, request):
-        self._save_options(('tt_overview',))
+    @exposed(access_level=1, skip_corpus_init=True, return_type='json', http_method='POST')
+    def toggle_conc_dashboard(self, request):
         return {}

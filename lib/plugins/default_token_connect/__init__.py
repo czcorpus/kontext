@@ -44,6 +44,7 @@ from l10n import import_string
 from actions import concordance
 from controller import exposed
 from plugins.default_token_connect.cache_man import CacheMan
+from plugins.default_token_connect.frontends import ErrorFrontend
 
 
 @exposed(return_type='json')
@@ -62,10 +63,11 @@ def fetch_token_detail(self, request):
 
     """
     token_id = request.args['token_id']
+    num_tokens = int(request.args['num_tokens'])
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
         token, resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
-                                         [self.corp.corpname] + self.args.align, self.ui_lang, token_id)
+                                         [self.corp.corpname] + self.args.align, self.ui_lang, token_id, num_tokens)
     return dict(token=token, items=[item for item in resp_data])
 
 
@@ -89,25 +91,28 @@ class DefaultTokenConnect(ProviderWrapper):
         self._corparch = corparch
 
     @staticmethod
-    def fetch_attr(corp, attr, token_id):
-        try:
-            mattr = corp.get_attr(attr)
-            return import_string(mattr.pos2str(int(token_id)), corp.get_conf('ENCODING'))
-        except manatee.AttrNotFound:
-            return ''
+    def fetch_attr(corp, attr, token_id, num_tokens):
+        mattr = corp.get_attr(attr)
+        ans = []
+        for i in range(num_tokens):
+            ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
+        return ' '.join(ans)
 
-    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id):
+    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id, num_tokens):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
-            args = dict((attr, self.fetch_attr(maincorp_obj, attr, token_id))
-                        for attr in backend.get_required_posattrs())
             try:
+                args = dict((attr, self.fetch_attr(maincorp_obj, attr, token_id, num_tokens))
+                            for attr in backend.get_required_posattrs())
                 data, status = backend.fetch_data(corpora, lang, args)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
-                raise ex
-        word = self.fetch_attr(maincorp_obj, 'word', token_id)
+                err_frontend = ErrorFrontend(dict(heading=frontend.headings))
+                ans.append(err_frontend.export_data(
+                    dict(error=u'{0}'.format(ex)), False, lang).to_dict())
+
+        word = self.fetch_attr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans
 
     def is_enabled_for(self, plugin_api, corpname):

@@ -40,7 +40,6 @@ import plugins
 import plugins.export
 import settings
 import translation
-import l10n
 from controller import KonTextCookie
 from initializer import setup_plugins
 
@@ -146,6 +145,8 @@ class WsgiApp(object):
             from actions.admin import Admin as ControllerClass
         elif path_info.startswith('/corpora'):
             from actions.corpora import Corpora as ControllerClass
+        elif path_info.startswith('/wordlist'):
+            from actions.wordlist import Wordlist as ControllerClass
         else:
             from actions.concordance import Actions as ControllerClass
         return ControllerClass

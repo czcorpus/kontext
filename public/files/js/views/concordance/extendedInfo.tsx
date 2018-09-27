@@ -23,7 +23,8 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as ttOverviewInit} from './ttOverview';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import {ConcDashboard} from '../../models/concordance/dashboard';
+import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashboard';
+import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import { PluginInterfaces } from '../../types/plugins';
 
 
@@ -41,33 +42,13 @@ export interface ExtendedInfoViewsInitArgs {
     he:Kontext.ComponentHelpers;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
+    usageTipsModel:UsageTipsModel;
 }
 
-export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoViewsInitArgs):ExtendedInfoViews {
+export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsModel}:ExtendedInfoViewsInitArgs):ExtendedInfoViews {
 
     const layoutViews = he.getLayoutViews();
     const ttDistViews = ttOverviewInit(dispatcher, he, ttDistModel);
-
-    // ------------------------- <CloseIcon /> ---------------------------
-
-    const CloseIcon:React.SFC<{}> = (props) => {
-
-        const handleClick = () => {
-            if (window.confirm(
-                    he.translate('concview__close_tt_overview_confirm_msg'))) {
-                dispatcher.dispatch({
-                    actionType: 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY',
-                    props: {
-                        value: false
-                    }
-                });
-            }
-        };
-
-        return <a className="CloseIcon" onClick={handleClick} title={he.translate('global__close')}>
-            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')} />
-        </a>;
-    };
 
     // ------------------------- <MinimizeIcon /> ---------------------------
 
@@ -89,7 +70,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
             return <a className="MinimizeIcon" onClick={handleClick} title={he.translate('global__restore')}>
                 <layoutViews.ImgWithMouseover
                         src={he.createStaticUrl('img/maximize-icon.svg')}
-                        alt={he.translate('global__restore')} />
+                        alt={he.translate('global__restore_dashboard')} />
             </a>;
 
         } else {
@@ -99,55 +80,58 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
                         alt={he.translate('global__minimize')} />
             </a>;
         }
-
     }
 
-    // ---------------------- <Menu /> ----------------------------------------
+    // ---------------------- <UsageTips /> ----------------------------------------
 
-    const Menu:React.SFC<{
-        activeTab:string;
-        hasKwicConnectView:boolean;
-        clickHandler:(v:string)=>void;
-
-    }> = (props) => {
-        return(
-            <div className="Menu">
-                <ul>
-                    <li className={props.activeTab === 'tt-overview' ? 'active' : ''}>
-                        <a onClick={() => props.clickHandler('tt-overview')}>{he.translate('concview__text_types_ratios_head')}</a>
-                    </li>
-                    {props.hasKwicConnectView ?
-                        <li className={props.activeTab === 'kwic-connect' ? 'active' : ''}>
-                            <a onClick={() => props.clickHandler('kwic-connect')}>Extended kwic info</a>
-                        </li> :
-                        null
-                    }
-                </ul>
-            </div>
-        );
-    };
-
-    // ---------------------- <ConcExtendedInfo /> ----------------------------------------
-
-    class ConcExtendedInfo extends React.Component<ConcExtendedInfoProps, {
-        extendedInfoMinimized:boolean;
-
-    }> {
+    class UsageTips extends React.PureComponent<{}, UsageTipsState> {
 
         constructor(props) {
             super(props);
-            this.state = this.fetchStoreState();
+            this.state = usageTipsModel.getState();
+            this.handleModelChange = this.handleModelChange.bind(this);
+            this.handleNextClick = this.handleNextClick.bind(this);
+        }
+
+        private handleModelChange(state) {
+            this.setState(state);
+        }
+
+        componentDidMount() {
+            usageTipsModel.addChangeListener(this.handleModelChange);
+        }
+
+        componentWillUnmount() {
+            usageTipsModel.removeChangeListener(this.handleModelChange);
+        }
+
+        handleNextClick(e:React.MouseEvent<HTMLAnchorElement>) {
+            dispatcher.dispatch({
+                actionType: 'NEXT_CONC_HINT',
+                props: {}
+            });
+        }
+
+        render() {
+            return <div>
+                {this.state.currentHints.get(UsageTipCategory.CONCORDANCE)}
+                {'\u00a0'}(<a onClick={this.handleNextClick}>{he.translate('global__next_tip')}</a>)
+            </div>
+        };
+    }
+
+    // ---------------------- <ConcExtendedInfo /> ----------------------------------------
+
+    class ConcExtendedInfo extends React.Component<ConcExtendedInfoProps, ConcDashboardState> {
+
+        constructor(props) {
+            super(props);
+            this.state = dashboardModel.getState();
             this.handleStoreChange = this.handleStoreChange.bind(this);
         }
 
-        private fetchStoreState() {
-            return {
-                extendedInfoMinimized: dashboardModel.getIsExtendedInfoMinimized()
-            }
-        }
-
-        private handleStoreChange() {
-            this.setState(this.fetchStoreState());
+        private handleStoreChange(state) {
+            this.setState(state);
         }
 
         private hasKwicConnectView() {
@@ -156,7 +140,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
 
         componentDidMount() {
             dashboardModel.addChangeListener(this.handleStoreChange);
-            if (this.state.extendedInfoMinimized) { // we are doing a pre-load here
+            if (!this.state.expanded) { // we are doing a pre-load here
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
                     props: {}
@@ -171,28 +155,30 @@ export function init({dispatcher, he, ttDistModel, dashboardModel}:ExtendedInfoV
         render() {
             return (
                 <div className="ConcExtendedInfo">
-                    <div>
-                        <CloseIcon />
-                        <MinimizeIcon minimized={this.state.extendedInfoMinimized} />
-                        <h2 className={`${this.state.extendedInfoMinimized ? 'minimized' : null}`}>
-                            {he.translate('concview__extended_info')}
-                            {this.state.extendedInfoMinimized ? '\u2026' : ''}
-                        </h2>
-                    </div>
-                    {this.state.extendedInfoMinimized ?
-                        <div className="minimized-contents"></div> :
+                    <header>
+                        <MinimizeIcon minimized={!this.state.expanded} />
+                    </header>
+                    {this.state.expanded ?
                         <div className="contents">
+                            {this.state.showFreqInfo ?
+                                <div className="box">
+                                    <ttDistViews.TextTypesDist />
+                                </div> :
+                                null
+                            }
                             <div className="box">
-                                <ttDistViews.TextTypesDist />
+                                {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
                             </div>
                             <div className="box">
-                                {this.hasKwicConnectView() ?
-                                    <layoutViews.ErrorBoundary>
-                                        <this.props.kwicConnectView />
-                                    </layoutViews.ErrorBoundary> : null
-                                }
+                                <h3 className="block">
+                                    {he.translate('concview__tips_heading')}
+                                    <img src={he.createStaticUrl('img/lightbulb.svg')} alt={he.translate('global__lightbulb_icon')} />
+                                </h3>
+                                <hr />
+                                <UsageTips />
                             </div>
-                        </div>
+                        </div> :
+                        <div></div>
                     }
                 </div>
             );

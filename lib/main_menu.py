@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from translation import ugettext as _
+from translation import ugettext as te
 import plugins
 
 
@@ -290,16 +290,18 @@ class EventTriggeringItem(HideOnCustomCondItem):
     that keys with multiple values are not supported.
     """
 
-    def __init__(self, ident, label, message, key_code=None, hint=None):
+    def __init__(self, ident, label, message, key_code=None, key_mod=None, hint=None):
         super(EventTriggeringItem, self).__init__(ident, label, None, hint)
         self._message = message
         self._key_code = key_code
+        self._key_mod = key_mod
 
     def create(self, out_data):
         ans = super(EventTriggeringItem, self).create(out_data)
         ans['message'] = self._message
         ans['args'] = dict(ans['args'])
         ans['keyCode'] = self._key_code
+        ans['keyMod'] = self._key_mod
         ans.pop('action')
         return ans
 
@@ -312,7 +314,7 @@ class MenuGenerator(object):
         # -------------------------- menu-new-query -------------------------------------
 
         self.new_query = (
-            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), _('Enter new query'), 'first_form')
+            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), te('Enter new query'), 'first_form')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usecubcorp', self._args['usesubcorp']),
@@ -321,7 +323,7 @@ class MenuGenerator(object):
         )
 
         self.recent_queries = (
-            HideOnCustomCondItem(MainMenu.NEW_QUERY('history'), _(
+            HideOnCustomCondItem(MainMenu.NEW_QUERY('history'), te(
                 'Recent queries'), 'user/query_history')
             .add_args(
                 ('corpname', self._args['corpname']))
@@ -329,7 +331,7 @@ class MenuGenerator(object):
         )
 
         self.word_list = (
-            HideOnCustomCondItem(MainMenu.NEW_QUERY('wordlist'), _('Word List'), 'wordlist_form')
+            HideOnCustomCondItem(MainMenu.NEW_QUERY('wordlist'), te('Word List'), 'wordlist/form')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('include_nonwords', 1))
@@ -340,19 +342,24 @@ class MenuGenerator(object):
 
         self.avail_corpora = (
             MenuItemInternal(MainMenu.CORPORA('avail-corpora'),
-                             _('Available corpora'), 'corpora/corplist')
+                             te('Available corpora'), 'corpora/corplist')
             .mark_indirect()
         )
 
         self.my_subcorpora = (
             MenuItemInternal(MainMenu.CORPORA('my-subcorpora'),
-                             _('My subcorpora'), 'subcorpus/subcorp_list')
+                             te('My subcorpora'), 'subcorpus/subcorp_list')
             .mark_indirect()
+        )
+
+        self.public_subcorpora = (
+            MenuItemInternal(MainMenu.CORPORA('public-subcorpora'),
+                             te('Public subcorpora'), 'subcorpus/list_published')
         )
 
         self.create_subcorpus = (
             MenuItemInternal(MainMenu.CORPORA('create-subcorpus'),
-                             _('Create new subcorpus'), 'subcorpus/subcorp_form')
+                             te('Create new subcorpus'), 'subcorpus/subcorp_form')
             .add_args(
                 ('corpname', self._args['corpname']))
             .mark_indirect()
@@ -367,42 +374,42 @@ class MenuGenerator(object):
 
         self.curr_conc = (
             ConcMenuItem(MainMenu.CONCORDANCE('current-concordance'),
-                         _('Current concordance'), 'view')
+                         te('Current concordance'), 'view')
         )
 
         self.sorting = (
-            EventTriggeringItem(MainMenu.CONCORDANCE('sorting'), _('Sorting'),
-                                'MAIN_MENU_SHOW_SORT', key_code=82).mark_indirect()
+            EventTriggeringItem(MainMenu.CONCORDANCE('sorting'), te('Sorting'),
+                                'MAIN_MENU_SHOW_SORT', key_code=83).mark_indirect()
         )
 
         self.shuffle = (
             EventTriggeringItem(MainMenu.CONCORDANCE('shuffle'),
-                                _('Shuffle'), 'MAIN_MENU_APPLY_SHUFFLE')
+                                te('Shuffle'), 'MAIN_MENU_APPLY_SHUFFLE')
         )
 
         self.sample = EventTriggeringItem(MainMenu.CONCORDANCE('sample'),
-                                          _('Sample'), 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect()
+                                          te('Sample'), 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect()
 
         self.query_overview = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'),
-                                _('Query overview'), 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO')
+                                te('Query overview'), 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO')
         )
 
         self.query_save_as = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-save-as'),
-                                _('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM').mark_indirect()
+                                te('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM').mark_indirect()
             .enable_if(lambda d: d.get('user_owns_conc', False))
         )
 
         self.archive_conc = lambda: (
             EventTriggeringItem(MainMenu.CONCORDANCE('archive-conc'),
-                                _('Permanent link'), 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT')
+                                te('Permanent link'), 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT')
             .mark_indirect()
             .enable_if(lambda d: d.get('user_owns_conc', False))
         ) if self._args['explicit_conc_persistence_ui'] else None
 
         self.query_undo = (
-            EventTriggeringItem(MainMenu.CONCORDANCE('undo'), _(
+            EventTriggeringItem(MainMenu.CONCORDANCE('undo'), te(
                 'Undo'), 'MAIN_MENU_UNDO_LAST_QUERY_OP')
             .enable_if(lambda d: len(d.get('undo_q', [])) > 0)
         )
@@ -410,56 +417,50 @@ class MenuGenerator(object):
         # ------------------------------------ menu-filter ------------------------------
 
         self.filter_pos = (
-            EventTriggeringItem(MainMenu.FILTER('positive'), _('Positive'), 'MAIN_MENU_SHOW_FILTER',
-                                key_code=73)  # key = 'i'
+            EventTriggeringItem(MainMenu.FILTER('positive'), te('Positive'), 'MAIN_MENU_SHOW_FILTER',
+                                key_code=70)  # key = 'f'
             .add_args(('pnfilter', 'p'))
             .mark_indirect()
         )
 
         self.filter_neg = (
-            EventTriggeringItem(MainMenu.FILTER('negative'), _('Negative'), 'MAIN_MENU_SHOW_FILTER')
+            EventTriggeringItem(MainMenu.FILTER('negative'), te(
+                'Negative'), 'MAIN_MENU_SHOW_FILTER')
             .add_args(('pnfilter', 'n'))
             .mark_indirect()
         )
 
         self.filter_subhits = (
             EventTriggeringItem(MainMenu.FILTER('subhits'),
-                                _('Remove nested matches'), 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
+                                te('Remove nested matches'), 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
         )
 
         self.filter_each_first = (
             EventTriggeringItem(MainMenu.FILTER('each-first'),
-                                _('First hits in documents'),
+                                te('First hits in documents'),
                                 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES')
         )
 
         # ----------------------------------- menu-frequency ----------------------------
 
         self.freq_lemmas = (
-            ConcMenuItem(MainMenu.FREQUENCY('lemmas'), _('Lemmas'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('lemmas'), te('Lemmas'), 'freqs')
             .add_args(
                 ('fcrit', 'lemma/e 0~0>0'),
                 ('ml', 0))
             .enable_if(lambda d: 'tag' in [x['n'] for x in self._args.get('AttrList', ())])
         )
 
-        self.freq_node_forms = (
-            ConcMenuItem(MainMenu.FREQUENCY('node-forms'), _('Node forms'), 'freqs')
-            .add_args(
-                ('fcrit', 'word/e 0~0>0'),
-                ('ml', 0))
-        )
-
         self.freq_node_forms_i = (
-            ConcMenuItem(MainMenu.FREQUENCY('node-forms'), _('Node forms') + ' [A=a]', 'freqs',
-                         hint=_('case insensitive'))
+            ConcMenuItem(MainMenu.FREQUENCY('node-forms'), te('Node forms') + ' [A=a]', 'freqs',
+                         hint=te('case insensitive'))
             .add_args(
                 ('fcrit', 'word/ie 0~0>0'),
                 ('ml', 0))
         )
 
         self.freq_doc_ids = (
-            ConcMenuItem(MainMenu.FREQUENCY('doc-ids'), _('Doc IDs'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('doc-ids'), te('Doc IDs'), 'freqs')
             .add_args(
                 ('fcrit', self._args['fcrit_shortref']),
                 ('ml', 0))
@@ -468,43 +469,43 @@ class MenuGenerator(object):
         )
 
         self.freq_text_types = (
-            ConcMenuItem(MainMenu.FREQUENCY('text-types'), _('Text Types'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('text-types'), te('Text Types'), 'freqs')
             .add_args(*self._args.get('ttcrit', []))
             .add_args(('ml', 0))
             .enable_if(lambda d: bool(d['ttcrit']))
         )
 
         self.freq_custom = (
-            EventTriggeringItem(MainMenu.FREQUENCY('custom'), _('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM',
-                                key_code=70)  # key = 'f'
+            EventTriggeringItem(MainMenu.FREQUENCY('custom'), te('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM',
+                                key_code=70, key_mod='shift')  # key = 'f'
             .mark_indirect()
         )
 
         # -------------------------------- menu-collocations ----------------------------
 
         self.colloc_custom = (
-            EventTriggeringItem(MainMenu.COLLOCATIONS('custom'), _('Custom'),
-                                'MAIN_MENU_SHOW_COLL_FORM', key_code=67)  # key = 'c'
+            EventTriggeringItem(MainMenu.COLLOCATIONS('custom'), te('Custom'),
+                                'MAIN_MENU_SHOW_COLL_FORM', key_code=67, key_mod='shift')  # key = 'c'
             .mark_indirect()
         )
 
         # -------------------------------- menu-view ------------------------------------
 
         self.view_mode_switch = (
-            EventTriggeringItem(MainMenu.VIEW('kwic-sent-switch'), _('KWIC/Sentence'),
-                                'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=75)  # key = 'k'
+            EventTriggeringItem(MainMenu.VIEW('kwic-sent-switch'), te('KWIC/Sentence'),
+                                'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=86)  # key = 'v'
         )
 
         self.view_structs_attrs = (
-            EventTriggeringItem(MainMenu.VIEW('structs-attrs'), _('Corpus-specific settings'),
+            EventTriggeringItem(MainMenu.VIEW('structs-attrs'), te('Corpus-specific settings'),
                                 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS', key_code=79)  # key = 'o'
             .mark_corpus_dependent()
             .mark_indirect()
         )
 
         self.view_global = (
-            EventTriggeringItem(MainMenu.VIEW('global-options'), _('General view options'),
-                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS')
+            EventTriggeringItem(MainMenu.VIEW('global-options'), te('General view options'),
+                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS', key_code=79, key_mod='shift')  # key = 'o'
             .mark_indirect()
         )
 
@@ -520,7 +521,7 @@ class MenuGenerator(object):
 
         self.keyboard_shortcuts = (
             EventTriggeringItem(MainMenu.HELP('keyboard-shortcuts'), 'global__keyboard_shortcuts',
-                                'OVERVIEW_SHOW_KEY_SHORTCUTS')
+                                'OVERVIEW_SHOW_KEY_SHORTCUTS', key_code=75, key_mod='shift')  # key = 'k')
         )
 
         # -------------------------------------------------------------------------------
@@ -570,54 +571,54 @@ class MenuGenerator(object):
 
         items = [
             (MainMenu.NEW_QUERY.name, dict(
-                label=_('Query'),
+                label=te('Query'),
                 fallback_action='first_form',
                 items=exp(MainMenu.NEW_QUERY, self.new_query, self.recent_queries, self.word_list),
                 disabled=is_disabled(MainMenu.NEW_QUERY)
             )),
             (MainMenu.CORPORA.name, dict(
-                label=_('Corpora'),
+                label=te('Corpora'),
                 fallback_action='corpora/corplist',
                 items=exp(MainMenu.CORPORA, self.avail_corpora,
-                          self.my_subcorpora, self.create_subcorpus),
+                          self.my_subcorpora, self.public_subcorpora, self.create_subcorpus),
                 disabled=is_disabled(MainMenu.CORPORA)
             )),
             (MainMenu.SAVE.name, dict(
-                label=_('Save'),
+                label=te('Save'),
                 items=exp(MainMenu.SAVE, *save_items),
                 disabled=is_disabled(MainMenu.SAVE)
             )),
             (MainMenu.CONCORDANCE.name, dict(
-                label=_('Concordance'),
+                label=te('Concordance'),
                 items=exp(MainMenu.CONCORDANCE, self.curr_conc, self.sorting, self.shuffle, self.sample,
                           self.query_overview, self.query_save_as, self.archive_conc, self.query_undo),
                 disabled=is_disabled(MainMenu.CONCORDANCE)
             )),
             (MainMenu.FILTER.name, dict(
-                label=_('Filter'),
+                label=te('Filter'),
                 items=exp(MainMenu.FILTER, self.filter_pos, self.filter_neg,
                           self.filter_subhits, self.filter_each_first),
                 disabled=is_disabled(MainMenu.FILTER)
             )),
             (MainMenu.FREQUENCY.name, dict(
-                label=_('Frequency'),
-                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms, self.freq_node_forms_i,
+                label=te('Frequency'),
+                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms_i,
                           self.freq_doc_ids, self.freq_text_types, self.freq_custom),
                 disabled=is_disabled(MainMenu.FREQUENCY)
             )),
             (MainMenu.COLLOCATIONS.name, dict(
-                label=_('Collocations'),
+                label=te('Collocations'),
                 items=exp(MainMenu.COLLOCATIONS, self.colloc_custom),
                 disabled=is_disabled(MainMenu.COLLOCATIONS)
             )),
             (MainMenu.VIEW.name, dict(
-                label=_('View'),
+                label=te('View'),
                 items=exp(MainMenu.VIEW, self.view_mode_switch,
                           self.view_structs_attrs, self.view_global),
                 disabled=is_disabled(MainMenu.VIEW)
             )),
             (MainMenu.HELP.name, dict(
-                label=_('Help'),
+                label=te('Help'),
                 items=exp(MainMenu.HELP, self.how_to_cite_corpus, self.keyboard_shortcuts),
                 disabled=is_disabled(MainMenu.HELP)
             ))

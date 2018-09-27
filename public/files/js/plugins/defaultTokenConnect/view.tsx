@@ -19,10 +19,8 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 
 
@@ -38,6 +36,11 @@ export interface Views {
             score:number;
             tags:Array<string>;
         }>;
+    }>;
+    ErrorRenderer:React.SFC<{
+        data:{
+            error:string;
+        }
     }>;
 }
 
@@ -119,12 +122,31 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         );
     };
 
+    // ------------- <ErrorRenderer /> -------------------------------
+
+    const ErrorRenderer:Views['ErrorRenderer'] = (props) => {
+        return <div className="ErrorRenderer">
+            <p>
+                <img className="error-icon"
+                        src={he.createStaticUrl('img/error-icon.svg')}
+                        alt={he.translate('global__error_icon')} />
+                {he.translate('defaultTD__failed_to_fetch_external_information')}.
+
+            </p>
+            <p className="gear">
+                <img src={he.createStaticUrl('img/gear.svg')} alt={he.translate('defaultTD__plug_in_error_symbol_alt')}
+                        style={{width: '3em'}} title={props.data.error} />
+            </p>
+        </div>
+    };
+
     return {
         RawHtmlRenderer: RawHtmlRenderer,
         SimpleTabularRenderer: SimpleTabularRenderer,
         DescriptionListRenderer: DescriptionListRenderer,
         UnsupportedRenderer: UnsupportedRenderer,
         DataMuseSimilarWords: DataMuseSimilarWords,
+        ErrorRenderer: ErrorRenderer
     };
 
 }

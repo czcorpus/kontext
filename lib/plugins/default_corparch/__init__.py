@@ -407,6 +407,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 ans = False
         return ans
 
+    def customize_corpus_info(self, corpus_info, node):
+        pass
+
     def get_list(self, plugin_api, user_allowed_corpora):
         """
         arguments:
@@ -576,6 +579,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         kwic_connect_elm = node.find('kwic_connect')
         if kwic_connect_elm is not None:
             ans.kwic_connect.providers = [p.text for p in kwic_connect_elm.findall('provider')]
+
+        self.customize_corpus_info(ans, node)
         data.append(ans)
 
     def _parse_corplist_node(self, root, path, lang, data):

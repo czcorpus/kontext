@@ -37,7 +37,7 @@ class User(Kontext):
     def _is_anonymous_id(user_id):
         return plugins.runtime.AUTH.instance.is_anonymous(user_id)
 
-    @exposed(skip_corpus_init=True, template='user/login.tmpl')
+    @exposed(skip_corpus_init=True, template='user/login.tmpl', http_method='POST')
     def login(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         if request.method == 'GET':
@@ -157,15 +157,15 @@ class User(Kontext):
             limit=limit
         )
 
-    @exposed(return_type='html', legacy=True, skip_corpus_init=True)
-    def ajax_get_toolbar(self):
+    @exposed(return_type='html', skip_corpus_init=True)
+    def ajax_get_toolbar(self, _):
         with plugins.runtime.APPLICATION_BAR as ab:
             return ab.get_contents(plugin_api=self._plugin_api, return_url=self.return_url)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self.session_get('user', 'id'))
+            user_info = auth.get_user_info(self._plugin_api)
             if not self.user_is_anonymous():
                 return {'user': user_info}
             else:
@@ -177,13 +177,13 @@ class User(Kontext):
         if not self._uses_internal_user_pages():
             raise UserActionException(_('This function is disabled.'))
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self.session_get('user', 'id'))
+            user_info = auth.get_user_info(self._plugin_api)
             if not self.user_is_anonymous():
                 return {'user': user_info}
             else:
                 return {'user': {'username': user_info['username']}}
 
-    @exposed(skip_corpus_init=True, http_method='POST')
+    @exposed(skip_corpus_init=True, http_method='POST', access_level=0)
     def switch_language(self, request):
         if plugins.runtime.GETLANG.exists:
             pass  # TODO should the plug-in do something here?
@@ -193,5 +193,6 @@ class User(Kontext):
             self._new_cookies['kontext_ui_lang']['path'] = path_prefix if path_prefix else '/'
             self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
                                                                             time.gmtime(time.time() + 180 * 24 * 3600))
-            self.redirect(request.form.get('continue'))
+            self.redirect(
+                request.environ.get('HTTP_REFERER', self.create_url('first_form', dict(corpname=self.args.corpname))))
         return {}

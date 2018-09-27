@@ -78,7 +78,7 @@ export class WordlistPage extends StatefulModel  {
         });
         this.layoutModel.ajax(
             'GET',
-            this.layoutModel.createActionUrl('wordlist_process'),
+            this.layoutModel.createActionUrl('wordlist/process'),
             args
 
         ).then(
@@ -86,7 +86,7 @@ export class WordlistPage extends StatefulModel  {
                 if (data['status'] === 100) {
                     this.stopWatching(); // just for sure
                     window.location.href = this.layoutModel.createActionUrl(
-                        'wordlist',
+                        'wordlist/result',
                         new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
                     );
 
@@ -217,7 +217,7 @@ export class WordlistPage extends StatefulModel  {
                 this.initCorpInfoToolbar();
 
                 this.layoutModel.getHistory().replaceState(
-                    'wordlist',
+                    'wordlist/result',
                     new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
                     {},
                     ''

@@ -19,12 +19,13 @@ class Parameter(Generic[T]):
     pass
 
 
-ConcArgsMapping:Tuple[str]
+ConcArgsMapping:Tuple[str,...]
+
+WidectxArgsMapping:Tuple[str,...]
 
 
 class GlobalArgs(object):
     format:str
-    reload:int
 
     fc_lemword_window_type:str
     fc_lemword_type:str
@@ -138,7 +139,6 @@ class GlobalArgs(object):
     wlsendmail:str
     cup_hl:str
     structattrs:List[str]
-    tt_overview:int
     cql_editor:int
 
     flimit:int

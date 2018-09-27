@@ -34,7 +34,8 @@ import { ConcLineModel, ConcSummary as LinesConcSummary } from '../../models/con
 import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/concordance/detail';
 import { CollFormModel } from '../../models/coll/collForm';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import { ConcDashboard } from '../../models/concordance/dashboard';
+import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
+import { UsageTipsModel } from '../../models/usageTips';
 
 
 export class ViewPageModels {
@@ -47,6 +48,7 @@ export class ViewPageModels {
     mainMenuModel:Kontext.IMainMenuModel;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
+    usageTipsModel:UsageTipsModel;
 }
 
 
@@ -77,18 +79,13 @@ export interface ConcordanceDashboardProps {
 }
 
 
-interface ConcordanceDashboardState {
-    showTTOverview:boolean;
-}
-
-
 export interface MainViews {
     ConcordanceDashboard:React.ComponentClass<ConcordanceDashboardProps>;
 }
 
 
 export function init({dispatcher, he, lineSelectionModel, lineViewModel,
-    concDetailModel, refsDetailModel, userInfoModel, collFormModel, mainMenuModel,
+    concDetailModel, refsDetailModel, usageTipsModel,
     ttDistModel, dashboardModel}:MainModuleArgs):MainViews
  {
 
@@ -114,7 +111,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         lineModel: lineViewModel
     });
     const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
-    const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, dashboardModel});
+    const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, usageTipsModel, dashboardModel});
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -361,11 +358,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
             } else {
                 return (
-                    <span className="ipm-note">(
-                        <img src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')} />
-                        {he.translate('concview__ipm_rel_to_the_{corpname}',
-                            {corpname: props.corpname})}
-                    )</span>
+                    <span className="ipm-note">({he.translate('concview__ipm_rel_to_the_whole_corp')})</span>
                 );
             }
         };
@@ -452,14 +445,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         render() {
             return (
                 <div className="conc-toolbar">
-                    <span className="separ">|</span>
-                    <span className="mouseover-available">
-                        {he.translate('options__vmode_status_label')}
-                        {':\u00a0'}
-                        <layoutViews.VmodeIcon
-                                viewMode={this.props.viewMode}
-                                mouseoverAttrs={this.state.currViewAttrs} />
-                    </span>
                 </div>
             );
         }
@@ -709,7 +694,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         }
                     });
 
-                } else if (kwicLength === -1) {
+                } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
                     dispatcher.dispatch({
                         actionType: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
                         props: {
@@ -851,22 +836,16 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
 
-    class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcordanceDashboardState> {
+    class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcDashboardState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
+            this.state = dashboardModel.getState();
             this._modelChangeListener = this._modelChangeListener.bind(this);
         }
 
-        _modelChangeListener() {
-            this.setState(this._fetchModelState());
-        }
-
-        _fetchModelState() {
-            return {
-                showTTOverview: dashboardModel.getShowTTOverview()
-            };
+        _modelChangeListener(state) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -877,10 +856,19 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             dashboardModel.removeChangeListener(this._modelChangeListener);
         }
 
+        private getModClass():string {
+            if (this.state.showFreqInfo || this.state.showKwicConnect) {
+                return this.state.expanded ? '' : ' collapsed';
+
+            } else {
+                return ' disabled';
+            }
+        }
+
         render() {
             return (
-                <div>
-                    {this.state.showTTOverview ?
+                <div className={`ConcordanceDashboard${this.getModClass()}`}>
+                    {this.state.showFreqInfo || this.state.showKwicConnect ?
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
                     }

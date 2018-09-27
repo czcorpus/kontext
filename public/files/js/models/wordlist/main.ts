@@ -251,7 +251,7 @@ export class WordlistResultModel extends StatefulModel {
 
         return this.layoutModel.ajax<DataAjaxResponse>(
             'POST',
-            this.layoutModel.createActionUrl('wordlist'),
+            this.layoutModel.createActionUrl('wordlist/result'),
             args
 
         ).then(

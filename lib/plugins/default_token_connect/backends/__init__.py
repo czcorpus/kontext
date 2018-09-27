@@ -23,7 +23,7 @@ import logging
 import sqlite3
 from plugins.default_token_connect.backends.cache import cached
 
-from plugins.abstract.token_connect import AbstractBackend
+from plugins.abstract.token_connect import AbstractBackend, BackendException
 
 
 class SQLite3Backend(AbstractBackend):
@@ -89,9 +89,15 @@ class HTTPBackend(AbstractBackend):
             args = dict(
                 ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
                 corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
-                **dict((k, self.enc_val(v) ) for k, v in query_args.items()))
+                **dict((k, self.enc_val(v)) for k, v in query_args.items()))
             logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
-            connection.request('GET', self._conf['path'].format(**args).encode('utf-8', 'replace'))
+
+            try:
+                query_string = self._conf['path'].format(**args).encode('utf-8', 'replace')
+            except KeyError as ex:
+                raise BackendException(u'Failed to build query - value {0} not found'.format(ex))
+
+            connection.request('GET', query_string)
             return self.process_response(connection)
         finally:
             connection.close()

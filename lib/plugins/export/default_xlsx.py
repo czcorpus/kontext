@@ -69,13 +69,13 @@ class XLSXExport(AbstractExport):
             data = ['%s: %s' % (k, v) for (k, v) in data.items()]
         for i in range(1, len(data) + 1):
             col = get_column_letter(i)
-            self._sheet.cell('%s%s' % (col, self._curr_line)).value = data[i - 1]
+            self._sheet['%s%s' % (col, self._curr_line)].value = data[i - 1]
         self._curr_line += 2
 
     def write_ref_headings(self, data):
         for i in range(1, len(data) + 1):
             col = get_column_letter(i)
-            cell = self._sheet.cell('%s%s' % (col, self._curr_line))
+            cell = self._sheet['%s%s' % (col, self._curr_line)]
             cell.font = cell.font.copy(bold=True)
             cell.value = data[i - 1]
         self._curr_line += 1
@@ -110,7 +110,7 @@ class XLSXExport(AbstractExport):
         for i in range(1, len(row) + 1):
             col = get_column_letter(i)
             value, cell_format = self._import_value(row[i - 1], i - 1)
-            cell = self._sheet.cell('%s%s' % (col, self._curr_line))
+            cell = self._sheet['%s%s' % (col, self._curr_line)]
             cell.value = value
             cell.number_format = cell_format
         self._curr_line += 1

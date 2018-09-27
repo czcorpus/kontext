@@ -19,9 +19,8 @@
  */
 
 import {Kontext} from '../../../types/common';
-import {parse as parseQuery, SyntaxError, TracerItem} from 'cqlParser/parser';
-import * as Immutable from 'immutable';
-import {IAttrHelper, AttrHelper, NullAttrHelper} from './attrs';
+import {parse as parseQuery, SyntaxError} from 'cqlParser/parser';
+import {IAttrHelper, NullAttrHelper} from './attrs';
 
 /**
  * CharsRule represents a pointer to the original
@@ -72,17 +71,24 @@ class RuleCharMap {
 
     private he:Kontext.ComponentHelpers;
 
+    private wrapLongQuery:boolean;
+
     private attrHelper:IAttrHelper;
+
+    private posCounter:number;
 
     private onHintChange:(message:string)=>void;
 
-    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper, onHintChange:(message:string)=>void) {
+    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper,
+                wrapLongQuery:boolean, onHintChange:(message:string)=>void) {
         this.query = query;
         this.data = {};
         this.nonTerminals = [];
         this.he = he;
         this.attrHelper = attrHelper;
+        this.wrapLongQuery = wrapLongQuery;
         this.onHintChange = onHintChange;
+        this.posCounter = 0;
     }
 
     private mkKey(i:number, j:number):string {
@@ -231,6 +237,11 @@ class RuleCharMap {
                             }
                         });
                     });
+                    if (this.wrapLongQuery && this.posCounter % 3 == 0) {
+                        const range = this.convertRange(v.from, v.to, chunks);
+                        inserts[range[0]].push('<br />');
+                    }
+                    this.posCounter += 1;
                 break;
                 case 'Structure':
                     const attrNamesInStruct = this.findSubRuleIn('AttName', v.from, v.to);
@@ -256,6 +267,12 @@ class RuleCharMap {
                             errors.push(`${this.he.translate('query__structattr_does_not_exist')}: <strong>${structName}.${structAttrName}</strong>`);
                         }
                     });
+                break;
+                case 'WithinContainingPart':
+                    if (this.wrapLongQuery) {
+                        const range = this.convertRange(v.from, v.to, chunks);
+                        inserts[range[0]].push('<br />');
+                    }
                 break;
             }
         });
@@ -363,7 +380,7 @@ class ParserStack {
     private lastPos:number;
 
 
-    constructor(query:string, rcMap:RuleCharMap) {
+    constructor(rcMap:RuleCharMap) {
         this.stack = [];
         this.rcMap = rcMap;
         this.lastPos = 0;
@@ -402,17 +419,46 @@ class ParserStack {
     }
 }
 
-function escapeString(v:string):string {
-    return v.replace('<', '&lt;').replace('>', '&gt;');
+
+const escapeQuery = (v:string):string => {
+    return v.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+};
+
+
+interface HSArgs {
+    query:string;
+    applyRules:Array<string>;
+    he:Kontext.ComponentHelpers;
+    ignoreErrors:boolean;
+    attrHelper:IAttrHelper;
+    parserRecoverIdx:number;
+    wrapLongQuery:boolean;
+    onHintChange:(message:string)=>void;
 }
 
 
-export function _highlightSyntax(query:string, applyRules:Array<string>, he:Kontext.ComponentHelpers, ignoreErrors:boolean,
-        attrHelper:IAttrHelper, onHintChange:(message:string)=>void):string {
+function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx,
+            wrapLongQuery, onHintChange}:HSArgs):string {
 
-    const rcMap = new RuleCharMap(query, he, attrHelper, onHintChange);
-    const stack = new ParserStack(query, rcMap);
+    const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, onHintChange);
+    const stack = new ParserStack(rcMap);
 
+    const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
+        if (numParserRecover === 0 && error) {
+            const title = he.translate(
+                'query__unrecognized_input_{wrongChar}{position}',
+                {
+                    wrongChar: error.found,
+                    position: error.location.start.column
+                }
+            );
+            const style = 'text-decoration: underline dotted red';
+            return `<span title="${escapeQuery(title)}" style="${style}">` + escapeQuery(v) + '</span>';
+        }
+        return escapeQuery(v);
+    }
+
+    let parseError:SyntaxError = null;
     try {
         parseQuery(query + (applyRules[0] === 'Query' ? ';' : ''), {
             startRule: applyRules[0],
@@ -434,6 +480,7 @@ export function _highlightSyntax(query:string, applyRules:Array<string>, he:Kont
         });
 
     } catch (e) {
+        parseError = e;
         if (!ignoreErrors) {
             throw e;
         }
@@ -449,18 +496,21 @@ export function _highlightSyntax(query:string, applyRules:Array<string>, he:Kont
         // try to apply a partial rule to the rest of the query
         const srch = /^([^\s]+|)(\s+)(.+)$/.exec(query.substr(lastPos));
         if (srch !== null) {
-            const partial = _highlightSyntax(
-                srch[3],
-                srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
-                he,
-                true,
-                attrHelper,
-                onHintChange
-            );
-            return ans + escapeString(srch[1] + srch[2]) + partial;
+            const partial = _highlightSyntax({
+                query: srch[3],
+                applyRules: srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
+                he: he,
+                ignoreErrors: true,
+                attrHelper: attrHelper,
+                wrapLongQuery: false,
+                onHintChange: onHintChange,
+                parserRecoverIdx: parserRecoverIdx + 1
+            });
+
+            return ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial;
         }
     }
-    return ans + escapeString(query.substr(lastPos));
+    return ans + wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError);
 }
 
 function getApplyRules(queryType:string):Array<string> {
@@ -488,16 +538,30 @@ export function highlightSyntax(
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         onHintChange:(message:string)=>void):string {
-    return _highlightSyntax(
-        query,
-        getApplyRules(queryType),
-        he,
-        true,
-        attrHelper ? attrHelper : new NullAttrHelper(),
-        onHintChange ? onHintChange : _ => undefined
-    );
+    return _highlightSyntax({
+        query: query,
+        applyRules: getApplyRules(queryType),
+        he: he,
+        ignoreErrors: true,
+        attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
+        wrapLongQuery: false,
+        onHintChange: onHintChange ? onHintChange : _ => undefined,
+        parserRecoverIdx: 0
+    });
 }
 
-export function highlightSyntaxStrict(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
-    return _highlightSyntax(query, getApplyRules(queryType), he, false, new NullAttrHelper(), _ => undefined);
+export function highlightSyntaxStatic(
+        query:string,
+        queryType:string,
+        he:Kontext.ComponentHelpers):string {
+    return _highlightSyntax({
+        query: query,
+        applyRules: getApplyRules(queryType),
+        he: he,
+        ignoreErrors: true,
+        attrHelper: new NullAttrHelper(),
+        wrapLongQuery: true,
+        onHintChange: _ => undefined,
+        parserRecoverIdx: 0
+    });
 }

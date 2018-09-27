@@ -491,6 +491,9 @@ fieldset.FieldsetOutputOptions {
 
 .GeneralOptions {
 
+    max-width: 30em;
+    white-space: normal;
+
     fieldset {
         padding: 10pt 10pt;
 
@@ -534,60 +537,58 @@ fieldset.FieldsetOutputOptions {
     width: initial;
 }
 
-.StructAttrsViewOptions .StructsAndAttrsForm {
+.StructAttrsViewOptions {
 
-    fieldset {
-        display: inline-block;
-        vertical-align: top;
-        margin-right: 1em;
+    .StructsAndAttrsForm {
 
-        legend {
-            font-weight: bold;
-        }
+        fieldset {
 
-        ul {
-            margin: 0;
-            padding: 0;
-            list-style-type: none;
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 1em;
 
-            li {
-                margin: 0 0 0 1em;
+            legend {
+                font-weight: bold;
+            }
+
+            ul {
+                margin: 0;
                 padding: 0;
+                list-style-type: none;
+
+                li {
+                    margin: 0 0 0 1em;
+                    padding: 0;
+                }
+            }
+
+            h3.label {
+                text-align: left;
+                font-size: 1.0em;
+                margin-top: 1.2em;
+                margin-bottom: 0.2em;
+            }
+
+            p.warning {
+                max-width: 20em;
+                white-space: normal;
+
+                img.icon {
+                    display: inline-block;
+                    vertical-align: middle;
+                    padding-right: 0.4em;
+                    width: 1em;
+                    margin-bottom: 0.1em;
+                }
             }
         }
 
-        .icons {
-            display: inline-block;
-            width: 5.2em;
-            margin-left: 0.9em;
-        }
-
-        select.no-label,
-        .icons img,
-        .icons strong {
-            display: inline-block;
-            margin-top: 0.9em;
-            vertical-align: middle;
-        }
-
-        .icons strong {
-            font-size: 1.3em;
-            padding-left: 0.1em;
-            padding-right: 0.1em;
-        }
-
-        h3.label {
-            text-align: left;
-            font-size: 1.0em;
-            margin-top: 1.2em;
-            margin-bottom: 0.2em;
+        .button-replace {
+            padding: 0.3em 2em;
+            background-color: transparent;
         }
     }
 
-    .button-replace {
-        padding: 0.3em 2em;
-        background-color: transparent;
-    }
 }
 
 .SyntaxViewPane {
@@ -608,6 +609,7 @@ fieldset.FieldsetOutputOptions {
 }
 
 .KeyboardShortcuts {
+
     td {
         padding: 0.3em;
     }
@@ -615,6 +617,7 @@ fieldset.FieldsetOutputOptions {
     th {
         padding: 0.3em;
         font-weight: normal;
+        text-align: right;
 
         span.key-button {
             font-size: 1.6em;
@@ -628,23 +631,6 @@ fieldset.FieldsetOutputOptions {
             margin-right: 0.7em;
             box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
         }
-    }
-}
-
-ul.FreqFormSelector,
-ul.SortFormSelector {
-    list-style-type: none;
-    margin: 0 auto 2em auto;
-    padding: 0;
-
-    li {
-        display: inline-block;
-        margin: 0;
-        padding: 0;
-    }
-
-    li:not(:first-child) {
-        margin-left: 1em;
     }
 }
 
@@ -865,10 +851,6 @@ table.MLSingleLevelFields {
     display: grid;
     grid-template-columns: 1fr 1fr;
 
-    .AddLevelButton {
-        font-size: 2em;
-    }
-
     li {
         padding: 1em;
         margin: 0;
@@ -902,10 +884,6 @@ table.MLSingleLevelFields {
 
     .multilevel-freq-params {
 
-        #add-freq-level-button {
-            .plus-button;
-        }
-
         border-spacing: 0;
         border: 1px solid @color-light-frame;
         border-radius: @border-radius-default;
@@ -926,6 +904,11 @@ table.MLSingleLevelFields {
             background-color: @color-data-table-footer;
         }
 
+        tr:nth-child(2) td,
+        tr:nth-child(2) th {
+            padding-top: 0.7em;
+        }
+
         tr:nth-child(odd):not(:first-child):not(:last-child) {
             background-color: @color-light-green;
         }
@@ -934,6 +917,10 @@ table.MLSingleLevelFields {
             text-align: center;
             font-size: 120%;
             font-weight: bold;
+        }
+
+        .PlusButton {
+            margin-bottom: 0.3em;
         }
     }
 }
@@ -1038,3 +1025,135 @@ table.MLSingleLevelFields {
         }
     }
 }
+
+.TabButton:not(:first-child) {
+    margin-left: 0.7em;
+}
+
+.TabButton {
+    display: inline-block;
+    text-align: center;
+
+    button {
+        display: inline;
+    }
+
+    .underline {
+        margin-top: 0.6em;
+        margin-left: 0.1em;
+        margin-right: 0.1em;
+        display: block;
+        height: 0.15em;
+        border-radius: @input-border-radius;
+        background-color: @color-logo-blue;
+    }
+
+    .underline.hidden {
+        visibility: hidden;
+    }
+}
+
+.PlusButton {
+
+    display: inline-block;
+
+    img {
+        display: block;
+        height: 1em;
+        width: 1em;
+        padding: 0.2em;
+    }
+}
+
+.MLMoveLevelControl {
+
+    a {
+        display: inline-block;
+
+        img {
+            width: 0.7em;
+            height: 0.7em;
+            display: block;
+        }
+    }
+
+    a:nth-child(2) {
+        margin-top: 0.1em;
+    }
+}
+
+.AttributesTweaks {
+
+    h3 {
+        margin-bottom: 0.4em;
+    }
+
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+
+            margin: 0;
+            padding: 0.2em 0;
+
+            label {
+                input,
+                span {
+                    vertical-align: middle;
+                    display: inline-block;
+                }
+            }
+        }
+    }
+}
+
+.CollForm {
+    margin-bottom: 2em;
+}
+
+table.CollMetricsSelection {
+    margin-left: 2em;
+    border-spacing: 0;
+    border-collapse: collapse;
+
+    td.display-chk,
+    td.sort-sel {
+        cursor: pointer;
+
+        input {
+            cursor: pointer;
+        }
+    }
+
+    tr:nth-child(1) th,
+    tr:nth-child(1) td, {
+        border: none;
+    }
+
+    tr:nth-child(1) th {
+        color: @color-light-text;
+    }
+
+    th, td {
+        border: 1px solid @color-light-text;
+        padding: 0.3em 1em 0.3em 0.6em;
+    }
+
+    tr:nth-child(2n) {
+        background-color: @table-even-bg;
+    }
+
+    td.display-chk {
+        text-align: center;
+    }
+
+    tr td.sort-sel {
+        text-align: center;
+    }
+
+}
+
+@import "./layoutMobile.less";
+@import "~custom-styles/theme.less";

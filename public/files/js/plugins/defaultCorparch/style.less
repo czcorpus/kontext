@@ -30,6 +30,11 @@ section.corplist {
         display: inline-block;
         vertical-align: middle;
         margin-left: 0.7em;
+
+        img {
+            display: inline-block;
+            vertical-align: middle;
+        }
     }
 
     div.autocomplete-wrapper {
@@ -83,6 +88,10 @@ section.corplist {
     margin-left: 1em;
     padding: 0.3em 1em 0.3em 1em;
 
+    .tt-suggestion.focus a {
+        background-color: @color-whitelike-blue;
+    }
+
     .tt-suggestion {
 
         margin: 0;
@@ -97,13 +106,16 @@ section.corplist {
 
         a {
             display: inline-block;
-            padding-right: 1em;
+            padding-left: 0.4em;
+            padding-top: 0.2em;
+            padding-bottom: 0.2em;
+            padding-right: 0.4em;
             text-decoration: none;
             color: inherit;
         }
 
         a:hover {
-            background-color: #FFF9ED;
+            background-color: @color-whitelike-blue;
         }
 
         .found-in {
@@ -160,17 +172,22 @@ section.corplist {
 
     table td {
         padding: 0.2em 0.2em 0.2em 1em;
+        vertical-align: middle;
     }
 
     table td.tools {
-        padding: 0.2em 0 0 0.3em;
         text-align: left;
-        vertical-align: middle;
+
+        img {
+            display: block;
+        }
+
     }
 
     tr td a {
         color: @color-default-text;
         text-decoration: none;
+        display: inline-block;
     }
 
 
@@ -300,11 +317,24 @@ section.corplist {
         tr.data-item.in-trash a {
             color: @color-superlight-text;
         }
+
+        tr.active {
+            background-color: @color-whitelike-blue;
+        }
     }
 
     table.featured-list {
         margin-left: @corplist-widget-table-spacing;
         margin-right: 1em;
+
+        tr.active {
+            background-color: @color-whitelike-blue;
+        }
+    }
+
+    div.tables:focus {
+        border: none;
+        outline: none;
     }
 
     div.tables > table tr {

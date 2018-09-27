@@ -47,6 +47,11 @@ export namespace Kontext {
 
     }
 
+    export var isFormValue = <T>(v:any):v is FormValue<T> => {
+        return v !== null && v !== undefined && v.hasOwnProperty('value') &&
+                v.hasOwnProperty('isRequired') && v.hasOwnProperty('isInvalid');
+    }
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
@@ -192,6 +197,7 @@ export namespace Kontext {
         message:string; // a dispatcher action type
         args:GeneralProps;
         keyCode:number;
+        keyMod:string;
         indirect:boolean;
     }
 
@@ -203,6 +209,14 @@ export namespace Kontext {
     }
 
     export type MenuEntry = [string, MenuItem];
+
+    /**
+     *
+     */
+    export interface IMainMenuShortcutMapper {
+        get(keyCode:number, keyMod:string):EventTriggeringSubmenuItem;
+        register(keyCode:number, keyMod:string, message:string, args:GeneralProps):void;
+    }
 
     /**
      * A model watched by components which are
@@ -231,7 +245,7 @@ export namespace Kontext {
          */
         removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
 
-        exportKeyShortcutActions():Immutable.Map<number, EventTriggeringSubmenuItem>
+        exportKeyShortcutActions():IMainMenuShortcutMapper;
 
         /**
          * Bind a custom event handler (typically a one dispatching a custom
@@ -628,8 +642,7 @@ export namespace ViewOptions {
     export enum AttrViewMode {
         VISIBLE_ALL = 'visible-all',
         VISIBLE_KWIC = 'visible-kwic',
-        MOUSEOVER = 'mouseover',
-        MIXED = 'mixed'
+        MOUSEOVER = 'mouseover'
     }
 
     export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
@@ -669,6 +682,8 @@ export namespace ViewOptions {
         getShowConcToolbar():boolean;
         getIsWaiting():boolean;
         getUserIsAnonymous():boolean;
+        lockedPosAttrNotSelected():boolean;
+        getCorpusUsesRTLText():boolean;
     }
 
     export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
@@ -680,7 +695,6 @@ export namespace ViewOptions {
         getFmaxItems():Kontext.FormValue<string>;
         getCitemsPerPage():Kontext.FormValue<string>;
         getIsBusy():boolean;
-        getShowTTOverview():boolean;
         addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
         getUseCQLEditor():boolean;
         getUserIsAnonymous():boolean;
@@ -1088,7 +1102,6 @@ export namespace TextTypes {
 
     export type ExportedSelection = {[attr:string]:Array<string>};
 
-
 }
 
 declare module Legacy {
@@ -1097,4 +1110,16 @@ declare module Legacy {
         getContentElement():HTMLElement;
         close():void;
     }
+}
+
+export namespace KeyCodes {
+    export const ENTER = 13;
+    export const ESC = 27;
+    export const TAB = 9;
+    export const DOWN_ARROW = 40;
+    export const UP_ARROW = 38;
+    export const LEFT_ARROW = 37;
+    export const RIGHT_ARROW = 39;
+    export const BACKSPACE = 8;
+    export const DEL = 46;
 }

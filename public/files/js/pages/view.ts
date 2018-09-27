@@ -20,7 +20,6 @@
 
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
-import * as SoundManager from 'vendor/SoundManager';
 import RSVP from 'rsvp';
 
 import {Kontext, TextTypes} from '../types/common';
@@ -34,8 +33,9 @@ import * as conclines from '../conclines';
 import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
 import {LineSelectionModel} from '../models/concordance/lineSelection';
 import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
-import {ConcLineModel, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
-import {QueryFormProperties, QueryFormUserEntries, QueryModel, QueryHintModel, fetchQueryFormArgs} from '../models/query/main';
+import {ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
+import {QueryFormProperties, QueryModel, fetchQueryFormArgs} from '../models/query/main';
+import {UsageTipsModel} from '../models/usageTips';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {QueryReplayModel, LocalQueryFormData} from '../models/query/replay';
 import {FilterModel, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
@@ -78,7 +78,7 @@ export class QueryModels {
     queryModel:QueryModel;
     filterModel:FilterModel;
     textTypesModel:TextTypesModel;
-    queryHintModel:QueryHintModel;
+    queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
@@ -119,8 +119,6 @@ export class ViewPage {
 
     private queryModels:QueryModels;
 
-    private hasLockedGroups:boolean;
-
     private concViews:ConcViews;
 
     private analysisViews:AnalysisFrameViews;
@@ -156,10 +154,9 @@ export class ViewPage {
      * @param layoutModel
      * @param hasLockedGroups
      */
-    constructor(layoutModel:PageModel, hasLockedGroups:boolean) {
+    constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
         this.queryModels = new QueryModels();
-        this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
         this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
         this.lineGroupsChart = new LineSelGroupsRatiosChart(
@@ -430,9 +427,8 @@ export class ViewPage {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
-        this.queryModels.queryHintModel = new QueryHintModel(
+        this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
-            ['query__tip_01', 'query__tip_02', 'query__tip_03', 'query__tip_04'],
             this.layoutModel.translate.bind(this.layoutModel)
         );
         this.queryModels.withinBuilderModel = new WithinBuilderModel(this.layoutModel.dispatcher,
@@ -941,10 +937,16 @@ export class ViewPage {
 
     private initKeyShortcuts():void {
         const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
+        actionMap.register(
+            69,
+            null,
+            'DASHBOARD_TOGGLE_EXTENDED_INFO',
+            {}
+        );
         this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
             if (document.activeElement === document.body &&
-                    !evt.ctrlKey && !evt.altKey && !evt.shiftKey && !evt.metaKey) {
-                const action = actionMap.get(evt.keyCode);
+                    !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
+                const action = actionMap.get(evt.keyCode, evt.shiftKey ? 'shift' : null);
                 if (action) {
                     this.layoutModel.dispatcher.dispatch({
                         actionType: action.message,
@@ -1069,6 +1071,10 @@ export class ViewPage {
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
+        this.viewModels.usageTipsModel = new UsageTipsModel(
+            this.layoutModel.dispatcher,
+            s => this.layoutModel.translate(s)
+        );
         this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
             (_) => this.viewModels.lineViewModel.updateOnCorpViewOptsChange());
         this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
@@ -1108,10 +1114,10 @@ export class ViewPage {
         this.viewModels.dashboardModel = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.layoutModel.getModels().generalViewOptionsModel,
             {
-                showTTOverview: !!this.layoutModel.getConf<number>('ShowTTOverview'),
-                hasTTCrit: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
+                showFreqInfo: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
+                                    this.layoutModel.getConf<Array<string>>('ConcDashboardModules').indexOf('freqs') > -1,
+                hasKwicConnect: this.layoutModel.pluginIsActive('kwic_connect')
             }
         );
         this.viewModels.ttDistModel = new TextTypesDistModel(
@@ -1138,7 +1144,6 @@ export class ViewPage {
                 this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
                     (optsModel) => {
                         this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
-                        this.viewModels.dashboardModel.updateOnGlobalViewOptsChange(optsModel);
                     }
                 );
                 const ttModel = this.initTextTypesModel();
@@ -1230,8 +1235,7 @@ export class ViewPage {
 export function init(conf):void {
     const layoutModel = new PageModel(conf);
     const pageModel = new ViewPage(
-        layoutModel,
-        layoutModel.getConf<number>('NumLinesInGroups') > 0
+        layoutModel
     );
     pageModel.init();
 };

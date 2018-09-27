@@ -17,25 +17,20 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A modified implementation of default_conc_persistence plug-in which looks into
-a secondary archive in case a key is not found. It is expected that an external
-script archives old/unused/whatever records from main to the secondary db.
+A custom implementation of conc_persistence where:
 
-required config.xml entries:
+1) primary storage is in Redis with different TTL for public and registered users
+2) secondary storage is a list of SQLite3 databases. The config.xml contains only the current
+   database file and all the other (readonly) archives are searched within the same directory.
+   The order of a search is the following:
+     - the current archive file always comes first
+     - other files are sorted in a reversed alphabetical order; i.e. e.g. the following naming convention
+       works well: 'conc.db', 'conc.20180801.db', 'conc.2017.08.17.db', 'conc.2016.08.30.db'.
 
-element conc_persistence {
-  element module { "ucnk_conc_persistence2" }
-  element archive_db_path {
-    attribute extension-by { "ucnk" }
-    { text } # a path to a sqlite3 database (see SQL below)
-  }
-  element archive_queue_key {
-    attribute extension-by { "ucnk" }
-    { text } # a key used in Redis to access the archive processing queue
-  }
-}
 
-archive db:
+For required config.xml entries - please see config.rng (and/or use scripts/validate_xml to check your config)
+
+archive db (can be also created using the 'archive.py' script):
 
 CREATE TABLE archive (
     id text,
@@ -159,7 +154,7 @@ class ConcPersistence(AbstractConcPersistence):
         self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
         self.db = db
         self._auth = auth
-        self._db_path = settings.get('plugins')['conc_persistence']['ucnk:archive_db_path']
+        self._db_path = plugin_conf['ucnk:archive_db_path']
         self._archives = self._open_archives()
         self._settings = settings
 
@@ -180,10 +175,13 @@ class ConcPersistence(AbstractConcPersistence):
 
     def _open_archives(self):
         root_dir = os.path.dirname(self._db_path)
+        curr_file = os.path.basename(self._db_path)
+        curr_db = sqlite3.connect(self._db_path)
         dbs = []
         for item in os.listdir(root_dir):
-            dbs.append((item, sqlite3.connect(os.path.join(root_dir, item))))
-        dbs = sorted(dbs, key=lambda x: x[0].rsplit('.', 1)[0])
+            if item != curr_file:
+                dbs.append((item, sqlite3.connect(os.path.join(root_dir, item))))
+        dbs = [(curr_file, curr_db)] + sorted(dbs, reverse=True)
         logging.getLogger(__name__).info(
             'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
         return [x[1] for x in dbs]
@@ -230,7 +228,7 @@ class ConcPersistence(AbstractConcPersistence):
                 if tmp:
                     data = json.loads(tmp[0])
                     cursor.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
-                        (int(round(time.time())), data_id))
+                                   (int(round(time.time())), data_id))
                     arch_db.commit()
                     break
         return data

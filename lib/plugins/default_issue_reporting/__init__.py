@@ -56,8 +56,7 @@ class DefaultErrorReporting(AbstractIssueReporting):
         return '\n'.join(('  {0}: {1}'.format(k, v)) for k, v in info.items())
 
     def _send_mail(self, plugin_api, body, browser_info):
-        user_id = plugin_api.user_id
-        user_info = self._auth.get_user_info(user_id)
+        user_info = self._auth.get_user_info(plugin_api)
         user_email = user_info['email']
         username = user_info['username']
 

@@ -17,20 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-
-Required XML configuration:
-
-element token_connect {
-  element module { "default_kwic_connect" }
-  element js_module { "defaultKwicConnect" }
-  element max_kwic_words {   # how many unique kwic words to explore (at most)
-    attribute extension-by { "default" }
-    { xsd:integer }
-  }
-  element load_chunk_size {  # how many kwic words' responses to load at once (0 ... max_kwic_words)
-    attribute extension-by { "default" }
-    { xsd:integer }
-  }
+Required XML configuration: please see ./config.rng
 """
 
 from plugins.abstract.kwic_connect import AbstractKwicConnect
@@ -39,6 +26,7 @@ import plugins
 import logging
 from actions import concordance
 from controller import exposed
+from multiprocessing.pool import ThreadPool
 
 
 def merge_results(curr, new, word):
@@ -52,16 +40,23 @@ def merge_results(curr, new, word):
         return curr
 
 
+def handle_word_req(args):
+    word, corpora, ui_lang, providers = args
+    with plugins.runtime.KWIC_CONNECT as kc:
+        return word, kc.fetch_data(providers, corpora, ui_lang, word)
+
+
 @exposed(return_type='json')
 def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
-    with plugins.runtime.KWIC_CONNECT as kc, plugins.runtime.CORPARCH as ca:
+    with plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        args = [(w, [self.corp.corpname] + self.args.align, self.ui_lang, corpus_info.kwic_connect.providers)
+                for w in words]
+        results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
         provider_all = []
-        for word in words:
-            resp_data = kc.fetch_data(corpus_info.kwic_connect.providers,
-                                      [self.corp.corpname] + self.args.align, self.ui_lang, word)
-            provider_all = merge_results(provider_all, resp_data, word)
+        for word, res in results:
+            provider_all = merge_results(provider_all, res, word)
         ans = []
         for provider in provider_all:
             ans.append(dict(
@@ -70,6 +65,15 @@ def fetch_external_kwic_info(self, request):
                 note=provider[0]['note'],
                 data=[dict(kwic=item['kwic'], status=item['status'], contents=item['contents']) for item in provider]))
     return dict(data=ans)
+
+
+@exposed(return_type='json')
+def get_corpus_kc_providers(self, _):
+    with plugins.runtime.CORPARCH as ca, plugins.runtime.KWIC_CONNECT as kc:
+        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        mp = kc.map_providers(corpus_info.kwic_connect.providers)
+        return dict(corpname=self.corp.corpname,
+                    providers=[dict(id=b.provider_id, label=f.get_heading(self.ui_lang)) for b, f in mp])
 
 
 class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
@@ -88,7 +92,7 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
         return dict(max_kwic_words=self._max_kwic_words, load_chunk_size=self._load_chunk_size)
 
     def export_actions(self):
-        return {concordance.Actions: [fetch_external_kwic_info]}
+        return {concordance.Actions: [fetch_external_kwic_info, get_corpus_kc_providers]}
 
     def fetch_data(self, provider_ids, corpora, lang, lemma):
         ans = []

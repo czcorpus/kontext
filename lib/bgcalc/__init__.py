@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -12,31 +12,79 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from __future__ import absolute_import
+import imp
+
+
+_backend_app = None
+
+
+class CalcBackendInitError(Exception):
+    pass
+
+
+class ExternalTaskError(Exception):
+    pass
+
 
 class UnfinishedConcordanceError(Exception):
     """
     This error is used whenever a concordance
-    used by some background calculation is 
+    used by some background calculation is
     not completed yet (i.e. this applies only
     in case async=1).
     """
     pass
 
 
-def is_celery_error(err):
-    """
-    Because Celery when using json serialization cannot (de)serialize original exceptions,
-    errors it throws to a client are derived ones dynamically generated within package
-    'celery.backends.base'. It means that static 'except' blocks are impossible and we
-    must catch Exception and investigate further. This function helps with that. 
-    """
-    return isinstance(err, Exception) and err.__class__.__module__ == 'celery.backends.base'
+def _init_backend_app(conf, fn_prefix):
+    app_type = conf.get('calc_backend', 'type')
+    app_conf = conf.get('calc_backend', 'conf')
+    if app_type == 'celery':
+        import celery
+        from bgcalc.celery import Config
+
+        if app_conf:
+            cconf = imp.load_source('celeryconfig', app_conf)
+        else:
+            cconf = Config()
+            cconf.BROKER_URL = conf.get('calc_backend', 'celery_broker_url')
+            cconf.CELERY_RESULT_BACKEND = conf.get('calc_backend', 'celery_result_backend')
+            cconf.CELERY_TASK_SERIALIZER = conf.get('calc_backend', 'celery_task_serializer')
+            cconf.CELERY_RESULT_SERIALIZER = conf.get('calc_backend', 'celery_result_serializer')
+            cconf.CELERY_ACCEPT_CONTENT = conf.get('calc_backend', 'celery_accept_content')
+            cconf.CELERY_TIMEZONE = conf.get('calc_backend', 'celery_timezone')
+        return celery.Celery('bgcalc', config_source=cconf)
+    elif app_type == 'konserver':
+        from bgcalc.konserver import KonserverApp, Config
+
+        if app_conf:
+            kconf = imp.load_source('konserverconfig', app_conf)
+        else:
+            kconf = Config()
+            kconf.SERVER = conf.get('calc_backend', 'konserver_server')
+            kconf.PORT = conf.get_int('calc_backend', 'konserver_port')
+            kconf.PATH = conf.get('calc_backend', 'konserver_path')
+            kconf.HTTP_CONNECTION_TIMEOUT = conf.get_int('calc_backend', 'konserver_http_connection_timeout')
+            kconf.RESULT_WAIT_MAX_TIME = conf.get_int('calc_backend', 'konserver_result_wait_max_time')
+        return KonserverApp(conf=kconf, fn_prefix=fn_prefix)
+    elif app_type == 'multiprocessing':  # legacy stuff
+        return None
+    else:
+        raise CalcBackendInitError(
+            'Failed to init calc backend {0} (conf: {1})'.format(app_type, app_conf))
 
 
-def is_celery_user_error(err):
-    """
-    Tests whether a provided exception is a Celery derived exception generated from
-    KonText's UserActionException. Please see is_bgcalc_error for more explanation.
+def _calc_backend_app(conf, fn_prefix=''):
+    global _backend_app
+    if _backend_app is None:
+        _backend_app = _init_backend_app(conf, fn_prefix)
+    return _backend_app
 
-    """
-    return is_celery_error(err) and err.__class__.__name__ == 'UserActionException'
+
+def calc_backend_client(conf):
+    return _calc_backend_app(conf, '')
+
+
+def calc_backend_server(conf, fn_prefix):
+    return _calc_backend_app(conf, fn_prefix)

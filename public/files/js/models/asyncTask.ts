@@ -156,8 +156,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
          return this.pageModel.ajax(
             'GET',
             this.pageModel.createActionUrl('check_tasks_status'),
-            {},
-            {contentType : 'application/x-www-form-urlencoded'}
+            {}
         );
     }
 
@@ -166,8 +165,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         return this.pageModel.ajax(
             'DELETE',
             this.pageModel.createActionUrl('remove_task_info'),
-            {'tasks': finishedTasksIds},
-            {contentType : 'application/x-www-form-urlencoded'}
+            {'tasks': finishedTasksIds}
         );
     }
 

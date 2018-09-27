@@ -51,6 +51,12 @@ declare module "cqlParser/parser" {
         name:string;
         location:SrcRange;
         message:string;
+        expected:Array<{
+            type:string;
+            text:string;
+            ignoreCase:boolean;
+        }>;
+        found:string;
     }
 
     export function parse(input:string, options?:Options):Array<any>;

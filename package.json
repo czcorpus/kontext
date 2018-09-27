@@ -37,8 +37,8 @@
     "@types/react-dom": "^16.0.6",
     "@types/rsvp": "^4.0.2",
     "immutable": "^3.8.2",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
     "rsvp": "^4.8.3"
   }
 }

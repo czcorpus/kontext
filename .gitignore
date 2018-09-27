@@ -5,8 +5,7 @@
 *.*~
 public/files/.settings
 
-# local development 
-doc/
+# local development
 log/
 tmp/
 *.db
@@ -16,7 +15,7 @@ node_modules/
 # default app installation
 venv/
 conf/*
-!conf/config.sample.xml
+!conf/config.default.xml
 !conf/main-menu.sample.json
 public/files/.vscode/
 public/files/dist

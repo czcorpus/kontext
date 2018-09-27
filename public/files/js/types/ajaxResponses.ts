@@ -38,6 +38,7 @@ export namespace AjaxResponse {
     export interface ServerSubcorpListItem {
         deleted:boolean;
         usesubcorp:string;
+        orig_subcname:string;
         created:number;
         cql:string;
         human_corpname:string;
@@ -54,11 +55,11 @@ export namespace AjaxResponse {
         filter:{[k:string]:any};
         sort_key:{name:string; reverse:boolean};
         related_corpora:Array<string>,
-        unfinished_subc:Array<Kontext.AsyncTaskInfo>;
+        processed_subc:Array<Kontext.AsyncTaskInfo>;
     }
 
     export interface CreateSubcorpus extends Kontext.AjaxResponse {
-        unfinished_subc:Array<Kontext.AsyncTaskInfo>;
+        processed_subc:Array<Kontext.AsyncTaskInfo>;
     }
 
     export interface ConcStatus extends Kontext.AjaxResponse {
@@ -217,6 +218,7 @@ export namespace AjaxResponse {
         CurrentSubcorp:string;
         SubcorpList:Array<{v:string; n:string}>;
         TextTypesNotes:string;
+        TextDirectionRTL:boolean;
     }
 }
 

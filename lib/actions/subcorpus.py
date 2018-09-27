@@ -21,7 +21,7 @@ from controller.errors import FunctionNotSupported, UserActionException
 from controller.kontext import AsyncTaskStatus
 from controller.querying import Querying
 from main_menu import MainMenu
-from translation import ugettext as _
+from translation import ugettext as translate
 import plugins
 import l10n
 from l10n import import_string
@@ -47,8 +47,8 @@ class Subcorpus(Querying):
 
     def prepare_subc_path(self, corpname, subcname, publish):
         if publish:
-            code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
-                'user', 'id'), corpname, subcname)).hexdigest()[:10]
+            code = hashlib.md5(u'{0} {1} {2}'.format(self.session_get(
+                'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
             path = os.path.join(self.subcpath[1], corpname)
             if not os.path.isdir(path):
                 os.makedirs(path)
@@ -132,7 +132,7 @@ class Subcorpus(Querying):
 
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
-            raise UserActionException(_('No subcorpus name specified!'))
+            raise UserActionException(translate('No subcorpus name specified!'))
         path = self.prepare_subc_path(basecorpname, subcname, publish=False)
         publish_path = self.prepare_subc_path(
             basecorpname, subcname, publish=True) if publish else None
@@ -143,12 +143,12 @@ class Subcorpus(Querying):
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
-                corplib.mk_publish_links(path, publish_path, description)
+                corplib.mk_publish_links(path, publish_path, self.session_get('user', 'fullname'), description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
-            backend, conf = settings.get_full('global', 'calc_backend')
-            if backend == 'celery':
-                import task
-                app = task.get_celery_app(conf['conf'])
+            backend = settings.get('calc_backend', 'type')
+            if backend in ('celery', 'konserver'):
+                import bgcalc
+                app = bgcalc.calc_backend_client(settings)
                 res = app.send_task('worker.create_subcorpus',
                                     (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
                                      tt_query, imp_cql, description),
@@ -168,7 +168,7 @@ class Subcorpus(Querying):
                     worker.run, tt_query, imp_cql, path, publish_path, description)).start()
                 result = {}
         else:
-            raise UserActionException(_('Nothing specified!'))
+            raise UserActionException(translate('Nothing specified!'))
         if result is not False:
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
@@ -179,12 +179,12 @@ class Subcorpus(Querying):
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
-                                            _('Subcorpus created but there was a problem saving a backup copy.'))
+                                            translate('Subcorpus created but there was a problem saving a backup copy.'))
             unfinished_corpora = filter(lambda at: not at.is_finished(),
                                         self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
-            return dict(unfinished_subc=[uc.to_dict() for uc in unfinished_corpora])
+            return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
         else:
-            raise SubcorpusError(_('Empty subcorpus!'))
+            raise SubcorpusError(translate('Empty subcorpus!'))
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
              http_method='POST')
@@ -197,7 +197,7 @@ class Subcorpus(Querying):
             ans = self.subcorp_form(request)
         return ans
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, apply_semi_persist_args=True)
     def subcorp_form(self, request):
         """
         Displays a form to create a new subcorpus
@@ -238,7 +238,7 @@ class Subcorpus(Querying):
         ))
         return out
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', http_method='POST')
     def ajax_create_subcorpus(self, request):
         return self._create_subcorpus(request)
 
@@ -292,7 +292,8 @@ class Subcorpus(Querying):
                         'created': time.mktime(sc.created.timetuple()),
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
-                        'usesubcorp': item['n'],
+                        'usesubcorp': sc.subcname,
+                        'orig_subcname': sc.orig_subcname,
                         'deleted': False,
                         'description': sc.description,
                         'published': corplib.subcorpus_is_published(sc.spath)
@@ -326,21 +327,22 @@ class Subcorpus(Querying):
         else:
             full_list = l10n.sort(full_list, loc=self.ui_lang,
                                   key=lambda x: x[sort_key], reverse=rev)
-        unfinished_corpora = filter(lambda at: not at.is_finished(),
-                                    self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
+
         ans = dict(
             SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
             subcorp_list=full_list,
             sort_key=dict(name=sort_key, reverse=rev),
             filter=filter_args,
-            unfinished_subc=[uc.to_dict() for uc in unfinished_corpora],
+            processed_subc=[v.to_dict() for v in self.get_async_tasks(
+                category=AsyncTaskStatus.CATEGORY_SUBCORPUS)],
             related_corpora=sorted(related_corpora),
             uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
         )
         return ans
 
-    @exposed(access_level=1, return_type='json', legacy=True)
-    def ajax_subcorp_info(self, subcname=''):
+    @exposed(access_level=1, return_type='json')
+    def ajax_subcorp_info(self, request):
+        subcname = request.args.get('subcname', '')
         sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
         ans = dict(
             corpusId=self.args.corpname,
@@ -360,7 +362,7 @@ class Subcorpus(Querying):
                     ans['extended_info'].update(tmp)
         return ans
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', http_method='POST')
     def ajax_wipe_subcorpus(self, request):
         if plugins.runtime.SUBC_RESTORE.exists:
             corpus_id = request.form['corpname']
@@ -368,9 +370,10 @@ class Subcorpus(Querying):
             with plugins.runtime.SUBC_RESTORE as sr:
                 sr.delete_query(self.session_get('user', 'id'), corpus_id, subcorp_name)
             self.add_system_message('info',
-                                    _('Subcorpus %s has been deleted permanently.') % subcorp_name)
+                                    translate('Subcorpus %s has been deleted permanently.') % subcorp_name)
         else:
-            self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
+            self.add_system_message('error', translate(
+                'Unsupported operation (plug-in not present)'))
         return {}
 
     @exposed(access_level=1, return_type='json', http_method='POST')
@@ -381,7 +384,7 @@ class Subcorpus(Querying):
         curr_subc = os.path.join(self.subcpath[0], corpname, subcname + '.subc')
         public_subc = self.prepare_subc_path(corpname, subcname, True)
         if os.path.isfile(curr_subc):
-            corplib.mk_publish_links(curr_subc, public_subc, description)
+            corplib.mk_publish_links(curr_subc, public_subc, self.session_get('user', 'fullname'), description)
             return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
         else:
             raise UserActionException('Subcorpus {0} not found'.format(subcname))
@@ -392,3 +395,21 @@ class Subcorpus(Querying):
             raise UserActionException('Corpus is not published - cannot change description')
         corplib.rewrite_subc_desc(self.corp.spath, request.form['description'])
         return {}
+
+    @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
+    def list_published(self, request):
+        min_author_prefix = 4
+        min_code_prefix = 2
+        query = request.args.get('query', '')
+        search_type = request.args.get('search_type', '')
+        offset = int(request.args.get('offset', '0'))
+        limit = int(request.args.get('limit', '20'))
+        if search_type == 'author' and len(query) >= min_author_prefix:
+            subclist = corplib.list_public_subcorpora(self.subcpath[-1], author_prefix=query,
+                                                      code_prefix=None, offset=offset, limit=limit)
+        elif search_type == 'code' and len(query) >= min_code_prefix:
+            subclist = corplib.list_public_subcorpora(self.subcpath[-1], author_prefix=None,
+                                                      code_prefix=query, offset=offset, limit=limit)
+        else:
+            subclist = []
+        return dict(data=subclist, min_author_prefix=min_author_prefix, min_code_prefix=min_code_prefix)

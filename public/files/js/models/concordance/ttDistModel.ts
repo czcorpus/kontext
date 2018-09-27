@@ -92,12 +92,14 @@ export interface FreqBlock {
 
 export class TextTypesDistModel extends StatefulModel {
 
-    private static SAMPLE_SIZE = 10000;
+    private static SAMPLE_SIZE = 100000;
 
     private static IPM_BAR_WIDTH = 400;
 
     private static COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
                              "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+
+    private static DEFAULT_MAX_BLOCK_ITEMS = 10;
 
     private layoutModel:PageModel;
 
@@ -117,6 +119,8 @@ export class TextTypesDistModel extends StatefulModel {
 
     private lastArgs:string;
 
+    private maxBlockItems:number;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -125,6 +129,7 @@ export class TextTypesDistModel extends StatefulModel {
         this.blocks = Immutable.List<FreqBlock>();
         this.flimit = 100; // this is always recalculated according to data
         this.sampleSize = 0;
+        this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
         this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
         this.isBusy = this.concLineModel.isUnfinishedCalculation();
         this.dispatcherRegister((payload:ActionPayload) => {
@@ -134,43 +139,45 @@ export class TextTypesDistModel extends StatefulModel {
                     this.performDataLoad();
                 break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
-                    this.performDataLoad();
+                    if (this.blocks.size === 0) {
+                        this.performDataLoad();
+                    }
+                break;
+                case 'REMOVE_CHART_ITEMS_LIMIT':
+                    this.maxBlockItems = -1;
+                    this.notifyChangeListeners();
+                break;
+                case 'RESTORE_CHART_ITEMS_LIMIT':
+                    this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
+                    this.notifyChangeListeners();
                 break;
             }
         });
     }
 
     private performDataLoad():void {
-        const args = this.layoutModel.getConcArgs();
-        if (this.lastArgs !== args.getFirst('q')) {
-            this.isBusy = true;
-            this.notifyChangeListeners();
-            this.loadData(args).then(
-                (ans) => {
-                    this.isBusy = false;
-                    this.notifyChangeListeners();
-                },
-                (err) => {
-                    this.isBusy = false;
-                    this.layoutModel.showMessage('error', err);
-                    this.notifyChangeListeners();
-                }
-            );
+        if (!this.blockedByAsyncConc && this.getConcSize() > 0) {
+            const args = this.layoutModel.getConcArgs();
+            if (this.lastArgs !== args.getFirst('q')) {
+                this.isBusy = true;
+                this.notifyChangeListeners();
+                this.loadData(args).then(
+                    (ans) => {
+                        this.isBusy = false;
+                        this.notifyChangeListeners();
+                    },
+                    (err) => {
+                        this.isBusy = false;
+                        this.layoutModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+                    }
+                );
+            }
         }
     }
 
     private getConcSize():number {
         return this.concLineModel.getConcSummary().concSize;
-    }
-
-    private calcMinFreq():number {
-        if (this.getConcSize() > 1000) {
-            return 100;
-
-        } else if (this.getConcSize() > 100) {
-            return 10;
-        }
-        return 1;
     }
 
     private loadData(args:MultiDict):RSVP.Promise<boolean> {
@@ -193,7 +200,7 @@ export class TextTypesDistModel extends StatefulModel {
             (reduceAns:Response.Reduce) => {
                 const args = this.layoutModel.getConcArgs();
                 this.ttCrit.forEach(v => args.add(v[0], v[1]));
-                this.flimit = this.calcMinFreq();
+                this.flimit = this.concLineModel.getRecommOverviewMinFreq();
                 args.set('ml', 0);
                 args.set('flimit', this.flimit);
                 args.set('force_cache', '1');
@@ -236,6 +243,22 @@ export class TextTypesDistModel extends StatefulModel {
         return this.blocks;
     }
 
+    getDisplayableBlocks():Immutable.List<FreqBlock> {
+        return this.blocks.filter(block => block.items.length <= this.maxBlockItems || this.maxBlockItems === -1).toList();
+    }
+
+    isDisplayedBlocksSubset():boolean {
+        return this.getBlocks().size > this.getDisplayableBlocks().size;
+    }
+
+    shouldDisplayBlocksSubset():boolean {
+        return this.blocks.find(block => block.items.length > this.maxBlockItems) !== undefined;
+    }
+
+    getMaxChartItems():number {
+        return this.maxBlockItems;
+    }
+
     getIsBusy():boolean {
         return this.isBusy;
     }
@@ -246,9 +269,5 @@ export class TextTypesDistModel extends StatefulModel {
 
     getSampleSize():number {
         return this.sampleSize;
-    }
-
-    getBlockedByAsyncConc():boolean {
-        return this.blockedByAsyncConc;
     }
 }

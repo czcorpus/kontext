@@ -51,6 +51,7 @@ module.exports = {
             queryHistory: mkpath('js/pages/queryHistory.ts'),
             subcorpForm: mkpath('js/pages/subcorpForm.ts'),
             subcorpList: mkpath('js/pages/subcorpList.ts'),
+            pubSubcorpList: mkpath('js/pages/pubSubcorpList.ts'),
             view: mkpath('js/pages/view.ts'),
             wordlist: mkpath('js/pages/wordlist.ts'),
             wordlistForm: mkpath('js/pages/wordlistForm.ts'),

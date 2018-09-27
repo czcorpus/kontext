@@ -19,12 +19,11 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel, PluginApi} from '../app/main';
+import {PageModel} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {StatefulModel} from '../models/base';
 import {WordlistFormModel} from '../models/wordlist/form';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import createCorparch from 'plugins/corparch/init';

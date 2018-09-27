@@ -172,7 +172,11 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
-            'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
+            'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
+            '  AS speaker_id_attr, '
+            'IF (c.speech_overlap_struct IS NOT NULL, CONCAT(c.speech_overlap_struct, \'.\', c.speech_overlap_attr), '
+            '  NULL) AS speech_overlap_attr, '
+            'c.speech_overlap_val, c.use_safe_font, '
             'c.requestable, c.featured, c.text_types_db AS `database`, '
             'IF (c.bib_label_attr IS NOT NULL, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) '
             '  AS label_attr, '
@@ -193,7 +197,7 @@ class Backend(DatabaseBackend):
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0,
                          limit=10000000000):
-        where_cond = ['c.active = %s', 'kcu.user_id = %s']
+        where_cond = ['c.active = %s', 'kcu.user_id = %s OR c.requestable = 1']
         values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
@@ -228,13 +232,13 @@ class Backend(DatabaseBackend):
                'FROM corpora AS c '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-               'JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
+               'LEFT JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
                'WHERE {0} '
                'GROUP BY c.name '
                'HAVING num_match_keys >= %s '
                'ORDER BY c.group_name, c.version DESC, c.name '
                'LIMIT %s '
-               'OFFSET %s').format(' AND '.join(where_cond))
+               'OFFSET %s').format(' AND '.join('(' + wc + ')' for wc in where_cond))
         c.execute(sql, values_cond)
         return c.fetchall()
 

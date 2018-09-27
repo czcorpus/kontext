@@ -65,6 +65,12 @@ export namespace CoreViews {
              */
             onCloseClick:()=>void;
 
+            /**
+             * An optional handler triggered in case user clicks anywhere
+             * within PopupBox. This can be used e.g. to regain focus.
+             */
+            onAreaClick?:()=>void;
+
             status?:string;
 
             /**
@@ -222,6 +228,7 @@ export namespace CoreViews {
     export namespace AjaxLoaderImage {
         export interface Props {
             htmlClass?:string;
+            title?:string;
         }
         export type Component = React.SFC<Props>;
     }
@@ -231,6 +238,7 @@ export namespace CoreViews {
     export namespace AjaxLoaderBarImage {
         export interface Props {
             htmlClass?:string;
+            title?:string;
         }
         export type Component = React.SFC<Props>;
     }
@@ -293,11 +301,24 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
-    export namespace VmodeIcon {
+    export namespace TabButton {
 
         export interface Props {
-            viewMode:ViewOptions.AttrViewMode;
-            mouseoverAttrs?:Array<string>;
+            isActive:boolean;
+            label:string;
+            htmlClass?:string;
+            onClick:()=>void;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
+    export namespace PlusButton {
+
+        export interface Props {
+            mouseOverHint?:string;
+            htmlClass?:string;
+            onClick:()=>void;
         }
 
         export type Component = React.SFC<Props>;
@@ -322,7 +343,8 @@ export namespace CoreViews {
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
-        VmodeIcon:VmodeIcon.Component;
+        TabButton:TabButton.Component;
+        PlusButton:PlusButton.Component;
     }
 }
 

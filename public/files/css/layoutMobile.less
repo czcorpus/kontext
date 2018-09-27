@@ -1,5 +1,34 @@
 @import "./shared/globals.less";
 
+@media screen and (max-width: 600px) {
+
+    #conc-dashboard-mount {
+
+        .ConcordanceDashboard {
+            display: grid;
+            grid-template-columns: auto;
+        }
+
+        .ConcordanceDashboard.collapsed {
+            grid-template-columns: auto;
+
+            .ConcExtendedInfo {
+
+                header {
+
+                    padding: 0.3em;
+
+                    a {
+                        margin: 0 0 0 0.3em;
+                    }
+                }
+            }
+        }
+
+    }
+
+}
+
 @media screen and (max-width: 479px) {
 
     #logo-wrapper {
@@ -129,3 +158,6 @@
         width: 100% !important;
     }
 }
+
+@import "./layoutMobile.less";
+@import "~custom-styles/theme.less";

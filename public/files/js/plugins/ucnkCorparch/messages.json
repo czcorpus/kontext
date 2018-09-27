@@ -22,5 +22,17 @@
     "ucnkCorparch__your_message_failed": "Požadavek se nepodařilo odeslat. Zkuste to prosím později nebo kontaktujte podporu.",
     "ucnkCorparch__tmp_hint_alt": "Vysvětlení změn ve způsobu výběru korpusu",
     "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Překvapil vás nový způsob výběru korpusu? Od KonTextu verze 0.7 jsme byli nuceni nahradit zobrazování korpusů v podobě hierarchizovaného stromu jiným systémem, protože dosavadní způsob přestal být vzhledem k rostoucímu počtu korpusů a jejich verzí přehledný a do budoucna udržitelný. Nová podoba výběru korpusů umožňuje jednak využít rychlou volbu včetně uživateli definovaných oblíbených korpusů, jednak prohledávat seznam všech dostupných korpusů pomocí tzv. štítků se základní charakteristikou každého z nich.</p><p class=\"boxed-par\">Popis práce s novým systémem najdete v <a target=\"_blank\"  href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manuálu</a>.</p>"
+  },
+  "szl": {
+    "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProszã ô dostymp do korpusu {corpname}\u201D",
+    "ucnkCorparch__custom_message": "Włŏsnŏ wiadōmość (ôpcjōnalnie)",
+    "ucnkCorparch__click_to_ask_access": "Kliknij, żeby poprosić ô dostymp.",
+    "ucnkCorparch__message_icon": "Ikōna wiadōmości",
+    "ucnkCorparch__send": "Wyślij",
+    "ucnkCorparch__load_all": "Laduj wszyjsko",
+    "ucnkCorparch__your_message_sent": "Twoja prośba była wysłanŏ. Na twojã adresã emailowõ bydzie posłanŏ wiadōmość, jak bydzie decyzyjŏ.",
+    "ucnkCorparch__your_message_failed": "Niy szło wysłać prośby. Sprōbuj zaś niyskorzij abo skōntaktuj sie z pōmocōm.",
+    "ucnkCorparch__tmp_hint_alt": "Wyeklerowanie zmian nŏczyniŏ wyboru korpusu",
+    "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Niy radzisz sie ze nowym spusobym ôbiyraniŏ korpusu? Ze aktualizacyjōm KonTextu musieli my pociepnōńć starõ metodã pokazowaniŏ dostympnych korpusōw i wkludzić nowy system, co może lepij dostosować sie do corŏz wiynkszyj wielości korpusōw i jejich wersyji. Nowy mechanizm wybiyraniŏ korpusu mŏ bezpostrzedni dostymp do ôbranych korpusōw, w tym podryncznych korpusōw ôbranych ôd używŏcza, i używŏ etyket co dŏwajōm podstawowõ charakterystykã wszyjskich dostympnych korpusōw.</p><p class=\"boxed-par\">Po szczegōłowy ôpis nowego systymu i jego funkcyji wejzdrzij do <a target=\"_blank\" href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manuala</a>.</p>"
   }
 }

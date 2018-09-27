@@ -18,18 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
 import {FilterModel} from '../../models/query/filter';
-import {QueryHintModel} from '../../models/query/main';
+import {WidgetsMap} from '../../models/query/main';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {FirstHitsModel} from '../../models/query/firstHits';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {PluginInterfaces} from '../../types/plugins';
+import { UsageTipsModel } from '../../models/usageTips';
 
 
 
@@ -55,7 +56,7 @@ export interface FilterFormState {
     inclKwicValue:boolean;
     withinArg:number;
     queryTypes:Immutable.Map<string, string>;
-    supportedWidgets:Immutable.Map<string, Immutable.List<string>>;
+    supportedWidgets:WidgetsMap;
     lposValues:Immutable.Map<string, string>;
     matchCaseValues:Immutable.Map<string, boolean>;
     forcedAttr:string;
@@ -108,7 +109,7 @@ export function init(
         dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         filterModel:FilterModel,
-        queryHintModel:QueryHintModel,
+        queryHintModel:UsageTipsModel,
         withinBuilderModel:WithinBuilderModel,
         virtualKeyboardModel:VirtualKeyboardModel,
         firstHitsModel:FirstHitsModel,
@@ -171,7 +172,7 @@ export function init(
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
+            if (evt.keyCode === KeyCodes.ENTER && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
                         actionType: 'BRANCH_QUERY',

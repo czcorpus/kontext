@@ -25,8 +25,9 @@ import {init as keyboardInit} from './keyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
-import {Kontext} from '../../types/common';
-import {GeneralQueryModel, QueryHintModel} from '../../models/query/main';
+import {Kontext, KeyCodes} from '../../types/common';
+import {GeneralQueryModel} from '../../models/query/main';
+import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 
@@ -35,7 +36,7 @@ export interface InputModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
     queryModel:GeneralQueryModel;
-    queryHintModel:QueryHintModel;
+    queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     cqlEditorModel:CQLEditorModel;
@@ -66,6 +67,7 @@ export interface TRQueryInputFieldProps {
     matchCaseValue:boolean;
     tagsetDocUrl:string;
     onEnterKey:()=>void;
+    takeFocus?:boolean;
 }
 
 
@@ -109,20 +111,17 @@ export function init({
 
     class QueryHints extends React.Component<{
         actionPrefix:string;
-    },
-    {
-        hintText:string;
-    }> {
+    }, UsageTipsState> {
 
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
             this._clickHandler = this._clickHandler.bind(this);
-            this.state = {hintText: queryHintModel.getHint()};
+            this.state = queryHintModel.getState();
         }
 
-        _changeListener() {
-            this.setState({hintText: queryHintModel.getHint()});
+        _changeListener(state) {
+            this.setState(state);
         }
 
         _clickHandler() {
@@ -143,7 +142,7 @@ export function init({
         render() {
             return (
                 <div>
-                    <span className="hint">{this.state.hintText}</span>
+                    <span className="hint">{this.state.currentHints.get(UsageTipCategory.QUERY)}</span>
                     <span className="next-hint">
                         (<a onClick={this._clickHandler}>{he.translate('global__next_tip')}</a>)
                     </span>
@@ -704,16 +703,16 @@ export function init({
 
     class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
 
-        private _queryInputElement:HTMLInputElement;
+        private _queryInputElement:React.RefObject<HTMLInputElement>;
 
         constructor(props) {
             super(props);
-            this._queryInputElement = null;
+            this._queryInputElement = React.createRef();
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
-            this._attachInputElementRef = this._attachInputElementRef.bind(this);
+            this._inputChangeHandler = this._inputChangeHandler.bind(this);
             this.state = {
                 query: queryModel.getQuery(this.props.sourceId),
                 historyVisible: false,
@@ -741,17 +740,26 @@ export function init({
 
         _inputKeyHandler(evt) {
             if (this.props.widgets.indexOf('history') > -1 &&
-                    evt.keyCode === 40 && !this.state.historyVisible) {
+                    evt.keyCode === KeyCodes.DOWN_ARROW && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
                 evt.preventDefault();
 
-            } else if (evt.keyCode === 13 && !evt.shiftKey) {
+            } else if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 this.props.onEnterKey();
                 evt.stopPropagation();
                 evt.preventDefault();
+
+            } else if (evt.keyCode === KeyCodes.ESC) {
+                // TODO - use a React way
+                const firstButton = document.querySelector('.query-form button');
+                if (firstButton instanceof HTMLButtonElement) {
+                    firstButton.focus();
+                }
             }
         }
+
+        _inputChangeHandler() {}
 
         _toggleHistoryWidget() {
             this.setState({
@@ -763,6 +771,9 @@ export function init({
 
         componentDidMount() {
             cqlEditorModel.addChangeListener(this._handleModelChange);
+            if (this.props.takeFocus && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
         }
 
         componentWillUnmount() {
@@ -770,14 +781,10 @@ export function init({
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (this._queryInputElement
-                    && prevState.historyVisible && !this.state.historyVisible) {
-                this._queryInputElement.focus();
+            if (prevState.historyVisible && !this.state.historyVisible &&
+                    this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
             }
-        }
-
-        _attachInputElementRef(elm) {
-            this._queryInputElement = elm;
         }
 
         _renderInput() {
@@ -789,7 +796,7 @@ export function init({
                 case 'char':
                     return <input className="simple-input" type="text"
                                 spellCheck={false}
-                                ref={this._attachInputElementRef}
+                                ref={this._queryInputElement}
                                 onChange={this._handleInputChange}
                                 value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
@@ -797,12 +804,14 @@ export function init({
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
-                                attachCurrInputElement={this._attachInputElementRef}
+                                initialValue={this.state.query}
+                                takeFocus={this.props.takeFocus}
                                 inputKeyHandler={this._inputKeyHandler}
-                                inputChangeHandler={(_)=>undefined} /> :
+                                inputChangeHandler={this._inputChangeHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
                             sourceId={this.props.sourceId}
-                            attachCurrInputElement={this._attachInputElementRef}
+                            initialValue={this.state.query}
+                            takeFocus={this.props.takeFocus}
                             inputKeyHandler={this._inputKeyHandler}
                             inputChangeHandler={this._handleInputChange} />;
             }

@@ -247,11 +247,11 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _renderStructLine(line, viewIdx) {
-            return <>
-                <ExpressionDescLine key ={'wl' + line.rowIdx} viewIdx={viewIdx} />
-                <StructLine key={'sl' + line.rowIdx} rowIdx={line.rowIdx}
+            return <React.Fragment key ={'wl' + line.rowIdx}>
+                <ExpressionDescLine viewIdx={viewIdx} />
+                <StructLine rowIdx={line.rowIdx}
                         lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
-            </>;
+            </React.Fragment>;
         }
 
         render() {
@@ -312,9 +312,6 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         return <div>
             <input type="checkbox" onChange={handleCheckbox} checked={props.value}
                     style={{verticalAlign: 'middle'}} />
-            <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
-                {he.translate('subcform__publication_notes')})
-            </layoutViews.InlineHelp>
         </div>;
     };
 
@@ -334,7 +331,10 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         };
 
-        return <textarea rows={5} cols={60} value={props.value} onChange={handleChange} />;
+        return <>
+            <textarea rows={5} cols={60} value={props.value} onChange={handleChange} />
+            <p className="note">({he.translate('global__markdown_supported')})</p>
+        </>;
     };
 
     // ------------------------ <TDInputModeSelection /> --------------------------
@@ -543,6 +543,10 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                             <tr>
                                 <th>
                                     {he.translate('subcform__set_as_public')}:
+                                    <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
+                                        <p>{he.translate('subcform__publication_notes')}</p>
+                                        <p>{he.translate('subcform__publication_notes_2')}</p>
+                                    </layoutViews.InlineHelp>
                                 </th>
                                 <td>
                                     <SubcNamePublicCheckbox value={this.state.isPublic} />

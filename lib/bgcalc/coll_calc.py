@@ -175,10 +175,10 @@ def calculate_colls(coll_args):
         coll_args.cache_path = cache_path
         coll_args.num_fetch_items = num_fetch_items
 
-        backend, conf = settings.get_full('global', 'calc_backend')
-        if backend == 'celery':
-            import task
-            app = task.get_celery_app(conf['conf'])
+        backend = settings.get('calc_backend', 'type')
+        if backend in ('celery', 'konserver'):
+            import bgcalc
+            app = bgcalc.calc_backend_client(settings)
             res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
                                 time_limit=TASK_TIME_LIMIT)
             # worker task caches the value AFTER the result is returned (see worker.py)

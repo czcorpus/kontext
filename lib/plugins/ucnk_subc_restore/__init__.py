@@ -24,14 +24,8 @@ CREATE TABLE subc_archive (
   timestamp INTEGER NOT NULL
 );
 
-required entry in config.xml:
+required entry in config.xml: please see config.rng
 
-element subc_restore {
-    element module { "ucnk_subc_restore" }
-    element db_path {
-    { text } # a path to a respective SQLite3 database
-    attribute extension-by { "ucnk" }
-}
 """
 
 import time
@@ -125,13 +119,17 @@ class UCNKSubcRestore(AbstractSubcRestore):
         Returns:
             list of dict: a new list containing both the original subc_list and also the extended part
         """
+        def get_user_subcname(rec):
+            return rec.get('orig_subcname') if rec.get('orig_subcname') else rec.get('usesubcorp')
+
         subc_queries = self.list_queries(plugin_api.user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
-            subc_queries_map[u'%s:%s' % (x['corpname'], x['subcname'])] = x
+            subc_queries_map[(x['corpname'], x['subcname'])] = x
 
         if filter_args.get('show_deleted', False):
-            deleted_keys = set(subc_queries_map.keys()) - (set([x['name'] for x in subc_list]))
+            deleted_keys = set(subc_queries_map.keys()) - \
+                (set((x['corpname'], get_user_subcname(x)) for x in subc_list))
         else:
             deleted_keys = []
 
@@ -149,7 +147,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
                 if corpname_matches(corpus_name):
                     corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpus_name)
                     deleted_items.append({
-                        'name': '{0}:{1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
+                        'name': '{0} / {1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
                         'size': None,
                         'created': subc_queries_map[dk]['timestamp'],
                         'human_corpname': corpus_info.name,
@@ -160,10 +158,10 @@ class UCNKSubcRestore(AbstractSubcRestore):
                         'published': False})
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
-
         for subc in subc_list:
-            if subc['name'] in subc_queries_map:
-                subc['cql'] = urllib.quote(subc_queries_map[subc['name']]['cql'].encode('utf-8'))
+            key = (subc['corpname'], get_user_subcname(subc))
+            if key in subc_queries_map:
+                subc['cql'] = urllib.quote(subc_queries_map[key]['cql'].encode('utf-8'))
             else:
                 subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])

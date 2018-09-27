@@ -20,17 +20,17 @@ import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel, DownloadType} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
-import {CollFormModel, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
 import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
-import {QueryReplayModel, IndirectQueryReplayModel} from '../models/query/replay';
+import {IndirectQueryReplayModel} from '../models/query/replay';
 import {QuerySaveAsFormModel} from '../models/query/save';
 import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
-import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../views/analysis';
+import {init as analysisFrameInit} from '../views/analysis';
 import {init as collFormInit} from '../views/coll/forms';
 import {init as collResultViewInit} from '../views/coll/result';
-import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
-import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
+import {init as freqFormInit} from '../views/freqs/forms';
+import {init as queryOverviewInit} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/attrValues';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 
@@ -240,8 +240,7 @@ export class CollPage {
                     queryStorageView: null,
                     liveAttrsView: null,
                     liveAttrsCustomTT: null,
-                    attributes: [],
-                    onEnterKey:()=>undefined
+                    attributes: []
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,

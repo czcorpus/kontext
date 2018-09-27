@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2013 Charles University, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,8 +20,7 @@
 
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel, PluginApi} from '../app/main';
-import * as corplist from 'plugins/corparch/init';
+import {PageModel} from '../app/main';
 import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
 import {init as listViewInit} from '../views/subcorp/list';
 
@@ -40,18 +41,8 @@ interface SubcorpusExtendedInfo {
 }
 
 /**
- * Server-defined data (subcorpus/ajax_subcorp_info)
+ *
  */
-interface SubcorpusInfo {
-    corpusName:string;
-    subCorpusName:string;
-    corpusSize:string;
-    subCorpusSize:string;
-    created:string;
-    extended_info:SubcorpusExtendedInfo
-}
-
-
 class SubcorpListPage {
 
     private layoutModel:PageModel;
@@ -85,7 +76,7 @@ class SubcorpListPage {
                     this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
                     this.layoutModel.getConf<SortKey>('SortKey'),
                     this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
-                    this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('UnfinishedSubcorpora'),
+                    this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
                     this.layoutModel.getConf<SubcListFilter>('Filter')
                 );
                 this.renderView();

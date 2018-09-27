@@ -250,30 +250,26 @@ def test_5(finfo):
             yield finfo.file_exists(os.path.join(APP_PATH, 'locale/%s/LC_MESSAGES/kontext.mo' % tr))
 
 
-@test('Test formats.json localizations are set-up and present')
-def test_5(finfo):
-    translations = settings.get_list('global', 'translations')
-    for tr in translations:
-        yield finfo.file_exists(os.path.join(APP_PATH, 'locale/%s/formats.json' % tr))
-
-
 @test('Test <calc_backend> is set-up properly')
 def test_6(finfo):
-    conf = settings.get_full('global', 'calc_backend')
-    if conf[0] == 'celery':
-        return finfo.file_exists(os.path.join(conf[1]['conf']))
-    elif conf[0] != 'multiprocessing':
-        return False, UnsupportedValue('/global/calc_backend', conf[0])
+    bck_type = settings.get('calc_backend', 'type')
+    conf = settings.get('calc_backend', 'conf')
+    if conf:  # otherwise user uses direct configuration which is taken care of by RelaxNG validation
+        if bck_type in ('celery', 'konserver'):
+            return finfo.file_exists(os.path.join(conf))
+        elif bck_type != 'multiprocessing':
+            return False, UnsupportedValue('/global/calc_backend', bck_type)
     return True, None
 
 
 @test('Test <periodic_tasks> is set-up properly')
 def test_6(finfo):
-    conf = settings.get_full('global', 'periodic_tasks')
-    if conf[0] == 'celery':
-        return finfo.file_exists(os.path.join(conf[1]['conf']))
-    elif conf[0]:
-        return False, UnsupportedValue('/global/periodic_tasks', conf[0])
+    bck_type = settings.get('periodic_tasks', 'type')
+    conf = settings.get('periodic_tasks', 'conf')
+    if bck_type in ('celery', 'konserver'):
+        return finfo.file_exists(os.path.join(conf))
+    elif bck_type:
+        return False, UnsupportedValue('/global/periodic_tasks', bck_type)
     return True, None
 
 

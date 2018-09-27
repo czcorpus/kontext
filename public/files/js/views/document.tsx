@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, ViewOptions} from '../types/common';
+import {Kontext, KeyCodes} from '../types/common';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -95,7 +95,7 @@ export function init(
         }
 
         _keyPressHandler(evt) {
-            if (evt.keyCode === 27 && typeof this.props.onCloseKey === 'function') {
+            if (evt.keyCode === KeyCodes.ESC && typeof this.props.onCloseKey === 'function') {
                 this.props.onCloseKey();
             }
         }
@@ -171,11 +171,15 @@ export function init(
 
         private resize:(ref:HTMLElement)=>void;
 
+        private closeBtnRef:React.RefObject<HTMLButtonElement>;
+
         constructor(props) {
             super(props);
             this._handleKeyPress = this._handleKeyPress.bind(this);
             this._closeClickHandler = this._closeClickHandler.bind(this);
             this._windowResizeHandler = this._windowResizeHandler.bind(this);
+            this._handleAreaClick = this._handleAreaClick.bind(this);
+            this.closeBtnRef = React.createRef();
 
             this.customCss = {};
             this._createStyle();
@@ -199,6 +203,9 @@ export function init(
         }
 
         componentDidMount() {
+            if (this.props.takeFocus) {
+                this.closeBtnRef.current.focus();
+            }
             if (this.props.onReady) {
                 this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
             }
@@ -230,22 +237,17 @@ export function init(
             if (typeof this.props.keyPressHandler === 'function') {
                 this.props.keyPressHandler(evt);
             }
-            evt.preventDefault();
-            evt.stopPropagation();
         }
 
-        _renderCloseButton() {
-             if (this.props.takeFocus) {
-                return <button className="close-link"
-                            onClick={this._closeClickHandler}
-                            onKeyDown={this._handleKeyPress}
-                            ref={item => item ? item.focus() : null} />;
-
-             } else {
-                 return <button type="button" className="close-link"
-                            onClick={this._closeClickHandler}
-                            onKeyDown={this._handleKeyPress} />;
-             }
+        _handleAreaClick(evt:React.MouseEvent):void {
+            const targetElm = evt.target as HTMLElement;
+            const isInteractiveActive = (elm:HTMLElement) =>
+                ['INPUT', 'SELECT', 'BUTTON', 'A', 'LABEL', 'TEXTAREA'].indexOf(elm.nodeName) > -1 ||
+                elm.getAttribute('tabindex') !== null;
+            if (this.props.onAreaClick && !isInteractiveActive(targetElm)) {
+                this.closeBtnRef.current.focus();
+                this.props.onAreaClick();
+            }
         }
 
         render() {
@@ -255,9 +257,15 @@ export function init(
             }
 
             return (
-                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}>
+                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}
+                        onClick={this._handleAreaClick}
+                        onKeyDown={this._handleKeyPress}>
                     <div className="header">
-                        {this._renderCloseButton()}
+                        <button type="button" className="close-link"
+                                onClick={this._closeClickHandler}
+                                onKeyDown={this._handleKeyPress}
+                                ref={this.closeBtnRef}
+                                title={he.translate('global__click_or_esc_to_close')} />
                         <StatusIcon status={this.props.status} />
                     </div>
                     {this.props.children}
@@ -425,6 +433,7 @@ export function init(
         }
     }
 
+    // ------------------------------ <Abbreviation /> -----------------------------------
 
     class Abbreviation extends React.Component<CoreViews.Abbreviation.Props, {helpVisible:boolean}> {
 
@@ -656,7 +665,8 @@ export function init(
         return <img
                     className={props.htmlClass ? props.htmlClass : undefined}
                     src={he.createStaticUrl('img/ajax-loader.gif')}
-                    alt={he.translate('global__loading')} />;
+                    alt={he.translate('global__loading')}
+                    title={props.title} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
@@ -665,7 +675,8 @@ export function init(
         return <img
                 className={props.htmlClass ? props.htmlClass : undefined}
                 src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                alt={he.translate('global__loading')} />;
+                alt={he.translate('global__loading')}
+                title={props.title} />;
     };
 
     // ------------------------------------------------------------------------------------
@@ -696,37 +707,31 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
-    const VmodeIcon:CoreViews.VmodeIcon.Component = (props) => {
-        const vmodeMouseover = <img
-            src={he.createStaticUrl('img/vmode_mouseover.svg')}
-            title={`${he.translate('options__vmode_status_label')}: ` +
-                    `${he.translate('options__vmode_switch_mouseover_all')}.` +
-                    (props.mouseoverAttrs ? ' ' + he.translate('options__attribs_are_on_mouseover_{attrs}',
-                    {attrs: props.mouseoverAttrs.slice(1).join('/')}) : '')} />;
-
-        const vmodeAll = <img
-            src={he.createStaticUrl('img/vmode_all.svg')}
-            title={`${he.translate('options__vmode_status_label')}: ` +
-                    `${he.translate('options__vmode_switch_visible_all')}.`} />;
-
-        const vmodeKwic = <img
-            src={he.createStaticUrl('img/vmode_kwic.svg')}
-            title={`${he.translate('options__vmode_status_label')}: ` +
-                   `${he.translate('options__vmode_switch_visible_kwic')}.`} />;
-
-        switch (props.viewMode) {
-            case ViewOptions.AttrViewMode.MOUSEOVER:
-                return vmodeMouseover;
-            case ViewOptions.AttrViewMode.MIXED:
-                return <>{vmodeMouseover}<strong>+</strong>{vmodeKwic}</>;
-            case ViewOptions.AttrViewMode.VISIBLE_ALL:
-                return vmodeAll;
-            case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                return vmodeKwic;
-            default:
-                return <span />;
-        }
+    /**
+     * This button is used along with [ul.tabs li] as a tab-like sub-forms and control
+     * panels.
+     */
+    const TabButton:CoreViews.TabButton.Component = (props) => {
+        const cls = props.htmlClass ? 'util-button ' + props.htmlClass : 'util-button';
+        return <span className="TabButton">
+                <button type="button" className={cls} onClick={props.onClick}>
+                    {props.label}
+                </button>
+                <br />
+                <span className={props.isActive ? 'underline' : 'underline hidden'}> </span>
+            </span>;
     };
+
+    // ------------------------------------------------------------------------------------
+
+    const PlusButton:CoreViews.PlusButton.Component = (props) => {
+        const cls = props.htmlClass ? 'PlusButton util-button ' + props.htmlClass : 'PlusButton util-button';
+        return <button type="button" className={cls} title={props.mouseOverHint}
+                    onClick={props.onClick}>
+                    <img src={he.createStaticUrl('img/plus.svg')} />
+                </button>
+    }
+
 
     // ------------------------------------------------------------------------------------
 
@@ -747,6 +752,7 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        VmodeIcon: VmodeIcon
+        TabButton: TabButton,
+        PlusButton: PlusButton
     };
 }

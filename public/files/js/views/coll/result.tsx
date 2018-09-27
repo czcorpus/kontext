@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as initSaveViews} from './save';
-import { CollResultModel, CollResultRow, CollResultHeading, CollResultHeadingCell, CollResultData } from '../../models/coll/result';
+import { CollResultModel, CollResultRow, CollResultHeadingCell } from '../../models/coll/result';
 
 
 export interface CollResultViewProps {
@@ -121,7 +121,6 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         label:string;
 
     }> = (props) => {
-
         const handleClick = () => {
             dispatcher.dispatch({
                 actionType: 'COLL_RESULT_SORT_BY_COLUMN',
@@ -211,8 +210,13 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         return (
             <span className="curr-page">
                 {props.isWaiting ?
-                    <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={utils.translate('global__loading')} /> :
+                    <>
+                        <span className="overlay">
+                            <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={utils.translate('global__loading')} />
+                        </span>
+                        <input type="text" value="" />
+                    </> :
                     <input type="text" value={props.currPageInput}
                         onChange={handleInputChange}
                         title={utils.translate('global__hit_enter_to_confirm')} />

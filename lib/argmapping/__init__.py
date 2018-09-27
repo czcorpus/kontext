@@ -125,11 +125,6 @@ class GlobalArgs(object):
     # specifies response output format (used in case default one is not applicable)
     format = Parameter(u'')
 
-    # after an "action" was called, controller internally (without HTTP redirects)
-    # calls "action_form" which (by convention) leads to a page with a form submitting
-    # to the "action"
-    reload = Parameter(0)
-
     fc_lemword_window_type = Parameter(u'both')
     fc_lemword_type = Parameter(u'all')
     fc_lemword_wsize = Parameter(5)
@@ -231,7 +226,7 @@ class GlobalArgs(object):
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter(u'kw')
-    attr_vmode = Parameter(u'visible', persistent=Parameter.PERSISTENT)
+    attr_vmode = Parameter(u'mouseover', persistent=Parameter.PERSISTENT)
     allpos = Parameter(u'kw')
     structs = Parameter(u'', persistent=Parameter.PERSISTENT)
     q = Parameter([])
@@ -242,7 +237,6 @@ class GlobalArgs(object):
     wlsendmail = Parameter(u'')
     cup_hl = Parameter(u'q', persistent=Parameter.PERSISTENT)
     structattrs = Parameter([], persistent=Parameter.PERSISTENT)
-    tt_overview = Parameter(0, persistent=Parameter.PERSISTENT)
     cql_editor = Parameter(1, persistent=Parameter.PERSISTENT)
 
     flimit = Parameter(1)

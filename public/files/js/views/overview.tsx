@@ -178,7 +178,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 </tbody>
                             </table>
                             <p className="note">
-                            {he.translate('global__remark_figures_denote_different_attributes')}
+                            <strong>{he.translate('global__corp_info_attrs_remark_label')}: </strong>
+                            {he.translate('global__corp_info_attrs_remark_text')}
                             </p>
                         </dd>
                         <dt>{he.translate('global__citation_info')}:</dt>
@@ -199,7 +200,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const getAccess = () => {
             if (props.data.subCorpusName !== props.data.origSubCorpusName) {
-                return he.translate('global__published_subcorp');
+                return <>
+                    {he.translate('global__published_subcorp')}
+                    {'\u00a0'}
+                    <span className="note">({he.translate('global__published_subcorp_id')}{':\u00a0'}
+                    {props.data.subCorpusName})</span>
+                </>;
             }
             return he.translate('global__subc_info_access_private');
         };
@@ -251,12 +257,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <>
                     <h4>
-                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}
+                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}:
                     </h4>
                     <div className="html" dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
                     {props.data.article_ref.length > 0 ?
                         (<>
-                            <h4>{he.translate('global__references')}</h4>
+                            <h4>{he.translate('global__references')}:</h4>
                             {props.data.article_ref.map((item, i) => {
                                 return <div key={i} className="html" dangerouslySetInnerHTML={{__html: item }} />;
                             })}
@@ -264,7 +270,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         null}
                     {props.data.other_bibliography ?
                         (<>
-                            <h4>{he.translate('global__general_references')}</h4>
+                            <h4>{he.translate('global__general_references')}:</h4>
                             <div className="html" dangerouslySetInnerHTML={{__html: props.data.other_bibliography}} />
                         </>) :
                         null}
@@ -281,36 +287,103 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     const KeyboardShortcuts:React.SFC<{}> = (props) => {
         return (
             <div className="KeyboardShortcuts">
+                <h1>{he.translate('global__keyboard_shortcuts')}</h1>
                 <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
                 <table>
                     <tbody>
                         <tr>
-                            <th><span className="key-button">s</span> - </th>
-                            <td>{he.translate('global__key_shortcut_save')}</td>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">k</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_shortuts')}</td>
+                        </tr>
+                        <tr className="separ">
+                            <td colSpan={2}><hr /></td>
                         </tr>
                         <tr>
-                            <th><span className="key-button">i</span> - </th>
+                            <th>
+                                <span className="key-button">f</span>
+                                -
+                            </th>
                             <td>{he.translate('global__key_shortcut_filter')}</td>
                         </tr>
                         <tr>
-                            <th><span className="key-button">r</span> - </th>
+                            <th>
+                                <span className="key-button">s</span>
+                                -
+                            </th>
                             <td>{he.translate('global__key_shortcut_sorting')}</td>
                         </tr>
                         <tr>
-                            <th><span className="key-button">m</span> - </th>
+                            <th>
+                                <span className="key-button">m</span>
+                                -
+                            </th>
                             <td>{he.translate('global__key_shortcut_sample')}</td>
                         </tr>
-                        <tr>
-                            <th><span className="key-button">o</span> - </th>
-                            <td>{he.translate('global__key_shortcut_options')}</td>
+                        <tr className="separ">
+                        <td colSpan={2}><hr /></td>
                         </tr>
                         <tr>
-                            <th><span className="key-button">f</span> - </th>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">f</span>
+                                -
+                            </th>
                             <td>{he.translate('global__key_shortcut_freq')}</td>
                         </tr>
                         <tr>
-                            <th><span className="key-button">c</span> - </th>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">c</span>
+                                -
+                            </th>
                             <td>{he.translate('global__key_shortcut_colls')}</td>
+                        </tr>
+                        <tr className="separ">
+                            <td colSpan={2}><hr /></td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">v</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_vmode')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">e</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_toggle_extended_info')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">s</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_save')}</td>
+                        </tr>
+                        <tr className="separ">
+                            <td colSpan={2}><hr /></td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">o</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_options')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">o</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_global_options')}</td>
                         </tr>
                     </tbody>
                 </table>

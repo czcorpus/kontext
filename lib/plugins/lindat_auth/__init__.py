@@ -63,7 +63,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     ID_KEYS = ('HTTP_EPPN', 'HTTP_PERSISTENT_ID', 'HTTP_MAIL')
     RESERVED_USER = '__user_count'
 
-    def get_user_info(self, user_id):
+    def get_user_info(self, plugin_api):
         raise NotImplementedError()
 
     def __init__(self, corplist, db, sessions, conf, failover):

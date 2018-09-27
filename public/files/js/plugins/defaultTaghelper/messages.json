@@ -14,5 +14,13 @@
       "taghelper__reset": "Obnovit",
       "taghelper__undo": "Krok zpět",
       "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány."
+  },
+  "szl": {
+      "taghelper__create_tag_heading": "Stwōrz symbol",
+      "taghelper__insert_btn": "Wraź",
+      "taghelper__unfulfilled": "Niywypołniōne",
+      "taghelper__reset": "Ôdnōw",
+      "taghelper__undo": "Cŏfnij",
+      "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane."
   }
 }

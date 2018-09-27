@@ -21,7 +21,6 @@
 import {Kontext} from '../../../types/common';
 import * as Immutable from 'immutable';
 import {StatelessModel} from '../../../models/base';
-import {GeneralQueryModel} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
@@ -39,9 +38,9 @@ export interface CQLEditorModelState {
 
     message:Immutable.Map<string, string>;
 
-    rawAnchorIdx:number;
+    rawAnchorIdx:Immutable.Map<string, number>;
 
-    rawFocusIdx:number;
+    rawFocusIdx:Immutable.Map<string, number>;
 
     isEnabled:boolean;
 
@@ -76,10 +75,6 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
 
     private attrHelper:AttrHelper;
 
-    private attrList:Immutable.List<Kontext.AttrItem>;
-
-    private structAttrList:Immutable.List<Kontext.AttrItem>;
-
     private actionPrefix:string;
 
     private hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
@@ -93,8 +88,8 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                 rawCode: Immutable.Map<string, string>(),
                 richCode: Immutable.Map<string, string>(),
                 message: Immutable.Map<string, string>(),
-                rawAnchorIdx: 0,
-                rawFocusIdx: 0,
+                rawAnchorIdx: Immutable.Map<string, number>(),
+                rawFocusIdx: Immutable.Map<string, number>(),
                 isEnabled: isEnabled
             }
         );
@@ -133,8 +128,8 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                 newState = this.copyState(state);
                 const args = typedProps<CQLEditorSetRawQueryProps>(action.props);
                 if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
-                    newState.rawAnchorIdx = args.rawAnchorIdx;
-                    newState.rawFocusIdx = args.rawFocusIdx;
+                    newState.rawAnchorIdx = newState.rawAnchorIdx.set(args.sourceId, args.rawAnchorIdx);
+                    newState.rawFocusIdx = newState.rawFocusIdx.set(args.sourceId, args.rawFocusIdx);
                 }
                 this.setRawQuery(
                     newState,
@@ -207,7 +202,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                     actionType: `@${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     props: {
                         sourceId: args.sourceId,
-                        query: args.query
+                        query: state.rawCode.get(args.sourceId)
                     }
                 });
             }
@@ -220,8 +215,8 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
     }
 
     private moveCursorToPos(state:CQLEditorModelState, sourceId:string, posIdx:number):void {
-        state.rawAnchorIdx = posIdx;
-        state.rawFocusIdx = posIdx;
+        state.rawAnchorIdx = state.rawAnchorIdx.set(sourceId, posIdx);
+        state.rawFocusIdx = state.rawFocusIdx.set(sourceId, posIdx);
     }
 
     private moveCursorToEnd(state:CQLEditorModelState, sourceId:string):void {

@@ -6,5 +6,21 @@
   "term_ipm": {
       "en_US": "http://wiki.korpus.cz/doku.php/pojmy:ipm",
       "cs_CZ": "http://wiki.korpus.cz/doku.php/pojmy:ipm"
+  },
+  "term_coll_m": {
+      "cs_CZ": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#mi-score_a_mi3",
+      "en_US": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#mi-score_a_mi3"
+  },
+  "term_coll_3": {
+      "cs_CZ": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#mi-score_a_mi3",
+      "en_US": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#mi-score_a_mi3"
+  },
+  "term_coll_d": {
+      "cs_CZ": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#dice_a_logdice",
+      "en_US": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#dice_a_logdice"
+  },
+  "term_coll_t": {
+      "cs_CZ": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#t-score",
+      "en_US": "https://wiki.korpus.cz/doku.php/pojmy:asociacni_miry?redirect=1#t-score"
   }
 }

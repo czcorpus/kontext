@@ -26,7 +26,7 @@ import manatee
 import l10n
 from l10n import import_string, export_string, escape
 from kwiclib import lngrp_sortcrit
-from translation import ugettext as _
+from translation import ugettext as translate
 
 
 def get_conc_labelmap(infopath):
@@ -93,10 +93,11 @@ class PyConc(manatee.Concordance):
                 manatee.Concordance.__init__(self, corp, self._conc_file)
             elif action == 's':
                 # stored in _conc_dir
-                self._conc_file = os.path.join(self.pycorp._conc_dir, corp.corpname, params + '.conc')
+                self._conc_file = os.path.join(
+                    self.pycorp._conc_dir, corp.corpname, params + '.conc')
                 manatee.Concordance.__init__(self, corp, self._conc_file)
             else:
-                raise RuntimeError(_('Unknown concordance action: %s') % action)
+                raise RuntimeError(translate('Unknown concordance action: %s') % action)
         except UnicodeEncodeError:
             raise RuntimeError('Character encoding of this corpus ({0}) does not support one or more characters in the query.'
                                .format(self.corpus_encoding))
@@ -165,7 +166,7 @@ class PyConc(manatee.Concordance):
             except RuntimeError as e:
                 logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
                 raise EmptyParallelCorporaIntersection(
-                    _('No alignment available for the selected languages'))
+                    translate('No alignment available for the selected languages'))
             self.switch_aligned(options[1:])
             self.corpname = options[1:]
         else:
@@ -283,7 +284,7 @@ class PyConc(manatee.Concordance):
         attrs = crit.split()
         head = [dict(n=label(attrs[x]), s=x / 2)
                 for x in range(0, len(attrs), 2)]
-        head.append(dict(n=_('Freq'), s='freq', title=_('Frequency')))
+        head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
 
         tofbar, tonbar = calc_scale(freqs, norms)
         if tonbar and not ml:
@@ -301,7 +302,8 @@ class PyConc(manatee.Concordance):
             if rel_mode == 0:
                 head.append(dict(
                     n='i.p.m.',
-                    title=_('instances per million positions (refers to the respective category)'),
+                    title=translate(
+                        'instances per million positions (refers to the respective category)'),
                     s='rel'
                 ))
             else:
@@ -384,15 +386,15 @@ class PyConc(manatee.Concordance):
         return zip(vals, begs)
 
     def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
-        statdesc = {'t': _('T-score'),
-                    'm': _('MI'),
-                    '3': _('MI3'),
-                    'l': _('log likelihood'),
-                    's': _('min. sensitivity'),
-                    'p': _('MI.log_f'),
-                    'r': _('relative freq. [%]'),
-                    'f': _('absolute freq.'),
-                    'd': _('logDice')
+        statdesc = {'t': translate('T-score'),
+                    'm': translate('MI'),
+                    '3': translate('MI3'),
+                    'l': translate('log likelihood'),
+                    's': translate('min. sensitivity'),
+                    'p': translate('MI.log_f'),
+                    'r': translate('relative freq. [%]'),
+                    'f': translate('absolute freq.'),
+                    'd': translate('logDice')
                     }
         items = []
         colls = manatee.CollocItems(self, cattr, csortfn, cminfreq, cminbgr,

@@ -31,13 +31,13 @@ import {Kontext} from '../../types/common';
  * user has written to the search input.
  */
 export interface SearchResultRow {
-    name: string;
-    favorite: boolean;
-    path: string;
-    desc: string;
-    id: string;
-    size: number;
-    size_info: string;
+    name:string;
+    favorite:boolean;
+    path:string;
+    desc:string;
+    id:string;
+    size:number;
+    size_info:string;
     found_in?: Array<string>;
 }
 

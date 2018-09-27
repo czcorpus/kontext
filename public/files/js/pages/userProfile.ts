@@ -20,7 +20,6 @@
 
 import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
-import authPlugin from 'plugins/auth/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page

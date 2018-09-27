@@ -18,22 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginName} from '../app/main';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import {TextTypesModel} from '../models/textTypes/attrValues';
-import {QueryFormProperties, QueryModel, QueryHintModel} from '../models/query/main';
+import {QueryModel} from '../models/query/main';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
 import {QueryContextModel} from '../models/query/context';
+import {UsageTipsModel} from '../models/usageTips';
 import {init as queryFormInit, QueryFormProps} from '../views/query/main';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import { CQLEditorProps } from '../views/query/cqlEditor';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
@@ -60,7 +59,7 @@ export class FirstFormPage {
 
     private textTypesModel:TextTypesModel;
 
-    private queryHintModel:QueryHintModel;
+    private queryHintModel:UsageTipsModel;
 
     private withinBuilderModel:WithinBuilderModel;
 
@@ -191,8 +190,7 @@ export class FirstFormPage {
             tagHelperView: null,
             queryStorageView: null,
             allowCorpusSelection: null,
-            actionPrefix: null,
-            onEnterKey: null
+            actionPrefix: null
         };
     }
 
@@ -302,9 +300,8 @@ export class FirstFormPage {
     init():void {
         this.layoutModel.init().then(
             () => {
-                this.queryHintModel = new QueryHintModel(
+                this.queryHintModel = new UsageTipsModel(
                     this.layoutModel.dispatcher,
-                    ['query__tip_01', 'query__tip_02', 'query__tip_03', 'query__tip_04'],
                     this.layoutModel.translate.bind(this.layoutModel)
                 );
                 this.withinBuilderModel = new WithinBuilderModel(

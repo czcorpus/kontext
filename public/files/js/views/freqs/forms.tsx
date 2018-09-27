@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
 import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
-import {Freq2DFormModel, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
+import {Freq2DFormModel, AlignTypes} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -371,17 +371,25 @@ export function init(
 
         const iconStyle = {cursor: 'pointer'};
         return (
-            <div>
-                {props.levelIdx < props.numLevels - 1 ?
-                    <img src={he.createStaticUrl('img/sort_desc.svg')} style={iconStyle}
-                            onClick={handleClick.bind(null, 'down')}
-                            alt={he.translate('freq__move_level_up')} />
-                    : null}
+            <div className="MLMoveLevelControl">
                 {props.levelIdx > 0 ?
-                    <img src={he.createStaticUrl('img/sort_asc.svg')} style={iconStyle}
-                            onClick={handleClick.bind(null, 'up')}
-                            alt={he.translate('freq__move_level_down')} />
-                    : null}
+                    <a onClick={handleClick.bind(null, 'up')}>
+                        <layoutViews.ImgWithMouseover
+                                src={he.createStaticUrl('img/sort_asc.svg')}
+                                style={iconStyle}
+                                alt={he.translate('freq__move_level_down')} />
+                    </a> :
+                    <img src={he.createStaticUrl('img/sort_asc_grey.svg')} />
+                }
+                {props.levelIdx < props.numLevels - 1 ?
+                    <a onClick={handleClick.bind(null, 'down')}>
+                        <layoutViews.ImgWithMouseover
+                                src={he.createStaticUrl('img/sort_desc.svg')}
+                                style={iconStyle}
+                                alt={he.translate('freq__move_level_up')} />
+                    </a> :
+                    <img src={he.createStaticUrl('img/sort_desc_grey.svg')}  />
+                }
             </div>
         );
     };
@@ -564,8 +572,8 @@ export function init(
                                         {this.state.levels.size < this.state.maxNumLevels ?
                                             (<tr>
                                                 <td>
-                                                    <a id="add-freq-level-button" title={he.translate('freq__add_level_btn')}
-                                                        onClick={this._handleAddLevelClick}>+</a>
+                                                    <layoutViews.PlusButton mouseOverHint={he.translate('freq__add_level_btn')}
+                                                        onClick={this._handleAddLevelClick} />
                                                 </td>
                                                 <td colSpan={6} />
                                             </tr>)
@@ -597,21 +605,21 @@ export function init(
         };
 
         return (
-            <ul className="FreqFormSelector">
+            <ul className="FreqFormSelector tabs">
                 <li>
-                    <a className={props.formType === "ml" ? 'util-button active' : 'util-button'} onClick={onItemClick('ml')}>
-                        {he.translate('freq__sel_form_type_ml')}
-                    </a>
+                    <layoutViews.TabButton onClick={onItemClick('ml')}
+                        label={he.translate('freq__sel_form_type_ml')}
+                        isActive={props.formType === "ml"} />
                 </li>
                 <li>
-                    <a className={props.formType === "tt" ? 'util-button active' : 'util-button'} onClick={onItemClick('tt')}>
-                        {he.translate('freq__sel_form_type_tt')}
-                    </a>
+                    <layoutViews.TabButton onClick={onItemClick('tt')}
+                        label={he.translate('freq__sel_form_type_tt')}
+                        isActive={props.formType === "tt"} />
                 </li>
                 <li>
-                    <a className={props.formType === "ct" ? 'util-button active' : 'util-button'} onClick={onItemClick('ct')}>
-                        {he.translate('freq__sel_form_type_ct')}
-                    </a>
+                    <layoutViews.TabButton onClick={onItemClick('ct')}
+                        label={he.translate('freq__sel_form_type_ct')}
+                        isActive={props.formType === "ct"} />
                 </li>
             </ul>
         );

@@ -36,7 +36,7 @@ from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
 from l10n import corpus_get_conf
-from translation import ugettext as _
+from translation import ugettext as translate
 import scheduled
 import templating
 import fallback_corpus
@@ -217,7 +217,7 @@ class Kontext(Controller):
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
                        'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
-                       'tt_overview', 'cql_editor')
+                       'cql_editor')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
@@ -483,7 +483,7 @@ class Kontext(Controller):
                     self._lines_groups = LinesGroups.deserialize(
                         self._prev_q_data.get('lines_groups', []))
                 else:
-                    raise UserActionException(_('Invalid or expired query'))
+                    raise UserActionException(translate('Invalid or expired query'))
 
     def get_saveable_conc_data(self):
         """
@@ -679,9 +679,10 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
         self._fix_interdependent_attrs()
 
-    def _check_corpus_access(self, form, action_metadata):
+    def _check_corpus_access(self, action_name, form, action_metadata):
         """
         Args:
+            action_name:
             form:
             action_metadata:
 
@@ -703,7 +704,10 @@ class Kontext(Controller):
                     has_access, variant = validate_access(
                         corpname, auth.permitted_corpora(self.session_get('user')))
                 if has_access and redirect:
-                    self.redirect(self.create_url('first_form', dict(corpname=corpname)))
+                    url_pref = self.get_mapping_url_prefix()
+                    if len(url_pref) > 0:
+                        url_pref = url_pref[1:]
+                    self.redirect(self.create_url(url_pref + action_name, dict(corpname=corpname)))
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                     raise CorpusForbiddenException(corpname, variant)
@@ -752,13 +756,13 @@ class Kontext(Controller):
         # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
-    def pre_dispatch(self, named_args, action_metadata=None):
+    def pre_dispatch(self, action_name, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
         options, validating corpus access rights, scheduled actions.
         """
-        super(Kontext, self).pre_dispatch(named_args, action_metadata)
+        super(Kontext, self).pre_dispatch(action_name, named_args, action_metadata)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.pre_dispatch(self._plugin_api, named_args, action_metadata)
@@ -768,18 +772,13 @@ class Kontext(Controller):
                 return self.corp.get_error()
             info = self.get_corpus_info(self.args.corpname)
             if isinstance(info, BrokenCorpusInfo):
-                return NotFoundException(_('Corpus \"{0}\" not available'.format(info.name)),
+                return NotFoundException(translate('Corpus \"{0}\" not available'.format(info.name)),
                                          internal_message='Failed to fetch configuration for {0}'.format(info.name))
             return None
         if not action_metadata['skip_corpus_init']:
             self.add_validator(validate_corpus)
 
         form = RequestArgsProxy(self._request.form, self._request.args)
-
-        if not action_metadata:
-            def null(): pass
-            action_metadata = {}
-            action_metadata.update(exposed()(null).__dict__)
 
         if action_metadata['apply_semi_persist_args']:
             self._apply_semi_persistent_args(form)
@@ -794,7 +793,7 @@ class Kontext(Controller):
 
         self._restore_prev_conc_params(form)
         # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, corpus_variant = self._check_corpus_access(form, action_metadata)
+        corpname, corpus_variant = self._check_corpus_access(action_name, form, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
@@ -817,7 +816,7 @@ class Kontext(Controller):
         # by default, each action is public
         access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
-            raise ForbiddenException(_('Access forbidden - please log-in.'))
+            raise ForbiddenException(translate('Access forbidden - please log-in.'))
 
         # plugins setup
         for p in plugins.runtime:
@@ -837,8 +836,11 @@ class Kontext(Controller):
 
         # create and store concordance query key
         if type(result) is DictType:
-            new_query_key = self._store_conc_params()
-            self._update_output_with_conc_params(new_query_key, result)
+            if action_metadata['mutates_conc']:
+                next_query_key = self._store_conc_params()
+            else:
+                next_query_key = self._prev_q_data.get('id', None) if self._prev_q_data else None
+            self._update_output_with_conc_params(next_query_key, result)
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
@@ -852,7 +854,7 @@ class Kontext(Controller):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
             self._save_menu.append(
-                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83,
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
                                     hint=hint).mark_indirect())  # key = 's'
 
         else:
@@ -1019,6 +1021,7 @@ class Kontext(Controller):
             settings.get('corpora', 'interval_char', None),
             settings.get('corpora', 'right_interval_char', None),
         )
+        result['righttoleft'] = True if self.corp.get_conf('RIGHTTOLEFT') else False
 
     def _setup_optional_plugins_js(self, result):
         """
@@ -1081,7 +1084,7 @@ class Kontext(Controller):
             logo_href = self.get_root_url()
 
         if theme_name == 'default':
-            logo_title = _('Click to enter a new query')
+            logo_title = translate('Click to enter a new query')
         else:
             logo_title = unicode(logo_href)
 
@@ -1127,6 +1130,8 @@ class Kontext(Controller):
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = templating.StateGlobals(global_var_val)
         result['Globals'].set('q', [q for q in result.get('Q')])
+        if corplib.is_subcorpus(self.corp):
+            result['Globals'].set('usesubcorp', self.corp.subcname)
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this
@@ -1195,7 +1200,8 @@ class Kontext(Controller):
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
                 self._plugin_api).to_dict() if irp else None
-        page_model = action_metadata['page_model'] if action_metadata['page_model'] else l10n.camelize(methodname)
+        page_model = action_metadata['page_model'] if action_metadata['page_model'] else l10n.camelize(
+            methodname)
         result['page_model'] = page_model
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
@@ -1253,29 +1259,6 @@ class Kontext(Controller):
         else:
             return ''
 
-    @staticmethod
-    def _validate_range(actual_range, max_range):
-        """
-        arguments:
-        actual_range -- 2-tuple
-        max_range -- 2-tuple (if second value is None, that validation of the value is omitted
-
-        returns:
-        None if everything is OK else UserActionException instance
-        """
-        if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
-                or actual_range[0] > actual_range[1]:
-            if max_range[0] > max_range[1]:
-                msg = _('Invalid range - cannot select rows from an empty list.')
-            elif max_range[1] is not None:
-                msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
-                    % (actual_range + max_range)
-            else:
-                msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal '
-                        'than %s' % (actual_range[0], actual_range[1], max_range))
-            return UserActionException(msg)
-        return None
-
     def _get_struct_opts(self):
         """
         Returns structures and structural attributes the current concordance should display.
@@ -1321,6 +1304,26 @@ class Kontext(Controller):
                                                                                             ans[id_attr]))
         return ans, bib_mapping
 
+    def _export_subcorpora_list(self, corpname, out):
+        """
+        Updates passed dictionary by information about available sub-corpora.
+        Listed values depend on current user and corpus.
+        If there is a list already present in 'out' then it is extended
+        by the new values.
+
+        arguments:
+        corpname -- corpus id
+        out -- a dictionary used by templating system
+        """
+        basecorpname = corpname.split(':')[0]
+        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
+                                 loc=self.ui_lang, key=lambda x: x['n'])
+        if len(subcorp_list) > 0:
+            subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
+        if out.get('SubcorpList', None) is None:
+            out['SubcorpList'] = []
+        out['SubcorpList'].extend(subcorp_list)
+
     @staticmethod
     def _uses_internal_user_pages():
         return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
@@ -1351,8 +1354,8 @@ class Kontext(Controller):
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
 
-    @exposed(return_type='json', legacy=True)
-    def concdesc_json(self):
+    @exposed(return_type='json')
+    def concdesc_json(self, _=None):
         out = {'Desc': []}
         conc_desc = conclib.get_conc_desc(corpus=self.corp, q=self.args.q,
                                           subchash=getattr(self.corp, 'subchash', None))
@@ -1390,10 +1393,10 @@ class Kontext(Controller):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request):
-        backend, conf = settings.get_full('global', 'calc_backend')
-        if backend == 'celery':
-            import task
-            app = task.get_celery_app(conf['conf'])
+        backend = settings.get('calc_backend', 'type')
+        if backend in('celery', 'konserver'):
+            import bgcalc
+            app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()
             for at in at_list:
                 r = app.AsyncResult(at.ident)
@@ -1404,11 +1407,11 @@ class Kontext(Controller):
                     else:
                         at.error = str(r.result)
             self._set_async_tasks(at_list)
-            return {'data': [d.to_dict() for d in at_list]}
+            return dict(data=[d.to_dict() for d in at_list])
         else:
-            return {'data': []}  # other backends are not supported
+            return dict(data=[])  # other backends are not supported
 
-    @exposed(return_type='json', skip_corpus_init=True)
+    @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request):
         task_ids = request.form.getlist('tasks')
         self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))

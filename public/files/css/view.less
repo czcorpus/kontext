@@ -3,6 +3,36 @@
 
 #conc-dashboard-mount {
 
+    .ConcordanceDashboard {
+        display: grid;
+        align-items: flex-start;
+        grid-template-columns: minmax(auto, 32em) auto;
+        grid-column-gap: 1em;
+    }
+
+    .ConcordanceDashboard.collapsed {
+        grid-template-columns: 1.3em auto;
+        grid-column-gap: 0.5em;
+
+        .ConcExtendedInfo {
+
+            border-radius: 3px;
+
+            header {
+                padding: 0;
+
+                a {
+                    display: block;
+                    margin: 0 auto;
+                }
+            }
+        }
+    }
+
+    .ConcordanceDashboard.disabled {
+        grid-template-columns: auto;
+    }
+
     .ktx-pagination {
         float: right;
         text-align: right;
@@ -12,21 +42,10 @@
     .ConcordanceView,
     .ConcExtendedInfo {
         overflow: hidden;
-        border-radius: 9px;
+        border-radius: 7px;
         margin-bottom: 1em;
         margin-top: 1em;
         box-shadow: @portal-box-shadow;
-
-        .CloseIcon,
-        .MinimizeIcon {
-            margin-right: 0.6em;
-            margin-top: 0.5em;
-            float: right;
-
-            img {
-                width: 1.2em;
-            }
-        }
 
         > .contents {
 
@@ -73,23 +92,51 @@
     }
 
     .ConcExtendedInfo {
+        display: flex;
+        flex-direction: column;
+
+        header {
+            display: flex;
+            flex-direction: row;
+            background-color: @color-default-green;
+            padding: 0.4em 0.7em;
+
+            .MinimizeIcon {
+                display: inline-block;
+                margin-right: 0;
+
+                img {
+                    display: inline-block;
+                    vertical-align: middle;
+                    width: 1.3em;
+                }
+            }
+
+            h2 {
+                flex-grow: 9;
+                margin: 0;
+            }
+
+        }
 
         background-color: #FFFFFF;
 
-        h2 {
-            margin: 0;
-            padding: 0.4em 1em;
-            background-color: @color-default-green;
-            font-size: 1.2em;
-        }
+        .KwicConnectContainer,
+        .TextTypesDist {
 
-        h2.minimized {
-            color: @color-light-text;
-        }
+            p.note {
+                margin: 0;
+                font-size: 0.85em;
+                text-align: right;
 
-        p.note {
-            font-size: 0.85em;
-            text-align: center;
+                a {
+                    color: @color-light-text;
+                }
+
+                a:hover {
+                    color: @color-logo-pink;
+                }
+            }
         }
 
         .Menu {
@@ -118,24 +165,59 @@
             }
         }
 
-        > .minimized-contents {
-
-        }
-
         > .contents {
             display: grid;
-            grid-template-columns: 70% 30%;
+
+            > div.box:not(:first-child) h3.block {
+                margin-top: 1.5em;
+            }
+
+            > div.box:first-child h3.block {
+                margin-top: 0;
+            }
 
             > div.box {
                 align-self: start;
                 overflow: hidden;
 
 
-                .KwicConnectWidget {
+                .KwicConnectContainer {
                     h3 {
                         margin-top: 0;
                     }
+
+                    .data-not-avail {
+
+                        color: @color-light-text;
+
+                        img {
+                            width: 1em;
+                            display: inline-block;
+                            vertical-align: middle;
+                            margin-right: 0.3em;
+                        }
+                    }
                 }
+
+                h3.block {
+                    color: @color-default-text;
+                    text-align: right;
+                    margin-bottom: 0;
+                    padding-bottom: 0.2em;
+                    font-size: 1.1em;
+                    background-color: transparent;
+
+                    img {
+                        width: 1.1em;
+                        margin-left: 0.3em;
+                        margin-right: 0.1em;
+                        margin-bottom: 0.15em;
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+                }
+
+
             }
         }
     }
@@ -230,22 +312,6 @@
 
         .conc-toolbar {
             display: inline-block;
-
-            .mouseover-available {
-                img {
-                    vertical-align: middle;
-                    width: 1.2em;
-                }
-
-                strong {
-                    padding-left: 0.2em;
-                    padding-right: 0.2em;
-                }
-
-                img:not(:first-child) {
-                    margin-right: 0.7em;
-                }
-            }
         }
     }
 }
@@ -429,13 +495,14 @@ i.coll {
 .tooltip-box.refs-detail {
     max-width: 60em;
     min-width: 40em;
+    max-height: 80%;
 
 }
 
 .tooltip-box.conc-detail {
     max-width: 40em;
     min-width: 30em;
-    max-height: 90%;
+    max-height: 80%;
 }
 
 .conc-detail {
@@ -621,10 +688,8 @@ table.full-ref tr:nth-child(odd) {
     padding: 2px;
 }
 
+
 /* concordance annotation */
-tr.selected {
-    background-color: #bdb;
-}
 
 tr.highlight {
     background-color: #bfb;
@@ -946,3 +1011,6 @@ section#chart-export {
 #conclines .note {
     padding: 0 0 0 1em;
 }
+
+@import "./layoutMobile.less";
+@import "~custom-styles/theme.less";

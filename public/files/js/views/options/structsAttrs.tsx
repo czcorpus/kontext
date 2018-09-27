@@ -120,7 +120,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     }> = (props) => {
 
-        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLSelectElement>) => {
+        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
                 props: {
@@ -134,31 +134,32 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <h3 className="label">
                     {helpers.translate('options__attr_apply_header')}
                 </h3>
-                <div>
-                    <select name="attr_vmode"
-                            value={props.attrsVmode}
-                            onChange={handleSelectChangeFn}
-                            className="no-label">
-                        <option value={ViewOptions.AttrViewMode.VISIBLE_ALL}>
-                            {helpers.translate('options__vmode_switch_visible_all')}
-                        </option>
-                        <option value={ViewOptions.AttrViewMode.VISIBLE_KWIC}>
-                            {helpers.translate('options__vmode_switch_visible_kwic')}
-                        </option>
-                        <option value={ViewOptions.AttrViewMode.MOUSEOVER}>
-                            {helpers.translate('options__vmode_switch_mouseover_all')}
-                        </option>
-                        <option value={ViewOptions.AttrViewMode.MIXED}>
-                            {helpers.translate('options__vmode_switch_mixed')}
-                        </option>
-                    </select>
-                    <span className="icons">
-                        {props.showConcToolbar ?
-                            <layoutViews.VmodeIcon viewMode={props.attrsVmode} /> :
-                            null
-                        }
-                    </span>
-                </div>
+                <ul>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_ALL}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_KWIC}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_mixed')}</span>
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.MOUSEOVER}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.MOUSEOVER}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_mouseover_all')}</span>
+                        </label>
+                    </li>
+                </ul>
             </div>
         );
     };
@@ -170,6 +171,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAll:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
+        lockedPosAttrNotSelected:boolean;
 
     }> = (props) => {
 
@@ -185,16 +187,20 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <legend>{helpers.translate('options__attributes_hd')}</legend>
                 <ul>
                 {props.attrList.map((item, i) => {
-                    if (item.locked) {
-                        return <LiFixedAttributeItem key={'atrr:' + item.n} n={item.n} label={item.label} />;
-
-                    } else {
-                        return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
+                    return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
                                         isSelected={item.selected} />;
-                    }
                 })}
                 </ul>
                 <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                {props.lockedPosAttrNotSelected ?
+                    <p className="warning">
+                        <img className="icon"
+                                src={helpers.createStaticUrl('img/warning-icon.svg')}
+                                alt={helpers.translate('global__warning_icon')} />
+                        {helpers.translate('options__remove_word_warning')}
+                    </p> :
+                    null
+                }
                 <hr />
                 <AttributesTweaks attrsVmode={props.attrsVmode}
                         showConcToolbar={props.showConcToolbar} />
@@ -237,6 +243,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
     const FieldsetStructures:React.SFC<{
         availStructs:Immutable.List<ViewOptions.AttrDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
+        corpusUsesRTLText:boolean;
 
     }> = (props) => {
 
@@ -265,6 +272,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
         return (
             <fieldset className="FieldsetStructures">
                 <legend>{helpers.translate('options__structures_hd')}</legend>
+                {props.corpusUsesRTLText ?
+                    <p className="warning">
+                        <img className="icon"
+                                src={helpers.createStaticUrl('img/warning-icon.svg')}
+                                alt={helpers.translate('global__warning_icon')} />
+                        {helpers.translate('options__rtl_text_warning')}
+                    </p> :
+                    null}
                 <ul>
                     {props.availStructs.map((item) => {
                         return (
@@ -406,6 +421,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         TehasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
+        lockedPosAttrNotSelected:boolean;
+        corpusUsesRTLText:boolean;
 
     }> = (props) => {
 
@@ -413,11 +430,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <FieldsetAttributes  attrList={props.attrList}
+                        <FieldsetAttributes
+                                attrList={props.attrList}
                                 hasSelectAll={props.hasSelectAllAttrs}
                                 attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar} />
-                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
+                                showConcToolbar={props.showConcToolbar}
+                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
+                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
+                                    corpusUsesRTLText={props.corpusUsesRTLText} />
                         <FieldsetMetainformation availRefs={props.availRefs}
                                 hasSelectAll={props.TehasSelectAllRefs} />
                         {props.userIsAnonymous ?
@@ -460,6 +480,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         isWaiting:boolean;
         isVisible:boolean;
         userIsAnonymous:boolean;
+        lockedPosAttrNotSelected:boolean;
+        corpusUsesRTLText:boolean;
     }> {
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
@@ -486,7 +508,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 showConcToolbar: viewOptionsModel.getShowConcToolbar(),
                 isWaiting: viewOptionsModel.getIsWaiting(),
                 isVisible: false,
-                userIsAnonymous: viewOptionsModel.getUserIsAnonymous()
+                userIsAnonymous: viewOptionsModel.getUserIsAnonymous(),
+                lockedPosAttrNotSelected: viewOptionsModel.lockedPosAttrNotSelected(),
+                corpusUsesRTLText: viewOptionsModel.getCorpusUsesRTLText()
             };
         }
 
@@ -536,7 +560,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                             attrsVmode={this.state.attrsVmode}
                             showConcToolbar={this.state.showConcToolbar}
                             isWaiting={this.state.isWaiting}
-                            userIsAnonymous={this.state.userIsAnonymous} />
+                            userIsAnonymous={this.state.userIsAnonymous}
+                            lockedPosAttrNotSelected={this.state.lockedPosAttrNotSelected}
+                            corpusUsesRTLText={this.state.corpusUsesRTLText} />
                 </div>
             );
         }

@@ -24,10 +24,9 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import * as Rx from '@reactivex/rxjs';
-import {SynchronizedModel, StatefulModel} from '../base';
+import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesModel} from '../textTypes/attrValues';
@@ -72,7 +71,24 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     tagsetDocs:{[corpname:string]:boolean};
 }
 
-export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
+/**
+ *
+ */
+export class WidgetsMap {
+
+    private data:Immutable.Map<string, Immutable.List<string>>;
+
+    constructor(data:Immutable.List<[string, Immutable.List<string>]>) {
+        this.data = Immutable.Map<string, Immutable.List<string>>(data);
+    }
+
+    get(key:string):Immutable.List<string> {
+        if (this.data.has(key)) {
+            return this.data.get(key);
+        }
+        return Immutable.List<string>();
+    }
+}
 
 
 export function appendQuery(origQuery:string, query:string, prependSpace:boolean):string {
@@ -160,6 +176,9 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
 
     private widgetArgs:Kontext.GeneralProps;
 
+    protected supportedWidgets:WidgetsMap;
+
+
     // -------
 
 
@@ -213,6 +232,10 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
     abstract getQueryTypes():Immutable.Map<string, string>;
 
     /// ---------
+
+    getSupportedWidgets():WidgetsMap {
+        return this.supportedWidgets;
+    }
 
     getWidgetArgs():Kontext.GeneralProps {
         return this.widgetArgs;
@@ -389,6 +412,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
         this.currentAction = 'first_form';
+        this.supportedWidgets = this.determineSupportedWidgets();
 
         this.dispatcher.register(payload => {
             switch (payload.actionType) {
@@ -402,6 +426,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                         this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
                     }
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], qType);
+                    this.supportedWidgets = this.determineSupportedWidgets();
                     this.notifyChangeListeners();
                 break;
                 case 'CORPARCH_FAV_ITEM_CLICK':
@@ -606,6 +631,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
             if (!this.defaultAttrValues.has(corpname)) {
                 this.defaultAttrValues = this.defaultAttrValues.set(corpname, 'word');
             }
+            this.supportedWidgets = this.determineSupportedWidgets();
 
         } else {
             // TODO error
@@ -627,7 +653,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         const args = this.pageModel.getConcArgs();
         args.replace('corpname', [primaryCorpus]);
         if (this.currentSubcorp) {
-            args.add('usesubcorp', this.currentSubcorp);
+            args.set('usesubcorp', this.currentSubcorp);
         }
 
         if (this.corpora.size > 1) {
@@ -703,6 +729,31 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         return args;
     }
 
+    private determineSupportedWidgets():WidgetsMap {
+        const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
+        const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
+            const ans = ['keyboard'];
+            if (!userIsAnonymous()) {
+                ans.push('history');
+            }
+            if (queryType === 'cql') {
+                ans.push('within');
+                if (this.tagBuilderSupport.get(corpname)) {
+                    ans.push('tag');
+                }
+            }
+            return ans;
+        }
+        return new WidgetsMap(
+                this.corpora.map<[string, Immutable.List<string>]>(corpname =>
+                    [
+                        corpname,
+                        Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))
+                    ]
+                )
+                .toList());
+    }
+
     submitQuery():void {
         const args = this.createSubmitArgs().items();
         const url = this.pageModel.createActionUrl('first', args);
@@ -753,27 +804,6 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
     }
 
-    getSupportedWidgets():WidgetsMap {
-        const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
-        const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
-            const ans = ['keyboard'];
-            if (!userIsAnonymous()) {
-                ans.push('history');
-            }
-            if (queryType === 'cql') {
-                ans.push('within');
-                if (this.tagBuilderSupport.get(corpname)) {
-                    ans.push('tag');
-                }
-            }
-            return ans;
-        }
-        const ans = Immutable.Map<string, Immutable.List<string>>();
-        return Immutable.Map<string, Immutable.List<string>>(this.corpora.map(corpname => {
-            return [corpname, Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))];
-        }));
-    }
-
     getPcqPosNegValues():Immutable.Map<string, string> {
         return this.pcqPosNegValues;
     }
@@ -818,47 +848,4 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
     getTagsetDocUrls():Immutable.Map<string, string> {
         return this.tagsetDocs;
     }
-}
-
-
-/**
- *
- */
-export class QueryHintModel extends StatefulModel {
-
-    private hints:Array<string>;
-
-    private currentHint:number;
-
-    private translatorFn:(s:string)=>string;
-
-    constructor(dispatcher:ActionDispatcher, hints:Array<string>, translatorFn:(s:string)=>string) {
-        super(dispatcher);
-        const self = this;
-        this.hints = hints ? hints : [];
-        this.translatorFn = translatorFn;
-        this.currentHint = this.randomIndex();
-
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
-                case 'NEXT_QUERY_HINT':
-                    this.setNextHint();
-                    this.notifyChangeListeners();
-                    break;
-            }
-        });
-    }
-
-    randomIndex():number {
-        return Math.round((Math.random() * (this.hints.length - 1)))|0;
-    }
-
-    setNextHint():void {
-        this.currentHint = (this.currentHint + 1) % this.hints.length;
-    }
-
-    getHint():string {
-        return this.translatorFn(this.hints[this.currentHint]);
-    }
-
 }

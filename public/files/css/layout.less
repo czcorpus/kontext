@@ -76,8 +76,7 @@ img {
 }
 
 input[type="text"],
-input[type="password"],
-span.input-like {
+input[type="password"] {
     border: @input-border-style;
     border-radius: @input-border-radius;
     display: inline-block;
@@ -87,12 +86,6 @@ span.input-like {
 
 input[readonly][type="text"] {
     background-color: @color-light-green;
-}
-
-span.input-like {
-    background-color: #FFFFFF;
-    display: inline-block;
-    text-align: center;
 }
 
 input[type="number"] {
@@ -649,6 +642,13 @@ header#topbar {
         border-collapse: collapse;
     }
 
+    table.attrib-list tr:nth-child(2) th,
+    table.attrib-list tr:nth-child(2) td,
+    table.struct-list tr:nth-child(2) th,
+    table.struct-list tr:nth-child(2) td {
+        padding-top: 0.7em;
+    }
+
     table.attrib-list th,
     table.struct-list th,
     table.attrib-list td,
@@ -660,7 +660,7 @@ header#topbar {
     table.struct-list th {
         color: @color-logo-pink;
         padding: 0.2em 1em;
-        text-align: center;
+        text-align: left;
         font-weight: normal;
     }
 
@@ -688,7 +688,7 @@ header#topbar {
     }
 
     .note {
-        margin: 0;
+        margin: 1em 0 0 0;
         padding: 0 5em 0 0;
         font-size: 70%;
         color: @color-default-text;
@@ -706,9 +706,9 @@ header#topbar {
     dd.references {
 
         h4 {
-            font-size: 1em;
-            font-weight: normal;
-            margin-bottom: 0.2em;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 0.7em;
         }
 
         .html {
@@ -772,50 +772,61 @@ section #result-mount .ktx-pagination {
     vertical-align: middle;
 
     .curr-page {
-
-        background-color: #ffffff;
         display: inline-block;
-        width: 3em;
-        line-height: 1.4em;
-        border: @input-border-style;
-        border-radius: @input-border-radius;
         padding: 0;
         text-align: left;
+        width: 3em;
 
         input {
+            display: block;
             width: 3em;
-            border: none;
-            padding-right: 0.4em;
-            padding-left: 0.4em;
-            border-radius: 0;
+            border: @input-border-style;
+            border-radius: @input-border-radius;
             box-sizing: border-box;
         }
 
+        .overlay {
+            position: absolute;
+        }
+
         img.ajax-loader-bar {
-            display: inline-block;
-            vertical-align: middle;
+            margin-top: 0.2em;
+            margin-left: 0.2em;
+            display: block;
         }
     }
 }
 
 .ktx-pagination-left {
     display: inline-block;
-    padding-right: 6px;
+    padding-right: 0.3em;
+
+    > a {
+        display: inline-block;
+        vertical-align: middle;
+        margin-top: -0.1em;
+
+        > img {
+            display: block;
+            height: @navig-icon-size;
+        }
+    }
 }
 
 .ktx-pagination-right {
     display: inline-block;
-    padding-left: 6px;
-}
+    padding-left: 0.3em;
 
-.ktx-pagination a {
-    vertical-align: middle;
-}
+    > a {
+        display: inline-block;
+        vertical-align: middle;
+        margin-top: -0.1em;
 
-.ktx-pagination a > img {
-    display: inline-block;
-    vertical-align: middle;
-    height: @navig-icon-size;
+        > img {
+            display: block;
+            height: @navig-icon-size;
+        }
+    }
 }
 
 .ktx-pagination a:last-of-type img {
@@ -842,7 +853,8 @@ section #result-mount .ktx-pagination {
 }
 
 a.disabled,
-.disabled {
+input.disabled,
+button.disabled {
     color: @color-light-text;
 }
 
@@ -1202,26 +1214,12 @@ p.boxed-par {
 
 .sh-value-clickable {
     text-decoration: none;
-    background-color: rgb(236, 243, 250);
+    background-color: rgb(236, 239, 250);
 }
 
-fieldset.colloc-metrics {
-    display: inline-block;
-    margin-top: 1em;
-    margin-right: 1em;
-    border: 1px solid #DADADA;
-    border-radius: @border-radius-default;
-
-    table.colloc-metrics td,
-    table.colloc-metrics th {
-        padding: 3px 5px;
-    }
-    table.colloc-metrics th {
-        color: @color-default-text;
-    }
-    table.colloc-metrics label {
-        display: block;
-    }
+.sh-value-clickable:hover {
+    color: @color-logo-blue;
+    text-decoration: underline;
 }
 
 @keyframes fadein {
@@ -1250,3 +1248,40 @@ fieldset.colloc-metrics {
     0% { opacity: 0; }
     100% { opacity: 1; }
 }
+
+ul.tabs {
+    list-style-type: none;
+    margin: 0 auto 1.1em auto;
+    padding: 0;
+    white-space: nowrap;
+
+    li {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+    }
+
+    li:not(:first-child) {
+        margin-left: 1em;
+    }
+
+    li:not(:last-child) {
+        padding-right: 1em;
+    }
+}
+
+#language-switch-form .switch {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: @color-link-dark;
+    text-decoration: underline;
+    padding: 0.1em 0.2em;
+}
+
+#language-switch-form .switch:last-child {
+    padding-right: 0;
+}
+
+@import "./layoutMobile.less";
+@import "~custom-styles/theme.less";

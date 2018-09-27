@@ -28,7 +28,7 @@ import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/attrValues';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
-import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery} from './main';
+import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery, WidgetsMap} from './main';
 
 
 /**
@@ -56,11 +56,6 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     hasLemma:Array<[string, boolean]>;
     tagsetDoc:Array<[string, string]>;
 }
-
-/**
- *
- */
-export type FilterWidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
 /**
  *import {GeneralViewOptionsModel} from '../options/general';
@@ -149,7 +144,13 @@ export class FilterModel extends GeneralQueryModel {
 
         this.maincorps = Immutable.Map<string, string>(props.maincorps);
         this.queries = Immutable.Map<string, string>(props.currQueries);
+        if (!this.queries.has('__new__')) {
+            this.queries = this.queries.set('__new__', '');
+        }
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
+        if (!this.queryTypes.has('__new__')) {
+            this.queryTypes = this.queries.set('__new__', 'iquery');
+        }
         this.lposValues = Immutable.Map<string, string>(props.currLposValues);
         this.matchCaseValues = Immutable.Map<string, boolean>(props.currQmcaseValues);
         this.defaultAttrValues = Immutable.Map<string, string>(props.currDefaultAttrValues);
@@ -166,6 +167,7 @@ export class FilterModel extends GeneralQueryModel {
         this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDoc);
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
+        this.supportedWidgets = this.determineSupportedWidgets();
 
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -174,6 +176,7 @@ export class FilterModel extends GeneralQueryModel {
                 break;
                 case 'FILTER_QUERY_INPUT_SELECT_TYPE':
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
+                    this.supportedWidgets = this.determineSupportedWidgets();
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
@@ -447,7 +450,7 @@ export class FilterModel extends GeneralQueryModel {
         return this.withinArgs;
     }
 
-    getSupportedWidgets():FilterWidgetsMap {
+    private determineSupportedWidgets():WidgetsMap {
         const getWidgets = (filterId:string):Array<string> => {
             switch (this.queryTypes.get(filterId)) {
                 case 'iquery':
@@ -464,11 +467,12 @@ export class FilterModel extends GeneralQueryModel {
                     return ans;
             }
         }
-        return Immutable.Map<string, Immutable.List<string>>(
-            this.queries.keySeq().map(filterId => {
-                return [filterId, Immutable.List<string>(
-                getWidgets(filterId))];
-            })
+
+        return new WidgetsMap(
+            this.queries.keySeq()
+            .map<[string, Immutable.List<string>]>(filterId =>
+                [filterId, Immutable.List<string>(getWidgets(filterId))])
+            .toList()
         );
     }
 

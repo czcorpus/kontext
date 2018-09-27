@@ -105,14 +105,14 @@ def _contains_shuffle_seq(q_ops):
 def _cancel_async_task(cache_map, subchash, q):
     cachefile = cache_map.cache_file_path(subchash, q)
     status = cache_map.get_calc_status(subchash, q)
-    backend, conf = settings.get_full('global', 'calc_backend')
+    backend = settings.get('calc_backend', 'type')
     if backend == 'multiprocessing':
         logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')
-    elif backend == 'celery' and status:
-        import task
+    elif backend in ('celery', 'konserver') and status:
+        import bgcalc
         try:
             if status.task_id:
-                app = task.get_celery_app(conf['conf'])
+                app = bgcalc.calc_backend_client(settings)
                 app.control.revoke(status.task_id, terminate=True, signal='SIGKILL')
         except IOError:
             pass
@@ -205,13 +205,13 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used ----- TODO remove it
     """
-    backend, conf = settings.get_full('global', 'calc_backend')
+    backend = settings.get('calc_backend', 'type')
     if backend == 'multiprocessing':
         from concworker import mp
         mp.create_task(user_id, corp, subchash, q, samplesize).start()
-    elif backend == 'celery':
-        import task
-        app = task.get_celery_app(conf['conf'])
+    elif backend in ('celery', 'konserver'):
+        import bgcalc
+        app = bgcalc.calc_backend_client(settings)
         ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
                                                      subchash, q, samplesize, TASK_TIME_LIMIT), time_limit=10)  # register should be fast
         ans.get()  # = wait for task registration

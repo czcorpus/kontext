@@ -307,8 +307,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     private origSubcorpName:string;
 
-    private mainCorp:string;
-
     private audioPlayer:AudioPlayer;
 
     private playerAttachedChunk:string;
@@ -358,7 +356,6 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         this.baseCorpname = lineViewProps.baseCorpname;
         this.subCorpName = lineViewProps.subCorpName;
         this.origSubcorpName = lineViewProps.origSubCorpName;
-        this.mainCorp = lineViewProps.mainCorp;
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;
@@ -613,9 +610,9 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
         } else {
             mode = {'sen': 'kwic', 'kwic': 'sen'}[this.viewMode];
         }
-        const args = this.layoutModel.getConcArgs();
         this.viewMode = mode;
-        args.set('viewmode', this.viewMode);
+        this.layoutModel.replaceConcArg('viewmode', [this.viewMode]);
+        const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
 
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
@@ -860,6 +857,17 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
 
     getIsBusy():boolean {
         return this.isBusy;
+    }
+
+    // TODO pick a good heuristics here
+    getRecommOverviewMinFreq():number {
+        if (this.concSummary.concSize > 10000) {
+            return 100;
+
+        } else if (this.concSummary.concSize > 1000) {
+            return 10;
+        }
+        return 1;
     }
 }
 

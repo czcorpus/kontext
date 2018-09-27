@@ -22,7 +22,6 @@
 
 import {Kontext} from '../../types/common';
 import * as React from 'react';
-import * as d3Color from 'vendor/d3-color';
 import * as Immutable from 'immutable';
 import {TextTypesDistModel, FreqItem, FreqBlock} from '../../models/concordance/ttDistModel';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -36,7 +35,9 @@ interface TextTypesState {
     minFreq:number;
     isBusy:boolean;
     sampleSize:number;
-    blockedByAsyncConc:boolean;
+    getMaxChartItems:number;
+    isDisplayedBlocksSubset:boolean;
+    shouldDisplayBlocksSubset:boolean;
 }
 
 export interface TtOverviewViews {
@@ -50,7 +51,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     const FreqBar = (props:{items:Array<FreqItem>, label:string}) => {
 
-        const mkTitle = (v:FreqItem) => he.translate('concview__abs_ipm_bar_title_{abs}{ipm}', {abs: v.abs, ipm: v.ipm});
+        const mkTitle = (v:FreqItem) => he.translate('concview__abs_ipm_bar_title_{abs}{ipm}',
+                            {abs: he.formatNumber(v.abs), ipm: he.formatNumber(v.ipm)});
 
         return (
             <div className="FreqBar">
@@ -72,28 +74,58 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         );
     };
 
-    /**
-     *
-     */
-    const FreqsView:React.SFC<{
+    // ------------------------- <FreqsNotes /> ----------------------------------
+
+    const FreqsNotes:React.SFC<{
         blocks:Immutable.List<FreqBlock>;
+        isDisplayedBlocksSubset:boolean;
+        shouldDisplayBlocksSubset:boolean;
+        maxChartItems:number;
+        sampleSize:number;
         minFreq:number;
-        sampleSize:number
 
     }> = (props) => {
-        return (
-            <div>
-                {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
-                {props.blocks.size > 0 ?
-                    <p className="note">
-                        {he.translate('concview__using_min_freq_{value}', {value: props.minFreq})}.
-                        {props.sampleSize > 0 ?
-                            ' ' + he.translate('concview__using_sample_{value}', {value: props.sampleSize}) + '.' : ''
-                        }
-                    </p> : null
-                }
-            </div>
-        );
+
+        const handleLimitRemove = () => {
+            dispatcher.dispatch({
+                actionType: 'REMOVE_CHART_ITEMS_LIMIT',
+                props: {}
+            });
+        };
+
+        const handleLimitRestore = () => {
+            dispatcher.dispatch({
+                actionType: 'RESTORE_CHART_ITEMS_LIMIT',
+                props: {}
+            });
+        };
+
+        return props.blocks.size > 0 ?
+                <p className="note">
+                    {he.translate('concview__charts_units_are')}: <strong>i.p.m.</strong>{'\u00a0|\u00a0'}
+                    {he.translate('concview__using_min_freq')}: <strong>{props.minFreq}</strong>
+                    {props.isDisplayedBlocksSubset ?
+                        <>
+                            {'\u00a0|\u00a0'}
+                            {he.translate('concview__displaying_charts_up_to_{num_items}',
+                                {num_items: props.maxChartItems})}
+                            {'\u00a0'}(<a onClick={handleLimitRemove}>{he.translate('concview__display_all_tt_charts')}</a>)
+                        </> :
+                        null
+                    }
+                    {!props.isDisplayedBlocksSubset && props.shouldDisplayBlocksSubset ?
+                        <>
+                            {'\u00a0|\u00a0'}
+                            {he.translate('concview__display_limited_tt_charts')}{'\u00a0'}
+                            (<a onClick={handleLimitRestore}>{he.translate('global__yes')}</a>)
+                        </> :
+                        null
+                    }
+                    {props.sampleSize > 0 ?
+                        '\u00a0|\u00a0' + he.translate('concview__using_sample_{value}',
+                                {value: props.sampleSize}) + '.' : ''
+                    }
+                </p> : null;
     };
 
     /**
@@ -109,11 +141,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         _fetchModelState():TextTypesState {
             return {
-                blocks: ttDistModel.getBlocks(),
+                blocks: ttDistModel.getDisplayableBlocks(),
                 isBusy: ttDistModel.getIsBusy(),
                 minFreq: ttDistModel.getMinFreq(),
                 sampleSize: ttDistModel.getSampleSize(),
-                blockedByAsyncConc: ttDistModel.getBlockedByAsyncConc()
+                getMaxChartItems: ttDistModel.getMaxChartItems(),
+                isDisplayedBlocksSubset: ttDistModel.isDisplayedBlocksSubset(),
+                shouldDisplayBlocksSubset: ttDistModel.shouldDisplayBlocksSubset()
             };
         }
 
@@ -123,12 +157,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         componentDidMount() {
             ttDistModel.addChangeListener(this._handleModelChange);
-            if (!this.state.blockedByAsyncConc) {
-                dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-                    props: {}
-                });
-            }
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+                props: {}
+            });
+
         }
 
         componentWillUnmount() {
@@ -138,11 +171,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         render() {
             return (
                 <div className="TextTypesDist">
+                    <h3 className="block">
+                        {he.translate('concview__freqs_overview_heading')}
+                    </h3>
+                    <FreqsNotes blocks={this.state.blocks}
+                                minFreq={this.state.minFreq}
+                                sampleSize={this.state.sampleSize}
+                                maxChartItems={this.state.getMaxChartItems}
+                                isDisplayedBlocksSubset={this.state.isDisplayedBlocksSubset}
+                                shouldDisplayBlocksSubset={this.state.shouldDisplayBlocksSubset} />
+                    <hr />
                     <div className="contents">
                         {this.state.isBusy ?
                             <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                            <FreqsView blocks={this.state.blocks} minFreq={this.state.minFreq}
-                                sampleSize={this.state.sampleSize} />
+                            <div>
+                                {this.state.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
+                            </div>
                         }
                     </div>
                 </div>

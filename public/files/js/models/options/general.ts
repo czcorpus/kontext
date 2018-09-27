@@ -57,8 +57,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     private shuffle:boolean;
 
-    private showTTOverview:boolean;
-
     private useCQLEditor:boolean;
 
     // --- word list opts
@@ -104,10 +102,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
                     this.shuffle = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
-                case 'GENERAL_VIEW_OPTIONS_SET_SHOW_TT_OVERVIEW':
-                    this.showTTOverview = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
                 case 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR':
                     this.useCQLEditor = payload.props['value'];
                     this.notifyChangeListeners();
@@ -123,19 +117,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
                 case 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE':
                     this.citemsperpage.value = payload.props['value'];
                     this.notifyChangeListeners();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY':
-                    this.showTTOverview = payload.props['value'];
-                    this.submitTTOverview().then(
-                        (_) => {
-                            this.notifyChangeListeners();
-                            this.submitResponseHandlers.forEach(fn => fn(this));
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
-                        }
-                    );
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SUBMIT':
                     const err = this.validateForm();
@@ -180,14 +161,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         return null;
     }
 
-    private submitTTOverview():RSVP.Promise<Kontext.AjaxResponse> {
-        return this.layoutModel.ajax<Kontext.AjaxResponse>(
-            'POST',
-            this.layoutModel.createActionUrl('options/set_tt_overview'),
-            {tt_overview: this.showTTOverview ? '1' : '0'}
-        );
-    }
-
     addOnSubmitResponseHandler(fn:(model:ViewOptions.IGeneralViewOptionsModel)=>void):void {
         this.submitResponseHandlers = this.submitResponseHandlers.push(fn);
     }
@@ -208,7 +181,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
                 this.wlpagesize = {value: `${data.wlpagesize}`, isInvalid: false, isRequired: true};
                 this.fmaxitems = {value: `${data.fmaxitems}`, isInvalid: false, isRequired: true};
                 this.citemsperpage = {value: `${data.citemsperpage}`, isInvalid: false, isRequired: true};
-                this.showTTOverview = !!data.tt_overview;
                 this.useCQLEditor = !!data.cql_editor;
                 return true;
             }
@@ -225,7 +197,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         args.set('wlpagesize', this.wlpagesize.value);
         args.set('fmaxitems', this.fmaxitems.value);
         args.set('citemsperpage', this.citemsperpage.value);
-        args.set('tt_overview', this.showTTOverview ? '1' : '0');
         args.set('cql_editor', this.useCQLEditor ? '1' : '0');
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
             'POST',
@@ -270,10 +241,6 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     getIsBusy():boolean {
         return this.isBusy;
-    }
-
-    getShowTTOverview():boolean {
-        return this.showTTOverview;
     }
 
     getUseCQLEditor():boolean {

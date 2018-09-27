@@ -74,7 +74,7 @@ def get_favorite_corpora(ctrl, request):
     return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_api)
 
 
-@exposed(access_level=1, return_type='json', skip_corpus_init=True)
+@exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
 def ask_corpus_access(ctrl, request):
     ans = {}
     with plugins.runtime.CORPARCH as ca:
@@ -146,8 +146,7 @@ class UcnkCorpArch2(RDBMSCorparch):
             query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
         else:
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
-        query = ' '.join(query_substrs) \
-                + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
+        query = (' '.join(query_substrs) + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords))
         return super(UcnkCorpArch2, self).search(plugin_api, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, plugin_api, custom_message):
@@ -157,14 +156,13 @@ class UcnkCorpArch2(RDBMSCorparch):
         """
         errors = []
 
-        user_id = plugin_api.session['user']['id']
-        user_info = self._auth.get_user_info(user_id)
+        user_info = self._auth.get_user_info(plugin_api)
         user_email = user_info['email']
         username = user_info['username']
 
         text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
         text += u'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
-        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, user_id, user_email)
+        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, plugin_api.user_id, user_email)
         text += u'korpus ID: %s\n' % corpus_id
 
         if custom_message:
