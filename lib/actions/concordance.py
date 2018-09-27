@@ -324,6 +324,12 @@ class Actions(Querying):
         else:
             self.args.align = [
                 ac for ac in self.args.align if ac in self.get_available_aligned_corpora()]
+
+        if self.args.corpname in self.args.align:
+            self.args.align = list(set(self.args.align).difference(set([self.args.corpname])))
+            self.redirect(self.create_url('first_form', [('corpname', self.args.corpname)] +
+                                          [('align', a) for a in self.args.align]))
+
         out['aligned_corpora'] = self.args.align
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']

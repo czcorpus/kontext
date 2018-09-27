@@ -440,7 +440,11 @@ class Controller(object):
         def convert_val(x):
             return str(x) if type(x) not in (str, unicode) else x.encode('utf-8')
 
-        params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params.items()])
+        if type(params) is dict:
+            params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params.items()])
+        else:
+            params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params])
+
         if len(params_str) > 0:
             return '%s%s?%s' % (root, action, params_str)
         else:
