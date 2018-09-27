@@ -61,8 +61,6 @@ class TransientStorage implements Storage {
  */
 export class UserSettings implements Kontext.IUserSettings {
 
-    static ALIGNED_CORPORA_KEY = 'active_parallel_corpora';
-
     storage:Storage;
 
     storageKey:string;
@@ -105,13 +103,22 @@ export class UserSettings implements Kontext.IUserSettings {
 
     init():void {
         if (this.storageKey in this.storage) {
+            let src:string;
             try {
-                this.data = JSON.parse(this.storage.getItem(this.storageKey));
+                src = this.storage.getItem(this.storageKey);
 
             } catch (e) {
                 console.error(`Storage access error ${e}. Switching to NullStorage.`);
                 this.storage = new TransientStorage();
-                this.data = JSON.parse(this.storage.getItem(this.storageKey));
+                src = '{}';
+            }
+
+            try {
+                this.data = JSON.parse(src);
+
+            } catch (e) {
+                this.data = {};
+                this.storage.setItem(this.storageKey, '{}');
             }
 
         } else {

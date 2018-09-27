@@ -410,11 +410,6 @@ export class ViewPage {
         }
     }
 
-    private updateLocalAlignedCorpora():void {
-        let serverSideAlignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
-        this.layoutModel.userSettings.set(UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
-    }
-
     private getActiveCorpora():Array<string> {
         return [this.layoutModel.getCorpusIdent().id].concat(
                 this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
@@ -1206,7 +1201,6 @@ export class ViewPage {
             (deps) => {
                 this.setupHistoryOnPopState();
                 this.onBeforeUnloadAsk();
-                this.updateLocalAlignedCorpora();
                 this.initQueryForm();
                 this.initFirsthitsForm();
                 this.initFilterForm(this.queryModels.firstHitsModel);
