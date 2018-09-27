@@ -13,8 +13,7 @@
 
 ## Introduction
 
-KonText is an **advanced corpus query interface** for the [Manatee-open](http://nlp.fi.muni.cz/trac/noske)
-corpus search engine. It builds on top of core server-side libraries from NoSketchEngine and both applications are data-compatible as well. The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
+KonText is an **advanced corpus query interface** and corpus data integration middleware built around corpus search engine [Manatee-open](http://nlp.fi.muni.cz/trac/noske). The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
 
 ## Features
 
@@ -43,9 +42,10 @@ corpus search engine. It builds on top of core server-side libraries from NoSket
 * **access to favorite corpora** (subcorpora, aligned corpora)
 * **interactive PoS tag tool** - in case of positional PoS tag formats an interactive tool can be used to write tag queries
 * a concordance/frequency/collocation listing can be **saved in Excel format** (xlsx)
+* concordance tokens and KWICs can be connected to external data services (e.g. dictionaries, encyclopedias)
 * a correct (i.e. the one calculating only with selected text types) i.p.m. can be calculated on-demand for ad-hoc subcorpora
-* result shuffling can be pre-set
-* less full page reloads 
+
+
 
 ### internal features
 
@@ -62,9 +62,9 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 ## Requirements
 
 * WSGI-compatible server
-    * [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested),...
+    * [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
 * Rerverse proxy server        
-  + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested),...
+  + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested)
 * Python *2.7* and:
     * [Cheetah](http://www.cheetahtemplate.org/) Template Engine
     * [lxml](http://lxml.de/) library
