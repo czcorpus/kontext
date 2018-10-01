@@ -278,7 +278,7 @@
             if (fs.lstatSync(fullPath).isDirectory() && ['min'].indexOf(item) === -1) {
                 ans = ans.concat(findAllMessageFiles(fullPath));
 
-            } else if (item === 'messages.json') {
+            } else if (item.match(/messages(\.[a-zA-Z]{1,8})?\.json/)) {
                 ans.push(fullPath);
             }
         });
@@ -315,8 +315,7 @@
             destFile = [destFile];
         }
         destFile.forEach((destItem) => {
-            fs.writeFileSync(destItem, "define([], function () { return "
-                + JSON.stringify(translations) + "; });");
+            fs.writeFileSync(destItem, "module.exports = " + JSON.stringify(translations) + ";\n");
         });
     }
 

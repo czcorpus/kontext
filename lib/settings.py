@@ -195,8 +195,9 @@ def parse_config_section(section):
                 item_list = []
                 meta_list = []
                 for sub_item in item:
-                    item_list.append(sub_item.text)
-                    meta_list.append(dict(sub_item.attrib))
+                    if sub_item.tag is not etree.Comment:
+                        item_list.append(sub_item.text)
+                        meta_list.append(dict(sub_item.attrib))
                 ans[item_id] = tuple(item_list)
                 meta[item_id] = tuple(meta_list)
     return ans, meta
