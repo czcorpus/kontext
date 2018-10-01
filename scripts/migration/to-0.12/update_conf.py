@@ -206,6 +206,12 @@ def update_11(doc):
     elm.tail = '\n        '
 
 
+def update_12(doc):
+    srch = doc.findall('/global/translations/language')
+    for item in srch:
+        item.text = item.text.replace('_', '-')
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.11.x '

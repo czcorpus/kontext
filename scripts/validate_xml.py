@@ -39,14 +39,14 @@ def validate_main_config(conf_obj, schema_path):
     ans_err = 0
     with open(schema_path, 'rb') as schema_f:
         if hasattr(conf_obj, 'docinfo'):
-            ans += 'Validating main configuration file "{0}"...'.format(conf_obj.docinfo.URL)
+            ans += u'Validating main configuration file "{0}"...'.format(conf_obj.docinfo.URL)
         else:
             ans += '  {0} ...'.format(os.path.basename(os.path.dirname(schema_path)))
         schema = etree.parse(schema_f)
         err = validate_config(schema, conf_obj)
         if err:
             ans_err = 1
-            ans += ' ERROR: {0}'.format(err)
+            ans += u' ERROR: {0}'.format(err)
         else:
             ans += ' OK'
     return ans, ans_err
