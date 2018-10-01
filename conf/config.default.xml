@@ -19,8 +19,12 @@
         <profile_log_path/> <!-- leave this empty unless you want to do a low-level debugging -->
         <max_attr_list_size>30</max_attr_list_size>
         <translations>
-            <language label="česky">cs_CZ</language>
-            <language label="English">en_US</language>
+            <!--
+            please note that you need to rebuild the project
+            whenever you change supported UI languages here
+            -->
+            <language label="česky">cs-CZ</language>
+            <language label="English">en-US</language>
             <language label="ślōnskŏ mŏwa">szl</language>
         </translations>
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>

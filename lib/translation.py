@@ -46,7 +46,7 @@ def load_translations(languages):
     global _translations
 
     gettext.install('kontext', '%s/../locale' % os.path.dirname(__file__), unicode=1)
-    languages = tuple([x for x in languages if x != 'en_US'])  # english translation is implicit
+    languages = (x.replace('-', '_') for x in languages if x != 'en-US')  # english translation is implicit
     for lang in languages:
         try:
             _translations[lang] = gettext.translation('kontext',

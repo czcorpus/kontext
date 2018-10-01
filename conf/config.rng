@@ -196,7 +196,7 @@
                                 <attribute name="label">
                                     <text />
                                 </attribute>
-                                <text />
+                                <data type="language" />
                             </element>
                         </oneOrMore>
                     </element>

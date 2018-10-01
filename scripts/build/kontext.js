@@ -143,7 +143,6 @@
         return ans
     };
 
-
     /**
      * Produces mapping for modules with 'fake' (= non filesystem) paths.
      * E.g. 'plugins/queryStorage' maps to 'plugins/myCoolQueryStorage'.
@@ -157,7 +156,8 @@
      */
     module.exports.loadModulePathMap = function (confDoc, jsPath, cssPath, themesPath, isProduction) {
         const pluginsPath = path.resolve(jsPath, 'plugins');
-        mergeTranslations(jsPath, path.resolve(jsPath, '.compiled/translations.js'));
+        const langs = findConfiguredLanguages(confDoc);
+        mergeTranslations(jsPath, path.resolve(jsPath, '.compiled/translations.js'), langs);
         const cqlParserPath = parseCqlGrammar(jsPath);
         const moduleMap = {
             'translations': path.resolve(jsPath, '.compiled/translations'),
@@ -253,6 +253,24 @@
         ];
     };
 
+    function findConfiguredLanguages(confDoc) {
+        const glb = confDoc.getElementsByTagName('global');
+        const trn = glb[0].getElementsByTagName('translations');
+        const items = trn[0].childNodes;
+        const ans = [];
+        for (let i = 0; i < items.length; i += 1) {
+            if (items[i].nodeType === 1) {
+                const tmp = items[i].textContent.trim();
+                if (tmp.length > 0) {
+                    ans.push(tmp);
+                }
+            }
+        }
+        validateLanguageCodes(ans);
+        console.log('\x1b[44m', 'Configured UI translations:', '\x1b[0m', '\x1b[33m', '\n', ans.join(', '), "\x1b[0m", '\n');
+        return ans;
+    }
+
     function findAllMessageFiles(startDir) {
         let ans = [];
         fs.readdirSync(startDir).forEach((item) => {
@@ -267,11 +285,28 @@
         return ans;
     }
 
-    function mergeTranslations(startDir, destFile) {
+    function validateLanguageCodes(codeList) {
+        codeList.forEach((item, i) => {
+            if (item.match(/^[a-z]{1,8}_[A-Za-z0-9]{1,8}$/)) {
+                console.log('\x1b[31m', `WARNING: Invalid language format - please use ${item.replace('_', '-')} instead of ${item}`, '\x1b[0m');
+                codeList[i] = item.replace('_','-');
+                console.log('  (auto-fixed)', '\n');
+            }
+        })
+    }
+
+    function mergeTranslations(startDir, destFile, configuredLangs) {
         let files = findAllMessageFiles(startDir);
         let translations = {};
         files.forEach((item) => {
-           translations = merge.recursive(translations, JSON.parse(fs.readFileSync(item)));
+            const data = JSON.parse(fs.readFileSync(item));
+            validateLanguageCodes(Object.keys(data));
+            Object.keys(data).forEach(avail => {
+                if (configuredLangs.indexOf(avail) === -1) {
+                    delete data[avail];
+                }
+            })
+           translations = merge.recursive(translations, data);
         });
         if (!destFile || destFile.length === 0) {
             throw new Error('No target file for client-side translations specified');
