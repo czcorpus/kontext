@@ -309,7 +309,7 @@ class CalcWatchdog {
 
     startWatching():void {
         this.numNoChange = 0;
-        this.checkIntervalId = setInterval(this.checkStatus.bind(this),
+        this.checkIntervalId = window.setInterval(this.checkStatus.bind(this),
                 CalcWatchdog.CHECK_INTERVAL_SEC * 1000);
     }
 
