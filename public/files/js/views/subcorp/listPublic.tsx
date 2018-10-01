@@ -26,7 +26,7 @@ import {PublicSubcorpListState, PublicSubcorpListModel,
     CorpusItem, DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
 
 export interface Views {
-    List:React.ComponentClass<ListProps, PublicSubcorpListState>;
+    List:React.ComponentClass<ListProps>;
 }
 
 export interface ListProps {
