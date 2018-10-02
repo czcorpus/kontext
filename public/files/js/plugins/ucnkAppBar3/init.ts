@@ -20,8 +20,7 @@
 
 /// <reference path="./external.d.ts" />
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {PluginInterfaces} from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
