@@ -41,10 +41,10 @@ class Shared(InstallCorpusInfo):
         self._reg_path = reg_path
 
     def get_ref_ttdesc(self, ident):
-        return self._desc.get(ident, [])
+        return self._desc.get(ident, None)
 
-    def add_ref_art(self, ident, values):
-        self._desc[ident] = values
+    def add_ref_art(self, ident, value):
+        self._desc[ident] = value
 
     @property
     def ttdesc_id_inc(self):
@@ -145,10 +145,14 @@ def _corpus_exists(db, ident):
     return row and row['cnt'] == 1
 
 
-def create_corp_record(node, db, shared, json_out, variant):
+def create_corp_record(node, db, shared, json_out, variant, create_if_none):
+    cursor = new_cursor(db)
     ident = node.attrib['ident'].lower()
     if not _corpus_exists(db, ident):
-        return
+        if create_if_none:
+            cursor.execute('INSERT INTO corpora (name) VALUES (%s)', (ident,))
+        else:
+            return
     web = node.attrib['web'] if 'web' in node.attrib else None
     tagset = node.attrib.get('tagset', None)
     speech_segment_struct, speech_segment_attr = fetch_structattr(
@@ -162,7 +166,6 @@ def create_corp_record(node, db, shared, json_out, variant):
     sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
     group_name, version = InstallJson.create_sorting_values(ident)
 
-    cursor = new_cursor(db)
     t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
     cursor.execute('UPDATE corpora SET group_name = %s, version = %s, updated = CURRENT_TIMESTAMP, '
                    'web = %s, tagset = %s, collator_locale = %s, speech_overlap_val = %s, use_safe_font = %s, '
@@ -230,6 +233,16 @@ def create_structattr(db, corpus_id, struct_name, structattr_name):
                    (corpus_id, struct_name, structattr_name))
 
 
+def _find_existing_ic_ttdesc_id(db):
+    cursor = db.cursor(buffered=True)
+    cursor.execute(
+        "SELECT ttdesc_id FROM corpora WHERE ttdesc_id IS NOT NULL AND name LIKE '%intercorp%'")
+    row = cursor.fetchone()
+    if row:
+        return row['ttdesc_id']
+    return None
+
+
 def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
     ans = {}
     desc_all = meta_elm.findall('desc')
@@ -237,8 +250,11 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
     if len(desc_all) == 1 and 'ref' in desc_all[0].keys():
         message_key = desc_all[0].attrib['ref']
         value = shared.get_ref_ttdesc(message_key)
-        cursor.execute(
-            'UPDATE corpora SET ttdesc_id = %s WHERE name = %s', (value, corpus_id))
+        if value is None:
+            value = _find_existing_ic_ttdesc_id(db)
+        if value:
+            cursor.execute(
+                'UPDATE corpora SET ttdesc_id = %s WHERE name = %s', (value, corpus_id))
     elif len(desc_all) > 0:
         text_cs = ''
         text_en = ''
@@ -370,17 +386,18 @@ def parse_keywords_def(root, db):
                                                    item.attrib['color'] if 'color' in item.attrib else None))
 
 
-def parse_corplist(path, db, shared, json_out, variant, verbose):
+def parse_corplist(path, db, shared, json_out, variant, verbose, data_only, create_if_none):
     with open(path) as f:
-        prepare_tables(db)
+        if not data_only:
+            prepare_tables(db)
+
         xml = etree.parse(f)
-
         parse_keywords_def(xml, db)
-
         corpora = xml.findall('//corpus')
+
         for c in corpora:
             try:
-                create_corp_record(c, db, shared, json_out, variant)
+                create_corp_record(c, db, shared, json_out, variant, create_if_none)
             except Exception as ex:
                 print('Skipping corpus [{0}] due to error: {1}'.format(c.attrib['ident'], ex))
                 if verbose:
@@ -393,8 +410,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Import existing corplist.xml into an existing mysql/mariadb database')
     parser.add_argument('corplist', metavar='CORPLIST', type=str)
-    parser.add_argument('dbpath', metavar='DBPATH', type=str)
+    parser.add_argument('conf_path', metavar='CONFPATH', type=str)
     parser.add_argument('-s', '--schema-only', metavar='SCHEMA_ONLY',
+                        action='store_const', const=True)
+    parser.add_argument('-d', '--data-only', metavar='DATA_ONLY', action='store_const', const=True)
+    parser.add_argument('-c', '--create-if-none', metavar='CREATE_IF_NONE',
                         action='store_const', const=True)
     parser.add_argument('-j', '--json-out', metavar='JSON_OUT', type=str,
                         help='A directory where corpus installation JSON should be stored')
@@ -405,12 +425,16 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_const', const=True,
                         help='Print some additional (error) information')
     args = parser.parse_args()
-    db = MySQL(MySQLConf(args.dbpath))
+    import settings
+    settings.load(args.conf_path)
+    db = MySQL(MySQLConf(settings))
     if args.schema_only:
         prepare_tables(db)
     else:
+        reg_path = args.reg_path if args.reg_path else settings.get('corpora', 'manatee_registry')
         ijson = InstallJsonDir(args.json_out)
-        parse_corplist(path=args.corplist, db=db, shared=Shared(reg_path=args.reg_path), json_out=ijson,
-                       variant=args.variant, verbose=args.verbose)
+        parse_corplist(path=args.corplist, db=db, shared=Shared(reg_path=reg_path), json_out=ijson,
+                       variant=args.variant, verbose=args.verbose, data_only=args.data_only,
+                       create_if_none=args.create_if_none)
         ijson.write()
     db.commit()
