@@ -882,7 +882,7 @@ class Actions(Querying):
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view()
 
-    @exposed(access_level=1, legacy=True, page_model='freq')
+    @exposed(access_level=0, legacy=True, page_model='freq')
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, force_cache=0):
         """
         display a frequency list
