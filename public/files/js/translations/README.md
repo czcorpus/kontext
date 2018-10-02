@@ -9,14 +9,15 @@ Each "messages" file may contain one or more language blocks. The convention
 is the following:
 
 * first-level key is always a language code (e.g. *en-US*),
-* plug-ins should use a single *messages.json* file as the are expected to
+* plug-ins should use a single *messages.json* file as they are expected to
 contain only a few messages,
 * core translation files should contain only a single language or multiple
 variants for a single language (e.g. en-US, en-GB).
-* the language code used in a file name does not have to be a standard one.
+* the language code used in a file name should be a standard one describing
+actual languages inside the file (e.g. *messages.it.json*, *messages.pl.json*).
+KonText does not check the value against JSON keys in a respective file but
+for sake of consistency, the rule should be followed.
 
-(KonText does not check the value) but a standard value is always preferred
-(e.g. *messages.it.json*, *messages.pl.json*)
 
 ## Project building versus translations
 
