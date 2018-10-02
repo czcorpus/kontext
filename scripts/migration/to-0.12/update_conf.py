@@ -170,7 +170,7 @@ def update_10(doc):
         type_elm = etree.SubElement(ce, 'type')
         type_elm.text = cb_srch.text
         conf_elm = etree.SubElement(ce, 'conf')
-        conf_elm.text = cb_srch.attrib['conf']
+        conf_elm.text = cb_srch.attrib.get('conf')
         cb_srch.getparent().remove(cb_srch)
         etree.SubElement(ce, 'status_service_url')
     cbt_srch = doc.find('global/calc_backend_time_limit')
@@ -180,7 +180,7 @@ def update_10(doc):
         cbt_srch.getparent().remove(cbt_srch)
     else:
         cbt_new = etree.SubElement(ce, 'time_limit')
-        cbt_new.text = 300
+        cbt_new.text = '300'
 
     glb_srch = doc.find('/calc_backend')
     root = glb_srch.getparent()
@@ -194,7 +194,7 @@ def update_10(doc):
         pt_new = etree.SubElement(js, 'type')
         pt_new.text = pt_srch.text
         pt_conf_new = etree.SubElement(js, 'conf')
-        pt_conf_new.text = pt_srch.attrib['conf']
+        pt_conf_new.text = pt_srch.attrib.get('conf')
         pt_srch.getparent().remove(pt_srch)
 
 
@@ -204,6 +204,12 @@ def update_11(doc):
     elm2 = etree.SubElement(elm, 'item')
     elm2.text = 'freqs'
     elm.tail = '\n        '
+
+
+def update_12(doc):
+    srch = doc.findall('/global/translations/language')
+    for item in srch:
+        item.text = item.text.replace('_', '-')
 
 
 if __name__ == '__main__':

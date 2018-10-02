@@ -437,7 +437,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         return dict(
             favorite=self._export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
-            corpora_labels=[(k, lab, '')  # TODO self.get_label_color(k)
+            corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang).items()],
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
