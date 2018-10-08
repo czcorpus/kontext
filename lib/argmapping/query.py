@@ -133,6 +133,7 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_query_types = dict((c, None) for c in corpora)
         self.curr_queries = dict((c, None) for c in corpora)
         self.curr_pcq_pos_neg_values = dict((c, None) for c in corpora)
+        self.curr_include_empty_values = dict((c, None) for c in corpora)
         self.curr_lpos_values = dict((c, None) for c in corpora)
         self.curr_qmcase_values = dict((c, None) for c in corpora)
         self.curr_default_attr_values = dict((c, None) for c in corpora)

@@ -53,6 +53,7 @@ export interface QueryFormUserEntries {
     currDefaultAttrValues:{[corpname:string]:string};
     currLposValues:{[corpname:string]:string};
     currQmcaseValues:{[corpname:string]:boolean};
+    currIncludeEmptyValues:{[corpname:string]:boolean};
 }
 
 
@@ -125,6 +126,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
             curr_query_types: {},
             curr_queries: {},
             curr_pcq_pos_neg_values: {},
+            curr_include_empty_values: {},
             curr_lpos_values: {},
             curr_qmcase_values: {},
             curr_default_attr_values: {},
@@ -362,6 +364,8 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
     private tagsetDocs:Immutable.Map<string, string>;
 
+    private includeEmptyValues:Immutable.Map<string, boolean>; // applies only for aligned languages
+
     /**
      * Text descriptions of text type structure for end user.
      * (applies for the main corpus)
@@ -404,6 +408,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
         this.queryTypes = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueryTypes[item] || 'iquery'])).toMap();
         this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
+        this.includeEmptyValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currIncludeEmptyValues[item] || false]));
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
         this.hasLemma = Immutable.Map<string, boolean>(props.hasLemma);
@@ -500,7 +505,11 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     this.pcqPosNegValues = this.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
                     this.notifyChangeListeners();
-                    break;
+                break;
+                case 'QUERY_INPUT_SET_INCLUDE_EMPTY':
+                    this.includeEmptyValues = this.includeEmptyValues.set(payload.props['corpname'], payload.props['value']);
+                    this.notifyChangeListeners();
+                break;
                 case 'QUERY_MAKE_CORPUS_PRIMARY':
                     this.makeCorpusPrimary(payload.props['corpname']);
                     break;
@@ -580,7 +589,8 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                         currLposValues: data.curr_lpos_values,
                         currDefaultAttrValues: data.curr_default_attr_values,
                         currQmcaseValues: data.curr_qmcase_values,
-                        currPcqPosNegValues: data.curr_pcq_pos_neg_values
+                        currPcqPosNegValues: data.curr_pcq_pos_neg_values,
+                        currIncludeEmptyValues: data.curr_include_empty_values
                     });
                     this.tagBuilderSupport = Immutable.Map<string, boolean>(data.tag_builder_support);
                     this.hasLemma = Immutable.Map<string, boolean>(data.has_lemma);
@@ -628,6 +638,9 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
             if (!this.pcqPosNegValues.has(corpname)) {
                 this.pcqPosNegValues = this.pcqPosNegValues.set(corpname, 'pos');
             }
+            if (!this.includeEmptyValues.has(corpname)) {
+                this.includeEmptyValues = this.includeEmptyValues.set(corpname, false);
+            }
             if (!this.defaultAttrValues.has(corpname)) {
                 this.defaultAttrValues = this.defaultAttrValues.set(corpname, 'word');
             }
@@ -651,21 +664,22 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
     private createSubmitArgs():MultiDict {
         const primaryCorpus = this.corpora.get(0);
         const args = this.pageModel.getConcArgs();
-        args.replace('corpname', [primaryCorpus]);
+        args.set('corpname', primaryCorpus);
         if (this.currentSubcorp) {
             args.set('usesubcorp', this.currentSubcorp);
         }
 
         if (this.corpora.size > 1) {
-            args.replace('maincorp', [primaryCorpus]);
+            args.set('maincorp', primaryCorpus);
             args.replace('align', this.corpora.rest().toArray());
-            args.replace('viewmode', ['align']);
+            args.set('viewmode', 'align');
 
         } else {
             args.remove('maincorp');
             args.remove('align');
-            args.replace('viewmode', ['kwic']);
+            args.set('viewmode', 'kwic');
         }
+
         function createArgname(name, corpname) {
             return corpname !== primaryCorpus ? name + '_' + corpname : name;
         }
@@ -691,8 +705,9 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
             if (this.matchCaseValues.get(corpname)) {
                 args.add(createArgname('qmcase', corpname), this.matchCaseValues.get(corpname) ? '1' : '0');
             }
-            args.replace(createArgname('pcq_pos_neg', corpname), [this.pcqPosNegValues.get(corpname)]);
-            args.add(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
+            args.set(createArgname('pcq_pos_neg', corpname), this.pcqPosNegValues.get(corpname));
+            args.set(createArgname('include_empty', corpname), this.includeEmptyValues.get(corpname) ? '1' : '0');
+            args.set(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
         });
 
         // query context
@@ -806,6 +821,10 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
     getPcqPosNegValues():Immutable.Map<string, string> {
         return this.pcqPosNegValues;
+    }
+
+    getIncludeEmptyValues():Immutable.Map<string, boolean> {
+        return this.includeEmptyValues;
     }
 
     getCorpora():Immutable.List<string> {

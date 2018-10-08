@@ -108,6 +108,7 @@ export namespace AjaxResponse {
         curr_lpos_values:{[corpname:string]:string};
         curr_qmcase_values:{[corpname:string]:boolean};
         curr_default_attr_values:{[corpname:string]:string};
+        curr_include_empty_values:{[corpname:string]:boolean};
         tag_builder_support:{[corpname:string]:boolean};
         selected_text_types:TextTypes.ServerCheckedValues;
         bib_mapping:TextTypes.BibMapping;

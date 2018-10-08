@@ -773,6 +773,14 @@ fieldset.FieldsetOutputOptions {
     }
 }
 
+.TRIncludeEmptySelector {
+    input {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 0;
+    }
+}
+
 .InlineHelp {
 
     .tooltip-box {
@@ -987,6 +995,22 @@ table.MLSingleLevelFields {
 .TextTypesNotes {
     padding-left: 1em;
     max-width: 50em;
+
+    div:before {
+        display: block;
+        content: "";
+        background-image: url('../img/info-icon.svg');
+        background-size: 1em 1em;
+        background-repeat: no-repeat;
+        width: 1.05em;
+        height: 1.05em;
+        float: left;
+        margin: 0 0.3em 0 0;
+    }
+
+    div {
+        text-align: justify;
+    }
 }
 
 .PersistentConcordanceForm {

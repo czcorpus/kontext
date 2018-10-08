@@ -105,6 +105,8 @@ class QueryStorage(AbstractQueryStorage):
         q_id = data['query_id']
         edata = self._conc_persistence.open(q_id)
 
+        def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
+
         if edata and 'lastop_form' in edata:
             ans = {}
             ans.update(data)
@@ -127,7 +129,8 @@ class QueryStorage(AbstractQueryStorage):
                                            default_attr=form_data['curr_default_attr_values'][aitem],
                                            lpos=form_data['curr_lpos_values'][aitem],
                                            qmcase=form_data['curr_qmcase_values'][aitem],
-                                           pcq_pos_neg=form_data['curr_pcq_pos_neg_values'][aitem]))
+                                           pcq_pos_neg=form_data['curr_pcq_pos_neg_values'][aitem],
+                                           include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
             return ans
         else:
             return None   # persistent result not available
@@ -166,6 +169,7 @@ class QueryStorage(AbstractQueryStorage):
                 tmp['lpos'] = None
                 tmp['qmcase'] = None
                 tmp['pcq_pos_neg'] = None
+                tmp['include_empty'] = None
                 tmp['selected_text_types'] = {}
                 tmp['aligned'] = []
                 tmp['name'] = None

@@ -27,10 +27,10 @@ from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, Sampl
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
+from argmapping import ConcArgsMapping
 import settings
 import conclib
 import corplib
-import hashlib
 from bgcalc import freq_calc, coll_calc
 import plugins
 from kwiclib import Kwic, KwicPageArgs
@@ -41,6 +41,7 @@ from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
+import templating
 
 
 class ConcError(UserActionException):
@@ -102,12 +103,16 @@ class Actions(Querying):
 
     def add_globals(self, result, methodname, action_metadata):
         super(Actions, self).add_globals(result, methodname, action_metadata)
+
+        conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
+        conc_args.set('q', [q for q in result.get('Q')])
+        if corplib.is_subcorpus(self.corp):
+            conc_args.set('usesubcorp', self.corp.subcname)
         args = {}
         if self.args.align:
             for aligned_lang in self.args.align:
                 args.update(self.export_aligned_form_params(aligned_lang, state_only=True))
-        result['globals'] += '&' + self.urlencode(args)
-        result['Globals'] = result['Globals'].update(args)
+        result['Globals'] = conc_args.update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         if len(result['query_overview']) > 0:
@@ -243,7 +248,7 @@ class Actions(Querying):
 
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
-        out['widectx_globals'] = self._get_attrs(
+        out['widectx_globals'] = self._get_mapped_attrs(
             WidectxArgsMapping, dict(structs=self._get_struct_opts()))
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.align
@@ -348,6 +353,8 @@ class Actions(Querying):
             qf_args.curr_lpos_values[cid] = request.args.get('lpos')
             qf_args.curr_qmcase_values[cid] = bool(int(request.args.get('qmcase', '0')))
             qf_args.curr_pcq_pos_neg_values[cid] = request.args.get('pcq_pos_neg')
+            # the value of 'include_empty' does not matter form primary corp actually
+            qf_args.curr_include_empty_values[cid] = False
             qf_args.curr_default_attr_values[cid] = request.args.get('default_attr')
             qf_args.selected_text_types, qf_args.bib_mapping = self._get_checked_text_types(request)
 
@@ -359,6 +366,8 @@ class Actions(Querying):
             qf_args.curr_qmcase_values[item] = bool(
                 int(request.args.get('qmcase_{0}'.format(item), '0')))
             qf_args.curr_pcq_pos_neg_values[item] = request.args.get('pcq_pos_neg_{0}'.format(item))
+            qf_args.curr_include_empty_values[item] = bool(
+                int(request.args.get('include_empty_{0}'.format(item), '0')))
             qf_args.curr_default_attr_values[item] = request.args.get(
                 'default_attr_{0}'.format(item))
 
@@ -695,8 +704,7 @@ class Actions(Querying):
                           (-fc_pos_wsize, fc_pos_wsize, 1),
                           fc_pos_type)
         for al_corpname in self.args.align:
-            if al_corpname in nopq and not getattr(self.args,
-                                                   'include_empty_' + al_corpname, ''):
+            if al_corpname in nopq and not int(getattr(self.args, 'include_empty_' + al_corpname, '0')):
                 if corplib.manatee_min_version('2.130.6'):
                     self.args.q.append('X%s' % al_corpname)
                 else:
@@ -720,8 +728,10 @@ class Actions(Querying):
             qinfo.curr_queries[corp] = getattr(
                 self.args, qtype + suffix, None) if qtype is not None else None
             qinfo.curr_pcq_pos_neg_values[corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
+            qinfo.curr_include_empty_values[corp] = bool(
+                int(getattr(self.args, 'include_empty' + suffix, '0')))
             qinfo.curr_lpos_values[corp] = getattr(self.args, 'lpos' + suffix, None)
-            qinfo.curr_qmcase_values[corp] = bool(getattr(self.args, 'qmcase' + suffix, False))
+            qinfo.curr_qmcase_values[corp] = bool(int(getattr(self.args, 'qmcase' + suffix, '0')))
             qinfo.curr_default_attr_values[corp] = getattr(
                 self.args, 'default_attr' + suffix, 'word')
             qinfo.selected_text_types, qinfo.bib_mapping = self._get_checked_text_types(
@@ -1352,8 +1362,8 @@ class Actions(Querying):
             data['expand_left_args'] = None
         if int(getattr(self.args, 'detail_right_ctx', 0)) >= int(data['maxdetail']):
             data['expand_right_args'] = None
-        data['widectx_globals'] = self._get_attrs(WidectxArgsMapping,
-                                                  dict(structs=self._get_struct_opts()))
+        data['widectx_globals'] = self._get_mapped_attrs(WidectxArgsMapping,
+                                                         dict(structs=self._get_struct_opts()))
         return data
 
     @exposed(access_level=0, return_type='json')

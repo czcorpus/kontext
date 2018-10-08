@@ -23,23 +23,14 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {InputModuleViews} from './input';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {QueryModel, WidgetsMap} from '../../models/query/main';
-import {WithinBuilderModel} from '../../models/query/withinBuilder';
-import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
-import {CQLEditorModel} from '../../models/query/cqleditor/model';
+import {WidgetsMap} from '../../models/query/main';
 import {PluginInterfaces} from '../../types/plugins';
-import { UsageTipsModel } from '../../models/usageTips';
 
 
 export interface AlignedModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
     inputViews:InputModuleViews;
-    queryModel:QueryModel;
-    queryHintModel:UsageTipsModel;
-    withinBuilderModel:WithinBuilderModel;
-    virtualKeyboardModel:VirtualKeyboardModel;
-    cqlEditorModel:CQLEditorModel;
 }
 
 export interface AlignedCorporaProps {
@@ -55,6 +46,7 @@ export interface AlignedCorporaProps {
     attrList:Immutable.List<Kontext.AttrItem>;
     tagsetDocUrls:Immutable.Map<string, string>;
     pcqPosNegValues:Immutable.Map<string, string>;
+    includeEmptyValues:Immutable.Map<string, boolean>;
     inputLanguages:Immutable.Map<string, string>;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     hasLemmaAttr:Immutable.Map<string, boolean>;
@@ -67,8 +59,8 @@ export interface AlignedViews {
     AlignedCorpora:React.SFC<AlignedCorporaProps>;
 }
 
-export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
-        withinBuilderModel, virtualKeyboardModel, cqlEditorModel}:AlignedModuleArgs):AlignedViews {
+export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedViews {
+
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
     /*
@@ -86,6 +78,7 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
         corpname:string;
         label:string;
         pcqPosNegValue:string;
+        includeEmptyValue:boolean;
         queryType:string;
         widgets:Immutable.List<string>;
         hasLemmaAttr:boolean;
@@ -127,27 +120,30 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                 }
             });
         }
-
         render() {
             return (
                 <div className="AlignedCorpBlock">
                     <div className="heading">
-                        <a className="make-primary" title={he.translate('query__make_corpus_primary')}
-                                onClick={this.handleMakeMainClick}>
-                            <img src={he.createStaticUrl('img/make-main.svg')}
-                                alt={he.translate('query__make_corpus_primary')} />
-                        </a>
                         <h3>{this.props.label}</h3>
-                        <a className="close-button" title={he.translate('query__remove_corpus')}
-                                onClick={this.handleCloseClick}>
-                            <img src={he.createStaticUrl('img/close-icon.svg')}
-                                    alt={he.translate('query__close_icon')} />
-                        </a>
+                        <span className="icons">
+                            <a className="make-primary" title={he.translate('query__make_corpus_primary')}
+                                    onClick={this.handleMakeMainClick}>
+                                <img src={he.createStaticUrl('img/make-main.svg')}
+                                    alt={he.translate('query__make_corpus_primary')} />
+                            </a>
+                            <a className="close-button" title={he.translate('query__remove_corpus')}
+                                    onClick={this.handleCloseClick}>
+                                <img src={he.createStaticUrl('img/close-icon.svg')}
+                                        alt={he.translate('query__close_icon')} />
+                            </a>
+                        </span>
                     </div>
                     <table className="form">
                         <tbody>
                             <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
                                     value={this.props.pcqPosNegValue} actionPrefix="" />
+                            <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
+                                    corpname={this.props.corpname} />
                             <inputViews.TRQueryTypeField queryType={this.props.queryType}
                                     sourceId={this.props.corpname}
                                     actionPrefix=""
@@ -203,17 +199,6 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                 <legend>
                     {he.translate('query__aligned_corpora_hd')}
                 </legend>
-                <div id="add-searched-lang-widget">
-                    <select onChange={handleAddAlignedCorpus} value="">
-                        <option value="" disabled={true}>
-                            {`-- ${he.translate('query__add_a_corpus')} --`}</option>
-                        {props.availableCorpora
-                            .filter(item => corpIsUnused(item.n))
-                            .map(item => {
-                                return <option key={item.n} value={item.n}>{item.label}</option>;
-                            })}
-                    </select>
-                </div>
                 {props.alignedCorpora.map(item => <AlignedCorpBlock
                         key={item}
                         label={findCorpusLabel(item)}
@@ -229,12 +214,24 @@ export function init({dispatcher, he, inputViews, queryModel, queryHintModel,
                         tagsetDocUrl={props.tagsetDocUrls.get(item)}
                         tagHelperView={props.tagHelperView}
                         pcqPosNegValue={props.pcqPosNegValues.get(item)}
+                        includeEmptyValue={props.includeEmptyValues.get(item)}
                         inputLanguage={props.inputLanguages.get(item)}
                         queryStorageView={props.queryStorageView}
                         hasLemmaAttr={props.hasLemmaAttr.get(item)}
                         useCQLEditor={props.useCQLEditor}
                         onEnterKey={props.onEnterKey} />
                 )}
+                <div id="add-searched-lang-widget">
+                    <select onChange={handleAddAlignedCorpus} value="">
+                        <option value="" disabled={true}>
+                            {`-- ${he.translate('query__add_a_corpus')} --`}</option>
+                        {props.availableCorpora
+                            .filter(item => corpIsUnused(item.n))
+                            .map(item => {
+                                return <option key={item.n} value={item.n}>{item.label}</option>;
+                            })}
+                    </select>
+                </div>
             </fieldset>
         );
     };

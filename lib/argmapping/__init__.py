@@ -222,6 +222,7 @@ class GlobalArgs(object):
     save = Parameter(1)
     async = Parameter(1)
     qmcase = Parameter(0)
+    include_empty = Parameter(0)
     rlines = Parameter(u'250')
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)

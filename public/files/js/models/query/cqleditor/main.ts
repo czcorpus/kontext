@@ -277,7 +277,7 @@ class RuleCharMap {
             }
         });
         if (errors.length > 0) {
-            this.onHintChange(errors.join('<br />'));
+            this.onHintChange('<strong>\u26A0</strong>\u00a0' + errors.join('<br />'));
 
         } else {
             this.onHintChange(null);
