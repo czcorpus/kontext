@@ -131,6 +131,9 @@ class TreqBackend(HTTPBackend):
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 data['lines'] = data['lines'][:max_items]
+            except ValueError:
+                logging.getLogger(__name__).error(u'Failed to parse response: {0}'.format(data))
+                data = dict(sum=0, lines=[])
             finally:
                 connection.close()
         else:
