@@ -47,6 +47,7 @@ export interface InputModuleViews {
     TRQueryInputField:React.ComponentClass<TRQueryInputFieldProps>;
     TRQueryTypeField:React.SFC<TRQueryTypeFieldProps>;
     TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps>;
+    TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps>;
 }
 
 
@@ -90,6 +91,11 @@ export interface TRPcqPosNegFieldProps {
     actionPrefix:string;
     sourceId:string;
     value:string; // TODO enum
+}
+
+export interface TRIncludeEmptySelectorProps {
+    value:boolean;
+    corpname:string;
 }
 
 
@@ -274,6 +280,34 @@ export function init({
                         <option value="pos">{he.translate('query__align_contains')}</option>
                         <option value="neg">{he.translate('query__align_not_contains')}</option>
                     </select>
+                </td>
+            </tr>
+        );
+    };
+
+    // ---------------- <TRIncludeEmptySelector /> ---------------------------
+
+    const TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps> = (props) => {
+
+        const handleCheckbox = () => {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SET_INCLUDE_EMPTY',
+                props: {
+                    corpname: props.corpname,
+                    value: !props.value
+                }
+            });
+        };
+
+        return (
+            <tr className="TRIncludeEmptySelector">
+                <th />
+                <td>
+                    <label>
+                        <input type="checkbox" checked={props.value}
+                            onChange={handleCheckbox} />
+                        {he.translate('query__include_empty_aligned')}
+                    </label>
                 </td>
             </tr>
         );
@@ -698,7 +732,6 @@ export function init({
         }
     };
 
-
     // ------------------- <TRQueryInputField /> -----------------------------
 
     class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
@@ -906,7 +939,8 @@ export function init({
     return {
         TRQueryInputField: TRQueryInputField,
         TRQueryTypeField: TRQueryTypeField,
-        TRPcqPosNegField: TRPcqPosNegField
+        TRPcqPosNegField: TRPcqPosNegField,
+        TRIncludeEmptySelector: TRIncludeEmptySelector
     };
 
 }

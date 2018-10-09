@@ -138,7 +138,7 @@ class Querying(Kontext):
     def _attach_aligned_query_params(self, tpl_out):
         """
         Adds template data required to generate components for adding/overviewing
-        aligned corpora.
+        aligned corpora. This is called by individual actions.
 
         arguments:
         tpl_out -- a dict where exported data is stored
@@ -167,14 +167,14 @@ class Querying(Kontext):
             def name_filter(v):
                 return True
 
-        args = ('include_empty', 'pcq_pos_neg')
+        args = (('include_empty', lambda x: int(x)), ('pcq_pos_neg', lambda x: x))
         if not state_only:
-            args += ('queryselector',)
+            args += (('queryselector', lambda x: x),)
         ans = {}
-        for param_name in args:
+        for param_name, type_conv in args:
             full_name = '%s_%s' % (param_name, aligned_corp)
             if full_name in self._request.args and name_filter(param_name):
-                ans[full_name] = self._request.args[full_name]
+                ans[full_name] = type_conv(self._request.args[full_name])
         return ans
 
     @exposed(return_type='json', http_method='GET')
