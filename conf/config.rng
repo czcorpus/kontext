@@ -119,6 +119,19 @@
                             </element>
                         </optional>
                     </interleave>
+                    <zeroOrMore>
+                    <element>
+                        <anyName />
+                        <attribute name="extension-by">
+                            <text />
+                        </attribute>
+                        <zeroOrMore>
+                            <element name="item">
+                                <text />
+                            </element>
+                        </zeroOrMore>
+                    </element>
+                </zeroOrMore>
                 </element>
             </optional>
             <element name="global">
