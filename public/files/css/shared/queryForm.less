@@ -93,6 +93,7 @@ form.query-form {
     .pos-filter {
         margin-top: 1.7em;
     }
+
 }
 
 
@@ -157,16 +158,6 @@ div.query-form-spa {
     white-space: nowrap;
 }
 
-#specify-context div.contents,
-#specify-query-metainformation div.contents {
-    display: none;
-
-    .text-types-selection {
-        padding-top: 0.4em;
-    }
-}
-
-
 .query-area {
     max-width: 50em;
     border-radius: @input-border-radius;
@@ -201,6 +192,7 @@ div.query-form-spa {
 
         background-color: #FAFAFA;
         max-width: 40em;
+        white-space: initial;
 
         div {
             color: @color-light-text;
@@ -210,11 +202,17 @@ div.query-form-spa {
         }
 
         .next-hint {
-            padding-left: 1em;
+            padding-left: 0.7em;
         }
 
         .next-hint a {
             color: @color-light-text;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .next-hint a:hover {
+            color: @color-logo-blue;
         }
 
         .cql-editor-message {

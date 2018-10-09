@@ -150,7 +150,10 @@ export function init({
                 <div>
                     <span className="hint">{this.state.currentHints.get(UsageTipCategory.QUERY)}</span>
                     <span className="next-hint">
-                        (<a onClick={this._clickHandler}>{he.translate('global__next_tip')}</a>)
+                        <a onClick={this._clickHandler} title={he.translate('global__next_tip')}>
+                            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
+                                    alt={he.translate('global__next_tip')} />
+                        </a>
                     </span>
                 </div>
             );
