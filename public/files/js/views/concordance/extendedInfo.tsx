@@ -113,9 +113,13 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         render() {
-            return <div>
+            return <div className="UsageTips">
                 {this.state.currentHints.get(UsageTipCategory.CONCORDANCE)}
-                {'\u00a0'}(<a onClick={this.handleNextClick}>{he.translate('global__next_tip')}</a>)
+                {'\u00a0'}<span className="next-hint">
+                <a onClick={this.handleNextClick} title={he.translate('global__next_tip')}>
+                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
+                            alt={he.translate('global__next_tip')} />
+                </a></span>
             </div>
         };
     }

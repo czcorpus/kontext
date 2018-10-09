@@ -367,7 +367,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     wPoSList={this.state.wPoSList} />
                             : null}
                     </fieldset>
-                    <fieldset id="specify-query-metainformation">
+                    <fieldset className="specify-query-metainformation">
                         <AdvancedFormLegend
                                 formVisible={this.state.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
@@ -395,7 +395,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     const SelectedTextTypesLite = (props) => {
         return (
-            <fieldset id="specify-query-metainformation">
+            <fieldset className="SelectedTextTypesLite specify-query-metainformation">
                 <legend>{he.translate('query__chosen_texts')}</legend>
                 <ul>
                     {Object.keys(props.data).map(v => (
