@@ -150,7 +150,7 @@ class Actions(Kontext):
             for kwicline in page['Lines']
         ][start:][:max_rec]
 
-    @exposed(return_type='xml', template='fcs/v1_complete.tmpl', skip_corpus_init=True)
+    @exposed(return_type='xml', template='fcs/v1_complete.tmpl', skip_corpus_init=True, http_method=('GET', 'HEAD'))
     def v1(self, req):
         current_version = 1.2
 
