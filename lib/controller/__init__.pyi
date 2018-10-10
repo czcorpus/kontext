@@ -23,7 +23,7 @@ import werkzeug.wrappers
 
 
 def exposed(access_level:Optional[int], template:Optional[str], vars:Optional[Tuple[str]], page_model:Optional[str],
-            legacy:Optional[bool], skip_corpus_init:Optional[bool], http_method:Optional[str],
+            legacy:Optional[bool], skip_corpus_init:Optional[bool], http_method:Union[Optional[str], Tuple[str,...]],
             accept_kwargs:Optional[bool], apply_semi_persist_args:Optional[bool],
             mutates_conc:Optional[bool], return_type:Optional[str]) -> Callable[[Any,...], Any]: ...
 
