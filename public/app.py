@@ -108,6 +108,8 @@ class WsgiApp(object):
                 lgs_string = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
             else:
                 lgs_string = lang_cookie.value
+            if lgs_string is None:
+                lgs_string = 'en_US'
             if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
                 lgs_string = self._installed_langs.get(lgs_string)
             else:
