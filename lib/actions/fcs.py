@@ -248,6 +248,8 @@ class Actions(Kontext):
                 corpus = self.cm.get_Corpus(corpname)
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
+                data['corpus_desc'] = u'Corpus {0} (size: {1} tokens)'.format(
+                    corpus.get_conf('NAME'), corpus.size())
 
             # wordlist for a given attribute
             elif operation == 'scan':
