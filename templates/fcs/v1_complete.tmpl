@@ -47,7 +47,7 @@
         </sru:recordData>
         #end if
     </sru:record>
-    #if $show_endpoint_desc
+    #if $getVar('show_endpoint_desc', False)
     <sru:extraResponseData>
         <ed:EndpointDescription xmlns:ed="http://clarin.eu/fcs/endpoint-description" version="1">
             <ed:Capabilities>
