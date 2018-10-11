@@ -20,8 +20,13 @@
                     <zr:title lang="en" primary="true">$corpname</zr:title>
                     <zr:description lang="en" primary="true">$corpus_desc</zr:description>
                 </zr:databaseInfo>
+                <zr:schemaInfo>
+                    <zr:schema identifier="http://clarin.eu/fcs/resource" name="fcs">
+                        <zr:title lang="en" primary="true">CLARIN Content Search</zr:title>
+                    </zr:schema>
+                </zr:schemaInfo>
                 <zr:indexInfo>
-                    <zr:set identifier="clarin.eu/fcs/1.0" name="fcs">
+                    <zr:set identifier="http://clarin.eu/fcs/resource" name="fcs">
                         <zr:title lang="de">CLARIN Content Search</zr:title>
                         <zr:title lang="en" primary="true">CLARIN Content Search</zr:title>
                     </zr:set>
@@ -34,18 +39,36 @@
                     </zr:index>
                     #end for
                 </zr:indexInfo>
-                <zr:schemaInfo>
-                    <zr:schema identifier="http://clarin.eu/fcs/1.0" name="fcs">
-                        <zr:title lang="en" primary="true">CLARIN Content Search</zr:title>
-                    </zr:schema>
-                </zr:schemaInfo>
                 <zr:configInfo>
                     <zr:setting type="maximumRecords">$maximumRecords</zr:setting>
+                    <zr:default type="maximumTerms">$maximumTerms</zr:default>
                 </zr:configInfo>
             </zr:explain>
         </sru:recordData>
         #end if
     </sru:record>
+    #if $show_endpoint_desc
+    <sru:extraResponseData>
+        <ed:EndpointDescription xmlns:ed="http://clarin.eu/fcs/endpoint-description" version="1">
+            <ed:Capabilities>
+                <ed:Capability>http://clarin.eu/fcs/capability/basic-search</ed:Capability>
+            </ed:Capabilities>
+            <ed:SupportedDataViews>
+                <ed:SupportedDataView id="hits" delivery-policy="send-by-default">application/x-clarin-fcs-hits+xml</ed:SupportedDataView>
+            </ed:SupportedDataViews>
+            <ed:Resources>
+                <ed:Resource pid="http://hdl.handle.net/4711/0815">
+                    <ed:Title xml:lang="en">$corpus_desc</ed:Title>
+                    <ed:LandingPageURI>http://repos.example.org/corpus1.html</ed:LandingPageURI>
+                    <ed:Languages>
+                        <ed:Language>cze</ed:Language>
+                    </ed:Languages>
+                    <ed:AvailableDataViews ref="hits"/>
+                </ed:Resource>
+            </ed:Resources>
+        </ed:EndpointDescription>
+    </sru:extraResponseData>
+    #end if
 #end filter
 #filter None
     $add_diagnostics()
@@ -103,12 +126,10 @@
             <sru:recordPacking>$recordPacking</sru:recordPacking>
             <sru:recordData>
                 <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="$corppid" ref="$corpname">
-                    <fcs:DataView type="application/x-clarin-fcs-kwic+xml">
-                        <kwic:kwic xmlns:kwic="http://clarin.eu/fcs/1.0/kwic">
-                            <kwic:c type="left">$left</kwic:c>
-                            <kwic:kw>$word</kwic:kw>
-                            <kwic:c type="right">$right</kwic:c>
-                        </kwic:kwic>
+                    <fcs:DataView type="application/x-clarin-fcs-hits+xml">
+                        <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
+                            $left <hits:Hit>$word</hits:Hit> $right
+                        </hits:Result>
                     </fcs:DataView>
                 </fcs:Resource>
             </sru:recordData>
