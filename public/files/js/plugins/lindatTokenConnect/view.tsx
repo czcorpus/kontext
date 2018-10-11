@@ -333,27 +333,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
     // ------------- <VerbList /> -------------------------------
 
-    const VerbList:React.SFC<{
+    class VerbList extends React.Component<{
         list:VRD.CompleteSenseList;
-        language:string;
-    }> = (props) => {
-        const renderVerbInfo = () => {
-            return props.list.map((item, i) => {
-                return <Pair language={props.language} key={i} name={item[0]} detail={item[1]} />
-            });
-
-        };
-        return (
-            <div>{renderVerbInfo()}</div>
-        );
-    };
-
-    // ------------- <Pair /> -------------------------------
-
-    class Pair extends React.Component<{
-        key:any;
-        name:VRD.Sense;
-        detail:VRD.SenseInfoList;
         language:string;
     }, {collapse: boolean}> {
 
@@ -368,16 +349,44 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler() {
-            return this.state.collapse ? "Show details" : "Hide details";
+            return this.state.collapse ? "Expand all" : "Collapse all";
         }
 
         _getStateDisplay() {
             return this.state.collapse ? {display: 'none'} : {display: 'block'};
         }
 
-        _toVallex () {
-            const TargetVallex = this.props.name.split(' : ')[0];
-            if (this.props.language == 'cz') {
+        _renderVerbInfo() {
+            return this.props.list.map((item, i) => {
+                return <Pair language={this.props.language} key={i} name={item[0]} detail={item[1]} />
+            });
+
+        };
+
+        render() {
+            return (
+                <div>
+                    <a className="verbListExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div style={this._getStateDisplay()}>{this._renderVerbInfo()}
+                    </div>
+                </div>
+            );
+        }
+    };
+
+    // ------------- <Pair /> -------------------------------
+
+    const Pair:React.SFC<{
+        key:any;
+        name:VRD.Sense;
+        detail:VRD.SenseInfoList;
+        language:string;
+    }> = (props) => {
+
+        const toVallex = (props) => {
+            const TargetVallex = props.name.split(' : ')[0];
+            if (props.language == 'cz') {
                 const fullLink = 'https://lindat.mff.cuni.cz/services/CzEngVallex/CzEngVallex.html?vlanguage=cz&block=D&first_verb=' + TargetVallex + '&second_verb=ALL';
                 return fullLink
             } else {
@@ -386,43 +395,36 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             }
         };
 
-        render() {
-            return (
-                <div>
-                    <a className="vallexSense" href={this._toVallex()} target="_blank">{this.props.name}</a>
-                    <a className="vallexSenseExpand" onClick={this._clickHandler}>{this._textHandler()}
-                    </a>
-                    <div className="vallexSenseBlock" style={this._getStateDisplay()}>
-                    {this.props.detail.map((sourceValue, h) => {
-                        return (
-                            <div key={h}>
-                                <div className="vallexSourceV">{this.props.name.split(' : ')[0]}
-                                    {sourceValue[1][0].map((listValue, i) => {
-                                        if (listValue.length !== 0) {
-                                            return <span className="vallexFrame" key={i}>&nbsp;<span
-                                                dangerouslySetInnerHTML={{__html: listValue}}/></span>;
-                                        }
-                                    })}
-                                </div>
-                                <div className="vallexExpl">{sourceValue[1][1]}</div>
-                                <ul className="vallexExamples">
-                                    {sourceValue[1][2].map((example, j) => {
-                                        if (example.length !== 0) {
-                                            return <li className="vallexExamples" key={j}>{example}</li>;
-                                        }
-                                    })}
-                                </ul>
-                                <TargetVerb verbSourceName={this.props.name.split(' : ')[0]}
-                                            verbTargetName={this.props.name.split(' : ')[1]}
-                                            verbSourceID={sourceValue[0]}
-                                            verbTargetList={sourceValue[2]}/>
+        return (
+            <div>
+                <a className="vallexSense" href={toVallex(props)} target="_blank">{props.name}</a>
+                {props.detail.map((sourceValue, h) => {
+                    return (
+                        <div key={h}>
+                            <div className="vallexSourceV">{props.name.split(' : ')[0]}
+                                {sourceValue[1][0].map((listValue, i) => {
+                                    if (listValue.length !== 0) {
+                                        return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
+                                    }
+                                })}
                             </div>
-                        );
-                    })}
-                    </div>
-                </div>
-            );
-        }
+                            <div className="vallexExpl">{sourceValue[1][1]}</div>
+                            <ul className="vallexExamples">
+                            {sourceValue[1][2].map((example, j) => {
+                                if (example.length !== 0) {
+                                    return <li className="vallexExamples" key={j}>{example}</li>;
+                                }
+                            })}
+                            </ul>
+                            <TargetVerb verbSourceName={props.name.split(' : ')[0]}
+                                        verbTargetName={props.name.split(' : ')[1]}
+                                        verbSourceID={sourceValue[0]}
+                                        verbTargetList={sourceValue[2]}/>
+                        </div>
+                    );
+                })}
+            </div>
+        );
     };
 
     // ------------- <TargetVerb /> -------------------------------
