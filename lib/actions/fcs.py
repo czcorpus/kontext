@@ -250,7 +250,8 @@ class Actions(Kontext):
                 data['numberOfRecords'] = len(data['result'])
                 data['corpus_desc'] = u'Corpus {0} (size: {1} tokens)'.format(
                     corpus.get_conf('NAME'), corpus.size())
-
+                data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
+                                              else False)
             # wordlist for a given attribute
             elif operation == 'scan':
                 self._check_args(
