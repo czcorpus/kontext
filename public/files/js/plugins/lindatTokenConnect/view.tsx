@@ -54,23 +54,48 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
     };
 
-        // ------------- <EngVerbList /> -------------------------------
+    // ------------- <EngVerbList /> -------------------------------
 
-    const EngVerbList:React.SFC<{
+    class EngVerbList extends React.Component<{
         info:ENGVRD.VerbAndInfo;
-    }> = (props) => {
-        const renderEngVerbInfo = () => {
-            return props.info[1].map((item, i) => {
+    }, {collapse: boolean}> {
+
+        constructor(props) {
+            super(props);
+            this.state = {collapse: true};
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
+            this.setState({collapse: !this.state.collapse});
+        }
+
+        _textHandler() {
+            return this.state.collapse ? "Expand all" : "Collapse all";
+        }
+
+        _getStateDisplay() {
+            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+        }
+
+        _renderEngVerbInfo() {
+            return this.props.info[1].map((item, i) => {
                 return <OneEngFrame key={i} id={item[0]}
                                 info={item[1]}
                                 pcedtEx={item[2]}
-                                verb={props.info[0]}/>
+                                verb={this.props.info[0]}/>
             });
+        }
 
-        };
-        return (
-            <div>{renderEngVerbInfo()}</div>
-        );
+        render() {
+            return (
+                <div>
+                    <a className="EngVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div style={this._getStateDisplay()}>{this._renderEngVerbInfo()}</div>
+                </div>
+            );
+        }
     };
 
         // ------------- <OneEngFrame /> -------------------------------
@@ -182,21 +207,46 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         // ------------- <PDTVerbList /> -------------------------------
 
-    const PDTVerbList:React.SFC<{
+    class PDTVerbList extends React.Component <{
         info:PDTVRD.VerbAndInfo;
-    }> = (props) => {
-        const renderVerbInfo = () => {
-            return props.info[1].map((item, i) => {
+    }, {collapse: boolean}> {
+
+        constructor(props) {
+            super(props);
+            this.state = {collapse: true};
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
+            this.setState({collapse: !this.state.collapse});
+        }
+
+        _textHandler() {
+            return this.state.collapse ? "Expand all" : "Collapse all";
+        }
+
+        _getStateDisplay() {
+            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+        }
+
+        _renderVerbInfo () {
+            return this.props.info[1].map((item, i) => {
                 return <OneFrame key={i} id={item[0]}
                                 info={item[1]} pdtEx={item[2]}
                                 pcedtEx={item[3]}
-                                verb={props.info[0]}/>
+                                verb={this.props.info[0]}/>
             });
+        }
 
-        };
-        return (
-            <div>{renderVerbInfo()}</div>
-        );
+        render() {
+            return (
+                <div>
+                    <a className="PDTVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div style={this._getStateDisplay()}>{this._renderVerbInfo()}</div>
+                </div>
+            );
+        }
     };
 
         // ------------- <OneFrame /> -------------------------------
