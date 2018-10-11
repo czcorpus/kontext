@@ -18,6 +18,7 @@
                     </zr:serverInfo>
                 <zr:databaseInfo>
                     <zr:title lang="en" primary="true">$corpname</zr:title>
+                    <zr:description lang="en" primary="true">$corpus_desc</zr:description>
                 </zr:databaseInfo>
                 <zr:indexInfo>
                     <zr:set identifier="clarin.eu/fcs/1.0" name="fcs">
@@ -98,10 +99,10 @@
     <sru:records>
         #for $left, $word, $right, $ref in $result
         <sru:record>
-            <sru:recordSchema>http://clarin.eu/fcs/1.0</sru:recordSchema>
+            <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
             <sru:recordPacking>$recordPacking</sru:recordPacking>
             <sru:recordData>
-                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/1.0" pid="$corppid" ref="$corpname">
+                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="$corppid" ref="$corpname">
                     <fcs:DataView type="application/x-clarin-fcs-kwic+xml">
                         <kwic:kwic xmlns:kwic="http://clarin.eu/fcs/1.0/kwic">
                             <kwic:c type="left">$left</kwic:c>
