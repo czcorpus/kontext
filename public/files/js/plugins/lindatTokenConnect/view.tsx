@@ -355,9 +355,27 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         name:VRD.Sense;
         detail:VRD.SenseInfoList;
         language:string;
-    }> {
+    }, {collapse: boolean}> {
 
-        toVallex () {
+        constructor(props) {
+            super(props);
+            this.state = {collapse: true};
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
+            this.setState({collapse: !this.state.collapse});
+        }
+
+        _textHandler() {
+            return this.state.collapse ? "Show details" : "Hide details";
+        }
+
+        _getStateDisplay() {
+            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+        }
+
+        _toVallex () {
             const TargetVallex = this.props.name.split(' : ')[0];
             if (this.props.language == 'cz') {
                 const fullLink = 'https://lindat.mff.cuni.cz/services/CzEngVallex/CzEngVallex.html?vlanguage=cz&block=D&first_verb=' + TargetVallex + '&second_verb=ALL';
@@ -371,7 +389,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="vallexSense" href={this.toVallex()} target="_blank">{this.props.name}</a>
+                    <a className="vallexSense" href={this._toVallex()} target="_blank">{this.props.name}</a>
+                    <a className="vallexSenseExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    </a>
+                    <div className="vallexSenseBlock" style={this._getStateDisplay()}>
                     {this.props.detail.map((sourceValue, h) => {
                         return (
                             <div key={h}>
@@ -398,6 +419,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                             </div>
                         );
                     })}
+                    </div>
                 </div>
             );
         }
