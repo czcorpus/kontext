@@ -66,7 +66,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
     legacy -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
     skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
     mutates_conc -- store a new conc action under a new key to a conc_peristence db
-    http_method -- required HTTP method (POST, GET, PUT,...)
+    http_method -- required HTTP method (POST, GET, PUT,...), either a single string or a tuple of strings
     accept_kwargs -- True/False
     apply_semi_persist_args -- if True hen use session to initialize action args first
     return_type -- {plain, json, html}
@@ -451,8 +451,10 @@ class Controller(object):
             return '%s%s' % (root, action)
 
     def _validate_http_method(self, action_metadata):
-        if 'http_method' in action_metadata and (self.get_http_method().lower() !=
-                                                 action_metadata['http_method'].lower()):
+        hm = action_metadata.get('http_method', 'GET')
+        if type(hm) is not tuple:
+            hm = (hm,)
+        if self.get_http_method() not in hm:
             raise UserActionException(translate('Unknown action'), code=404)
 
     def _pre_action_validate(self):

@@ -121,7 +121,8 @@ class Options(Kontext):
         self._save_options(['attrs', 'attr_vmode', 'attr_allpos', 'ctxattrs', 'structs',
                             'refs', 'structattrs'], self.args.corpname)
         if self.args.format == 'json':
-            return dict(widectx_globals=self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts())))
+            return dict(widectx_globals=self._get_mapped_attrs(
+                WidectxArgsMapping, dict(structs=self._get_struct_opts())))
         elif self.args.q:
             self._redirect_to_conc()
         else:

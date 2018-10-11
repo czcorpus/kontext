@@ -84,6 +84,7 @@ interface GeneralQueryFormState {
     attrList:Immutable.List<Kontext.AttrItem>;
     tagsetDocUrls:Immutable.Map<string, string>;
     pcqPosNegValues:Immutable.Map<string, string>;
+    includeEmptyValues:Immutable.Map<string, boolean>;
     lemmaWindowSizes:Immutable.List<number>;
     posWindowSizes:Immutable.List<number>;
     hasLemmaAttr:Immutable.Map<string, boolean>;
@@ -133,16 +134,10 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     const alignedViews = alignedInit({
             dispatcher: dispatcher,
             he: he,
-            inputViews: inputViews,
-            queryModel: queryModel,
-            queryHintModel: queryHintModel,
-            withinBuilderModel: withinBuilderModel,
-            virtualKeyboardModel: virtualKeyboardModel,
-            cqlEditorModel: cqlEditorModel
+            inputViews: inputViews
     });
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
-    const layoutViews = he.getLayoutViews();
 
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
@@ -179,8 +174,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         if (props.description) {
             return (
                 <div className="TextTypesNotes">
-                    <img src={he.createStaticUrl('img/info-icon.svg')}
-                            style={{width: '1em', verticalAlign: 'middle', marginRight: '0.7em'}} />
                     <div dangerouslySetInnerHTML={{__html: props.description}} />
                 </div>
             );
@@ -237,6 +230,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 structAttrList: queryModel.getStructAttrList(),
                 tagsetDocUrls: queryModel.getTagsetDocUrls(),
                 pcqPosNegValues: queryModel.getPcqPosNegValues(),
+                includeEmptyValues: queryModel.getIncludeEmptyValues(),
                 lemmaWindowSizes: queryModel.getLemmaWindowSizes(),
                 posWindowSizes: queryModel.getPosWindowSizes(),
                 hasLemmaAttr: queryModel.getHasLemmaAttr(),
@@ -350,6 +344,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 attrList={this.state.attrList}
                                 tagsetDocUrls={this.state.tagsetDocUrls}
                                 pcqPosNegValues={this.state.pcqPosNegValues}
+                                includeEmptyValues={this.state.includeEmptyValues}
                                 inputLanguages={this.state.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
                                 hasLemmaAttr={this.state.hasLemmaAttr}
@@ -372,7 +367,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     wPoSList={this.state.wPoSList} />
                             : null}
                     </fieldset>
-                    <fieldset id="specify-query-metainformation">
+                    <fieldset className="specify-query-metainformation">
                         <AdvancedFormLegend
                                 formVisible={this.state.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
@@ -400,7 +395,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     const SelectedTextTypesLite = (props) => {
         return (
-            <fieldset id="specify-query-metainformation">
+            <fieldset className="SelectedTextTypesLite specify-query-metainformation">
                 <legend>{he.translate('query__chosen_texts')}</legend>
                 <ul>
                     {Object.keys(props.data).map(v => (
@@ -442,6 +437,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 attrList: queryModel.getAttrList(),
                 tagsetDocUrls: queryModel.getTagsetDocUrls(),
                 pcqPosNegValues: queryModel.getPcqPosNegValues(),
+                includeEmptyValues: queryModel.getIncludeEmptyValues(),
                 lemmaWindowSizes: queryModel.getLemmaWindowSizes(),
                 posWindowSizes: queryModel.getPosWindowSizes(),
                 hasLemmaAttr: queryModel.getHasLemmaAttr(),

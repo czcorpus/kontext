@@ -616,7 +616,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                                         refsDetailClickHandler={this.props.refsDetailClickHandler} />
                                 </td>
-                                {this._renderText(alCorp, i + 1)}
+                                {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1) :
+                                    <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
+                                }
                             </React.Fragment>;
 
                         } else {

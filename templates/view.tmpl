@@ -45,6 +45,7 @@ KonText - $getVar('page_title', '') ($_('Concordance').lower())#slurp
 #end def
 
 #def bodyonload
+__conf.currentArgs = $to_json($Globals.export());
 __conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
 __conf.concLineMaxGroupNum = $conc_line_max_group_num;
 __conf.WideCtxGlobals = $to_json($widectx_globals);

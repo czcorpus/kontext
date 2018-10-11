@@ -335,16 +335,16 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const renderLabel = () => {
             if (props.idx === 0) {
-                return [
-                    '\u00a0|\u00a0',
+                return <>
+                    {'\u00a0|\u00a0'}
                     <strong key="op">{props.item.op}</strong>
-                ];
+                </>;
 
             } else {
-                return [
-                    <span key="transit" className="transition">{'\u00A0\u25B6\u00A0'}</span>,
+                return <>
+                    <span key="transit" className="transition">{'\u00A0\u25B6\u00A0'}</span>
                     <strong key="op">{props.item.op}</strong>
-                ];
+                    </>;
             }
         };
 
@@ -353,7 +353,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                 {renderLabel()}{':\u00a0'}
                 {props.item.nicearg ?
                     (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
-                        {props.item.nicearg}
+                        <layoutViews.Shortener text={props.item.nicearg} limit={40} />
                     </a>)
                     : (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
                         {'\u2713'}</a>)

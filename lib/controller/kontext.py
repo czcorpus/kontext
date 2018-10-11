@@ -38,7 +38,6 @@ import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
 import scheduled
-import templating
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
@@ -566,7 +565,7 @@ class Kontext(Controller):
         """
         Redirects to the current concordance
         """
-        args = self._get_attrs(ConcArgsMapping)
+        args = self._get_mapped_attrs(ConcArgsMapping)
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
@@ -1043,13 +1042,11 @@ class Kontext(Controller):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
-    def _get_attrs(self, attr_names, force_values=None):
+    def _get_mapped_attrs(self, attr_names, force_values=None):
         """
         Returns required attributes (= passed attr_names) and their respective values found
         in 'self.args'. Only attributes initiated via class attributes and the Parameter class
         are considered valid.
-
-        Note: this should not be used with new-style actions.
         """
         if force_values is None:
             force_values = {}
@@ -1059,6 +1056,7 @@ class Kontext(Controller):
 
         def get_val(k):
             return force_values[k] if k in force_values else getattr(self.args, k, None)
+
         ans = []
         for attr in attr_names:
             v_tmp = get_val(attr)
@@ -1125,13 +1123,6 @@ class Kontext(Controller):
         result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
-
-        global_var_val = self._get_attrs(ConcArgsMapping)
-        result['globals'] = self.urlencode(global_var_val)
-        result['Globals'] = templating.StateGlobals(global_var_val)
-        result['Globals'].set('q', [q for q in result.get('Q')])
-        if corplib.is_subcorpus(self.corp):
-            result['Globals'].set('usesubcorp', self.corp.subcname)
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this
