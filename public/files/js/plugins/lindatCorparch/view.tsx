@@ -158,7 +158,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         name:string;
         description:string;
         permitted:boolean;
-        tokenConnect:any;
+        tokenConnect:Array<string>;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
@@ -252,7 +252,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
-        _tConnect(tokenConnect:any) {
+        _tConnect(tokenConnect:Array<string>) {
             if (this.props.tokenConnect.length > 0 ) {
             return <div className="md-transparent" title="Dictionaries are avaliable for this corpus">
                     <button className="btn btn-default pmltq" style={{background: this._myColor(), opacity: this._myOpacity()}}>
