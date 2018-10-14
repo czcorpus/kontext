@@ -92,7 +92,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                 <div>
                     <a className="EngVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
-                    <div style={this._getStateDisplay()}>{this._renderEngVerbInfo()}</div>
+                    <div className="containerTC" style={this._getStateDisplay()}>{this._renderEngVerbInfo()}</div>
                 </div>
             );
         }
@@ -109,7 +109,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     }> = (props) => {
 
         return (
-            <div className="containerTC">
+            <div>
                 <div className="vallexSourceV">{props.verb}
                     {props.info[0].map((listValue, i) => {
                         if (listValue.length !== 0) {
