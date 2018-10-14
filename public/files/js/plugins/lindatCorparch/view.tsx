@@ -136,7 +136,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={this.props.activeLanguage}
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
-                                permitted={this.props.permitted} />
+                                permitted={this.props.permitted}/>
                     </div>
                 </div>
             );
@@ -158,6 +158,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         name:string;
         description:string;
         permitted:boolean;
+        tokenConnect:any;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
@@ -251,6 +252,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
+        _tConnect(tokenConnect:any) {
+            if (this.props.tokenConnect.length > 0 ) {
+            return <div className="md-transparent" title="Dictionaries are avaliable for this corpus">
+                    <button className="btn btn-default pmltq" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                        <span className="lindat-vallex"></span></button></div>
+            }
+        }
+
         _download(repo:string) {
             if (repo !== 'no' && this.props.permitted) {
             return <a href={this.props.repo} className="md-transparent" title={"Download " + this.props.name}>
@@ -311,6 +320,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                     {this._download(this.props.repo)}
                                     {this._access()}
                                     {this._syntax()}
+                                    {this._tConnect(this.props.tokenConnect)}
                                 </div>
                                 <div className="col-xs-6 details">
                                     <h3 className="title" onMouseOver={this._mouseOver} onMouseOut={this._mouseOut} onClick={this._clickHandler} title={"Search in " + this.props.name}>
@@ -368,7 +378,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                                 onActiveLanguageSet={props.onActiveLanguageSet}
                                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
                                                 onActiveFeatSet={props.onActiveFeatSet}
-                                                onActiveFeatDrop={props.onActiveFeatDrop} />;
+                                                onActiveFeatDrop={props.onActiveFeatDrop}/>;
                         }
                     } else {
                         return <TreeLeaf key={i} name={item.name} ident={item.ident}
@@ -382,7 +392,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                          activeFeat={props.activeFeat}
                                          onActiveFeatSet={props.onActiveFeatSet}
                                          onActiveFeatDrop={props.onActiveFeatDrop}
-                                         permitted={item.permitted} />;
+                                         permitted={item.permitted}
+                                         tokenConnect={item.tokenConnect}/>;
                     }
                 });
         };
@@ -427,7 +438,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeFeat={this.props.activeFeat}
                                 onActiveFeatSet={this.props.onActiveFeatSet}
                                 onActiveFeatDrop={this.props.onActiveFeatDrop}
-                                permitted={item.permitted} />
+                                permitted={item.permitted}
+                                tokenConnect={item.tokenConnect}/>
             ));
         }
 
@@ -560,7 +572,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permitted={this.state.data.permitted} />
+                                  permitted={this.state.data.permitted}/>
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
@@ -571,7 +583,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permitted={this.state.data.permitted} />
+                                  permitted={this.state.data.permitted}/>
                     </div>
                 </div>
             );

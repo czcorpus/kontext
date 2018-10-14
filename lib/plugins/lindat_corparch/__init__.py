@@ -210,11 +210,11 @@ class CorptreeParser(object):
             data['repo'] = elm.attrib['repo'] if 'repo' in elm.attrib and elm.attrib['repo'] != '' else 'no'
             data['parallel'] = elm.attrib['parallel'] if 'parallel' in elm.attrib else 'other'
             data['pmltq'] = elm.attrib['pmltq'] if 'pmltq' in elm.attrib else 'no'
-            data['token_connect'] = []
-            token_connect_elm = elm.find('token_connect')
+            data['tokenConnect'] = []
+            token_connect_elm = elm.find('tokenConnect')
             if token_connect_elm is not None:
                 for provider_elm in token_connect_elm.findall('provider'):
-                    data['token_connect'].append(provider_elm.text)
+                    data['tokenConnect'].append(provider_elm.text)
 
             self._metadata[data['ident']] = self.parse_node_metadata(elm)
         for child in filter(lambda x: x.tag in ('corplist', 'corpus'), list(elm)):

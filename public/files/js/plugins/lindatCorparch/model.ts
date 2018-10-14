@@ -49,6 +49,7 @@ export interface CorplistNodeServer {
     size:number;
     corplist?:Array<CorplistNodeServer>;
     permitted:boolean;
+    tokenConnect:any;
 }
 
 /**
@@ -105,6 +106,7 @@ export interface Node {
     features:Immutable.List<string>;
     corplist:Immutable.List<Node>;
     permitted:boolean;
+    tokenConnect:any;
 }
 
 /**
@@ -141,7 +143,8 @@ export class TreeWidgetModel extends StatefulModel {
             level: null,
             features: Immutable.List<string>(),
             corplist: Immutable.List<Node>(),
-            permitted: true
+            permitted: true,
+            tokenConnect: null,
         };
         this.sortedCorplist = Immutable.List<Node>();
 
@@ -194,7 +197,8 @@ export class TreeWidgetModel extends StatefulModel {
             language: node.language,
             features: node.features,
             corplist: node.corplist,
-            permitted: node.permitted
+            permitted: node.permitted,
+            tokenConnect: node.tokenConnect,
         };
     }
 
@@ -256,7 +260,8 @@ export class TreeWidgetModel extends StatefulModel {
                 access: Immutable.List<NodeAccess>((serverNode.access || ['anonymous']).map(x => x as NodeAccess)),
                 features: Immutable.List<string>((serverNode.features || '').split(',')),
                 corplist: null,
-                permitted: serverNode.permitted
+                permitted: serverNode.permitted,
+                tokenConnect: null,
             };
 
         } else {
