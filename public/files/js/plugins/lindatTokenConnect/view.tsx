@@ -90,9 +90,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="FirstLevelExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    <a className="EngVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
-                    <div style={this._getStateDisplay()}>{this._renderEngVerbInfo()}</div>
+                    <div class="containerTC" style={this._getStateDisplay()}>{this._renderEngVerbInfo()}</div>
                 </div>
             );
         }
@@ -241,7 +241,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="FirstLevelExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    <a className="PDTVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
                     <div style={this._getStateDisplay()}>{this._renderVerbInfo()}</div>
                 </div>
@@ -416,7 +416,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
-                    <a className="FirstLevelExpand" onClick={this._clickHandler}>{this._textHandler()}
+                    <a className="verbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
                     <div style={this._getStateDisplay()}>{this._renderVerbInfo()}
                     </div>
