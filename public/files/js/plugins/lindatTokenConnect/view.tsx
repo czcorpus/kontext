@@ -243,7 +243,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                 <div>
                     <a className="PDTVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
-                    <div style={this._getStateDisplay()}>{this._renderVerbInfo()}</div>
+                    <div className="containerTC" style={this._getStateDisplay()}>{this._renderVerbInfo()}</div>
                 </div>
             );
         }
@@ -418,7 +418,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
                 <div>
                     <a className="verbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
-                    <div style={this._getStateDisplay()}>{this._renderVerbInfo()}
+                    <div className="containerTC" style={this._getStateDisplay()}>{this._renderVerbInfo()}
                     </div>
                 </div>
             );
