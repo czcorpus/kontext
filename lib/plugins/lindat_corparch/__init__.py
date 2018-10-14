@@ -211,7 +211,7 @@ class CorptreeParser(object):
             data['parallel'] = elm.attrib['parallel'] if 'parallel' in elm.attrib else 'other'
             data['pmltq'] = elm.attrib['pmltq'] if 'pmltq' in elm.attrib else 'no'
             data['tokenConnect'] = []
-            token_connect_elm = elm.find('tokenConnect')
+            token_connect_elm = elm.find('token_connect')
             if token_connect_elm is not None:
                 for provider_elm in token_connect_elm.findall('provider'):
                     data['tokenConnect'].append(provider_elm.text)
