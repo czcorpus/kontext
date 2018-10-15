@@ -65,7 +65,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={props.activeLanguage}
                                 permitted={props.permitted}
                                 onActiveLanguageSet={props.onActiveLanguageSet}
-                                onActiveLanguageDrop={props.onActiveLanguageDrop} />
+                                onActiveLanguageDrop={props.onActiveLanguageDrop}
+                                expanded={false}/>
                     </div>
             </div>
         );
@@ -136,7 +137,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={this.props.activeLanguage}
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
-                                permitted={this.props.permitted}/>
+                                permitted={this.props.permitted}
+                                expanded={false}/>
                     </div>
                 </div>
             );
@@ -350,6 +352,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
+        expanded:boolean;
 
     }> = (props) => {
 
@@ -370,14 +373,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
-                                                active={item.active}
+                                                active={item.active || props.expanded}
                                                 activeFeat={props.activeFeat}
                                                 activeLanguage={props.activeLanguage}
                                                 permitted={item.permitted}
                                                 onActiveLanguageSet={props.onActiveLanguageSet}
                                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
                                                 onActiveFeatSet={props.onActiveFeatSet}
-                                                onActiveFeatDrop={props.onActiveFeatDrop}/>;
+                                                onActiveFeatDrop={props.onActiveFeatDrop}
+                                                />;
                         }
                     } else {
                         return <TreeLeaf key={i} name={item.name} ident={item.ident}
@@ -462,6 +466,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:Node;
         sortedData:Immutable.List<Node>;
         sorted:boolean;
+        expanded:boolean;
         activeLanguage:string;
         activeFeat:string;
     }> {
@@ -472,6 +477,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 data: treeModel.getData(),
                 sortedData: treeModel.getSortedData(),
                 sorted: false,
+                expanded: false,
                 activeLanguage: null,
                 activeFeat: null
             };
@@ -481,6 +487,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.handleActiveLanguageDrop = this.handleActiveLanguageDrop.bind(this);
             this.handleActiveFeatDrop = this.handleActiveFeatDrop.bind(this);
             this._sortClickHandler = this._sortClickHandler.bind(this);
+            this._expandClickHandler = this._expandClickHandler.bind(this);
         }
 
         _changeListener() {
@@ -526,6 +533,19 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.setState({sorted: !this.state.sorted});
         }
 
+        _expandClickHandler(){
+            if (!this.state.sorted) {
+                this.setState({expanded: !this.state.expanded});
+            }
+        }
+
+        _expandText(){
+            if (this.state.expanded) {
+                return "Collapse all";
+            }
+            return "Expand all";
+        }
+
         componentDidMount() {
             treeModel.addChangeListener(this._changeListener);
             dispatcher.dispatch({
@@ -558,6 +578,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <div className="col-xs-3 clickable btnlike">
                             <span className={`glyphicon glyphicon-sort-by-attributes`}
                                     style={{marginRight: 0.5 + 'em'}}></span>
+                            <span id="for-corpus-list-sizes" className="corplist-tabs" title={this._expandText()} style={{display: this._bySize()}} onClick={this._expandClickHandler}>this._expandText()</span>
                             <span id="for-corpus-list-sizes" className="corplist-tabs" title="Show by size" style={{display: this._bySize()}} onClick={this._sortClickHandler}>Show by size</span>
                             <span id="for-corpus-list-default" className="corplist-tabs" title="Show by category" style={{display: this._byDefault()}} onClick={this._sortClickHandler}>Show by category</span>
                         </div>
@@ -571,7 +592,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permitted={this.state.data.permitted}/>
+                                  permitted={this.state.data.permitted}
+                                  expanded={this.state.expanded}/>
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
