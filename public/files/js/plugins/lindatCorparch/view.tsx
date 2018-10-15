@@ -254,7 +254,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _tConnect(tokenConnect:Array<string>) {
             if (this.props.tokenConnect.length > 0 ) {
-            return <button className="vallex" title="Dictionaries are avaliable for this corpus" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+            return <button className="vallex" title="Dictionaries are avaliable for this corpus" style={{background: this._myColor(), opacity: this._myOpacity()}} disabled={true}>
                         <span className="lindat-vallex"></span></button>
             }
         }
