@@ -78,9 +78,7 @@ class CacheTest(unittest.TestCase):
         self.tok_det = DefaultTokenConnect(dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf),
                                            corparch)
         self.cache_path = CACHE_DB_PATH
-        cache_rows_limit = 10
-        cache_ttl_days = 7
-        self.cache_man = CacheMan(self.cache_path, cache_rows_limit, cache_ttl_days)
+        self.cache_man = CacheMan(self.cache_path)
         self.tok_det.set_cache_path(self.cache_path)
 
     def setUp(self):
@@ -155,9 +153,9 @@ class CacheTest(unittest.TestCase):
         fill the cache db with excessive number of rows, run cache maintenance, check whether size was decreased
         to the limit
         """
-        limit = self.cache_man.get_rows_limit()
+        limit = 5
         self.fill_cache(limit + 10)
-        self.cache_man.clear_extra_rows()
+        self.cache_man.clear_extra_rows(limit)
         self.assertEqual(self.cache_man.get_numrows(), limit)
 
     def test_unicode(self):

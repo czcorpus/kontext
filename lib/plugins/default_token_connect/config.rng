@@ -54,28 +54,6 @@
                 </attribute>
                 <text />
             </element>
-            <element name="cache_rows_limit">
-                <a:documentation>
-                    How many records should the cache database keep. Typically
-                    this can be 1e5 and more (depends on a typical response size
-                    and disk capacity you are willing to spend on this).
-                </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
-                <data type="positiveInteger" />
-            </element>
-            <element name="cache_ttl_days">
-                <a:documentation>
-                    This is another way how to restrict cache size. Records older than
-                    this specified value will be removed (if a respective CeleryBeat
-                    task is defined).
-                </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
-                <data type="positiveInteger" />
-            </element>
         </element>
     </start>
 </grammar>
