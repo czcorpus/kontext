@@ -1231,7 +1231,7 @@ class Kontext(Controller):
         result['help_links'] = settings.get_help_links(self.ui_lang)
         result['ui_testing_flag'] = settings.get_bool('global', 'ui_testing_flag', '0')
         result['use_phantom_polyfills'] = 'phantomjs' in self._request.environ.get(
-            'HTTP_USER_AGENT').lower()
+            'HTTP_USER_AGENT', '').lower()
         if 'popup_server_messages' not in result:
             result['popup_server_messages'] = True
         result['websocket_url'] = settings.get('global', 'websocket_url', None)
