@@ -61,6 +61,7 @@ initializer.init_plugin('conc_persistence')
 initializer.init_plugin('sessions')
 initializer.init_plugin('user_items')
 initializer.init_plugin('corparch')
+initializer.init_plugin('token_connect', optional=True)
 initializer.init_plugin('live_attributes', optional=True)
 initializer.init_plugin('dispatch_hook', optional=True)
 
@@ -161,7 +162,7 @@ class CustomTasks(object):
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'export_tasks', None)):
                 for tsk in p.instance.export_tasks():
-                    setattr(self, tsk.__name__,
+                    setattr(self, '%s_%s' % (p.name, tsk.__name__,),
                             app.task(tsk, name='%s.%s' % (p.name, tsk.__name__,)))
 
 
