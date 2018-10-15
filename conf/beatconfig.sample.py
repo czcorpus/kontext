@@ -26,5 +26,10 @@ CELERYBEAT_SCHEDULE = {
     'colls-cache-cleanup': {
         'task': 'worker.clean_colls_cache',
         'schedule': crontab(hour='*/1', minute=30)
+    },
+    'clean-tckc-cache': {
+        'task': 'token_connect.clean_cache',
+        'schedule': crontab(day_of_week=0, hour=3, minute=30),
+        'kwargs': dict(cache_size=10000000)
     }
 }

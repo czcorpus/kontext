@@ -75,13 +75,19 @@ class ProviderWrapper(AbstractTokenConnect):
 
     def __init__(self, providers):
         self._providers = providers
+        self._cache_path = None
 
     def map_providers(self, provider_ids):
         return [self._providers[ident] for ident in provider_ids]
 
     def set_cache_path(self, path):
+        self._cache_path = path
         for backend, frontend in self.map_providers(self._providers):
             backend.set_cache_path(path)
+
+    @property
+    def cache_path(self):
+        return self._cache_path
 
 
 class DefaultTokenConnect(ProviderWrapper):
@@ -122,6 +128,14 @@ class DefaultTokenConnect(ProviderWrapper):
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
 
+    def export_tasks(self):
+        """
+        Export tasks for Celery worker(s)
+        """
+        def clean_cache(cache_size):
+            CacheMan(self.cache_path).connect().clear_extra_rows(cache_size)
+        return clean_cache,
+
 
 def init_provider(conf, ident):
     """
@@ -146,9 +160,7 @@ def setup_providers(plg_conf):
     providers = dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf)
 
     if cache_path and not os.path.isfile(cache_path):
-        cache_rows_limit = plg_conf.get('default:cache_rows_limit')
-        cache_ttl_days = plg_conf.get('default:cache_ttl_days')
-        cache_manager = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+        cache_manager = CacheMan(cache_path)
         cache_manager.prepare_cache()
     return providers, cache_path
 

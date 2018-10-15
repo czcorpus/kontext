@@ -19,15 +19,16 @@
 
 import os
 import sqlite3
-import time
 
 
 class CacheMan(object):
-    def __init__(self, cache_path, cache_rows_limit, cache_ttl_days):
+    def __init__(self, cache_path):
         self.cache_path = cache_path
-        self.cache_rows_limit = cache_rows_limit
-        self.cache_ttl = cache_ttl_days * 24 * 60 * 60
         self._conn = None
+
+    def connect(self):
+        self._conn = sqlite3.connect(self.cache_path)
+        return self
 
     def prepare_cache(self):
         """
@@ -39,7 +40,7 @@ class CacheMan(object):
             os.mkdir(db_dir)
         if os.path.isfile(self.cache_path):
             os.remove(self.cache_path)
-        self._conn = sqlite3.connect(self.cache_path)
+        self.connect()
         c = self._conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS cache ("
                   "key text, "
@@ -50,30 +51,19 @@ class CacheMan(object):
                   "PRIMARY KEY (key))")
         self._conn.commit()
 
-    def clear_expired(self):
-        """
-        delete all items older then ttl
-        """
-        c = self._conn.cursor()
-        c.execute("DELETE FROM cache WHERE last_access <= ?", (time.time() - self.cache_ttl,))
-        self._conn.commit()
-
-    def clear_extra_rows(self):
+    def clear_extra_rows(self, cache_size):
         """
         delete the oldest rows so that the cache table contains no more than <cache_rows_limit> rows
         """
         c = self._conn.cursor()
         c.execute("DELETE FROM cache WHERE key NOT IN (SELECT key FROM cache ORDER BY last_access DESC LIMIT ?)",
-                  (self.cache_rows_limit,))
+                  (cache_size,))
         self._conn.commit()
 
     def get_numrows(self):
         c = self._conn.cursor()
         res = c.execute("SELECT COUNT(*) FROM cache").fetchone()
         return res[0]
-
-    def get_rows_limit(self):
-        return self.cache_rows_limit
 
     def get_cache_path(self):
         return self.cache_path
