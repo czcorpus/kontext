@@ -576,9 +576,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             </ul>
                         </div>
                         <div className="col-xs-3 clickable btnlike">
+                            <span id="for-corpus-list-sizes" className="corplist-tabs" title={this._expandText()} style={{display: this._bySize()}} onClick={this._expandClickHandler}>{this._expandText()}</span>
                             <span className={`glyphicon glyphicon-sort-by-attributes`}
                                     style={{marginRight: 0.5 + 'em'}}></span>
-                            <span id="for-corpus-list-sizes" className="corplist-tabs" title={this._expandText()} style={{display: this._bySize()}} onClick={this._expandClickHandler}>this._expandText()</span>
                             <span id="for-corpus-list-sizes" className="corplist-tabs" title="Show by size" style={{display: this._bySize()}} onClick={this._sortClickHandler}>Show by size</span>
                             <span id="for-corpus-list-default" className="corplist-tabs" title="Show by category" style={{display: this._byDefault()}} onClick={this._sortClickHandler}>Show by category</span>
                         </div>
