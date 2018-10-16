@@ -155,6 +155,14 @@ export class TreeWidgetModel extends StatefulModel {
                         this.toggleNodeActiveStatus(payload.props['nodeId']);
                         this.notifyChangeListeners();
                         break;
+                    case 'TREE_CORPARCH_EXPAND_ALL':
+                        this.toggleAllNodesActiveStatus(true);
+                        this.notifyChangeListeners();
+                        break;
+                    case 'TREE_CORPARCH_COLLAPSE_ALL':
+                        this.toggleAllNodesActiveStatus(false);
+                        this.notifyChangeListeners();
+                        break;
                     case 'TREE_CORPARCH_GET_DATA':
                         this.loadData().then(
                             (d) => this.notifyChangeListeners()
@@ -174,6 +182,23 @@ export class TreeWidgetModel extends StatefulModel {
                 }
             }
         );
+    }
+
+    private toggleAllNodesActiveStatus(status:boolean):void {
+        const srchRecursive = (nodePath:Array<Node>, status:boolean):void => {
+            const curr = nodePath[nodePath.length - 1];
+            if (curr.level === 'inner') {
+                const nodePath = this.findNode([this.data], curr.ident);
+                this.data = this.immutableUpdateTree(nodePath, (node) => {
+                    node.active = status;
+                });
+            }
+            for (let i = 0; i < curr.corplist.size; i +=1) {
+                srchRecursive(nodePath.concat(curr.corplist.get(i)), status);
+            }
+        }
+
+        srchRecursive([this.data], status);
     }
 
     private toggleNodeActiveStatus(nodeId:string):void {

@@ -48,7 +48,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveFeatDrop:()=>void;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
-        expanded:boolean;
     }> = (props) => {
 
 
@@ -65,8 +64,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={props.activeLanguage}
                                 permitted={props.permitted}
                                 onActiveLanguageSet={props.onActiveLanguageSet}
-                                onActiveLanguageDrop={props.onActiveLanguageDrop}
-                                expanded={props.expanded}/>
+                                onActiveLanguageDrop={props.onActiveLanguageDrop}/>
                     </div>
             </div>
         );
@@ -91,7 +89,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-            this.state = {active: this.props.active};
+            this.state = {active: false};
             this._clickHandler = this._clickHandler.bind(this);
         }
 
@@ -102,11 +100,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     nodeId: this.props.ident
                 }
             });
-            this.setState({active: !this.state.active});
         }
 
         _getStateGlyph() {
-            let glyph = this.state.active ||
+            let glyph = this.props.active ||
                     this.props.activeFeat !== null ||
                     this.props.activeLanguage !== null ?
                 'glyphicon glyphicon-minus-sign icon toggle-plus' :
@@ -115,7 +112,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _getStateDisplay() {
-            return this.state.active ||
+            return this.props.active ||
                     this.props.activeFeat !== null ||
                     this.props.activeLanguage !== null ?
                 {display: 'block'} :
@@ -143,8 +140,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={this.props.activeLanguage}
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
-                                permitted={this.props.permitted}
-                                expanded={false}/>
+                                permitted={this.props.permitted}/>
                     </div>
                 </div>
             );
@@ -358,7 +354,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
-        expanded:boolean;
 
     }> = (props) => {
 
@@ -375,12 +370,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                              onActiveLanguageSet={props.onActiveLanguageSet}
                                              onActiveLanguageDrop={props.onActiveLanguageDrop}
                                              onActiveFeatSet={props.onActiveFeatSet}
-                                             onActiveFeatDrop={props.onActiveFeatDrop}
-                                             expanded={props.expanded}/>;
+                                             onActiveFeatDrop={props.onActiveFeatDrop}/>;
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
-                                                active={item.active || props.expanded}
+                                                active={item.active}
                                                 activeFeat={props.activeFeat}
                                                 activeLanguage={props.activeLanguage}
                                                 permitted={item.permitted}
@@ -541,11 +535,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _expandClickHandler(){
-            console.log(this.state.expanded);
-            //if (!this.state.sorted) {
+            dispatcher.dispatch({
+                actionType: this.state.expanded? 'TREE_CORPARCH_COLLAPSE_ALL': 'TREE_CORPARCH_EXPAND_ALL',
+                props: {}
+            });
             this.setState({expanded: !this.state.expanded});
-            //}
-            console.log(this.state.expanded);
         }
 
         _expandText(){
@@ -601,8 +595,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permitted={this.state.data.permitted}
-                                  expanded={this.state.expanded}/>
+                                  permitted={this.state.data.permitted}/>
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
