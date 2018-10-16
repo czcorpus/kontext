@@ -86,6 +86,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
+        expanded:()=>boolean;
 
     }, {active: boolean}> {
 
@@ -104,14 +105,20 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _getStateGlyph() {
-            let glyph = this.props.active || this.props.activeFeat !== null || this.props.activeLanguage !== null ? 'glyphicon glyphicon-minus-sign icon toggle-plus' : 'glyphicon glyphicon-plus-sign icon toggle-plus';
+            let glyph = this.props.active ||
+                    this.props.activeFeat !== null ||
+                    this.props.activeLanguage !== null ||
+                    this.props.expanded()?
+                'glyphicon glyphicon-minus-sign icon toggle-plus' :
+                'glyphicon glyphicon-plus-sign icon toggle-plus';
             return glyph;
         }
 
         _getStateDisplay() {
             return this.props.active ||
                     this.props.activeFeat !== null ||
-                    this.props.activeLanguage !== null ?
+                    this.props.activeLanguage !== null ||
+                    this.props.expanded() ?
                 {display: 'block'} :
                 {display: 'none'};
         }
@@ -373,7 +380,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
-                                                active={item.active || props.expanded()}
+                                                active={item.active}
                                                 activeFeat={props.activeFeat}
                                                 activeLanguage={props.activeLanguage}
                                                 permitted={item.permitted}
@@ -381,6 +388,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
                                                 onActiveFeatSet={props.onActiveFeatSet}
                                                 onActiveFeatDrop={props.onActiveFeatDrop}
+                                                expanded={props.expanded}
                                                 />;
                         }
                     } else {
