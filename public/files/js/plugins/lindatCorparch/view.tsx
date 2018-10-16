@@ -66,7 +66,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 permitted={props.permitted}
                                 onActiveLanguageSet={props.onActiveLanguageSet}
                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
-                                expanded={false}/>
+                                expanded={function(){return false;}}/>
                     </div>
             </div>
         );
@@ -138,7 +138,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
                                 permitted={this.props.permitted}
-                                expanded={false}/>
+                                expanded={function(){return false;}}/>
                     </div>
                 </div>
             );
@@ -352,7 +352,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
-        expanded:boolean;
+        expanded:()=>boolean;
 
     }> = (props) => {
 
@@ -373,7 +373,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
-                                                active={item.active || props.expanded}
+                                                active={item.active || props.expanded()}
                                                 activeFeat={props.activeFeat}
                                                 activeLanguage={props.activeLanguage}
                                                 permitted={item.permitted}
@@ -515,6 +515,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.setState({activeFeat: null});
         }
 
+        expanded() {
+            return this.state.expanded;
+        }
+
         _bySize() {
             if (this.state.sorted) {
                 return "none";
@@ -593,7 +597,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
                                   permitted={this.state.data.permitted}
-                                  expanded={this.state.expanded}/>
+                                  expanded={this.expanded}/>
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
