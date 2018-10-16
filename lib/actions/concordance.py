@@ -846,7 +846,7 @@ class Actions(Querying):
         self.args.q.append('f')
         return self.view()
 
-    @exposed(access_level=1, legacy=True, page_model='freq')
+    @exposed(access_level=0, legacy=True, page_model='freq')
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
@@ -1077,7 +1077,7 @@ class Actions(Querying):
             output = writer.raw_content()
         return output
 
-    @exposed(access_level=1, template='freqs.tmpl', page_model='freq', accept_kwargs=True, legacy=True)
+    @exposed(access_level=0, template='freqs.tmpl', page_model='freq', accept_kwargs=True, legacy=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
