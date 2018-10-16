@@ -106,7 +106,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _getStateGlyph() {
-            let glyph = this.props.active ||
+            let glyph = this.state.active ||
                     this.props.activeFeat !== null ||
                     this.props.activeLanguage !== null ?
                 'glyphicon glyphicon-minus-sign icon toggle-plus' :
@@ -115,7 +115,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _getStateDisplay() {
-            return this.props.active ||
+            return this.state.active ||
                     this.props.activeFeat !== null ||
                     this.props.activeLanguage !== null ?
                 {display: 'block'} :
