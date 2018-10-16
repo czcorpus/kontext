@@ -91,9 +91,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         constructor(props) {
             super(props);
-            this.state = {active: false};
+            this.state = {active: this.props.active};
             this._clickHandler = this._clickHandler.bind(this);
         }
+
         _clickHandler() {
             dispatcher.dispatch({
                 actionType: 'TREE_CORPARCH_SET_NODE_STATUS',
@@ -101,6 +102,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     nodeId: this.props.ident
                 }
             });
+            this.setState({active: !this.state.active});
         }
 
         _getStateGlyph() {
