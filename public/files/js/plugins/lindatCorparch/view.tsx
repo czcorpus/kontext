@@ -48,7 +48,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveFeatDrop:()=>void;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
-
+        expanded:()=>boolean;
     }> = (props) => {
 
 
@@ -66,7 +66,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 permitted={props.permitted}
                                 onActiveLanguageSet={props.onActiveLanguageSet}
                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
-                                expanded={function(){return false;}}/>
+                                expanded={props.expanded}/>
                     </div>
             </div>
         );
@@ -376,7 +376,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                              onActiveLanguageSet={props.onActiveLanguageSet}
                                              onActiveLanguageDrop={props.onActiveLanguageDrop}
                                              onActiveFeatSet={props.onActiveFeatSet}
-                                             onActiveFeatDrop={props.onActiveFeatDrop} />;
+                                             onActiveFeatDrop={props.onActiveFeatDrop}
+                                             expanded={props.expanded}/>;
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
@@ -546,9 +547,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _expandClickHandler(){
+            console.log(this.state.expanded);
             if (!this.state.sorted) {
                 this.setState({expanded: !this.state.expanded});
             }
+            console.log(this.state.expanded);
         }
 
         _expandText(){
