@@ -48,7 +48,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveFeatDrop:()=>void;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
-        expanded:()=>boolean;
+        expanded:boolean;
     }> = (props) => {
 
 
@@ -86,7 +86,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
-        expanded:()=>boolean;
 
     }, {active: boolean}> {
 
@@ -107,8 +106,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _getStateGlyph() {
             let glyph = this.props.active ||
                     this.props.activeFeat !== null ||
-                    this.props.activeLanguage !== null ||
-                    this.props.expanded()?
+                    this.props.activeLanguage !== null ?
                 'glyphicon glyphicon-minus-sign icon toggle-plus' :
                 'glyphicon glyphicon-plus-sign icon toggle-plus';
             return glyph;
@@ -117,8 +115,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _getStateDisplay() {
             return this.props.active ||
                     this.props.activeFeat !== null ||
-                    this.props.activeLanguage !== null ||
-                    this.props.expanded() ?
+                    this.props.activeLanguage !== null ?
                 {display: 'block'} :
                 {display: 'none'};
         }
@@ -145,7 +142,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
                                 permitted={this.props.permitted}
-                                expanded={function(){return false;}}/>
+                                expanded={false}/>
                     </div>
                 </div>
             );
@@ -359,7 +356,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
         onActiveFeatDrop:()=>void;
-        expanded:()=>boolean;
+        expanded:boolean;
 
     }> = (props) => {
 
@@ -381,7 +378,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
-                                                active={item.active}
+                                                active={item.active || props.expanded}
                                                 activeFeat={props.activeFeat}
                                                 activeLanguage={props.activeLanguage}
                                                 permitted={item.permitted}
@@ -389,7 +386,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
                                                 onActiveFeatSet={props.onActiveFeatSet}
                                                 onActiveFeatDrop={props.onActiveFeatDrop}
-                                                expanded={props.expanded}
                                                 />;
                         }
                     } else {
@@ -524,10 +520,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.setState({activeFeat: null});
         }
 
-        expanded() {
-            return this.state.expanded;
-        }
-
         _bySize() {
             if (this.state.sorted) {
                 return "none";
@@ -548,9 +540,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _expandClickHandler(){
             console.log(this.state.expanded);
-            if (!this.state.sorted) {
-                this.setState({expanded: !this.state.expanded});
-            }
+            //if (!this.state.sorted) {
+            this.setState({expanded: !this.state.expanded});
+            //}
             console.log(this.state.expanded);
         }
 
@@ -608,7 +600,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
                                   permitted={this.state.data.permitted}
-                                  expanded={this.expanded}/>
+                                  expanded={this.state.expanded}/>
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
