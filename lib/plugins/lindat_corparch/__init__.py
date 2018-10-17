@@ -331,4 +331,4 @@ class TreeCorparch(AbstractCorporaArchive):
 
 def create_instance(conf):
     plugin_conf = conf.get('plugins', 'corparch')
-    return TreeCorparch(corplist_path=plugin_conf['lindat:file'])
+    return TreeCorparch(corplist_path=plugin_conf['file'])
