@@ -258,7 +258,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _tConnect(tokenConnect:Array<string>) {
             if (this.props.tokenConnect.length > 0 ) {
-            return <button title="Dictionaries are avaliable for this corpus" style={{background: this._myColor(), opacity: this._myOpacity()}} disabled={true}>
+            return <button className="ikon-like" title="Dictionaries are avaliable for this corpus" style={{background: this._myColor(), opacity: this._myOpacity()}} disabled={true}>
                     <span className="glyphicon glyphicon-book"></span>
                     </button>
             }
@@ -274,7 +274,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _access() {
             if (!this.props.permitted) {
-                return <button style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                return <button className="ikon-like" style={{background: this._myColor(), opacity: this._myOpacity()}} disabled={true}>
                         <span className="glyphicon glyphicon-lock"></span>
                         </button>
             }
