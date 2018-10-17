@@ -274,7 +274,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _access() {
             if (!this.props.permitted) {
-                return <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                return <button style={{background: this._myColor(), opacity: this._myOpacity()}}>
                         <span className="glyphicon glyphicon-lock"></span>
                         </button>
             }
