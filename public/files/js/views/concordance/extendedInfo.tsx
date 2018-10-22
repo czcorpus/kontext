@@ -176,7 +176,9 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
                             <div className="box">
                                 <h3 className="block">
                                     {he.translate('concview__tips_heading')}
-                                    <img src={he.createStaticUrl('img/lightbulb.svg')} alt={he.translate('global__lightbulb_icon')} />
+                                    <img src={he.createStaticUrl('img/lightbulb.svg')}
+                                            alt={he.translate('global__lightbulb_icon')}
+                                            className="lightbulb" />
                                 </h3>
                                 <hr />
                                 <UsageTips />
