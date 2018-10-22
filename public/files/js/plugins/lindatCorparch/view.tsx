@@ -48,7 +48,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         onActiveFeatDrop:()=>void;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
-
     }> = (props) => {
 
 
@@ -65,7 +64,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={props.activeLanguage}
                                 permitted={props.permitted}
                                 onActiveLanguageSet={props.onActiveLanguageSet}
-                                onActiveLanguageDrop={props.onActiveLanguageDrop} />
+                                onActiveLanguageDrop={props.onActiveLanguageDrop}/>
                     </div>
             </div>
         );
@@ -93,6 +92,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.state = {active: false};
             this._clickHandler = this._clickHandler.bind(this);
         }
+
         _clickHandler() {
             dispatcher.dispatch({
                 actionType: 'TREE_CORPARCH_SET_NODE_STATUS',
@@ -103,7 +103,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _getStateGlyph() {
-            let glyph = this.props.active || this.props.activeFeat !== null || this.props.activeLanguage !== null ? 'glyphicon glyphicon-minus-sign icon toggle-plus' : 'glyphicon glyphicon-plus-sign icon toggle-plus';
+            let glyph = this.props.active ||
+                    this.props.activeFeat !== null ||
+                    this.props.activeLanguage !== null ?
+                'glyphicon glyphicon-minus-sign icon toggle-plus' :
+                'glyphicon glyphicon-plus-sign icon toggle-plus';
             return glyph;
         }
 
@@ -136,7 +140,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeLanguage={this.props.activeLanguage}
                                 onActiveLanguageSet={this.props.onActiveLanguageSet}
                                 onActiveLanguageDrop={this.props.onActiveLanguageDrop}
-                                permitted={this.props.permitted} />
+                                permitted={this.props.permitted}/>
                     </div>
                 </div>
             );
@@ -158,6 +162,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         name:string;
         description:string;
         permitted:boolean;
+        tokenConnect:Array<string>;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
         onActiveFeatSet:(feat:string)=>void;
@@ -251,6 +256,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
+        _tConnect(tokenConnect:Array<string>) {
+            if (this.props.tokenConnect.length > 0 ) {
+            return <button className="ikon-like" title="Dictionaries are avaliable for this corpus" style={{background: this._myColor(), opacity: this._myOpacity()}} disabled={true}>
+                    <span className="glyphicon glyphicon-book"></span>
+                    </button>
+            }
+        }
+
         _download(repo:string) {
             if (repo !== 'no' && this.props.permitted) {
             return <a href={this.props.repo} className="md-transparent" title={"Download " + this.props.name}>
@@ -261,7 +274,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _access() {
             if (!this.props.permitted) {
-                return <button className="btn btn-default" style={{background: this._myColor(), opacity: this._myOpacity()}}>
+                return <button className="ikon-like" style={{background: this._myColor(), opacity: this._myOpacity()}} disabled={true}>
                         <span className="glyphicon glyphicon-lock"></span>
                         </button>
             }
@@ -311,6 +324,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                     {this._download(this.props.repo)}
                                     {this._access()}
                                     {this._syntax()}
+                                    {this._tConnect(this.props.tokenConnect)}
                                 </div>
                                 <div className="col-xs-6 details">
                                     <h3 className="title" onMouseOver={this._mouseOver} onMouseOut={this._mouseOut} onClick={this._clickHandler} title={"Search in " + this.props.name}>
@@ -357,7 +371,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                              onActiveLanguageSet={props.onActiveLanguageSet}
                                              onActiveLanguageDrop={props.onActiveLanguageDrop}
                                              onActiveFeatSet={props.onActiveFeatSet}
-                                             onActiveFeatDrop={props.onActiveFeatDrop} />;
+                                             onActiveFeatDrop={props.onActiveFeatDrop}/>;
                         } else {
                             return <SubTreeNode key={i} name={item.name} ident={item.ident}
                                                 corplist={item.corplist}
@@ -368,7 +382,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                                 onActiveLanguageSet={props.onActiveLanguageSet}
                                                 onActiveLanguageDrop={props.onActiveLanguageDrop}
                                                 onActiveFeatSet={props.onActiveFeatSet}
-                                                onActiveFeatDrop={props.onActiveFeatDrop} />;
+                                                onActiveFeatDrop={props.onActiveFeatDrop}
+                                                />;
                         }
                     } else {
                         return <TreeLeaf key={i} name={item.name} ident={item.ident}
@@ -382,7 +397,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                          activeFeat={props.activeFeat}
                                          onActiveFeatSet={props.onActiveFeatSet}
                                          onActiveFeatDrop={props.onActiveFeatDrop}
-                                         permitted={item.permitted} />;
+                                         permitted={item.permitted}
+                                         tokenConnect={item.tokenConnect}/>;
                     }
                 });
         };
@@ -427,7 +443,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 activeFeat={this.props.activeFeat}
                                 onActiveFeatSet={this.props.onActiveFeatSet}
                                 onActiveFeatDrop={this.props.onActiveFeatDrop}
-                                permitted={item.permitted} />
+                                permitted={item.permitted}
+                                tokenConnect={item.tokenConnect}/>
             ));
         }
 
@@ -451,6 +468,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         data:Node;
         sortedData:Immutable.List<Node>;
         sorted:boolean;
+        expanded:boolean;
         activeLanguage:string;
         activeFeat:string;
     }> {
@@ -461,6 +479,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 data: treeModel.getData(),
                 sortedData: treeModel.getSortedData(),
                 sorted: false,
+                expanded: false,
                 activeLanguage: null,
                 activeFeat: null
             };
@@ -470,6 +489,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.handleActiveLanguageDrop = this.handleActiveLanguageDrop.bind(this);
             this.handleActiveFeatDrop = this.handleActiveFeatDrop.bind(this);
             this._sortClickHandler = this._sortClickHandler.bind(this);
+            this._expandClickHandler = this._expandClickHandler.bind(this);
         }
 
         _changeListener() {
@@ -515,6 +535,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.setState({sorted: !this.state.sorted});
         }
 
+        _expandClickHandler(){
+            dispatcher.dispatch({
+                actionType: this.state.expanded? 'TREE_CORPARCH_COLLAPSE_ALL': 'TREE_CORPARCH_EXPAND_ALL',
+                props: {}
+            });
+            this.setState({expanded: !this.state.expanded});
+        }
+
+        _expandText(){
+            if (this.state.expanded) {
+                return "Collapse all";
+            }
+            return "Expand all";
+        }
+
         componentDidMount() {
             treeModel.addChangeListener(this._changeListener);
             dispatcher.dispatch({
@@ -545,6 +580,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             </ul>
                         </div>
                         <div className="col-xs-3 clickable btnlike">
+                            <span id="for-corpus-list-sizes" className="corplist-tabs" title={this._expandText()} style={{display: this._bySize(), marginRight: 1.5 + 'em'}} onClick={this._expandClickHandler}>{this._expandText()}</span>
                             <span className={`glyphicon glyphicon-sort-by-attributes`}
                                     style={{marginRight: 0.5 + 'em'}}></span>
                             <span id="for-corpus-list-sizes" className="corplist-tabs" title="Show by size" style={{display: this._bySize()}} onClick={this._sortClickHandler}>Show by size</span>
@@ -560,7 +596,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permitted={this.state.data.permitted} />
+                                  permitted={this.state.data.permitted}/>
                     </div>
                     <div style={{display: this._byDefault()}}>
                         <ItemListSorted htmlClass="corp-tree-sorted"
@@ -571,7 +607,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                   activeFeat={this.state.activeFeat}
                                   onActiveFeatSet={this.handleActiveFeatSet}
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
-                                  permitted={this.state.data.permitted} />
+                                  permitted={this.state.data.permitted}/>
                     </div>
                 </div>
             );

@@ -49,6 +49,7 @@ export interface CorplistNodeServer {
     size:number;
     corplist?:Array<CorplistNodeServer>;
     permitted:boolean;
+    tokenConnect:Array<string>;
 }
 
 /**
@@ -105,6 +106,7 @@ export interface Node {
     features:Immutable.List<string>;
     corplist:Immutable.List<Node>;
     permitted:boolean;
+    tokenConnect:Array<string>;
 }
 
 /**
@@ -141,7 +143,8 @@ export class TreeWidgetModel extends StatefulModel {
             level: null,
             features: Immutable.List<string>(),
             corplist: Immutable.List<Node>(),
-            permitted: true
+            permitted: true,
+            tokenConnect: [],
         };
         this.sortedCorplist = Immutable.List<Node>();
 
@@ -150,6 +153,14 @@ export class TreeWidgetModel extends StatefulModel {
                 switch (payload.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
                         this.toggleNodeActiveStatus(payload.props['nodeId']);
+                        this.notifyChangeListeners();
+                        break;
+                    case 'TREE_CORPARCH_EXPAND_ALL':
+                        this.toggleAllNodesActiveStatus(true);
+                        this.notifyChangeListeners();
+                        break;
+                    case 'TREE_CORPARCH_COLLAPSE_ALL':
+                        this.toggleAllNodesActiveStatus(false);
                         this.notifyChangeListeners();
                         break;
                     case 'TREE_CORPARCH_GET_DATA':
@@ -173,6 +184,23 @@ export class TreeWidgetModel extends StatefulModel {
         );
     }
 
+    private toggleAllNodesActiveStatus(status:boolean):void {
+        const srchRecursive = (nodePath:Array<Node>, status:boolean):void => {
+            const curr = nodePath[nodePath.length - 1];
+            if (curr.level === 'inner') {
+                const nodePath = this.findNode([this.data], curr.ident);
+                this.data = this.immutableUpdateTree(nodePath, (node) => {
+                    node.active = status;
+                });
+            }
+            for (let i = 0; i < curr.corplist.size; i +=1) {
+                srchRecursive(nodePath.concat(curr.corplist.get(i)), status);
+            }
+        }
+
+        srchRecursive([this.data], status);
+    }
+
     private toggleNodeActiveStatus(nodeId:string):void {
         const nodePath = this.findNode([this.data], nodeId);
         this.data = this.immutableUpdateTree(nodePath, (node) => {
@@ -194,7 +222,8 @@ export class TreeWidgetModel extends StatefulModel {
             language: node.language,
             features: node.features,
             corplist: node.corplist,
-            permitted: node.permitted
+            permitted: node.permitted,
+            tokenConnect: node.tokenConnect,
         };
     }
 
@@ -256,7 +285,8 @@ export class TreeWidgetModel extends StatefulModel {
                 access: Immutable.List<NodeAccess>((serverNode.access || ['anonymous']).map(x => x as NodeAccess)),
                 features: Immutable.List<string>((serverNode.features || '').split(',')),
                 corplist: null,
-                permitted: serverNode.permitted
+                permitted: serverNode.permitted,
+                tokenConnect: serverNode.tokenConnect,
             };
 
         } else {
