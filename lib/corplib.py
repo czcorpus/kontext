@@ -208,21 +208,23 @@ def rewrite_subc_desc(publicpath, desc):
 
 def mk_publish_links(subcpath, publicpath, author, desc):
     orig_cwd = os.getcwd()
-    os.chdir(os.path.dirname(subcpath))
-    os.link(subcpath, publicpath)
+    try:
+        os.chdir(os.path.dirname(subcpath))
+        os.link(subcpath, publicpath)
 
-    rest, tmp = os.path.split(publicpath)
-    link_elms = [tmp]
-    while link_elms[0] != 'published' and rest != '' and rest != os.path.sep:
-        rest, tmp = os.path.split(rest)
-        link_elms = [tmp] + link_elms
-    link_elms = (['..'] * (len(link_elms) - 1)) + link_elms
-    os.symlink(os.path.join(*link_elms), os.path.splitext(subcpath)[0] + '.pub')
-    with open(os.path.splitext(publicpath)[0] + '.name', 'w') as namefile:
-        namefile.write(subcpath + '\n')
-        namefile.write(author.encode('utf-8') + '\n\n')
-        namefile.write(desc.encode('utf-8'))
-    os.chdir(orig_cwd)
+        rest, tmp = os.path.split(publicpath)
+        link_elms = [tmp]
+        while link_elms[0] != 'published' and rest != '' and rest != os.path.sep:
+            rest, tmp = os.path.split(rest)
+            link_elms = [tmp] + link_elms
+        link_elms = (['..'] * (len(link_elms) - 1)) + link_elms
+        os.symlink(os.path.join(*link_elms), os.path.splitext(subcpath)[0] + '.pub')
+        with open(os.path.splitext(publicpath)[0] + '.name', 'w') as namefile:
+            namefile.write(subcpath + '\n')
+            namefile.write(author.encode('utf-8') + '\n\n')
+            namefile.write(desc.encode('utf-8'))
+    finally:
+        os.chdir(orig_cwd)
 
 
 class CorpusManager(object):
