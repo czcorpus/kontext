@@ -95,6 +95,18 @@ export interface InitialData {
 }
 
 
+export interface SelectedTextTypes {
+    [key:string]:Array<string>;
+}
+
+
+const typeIsSelected = (data:SelectedTextTypes, attr:string, v:string):boolean => {
+    if (data.hasOwnProperty(attr)) {
+        return data[attr].indexOf(v) > -1;
+    }
+    return false;
+}
+
 
 /**
  * Provides essential general operations on available text types
@@ -171,9 +183,9 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, data:InitialData) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, data:InitialData, selectedItems?:SelectedTextTypes) {
         super(dispatcher);
-        this.attributes = Immutable.List(this.importInitialData(data));
+        this.attributes = Immutable.List(this.importInitialData(data, selectedItems || {}));
         this.bibLabelAttr = data.bib_attr;
         this.bibIdAttr = data.id_attr;
         this.selectionHistory = Immutable.List<Immutable.List<TextTypes.AttributeSelection>>();
@@ -414,13 +426,14 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         this.selectionChangeListeners.forEach(fn => fn(this));
     }
 
-    private importInitialData(data:InitialData):Array<TextTypes.AttributeSelection> {
+    private importInitialData(data:InitialData, selectedItems:SelectedTextTypes):Array<TextTypes.AttributeSelection> {
         const mergedBlocks:Array<BlockLine> = data.Blocks.reduce((prev:Array<BlockLine>, curr:Block) => {
             return prev.concat(curr.Line);
         }, []);
         if (mergedBlocks.length > 0) {
             return mergedBlocks.map((attrItem:BlockLine) => {
                 if (attrItem.textboxlength) {
+                    // TODO restore selected items also here (must load labels first...)
                     return new TextInputAttributeSelection(
                         attrItem.name,
                         attrItem.label,
@@ -439,7 +452,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                             return {
                                 value: valItem.v,
                                 ident: valItem.v, // TODO what about bib items?
-                                selected: false,
+                                selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) ? true : false,
                                 locked:false,
                                 availItems:valItem.xcnt,
                                 numGrouped: 1 // TODO here we expect that initial data do not have any name duplicities

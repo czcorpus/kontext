@@ -26,11 +26,16 @@ import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TextTypesModel} from '../../models/textTypes/attrValues';
 
+export enum InputMode {
+    GUI = 'gui',
+    RAW = 'raw'
+}
+
 export class SubcorpFormModel extends StatefulModel {
 
     private pageModel:PageModel;
 
-    private inputMode:string;
+    private inputMode:InputMode;
 
     private corpname:string;
 
@@ -55,7 +60,7 @@ export class SubcorpFormModel extends StatefulModel {
         this.textTypesModel = textTypesModel;
         this.corpname = corpname;
         this.alignedCorporaProvider = alignedCorporaProvider;
-        this.inputMode = 'gui';
+        this.inputMode = InputMode.GUI;
         this.subcname = '';
         this.isPublic = false;
         this.description = '';
@@ -86,12 +91,26 @@ export class SubcorpFormModel extends StatefulModel {
         });
     }
 
+    public initializeValues(args:{
+        inputMode:InputMode,
+        subcname:string,
+        isPublic:boolean,
+        description:string
+
+    }):void {
+        this.inputMode = args.inputMode;
+        this.subcname = args.subcname;
+        this.isPublic = args.isPublic;
+        this.description = args.description;
+    }
+
     private getSubmitArgs():MultiDict {
         const args = new MultiDict();
         args.set('corpname', this.corpname);
         args.set('subcname', this.subcname);
         args.set('publish', this.isPublic ? '1' : '0');
         args.set('description', this.description);
+        args.set('method', this.inputMode);
         const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
             args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
