@@ -23,8 +23,8 @@ import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
-import {SubcorpWithinFormModel, SubcorpFormModel} from '../models/subcorp/form';
-import {TextTypesModel} from '../models/textTypes/attrValues';
+import {SubcorpWithinFormModel, SubcorpFormModel, InputMode} from '../models/subcorp/form';
+import {TextTypesModel, SelectedTextTypes} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
@@ -106,12 +106,13 @@ export class SubcorpForm {
         );
     }
 
-    createTextTypesComponents():TTInitData {
+    createTextTypesComponents(selectedTextTypes:SelectedTextTypes):TTInitData {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
-                textTypesData
+                textTypesData,
+                selectedTextTypes
         );
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
@@ -210,7 +211,9 @@ export class SubcorpForm {
 
         this.layoutModel.init().then(
             () => {
-                const ttComponent = this.createTextTypesComponents();
+                const ttComponent = this.createTextTypesComponents(
+                    this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
+                );
                 this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
@@ -232,6 +235,12 @@ export class SubcorpForm {
                     this.layoutModel.getCorpusIdent().id,
                     ttComponent.attachedAlignedCorporaProvider
                 );
+                this.subcorpFormModel.initializeValues({
+                    inputMode: this.layoutModel.getConf<InputMode>('Method'),
+                    subcname: this.layoutModel.getConf<string>('SubcName') || '',
+                    isPublic: this.layoutModel.getConf<boolean>('Publish'),
+                    description: this.layoutModel.getConf<string>('Description') || ''
+                });
 
                 const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),

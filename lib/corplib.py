@@ -207,22 +207,40 @@ def rewrite_subc_desc(publicpath, desc):
 
 
 def mk_publish_links(subcpath, publicpath, author, desc):
-    orig_cwd = os.getcwd()
-    os.chdir(os.path.dirname(subcpath))
-    os.link(subcpath, publicpath)
 
-    rest, tmp = os.path.split(publicpath)
-    link_elms = [tmp]
-    while link_elms[0] != 'published' and rest != '' and rest != os.path.sep:
-        rest, tmp = os.path.split(rest)
-        link_elms = [tmp] + link_elms
-    link_elms = (['..'] * (len(link_elms) - 1)) + link_elms
-    os.symlink(os.path.join(*link_elms), os.path.splitext(subcpath)[0] + '.pub')
-    with open(os.path.splitext(publicpath)[0] + '.name', 'w') as namefile:
-        namefile.write(subcpath + '\n')
-        namefile.write(author.encode('utf-8') + '\n\n')
-        namefile.write(desc.encode('utf-8'))
-    os.chdir(orig_cwd)
+    def rm_silent(p):
+        try:
+            os.unlink(p)
+        except Exception:
+            pass
+
+    orig_cwd = os.getcwd()
+    symlink_path = None
+    namefile_path = None
+    try:
+        os.chdir(os.path.dirname(subcpath))
+        os.link(subcpath, publicpath)
+
+        rest, tmp = os.path.split(publicpath)
+        link_elms = [tmp]
+        while link_elms[0] != 'published' and rest != '' and rest != os.path.sep:
+            rest, tmp = os.path.split(rest)
+            link_elms = [tmp] + link_elms
+        link_elms = (['..'] * (len(link_elms) - 1)) + link_elms
+        symlink_path = os.path.splitext(subcpath)[0] + '.pub'
+        os.symlink(os.path.join(*link_elms), symlink_path)
+        namefile_path = os.path.splitext(publicpath)[0] + '.name'
+        with open(namefile_path, 'w') as namefile:
+            namefile.write(subcpath + '\n')
+            namefile.write(author.encode('utf-8') + '\n\n')
+            namefile.write(desc.encode('utf-8'))
+    except Exception as ex:
+        rm_silent(symlink_path)
+        rm_silent(namefile_path)
+        rm_silent(publicpath)
+        raise ex
+    finally:
+        os.chdir(orig_cwd)
 
 
 class CorpusManager(object):

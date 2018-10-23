@@ -87,6 +87,12 @@ class Subcorpus(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         description = request.form.get('description')
 
+        if not subcname:
+            raise UserActionException(translate('No subcorpus name specified!'))
+
+        if publish and not description:
+            raise UserActionException(translate('No description specified'))
+
         if raw_cql:
             aligned_corpora = []
             tt_query = ()
@@ -131,8 +137,6 @@ class Subcorpus(Querying):
             imp_cql = (full_cql,)
 
         basecorpname = self.args.corpname.split(':')[0]
-        if not subcname:
-            raise UserActionException(translate('No subcorpus name specified!'))
         path = self.prepare_subc_path(basecorpname, subcname, publish=False)
         publish_path = self.prepare_subc_path(
             basecorpname, subcname, publish=True) if publish else None
@@ -143,7 +147,10 @@ class Subcorpus(Querying):
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
-                corplib.mk_publish_links(path, publish_path, self.session_get('user', 'fullname'), description)
+                logging.getLogger(__name__).debug(
+                    u'using user: {0}'.format(self.session_get('user', 'fullname')))
+                corplib.mk_publish_links(path, publish_path, self.session_get(
+                    'user', 'fullname'), description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
             backend = settings.get('calc_backend', 'type')
             if backend in ('celery', 'konserver'):
@@ -226,15 +233,20 @@ class Subcorpus(Querying):
         out = dict(SubcorpList=())
         self._attach_aligned_query_params(out)
         corpus_info = self.get_corpus_info(self.args.corpname)
+
         out.update(dict(
             Normslist=tt_sel['Normslist'],
             text_types_data=tt_sel,
+            selected_text_types=TextTypeCollector(self.corp, request).get_attrmap(),
             structs_and_attrs=structs_and_attrs,
             method=method,
             within_data=within_data,
-            subcname=subcname,
             subcnorm=subcnorm,
-            id_attr=corpus_info.metadata.id_attr
+            id_attr=corpus_info.metadata.id_attr,
+            subcname=subcname,
+            aligned_corpora=request.form.getlist('aligned_corpora'),
+            publish=bool(int(request.form.get('publish', '0'))),
+            description=request.form.get('description', '')
         ))
         return out
 
@@ -384,7 +396,8 @@ class Subcorpus(Querying):
         curr_subc = os.path.join(self.subcpath[0], corpname, subcname + '.subc')
         public_subc = self.prepare_subc_path(corpname, subcname, True)
         if os.path.isfile(curr_subc):
-            corplib.mk_publish_links(curr_subc, public_subc, self.session_get('user', 'fullname'), description)
+            corplib.mk_publish_links(curr_subc, public_subc,
+                                     self.session_get('user', 'fullname'), description)
             return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
         else:
             raise UserActionException('Subcorpus {0} not found'.format(subcname))
