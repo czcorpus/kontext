@@ -255,7 +255,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 (<div>
                                     <h3>{he.translate('subcform__public_description')}:</h3>
                                     <div>
-                                        <subcFormViews.SubcDescription value={props.description} />
+                                        <subcFormViews.SubcDescription
+                                            value={{value: props.description, isInvalid: false, isRequired: false}} />
                                     </div>
                                 </div>) : null
                             }

@@ -136,6 +136,8 @@ def create_subcorpus(path, corpus, structname, subquery):
     structname -- a structure used to specify subcorpus content (only one structure name can be used)
     subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
     """
+    if os.path.exists(path):
+        raise RuntimeError(_('Subcorpus already exists'))
     return manatee.create_subcorpus(path, corpus, structname, subquery)
 
 

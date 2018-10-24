@@ -23,7 +23,6 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {AlignTypes} from './ctFreqForm';
 
 

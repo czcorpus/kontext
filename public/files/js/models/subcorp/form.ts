@@ -18,13 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
+import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TextTypesModel} from '../../models/textTypes/attrValues';
+import {SubcorpWithinFormModel} from './withinForm';
+import RSVP from 'rsvp';
 
 export enum InputMode {
     GUI = 'gui',
@@ -39,15 +41,17 @@ export class SubcorpFormModel extends StatefulModel {
 
     private corpname:string;
 
-    private subcname:string;
+    private subcname:Kontext.FormValue<string>;
 
     private isPublic:boolean;
 
-    private description:string;
+    private description:Kontext.FormValue<string>;
 
     private withinFormModel:SubcorpWithinFormModel;
 
     private textTypesModel:TextTypesModel;
+
+    private isBusy:boolean;
 
     private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
@@ -61,9 +65,10 @@ export class SubcorpFormModel extends StatefulModel {
         this.corpname = corpname;
         this.alignedCorporaProvider = alignedCorporaProvider;
         this.inputMode = InputMode.GUI;
-        this.subcname = '';
+        this.subcname = {value: '', isRequired: true, isInvalid: false};
         this.isPublic = false;
-        this.description = '';
+        this.description = {value: '', isRequired: false, isInvalid: false};
+        this.isBusy = false;
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -72,45 +77,48 @@ export class SubcorpFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SET_SUBCNAME':
-                    this.subcname = payload.props['value'];
+                    this.subcname = Kontext.updateFormValue(this.subcname, {value: payload.props['value']});
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC':
                     this.isPublic = payload.props['value'];
+                    this.description = Kontext.updateFormValue(this.description, {isRequired: this.isPublic});
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SET_DESCRIPTION':
-                    this.description = payload.props['value'];
+                    this.description = Kontext.updateFormValue(this.description, {value: payload.props['value']});
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SUBMIT':
-                    this.submit();
-                    // leaves the page here
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.submit().then(
+                        () => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.withinFormModel.notifyChangeListeners();
+                            window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
+                        },
+                        (err) => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.withinFormModel.notifyChangeListeners();
+                            this.pageModel.showMessage('error', err);
+                        }
+                    );
                 break;
             }
         });
     }
 
-    public initializeValues(args:{
-        inputMode:InputMode,
-        subcname:string,
-        isPublic:boolean,
-        description:string
-
-    }):void {
-        this.inputMode = args.inputMode;
-        this.subcname = args.subcname;
-        this.isPublic = args.isPublic;
-        this.description = args.description;
-    }
-
     private getSubmitArgs():MultiDict {
         const args = new MultiDict();
         args.set('corpname', this.corpname);
-        args.set('subcname', this.subcname);
+        args.set('subcname', this.subcname.value);
         args.set('publish', this.isPublic ? '1' : '0');
-        args.set('description', this.description);
+        args.set('description', this.description.value);
         args.set('method', this.inputMode);
+        args.set('format', 'json');
         const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
             args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
@@ -128,22 +136,50 @@ export class SubcorpFormModel extends StatefulModel {
         return args;
     }
 
-    submit():void {
+    private validateForm():Error|null {
+        if (this.subcname.value === '') {
+            this.subcname.isInvalid = true;
+            return new Error(this.pageModel.translate('subcform__missing_subcname'));
+
+        } else {
+            this.subcname.isInvalid = false;
+        }
+
+        if (this.description.isRequired && this.description.value === '') {
+            this.description.isInvalid = true;
+            return new Error(this.pageModel.translate('subcform__missing_description'));
+
+        } else {
+            this.subcname.isInvalid = false;
+        }
+
+        if (this.inputMode === InputMode.GUI && !this.textTypesModel.hasSelectedItems()) {
+            return new Error(this.pageModel.translate('subcform__at_least_one_type_must_be_selected'));
+        }
+
+        if (this.inputMode === InputMode.RAW) {
+            return this.withinFormModel.validateForm();
+        }
+
+        return null;
+    }
+
+    submit():RSVP.Promise<any> {
         const args = this.getSubmitArgs();
-        if (this.subcname != '') {
-            this.pageModel.setLocationPost(
+        const err = this.validateForm();
+        if (err === null) {
+            return this.pageModel.ajax<any>(
+                'POST',
                 this.pageModel.createActionUrl('/subcorpus/subcorp'),
-                args.items()
+                args
             );
 
         } else {
-            this.pageModel.showMessage('error',
-                    this.pageModel.translate('subcform__missing_subcname'));
+            return RSVP.Promise.reject(err);
         }
-
     }
 
-    getSubcname():string {
+    getSubcname():Kontext.FormValue<string> {
         return this.subcname;
     }
 
@@ -155,148 +191,11 @@ export class SubcorpFormModel extends StatefulModel {
         return this.isPublic;
     }
 
-    getDescription():string {
+    getDescription():Kontext.FormValue<string> {
         return this.description;
     }
-}
 
-/**
- *
- */
-export class WithinLine {
-    rowIdx:number;
-    negated:boolean;
-    structureName:string;
-    attributeCql:string;
-
-    constructor(rowIdx:number, negated:boolean, structureName:string, attributeCql:string) {
-        this.rowIdx = rowIdx;
-        this.negated = negated;
-        this.structureName = structureName;
-        this.attributeCql = attributeCql;
-    }
-}
-
-
-/**
- *
- */
-export class SubcorpWithinFormModel extends StatefulModel {
-
-    private lines:Immutable.List<WithinLine>;
-
-    private lineIdGen:number;
-
-    constructor(dispatcher:ActionDispatcher, initialStructName:string,
-            initialState:Array<{[key:string]:string}>) {
-        super(dispatcher);
-        this.lines = Immutable.List<WithinLine>();
-        this.lineIdGen = 0;
-
-        (initialState || []).forEach((item) => {
-            this.importLine(item);
-        });
-        if (this.lines.size === 0) {
-            this.lines = this.lines.push(new WithinLine(0, false, initialStructName, ''));
-        }
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
-                case 'SUBCORP_FORM_WITHIN_LINE_ADDED':
-                    this.addLine(payload.props);
-                    this.notifyChangeListeners();
-                break;
-                case 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE':
-                    this.updateWithinType(payload.props['rowIdx'], payload.props['value']);
-                    this.notifyChangeListeners();
-                break;
-                case 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT':
-                    this.updateStruct(payload.props['rowIdx'], payload.props['value']);
-                    this.notifyChangeListeners();
-                break;
-                case 'SUBCORP_FORM_WITHIN_LINE_SET_CQL':
-                    this.updateCql(payload.props['rowIdx'], payload.props['value']);
-                    this.notifyChangeListeners();
-                break;
-                case 'SUBCORP_FORM_WITHIN_LINE_REMOVED':
-                    this.removeLine(payload.props['rowIdx']);
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
-    }
-
-    updateWithinType(rowIdx, negated) {
-        const srchIdx = this.lines.findIndex(v => v.rowIdx === rowIdx);
-        if (srchIdx > -1) {
-            this.lines = this.lines.set(srchIdx, new WithinLine(
-                srchIdx,
-                negated,
-                this.lines.get(srchIdx).structureName,
-                this.lines.get(srchIdx).attributeCql
-            ));
-        }
-    }
-
-    updateStruct(rowIdx, structName) {
-        const srchIdx = this.lines.findIndex(v => v.rowIdx === rowIdx);
-        if (srchIdx > -1) {
-            this.lines = this.lines.set(srchIdx, new WithinLine(
-                srchIdx,
-                this.lines.get(srchIdx).negated,
-                structName,
-                this.lines.get(srchIdx).attributeCql
-            ));
-        }
-    }
-
-    updateCql(rowIdx, cql) {
-        const srchIdx = this.lines.findIndex(v => v.rowIdx === rowIdx);
-        if (srchIdx > -1) {
-            this.lines = this.lines.set(srchIdx, new WithinLine(
-                srchIdx,
-                this.lines.get(srchIdx).negated,
-                this.lines.get(srchIdx).structureName,
-                cql
-            ));
-        }
-    }
-
-    importLine(data) {
-        this.lineIdGen += 1;
-        this.lines = this.lines.push(new WithinLine(this.lineIdGen, data['negated'], data['structure_name'], data['attribute_cql']));
-    }
-
-    addLine(data) {
-        this.lineIdGen += 1;
-        this.lines = this.lines.push(new WithinLine(this.lineIdGen, data['negated'], data['structureName'], data['attributeCql']));
-    }
-
-    removeLine(rowIdx:number) {
-        const srch = this.lines.findIndex(v => v.rowIdx === rowIdx);
-        if (srch > -1) {
-            this.lines = this.lines.remove(srch);
-        }
-    }
-
-    getLines():Immutable.List<WithinLine> {
-        return this.lines;
-    }
-
-    exportCql():string {
-        return this.lines.filter((v)=>v != null).map(
-            (v:WithinLine) => (
-                (v.negated ? '!within' : 'within') + ' <' + v.structureName
-                    + ' ' + v.attributeCql + ' />')
-        ).join(' ');
-    }
-
-    exportJson():string {
-        return JSON.stringify(this.lines.filter((v)=>v != null).map(
-            (v:WithinLine) => ({
-                    negated: v.negated,
-                    structure_name: v.structureName,
-                    attribute_cql: v.attributeCql
-            })
-        ));
+    getIsBusy():boolean {
+        return this.isBusy;
     }
 }

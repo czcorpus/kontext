@@ -23,8 +23,8 @@ import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import RSVP from 'rsvp';
-import * as textTypesModel from '../../models/textTypes/attrValues';
 import * as Immutable from 'immutable';
+import { SelectedTextTypes } from '../../models/textTypes/attrValues';
 
 
 interface ServerBibData {
@@ -520,8 +520,8 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         );
     }
 
-    private loadAutocompleteHint(pattern:string, patternAttr:string, selections:any):RSVP.Promise<any> {
-        let aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
+    private loadAutocompleteHint(pattern:string, patternAttr:string, selections:SelectedTextTypes):RSVP.Promise<any> {
+        const aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
         return this.pluginApi.ajax(
             'POST',
             this.pluginApi.createActionUrl('attr_val_autocomplete'),

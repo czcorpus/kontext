@@ -23,7 +23,8 @@ import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
-import {SubcorpWithinFormModel, SubcorpFormModel, InputMode} from '../models/subcorp/form';
+import {SubcorpFormModel} from '../models/subcorp/form';
+import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
 import {TextTypesModel, SelectedTextTypes} from '../models/textTypes/attrValues';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
@@ -75,11 +76,11 @@ export class SubcorpForm {
     }
 
     getCurrentSubcorpus():string {
-        return this.subcorpFormModel.getSubcname();
+        return this.subcorpFormModel.getSubcname().value;
     }
 
     getCurrentSubcorpusOrigName():string {
-        return this.subcorpFormModel.getSubcname();
+        return this.subcorpFormModel.getSubcname().value;
     }
 
     getCorpora():Immutable.List<string> {
@@ -145,8 +146,8 @@ export class SubcorpForm {
             this.textTypesModel,
             {
                 getIsPublic: () => this.subcorpFormModel.getIsPublic(),
-                getDescription: () => this.subcorpFormModel.getDescription(),
-                getSubcName: () => this.subcorpFormModel.getSubcname(),
+                getDescription: () => this.subcorpFormModel.getDescription().value,
+                getSubcName: () => this.subcorpFormModel.getSubcname().value,
                 addChangeListener: (fn:Kontext.ModelListener) => {
                     this.subcorpFormModel.addChangeListener(fn);
                 },
@@ -216,6 +217,7 @@ export class SubcorpForm {
                 );
                 this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                     this.layoutModel.dispatcher,
+                    this.layoutModel,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
                 );
@@ -235,12 +237,6 @@ export class SubcorpForm {
                     this.layoutModel.getCorpusIdent().id,
                     ttComponent.attachedAlignedCorporaProvider
                 );
-                this.subcorpFormModel.initializeValues({
-                    inputMode: this.layoutModel.getConf<InputMode>('Method'),
-                    subcname: this.layoutModel.getConf<string>('SubcName') || '',
-                    isPublic: this.layoutModel.getConf<boolean>('Publish'),
-                    description: this.layoutModel.getConf<string>('Description') || ''
-                });
 
                 const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
                     this.layoutModel.createActionUrl('subcorpus/subcorp_form'),

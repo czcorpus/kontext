@@ -25,9 +25,9 @@ export type ExtendedInfo = Immutable.Map<string, any>;
 
 /**
  * This class represents a text input-based selection of values for a specific structural
- * attribute. Although it is expected that a respective view contains a text input field,
+ * attribute. Although it is expected for a respective view to contain a text input field,
  * the class is able to handle multiple selected values at once (e.g. user writes something
- * and adds it to a temporary list and then she queries the database).
+ * and adds it to a temporary list).
  *
  * Instances of this class operate in an immutable way. Any modification call to the
  * object will produce a new copy.

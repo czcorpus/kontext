@@ -147,8 +147,6 @@ class Subcorpus(Querying):
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
-                logging.getLogger(__name__).debug(
-                    u'using user: {0}'.format(self.session_get('user', 'fullname')))
                 corplib.mk_publish_links(path, publish_path, self.session_get(
                     'user', 'fullname'), description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
@@ -158,7 +156,7 @@ class Subcorpus(Querying):
                 app = bgcalc.calc_backend_client(settings)
                 res = app.send_task('worker.create_subcorpus',
                                     (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                                     tt_query, imp_cql, description),
+                                     tt_query, imp_cql, self.session_get('user', 'fullname'), description),
                                     time_limit=TASK_TIME_LIMIT)
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
@@ -194,15 +192,12 @@ class Subcorpus(Querying):
             raise SubcorpusError(translate('Empty subcorpus!'))
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
-             http_method='POST')
+             http_method='POST', return_type='json')
     def subcorp(self, request):
         try:
-            ans = self._create_subcorpus(request)
-            self.redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
-        except (SubcorpusError, UserActionException, RuntimeError) as e:
-            self.add_system_message('error', getattr(e, 'message', e.__repr__()))
-            ans = self.subcorp_form(request)
-        return ans
+            return self._create_subcorpus(request)
+        except (SubcorpusError, RuntimeError) as e:
+            raise UserActionException(e.message)
 
     @exposed(access_level=1, apply_semi_persist_args=True)
     def subcorp_form(self, request):
@@ -244,9 +239,7 @@ class Subcorpus(Querying):
             subcnorm=subcnorm,
             id_attr=corpus_info.metadata.id_attr,
             subcname=subcname,
-            aligned_corpora=request.form.getlist('aligned_corpora'),
-            publish=bool(int(request.form.get('publish', '0'))),
-            description=request.form.get('description', '')
+            aligned_corpora=request.form.getlist('aligned_corpora')
         ))
         return out
 

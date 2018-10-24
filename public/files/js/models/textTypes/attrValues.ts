@@ -657,6 +657,10 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         }
     }
 
+    /**
+     * This applies only for TextInputAttributeSelection boxes. In other
+     * cases the function has no effect.
+     */
     setAutoComplete(attrName:string, values:Array<TextTypes.AutoCompleteItem>):void {
         const attr = this.getTextInputAttribute(attrName);
         if (attr) {
