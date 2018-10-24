@@ -27,8 +27,8 @@ from werkzeug.datastructures import MultiDict
 import corplib
 import conclib
 from controller import Controller, convert_types, exposed
-from controller.errors import (UserActionException, ForbiddenException, CorpusForbiddenException,
-                               AlignedCorpusForbiddenException, NotFoundException)
+from controller.errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException,
+                               NotFoundException)
 import plugins
 import plugins.abstract
 from plugins.abstract.corpora import BrokenCorpusInfo
@@ -709,7 +709,6 @@ class Kontext(Controller):
                     self.redirect(self.create_url(url_pref + action_name, dict(corpname=corpname)))
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
-                    raise CorpusForbiddenException(corpname, variant)
                 for al_corp in form.getlist('align'):
                     al_access, al_variant = validate_access(al_corp, allowed_corpora)
                     # we cannot accept aligned corpora without access right

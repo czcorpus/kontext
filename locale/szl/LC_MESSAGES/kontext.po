@@ -417,9 +417,6 @@ msgstr "Ôtwōrz formular logowaniŏ"
 msgid "Continue as anonymous user"
 msgstr "Kōntynuuj jako  anōnimowy użytkownik"
 
-msgid "Corpus \"{0}\" not available"
-msgstr "Korpus \"{0}\" niy je dostympny"
-
 msgid "No corpus selected"
 msgstr "Żŏdyn korpus niy bōł ôbrany"
 

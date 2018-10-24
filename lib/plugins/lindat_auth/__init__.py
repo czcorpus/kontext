@@ -12,6 +12,7 @@ import os
 import plugins
 from actions import corpora, user
 from controller import exposed
+from controller.errors import ImmediateRedirectException
 from plugins.abstract.auth import AbstractSemiInternalAuth
 from plugins.abstract import PluginException
 
@@ -134,9 +135,8 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
 
     def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
         if self.is_anonymous(plugin_api.user_id):
-            fallback = '%s%sfirst_form?corpname=%s' % (self.get_login_url(), plugin_api.root_url,
-                                                       corpname)
-            plugin_api.redirect(fallback)
+            raise ImmediateRedirectException(
+                '{0}{1}first_form?corpname={2}'.format(self.get_login_url(), plugin_api.root_url, corpname))
         else:
             super(FederatedAuthWithFailover, self).on_forbidden_corpus(
                 plugin_api, corpname, corp_variant)

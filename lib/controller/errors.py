@@ -91,7 +91,6 @@ class ForbiddenException(UserActionException):
 
 
 class CorpusForbiddenException(ForbiddenException):
-
     def __init__(self, corpname, variant):
         super(CorpusForbiddenException, self).__init__('Access to {0} forbidden'.format(corpname))
         self.corpname = corpname
@@ -105,3 +104,10 @@ class AlignedCorpusForbiddenException(ForbiddenException):
             'Access to aligned corpus {0} forbidden'.format(corpname))
         self.corpname = corpname
         self.variant = variant
+
+
+class ImmediateRedirectException(UserActionException):
+
+    def __init__(self, url, code=303):
+        super(ImmediateRedirectException, self).__init__('Redirect', code)
+        self.url = url

@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 from translation import ugettext as _
+from controller.errors import CorpusForbiddenException, UserActionException
 
 
 class AbstractAuth(object):
@@ -75,11 +76,9 @@ class AbstractAuth(object):
         2) Set some system message user can read.
         """
         if corpname:
-            plugin_api.add_system_message('error', _(
-                'Corpus "{0}" not available').format(corpname))
+            raise CorpusForbiddenException(corpname, corp_variant)
         else:
-            plugin_api.add_system_message('error', _('No corpus selected'))
-        plugin_api.set_not_found()
+            raise UserActionException()
 
     def get_user_info(self, plugin_api):
         """
