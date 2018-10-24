@@ -52,6 +52,14 @@ export namespace Kontext {
                 v.hasOwnProperty('isRequired') && v.hasOwnProperty('isInvalid');
     }
 
+    export var updateFormValue = <T>(formValue:FormValue<T>, data:{[P in keyof FormValue<T>]?: FormValue<T>[P]}) => {
+        return {
+            value: data.value !== undefined ? data.value : formValue.value,
+            isInvalid: data.isInvalid !== undefined ? data.isInvalid : formValue.isInvalid,
+            isRequired: data.isRequired !== undefined ? data.isRequired : formValue.isRequired
+        };
+    }
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).

@@ -453,5 +453,5 @@ msgstr "Veřejné subkorpusy"
 msgid "Find a published subcorpus"
 msgstr "Najít publikovaný subkorpus"
 
-msgid "No description specified"
-msgstr "Chybí popis"
+msgid "Subcorpus already exists"
+msgstr "Subkorpus již existuje"

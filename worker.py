@@ -360,9 +360,9 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 
 @app.task()
 def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
-    worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id, publish_path=publish_path,
+    worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id,
                                            description=description, author=author)
-    return worker.run(tt_query, cql, path)
+    return worker.run(tt_query, cql, path, publish_path)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

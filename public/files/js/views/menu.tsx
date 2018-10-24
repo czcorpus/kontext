@@ -260,7 +260,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     const AsyncTaskList:React.SFC<{
         clearOnCloseCheckboxStatus:boolean;
-        items:Immutable.List<{ident:string; category:string; label:string; created:number; status:string}>;
+        items:Immutable.List<Kontext.AsyncTaskInfo>;
         closeClickHandler:()=>void;
         handleClearOnCloseCheckbox:()=>void;
         handleOkButtonClick:(evt:React.MouseEvent<{}>)=>void;
@@ -277,6 +277,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                 <th>{he.translate('global__task_label')}</th>
                                 <th>{he.translate('global__task_created')}</th>
                                 <th>{he.translate('global__task_status')}</th>
+                                <th></th>
                             </tr>
                             {props.items.map(item => (
                                 <tr key={item.ident}>
@@ -289,6 +290,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                             <img src={he.createStaticUrl('img/error-icon.svg')} alt={item.status} />
                                             : null }
                                     </td>
+                                    <td>{item.error}</td>
                                 </tr>
                             ))}
                         </tbody>

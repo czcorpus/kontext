@@ -90,7 +90,7 @@ export class SubcorpListModel extends StatefulModel {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.importLines(data);
-        this.importUnfinished(unfinished);
+        this.importProcessed(unfinished);
         this.relatedCorpora = Immutable.List<string>(relatedCorpora);
         this.sortKey = sortKey;
         this.filter = initialFilter || {show_deleted: false, corpname: ''};
@@ -100,6 +100,8 @@ export class SubcorpListModel extends StatefulModel {
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             const subcTasks = itemList.filter(item => item.category == 'subcorpus');
             if (subcTasks.size > 0) {
+                this.layoutModel.showMessage('info',
+                    this.layoutModel.translate('task__type_subcorpus_done'));
                 this.reloadItems().then(
                     (data) => {
                         this.notifyChangeListeners();
@@ -421,15 +423,16 @@ export class SubcorpListModel extends StatefulModel {
         }));
     }
 
-    private importUnfinished(data:Array<Kontext.AsyncTaskInfo>):void {
-        this.unfinished = Immutable.List<UnfinishedSubcorp>(data.map<UnfinishedSubcorp>(item => {
-            return {
-                ident: item.ident,
-                name: item.label,
-                created: new Date(item.created * 1000),
-                failed: item.status === AsyncTaskStatus.FAILURE
-            }
-        }));
+    private importProcessed(data:Array<Kontext.AsyncTaskInfo>):void {
+        this.unfinished = Immutable.List<UnfinishedSubcorp>(
+            data
+                .filter(v => v.status !== AsyncTaskStatus.SUCCESS)
+                .map<UnfinishedSubcorp>(item => ({
+                    ident: item.ident,
+                    name: item.label,
+                    created: new Date(item.created * 1000),
+                    failed: item.status === AsyncTaskStatus.FAILURE
+                })));
     }
 
     private deleteSubcorpus(rowIdx:number):RSVP.Promise<any> {
@@ -467,7 +470,7 @@ export class SubcorpListModel extends StatefulModel {
         ).then(
             (data) => {
                 this.importLines(data.subcorp_list);
-                this.importUnfinished(data.processed_subc);
+                this.importProcessed(data.processed_subc);
                 this.relatedCorpora = Immutable.List<string>(data.related_corpora);
                 this.sortKey = {
                     name: data.sort_key.name,
@@ -509,7 +512,7 @@ export class SubcorpListModel extends StatefulModel {
         ).then(
             (data) => {
                 this.importLines(data.subcorp_list);
-                this.importUnfinished(data.processed_subc);
+                this.importProcessed(data.processed_subc);
                 this.relatedCorpora = Immutable.List<string>(data.related_corpora);
                 for (let p in filter) {
                     if (filter.hasOwnProperty(p)) {

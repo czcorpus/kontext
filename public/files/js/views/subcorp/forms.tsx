@@ -21,7 +21,8 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
-import { SubcorpFormModel, SubcorpWithinFormModel, WithinLine } from '../../models/subcorp/form';
+import { SubcorpFormModel } from '../../models/subcorp/form';
+import {SubcorpWithinFormModel, WithinLine} from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
 import { StructsAndAttrs } from '../../pages/subcorpForm';
 
@@ -42,7 +43,7 @@ export interface SubcorpFormProps {
 export interface FormViews {
     SubcorpForm:React.ComponentClass<SubcorpFormProps>;
     SubcNamePublicCheckbox:React.SFC<{value:boolean}>;
-    SubcDescription:React.SFC<{value:string}>;
+    SubcDescription:React.SFC<{value:Kontext.FormValue<string>}>;
 }
 
 export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
@@ -192,9 +193,11 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                     </select>
                 </td>
                 <td>
-                    <input type="text" value={props.lineData.attributeCql}
-                            onChange={handleCqlChange}
-                            style={{width: '30em'}} />
+                    <layoutViews.ValidatedItem invalid={props.lineData.attributeCql.isInvalid}>
+                        <input type="text" value={props.lineData.attributeCql.value}
+                                onChange={handleCqlChange}
+                                style={{width: '30em'}} />
+                        </layoutViews.ValidatedItem>
                 </td>
                 <td>
                     {props.rowIdx > 0
@@ -262,8 +265,10 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                         <tr key="button-row" className="last-line">
                             <td>
                                 <a className="add-within"
-                                    onClick={this._addLineHandler}
-                                    title={he.translate('global__add_within')}>+</a>
+                                        onClick={this._addLineHandler}
+                                        title={he.translate('global__add_within')}>
+                                    <img src={he.createStaticUrl('img/plus.svg')} style={{width: '1em'}} />
+                                </a>
                             </td>
                             <td></td>
                             <td></td>
@@ -278,7 +283,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
      *
      */
     const SubcNameInput:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
     }> = (props) => {
 
         const handleChange = (evt) => {
@@ -290,7 +295,9 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         };
 
-        return <input type="text" value={props.value} onChange={handleChange} />;
+        return <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                <input type="text" value={props.value.value} onChange={handleChange} />
+            </layoutViews.ValidatedItem>;
     };
 
     // ------------------------ <SubcNamePublicCheckbox /> --------------------------
@@ -318,7 +325,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     // ------------------------ <SubcDescription /> --------------------------
 
     const SubcDescription:React.SFC<{
-        value:string;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -332,9 +339,11 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         return <>
-            <textarea rows={5} cols={60} value={props.value} onChange={handleChange} />
+            <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                <textarea rows={5} cols={60} value={props.value.value} onChange={handleChange} />
+            </layoutViews.ValidatedItem>
             <p className="note">({he.translate('global__markdown_supported')})</p>
-        </>;
+            </>;
     };
 
     // ------------------------ <TDInputModeSelection /> --------------------------
@@ -449,10 +458,11 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
      *
      */
     class SubcorpForm extends React.Component<SubcorpFormProps, {
-        subcname:string;
+        subcname:Kontext.FormValue<string>;
         isPublic:boolean;
         inputMode:string;
-        description:string;
+        description:Kontext.FormValue<string>;
+        isBusy:boolean;
 
     }> {
 
@@ -469,7 +479,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                 subcname: subcorpFormModel.getSubcname(),
                 inputMode: subcorpFormModel.getInputMode(),
                 isPublic: subcorpFormModel.getIsPublic(),
-                description: subcorpFormModel.getDescription()
+                description: subcorpFormModel.getDescription(),
+                isBusy: subcorpFormModel.getIsBusy()
             };
         }
 
@@ -574,11 +585,13 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                             </tr>
                         </tbody>
                     </table>
-
-                    <button className="default-button" type="button"
-                            onClick={this._handleSubmitClick}>
-                        {he.translate('subcform__create_subcorpus')}
-                    </button>
+                    {this.state.isBusy ?
+                        <layoutViews.AjaxLoaderBarImage /> :
+                        <button className="default-button" type="button"
+                                onClick={this._handleSubmitClick}>
+                            {he.translate('subcform__create_subcorpus')}
+                        </button>
+                    }
                 </form>
             );
         }
