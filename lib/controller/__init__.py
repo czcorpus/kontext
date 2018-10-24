@@ -46,7 +46,7 @@ import settings
 from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
 from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
-                               CorpusForbiddenException)
+                               CorpusForbiddenException, ImmediateRedirectException)
 from templating import CheetahResponseFile
 
 
@@ -585,10 +585,9 @@ class Controller(object):
     def redirect(self, url, code=303):
         """
         Sets Controller to output HTTP redirection headers.
-        Please note that the header output is not immediate -
-        an action still must be set and performed. In case there is
-        no need to process anything a NOP action (which does nothing)
-        can be used.
+        Please note that the method does not interrupt request
+        processing, i.e. the redirect is not immediate. In case
+        immediate redirect is needed raise ImmediateRedirectException.
 
         arguments:
         url -- a target URL
@@ -805,6 +804,10 @@ class Controller(object):
             self._status = ex.code
             tmpl, result = self._run_message_action(
                 named_args, action_metadata, 'error', ex.message)
+        except ImmediateRedirectException as ex:
+            tmpl, result = self._run_message_action(
+                named_args, action_metadata, 'error', ex.message)
+            self.redirect(ex.url, ex.code)
         except UserActionException as ex:
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, return_type)
