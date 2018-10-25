@@ -198,7 +198,7 @@ class DatabaseBackend(object):
     def load_tckc_providers(self, corpus_id):
         raise NotImplementedError()
 
-    def load_interval_attrs(self, corpus_id)
+    def load_interval_attrs(self, corpus_id):
         """
         Load structural attributes selectable via
         numeric range (typically - publication date).
