@@ -222,7 +222,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler() {
-            return this.state.collapse ? "Expand all" : "Collapse all";
+            return this.state.collapse ? "Show more" : "Show less";
         }
 
         _getStateDisplay() {
@@ -230,6 +230,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _renderVerbInfo () {
+            if (this.state.collapse) {
+                return this.props.info[1].slice(0, 2).map((item, i) => {
+                    return <OneFrame key={i} id={item[0]}
+                                    info={item[1]} pdtEx={item[2]}
+                                    pcedtEx={item[3]}
+                                    verb={this.props.info[0]}/>
+            });
+            }
             return this.props.info[1].map((item, i) => {
                 return <OneFrame key={i} id={item[0]}
                                 info={item[1]} pdtEx={item[2]}
@@ -241,9 +249,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         render() {
             return (
                 <div>
+                    <div className="containerTC">{this._renderVerbInfo()}</div>
                     <a className="PDTVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
                     </a>
-                    <div className="containerTC" style={this._getStateDisplay()}>{this._renderVerbInfo()}</div>
                 </div>
             );
         }
