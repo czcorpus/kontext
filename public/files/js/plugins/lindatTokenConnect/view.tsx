@@ -42,7 +42,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     const EngVallexJsonRenderer:Views['EngVallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="VallexJsonRenderer">
+                <div className="VallexJsonRenderer 1">
                     <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/EngVallex.html?verb=' + props.data.result[1][0][0]} target="_blank">{props.data.result[1][0][0]}</a>
                     <EngVerbList info={props.data.result[1][0]} />
                 </div>
@@ -71,14 +71,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler() {
-            return this.state.collapse ? "Expand all" : "Collapse all";
-        }
-
-        _getStateDisplay() {
-            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+            return this.state.collapse ? "Show more" : "Show less";
         }
 
         _renderEngVerbInfo() {
+            if (this.state.collapse) {
+                return this.props.info[1].slice(0, 1).map((item, i) => {
+                    return <OneEngFrame key={i} id={item[0]}
+                                        info={item[1]}
+                                        pcedtEx={item[2]}
+                                        verb={this.props.info[0]}/>
+                });
+            }
             return this.props.info[1].map((item, i) => {
                 return <OneEngFrame key={i} id={item[0]}
                                 info={item[1]}
@@ -87,12 +91,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             });
         }
 
+        _renderToggle() {
+            if (this.props.info[1].length > 1) {
+                return <a className="EngVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}</a>
+            }
+            return ""
+        }
+
         render() {
             return (
                 <div>
-                    <a className="EngVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
-                    </a>
-                    <div className="containerTC" style={this._getStateDisplay()}>{this._renderEngVerbInfo()}</div>
+                    <div className="containerTC">{this._renderEngVerbInfo()}</div>
+                    <div>{this._renderToggle()}</div>
                 </div>
             );
         }
@@ -194,7 +204,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     const PDTVallexJsonRenderer:Views['PDTVallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="VallexJsonRenderer">
+                <div className="VallexJsonRenderer 2">
                     <PDTVerbList info={props.data.result[1][0]} />
                 </div>
             );
@@ -225,13 +235,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             return this.state.collapse ? "Show more" : "Show less";
         }
 
-        _getStateDisplay() {
-            return this.state.collapse ? {display: 'none'} : {display: 'block'};
-        }
-
-        _renderVerbInfo () {
+        _renderVerbInfo() {
             if (this.state.collapse) {
-                return this.props.info[1].slice(0, 2).map((item, i) => {
+                return this.props.info[1].slice(0, 1).map((item, i) => {
                     return <OneFrame key={i} id={item[0]}
                                     info={item[1]} pdtEx={item[2]}
                                     pcedtEx={item[3]}
@@ -246,12 +252,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             });
         }
 
+        _renderToggle() {
+            if (this.props.info[1].length > 1) {
+                return <a className="PDTVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}</a>
+            }
+            return ""
+        }
+
         render() {
             return (
                 <div>
                     <div className="containerTC">{this._renderVerbInfo()}</div>
-                    <a className="PDTVerbListExpand" onClick={this._clickHandler}>{this._textHandler()}
-                    </a>
+                    <div>{this._renderToggle()}</div>
                 </div>
             );
         }
@@ -271,8 +283,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         return (
             <div>
                 <div className="vallexSourceV">
-                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.verb + '#' + props.id} target="_blank">{props.verb}</a>
-                    {props.info[0].map((listValue, i) => {
+                    <div className="vallexSum2">
+                    <span className="vallexSense">{props.verb}</span>
+                    <div className="forVLink2">
+                    <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/PDT-Vallex.html?verb=' + props.verb + '#' + props.id} target="_blank">Open in PDT-Vallex</a>
+                    </div>
+                    </div>
+                        {props.info[0].map((listValue, i) => {
                         if (listValue.length !== 0) {
                             return <span className="vallexFrame" key={i}>&nbsp;<span dangerouslySetInnerHTML={{__html: listValue}}/></span>;
                         }
@@ -378,7 +395,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
     const VallexJsonRenderer:Views['VallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="VallexJsonRenderer">
+                <div className="VallexJsonRenderer 3">
                     <VerbList list={props.data.result[1]} language={props.data.inputParameters.language} />
                 </div>
             );
@@ -407,27 +424,34 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
         }
 
         _textHandler() {
-            return this.state.collapse ? "Expand all" : "Collapse all";
-        }
-
-        _getStateDisplay() {
-            return this.state.collapse ? {display: 'none'} : {display: 'block'};
+            return this.state.collapse ? "Show more" : "Show less";
         }
 
         _renderVerbInfo() {
+            if (this.state.collapse) {
+                return this.props.list.slice(0, 1).map((item, i) => {
+                    return <Pair language={this.props.language} key={i} name={item[0]} detail={item[1]}/>
+                });
+            }
             return this.props.list.map((item, i) => {
-                return <Pair language={this.props.language} key={i} name={item[0]} detail={item[1]} />
+                return <Pair language={this.props.language} key={i} name={item[0]} detail={item[1]}/>
             });
 
         };
 
+        _renderToggle() {
+            if (this.props.list.length > 1) {
+                return <a className="verbListExpand" onClick={this._clickHandler}>{this._textHandler()}</a>
+            }
+            return ""
+        }
+
         render() {
             return (
                 <div>
-                    <a className="verbListExpand" onClick={this._clickHandler}>{this._textHandler()}
-                    </a>
-                    <div className="containerTC" style={this._getStateDisplay()}>{this._renderVerbInfo()}
+                    <div className="containerTC">{this._renderVerbInfo()}
                     </div>
+                    <div>{this._renderToggle()}</div>
                 </div>
             );
         }
@@ -455,7 +479,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
 
         return (
             <div>
-                <a className="vallexSense" href={toVallex(props)} target="_blank">{props.name}</a>
+                <div className="vallexSum">
+                    <span className="vallexSense">{props.name}</span>
+                    <div className="forVLink">
+                    <a className="vallexSense" href={toVallex(props)} target="_blank">Open in CzEngVallex</a>
+                    </div>
+                </div>
                 {props.detail.map((sourceValue, h) => {
                     return (
                         <div key={h}>
