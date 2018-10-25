@@ -371,7 +371,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
         render() {
             if (this.state.hasAvailableAlignedCorpora) {
-                let classes = ['envelope', 'aligned'];
+                let classes = ['TableTextTypeAttribute', 'aligned'];
                 if (this.state.isLocked) {
                     classes.push('locked');
                 }

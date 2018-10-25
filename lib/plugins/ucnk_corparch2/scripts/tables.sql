@@ -9,6 +9,7 @@ INSERT INTO corpora (name) VALUES ('syn2010'), ('syn2015'), ('intercorp_v10_cs')
 ('koditex');
 */
 SET FOREIGN_KEY_CHECKS=0;
+/*
 ALTER TABLE corpora DROP INDEX corpora_name_uniq;
 ALTER TABLE corpora DROP FOREIGN KEY corpora_sentence_struct_fkey;
 ALTER TABLE corpora DROP FOREIGN KEY corpora_speech_segment_structattr_fkey;
@@ -17,7 +18,7 @@ ALTER TABLE corpora DROP FOREIGN KEY corpora_speech_overlap_attr_fkey;
 ALTER TABLE corpora DROP FOREIGN KEY corpora_bib_label_structattr_fkey;
 ALTER TABLE corpora DROP FOREIGN KEY corpora_bib_id_structattr_fkey;
 ALTER TABLE corpora DROP FOREIGN KEY corpora_ttdesc_id_fkey;
-ALTER TABLE corpora DROP COLUMN size;
+ALTER TABLE corpora DROP COLUMN `size`;
 ALTER TABLE corpora DROP COLUMN group_name;
 ALTER TABLE corpora DROP COLUMN version;
 ALTER TABLE corpora DROP COLUMN created;
@@ -44,6 +45,7 @@ ALTER TABLE corpora DROP COLUMN bib_id_attr;
 ALTER TABLE corpora DROP COLUMN featured;
 ALTER TABLE corpora DROP COLUMN featured;
 ALTER TABLE corpora DROP COLUMN ttdesc_id;
+*/
 
 SET FOREIGN_KEY_CHECKS=0;
 ALTER TABLE corpora
@@ -73,7 +75,9 @@ ALTER TABLE corpora
 	ADD COLUMN bib_id_attr VARCHAR(63),
 	ADD COLUMN bib_group_duplicates INTEGER DEFAULT 0,
 	ADD COLUMN featured INTEGER DEFAULT 0,
-	ADD COLUMN ttdesc_id INTEGER;
+	ADD COLUMN ttdesc_id INTEGER,
+	ADD COLUMN description_cs TEXT,
+	ADD COLUMN description_en TEXT;
 
 ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
 
@@ -256,6 +260,19 @@ CREATE TABLE corpus_structattr (
     CONSTRAINT corpus_structattr_pkey PRIMARY KEY (corpus_name, structure_name, name),
     CONSTRAINT corpus_structattr_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name),
     CONSTRAINT corpus_structattr_structure_name_fkey FOREIGN KEY (corpus_name, structure_name) REFERENCES corpus_structure(corpus_name, name)
+) ENGINE = INNODB CHARSET=utf8;
+
+
+
+/* ------------------------------ CORPUS interval attrs M:N ------------------- */
+
+DROP TABLE IF EXISTS kontext_interval_attr;
+CREATE TABLE kontext_interval_attr (
+    corpus_name VARCHAR(63) NOT NULL,
+    interval_struct VARCHAR(63) NOT NULL,
+    interval_attr VARCHAR(63) NOT NULL,
+    CONSTRAINT kontext_interval_attr_pkey PRIMARY KEY (corpus_name, interval_attr),
+    CONSTRAINT kontext_interval_attr_interval_attr_fkey FOREIGN KEY (corpus_name, interval_struct, interval_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name)
 ) ENGINE = INNODB CHARSET=utf8;
 
 /* --------------------------------------------- */

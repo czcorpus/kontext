@@ -221,7 +221,6 @@
         "query__use_ctrl_click_for": "použijte Ctrl+klik pro vícenásobný výběr",
         "query__select_one_or_more_pos_tags": "Vyberte jednu nebo více značek",
         "query__tt_select_individual": "Vybrat jednotlivé položky",
-        "query__tt_define_range": "Vybrat rozsah hodnot",
         "query__tt_from": "od",
         "query__tt_to": "do",
         "query__tt_interval_inclusion_policy": "částečně vyhovující hodnoty",

@@ -221,7 +221,6 @@
         "query__use_ctrl_click_for": "use Ctrl+click for multiple selection",
         "query__select_one_or_more_pos_tags": "Select one or more PoS tags",
         "query__tt_select_individual": "Select individual items",
-        "query__tt_define_range": "Select a range",
         "query__tt_from": "from",
         "query__tt_to": "to",
         "query__tt_interval_inclusion_policy": "partially included values",
