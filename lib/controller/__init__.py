@@ -805,8 +805,7 @@ class Controller(object):
             tmpl, result = self._run_message_action(
                 named_args, action_metadata, 'error', ex.message)
         except ImmediateRedirectException as ex:
-            tmpl, result = self._run_message_action(
-                named_args, action_metadata, 'error', ex.message)
+            tmpl, result = None, None
             self.redirect(ex.url, ex.code)
         except UserActionException as ex:
             self._status = ex.code

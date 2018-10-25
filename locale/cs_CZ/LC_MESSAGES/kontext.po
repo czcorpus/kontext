@@ -452,3 +452,6 @@ msgstr "Najít publikovaný subkorpus"
 
 msgid "Subcorpus already exists"
 msgstr "Subkorpus již existuje"
+
+msgid "No access to corpus {0}"
+msgstr "Nelze získat přístup ke korpusu {0}"

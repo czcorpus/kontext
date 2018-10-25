@@ -41,17 +41,11 @@ def fetch_exception_msg(ex):
     return msg
 
 
-class FunctionNotSupported(Exception):
-    """
-    This marks a functionality which is present in bonito-open but not in KonText
-    (either temporarily or for good).
-    """
-    pass
-
-
 class UserActionException(Exception):
     """
-    This exception should cover general errors occurring in Controller's action methods'
+    This exception covers general errors occurring in Controller's action methods
+    as a result of user action (e.g. user sends incorrect arguments, user does
+    not have access rights etc.).
     """
 
     def __init__(self, message, code=400, error_code=None, error_args=None, internal_message=None):
@@ -92,7 +86,7 @@ class ForbiddenException(UserActionException):
 
 class CorpusForbiddenException(ForbiddenException):
     def __init__(self, corpname, variant):
-        super(CorpusForbiddenException, self).__init__('Access to {0} forbidden'.format(corpname))
+        super(CorpusForbiddenException, self).__init__('No access to corpus {0}'.format(corpname))
         self.corpname = corpname
         self.variant = variant
 
@@ -101,13 +95,29 @@ class AlignedCorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
         super(AlignedCorpusForbiddenException, self).__init__(
-            'Access to aligned corpus {0} forbidden'.format(corpname))
+            'No access to corpus {0}'.format(corpname))
         self.corpname = corpname
         self.variant = variant
 
 
 class ImmediateRedirectException(UserActionException):
+    """
+    ImmediateRedirectException is used to trigger
+    an immediate request response with http headers
+    set to redirect.
+
+    It can be used in pre_dispatch or in a concrete
+    action.
+    """
 
     def __init__(self, url, code=303):
         super(ImmediateRedirectException, self).__init__('Redirect', code)
         self.url = url
+
+
+class FunctionNotSupported(Exception):
+    """
+    In case a function is invoked on a corpus which does not support it
+    this exception should be used.
+    """
+    pass
