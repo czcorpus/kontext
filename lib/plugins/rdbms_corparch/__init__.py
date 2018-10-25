@@ -375,6 +375,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                         ans = corp_info
                     ans.manatee = self._mc.get_info(corp_name)
                     ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
+                    ans.metadata.interval_attrs = self._backend.load_interval_attrs(corp_name)
 
                     return ans
                 return BrokenCorpusInfo(name=corp_name)

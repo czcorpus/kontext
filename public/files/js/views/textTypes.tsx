@@ -129,7 +129,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         render() {
             return (
                 <div className="range-selector">
-                    <h3>{he.translate('query__tt_define_range')}</h3>
                     <div>
                         <label className="date">
                             {he.translate('query__tt_from')}:{'\u00A0'}
@@ -356,7 +355,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         const renderListOfCheckBoxes = () => {
             return (
-                <table>
+                <table className="FullListContainer">
                     <tbody>
                     {props.attrObj.getValues().map((item, i) => {
                         return (
@@ -538,7 +537,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         render() {
             return (
-                <table>
+                <table className="textTypes_RawInputContainer">
                     <tbody>
                         <tr>
                             <td>
@@ -631,9 +630,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         hasExtendedInfo:boolean;
 
     }> = (props) => {
-
         return (
-            <div className="scrollable">
+            <div className="ValueSelector">
             {props.attrObj.containsFullList() || props.rangeIsOn
                 ? <FullListContainer attrObj={props.attrObj} rangeIsOn={props.rangeIsOn}
                         hasExtendedInfo={props.hasExtendedInfo} />
@@ -672,17 +670,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         _renderModeSwitch() {
-            if (this.props.attrObj.isInterval) {
-                const label = this.props.rangeIsOn
-                    ? he.translate('query__tt_select_individual')
-                    : he.translate('query__tt_select_range');
-                return (
-                    <td>
-                        <a className="util-button" onClick={this._intervalModeSwitchHandler}>{label}</a>
-                    </td>
-                );
-            }
-            return null;
+            return (
+                <select className="select-mode" onChange={this._intervalModeSwitchHandler}
+                        value={this.props.rangeIsOn ? 'r' : 'i'}>
+                    <option value="i">{he.translate('query__tt_select_individual')}</option>
+                    <option value="r">{he.translate('query__tt_select_range')}</option>
+                </select>
+            );
         }
 
         _selectAllHandler() {
@@ -703,14 +697,29 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             });
         }
 
+        _renderSelectAll() {
+            return <label className="select-all" style={{display: 'inline-block'}}>
+                    <input type="checkbox" className="select-all" onClick={this._selectAllHandler} />
+                        {he.translate('global__select_all')}
+            </label>;
+        }
+
         _renderFooter() {
             if (this.props.attrObj.containsFullList() && !this.props.attrObj.isLocked()) {
-                return (
-                    <label className="select-all" style={{display: 'inline-block'}}>
-                        <input type="checkbox" className="select-all" onClick={this._selectAllHandler} />
-                        {he.translate('global__select_all')}
-                        </label>
-                );
+                if (this.props.attrObj.isInterval) {
+                    if (this.props.rangeIsOn) {
+                        return this._renderModeSwitch();
+
+                    } else {
+                        return <>
+                            {this._renderSelectAll()}
+                            {this._renderModeSwitch()}
+                        </>;
+                    }
+
+                } else {
+                    return this._renderSelectAll();
+                }
 
             } else {
                 return null;
@@ -789,47 +798,34 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         render() {
-            const classes = ['envelope'];
+            const classes = ['TableTextTypeAttribute'];
             if (this.props.attrObj.isLocked()) {
                 classes.push('locked');
             }
             return (
-                <table className={classes.join(' ')}>
-                    <tbody>
-                        <tr className="attrib-name">
-                            <th title={this.props.attrObj.name !== this.props.attrObj.label ? this.props.attrObj.name : null}>
-                                {this.props.attrObj.label}
-                                {this._renderAttrInfo()}
-                            </th>
-                        </tr>
-                        <tr>
-                            <td>
-                                {this._renderExtendedInfo()}
-                            </td>
-                        </tr>
-                        <tr className={this.props.rangeIsOn ? 'range' : 'data-rows'}>
-                            <td>
-                                <ValueSelector attrObj={this.props.attrObj}
-                                        rangeIsOn={this.props.rangeIsOn}
-                                        isLocked={this.props.attrObj.isLocked()}
-                                        hasExtendedInfo={this.state.hasExtendedInfo}  />
-                            </td>
-                        </tr>
-                        <tr className="metadata">
-                            <td>
-                                {this._renderMetaInfo()}
-                            </td>
-                        </tr>
-                        <tr className="define-range">
-                            {!this.props.attrObj.isLocked() ? this._renderModeSwitch() : null}
-                        </tr>
-                        <tr className="last-line">
-                            <td>
-                                {this._renderFooter()}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div className={classes.join(' ')}>
+                    <div className="attrib-name">
+                        <h3 title={this.props.attrObj.name !== this.props.attrObj.label ? this.props.attrObj.name : null}>
+                            {this.props.attrObj.label}
+                            {this._renderAttrInfo()}
+                        </h3>
+                    </div>
+                    <div>
+                        {this._renderExtendedInfo()}
+                    </div>
+                    <div className={this.props.rangeIsOn ? 'range' : 'data-rows'}>
+                        <ValueSelector attrObj={this.props.attrObj}
+                                rangeIsOn={this.props.rangeIsOn}
+                                isLocked={this.props.attrObj.isLocked()}
+                                hasExtendedInfo={this.state.hasExtendedInfo}  />
+                    </div>
+                    <div className="metadata">
+                        {this._renderMetaInfo()}
+                    </div>
+                    <div className="last-line">
+                        {this._renderFooter()}
+                    </div>
+                </div>
             );
         }
     }
@@ -868,7 +864,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         render() {
             return (
-                <div>
+                <div className="TextTypesPanel">
                     <div className="plugin-controls">
                     {this.props.liveAttrsView
                         ? <this.props.liveAttrsView />
@@ -876,13 +872,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     </div>
                     <div className="text-type-top-bar">
                     </div>
-                    <div className="text-types-selection">
+                    <div className="grid">
                         {this.props.liveAttrsCustomTT
                             ? <this.props.liveAttrsCustomTT />
                             : null}
                         {this.state.attributes.map((attrObj) => {
-                            return <TableTextTypeAttribute key={attrObj.name + ':list:' + attrObj.containsFullList()}
-                                        attrObj={attrObj} rangeIsOn={this.state.rangeModes.get(attrObj.name)} />;
+                            return <div key={attrObj.name + ':list:' + attrObj.containsFullList()}>
+                                <TableTextTypeAttribute
+                                        attrObj={attrObj}
+                                        rangeIsOn={this.state.rangeModes.get(attrObj.name)} />
+                            </div>;
                         })}
                     </div>
                 </div>

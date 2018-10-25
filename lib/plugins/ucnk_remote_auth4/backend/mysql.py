@@ -355,3 +355,10 @@ class Backend(DatabaseBackend):
                        'FROM kontext_corpus_user AS kcu '
                        'WHERE kcu.user_id = %s', (user_id,))
         return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
+
+    def load_interval_attrs(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT interval_struct, interval_attr '
+                       'FROM kontext_interval_attr '
+                       'WHERE corpus_name = %s', (corpus_id,))
+        return ['{0}.{1}'.format(r['interval_struct'], r['interval_attr']) for r in cursor.fetchall()]
