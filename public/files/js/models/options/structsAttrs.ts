@@ -196,7 +196,6 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         const ans = {
             setattrs: this.attrList
                 .filter(item => item.selected)
-                .sort(attrCmp)
                 .map(item => item.n)
                 .toArray(),
             setstructs: this.structList.filter(item => item.selected).map(item => item.n).toArray(),
