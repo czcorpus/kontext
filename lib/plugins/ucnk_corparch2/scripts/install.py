@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.rdbms_corparch.backend import InstallCorpusInfo
 from plugins.rdbms_corparch.backend.input import InstallJson
 from plugins.ucnk_remote_auth4.backend.mysql import MySQL, MySQLConf
+from plugins.ucnk_corparch2.backend.dummy import DummySQL, DummyShared
 
 
 class Shared(InstallCorpusInfo):
@@ -424,16 +425,22 @@ if __name__ == '__main__':
                         help='Try to search for alternative registry in a directory with this name')
     parser.add_argument('-v', '--verbose', action='store_const', const=True,
                         help='Print some additional (error) information')
+    parser.add_argument('-y', '--dry-run', action='store_const', const=True,
+                        help='No actual database operation will be performed. SQL queries will be printed.')
     args = parser.parse_args()
     import settings
     settings.load(args.conf_path)
-    db = MySQL(MySQLConf(settings))
+    if args.dry_run:
+        db = DummySQL()
+    else:
+        db = MySQL(MySQLConf(settings))
     if args.schema_only:
         prepare_tables(db)
     else:
         reg_path = args.reg_path if args.reg_path else settings.get('corpora', 'manatee_registry')
+        shared = DummyShared() if args.dry_run else Shared(reg_path=reg_path)
         ijson = InstallJsonDir(args.json_out)
-        parse_corplist(path=args.corplist, db=db, shared=Shared(reg_path=reg_path), json_out=ijson,
+        parse_corplist(path=args.corplist, db=db, shared=shared, json_out=ijson,
                        variant=args.variant, verbose=args.verbose, data_only=args.data_only,
                        create_if_none=args.create_if_none)
         ijson.write()
