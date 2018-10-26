@@ -69,14 +69,14 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         if (props.minimized) {
             return <a className="MinimizeIcon" onClick={handleClick} title={he.translate('global__restore')}>
                 <layoutViews.ImgWithMouseover
-                        src={he.createStaticUrl('img/maximize-icon.svg')}
+                        src={he.createStaticUrl('img/maximize-icon-vert.svg')}
                         alt={he.translate('global__restore_dashboard')} />
             </a>;
 
         } else {
             return <a className="MinimizeIcon" onClick={handleClick} title={he.translate('global__minimize')}>
                 <layoutViews.ImgWithMouseover
-                        src={he.createStaticUrl('img/minimize-icon.svg')}
+                        src={he.createStaticUrl('img/minimize-icon-vert.svg')}
                         alt={he.translate('global__minimize')} />
             </a>;
         }

@@ -233,6 +233,8 @@
         "query__tt_{num}_items": "{num} items",
         "query__tt_multiple_items_same_name_{num_items}": "This item represents {num_items, plural, one{# record} other{# records}} of the same name.",
         "query__tt_click_to_see_attr_info": "Click to see an information about the attribute (opens in a new window)",
+        "query__tt_minimize_all_lists": "Minimize all the lists",
+        "query__tt_maximize_all_lists": "Show all the lists",
         "query__span_from": "From",
         "query__span_to": "To",
         "query__include_kwic": "Include KWIC",

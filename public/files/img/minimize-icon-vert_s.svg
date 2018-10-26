@@ -18,7 +18,7 @@
    viewBox="0 0 22.676 22.676"
    enable-background="new 0 0 22.676 22.676"
    xml:space="preserve"
-   sodipodi:docname="minimize-icon.svg"
+   sodipodi:docname="minimize-icon_s.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"><metadata
    id="metadata13"><rdf:RDF><cc:Work
        rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
@@ -32,24 +32,25 @@
    guidetolerance="10"
    inkscape:pageopacity="0"
    inkscape:pageshadow="2"
-   inkscape:window-width="1165"
-   inkscape:window-height="770"
+   inkscape:window-width="691"
+   inkscape:window-height="480"
    id="namedview9"
    showgrid="false"
    inkscape:zoom="10.407479"
-   inkscape:cx="-3.8433902"
+   inkscape:cx="11.338"
    inkscape:cy="11.338"
    inkscape:window-x="67"
    inkscape:window-y="27"
    inkscape:window-maximized="0"
    inkscape:current-layer="Vrstva_1" />
 <g
-   id="g6">
+   id="g6"
+   transform="rotate(90,11.338,11.338)">
 	<path
    d="M 5.669,0 C 5.669,0 0,0 0,5.669 v 11.339 c 0,0 0,5.668 5.669,5.668 h 11.337 c 0,0 5.67,0 5.67,-5.668 V 5.669 c 0,0 0,-5.669 -5.67,-5.669 z"
    id="path2"
    inkscape:connector-curvature="0"
-   style="fill:#009ddf" />
+   style="fill:#00caf6" />
 	<rect
    x="3.9419999"
    y="15.035"
