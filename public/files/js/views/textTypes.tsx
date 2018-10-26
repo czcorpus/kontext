@@ -38,6 +38,8 @@ export interface TextTypesPanelProps {
 interface TextTypesPanelState {
     attributes:Array<TextTypes.AttributeSelection>;
     rangeModes:Immutable.Map<string, boolean>;
+    minimized:Immutable.Map<string, boolean>;
+    hasSomeMaximizedBoxes:boolean;
 }
 
 
@@ -644,11 +646,43 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         );
     };
 
+    // --------------------- <TextTypeAttributeMinIcon /> -----------------
+
+    const TextTypeAttributeMinIcon:React.SFC<{
+        isMinimized:boolean;
+        ident:string;
+
+    }> = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch({
+                actionType: 'TT_TOGGLE_MINIMIZE_ITEM',
+                props: {
+                    ident: props.ident
+                }
+            });
+        }
+
+        return (
+            <div className="textTypes_TextTypeAttributeMinIcon">
+                <a onClick={handleClick}>
+                    {props.isMinimized ?
+                        <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/maximize-icon.svg')}
+                            alt="maximize" /> :
+                        <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/minimize-icon.svg')}
+                        alt="minimize" />
+                    }
+                </a>
+            </div>
+        );
+    }
+
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
     class TableTextTypeAttribute extends React.Component<{
         attrObj:TextTypes.AttributeSelection;
         rangeIsOn:boolean;
+        isMinimized:boolean;
     },
     {
         metaInfoHelpVisible:boolean;
@@ -768,7 +802,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         shouldComponentUpdate(nextProps, nextState) {
             return this.props.attrObj !== nextProps.attrObj
                     || this.props.rangeIsOn !== nextProps.rangeIsOn
-                    || this.state.metaInfoHelpVisible !== nextState.metaInfoHelpVisible;
+                    || this.state.metaInfoHelpVisible !== nextState.metaInfoHelpVisible
+                    || this.props.isMinimized !== nextProps.isMinimized;
         }
 
         _renderExtendedInfo() {
@@ -807,28 +842,62 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     <div className="attrib-name">
                         <h3 title={this.props.attrObj.name !== this.props.attrObj.label ? this.props.attrObj.name : null}>
                             {this.props.attrObj.label}
+                            {
+                            this.props.isMinimized && this.props.attrObj.hasUserChanges() ?
+                            <span title={he.translate('query__contains_selected_text_types')}>{'\u00a0\u2713'}</span> :
+                            null
+                            }
                             {this._renderAttrInfo()}
                         </h3>
+                        <TextTypeAttributeMinIcon isMinimized={this.props.isMinimized}
+                                ident={this.props.attrObj.name} />
                     </div>
-                    <div>
-                        {this._renderExtendedInfo()}
-                    </div>
-                    <div className={this.props.rangeIsOn ? 'range' : 'data-rows'}>
-                        <ValueSelector attrObj={this.props.attrObj}
-                                rangeIsOn={this.props.rangeIsOn}
-                                isLocked={this.props.attrObj.isLocked()}
-                                hasExtendedInfo={this.state.hasExtendedInfo}  />
-                    </div>
-                    <div className="metadata">
-                        {this._renderMetaInfo()}
-                    </div>
-                    <div className="last-line">
-                        {this._renderFooter()}
-                    </div>
+                    {this.props.isMinimized ?
+                        <div></div> :
+                        (<>
+                            <div>
+                                {this._renderExtendedInfo()}
+                            </div>
+                            <div className={this.props.rangeIsOn ? 'range' : 'data-rows'}>
+                                <ValueSelector attrObj={this.props.attrObj}
+                                        rangeIsOn={this.props.rangeIsOn}
+                                        isLocked={this.props.attrObj.isLocked()}
+                                        hasExtendedInfo={this.state.hasExtendedInfo}  />
+                            </div>
+                            <div className="metadata">
+                                {this._renderMetaInfo()}
+                            </div>
+                            <div className="last-line">
+                                {this._renderFooter()}
+                            </div>
+                        </>)
+                    }
                 </div>
             );
         }
     }
+
+    // ----------------------------- <TTAttribMinimizeSwitch /> --------------------------
+
+    const TTAttribMinimizeSwitch:React.SFC<{
+        hasSomeMaximized:boolean;
+
+    }> = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch({
+                actionType: props.hasSomeMaximized ? 'TT_MINIMIZE_ALL' : 'TT_MAXIMIZE_ALL',
+                props: {}
+            });
+        };
+
+        if (props.hasSomeMaximized) {
+            return <a onClick={handleClick}>{he.translate('query__tt_minimize_all_lists')}</a>;
+
+        } else {
+            return <a onClick={handleClick}>{he.translate('query__tt_maximize_all_lists')}</a>;
+        }
+    };
 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
@@ -843,7 +912,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         _fetchModelState() {
             return {
                 attributes: textTypesModel.getAttributes(),
-                rangeModes: textTypesModel.getRangeModes()
+                rangeModes: textTypesModel.getRangeModes(),
+                minimized: textTypesModel.getMiminimizedBoxes(),
+                hasSomeMaximizedBoxes: textTypesModel.hasSomeMaximizedBoxes()
             };
         }
 
@@ -871,6 +942,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                         : null}
                     </div>
                     <div className="text-type-top-bar">
+                        <TTAttribMinimizeSwitch hasSomeMaximized={this.state.hasSomeMaximizedBoxes} />
                     </div>
                     <div className="grid">
                         {this.props.liveAttrsCustomTT
@@ -880,7 +952,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                             return <div key={attrObj.name + ':list:' + attrObj.containsFullList()}>
                                 <TableTextTypeAttribute
                                         attrObj={attrObj}
-                                        rangeIsOn={this.state.rangeModes.get(attrObj.name)} />
+                                        rangeIsOn={this.state.rangeModes.get(attrObj.name)}
+                                        isMinimized={this.state.minimized.get(attrObj.name)} />
                             </div>;
                         })}
                     </div>

@@ -37,15 +37,14 @@
    id="namedview9"
    showgrid="false"
    inkscape:zoom="10.407479"
-   inkscape:cx="11.338"
+   inkscape:cx="-3.8433902"
    inkscape:cy="11.338"
    inkscape:window-x="67"
    inkscape:window-y="27"
    inkscape:window-maximized="0"
    inkscape:current-layer="Vrstva_1" />
 <g
-   id="g6"
-   transform="rotate(90,11.338,11.338)">
+   id="g6">
 	<path
    d="M 5.669,0 C 5.669,0 0,0 0,5.669 v 11.339 c 0,0 0,5.668 5.669,5.668 h 11.337 c 0,0 5.67,0 5.67,-5.668 V 5.669 c 0,0 0,-5.669 -5.67,-5.669 z"
    id="path2"

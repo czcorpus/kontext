@@ -37,10 +37,14 @@
             div.attrib-name {
 
                 background-color: @color-data-table-footer;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
 
                 h3 {
                     padding: 0.6em 1em;
                     margin: 0;
+                    flex-grow: 1;
 
                     span.info-link {
 
@@ -65,6 +69,21 @@
 
                 h3.focused {
                     color: @color-logo-pink;
+                }
+
+                .textTypes_TextTypeAttributeMinIcon {
+
+                    flex-basis: auto;
+                    padding: 0.3em 1em;
+
+                    a {
+                        vertical-align: middle;
+                        display: inline-block;
+
+                        img {
+                            width: 1em;
+                        }
+                    }
                 }
             }
 
@@ -232,7 +251,7 @@
         .TableTextTypeAttribute.locked {
             border: 1px solid @locked-attrs-bgcolor;
 
-            > tbody > tr > th {
+            > .attrib-name {
                 background-color: @locked-attrs-bgcolor;
             }
 

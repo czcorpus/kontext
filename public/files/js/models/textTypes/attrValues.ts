@@ -27,6 +27,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
+import { string } from 'prop-types';
 
 
 /**
@@ -175,6 +176,8 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
 
     private selectionChangeListeners:Immutable.List<(target:TextTypes.ITextTypesModel)=>void>;
 
+    private minimizedBoxes:Immutable.Map<string, boolean>;
+
     /**
      *
      */
@@ -201,6 +204,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         this.selectionChangeListeners = Immutable.List<(target:TextTypes.ITextTypesModel)=>void>();
         this.textInputPlaceholder = null;
         this._isBusy = false;
+        this.minimizedBoxes = Immutable.Map<string, boolean>(this.attributes.map(v => [v.name, false]));
 
         this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
@@ -262,6 +266,21 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                         }
                     );
                     break;
+                case 'TT_MINIMIZE_ALL':
+                    this.minimizedBoxes = this.minimizedBoxes.map((v, k) => true).toMap();
+                    this.notifyChangeListeners();
+                break;
+                case 'TT_MAXIMIZE_ALL':
+                    this.minimizedBoxes = this.minimizedBoxes.map((v, k) => false).toMap();
+                    this.notifyChangeListeners();
+                break;
+                case 'TT_TOGGLE_MINIMIZE_ITEM':
+                    this.minimizedBoxes = this.minimizedBoxes.set(
+                        payload.props['ident'],
+                        !this.minimizedBoxes.get(payload.props['ident'])
+                    );
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
@@ -746,5 +765,12 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         return this._isBusy;
     }
 
+    getMiminimizedBoxes():Immutable.Map<string, boolean> {
+        return this.minimizedBoxes;
+    }
+
+    hasSomeMaximizedBoxes():boolean {
+        return this.minimizedBoxes.find(v => v === false) !== undefined;
+    }
 
 }
