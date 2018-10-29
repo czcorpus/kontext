@@ -24,6 +24,7 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, TextTypes} from '../../types/common';
 import {LiveAttrsModel, SelectionStep} from './models';
 import { PluginInterfaces } from '../../types/plugins';
+import {init as ttViewInit} from '../../views/textTypes';
 
 
 export interface ViewModuleArgs {
@@ -47,6 +48,8 @@ export interface Views {
 
 
 export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel}:ViewModuleArgs):Views {
+
+    const ttViews = ttViewInit(dispatcher, he, textTypesModel);
 
     // ----------------------------- <StepLoader /> --------------------------
 
@@ -329,6 +332,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         hasAvailableAlignedCorpora:boolean;
         alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
         isLocked:boolean;
+        isTTListMinimized:boolean;
         manualAlignCorporaMode:boolean;
 
     }> {
@@ -337,6 +341,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
             super(props);
             this.state = this._fetchModelState();
             this._changeHandler = this._changeHandler.bind(this);
+            this._handleMinIconClick = this._handleMinIconClick.bind(this);
         }
 
         _fetchModelState() {
@@ -344,6 +349,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                 hasAvailableAlignedCorpora: liveAttrsModel.hasAvailableAlignedCorpora(),
                 alignedCorpora: liveAttrsModel.getAlignedCorpora(),
                 isLocked: liveAttrsModel.hasLockedAlignedLanguages(),
+                isTTListMinimized: liveAttrsModel.getIsTTListMinimized(),
                 manualAlignCorporaMode: liveAttrsModel.isManualAlignCorporaMode()
             };
         }
@@ -369,33 +375,40 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
             }
         }
 
+        _handleMinIconClick() {
+            dispatcher.dispatch({
+                actionType: 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
+                props: {}
+            });
+        }
+
         render() {
             if (this.state.hasAvailableAlignedCorpora) {
-                let classes = ['TableTextTypeAttribute', 'aligned'];
+                const classes = ['TableTextTypeAttribute', 'aligned'];
                 if (this.state.isLocked) {
                     classes.push('locked');
                 }
                 return (
-                    <table className={classes.join(' ')}>
-                        <tbody>
-                            <tr className="attrib-name">
-                                <th>
-                                    {he.translate('ucnkLA__aligned_corpora')}
-                                </th>
-                            </tr>
-                            <tr>
-                                <td className="note">
+                    <div className={classes.join(' ')}>
+                        <div className="attrib-name">
+                            <h3>{he.translate('ucnkLA__aligned_corpora')}</h3>
+                            <ttViews.TextTypeAttributeMinIcon isMinimized={this.state.isTTListMinimized}
+                                    onClick={this._handleMinIconClick} />
+                        </div>
+                        {this.state.isTTListMinimized ?
+                            <div /> :
+                            <>
+                                <div className="note">
                                     <p>
                                         {this._renderHint()}
                                     </p>
-                                    {this.state.hasAvailableAlignedCorpora && this.state.alignedCorpora.size > 0 ?
+                                    {
+                                        this.state.hasAvailableAlignedCorpora && this.state.alignedCorpora.size > 0 ?
                                         null :
                                         <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
                                     }
-                                </td>
-                            </tr>
-                            <tr>
-                                <td className="data-rows">
+                                </div>
+                                <div className="data-rows">
                                     <div className="scrollable">
                                         <table>
                                             <tbody>
@@ -412,17 +425,14 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                             </tbody>
                                         </table>
                                     </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td className="hidden-values">
-                                </td>
-                            </tr>
-                            <tr className="last-line">
-                                <td>{'\u00a0'}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                                <div className="hidden-values" />
+                                <div className="last-line">
+                                    {'\u00a0'}
+                                </div>
+                            </>
+                        }
+                    </div>
                 );
 
             } else {

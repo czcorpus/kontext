@@ -1077,6 +1077,10 @@ export namespace TextTypes {
         canUndoState():boolean;
 
         isBusy():boolean;
+
+        getMiminimizedBoxes():Immutable.Map<string, boolean>;
+
+        hasSomeMaximizedBoxes():boolean;
     }
 
     /**

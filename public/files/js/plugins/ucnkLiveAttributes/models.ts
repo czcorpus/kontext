@@ -115,6 +115,8 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
 
     private isBusy:boolean;
 
+    private isTTListMinimized:boolean;
+
     private selectedCorporaProvider:()=>Immutable.List<string>;
 
     /**
@@ -144,6 +146,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         this.controlsEnabled = false; // it is enabled when user selects one or more items
         this.textTypesModel = textTypesModel;
         this.isBusy = false;
+        this.isTTListMinimized = false;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
         this.alignedCorpora = Immutable.List(args.availableAlignedCorpora
                         .map((item) => {
@@ -217,6 +220,18 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     this.textTypesModel.undoState();
                     this.textTypesModel.notifyChangeListeners();
                     this.selectionSteps = this.selectionSteps.pop();
+                    this.notifyChangeListeners();
+                break;
+                case 'TT_MINIMIZE_ALL':
+                    this.isTTListMinimized = true;
+                    this.notifyChangeListeners();
+                break;
+                case 'TT_MAXIMIZE_ALL':
+                    this.isTTListMinimized = false;
+                    this.notifyChangeListeners();
+                break;
+                case 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST':
+                    this.isTTListMinimized = !this.isTTListMinimized;
                     this.notifyChangeListeners();
                 break;
                 case '@QUERY_INPUT_ADD_ALIGNED_CORPUS':
@@ -589,5 +604,9 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
 
     getIsBusy():boolean {
         return this.isBusy;
+    }
+
+    getIsTTListMinimized():boolean {
+        return this.isTTListMinimized;
     }
 }
