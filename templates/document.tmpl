@@ -61,11 +61,21 @@ if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=fun
 <script type="text/javascript" src="${abjs}"></script>
 #end for
 <!-- --------------------- -->
+#if $current_action != 'compatibility'
+<script type="text/javascript">
+if (((/*@cc_on!@*/false) || document['documentMode']) && window.navigator.userAgent.indexOf('MSIE') > -1) {
+    window.location.href = "${root_url}compatibility";
+}
+</script>
+#end if
+#block js_load
 <script type="text/javascript" src="$files_path/dist/common.js${deployment_suff}"></script>
 <script type="text/javascript" src="$files_path/dist/${page_model}.js${deployment_suff}"></script>
+#end block
 #block headers
 #end block
 
+#block js_init
 <script type="text/javascript">
 var __conf = {};
 __conf.page = {};
@@ -117,6 +127,7 @@ __conf.LogoutUrl = $to_json($logout_url);
 __conf.webSocketUrl = $to_json($websocket_url);
 __conf.TextDirectionRTL = $to_json($getVar('righttoleft', False));
 </script>
+#end block
 </head>
 <body>
 #filter WebSafe
