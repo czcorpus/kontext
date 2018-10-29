@@ -1422,3 +1422,7 @@ class Kontext(Controller):
     @exposed(accept_kwargs=True, skip_corpus_init=True, return_type='json')
     def message_json(self, *args, **kwargs):
         return self.message(*args, **kwargs)
+
+    @exposed(skip_corpus_init=True, template='compatibility.tmpl')
+    def compatibility(self, req):
+        return {}

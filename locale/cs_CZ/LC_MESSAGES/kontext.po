@@ -455,3 +455,18 @@ msgstr "Subkorpus již existuje"
 
 msgid "No access to corpus {0}"
 msgstr "Nelze získat přístup ke korpusu {0}"
+
+msgid "Compatibility notice"
+msgstr "Oznámení o kompatibilitě"
+
+msgid "Please note that KonText is not compatible with Microsoft Internet Explorer browser which has been discontinued by Microsoft in favour of the Edge browser in 2015."
+msgstr "Berte prosím na vědomí, že KonText není kompatibilní s prohlížečem Microsoft Internet Explorer, který byl firmou Microsoft v roce 2015 nahrazen prohlížečem Edge."
+
+msgid "To use KonText please install any modern web browser. E.g."
+msgstr "K používání KonTextu si prosím nainstalujte některý z moderních webových prohlížečů. Např."
+
+msgid "pre-installed on Windows 10"
+msgstr "předinstalováno ve Windows 10"
+
+msgid "pre-installed on Apple macOS"
+msgstr "předinstalováno v Apple macOS"
