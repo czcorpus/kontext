@@ -29,7 +29,7 @@ import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
-import {TextTypesModel} from '../textTypes/attrValues';
+import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
 

@@ -30,7 +30,7 @@ import {Kontext, KeyCodes} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {QueryModel, WidgetsMap} from '../../models/query/main';
 import {UsageTipsModel} from '../../models/usageTips';
-import {TextTypesModel} from '../../models/textTypes/attrValues';
+import {TextTypesModel} from '../../models/textTypes/main';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {QueryContextModel} from '../../models/query/context';

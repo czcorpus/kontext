@@ -23,7 +23,7 @@ import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginName} from '../app/main';
 import {ConcLinesStorage, openStorage} from '../conclines';
-import {TextTypesModel} from '../models/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/main';
 import {QueryModel} from '../models/query/main';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {WithinBuilderModel} from '../models/query/withinBuilder';

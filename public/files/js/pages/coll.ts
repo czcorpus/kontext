@@ -31,7 +31,7 @@ import {init as collFormInit} from '../views/coll/forms';
 import {init as collResultViewInit} from '../views/coll/result';
 import {init as freqFormInit} from '../views/freqs/forms';
 import {init as queryOverviewInit} from '../views/query/overview';
-import {TextTypesModel} from '../models/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/main';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 
 
