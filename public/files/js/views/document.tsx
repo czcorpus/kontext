@@ -346,6 +346,9 @@ export function init(
 
         componentDidMount() {
             window.addEventListener('resize', this.windowResizeHandler);
+            if (this.props.onReady) {
+                this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
+            }
         }
 
         componentWillUnmount() {

@@ -130,6 +130,7 @@ export namespace CoreViews {
 
         export interface Props {
             onCloseClick:()=>void;
+            onReady?:(elm:HTMLElement)=>void;
             customClass?:string;
             scrollable?:boolean;
             autoWidth?:CoreViews.AutoWidth;

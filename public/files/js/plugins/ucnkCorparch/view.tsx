@@ -181,14 +181,18 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
                     elm.style.top = newY;
                 };
                 return (
-                    <layoutViews.PopupBox onCloseClick={this._closeDialog}
-                        customClass="corpus-access-req" onReady={onBoxReady} >
-                        <div>
-                            <RequestForm submitHandler={this._closeDialog}
-                                corpusId={this.props.corpusId}
-                                corpusName={this.props.corpusName} />
-                        </div>
-                    </layoutViews.PopupBox>
+                    <layoutViews.ModalOverlay onCloseKey={this._closeDialog}>
+                        <layoutViews.CloseableFrame
+                                label={he.translate('ucnkCorparch__access_req_form_heading')}
+                                onCloseClick={this._closeDialog}
+                                customClass="corpus-access-req" onReady={onBoxReady}>
+                            <div>
+                                <RequestForm submitHandler={this._closeDialog}
+                                    corpusId={this.props.corpusId}
+                                    corpusName={this.props.corpusName} />
+                            </div>
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay>
                 );
 
             } else {
