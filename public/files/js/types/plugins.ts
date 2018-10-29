@@ -119,10 +119,11 @@ export namespace PluginInterfaces {
 
         export interface ISubcorpFormModel {
             getIsPublic():boolean;
-            getDescription():string;
-            getSubcName():string;
+            getDescription():Kontext.FormValue<string>;
+            getSubcName():Kontext.FormValue<string>;
             addChangeListener(fn:Kontext.ModelListener):void;
             removeChangeListener(fn:Kontext.ModelListener):void;
+            validateForm():Error|null;
         }
 
         export interface Factory {

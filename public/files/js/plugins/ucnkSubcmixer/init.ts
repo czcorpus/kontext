@@ -75,8 +75,6 @@ export class SubcMixerModel extends StatefulModel {
 
     private subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel;
 
-    private currentSubcname:string;
-
     private corpusIdAttr:string;
 
     textTypesModel:TextTypes.ITextTypesModel;
@@ -105,14 +103,6 @@ export class SubcMixerModel extends StatefulModel {
                     } catch (e) {
                         this.pluginApi.showMessage('error', e);
                     }
-                break;
-                case 'UCNK_SUBCMIXER_FETCH_CURRENT_SUBCNAME':
-                    this.currentSubcname = this.subcFormModel.getSubcName();
-                    this.notifyChangeListeners();
-                break;
-                case 'UCNK_SUBCMIXER_SET_SUBCNAME':
-                    this.currentSubcname = payload.props['value'];
-                    this.notifyChangeListeners();
                 break;
                 case 'UCNK_SUBCMIXER_CLEAR_RESULT':
                     this.currentCalculationResult = null;
@@ -204,16 +194,17 @@ export class SubcMixerModel extends StatefulModel {
     }
 
     private submitCreateSubcorpus():RSVP.Promise<any> {
-        if (!this.currentSubcname) {
+        const err = this.subcFormModel.validateForm();
+        if (err) {
             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
-                reject(new Error(this.pluginApi.translate('ucnk_subc__missing_subc_name')));
+                reject(err);
             });
         }
         const args = {};
         args['corpname'] = this.pluginApi.getCorpusIdent().id;
-        args['subcname'] = this.currentSubcname;
+        args['subcname'] = this.subcFormModel.getSubcName().value;
         args['publish'] = this.subcFormModel.getIsPublic() ? '1' : '0';
-        args['description'] = this.subcFormModel.getDescription();
+        args['description'] = this.subcFormModel.getDescription().value;
         args['idAttr'] = this.corpusIdAttr;
         args['ids'] = this.currentCalculationResult.ids.toArray().join(',');
         args['structs'] = this.currentCalculationResult.structs.toArray().join(',');
@@ -245,7 +236,7 @@ export class SubcMixerModel extends StatefulModel {
         }
         const args = {};
         args['corpname'] = this.pluginApi.getCorpusIdent().id;
-        args['subcname'] = this.currentSubcname;
+        args['subcname'] = this.subcFormModel.getSubcName().value;
         args['aligned_corpora'] = this.getAlignedCorporaFn().map(item => item.value).toArray();
         args['expression'] = JSON.stringify(
                 this.shares.map(item => ({
@@ -350,10 +341,6 @@ export class SubcMixerModel extends StatefulModel {
 
     getCurrentCalculationResults():CalculationResults {
         return this.currentCalculationResult;
-    }
-
-    getCurrentSubcname():string {
-        return this.currentSubcname;
     }
 
     getUsedAttributes():Immutable.Set<string> {

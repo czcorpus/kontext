@@ -136,7 +136,7 @@ export class SubcorpFormModel extends StatefulModel {
         return args;
     }
 
-    private validateForm():Error|null {
+    validateForm():Error|null {
         if (this.subcname.value === '') {
             this.subcname.isInvalid = true;
             return new Error(this.pageModel.translate('subcform__missing_subcname'));

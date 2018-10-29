@@ -316,10 +316,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         };
 
-        return <div>
-            <input type="checkbox" onChange={handleCheckbox} checked={props.value}
-                    style={{verticalAlign: 'middle'}} />
-        </div>;
+        return <input type="checkbox" onChange={handleCheckbox} checked={props.value}
+                    style={{verticalAlign: 'middle'}} />;
     };
 
     // ------------------------ <SubcDescription /> --------------------------
