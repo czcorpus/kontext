@@ -23,7 +23,6 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../app/dispatcher';
 import {PluginInterfaces} from '../types/plugins';
 import {Kontext, TextTypes} from '../types/common';
-import { TextTypesModel } from '../models/textTypes/main';
 import { ExtendedInfo } from '../models/textTypes/valueSelections';
 import { CoreViews } from '../types/coreViews';
 
@@ -43,12 +42,19 @@ interface TextTypesPanelState {
 }
 
 
-export interface TextTypesViews {
-    TextTypesPanel:React.ComponentClass<TextTypesPanelProps>;
+export interface TextTypeAttributeMinIconProps {
+    isMinimized:boolean;
+    onClick:()=>void;
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, textTypesModel:TextTypesModel):TextTypesViews {
+export interface TextTypesViews {
+    TextTypesPanel:React.ComponentClass<TextTypesPanelProps>;
+    TextTypeAttributeMinIcon:React.SFC<TextTypeAttributeMinIconProps>;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, textTypesModel:TextTypes.ITextTypesModel):TextTypesViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -648,24 +654,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     // --------------------- <TextTypeAttributeMinIcon /> -----------------
 
-    const TextTypeAttributeMinIcon:React.SFC<{
-        isMinimized:boolean;
-        ident:string;
-
-    }> = (props) => {
-
-        const handleClick = () => {
-            dispatcher.dispatch({
-                actionType: 'TT_TOGGLE_MINIMIZE_ITEM',
-                props: {
-                    ident: props.ident
-                }
-            });
-        }
+    const TextTypeAttributeMinIcon:React.SFC<TextTypeAttributeMinIconProps> = (props) => {
 
         return (
             <div className="textTypes_TextTypeAttributeMinIcon">
-                <a onClick={handleClick}>
+                <a onClick={props.onClick}>
                     {props.isMinimized ?
                         <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/maximize-icon.svg')}
                             alt="maximize" /> :
@@ -832,6 +825,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             return null;
         }
 
+        _handleMinimizeIconFn(ident:string):()=>void {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'TT_TOGGLE_MINIMIZE_ITEM',
+                    props: {
+                        ident: ident
+                    }
+                });
+            };
+        }
+
         render() {
             const classes = ['TableTextTypeAttribute'];
             if (this.props.attrObj.isLocked()) {
@@ -850,7 +854,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                             {this._renderAttrInfo()}
                         </h3>
                         <TextTypeAttributeMinIcon isMinimized={this.props.isMinimized}
-                                ident={this.props.attrObj.name} />
+                                onClick={this._handleMinimizeIconFn(this.props.attrObj.name)} />
                     </div>
                     {this.props.isMinimized ?
                         <div></div> :
@@ -946,7 +950,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     </div>
                     <div className="grid">
                         {this.props.liveAttrsCustomTT
-                            ? <this.props.liveAttrsCustomTT />
+                            ? <div><this.props.liveAttrsCustomTT /></div>
                             : null}
                         {this.state.attributes.map((attrObj) => {
                             return <div key={attrObj.name + ':list:' + attrObj.containsFullList()}>
@@ -963,7 +967,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
     }
 
     return {
-        TextTypesPanel: TextTypesPanel
+        TextTypesPanel: TextTypesPanel,
+        TextTypeAttributeMinIcon: TextTypeAttributeMinIcon
     };
 
 }
