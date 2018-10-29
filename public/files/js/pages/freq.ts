@@ -40,7 +40,7 @@ import {init as ctResultViewInit} from '../views/freqs/ctResult';
 import {FreqDataRowsModel} from '../models/freqs/dataRows';
 import {FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
-import {TextTypesModel} from '../models/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/main';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 
 declare var require:any;

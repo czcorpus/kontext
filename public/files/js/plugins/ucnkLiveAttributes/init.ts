@@ -18,15 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, TextTypes} from '../../types/common';
+import {TextTypes} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TextTypesModel} from '../../models/textTypes/attrValues';
+import {TextTypesModel} from '../../models/textTypes/main';
 import liveAttrsModel = require('./models');
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
-import common = require('./common');
 import {init as viewInit, Views} from './view';
-import createSubcMixer from 'plugins/subcmixer/init';
 
 declare var require:any;
 require('./style.less'); // webpack

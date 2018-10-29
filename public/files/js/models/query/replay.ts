@@ -24,13 +24,13 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {QueryModel, QueryFormUserEntries} from './main';
+import {QueryModel} from './main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {FilterModel} from './filter';
-import {ConcSortModel, MultiLevelConcSortModel, fetchSortFormArgs, ISubmitableConcSortModel} from './sort';
+import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from './sort';
 import {ConcSampleModel} from './sample';
 import {SwitchMainCorpModel} from './switchmc';
-import {TextTypesModel} from '../textTypes/attrValues';
+import {TextTypesModel} from '../textTypes/main';
 import {FirstHitsModel} from '../query/firstHits';
 
 

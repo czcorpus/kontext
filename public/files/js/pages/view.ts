@@ -42,7 +42,7 @@ import {FilterModel, FilterFormProperties, fetchFilterFormArgs} from '../models/
 import {ConcSampleModel, SampleFormProperties, fetchSampleFormArgs} from '../models/query/sample';
 import {SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs} from '../models/query/switchmc';
 import {QuerySaveAsFormModel} from '../models/query/save';
-import {TextTypesModel} from '../models/textTypes/attrValues';
+import {TextTypesModel} from '../models/textTypes/main';
 import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
 import {QueryContextModel} from '../models/query/context';
@@ -53,7 +53,6 @@ import {FirstHitsModel} from '../models/query/firstHits';
 import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/ctFreqForm';
 import {ConcSaveModel} from '../models/concordance/save';
 import {ConcDashboard} from '../models/concordance/dashboard';
-import {UserSettings} from '../app/userSettings';
 import {TextTypesDistModel, TTCrit} from '../models/concordance/ttDistModel';
 import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/main';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';

@@ -24,7 +24,7 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
-import { SelectedTextTypes } from '../../models/textTypes/attrValues';
+import { SelectedTextTypes } from '../../models/textTypes/main';
 
 
 interface ServerBibData {

@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {TextTypesModel} from '../../models/textTypes/attrValues';
+import {TextTypesModel} from '../../models/textTypes/main';
 import {SubcorpWithinFormModel} from './withinForm';
 import RSVP from 'rsvp';
 

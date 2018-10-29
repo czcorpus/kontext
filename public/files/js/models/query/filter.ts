@@ -25,7 +25,7 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
-import {TextTypesModel} from '../textTypes/attrValues';
+import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
 import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery, WidgetsMap} from './main';

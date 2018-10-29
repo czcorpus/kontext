@@ -25,7 +25,7 @@ import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpFormModel} from '../models/subcorp/form';
 import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
-import {TextTypesModel, SelectedTextTypes} from '../models/textTypes/attrValues';
+import {TextTypesModel, SelectedTextTypes} from '../models/textTypes/main';
 import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';

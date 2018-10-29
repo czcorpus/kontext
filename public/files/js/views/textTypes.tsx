@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../app/dispatcher';
 import {PluginInterfaces} from '../types/plugins';
 import {Kontext, TextTypes} from '../types/common';
-import { TextTypesModel } from '../models/textTypes/attrValues';
+import { TextTypesModel } from '../models/textTypes/main';
 import { ExtendedInfo } from '../models/textTypes/valueSelections';
 import { CoreViews } from '../types/coreViews';
 
