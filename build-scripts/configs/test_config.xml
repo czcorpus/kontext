@@ -167,7 +167,7 @@
         <corparch>
             <module>lindat_corparch</module>
             <js_module>lindatCorparch</js_module>
-            <file>/opt/kontext/installation/conf/corplist.xml</file>
+            <file extension-by="lindat">/opt/kontext/installation/conf/corplist.xml</file>
             <root_elm_path>/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
             <max_num_hints extension-by="default">10</max_num_hints>
