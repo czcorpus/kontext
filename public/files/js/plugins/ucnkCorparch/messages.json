@@ -2,6 +2,7 @@
   "en-US": {
     "ucnkCorparch__please_give_me_access_{corpname}": "\u201CPlease give me an access to the {corpname} corpus\u201D",
     "ucnkCorparch__custom_message": "Custom message (optional)",
+    "ucnkCorparch__access_req_form_heading": "Access request",
     "ucnkCorparch__click_to_ask_access": "Click to ask for access.",
     "ucnkCorparch__message_icon": "Message icon",
     "ucnkCorparch__send": "Send",
@@ -14,6 +15,7 @@
     "cs-CZ": {
     "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProsím o přístup ke korpusu {corpname}\u201D",
     "ucnkCorparch__custom_message": "Vlastní vzkaz (volitelný)",
+    "ucnkCorparch__access_req_form_heading": "Žádost o přístup",
     "ucnkCorparch__click_to_ask_access": "Klikněte pro vytvoření žádosti o přístup.",
     "ucnkCorparch__message_icon": "Message icon",
     "ucnkCorparch__send": "Odeslat",
@@ -26,6 +28,7 @@
   "szl": {
     "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProszã ô dostymp do korpusu {corpname}\u201D",
     "ucnkCorparch__custom_message": "Włŏsnŏ wiadōmość (ôpcjōnalnie)",
+    "ucnkCorparch__access_req_form_heading": "Access request",
     "ucnkCorparch__click_to_ask_access": "Kliknij, żeby poprosić ô dostymp.",
     "ucnkCorparch__message_icon": "Ikōna wiadōmości",
     "ucnkCorparch__send": "Wyślij",
