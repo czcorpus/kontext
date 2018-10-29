@@ -547,7 +547,8 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     value: item.value,
                     selected: newVal,
                     locked: item.locked,
-                    numGrouped: item.numGrouped
+                    numGrouped: item.numGrouped,
+                    availItems: item.availItems
                 };
             }));
             this.selectionChangeListeners.forEach(fn => fn(this));
@@ -635,7 +636,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
 
     updateItems(attrName:string, items:Array<string>):void {
         const attr = this.getAttribute(attrName);
-        let newAttr;
         const idx = this.attributes.indexOf(attr);
         if (idx > -1) {
             this.attributes = this.attributes.set(idx, attr.updateItems(items));
