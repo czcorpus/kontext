@@ -146,8 +146,9 @@ export class SubcorpForm {
             this.textTypesModel,
             {
                 getIsPublic: () => this.subcorpFormModel.getIsPublic(),
-                getDescription: () => this.subcorpFormModel.getDescription().value,
-                getSubcName: () => this.subcorpFormModel.getSubcname().value,
+                getDescription: () => this.subcorpFormModel.getDescription(),
+                getSubcName: () => this.subcorpFormModel.getSubcname(),
+                validateForm: () => this.subcorpFormModel.validateForm(),
                 addChangeListener: (fn:Kontext.ModelListener) => {
                     this.subcorpFormModel.addChangeListener(fn);
                 },

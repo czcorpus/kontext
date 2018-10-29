@@ -52,6 +52,14 @@ export namespace Kontext {
                 v.hasOwnProperty('isRequired') && v.hasOwnProperty('isInvalid');
     }
 
+    /**
+     * Create a copy of the provided formValue and update it
+     * with the provided data. If an empty object is provided as
+     * an update then an exact copy is created.
+     *
+     * @param formValue
+     * @param data
+     */
     export var updateFormValue = <T>(formValue:FormValue<T>, data:{[P in keyof FormValue<T>]?: FormValue<T>[P]}) => {
         return {
             value: data.value !== undefined ? data.value : formValue.value,

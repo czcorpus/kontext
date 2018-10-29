@@ -187,9 +187,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         numErrors:number;
         totalSize:number;
         numConditions:number;
-        currentSubcname:string;
+        currentSubcname:Kontext.FormValue<string>;
         isPublic:boolean;
-        description:string;
+        description:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -202,7 +202,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubcnameInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_SET_SUBCNAME',
+                actionType: 'SUBCORP_FORM_SET_SUBCNAME',
                 props: {
                     value: evt.target.value
                 }
@@ -245,18 +245,25 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         <p>
                             <label>
                                 {he.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
-                                <input type="text" value={props.currentSubcname}
-                                        onChange={handleSubcnameInputChange} />
+                                <layoutViews.ValidatedItem invalid={props.currentSubcname.isInvalid}>
+                                    <input type="text" value={props.currentSubcname.value}
+                                            onChange={handleSubcnameInputChange} />
+                                </layoutViews.ValidatedItem>
                             </label>
                         </p>
                         <div>
+                            {he.translate('subcform__set_as_public')}:
+                            <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
+                                <p>{he.translate('subcform__publication_notes')}</p>
+                                <p>{he.translate('subcform__publication_notes_2')}</p>
+                            </layoutViews.InlineHelp>
                             <subcFormViews.SubcNamePublicCheckbox value={props.isPublic} />
                             {props.isPublic ?
                                 (<div>
                                     <h3>{he.translate('subcform__public_description')}:</h3>
                                     <div>
                                         <subcFormViews.SubcDescription
-                                            value={{value: props.description, isInvalid: false, isRequired: false}} />
+                                            value={props.description} />
                                     </div>
                                 </div>) : null
                             }
@@ -292,10 +299,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         totalSize:number;
         numErrors:number;
         numConditions:number;
-        currentSubcname:string;
+        currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
         isPublic:boolean;
-        description:string;
+        description:Kontext.FormValue<string>;
 
         setWaitingFn:()=>void;
 
@@ -356,7 +363,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         selectedValues:Immutable.List<SubcMixerExpression>;
         currentResults:CalculationResults;
         numErrors:number;
-        currentSubcname:string;
+        currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
         errorTolerance:number;
         alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
@@ -365,7 +372,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     {
         isWaiting:boolean;
         isPublic:boolean;
-        description:string;
+        description:Kontext.FormValue<string>;
     }> {
 
         constructor(props) {
@@ -406,10 +413,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         componentDidMount() {
             subcMixerModel.addChangeListener(this._handleModelChange);
             subcFormModel.addChangeListener(this._handleModelChange);
-            dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_FETCH_CURRENT_SUBCNAME',
-                props: {}
-            });
         }
 
         componentWillUnmount() {
@@ -475,7 +478,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         selectedValues:Immutable.List<SubcMixerExpression>;
         currentResults:CalculationResults;
         numErrors:number;
-        currentSubcname:string;
+        currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
         errorTolerance:number;
         alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
@@ -491,7 +494,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 selectedValues: subcMixerModel.getShares(),
                 currentResults: subcMixerModel.getCurrentCalculationResults(),
                 numErrors: subcMixerModel.getNumOfErrors(),
-                currentSubcname: subcMixerModel.getCurrentSubcname(),
+                currentSubcname: subcFormModel.getSubcName(),
                 usedAttributes: subcMixerModel.getUsedAttributes(),
                 errorTolerance: subcMixerModel.getErrorTolerance(),
                 alignedCorpora: subcMixerModel.getAlignedCorpora()
@@ -503,7 +506,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 useWidget: true,
                 selectedValues: subcMixerModel.getShares(),
                 currentResults: subcMixerModel.getCurrentCalculationResults(),
-                currentSubcname: subcMixerModel.getCurrentSubcname(),
+                currentSubcname: subcFormModel.getSubcName(),
                 usedAttributes: subcMixerModel.getUsedAttributes(),
                 errorTolerance: subcMixerModel.getErrorTolerance(),
                 alignedCorpora: subcMixerModel.getAlignedCorpora()
@@ -533,7 +536,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 selectedValues: subcMixerModel.getShares(),
                 currentResults: subcMixerModel.getCurrentCalculationResults(),
                 numErrors: subcMixerModel.getNumOfErrors(),
-                currentSubcname: subcMixerModel.getCurrentSubcname(),
+                currentSubcname: subcFormModel.getSubcName(),
                 usedAttributes: subcMixerModel.getUsedAttributes(),
                 errorTolerance: subcMixerModel.getErrorTolerance(),
                 alignedCorpora: subcMixerModel.getAlignedCorpora()
@@ -542,10 +545,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidMount() {
             subcMixerModel.addChangeListener(this._handleModelChange);
+            subcFormModel.addChangeListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
             subcMixerModel.removeChangeListener(this._handleModelChange);
+            subcFormModel.removeChangeListener(this._handleModelChange);
         }
 
         _renderButton() {
