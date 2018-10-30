@@ -42,13 +42,17 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
     }
 
     getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
-        return viewInit({
+        const views = viewInit({
             dispatcher: this.pluginApi.dispatcher(),
             he: this.pluginApi.getComponentHelpers(),
             SubcmixerComponent: subcMixerView,
             textTypesModel: textTypesModel,
             liveAttrsModel: this.store
         });
+        if (!this.store.hasAvailableAlignedCorpora()) {
+            views.LiveAttrsCustomTT = null;
+        }
+        return views;
     }
 
     getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {
