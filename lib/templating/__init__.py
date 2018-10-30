@@ -18,6 +18,12 @@ import codecs
 codecs.register_error('replacedot', lambda err: (u'.', err.end))
 
 
+class DummyGlobals(object):
+
+    def export(self):
+        return []
+
+
 class StateGlobals(object):
     """
     A simple wrapper for $Globals template variable.

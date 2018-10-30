@@ -42,6 +42,7 @@ import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from controller.plg import PluginApi
+from templating import DummyGlobals
 from collections import defaultdict
 
 
@@ -1117,6 +1118,7 @@ class Kontext(Controller):
         """
         Controller.add_globals(self, result, methodname, action_metadata)
         result['corpus_ident'] = {}
+        result['Globals'] = DummyGlobals()
         result['base_attr'] = Kontext.BASE_ATTR
         result['root_url'] = self.get_root_url()
         result['files_path'] = self._files_path
