@@ -197,49 +197,80 @@ class Backend(DatabaseBackend):
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0,
                          limit=10000000000):
-        where_cond = ['c.active = %s', 'kcu.user_id = %s OR c.requestable = 1']
-        values_cond = [1, user_id]
+        where_cond1 = ['c.active = %s', 'kcu.user_id = %s']
+        values_cond1 = [1, user_id]
+        where_cond2 = ['c.active = %s', 'c.requestable = %s']
+        values_cond2 = [1, 1]
         if substrs is not None:
             for substr in substrs:
-                where_cond.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
-                values_cond.append(u'%{0}%'.format(substr))
-                values_cond.append(u'%{0}%'.format(substr))
-                values_cond.append(u'%{0}%'.format(substr))
+                where_cond1.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
+                values_cond1.append(u'%{0}%'.format(substr))
+                values_cond1.append(u'%{0}%'.format(substr))
+                values_cond1.append(u'%{0}%'.format(substr))
+                where_cond2.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
+                values_cond2.append(u'%{0}%'.format(substr))
+                values_cond2.append(u'%{0}%'.format(substr))
+                values_cond2.append(u'%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
-            where_cond.append(u'({0})'.format(' OR '.join(
+            where_cond1.append(u'({0})'.format(' OR '.join(
+                u'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond2.append(u'({0})'.format(' OR '.join(
                 u'kc.keyword_id = %s' for _ in range(len(keywords)))))
             for keyword in keywords:
-                values_cond.append(keyword)
+                values_cond1.append(keyword)
+                values_cond2.append(keyword)
         if min_size > 0:
-            where_cond.append('(c.size >= %s)')
-            values_cond.append(min_size)
+            where_cond1.append('(c.size >= %s)')
+            values_cond1.append(min_size)
+            where_cond2.append('(c.size >= %s)')
+            values_cond2.append(min_size)
         if max_size is not None:
-            where_cond.append('(c.size <= %s)')
-            values_cond.append(max_size)
-        values_cond.append(len(keywords) if keywords else 0)
-        values_cond.append(limit)
-        values_cond.append(offset)
+            where_cond1.append('(c.size <= %s)')
+            values_cond1.append(max_size)
+            where_cond2.append('(c.size <= %s)')
+            values_cond2.append(max_size)
+        values_cond1.append(len(keywords) if keywords else 0)
+        values_cond2.append(len(keywords) if keywords else 0)
 
         c = self._db.cursor()
-        sql = ('SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
+        sql = ('(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
                'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                'NULL AS reference_other, NULL AS ttdesc_id, '
                'COUNT(kc.keyword_id) AS num_match_keys, '
-               'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language,'
+               'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
+               'c.group_name AS g_name, c.version AS version, '
                '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                'WHERE kcx.corpus_name = c.name) AS keywords '
                'FROM corpora AS c '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
                'LEFT JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
-               'WHERE {0} '
+               'WHERE {where1} '
                'GROUP BY c.name '
-               'HAVING num_match_keys >= %s '
-               'ORDER BY c.group_name, c.version DESC, c.name '
+               'HAVING num_match_keys >= %s ) '
+               'UNION '
+               '(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
+               'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
+               'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
+               'NULL AS reference_other, NULL AS ttdesc_id, '
+               'COUNT(kc.keyword_id) AS num_match_keys, '
+               'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
+               'c.group_name AS g_name, c.version AS version, '
+               '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
+               'WHERE kcx.corpus_name = c.name) AS keywords '
+               'FROM corpora AS c '
+               'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
+               'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+               'LEFT JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
+               'WHERE {where2} '
+               'GROUP BY c.name '
+               'HAVING num_match_keys >= %s ) '
+               'ORDER BY g_name, version DESC, id '
                'LIMIT %s '
-               'OFFSET %s').format(' AND '.join('(' + wc + ')' for wc in where_cond))
-        c.execute(sql, values_cond)
+               'OFFSET %s').format(where1=' AND '.join('(' + wc + ')' for wc in where_cond1),
+                                   where2=' AND '.join('(' + wc + ')' for wc in where_cond2))
+        c.execute(sql, values_cond1 + values_cond2 + [limit, offset])
         return c.fetchall()
 
     def load_featured_corpora(self, user_lang):
