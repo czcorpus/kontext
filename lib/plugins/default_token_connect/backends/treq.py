@@ -81,16 +81,18 @@ class TreqBackend(HTTPBackend):
 
     @staticmethod
     def mk_api_args(lang1, lang2, groups, lemma):
-        multi_word = 'true' if ' ' in lemma else 'false'
-        return [('left', lang1), ('right', lang2), ('viceslovne', multi_word), ('regularni', 'true'),
-                ('lemma', 'true'), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', lemma),
+        multiw_flag = 'true' if ' ' in lemma else 'false'
+        lemma_flag = 'false' if ' ' in lemma else 'true'
+        return [('left', lang1), ('right', lang2), ('viceslovne', multiw_flag), ('regularni', 'false'),
+                ('lemma', lemma_flag), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', lemma),
                 ('order', 'percDesc')]
 
     @staticmethod
     def mk_page_args(lang1, lang2, groups, lemma):
-        multi_word = '1' if ' ' in lemma else '0'
-        return [('jazyk1', lang1), ('jazyk2', lang2), ('viceslovne', multi_word), ('regularni', '1'),
-                ('lemma', '1'), ('caseInsen', '1'), ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
+        multiw_flag = '1' if ' ' in lemma else '0'
+        lemma_flag = '0' if ' ' in lemma else '1'
+        return [('jazyk1', lang1), ('jazyk2', lang2), ('viceslovne', multiw_flag), ('regularni', '0'),
+                ('lemma', lemma_flag), ('caseInsen', '1'), ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
 
     def mk_api_path(self, lang1, lang2, groups, lemma):
         groups = ','.join(groups)
