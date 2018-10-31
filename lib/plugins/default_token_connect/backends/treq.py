@@ -81,10 +81,11 @@ class TreqBackend(HTTPBackend):
 
     @staticmethod
     def mk_api_args(lang1, lang2, groups, lemma):
-        multiw_flag = 'true' if ' ' in lemma else 'false'
-        lemma_flag = 'false' if ' ' in lemma else 'true'
-        return [('left', lang1), ('right', lang2), ('viceslovne', multiw_flag), ('regularni', 'false'),
-                ('lemma', lemma_flag), ('aJeA', 'true'), ('hledejKde', groups), ('hledejCo', lemma),
+        multiw_flag = '1' if ' ' in lemma else '0'
+        lemma_flag = '0' if ' ' in lemma else '1'
+        groups = ','.join(groups)
+        return [('left', lang1), ('right', lang2), ('viceslovne', multiw_flag), ('regularni', '0'),
+                ('lemma', lemma_flag), ('aJeA', '1'), ('hledejKde', groups), ('hledejCo', lemma),
                 ('order', 'percDesc')]
 
     @staticmethod
@@ -94,10 +95,8 @@ class TreqBackend(HTTPBackend):
         return [('jazyk1', lang1), ('jazyk2', lang2), ('viceslovne', multiw_flag), ('regularni', '0'),
                 ('lemma', lemma_flag), ('caseInsen', '1'), ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
 
-    def mk_api_path(self, lang1, lang2, groups, lemma):
-        groups = ','.join(groups)
-        args = ['{0}={1}'.format(k, urllib.quote(v.encode('utf-8'))) for k, v in self.mk_api_args(
-            lang1, lang2, groups, lemma)]
+    def mk_api_path(self, args):
+        args = ['{0}={1}'.format(k, urllib.quote(v.encode('utf-8'))) for k, v in args]
         return '/api.php?api=true&' + '&'.join(args)
 
     def find_lang_common_groups(self, lang1, lang2):
@@ -124,11 +123,11 @@ class TreqBackend(HTTPBackend):
                         **query_args)
             t_args = self.mk_page_args(**args)
             treq_link = (self.mk_server_addr() + '/index.php', t_args)
+            ta_args = self.mk_api_args(lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma'])
             connection = self.create_connection()
             try:
-                logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(t_args))
-                connection.request('GET', self.mk_api_path(
-                    lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma']))
+                logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(ta_args))
+                connection.request('GET', self.mk_api_path(ta_args))
                 data, status = self.process_response(connection)
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
