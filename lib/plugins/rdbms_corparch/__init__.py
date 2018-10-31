@@ -366,7 +366,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         if corp_name:
             try:
                 # get rid of path-like corpus ID prefix
-                corp_name = corp_name.split('/')[-1].lower()
+                corp_name = corp_name.lower()
                 corp_info = self._fetch_corpus_info(corp_name)
                 if corp_info is not None:
                     if user_lang is not None:
