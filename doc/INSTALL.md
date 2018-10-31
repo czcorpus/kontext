@@ -24,13 +24,13 @@ The easiest way to install and test-run KonText is to install it in an **LXC con
 the <a href="../scripts/install/install.ubuntu.sh">install.ubuntu.sh</a> script provided in this repository
 that performs all the installation and configuration steps that are necessary to run KonText as a standalone 
 server application for testing and development purposes. The installation has been
-tested in Ubuntu 18.04 LTS.
+tested in Ubuntu 18.04 LTS Bionic Beaver.
 
 Set up and start an LXC container (Ubuntu variant):
 
 ```
 sudo apt-get install lxc
-sudo lxc-create -t download -n kontext-container -- -d ubuntu -r xenial -a amd64
+sudo lxc-create -t download -n kontext-container -- -d ubuntu -r bionic -a amd64
 sudo lxc-start -n kontext-container
 ```
 
