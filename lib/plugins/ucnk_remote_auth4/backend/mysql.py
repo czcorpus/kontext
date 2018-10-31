@@ -366,19 +366,41 @@ class Backend(DatabaseBackend):
     # -- we should get rid of this caching and join our selects directly to a list of user avail. corpora
     def refresh_user_permissions(self, user_id):
         cursor = self._db.cursor(dictionary=False)
-        cursor.execute('DELETE FROM kontext_corpus_user WHERE user_id = %s', (user_id,))
         cursor.callproc('user_corpus_proc', (user_id,))
         # stored procedure returns: user_id, corpus_id, limited, name
+        rows = []
         for result in cursor.stored_results():
             rows = result.fetchall()
+        curr_perm = []
         for row in rows:
-            try:
-                cursor.execute(
-                    'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
-                    (user_id, row[3].split('/')[-1], 'omezeni' if row[2] else None))
-            except mysql.connector.errors.IntegrityError:
-                pass  # we deliberately ignore this
+            curr_perm.append((user_id, row[3].split('/')[-1] if row[2] else row[3], 'omezeni' if row[2] else None))
+
+        cursor.execute('SELECT user_id, corpus_name, variant FROM kontext_corpus_user WHERE user_id = %s', (user_id,))
+        cached_perm = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
+
+        curr_perm = set(curr_perm)
+        cached_perm = set(cached_perm)
+        to_del = cached_perm - curr_perm
+        to_add = curr_perm - cached_perm
+
+        for item in to_del:
+            if item[2] is None:
+                cursor.execute('DELETE FROM kontext_corpus_user '
+                               'WHERE user_id = %s AND corpus_name = %s AND variant IS NULL', (user_id, item[1]))
+            else:
+                cursor.execute('DELETE FROM kontext_corpus_user '
+                               'WHERE user_id = %s AND corpus_name = %s AND variant = %s',
+                               (user_id, item[1], item[2]))
+        try:
+            cursor.executemany(
+                'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
+                list(to_add))
+        except mysql.connector.errors.IntegrityError:
+            pass  # we deliberately ignore this
         self._db.commit()
+        if len(to_del) > 0 or len(to_add) > 0:
+            logging.getLogger(__name__).info('Corp permissions sync: added {0}, removed {1}, user: {2}'.format(
+                len(to_del), len(to_add), user_id))
 
     def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()

@@ -185,10 +185,8 @@ class CentralAuth(AbstractRemoteAuth):
         return dict((c, pref) for c, pref in corpora)
 
     def refresh_user_permissions(self, plugin_api):
-        return
-        # HOTFIX TODO
-        #self._db.refresh_user_permissions(
-        #    user_id=plugin_api.session.get('user', {'id': None})['id'])
+        self._db.refresh_user_permissions(
+            user_id=plugin_api.session.get('user', {'id': None})['id'])
 
     def get_user_info(self, plugin_api):
         ans = {}
