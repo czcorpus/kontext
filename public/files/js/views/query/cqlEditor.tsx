@@ -309,6 +309,25 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             );
                         }
                         evt.preventDefault();
+
+                    } else if (evt.keyCode === KeyCodes.ENTER && evt.shiftKey) {
+                        const src = this.extractText(this._queryInputElement.current);
+                        const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+                        const rawSrc = src.map(v => v[0]).join('');
+                        dispatcher.dispatch({
+                            actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                            props: {
+                                query: rawSrc + '\n ',
+                                sourceId: this.props.sourceId,
+                                rawAnchorIdx: rawAnchorIdx + 1,
+                                rawFocusIdx: rawFocusIdx + 1,
+                            }
+                        });
+                        this.reapplySelection(
+                            rawAnchorIdx + 1,
+                            rawAnchorIdx + 1
+                        );
+                        evt.preventDefault();
                     }
                 });
             }
