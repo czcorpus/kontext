@@ -400,7 +400,7 @@ class Backend(DatabaseBackend):
         self._db.commit()
         if len(to_del) > 0 or len(to_add) > 0:
             logging.getLogger(__name__).info('Corp permissions sync: added {0}, removed {1}, user: {2}'.format(
-                len(to_del), len(to_add), user_id))
+                len(to_add), len(to_del), user_id))
 
     def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()
