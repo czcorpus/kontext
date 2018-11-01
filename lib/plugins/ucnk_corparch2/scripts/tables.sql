@@ -131,6 +131,7 @@ CREATE TABLE kontext_keyword (
 	label_cs VARCHAR(255) NOT NULL,
 	label_en VARCHAR(255) NOT NULL,
 	color VARCHAR(31),
+	display_order INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_keyword_pkey PRIMARY KEY (id)
 ) ENGINE = INNODB CHARSET=utf8;
 
