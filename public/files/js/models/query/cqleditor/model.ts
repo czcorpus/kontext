@@ -165,6 +165,21 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                 );
                 this.moveCursorToEnd(newState, action.props['sourceId']);
             break;
+            case 'FILTER_QUERY_INPUT_APPEND_QUERY': // TODO this is far from perfect (= explicit solution for filter here)
+                if (this.actionPrefix === 'FILTER_') {
+                    newState = this.copyState(state);
+                    this.setRawQuery(
+                        newState,
+                        <string>action.props['sourceId'],
+                        <string>action.props['query'],
+                        [
+                            this.getQueryLength(newState, action.props['sourceId']),
+                            this.getQueryLength(newState, action.props['sourceId'])
+                        ]
+                    );
+                    this.moveCursorToEnd(newState, action.props['sourceId']);
+                }
+            break;
             case 'QUERY_INPUT_REMOVE_LAST_CHAR': {
                 newState = this.copyState(state);
                 const queryLength = newState.rawCode.get(action.props['sourceId']).length;
