@@ -71,7 +71,7 @@ export class FreqResultsSaveModel extends StatefulModel {
         this.formIsActive = false;
         this.saveformat = 'csv';
         this.fromLine = {value: '1', isInvalid: false, isRequired: true};
-        this.toLine = {value: '', isInvalid: false, isRequired: true};
+        this.toLine = {value: '', isInvalid: false, isRequired: false};
         this.includeHeading = false;
         this.includeColHeaders = false;
         this.freqArgsProviderFn = freqArgsProviderFn;
@@ -137,7 +137,7 @@ export class FreqResultsSaveModel extends StatefulModel {
             this.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (!this.validateNumberFormat(this.toLine.value, false)) {
+        if (!this.validateNumberFormat(this.toLine.value, true)) {
             this.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
