@@ -188,9 +188,7 @@ export class SubcorpWithinFormModel extends StatefulModel {
 
     validateForm():Error|null {
         const errIdx = this.lines.findIndex(v => v.attributeCql.value === '');
-        console.log('validating ', this.lines.toArray());
         if (errIdx > -1) {
-            console.log('error found at ', errIdx);
             const curr = this.lines.get(errIdx);
             this.lines = this.lines.set(errIdx, new WithinLine(
                 curr.rowIdx,

@@ -113,6 +113,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                 onInsert?:()=>void;
                 canUndo:boolean;
                 displayPattern:string;
+                actionPrefix:string;
             }> = (props) => {
 
         const buttonClick = (evt) => {
@@ -141,7 +142,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
                 } else {
                     dispatcher.dispatch({
-                        actionType: 'QUERY_INPUT_APPEND_QUERY',
+                        actionType: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                         props: {
                             sourceId: props.sourceId,
                             query: `[tag="${props.displayPattern}"]`
@@ -383,6 +384,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                                 onInsert={this.props.onInsert}
                                 canUndo={this.state.canUndo}
                                 range={this.props.range}
+                                actionPrefix={this.props.actionPrefix}
                                 displayPattern={this.state.displayPattern} />
                 </div>
                 <PositionList positions={this.state.positions}

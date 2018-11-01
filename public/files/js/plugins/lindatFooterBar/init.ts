@@ -16,8 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {IPluginApi, PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces} from '../../types/plugins';
 
 declare var require:any;
 require('./style.less'); // webpack
