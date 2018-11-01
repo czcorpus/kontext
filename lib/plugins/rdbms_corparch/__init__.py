@@ -32,6 +32,11 @@ from plugins.rdbms_corparch.backend import ManateeCorpora
 from plugins.rdbms_corparch.backend.sqlite import Backend
 from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
 
+try:
+    from markdown import markdown
+except ImportError:
+    def markdown(s): return s
+
 
 def parse_query(tag_prefix, query):
     """
@@ -348,11 +353,11 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             self._corpus_info_cache[corpus_id] = corp
             for art in self._backend.load_corpus_articles(corpus_id):
                 if art['role'] == 'default':
-                    corp.citation_info.default_ref = art['entry']
+                    corp.citation_info.default_ref = markdown(art['entry'])
                 elif art['role'] == 'standard':
-                    corp.citation_info.article_ref.append(art['entry'])
+                    corp.citation_info.article_ref.append(markdown(art['entry']))
                 elif art['role'] == 'other':
-                    corp.citation_info.other_bibliography = art['entry']
+                    corp.citation_info.other_bibliography = markdown(art['entry'])
             if row['ttdesc_id'] not in self._descriptions:
                 for drow in self._backend.load_ttdesc(row['ttdesc_id']):
                     self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
