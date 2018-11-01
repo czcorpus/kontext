@@ -149,7 +149,8 @@ class Backend(DatabaseBackend):
 
     def load_all_keywords(self):
         cursor = self._db.cursor()
-        cursor.execute('SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY id')
+        cursor.execute(
+            'SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY display_order')
         return cursor.fetchall()
 
     def load_ttdesc(self, desc_id):
@@ -373,9 +374,11 @@ class Backend(DatabaseBackend):
             rows = result.fetchall()
         curr_perm = []
         for row in rows:
-            curr_perm.append((user_id, row[3].split('/')[-1] if row[2] else row[3], 'omezeni' if row[2] else None))
+            curr_perm.append((user_id, row[3].split('/')[-1] if row[2]
+                              else row[3], 'omezeni' if row[2] else None))
 
-        cursor.execute('SELECT user_id, corpus_name, variant FROM kontext_corpus_user WHERE user_id = %s', (user_id,))
+        cursor.execute(
+            'SELECT user_id, corpus_name, variant FROM kontext_corpus_user WHERE user_id = %s', (user_id,))
         cached_perm = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
 
         curr_perm = set(curr_perm)
