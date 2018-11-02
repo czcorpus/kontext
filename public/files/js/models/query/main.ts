@@ -521,6 +521,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                 case 'CORPUS_SWITCH_MODEL_RESTORE':
                     if (payload.props['key'] === this.csGetStateKey()) {
                         this.csSetState(payload.props['data']);
+                        this.notifyChangeListeners();
                     }
                 break;
             }
