@@ -246,6 +246,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                 case 'CORPUS_SWITCH_MODEL_RESTORE':
                 if (payload.props['key'] === this.csGetStateKey()) {
                     this.csSetState(payload.props['data']);
+                    this.notifyChangeListeners();
                 }
                 break;
             }

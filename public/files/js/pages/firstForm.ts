@@ -47,10 +47,6 @@ require('styles/firstForm.less');
  */
 export class FirstFormPage {
 
-    private clStorage:ConcLinesStorage;
-
-    private corplistComponent:React.ComponentClass;
-
     private layoutModel:PageModel;
 
     private queryModel:QueryModel;
@@ -68,8 +64,6 @@ export class FirstFormPage {
     private queryContextModel:QueryContextModel;
 
     private onQueryModelReady:(qs:QueryModel)=>void;
-
-    private onAlignedCorporaChanged:(corpora:Immutable.List<string>)=>void;
 
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
@@ -162,14 +156,6 @@ export class FirstFormPage {
             this.onQueryModelReady = (qs => {
                 liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
             });
-            this.onAlignedCorporaChanged = (corpora => {
-                if (liveAttrsPlugin.hasSelectionSteps()) {
-                    liveAttrsPlugin.reset();
-                    liveAttrsPlugin.notifyChangeListeners();
-                    this.textTypesModel.notifyChangeListeners();
-                }
-                liveAttrsPlugin.selectLanguages(corpora, true);
-            });
             this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
             this.textTypesModel.addSelectionChangeListener(target => {
                 liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
@@ -179,7 +165,6 @@ export class FirstFormPage {
 
         } else {
             this.onQueryModelReady = () => undefined;
-            this.onAlignedCorporaChanged = (_) => undefined;
             liveAttrsViews = {};
         }
         return {
