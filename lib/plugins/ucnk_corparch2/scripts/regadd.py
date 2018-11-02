@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Import a Manatee registry file(s)')
     parser.add_argument('rpath', metavar='REGISTRY_PATH', type=str)
-    parser.add_argument('dbpath', metavar='DB_PATH', type=str)
+    parser.add_argument('conf_path', metavar='CONFPATH', type=str)
     parser.add_argument('-e', '--encoding', metavar='ENCODING', type=str, default=None)
     parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
                         help='A subdirectory containing (restricted) variants of corpora')
@@ -106,7 +106,9 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_const', const=True,
                         help='Provide more information during processing (especially errors)')
     args = parser.parse_args()
-    backend = WritableBackend(MySQLConf(args.dbpath))
+    import settings
+    settings.load(args.conf_path)
+    backend = WritableBackend(MySQLConf(settings))
 
     if os.path.isdir(args.rpath):
         process_directory(args.rpath, None, backend, args.auto_align, args.verbose)
