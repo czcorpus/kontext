@@ -116,7 +116,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
                 return dict(
                     id=user_data['id'],
                     user=user_data['username'],
-                    fullname='{0} {1}'.format(user_data['firstname'], user_data['lastname']),
+                    fullname=u'{0} {1}'.format(user_data['firstname'], user_data['lastname']),
                     email=user_data.get('email', None))
         return self.anonymous_user()
 
