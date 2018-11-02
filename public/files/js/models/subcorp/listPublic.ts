@@ -71,9 +71,8 @@ export enum Actions {
 
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
 
-    minCodePrefix:number;
 
-    minAuthorPrefix:number; // after how many entered chars we start to search
+    queryTypeMinPrefixMapping:Immutable.Map<string, number>;
 
     private pageModel:PageModel;
 
@@ -90,8 +89,10 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 inputPrefixThrottleTimer: -1
             }
         );
-        this.minCodePrefix = minCodePrefix;
-        this.minAuthorPrefix = minAuthorPrefix;
+        this.queryTypeMinPrefixMapping = Immutable.Map<string, number>({
+            [SearchTypes.BY_CODE]: minCodePrefix,
+            [SearchTypes.BY_AUTHOR]: minAuthorPrefix
+        });
         this.pageModel = pageModel;
     }
 
@@ -102,6 +103,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             case Actions.SET_SEARCH_TYPE:
                 newState = this.copyState(state);
                 newState.searchType = action.props['value'];
+                newState.minQuerySize = this.queryTypeMinPrefixMapping.get(action.props['value']);
                 return newState;
             case Actions.SET_SEARCH_QUERY:
                 newState = this.copyState(state);

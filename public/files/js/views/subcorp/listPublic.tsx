@@ -271,7 +271,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     </form>
                     {this.state.isBusy ?
                         <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                        <DataList data={this.state.data} hasQuery={this.state.searchQuery.length > 0} />
+                        <DataList data={this.state.data} hasQuery={this.state.searchQuery.length >= this.state.minQuerySize} />
                     }
                     <p className="disclaimer">
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
