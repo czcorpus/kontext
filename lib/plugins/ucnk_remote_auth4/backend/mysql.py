@@ -199,10 +199,10 @@ class Backend(DatabaseBackend):
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0,
                          limit=10000000000):
-        where_cond1 = ['c.active = %s', 'kcu.user_id = %s']
-        values_cond1 = [1, user_id]
-        where_cond2 = ['c.active = %s', 'c.requestable = %s']
-        values_cond2 = [1, 1]
+        where_cond1 = ['c.active = %s', 'c.requestable = %s']
+        values_cond1 = [1, 1]
+        where_cond2 = ['c.active = %s', 'kcu.user_id = %s']
+        values_cond2 = [1, user_id]
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
@@ -247,12 +247,11 @@ class Backend(DatabaseBackend):
                'FROM corpora AS c '
                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-               'LEFT JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
                'WHERE {where1} '
                'GROUP BY c.name '
                'HAVING num_match_keys >= %s ) '
                'UNION '
-               '(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
+               '(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, 0 as requestable, '
                'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                'NULL AS reference_other, NULL AS ttdesc_id, '
