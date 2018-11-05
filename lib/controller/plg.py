@@ -76,6 +76,9 @@ class PluginApi(object):
     def root_url(self):
         return self._controller.get_root_url()
 
+    def updated_current_url(self, args):
+        return self._controller.updated_current_url(args)
+
     def redirect(self, url, code=303):
         return self._controller.redirect(url, code=code)
 
