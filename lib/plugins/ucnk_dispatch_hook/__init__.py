@@ -74,7 +74,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
         # we still have to handle external links
         if action_name in ('first_form', 'first', 'view'):
             corp = request.args.get('corpname')
-            if corp.startswith('omezeni/'):
+            if corp is not None and corp.startswith('omezeni/'):
                 logging.getLogger(__name__).warning(
                     'Handling legacy action URL for {0}'.format(action_name))
                 raise ImmediateRedirectException(
