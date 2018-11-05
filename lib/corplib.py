@@ -310,8 +310,10 @@ class CorpusManager(object):
         corp = manatee.Corpus(registry_file)
         corp.corpname = str(corpname)  # never unicode (paths)
         corp.is_published = False
-        corp.cm = self
-
+        # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
+        # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
+        # KonText does not need such an attribute but to keep developers informed I leave
+        # the comment here.
         if subcname:
             if public_subcname:
                 subcname = public_subcname
