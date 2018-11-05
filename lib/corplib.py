@@ -535,6 +535,15 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
         { 'attr_doc_label' : '', 'Values' : [ {'v', 'item name'}, ... ], 'name' : '', 'attr_doc' : '', 'label' : '' },
         ...
     ]}
+
+    !!!!!!
+    NOTE: avoid calling this method repeatedly for the same corpus as the
+    attr = corp.get_attr(n) line is leaking opened files of corpora indexes which
+    leads to exhausted limit for opened files for Gunicorn/Celery after some time.
+    KonText caches the value returned by this function to prevent this.
+
+    !!! TODO !!!
+
     """
     if subcorpattrs == '#':
         return []

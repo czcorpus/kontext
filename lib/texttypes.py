@@ -45,17 +45,13 @@ class TextTypesCache(object):
         return 'ttcache:%s' % (corpname, )
 
     def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
-        get_data = partial(corplib.texttype_values, corp=corp, subcorpattrs=subcorpattrs,
-                           maxlistsize=maxlistsize, shrink_list=shrink_list,
-                           collator_locale=collator_locale)
-        cached = self._db.get(self._mk_cache_key(corp.corpname), {})
-
-        if corp.corpname in cached:
-            tt = cached[corp.corpname]
-        else:
-            tt = get_data()
-            self._db.set(self._mk_cache_key(corp.corpname), tt)
-        return tt
+        text_types = self._db.get(self._mk_cache_key(corp.corpname))
+        if text_types is None:
+            text_types = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs,
+                                                 maxlistsize=maxlistsize, shrink_list=shrink_list,
+                                                 collator_locale=collator_locale)
+            self._db.set(self._mk_cache_key(corp.corpname), text_types)
+        return text_types
 
 
 class StructNormsCalc(object):
@@ -63,6 +59,7 @@ class StructNormsCalc(object):
     Adds a size information of texts related to respective attribute values.
     An instance is always bound to a concrete structure and required value type.
     """
+
     def __init__(self, corpus, structname, subcnorm):
         """
         arguments:
@@ -75,7 +72,8 @@ class StructNormsCalc(object):
         self._structname = structname
         self._struct = self._corp.get_struct(structname)
         self._subcnorm = subcnorm
-        self._export_string = partial(l10n.export_string, to_encoding=self._corp.get_conf('ENCODING'))
+        self._export_string = partial(
+            l10n.export_string, to_encoding=self._corp.get_conf('ENCODING'))
         self._normvals = None
 
     @property
@@ -92,7 +90,8 @@ class StructNormsCalc(object):
                             for i in range(self._struct.size()))
         else:
             nas = self._struct.get_attr(self._subcnorm).pos2str
-            normvals = dict((self._struct.beg(i), self._safe_int(nas(i))) for i in range(self._struct.size()))
+            normvals = dict((self._struct.beg(i), self._safe_int(nas(i)))
+                            for i in range(self._struct.size()))
         return normvals
 
     @staticmethod
@@ -140,7 +139,8 @@ class CachedStructNormsCalc(StructNormsCalc):
 
     def compute_norm(self, attrname, value):
         if attrname not in self._data or value not in self._data[attrname]:
-            self._data[attrname][value] = super(CachedStructNormsCalc, self).compute_norm(attrname, value)
+            self._data[attrname][value] = super(
+                CachedStructNormsCalc, self).compute_norm(attrname, value)
             self._db.set(self._mk_cache_key(), self._data)
         return self._data[attrname][value]
 
@@ -173,36 +173,36 @@ class TextTypeCollector(object):
         return dict(scas)
 
     def get_query(self):
-            """
-            returns:
-            a list of tuples (struct, condition); strings are encoded to the encoding current
-            corpus uses!
-            """
-            scas = [(a[4:], self._access_fn(self._src_obj, a))
-                    for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
-            structs = {}
-            for sa, v in scas:
-                if type(v) in (str, unicode) and '|' in v:
-                    v = v.split('|')
-                s, a = sa.split('.')
-                if type(v) is list:
-                    expr_items = []
-                    for v1 in v:
-                        expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
-                    if len(expr_items) > 0:
-                        query = '(%s)' % ' | '.join(expr_items)
-                    else:
-                        query = None
+        """
+        returns:
+        a list of tuples (struct, condition); strings are encoded to the encoding current
+        corpus uses!
+        """
+        scas = [(a[4:], self._access_fn(self._src_obj, a))
+                for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
+        structs = {}
+        for sa, v in scas:
+            if type(v) in (str, unicode) and '|' in v:
+                v = v.split('|')
+            s, a = sa.split('.')
+            if type(v) is list:
+                expr_items = []
+                for v1 in v:
+                    expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
+                if len(expr_items) > 0:
+                    query = '(%s)' % ' | '.join(expr_items)
                 else:
-                    query = '%s="%s"' % (a, l10n.escape(v))
+                    query = None
+            else:
+                query = '%s="%s"' % (a, l10n.escape(v))
 
-                if query is not None:  # TODO: is the following encoding change always OK?
-                    query = l10n.export_string(query, to_encoding=self._corp.get_conf('ENCODING'))
-                    if s in structs:
-                        structs[s].append(query)
-                    else:
-                        structs[s] = [query]
-            return [(sname, ' & '.join(subquery)) for sname, subquery in structs.items()]
+            if query is not None:  # TODO: is the following encoding change always OK?
+                query = l10n.export_string(query, to_encoding=self._corp.get_conf('ENCODING'))
+                if s in structs:
+                    structs[s].append(query)
+                else:
+                    structs[s] = [query]
+        return [(sname, ' & '.join(subquery)) for sname, subquery in structs.items()]
 
 
 class TextTypesException(Exception):
@@ -242,12 +242,14 @@ class TextTypes(object):
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_api.user_lang, self._corpname)
+        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+            self._plugin_api.user_lang, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         subcorp_attr_list_tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
-        subcorp_attr_list = collections.OrderedDict(zip(subcorp_attr_list_tmp, [None]*len(subcorp_attr_list_tmp))).keys()
+        subcorp_attr_list = collections.OrderedDict(
+            zip(subcorp_attr_list_tmp, [None] * len(subcorp_attr_list_tmp))).keys()
         subcorpattrs = '|'.join(subcorp_attr_list)
         if len(subcorp_attr_list_tmp) != len(subcorp_attr_list):
             logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
@@ -279,7 +281,8 @@ class TextTypes(object):
             struct_calc = collections.OrderedDict()
             for item in subcorp_attr_list:
                 k = item.split('.')[0]
-                struct_calc[k] = CachedStructNormsCalc(self._corp, k, subcnorm, db=plugins.runtime.DB.instance)
+                struct_calc[k] = CachedStructNormsCalc(
+                    self._corp, k, subcnorm, db=plugins.runtime.DB.instance)
             for col in reduce(lambda p, c: p + c['Line'], tt, []):
                 if 'textboxlength' not in col:
                     structname, attrname = col['name'].split('.')
@@ -309,7 +312,8 @@ class TextTypes(object):
         return normslist
 
     def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_api.user_lang, self._corpname)['metadata']
+        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(
+            self._plugin_api.user_lang, self._corpname)['metadata']
         for line in tt:
             for item in line.get('Line', ()):
                 item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
