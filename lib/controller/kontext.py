@@ -764,7 +764,7 @@ class Kontext(Controller):
         super(Kontext, self).pre_dispatch(action_name, named_args, action_metadata)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.pre_dispatch(self._plugin_api, named_args, action_metadata)
+            dhook.pre_dispatch(self._plugin_api, action_name, action_metadata, self._request)
 
         def validate_corpus():
             if isinstance(self.corp, fallback_corpus.ErrorCorpus):

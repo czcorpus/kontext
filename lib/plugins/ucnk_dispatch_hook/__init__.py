@@ -22,6 +22,7 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 
+from controller.errors import ImmediateRedirectException
 from plugins.abstract.dispatch_hook import AbstractDispatchHook
 import plugins
 from plugins import inject
@@ -67,6 +68,17 @@ class UcnkDispatchHook(AbstractDispatchHook):
     def __init__(self, db, queue_key):
         self._db = db
         self._queue_key = queue_key
+
+    def pre_dispatch(self, plugin_api, action_name, action_metadata, request):
+        # Recent KonText versions avoid specifying corpus variant directly in URL but
+        # we still have to handle external links
+        if action_name in ('first_form', 'first', 'view'):
+            corp = request.args.get('corpname')
+            if corp.startswith('omezeni/'):
+                logging.getLogger(__name__).warning(
+                    'Handling legacy action URL for {0}'.format(action_name))
+                raise ImmediateRedirectException(
+                    plugin_api.updated_current_url(dict(corpname=corp[len('omezeni/'):])))
 
     def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
         self._db.list_append(self._queue_key, log_data)
