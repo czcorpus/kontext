@@ -153,6 +153,7 @@ CREATE TABLE kontext_tckc_corpus (
 	corpus_name VARCHAR(63) NOT NULL,
 	provider VARCHAR(127) NOT NULL,
 	type VARCHAR(63),
+	display_order INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_name, provider, type),
 	CONSTRAINT kontext_tckc_corpus_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;

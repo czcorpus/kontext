@@ -129,8 +129,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
                         {translations.length > 0 ? '' : '\u2014'}
                         {translations.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
-                                <a className="word" href={generateLink(props.data.kwic, translation['righ'])}>{translation['righ']}</a>
-                                {'\u00a0'}<span className="note">({translation['perc']})</span>
+                                <a className="word"
+                                        href={generateLink(props.data.kwic, translation['righ'])}
+                                        title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>
+                                    {translation['righ']}
+                                </a>
+                                {'\u00a0'}
+                                <span className="note" title={he.translate('default_kwic_connect__abs_freq') + ': ' + translation['freq']}>
+                                  ({he.formatNumber(translation['perc'], 1)}%)
+                                </span>
                                 {i < props.data.contents.translations.length - 1 ? ', ' : null}
                             </React.Fragment>
                         ))}
