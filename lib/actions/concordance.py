@@ -712,7 +712,7 @@ class Actions(Querying):
                     self.args.q.append('p0 0 1 []')
                     self.args.q.append('x-%s' % self.args.corpname)
 
-    @exposed(template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(template='view.tmpl', page_model='view', mutates_conc=True, http_method=('GET', 'POST'))
     def first(self, request):
         self._clear_prev_conc_params()
         self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
