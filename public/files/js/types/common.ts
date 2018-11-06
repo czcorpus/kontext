@@ -37,6 +37,8 @@ export namespace Kontext {
 
     export type SubcorpListItem = {v:string; n:string; pub:string};
 
+    export type StructsAndAttrs = {[struct:string]:Array<string>};
+
     export interface FormValue<T> {
 
         value:T;

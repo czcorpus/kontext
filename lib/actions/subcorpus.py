@@ -206,11 +206,6 @@ class Subcorpus(Querying):
         """
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS + (MainMenu.VIEW, )
         method = request.form.get('method', 'gui')
-        within_json = request.form.get('within_json', None)
-        if within_json:
-            within_data = json.loads(within_json)
-        else:
-            within_data = []
         subcname = request.form.get('subcname', None)
         subcnorm = request.args.get('subcnorm', 'tokens')
 
@@ -219,11 +214,6 @@ class Subcorpus(Querying):
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
-        structs_and_attrs = {}
-        for s, a in [t.split('.') for t in self.corp.get_conf('STRUCTATTRLIST').split(',')]:
-            if s not in structs_and_attrs:
-                structs_and_attrs[s] = []
-            structs_and_attrs[s].append(a)
 
         out = dict(SubcorpList=())
         self._attach_aligned_query_params(out)
@@ -233,9 +223,7 @@ class Subcorpus(Querying):
             Normslist=tt_sel['Normslist'],
             text_types_data=tt_sel,
             selected_text_types=TextTypeCollector(self.corp, request).get_attrmap(),
-            structs_and_attrs=structs_and_attrs,
             method=method,
-            within_data=within_data,
             subcnorm=subcnorm,
             id_attr=corpus_info.metadata.id_attr,
             subcname=subcname,

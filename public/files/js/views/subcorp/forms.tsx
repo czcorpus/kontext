@@ -22,9 +22,8 @@ import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import { SubcorpFormModel } from '../../models/subcorp/form';
-import {SubcorpWithinFormModel, WithinLine} from '../../models/subcorp/withinForm';
+import {SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine} from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
-import { StructsAndAttrs } from '../../pages/subcorpForm';
 
 export interface FormsModuleArgs {
     dispatcher:ActionDispatcher;
@@ -35,7 +34,6 @@ export interface FormsModuleArgs {
 }
 
 export interface SubcorpFormProps {
-    structsAndAttrs:StructsAndAttrs;
     ttProps:TextTypesPanelProps;
     ttComponent:React.ComponentClass<TextTypesPanelProps>;
 }
@@ -141,7 +139,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     const StructLine:React.SFC<{
         rowIdx:number;
-        structsAndAttrs:StructsAndAttrs;
+        structsAndAttrs:Kontext.StructsAndAttrs;
         lineData:WithinLine;
 
     }> = (props) => {
@@ -210,35 +208,64 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <WithinBuilder /> ----------------------------
 
-    class WithinBuilder extends React.Component<{
-        structsAndAttrs:StructsAndAttrs;
-    },
-    {
+    const WithinBuilder:React.SFC<{
+        structsAndAttrs:Kontext.StructsAndAttrs;
         lines:Immutable.List<WithinLine>;
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.state = {
-                lines: subcorpWithinFormModel.getLines()
-            };
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this._addLineHandler = this._addLineHandler.bind(this);
-        }
-
-        _addLineHandler() {
+        const addLineHandler = () => {
             dispatcher.dispatch({
                 actionType: 'SUBCORP_FORM_WITHIN_LINE_ADDED',
                 props: {
                     negated: false,
-                    structureName: Object.keys(this.props.structsAndAttrs)[0],
+                    structureName: Object.keys(props.structsAndAttrs).sort()[0],
                     attributeCql: ''
                 }
             });
+        };
+
+        return (
+            <table>
+                <tbody>
+                    {props.lines.map((line, i) =>
+                        <React.Fragment key ={'wl' + line.rowIdx}>
+                            <ExpressionDescLine viewIdx={i} />
+                            <StructLine rowIdx={line.rowIdx}
+                                lineData={line} structsAndAttrs={props.structsAndAttrs} />
+                        </React.Fragment>)
+                    }
+                    <tr key="button-row" className="last-line">
+                        <td>
+                            <a className="add-within"
+                                    onClick={addLineHandler}
+                                    title={he.translate('global__add_within')}>
+                                <img src={he.createStaticUrl('img/plus.svg')} style={{width: '1em'}} />
+                            </a>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        );
+    };
+
+
+    // ------------------------------------------- <TRWithinBuilderWrapper /> ----------------------------
+
+    class TRWithinBuilderWrapper extends React.Component<
+        {}, SubcorpWithinFormModelState> {
+
+        constructor(props) {
+            super(props);
+            this.state = subcorpWithinFormModel.getState();
+            this._handleHelpClick = this._handleHelpClick.bind(this);
+            this._handleHelpCloseClick = this._handleHelpCloseClick.bind(this);
+            this._modelChangeHandler = this._modelChangeHandler.bind(this);
         }
 
-        _modelChangeHandler() {
-            this.setState({lines: subcorpWithinFormModel.getLines()});
+        _modelChangeHandler(state) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -249,32 +276,39 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             subcorpWithinFormModel.removeChangeListener(this._modelChangeHandler);
         }
 
-        _renderStructLine(line, viewIdx) {
-            return <React.Fragment key ={'wl' + line.rowIdx}>
-                <ExpressionDescLine viewIdx={viewIdx} />
-                <StructLine rowIdx={line.rowIdx}
-                        lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
-            </React.Fragment>;
+        _handleHelpClick() {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
+                props: {}
+            });
+        }
+
+        _handleHelpCloseClick() {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
+                props: {}
+            });
         }
 
         render() {
             return (
-                <table>
-                    <tbody>
-                        {this.state.lines.map((line, i) => this._renderStructLine(line, i))}
-                        <tr key="button-row" className="last-line">
-                            <td>
-                                <a className="add-within"
-                                        onClick={this._addLineHandler}
-                                        title={he.translate('global__add_within')}>
-                                    <img src={he.createStaticUrl('img/plus.svg')} style={{width: '1em'}} />
-                                </a>
-                            </td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <tr id="subc-within-row">
+                    <th>
+                        {he.translate('subcform__mode_raw_within')}
+                        <a id="custom-within-hint" className="context-help"
+                                onClick={this._handleHelpClick}>
+                            <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
+                        </a>:
+                        {this.state.helpHintVisible ?
+                            <StructsHint structsAndAttrs={this.state.structsAndAttrs}
+                                    onCloseClick={this._handleHelpCloseClick} /> :
+                            null
+                        }
+                    </th>
+                    <td className="container">
+                        <WithinBuilder lines={this.state.lines} structsAndAttrs={this.state.structsAndAttrs} />
+                    </td>
+                </tr>
             );
         }
     }
@@ -371,7 +405,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     /**
      */
     const StructsHint:React.SFC<{
-        structsAndAttrs:StructsAndAttrs;
+        structsAndAttrs:Kontext.StructsAndAttrs;
         onCloseClick:()=>void;
 
     }> = (props) => {
@@ -403,54 +437,6 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             </layoutViews.PopupBox>
         );
     };
-
-    /**
-     *
-     */
-    class TRWithinBuilderWrapper extends React.Component<{
-        structsAndAttrs:StructsAndAttrs;
-    },
-    {
-        hintsVisible:boolean;
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.state = {hintsVisible: false};
-            this._handleHelpClick = this._handleHelpClick.bind(this);
-            this._handleHelpCloseClick = this._handleHelpCloseClick.bind(this);
-        }
-
-        _handleHelpClick() {
-            this.setState({hintsVisible: true});
-        }
-
-        _handleHelpCloseClick() {
-            this.setState({hintsVisible: false});
-        }
-
-        render() {
-            return (
-                <tr id="subc-within-row">
-                    <th>
-                        {he.translate('subcform__mode_raw_within')}
-                        <a id="custom-within-hint" className="context-help"
-                                onClick={this._handleHelpClick}>
-                            <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
-                        </a>:
-                        {this.state.hintsVisible ?
-                            <StructsHint structsAndAttrs={this.props.structsAndAttrs}
-                                    onCloseClick={this._handleHelpCloseClick} /> :
-                            null
-                        }
-                    </th>
-                    <td className="container">
-                        <WithinBuilder structsAndAttrs={this.props.structsAndAttrs} />
-                    </td>
-                </tr>
-            );
-        }
-    }
 
     /**
      *
@@ -513,7 +499,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         _renderTextTypeSelection() {
             switch (this.state.inputMode) {
                 case 'raw':
-                    return <TRWithinBuilderWrapper structsAndAttrs={this.props.structsAndAttrs} />;
+                    return <TRWithinBuilderWrapper  />;
                 case 'gui':
                     return (
                         <tr>

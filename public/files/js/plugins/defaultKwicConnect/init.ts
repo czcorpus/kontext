@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit, View} from './views';
 import {init as renderersInit, Views as RenderersView} from './renderers';
-import {KwicConnectModel, RendererMap} from './model';
+import {KwicConnectModel} from './model';
 import { IConcLinesProvider } from '../../types/concordance';
 
 declare var require:any;

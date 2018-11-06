@@ -1116,7 +1116,7 @@ class Kontext(Controller):
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        Controller.add_globals(self, result, methodname, action_metadata)
+        super(Kontext, self).add_globals(result, methodname, action_metadata)
         result['corpus_ident'] = {}
         result['Globals'] = DummyGlobals()
         result['base_attr'] = Kontext.BASE_ATTR

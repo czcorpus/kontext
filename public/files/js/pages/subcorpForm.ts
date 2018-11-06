@@ -32,6 +32,7 @@ import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
+import { InputMode } from '../models/subcorp/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -46,9 +47,6 @@ export interface TTInitData {
 }
 
 
-export type StructsAndAttrs = {[struct:string]:Array<string>};
-
-
 /**
  * A page model for the 'create new subcorpus' page.
  */
@@ -57,8 +55,6 @@ export class SubcorpForm {
     private corpusIdent:Kontext.FullCorpusIdent;
 
     private layoutModel:PageModel;
-
-    private corplistComponent:PluginInterfaces.Corparch.ICorpSelection;
 
     private viewComponents:any; // TODO types
 
@@ -100,7 +96,6 @@ export class SubcorpForm {
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
             {
-                structsAndAttrs: this.layoutModel.getConf<StructsAndAttrs>('structsAndAttrs'),
                 ttComponent: ttComponent,
                 ttProps: ttProps
             }
@@ -148,7 +143,7 @@ export class SubcorpForm {
                 getIsPublic: () => this.subcorpFormModel.getIsPublic(),
                 getDescription: () => this.subcorpFormModel.getDescription(),
                 getSubcName: () => this.subcorpFormModel.getSubcname(),
-                validateForm: () => this.subcorpFormModel.validateForm(),
+                validateForm: () => this.subcorpFormModel.validateForm(false),
                 addChangeListener: (fn:Kontext.ModelListener) => {
                     this.subcorpFormModel.addChangeListener(fn);
                 },
@@ -216,12 +211,6 @@ export class SubcorpForm {
                 const ttComponent = this.createTextTypesComponents(
                     this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
                 );
-                this.subcorpWithinFormModel = new SubcorpWithinFormModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
-                    this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
-                );
                 this.subcorpSel = new NonQueryCorpusSelectionModel({
                     layoutModel: this.layoutModel,
                     dispatcher: this.layoutModel.dispatcher,
@@ -233,10 +222,18 @@ export class SubcorpForm {
                 this.subcorpFormModel = new SubcorpFormModel(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
-                    this.subcorpWithinFormModel,
                     ttComponent.ttModel,
                     this.layoutModel.getCorpusIdent().id,
+                    InputMode.GUI,
                     ttComponent.attachedAlignedCorporaProvider
+                );
+
+                this.subcorpWithinFormModel = new SubcorpWithinFormModel(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    InputMode.GUI,
+                    this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'),
+                    this.subcorpFormModel
                 );
 
                 const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
