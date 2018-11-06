@@ -76,6 +76,7 @@ export class FreqResultsSaveModel extends StatefulModel {
         this.includeColHeaders = false;
         this.freqArgsProviderFn = freqArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
+        this.quickSaveRowLimit = quickSaveRowLimit;
 
         dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
