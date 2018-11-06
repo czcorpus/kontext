@@ -360,7 +360,8 @@ class Backend(DatabaseBackend):
     def load_tckc_providers(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_name = %s', (corpus_id,))
+            'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
+            (corpus_id,))
         return cursor.fetchall()
 
     # TODO this function should be improved as it loads all the registry info to cache user permissions

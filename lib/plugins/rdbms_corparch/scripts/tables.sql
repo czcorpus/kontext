@@ -102,6 +102,7 @@ CREATE TABLE kontext_keyword (
 	label_cs TEXT NOT NULL,
 	label_en TEXT NOT NULL,
 	color TEXT,
+	display_order INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_keyword_pkey PRIMARY KEY (id)
 );
 
@@ -119,6 +120,7 @@ CREATE TABLE kontext_tckc_corpus (
 	corpus_id TEXT NOT NULL,
 	provider TEXT NOT NULL,
 	type TEXT,
+	display_order INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_id, provider, type),
 	CONSTRAINT kontext_tckc_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id)
 );
