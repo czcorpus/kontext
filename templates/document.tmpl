@@ -110,6 +110,7 @@ __conf.queryTypesHints = {
     iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
 };
 __conf.ttIntervalChars = $to_json($getVar('interval_chars', []));
+__conf.structsAndAttrs = $to_json($getVar('structs_and_attrs', {}));
 __conf.menuData = $to_json($menu_data);
 __conf.asyncTasks = $to_json($async_tasks);
 __conf.ShowConcToolbar = $to_json($use_conc_toolbar);

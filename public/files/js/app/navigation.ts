@@ -407,6 +407,7 @@ export class AppNavigation implements Kontext.IURLHandler {
                 this.conf.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
                 this.conf.setConf<number>('numQueryOps', data.numQueryOps);
                 this.conf.setConf<any>('textTypesData', data.textTypesData); // TODO type
+                this.conf.setConf<Kontext.StructsAndAttrs>('structsAndAttrs', data.structsAndAttrs);
                 this.conf.setConf<any>('menuData', data.menuData); // TODO type
                 this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
                 this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type

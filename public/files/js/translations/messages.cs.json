@@ -528,7 +528,7 @@
         "pubsubclist__search_by_code": "veřejného identifikátoru",
         "pubsubclist__author": "autor",
         "task__type_subcorpus": "Nový subkorpus",
-        "task__type_subcorpus_status_updated": "Hotovo",
+        "task__type_subcorpus_done": "Hotovo",
         "task__type_conc_download": "Stažení konkordance",
         "task__type_freq_download": "Stažení frekv. seznamu",
         "task__type_freq2d_download": "Stažení 2D frekv. seznamu",

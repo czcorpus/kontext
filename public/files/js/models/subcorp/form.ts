@@ -25,13 +25,9 @@ import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TextTypesModel} from '../../models/textTypes/main';
-import {SubcorpWithinFormModel} from './withinForm';
+import {InputMode} from './common';
 import RSVP from 'rsvp';
 
-export enum InputMode {
-    GUI = 'gui',
-    RAW = 'raw'
-}
 
 export class SubcorpFormModel extends StatefulModel {
 
@@ -47,24 +43,20 @@ export class SubcorpFormModel extends StatefulModel {
 
     private description:Kontext.FormValue<string>;
 
-    private withinFormModel:SubcorpWithinFormModel;
-
     private textTypesModel:TextTypesModel;
 
     private isBusy:boolean;
 
     private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
-            withinFormModel:SubcorpWithinFormModel, textTypesModel:TextTypesModel, corpname:string,
-            alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, textTypesModel:TextTypesModel, corpname:string,
+            inputMode:InputMode, alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.withinFormModel = withinFormModel;
         this.textTypesModel = textTypesModel;
         this.corpname = corpname;
         this.alignedCorporaProvider = alignedCorporaProvider;
-        this.inputMode = InputMode.GUI;
+        this.inputMode = inputMode;
         this.subcname = {value: '', isRequired: true, isInvalid: false};
         this.isPublic = false;
         this.description = {value: '', isRequired: false, isInvalid: false};
@@ -90,22 +82,26 @@ export class SubcorpFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SUBMIT':
-                    this.isBusy = true;
-                    this.notifyChangeListeners();
-                    this.submit().then(
-                        () => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.withinFormModel.notifyChangeListeners();
-                            window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.withinFormModel.notifyChangeListeners();
-                            this.pageModel.showMessage('error', err);
-                        }
-                    );
+                    if (this.inputMode === InputMode.GUI) {
+                        this.isBusy = true;
+                        this.notifyChangeListeners();
+                        this.submit().then(
+                            () => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
+                            },
+                            (err) => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.pageModel.showMessage('error', err);
+                            }
+                        );
+
+                    } else if (this.inputMode === InputMode.RAW) {
+                        this.validateForm(false);
+                        this.notifyChangeListeners();
+                    }
                 break;
             }
         });
@@ -124,19 +120,14 @@ export class SubcorpFormModel extends StatefulModel {
             args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
             args.set('attrs', JSON.stringify(this.textTypesModel.exportSelections(false)));
         }
-        if (this.inputMode === 'raw') {
-            args.set('within_json', this.withinFormModel.exportJson());
-
-        } else if (this.inputMode === 'gui') {
-            const selections = this.textTypesModel.exportSelections(false);
-            for (let p in selections) {
-                args.replace(`sca_${p}`, selections[p]);
-            }
+        const selections = this.textTypesModel.exportSelections(false);
+        for (let p in selections) {
+            args.replace(`sca_${p}`, selections[p]);
         }
         return args;
     }
 
-    validateForm():Error|null {
+    validateForm(mustHaveTTSelection:boolean):Error|null {
         if (this.subcname.value === '') {
             this.subcname.isInvalid = true;
             return new Error(this.pageModel.translate('subcform__missing_subcname'));
@@ -153,20 +144,15 @@ export class SubcorpFormModel extends StatefulModel {
             this.subcname.isInvalid = false;
         }
 
-        if (this.inputMode === InputMode.GUI && !this.textTypesModel.hasSelectedItems()) {
+        if (mustHaveTTSelection && !this.textTypesModel.hasSelectedItems()) {
             return new Error(this.pageModel.translate('subcform__at_least_one_type_must_be_selected'));
         }
-
-        if (this.inputMode === InputMode.RAW) {
-            return this.withinFormModel.validateForm();
-        }
-
         return null;
     }
 
     submit():RSVP.Promise<any> {
         const args = this.getSubmitArgs();
-        const err = this.validateForm();
+        const err = this.validateForm(true);
         if (err === null) {
             return this.pageModel.ajax<any>(
                 'POST',
@@ -177,6 +163,10 @@ export class SubcorpFormModel extends StatefulModel {
         } else {
             return RSVP.Promise.reject(err);
         }
+    }
+
+    getCorpname():string {
+        return this.corpname;
     }
 
     getSubcname():Kontext.FormValue<string> {
@@ -197,5 +187,13 @@ export class SubcorpFormModel extends StatefulModel {
 
     getIsBusy():boolean {
         return this.isBusy;
+    }
+
+    getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
+        return this.alignedCorporaProvider();
+    }
+
+    getTTSelections():{[attr:string]:Array<string>} {
+        return this.textTypesModel.exportSelections(false);
     }
 }

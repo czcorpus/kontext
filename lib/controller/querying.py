@@ -209,3 +209,22 @@ class Querying(Kontext):
                         logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
                             last_id))
         return ans
+
+    def _get_structs_and_attrs(self):
+        structs_and_attrs = {}
+        attrs = (t for t in self.corp.get_conf('STRUCTATTRLIST').split(',') if t != '')
+        for s, a in [t.split('.') for t in attrs]:
+            if s not in structs_and_attrs:
+                structs_and_attrs[s] = []
+            structs_and_attrs[s].append(a)
+        return structs_and_attrs
+
+    def add_globals(self, result, methodname, action_metadata):
+        """
+        Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
+        HTML templates properly.
+        It is called after an action is processed but before any output starts
+        """
+        super(Querying, self).add_globals(result, methodname, action_metadata)
+
+        result['structs_and_attrs'] = self._get_structs_and_attrs()

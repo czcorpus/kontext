@@ -1701,7 +1701,6 @@ class Actions(Querying):
         tmp_out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
                                      for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',')
                                      if n]
-
         sref = corpus_get_conf(self.corp, 'SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
@@ -1756,7 +1755,8 @@ class Actions(Querying):
             CurrentSubcorp=self.args.usesubcorp,
             SubcorpList=tmp_out['SubcorpList'],
             TextTypesNotes=corpus_info.metadata.desc,
-            TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False
+            TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False,
+            structsAndAttrs=self._get_structs_and_attrs()
         )
         self._configure_auth_urls(ans)
         return ans

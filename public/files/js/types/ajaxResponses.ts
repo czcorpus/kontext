@@ -210,6 +210,7 @@ export namespace AjaxResponse {
         queryOverview:Array<Kontext.QueryOperation>;
         numQueryOps:number;
         textTypesData:any; // TODO type
+        structsAndAttrs:Kontext.StructsAndAttrs;
         menuData:any; // TODO type
         Wposlist:Array<any>; // TODO type
         AttrList:Array<any>; // TODO type
