@@ -69,6 +69,7 @@ export interface ProviderWordMatch {
 export interface KwicConnectState {
     isBusy:boolean;
     corpora:Immutable.List<string>;
+    mainCorp:string;
     freqType:FreqDistType;
     data:Immutable.List<ProviderWordMatch>;
     blockedByAsyncConc:boolean;
@@ -89,6 +90,7 @@ export interface KwicConnectModelArgs {
     dispatcher:ActionDispatcher;
     pluginApi:IPluginApi;
     corpora:Array<string>;
+    mainCorp:string;
     rendererMap:RendererMap;
     concLinesProvider:IConcLinesProvider;
     loadChunkSize:number;
@@ -111,6 +113,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             dispatcher,
             pluginApi,
             corpora,
+            mainCorp,
             rendererMap,
             concLinesProvider,
             loadChunkSize,
@@ -121,6 +124,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 isBusy: false,
                 data: Immutable.List<ProviderWordMatch>(),
                 corpora: Immutable.List<string>(corpora),
+                mainCorp: mainCorp,
                 freqType: FreqDistType.LEMMA,
                 blockedByAsyncConc: concLinesProvider.isUnfinishedCalculation()
             }
@@ -291,8 +295,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     private fetchKwicInfo(state:KwicConnectState, items:Array<string>):RSVP.Promise<Immutable.List<ProviderWordMatch>> {
         const args = new MultiDict();
-        args.set('corpname', state.corpora.get(0));
-        args.replace('align', state.corpora.slice(1).toArray());
+        args.set('corpname', state.mainCorp);
+        args.replace('align', state.corpora.filter(v => v !== state.mainCorp).toArray());
         items.slice(0, 10).forEach(v => args.add('w', v));
         return this.pluginApi.ajax<AjaxResponseFetchData>(
             'GET',

@@ -46,6 +46,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
             pluginApi: pluginApi,
             corpora: [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
                     .concat(...pluginApi.getConf<Array<string>>('alignedCorpora')),
+            mainCorp: this.pluginApi.getConcArgs()['maincorp'],
             rendererMap: this.selectRenderer.bind(this),
             concLinesProvider: concLinesProvider,
             loadChunkSize: loadChunkSize,

@@ -278,6 +278,13 @@ export function init(
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form">
                         <tbody>
+                            <inputViews.TRQueryTypeField
+                                queryType={this.state.queryTypes.get(this.props.filterId)}
+                                sourceId={this.props.filterId}
+                                actionPrefix={this.props.actionPrefix}
+                                hasLemmaAttr={this.state.hasLemmaAttr} />
+                        </tbody>
+                        <tbody>
                             <inputViews.TRQueryInputField
                                 queryType={this.state.queryTypes.get(this.props.filterId)}
                                 widgets={this.state.supportedWidgets.get(this.props.filterId)}
