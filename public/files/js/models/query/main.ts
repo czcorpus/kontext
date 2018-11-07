@@ -617,6 +617,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         const idx = this.corpora.indexOf(corpname);
         if (idx > -1) {
             this.corpora = this.corpora.remove(idx).insert(0, corpname);
+            this.currentSubcorp = '';
             window.location.href = this.pageModel.createActionUrl(this.currentAction, this.createSubmitArgs().items());
         }
     }
