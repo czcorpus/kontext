@@ -48,7 +48,7 @@ section.corplist {
         border-radius: @border-radius-default;
         padding: 0;
         display: inline-block;
-        margin: 2pt 1pt;
+        margin: 0.4em 0.2em;
     }
 
     .keywords .keyword .overlay {
@@ -63,15 +63,18 @@ section.corplist {
         transition: all 0.2s ease-in-out;
     }
 
-    .keywords .keyword.reset {
-        background-color: @color-light-grey;
-        border-color: @color-light-text;
+    .keywords .reset {
+        display: inline-block;
+        border: none;
+        background-color: transparent;
         color: @color-default-text;
+        margin-left: 0.7em;
+        text-decoration: underline;
     }
 
-    .keywords .keyword.reset:hover {
-        border-color: @color-light-text;
-        background-color: white;
+    .keywords .reset:hover {
+        color: @color-logo-pink;
+        text-decoration: none;
     }
 
     .keywords .keyword.current {

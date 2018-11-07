@@ -39,8 +39,8 @@ export class CorplistTableModel extends corplistDefault.CorplistTableModel {
     /**
      *
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData) {
-        super(dispatcher, pluginApi, initialData);
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData, preselectedKeywords:Array<string>) {
+        super(dispatcher, pluginApi, initialData, preselectedKeywords);
     }
 
     getState():CorplistTableModelState {
@@ -105,7 +105,12 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
     constructor(pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
         this.corpusAccessRequestModel = new CorpusAccessRequestModel(pluginApi.dispatcher(), pluginApi);
-        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi, initialData);
+        this.corplistTableModel = new CorplistTableModel(
+            pluginApi.dispatcher(),
+            pluginApi,
+            initialData,
+            pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []
+        );
         this.components = viewsInit(this.corplistTableModel);
     }
 

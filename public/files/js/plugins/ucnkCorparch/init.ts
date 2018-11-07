@@ -19,7 +19,6 @@
  */
 
 import {Kontext} from '../../types/common';
-import {CorplistItemUcnk} from './common';
 import {CorplistPage} from './corplist';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {init as viewInit} from './view';
