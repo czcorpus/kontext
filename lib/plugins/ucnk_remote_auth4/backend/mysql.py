@@ -235,6 +235,8 @@ class Backend(DatabaseBackend):
         values_cond2.append(len(keywords) if keywords else 0)
 
         c = self._db.cursor()
+        # performance note: using UNION instead of 'WHERE user_id = x OR c.requestable = 1' increased
+        # mysql performance significantly (more than 10x faster).
         sql = ('(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
                'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '

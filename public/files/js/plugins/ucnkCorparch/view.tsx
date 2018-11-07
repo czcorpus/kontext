@@ -366,7 +366,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
                             <defaultComponents.CorplistHeader />
                             {rows}
                             {this.state.nextOffset ?
-                                <ListExpansion offset={this.state.nextOffset} /> :
+                                <ListExpansion offset={this.state.nextOffset} limit={this.state.limit} /> :
                                 null
                             }
                         </tbody>
@@ -384,6 +384,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
      */
     const ListExpansion:React.SFC<{
         offset:number;
+        limit:number;
 
     }> = (props) => {
 
@@ -399,7 +400,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         return (
             <tr className="load-more">
                 <td colSpan={5}>
-                    <a onClick={linkClickHandler}>{he.translate('ucnkCorparch__load_all')}</a>
+                    <a onClick={linkClickHandler}>{he.translate('ucnkCorparch__next_{num}', {num: props.limit})}</a>
                 </td>
             </tr>
         );
