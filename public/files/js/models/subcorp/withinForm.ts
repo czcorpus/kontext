@@ -68,7 +68,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
 
     constructor(dispatcher:ActionDispatcher, pageModel:PageModel, inputMode:InputMode,
             structsAndAttrs:Kontext.StructsAndAttrs, subcFormModel:SubcorpFormModel) {
-                console.log('setting ', structsAndAttrs);
         super(
             dispatcher,
             {
