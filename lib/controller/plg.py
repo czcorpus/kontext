@@ -69,6 +69,10 @@ class PluginApi(object):
         return self._controller.corp
 
     @property
+    def aligned_corpora(self):
+        return self._controller.args.align
+
+    @property
     def current_url(self):
         return self._controller.get_current_url()
 
