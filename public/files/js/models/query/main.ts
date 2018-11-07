@@ -319,9 +319,9 @@ export abstract class GeneralQueryModel extends SynchronizedModel {
  *
  */
 export interface CorpusSwitchPreserved {
-    query:string;
-    queryType:string;
-    matchCase:boolean;
+    queries:Immutable.Map<string, string>;
+    queryTypes:Immutable.Map<string, string>;
+    matchCases:Immutable.Map<string, boolean>;
 }
 
 
@@ -519,13 +519,26 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                     }
                 break;
                 case 'CORPUS_SWITCH_MODEL_RESTORE':
-                    if (payload.props['key'] === this.csGetStateKey()) {
-                        this.csSetState(payload.props['data']);
-                        this.notifyChangeListeners();
-                    }
+                    this.restoreFromCorpSwitch(payload.props as Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>);
                 break;
             }
         });
+    }
+
+    private restoreFromCorpSwitch(props:Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>):void {
+        if (props.key === this.csGetStateKey()) {
+            props.currCorpora.forEach((corp, i) => {
+                if (props.prevCorpora.size > i) {
+                    this.queries = this.queries.set(corp, props.data.queries.get(props.prevCorpora.get(i)));
+                    this.queryTypes = this.queryTypes.set(corp, props.data.queryTypes.get(props.prevCorpora.get(i)));
+                    this.matchCaseValues = this.matchCaseValues.set(corp, props.data.matchCases.get(props.prevCorpora.get(i)));
+                }
+            });
+            this.queries = this.queries.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            this.queryTypes = this.queryTypes.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            this.matchCaseValues = this.matchCaseValues.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            this.notifyChangeListeners();
+        }
     }
 
     private testPrimaryQueryNonEmpty():boolean {
@@ -544,19 +557,11 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
     }
 
     csExportState():CorpusSwitchPreserved {
-        const corp = this.corpora.get(0);
         return {
-            query: this.queries.get(corp),
-            queryType: this.queryTypes.get(corp),
-            matchCase: this.matchCaseValues.get(corp)
+            queries: this.queries,
+            queryTypes: this.queryTypes,
+            matchCases: this.matchCaseValues
         };
-    }
-
-    csSetState(state:CorpusSwitchPreserved):void {
-        const corp = this.corpora.get(0);
-        this.queries = this.queries.set(corp, state.query);
-        this.queryTypes = this.queryTypes.set(corp, state.queryType);
-        this.matchCaseValues = this.matchCaseValues.set(corp, state.matchCase);
     }
 
     csGetStateKey():string {

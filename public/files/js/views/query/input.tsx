@@ -193,6 +193,8 @@ export function init({
                     return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char'), null];
                 case 'cql':
                     return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql'), he.getHelpLink('term_cql')];
+                default:
+                    return ['', '', null];
             }
         }
 
@@ -845,10 +847,8 @@ export function init({
                                 inputKeyHandler={this._inputKeyHandler}
                                 inputChangeHandler={this._inputChangeHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
-                            sourceId={this.props.sourceId}
-                            initialValue={this.state.query}
+                            value={this.state.query}
                             takeFocus={this.props.takeFocus}
-                            inputKeyHandler={this._inputKeyHandler}
                             inputChangeHandler={this._handleInputChange} />;
             }
         }

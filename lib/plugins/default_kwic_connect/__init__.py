@@ -87,7 +87,7 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
         tst = [p.enabled_for_corpora([corpname] + plugin_api.aligned_corpora)
-               for p, _ in self.map_providers(corpus_info.kwic_connect.providers)])
+               for p, _ in self.map_providers(corpus_info.kwic_connect.providers)]
         return len(tst) > 0 and True in tst
 
     def export(self, plugin_api):

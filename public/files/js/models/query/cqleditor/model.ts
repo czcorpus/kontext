@@ -69,7 +69,7 @@ export interface CQLEditorModelInitArgs {
 /**
  *
  */
-export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
+export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implements Kontext.ICorpusSwitchAware<CQLEditorModelState> {
 
     private pageModel:PageModel;
 
@@ -203,6 +203,9 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                     );
                 }
             break;
+            case 'CORPUS_SWITCH_MODEL_RESTORE':
+                newState = this.restoreFromCorpSwitch(state, action.props as Kontext.CorpusSwitchActionProps<CQLEditorModelState>);
+            break;
             default:
                 newState = state;
         }
@@ -223,6 +226,43 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
             }
             break;
         }
+    }
+
+    csExportState():CQLEditorModelState {
+        return this.getState();
+    }
+
+    csGetStateKey():string {
+        return `rich-cql-editor-${this.actionPrefix}`;
+    }
+
+    /**
+     * The function is called once main model switches to a new corpus (or corpora - for aligned stuff).
+     * Especially in case we switch from a list of aligned corpora to a new list of (possibly completely
+     * different) corpora the rules how to apply stored queries are quite hard to specify. We follow
+     * a simple rule - take a list of queries and apply it to the new list of queries one by one.
+     */
+    private restoreFromCorpSwitch(state:CQLEditorModelState, props:Kontext.CorpusSwitchActionProps<CQLEditorModelState>):CQLEditorModelState {
+        let ans:CQLEditorModelState;
+        if (props.key === this.csGetStateKey()) {
+            ans = this.copyState(props.data);
+            props.currCorpora.forEach((corp, i) => {
+                if (props.prevCorpora.size > i) {
+                    ans.rawCode = ans.rawCode.set(corp, ans.rawCode.get(props.prevCorpora.get(i) || ''));
+                    ans.richCode = ans.richCode.set(corp, ans.richCode.get(props.prevCorpora.get(i) || ''));
+                    ans.rawAnchorIdx = ans.rawAnchorIdx.set(corp, ans.rawAnchorIdx.get(props.prevCorpora.get(i) || ''));
+                    ans.rawFocusIdx = ans.rawFocusIdx.set(corp, ans.rawFocusIdx.get(props.prevCorpora.get(i) || ''));
+                }
+            });
+            ans.rawCode = ans.rawCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            ans.richCode = ans.richCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            ans.rawAnchorIdx = ans.rawAnchorIdx.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            ans.rawFocusIdx = ans.rawFocusIdx.filter((_, k) => props.currCorpora.includes(k)).toMap();
+
+        } else {
+            ans = state;
+        }
+        return ans;
     }
 
     private getQueryLength(state:CQLEditorModelState, sourceId:string):number {

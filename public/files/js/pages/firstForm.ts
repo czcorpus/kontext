@@ -37,10 +37,41 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
+import { StatefulModel } from '../models/base';
+import { ActionDispatcher, ActionPayload } from '../app/dispatcher';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/firstForm.less');
+
+
+/**
+ * ConfigWrapper ensures that actions we need to be bound
+ * to the global app config trigger proper updates in the config.
+ */
+class ConfigWrapper extends StatefulModel {
+
+    private layoutModel:PageModel;
+
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
+        super(dispatcher);
+        this.layoutModel = layoutModel;
+        this.dispatcherRegister((action:ActionPayload) => {
+            switch (action.actionType) {
+                case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
+                    const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
+                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.props['corpname']]));
+                }
+                break;
+                case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': {
+                    const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
+                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.props['corpname']));
+                }
+                break;
+            }
+        });
+    }
+}
 
 /**
  *
@@ -241,8 +272,6 @@ export class FirstFormPage {
     }
 
     private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
-
-        this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -311,7 +340,10 @@ export class FirstFormPage {
                 this.initQueryModel();
                 const corparchWidget = this.initCorplistComponent();
                 this.attachQueryForm(ttAns, corparchWidget);
+                this.layoutModel.registerSwitchCorpAwareObject(this.cqlEditorModel);
+                this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
                 this.initCorpnameLink();
+                new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
             }
 
         ).then(
