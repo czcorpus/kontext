@@ -18,7 +18,6 @@
 
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';

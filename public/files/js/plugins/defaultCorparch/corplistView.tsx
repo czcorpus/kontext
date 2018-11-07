@@ -102,9 +102,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 actionType: 'LIST_STAR_CLICKED',
                 props: {
                     corpusId: props.corpusId,
-                    corpusName: props.corpusName,
-                    favId: props.favId,
-                    type: 'corpus'
+                    favId: props.favId
                 }
             });
         };

@@ -94,11 +94,13 @@ export interface CorplistTableModelState {
 
     isBusy:boolean;
 
-    offset:number;
-
     searchedCorpName:string;
 
+    offset:number;
+
     nextOffset:number;
+
+    limit:number;
 
     rows:Immutable.List<common.CorplistItem>;
 }
@@ -127,6 +129,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 detailData: null,
                 isBusy: false,
                 offset: 0,
+                limit: pluginApi.getConf('pluginData')['corparch']['max_page_size'],
                 searchedCorpName: '',
                 nextOffset: initialData.nextOffset,
                 rows: Immutable.List<common.CorplistItem>(initialData.rows)
@@ -281,8 +284,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 );
             break;
             case 'LIST_STAR_CLICKED':
-                this.changeFavStatus(state, action.props['corpusId'], action.props['corpusName'],
-                        action.props['type'], action.props['favId']).then(
+                this.changeFavStatus(state, action.props['corpusId'], action.props['favId']).then(
                     (message) => {
                         dispatch({
                             actionType: 'LIST_STAR_CLICKED_DONE',
@@ -361,8 +363,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         };
     }
 
-    private changeFavStatus(state:CorplistTableModelState, corpusId:string, corpusName:string,
-                itemType:string, favId:string):RSVP.Promise<string> {
+    private changeFavStatus(state:CorplistTableModelState, corpusId:string, favId:string):RSVP.Promise<string> {
         if (favId === null) {
             const item:common.GeneratedFavListItem = {
                 subcorpus_id: null,

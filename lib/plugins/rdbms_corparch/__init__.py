@@ -156,7 +156,7 @@ class DeafultCorplistProvider(CorplistProvider):
             if i == limit - 1:
                 break
         return dict(rows=ans,
-                    nextOffset=(limit + 1) if len(rows) > limit else None,
+                    nextOffset=offset+limit if len(rows) > limit else None,
                     keywords=l10n.sort(used_keywords, loc=plugin_api.user_lang),
                     query=query,
                     current_keywords=query_keywords,
@@ -197,7 +197,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._user_items = user_items
         self._tag_prefix = tag_prefix
         self._max_num_hints = int(max_num_hints)
-        self._max_page_size = max_page_size
+        self._max_page_size = int(max_page_size)
         self._registry_lang = registry_lang
         self._corpus_info_cache = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
@@ -446,7 +446,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang).items()],
             tag_prefix=self._tag_prefix,
-            max_num_hints=self._max_num_hints
+            max_num_hints=self._max_num_hints,
+            max_page_size=self.max_page_size
         )
 
 
