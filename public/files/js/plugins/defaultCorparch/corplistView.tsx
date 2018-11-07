@@ -372,10 +372,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         };
 
         return (
-            <a className="keyword reset" onClick={handleClick}>
-                <span className="overlay">
-                    {he.translate('defaultCorparch__no_keyword')}
-                </span>
+            <a className="reset" onClick={handleClick}>
+                {he.translate('defaultCorparch__no_keyword')}
             </a>
         );
     };

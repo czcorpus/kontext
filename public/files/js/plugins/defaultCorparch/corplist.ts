@@ -25,6 +25,7 @@ import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatche
 import {MultiDict} from '../../util';
 import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
+import { init } from '../../views/query/input';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -73,13 +74,13 @@ export interface KeywordInfo {
     selected:boolean;
 }
 
-const importKeywordInfo = (v:[string, string, boolean, string]):KeywordInfo => {
+const importKeywordInfo = (preselected:Array<string>) => (v:[string, string, boolean, string]):KeywordInfo => {
     return {
         ident: v[0],
         label: v[1],
         color: v[3],
         visible: true,
-        selected: false
+        selected: preselected.indexOf(v[0]) > -1
     };
 }
 
@@ -115,17 +116,16 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
     protected tagPrefix:string;
 
-
     /**
      *
      * @param pluginApi
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData, preselectedKeywords:Array<string>) {
         super(
             dispatcher,
             {
                 filters: { maxSize: '', minSize: '', name: '' },
-                keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo)),
+                keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo(preselectedKeywords))),
                 detailData: null,
                 isBusy: false,
                 offset: 0,
@@ -487,7 +487,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 
     constructor(pluginApi:IPluginApi, initialData:CorplistServerData, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi, initialData);
+        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi, initialData, []);
         this.components = viewsInit(this.corplistTableModel);
     }
 
