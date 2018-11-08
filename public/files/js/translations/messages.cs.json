@@ -465,7 +465,7 @@
         "options__conc_show_line_nums": "Zobrazovat čísla řádků",
         "options__conc_shuffle_by_default": "Automaticky promíchat konkordanční řádky",
         "options__conc_no_effect_on_current": "Nemá vliv na aktuální konkordanci.",
-        "options__use_advanced_cql_editor": "Používat pokročilý CQL editor (experimentální)",
+        "options__use_advanced_cql_editor": "Používat pokročilý CQL editor",
         "options__worlist_fieldset_heading": "Seznam slov",
         "options__wordlist_page_size": "Velikost stránky (počet řádků)",
         "options__freq_fieldset_heading": "Frekvenční distribuce",

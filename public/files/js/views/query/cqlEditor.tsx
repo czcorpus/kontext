@@ -33,6 +33,12 @@ export interface CQLEditorProps {
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
 
+export interface CQLEditorFallbackProps {
+    value:string;
+    takeFocus:boolean;
+    inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
+}
+
 export interface CQLEditorViews {
     CQLEditorFallback:React.ComponentClass;
     CQLEditor:React.ComponentClass;
@@ -45,37 +51,25 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorProps, {query:string}> {
+    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps> {
 
         private _queryInputElement:React.RefObject<HTMLTextAreaElement>;
 
         constructor(props) {
             super(props);
-            this.state = {query: this.props.initialValue};
-            this.handleModelChange = this.handleModelChange.bind(this);
             this._queryInputElement = React.createRef();
         }
 
-        private handleModelChange() {
-            this.setState({query: queryModel.getQuery(this.props.sourceId)});
-        }
-
         componentDidMount() {
-            queryModel.addChangeListener(this.handleModelChange);
             if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
 
-        componentWillUnmount() {
-            queryModel.removeChangeListener(this.handleModelChange);
-        }
-
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={this._queryInputElement}
-                                value={this.state.query}
-                                onKeyDown={this.props.inputKeyHandler}
+                                value={this.props.value}
                                 onChange={this.props.inputChangeHandler}
                                 spellCheck={false} />;
         }

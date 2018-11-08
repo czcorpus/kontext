@@ -606,6 +606,13 @@ export namespace Kontext {
         csGetStateKey():string;
     }
 
+    export interface CorpusSwitchActionProps<T> {
+        key:string;
+        data:T;
+        prevCorpora:Immutable.List<string>;
+        currCorpora:Immutable.List<string>;
+    }
+
     export type AttrItem = {n:string; label:string};
 
     export type VirtualKeys = Array<Array<[string, string]>>;

@@ -707,7 +707,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 actionType: 'CORPUS_SWITCH_MODEL_RESTORE',
                 props: {
                     key: key,
-                    data: data
+                    data: data,
+                    prevCorpora: this.appNavig.getSwitchCorpPreviousCorpora(),
+                    currCorpora: [this.getCorpusIdent().id].concat(this.getConf<Array<string>>('alignedCorpora'))
                 }
             });
         });
