@@ -1,13 +1,23 @@
 @import "../../../css/shared/globals.less";
 
-ul.multiselect {
+ul.defaultTaghelper_PositionList {
     list-style-type: none;
     margin: 0;
     padding: 0;
     font-size: 9pt;
 }
 
-ul.multiselect {
+ul.defaultTaghelper_PositionList {
+
+
+    .defaultTaghelper_PositionLine {
+        margin: 0px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        clear: both;
+        max-height: 28em;
+    }
+
     li span.status-text {
         padding-left: 5px;
         color: #777;
@@ -67,7 +77,7 @@ ul.multiselect {
     li td.checkbox-cell {
         width: 15px;
     }
-} // ul.multiselect
+} // ul.defaultTaghelper_PositionList
 
 
 .tag-builder-widget h3 {

@@ -278,7 +278,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         return (
-            <li style={{margin: '0px', overflow: 'hidden', clear: 'both'}}>
+            <li className="defaultTaghelper_PositionLine">
                 <a className={linkClass} onClick={clickHandler}>
                     <span className="pos-num">{props.lineIdx + 1})</span> {props.position['label']}
                     <span className="status-text">[ {getAvailableChildren().size} ]</span>
@@ -319,7 +319,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         render() {
             return (
-                <ul className="multiselect">
+                <ul className="defaultTaghelper_PositionList">
                     {this.props.positions.map(
                         (item, i) => <PositionLine key={this._mkid(i)} position={item}
                                                     lineIdx={i} clickHandler={this._lineClickHandler}
