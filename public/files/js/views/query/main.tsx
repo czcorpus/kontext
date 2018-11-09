@@ -451,7 +451,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === 13 && !evt.shiftKey) {
+            if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey) {
                     if (this.props.operationIdx !== undefined) {
                         dispatcher.dispatch({
