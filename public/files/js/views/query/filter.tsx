@@ -171,27 +171,6 @@ export function init(
             };
         }
 
-        _keyEventHandler(evt) {
-            if (evt.keyCode === KeyCodes.ENTER && !evt.ctrlKey && !evt.shiftKey) {
-                if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch({
-                        actionType: 'BRANCH_QUERY',
-                        props: {operationIdx: this.props.operationIdx}
-                    });
-
-                } else {
-                    dispatcher.dispatch({
-                        actionType: 'FILTER_QUERY_APPLY_FILTER',
-                        props: {
-                            filterId: this.props.filterId
-                        }
-                    });
-                }
-                evt.stopPropagation();
-                evt.preventDefault();
-            }
-        }
-
         _modelChangeHandler() {
             const ans = this._fetchState();
             ans['contextFormVisible'] = this.state.contextFormVisible;
@@ -235,6 +214,27 @@ export function init(
                     value: evt.target.value
                 }
             });
+        }
+
+        _keyEventHandler(evt) {
+            if (evt.keyCode === KeyCodes.ENTER && !evt.ctrlKey && !evt.shiftKey) {
+                if (this.props.operationIdx !== undefined) {
+                    dispatcher.dispatch({
+                        actionType: 'BRANCH_QUERY',
+                        props: {operationIdx: this.props.operationIdx}
+                    });
+
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'FILTER_QUERY_APPLY_FILTER',
+                        props: {
+                            filterId: this.props.filterId
+                        }
+                    });
+                }
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
         }
 
         _handleSubmit() {
@@ -301,7 +301,7 @@ export function init(
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
                                 useCQLEditor={this.state.useCQLEditor}
-                                onEnterKey={()=>undefined} />
+                                onEnterKey={this._handleSubmit} />
                         </tbody>
                     </table>
                     <div className="buttons">
@@ -398,7 +398,8 @@ export function init(
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
                                 useCQLEditor={this.state.useCQLEditor}
-                                onEnterKey={()=>undefined} />
+                                onEnterKey={this._handleSubmit}
+                                takeFocus={false} />
                         </tbody>
                     </table>
                     <div className="buttons">
