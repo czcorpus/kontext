@@ -63,7 +63,8 @@ if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=fun
 <!-- --------------------- -->
 #if $current_action != 'compatibility'
 <script type="text/javascript">
-if (((/*@cc_on!@*/false) || document['documentMode']) && window.navigator.userAgent.indexOf('MSIE') > -1) {
+if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
+        (window.navigator.userAgent.indexOf('MSIE') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1)) {
     window.location.href = "${root_url}compatibility";
 }
 </script>
