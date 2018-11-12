@@ -17,8 +17,16 @@ GlobPart =
     GlobCond (_ BINAND _ GlobCond)*
 
 GlobCond =
-    NUMBER DOT AttName (__ NOT)? _ EQ _ NUMBER DOT AttName
+    NUMBER DOT AttName _ NOT? EQ _ NUMBER DOT AttName
     / KW_FREQ LPAREN NUMBER DOT AttName RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER
+
+WithinContainingPart =
+    Sequence
+    / WithinNumber
+    / NOT? AlignedPart
+
+Structure =
+    AttName _ AttValList?
 
 Position =
     OnePosition
@@ -30,14 +38,6 @@ OnePosition =
     / TEQ NUMBER? RegExp
     / KW_MU
     / MuPart
-
-WithinContainingPart =
-    Sequence
-    / WithinNumber
-    / NOT? AlignedPart
-
-Structure =
-    AttName _ AttValList?
 
 // -------------------- meet/union query --------------------
 
@@ -62,11 +62,12 @@ Seq =
 
 Repetition =
     AtomQuery RepOpt?
-    / LSTRUCT (Structure _ SLASH? / SLASH _ Structure) RSTRUCT
+    / LSTRUCT Structure _ SLASH? RSTRUCT
+    / LSTRUCT SLASH _ Structure RSTRUCT
 
 AtomQuery =
     Position
-    / LPAREN Sequence (_ NOT? _ KW_WITHIN _ WithinContainingPart)* RPAREN
+    / LPAREN Sequence (_ NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* RPAREN
 
 AlignedPart =
     AttName COLON _ Sequence  // parallel alignment
@@ -192,8 +193,6 @@ KW_WS = 'ws'
 KW_TERM = 'term'
 KW_SWAP = 'swap'
 KW_CCOLL = 'ccoll'
-
-__ = [ \t\n\r]+
 
 _ "whitespace"
   = [ \t\n\r]*
