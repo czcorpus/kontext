@@ -537,6 +537,10 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
             this.queries = this.queries.filter((_, k) => props.currCorpora.includes(k)).toMap();
             this.queryTypes = this.queryTypes.filter((_, k) => props.currCorpora.includes(k)).toMap();
             this.matchCaseValues = this.matchCaseValues.filter((_, k) => props.currCorpora.includes(k)).toMap();
+
+            const concArgs = this.pageModel.getConf<{[opKey:string]:AjaxResponse.QueryFormArgs}>('ConcFormsArgs');
+            this.tagBuilderSupport = Immutable.Map<string, boolean>(concArgs['__new__'] ? concArgs['__new__'].tag_builder_support : {});
+
             this.notifyChangeListeners();
         }
     }
