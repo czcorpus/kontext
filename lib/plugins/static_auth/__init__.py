@@ -23,29 +23,7 @@ Please note that this is not intended for installation with many
 users as sharing a single token between many people is not
 very secure.
 
-required xml conf:
-
-element auth {
-    element module { "static_auth" }
-    element auth_cookie_name { "kontext_session" }
-    element anonymous_user_id {
-        xsd:integer
-    }
-    element api_key_cookie_name {
-        attribute extension-by { "default" }
-        text
-    }
-    element api_key {
-        attribute extension-by { "default" }
-        text
-    }
-    element corpora {
-        attribute extension-by { "default" }
-        element item* {
-            text
-        }
-    }
-}
+required xml conf: please see ./config.rng
 """
 import hashlib
 from plugins.abstract.auth import AbstractRemoteAuth
@@ -53,8 +31,9 @@ from plugins.abstract.auth import AbstractRemoteAuth
 
 class StaticAuth(AbstractRemoteAuth):
 
-    def __init__(self, anonymous_id, corpora, api_key, api_key_cookie_name):
+    def __init__(self, anonymous_id, api_user_id, corpora, api_key, api_key_cookie_name):
         super(StaticAuth, self).__init__(anonymous_id)
+        self._api_user_id = api_user_id
         self._corpora = corpora
         self._api_key = api_key
         self._api_key_cookie_name = api_key_cookie_name
@@ -78,7 +57,7 @@ class StaticAuth(AbstractRemoteAuth):
             return dict((x, None) for x in self._corpora)
 
     def get_user_info(self, plugin_api):
-        return dict(id=self._anonymous_id + 1, user='apiuser', fullname='API user')
+        return dict(id=self._api_user_id, user='apiuser', fullname='API user')
 
     def _validate_key(self, k):
         return self._api_key == hashlib.sha256(k).hexdigest()
@@ -91,7 +70,8 @@ class StaticAuth(AbstractRemoteAuth):
         if api_key and self._validate_key(api_key):
             if self.is_anonymous(curr_user_id):
                 plugin_api.session.clear()
-            plugin_api.session['user'] = dict(id=1, user='api_user', fullname='API user')
+            plugin_api.session['user'] = dict(
+                id=self._api_user_id, user='api_user', fullname='API user')
         else:
             if not self.is_anonymous(curr_user_id):
                 plugin_api.session.clear()
@@ -105,6 +85,7 @@ def create_instance(conf):
     """
     plugin_conf = conf.get('plugins', 'auth')
     return StaticAuth(anonymous_id=int(plugin_conf['anonymous_user_id']),
+                      api_user_id=int(plugin_conf['default:api_user_id']),
                       corpora=plugin_conf.get('default:corpora', []),
                       api_key=plugin_conf['default:api_key'],
                       api_key_cookie_name=plugin_conf['default:api_key_cookie_name'])

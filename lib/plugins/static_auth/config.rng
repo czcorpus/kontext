@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="auth">
+            <element name="module">
+                <value>static_auth</value>
+            </element>
+            <element name="auth_cookie_name">
+                <text />
+            </element>
+            <element name="anonymous_user_id">
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="api_key_cookie_name">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="api_key">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="api_user_id">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="corpora">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <oneOrMore>
+                    <element name="item">
+                        <text />
+                    </element>
+                </oneOrMore>
+            </element>
+        </element>
+    </start>
+</grammar>
