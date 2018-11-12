@@ -55,8 +55,7 @@ import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins.ucnk_conc_persistence2.archive import Archiver
 from plugins import inject
-from controller import exposed
-from controller.errors import UserActionException, ForbiddenException
+from controller.errors import ForbiddenException, NotFoundException
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
@@ -242,13 +241,14 @@ class ConcPersistence(AbstractConcPersistence):
 
     def archive(self, user_id, conc_id, revoke=False):
         data = self.db.get(mk_key(conc_id))
+        if data is None:
+            raise NotFoundException('Concordance {0} not found'.format(conc_id))
         stored_user_id = data.get('user_id', None)
         if user_id != stored_user_id:
             raise ForbiddenException(
                 'Cannot change status of a concordance belonging to another user')
 
         curr_time = time.time()
-        data = self.db.get(mk_key(conc_id))
         cursor = self._archive.cursor()
         if revoke:
             cursor.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
