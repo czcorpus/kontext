@@ -53,6 +53,7 @@ import logging
 
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
+from plugins.ucnk_conc_persistence2.archive import Archiver
 from plugins import inject
 from controller import exposed
 from controller.errors import UserActionException, ForbiddenException
@@ -105,35 +106,6 @@ def mk_short_id(s, min_length=6):
     while id_exists(ans[:i]) and i < max_length:
         i += 1
     return ans[:i]
-
-
-def create_arch_conc_action(concdb, archdb):
-
-    @exposed(access_level=1, return_type='json', skip_corpus_init=True)
-    def archive_concordance(ctrl, request):
-        conc_key = request.args.get('conc_key')
-
-        if request.method == 'POST':
-            data = concdb.get(mk_key(conc_key))
-            if data:
-                save_time = int(round(time.time()))
-                cursor = archdb.cursor()
-                cursor.execute('INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                               [conc_key, json.dumps(data), save_time, 0])
-                archdb.commit()
-            else:
-                raise UserActionException('Concordance key \'%s\' not found.' % (conc_key,))
-            return dict(save_time=save_time, conc_key=conc_key)
-        elif request.method == 'GET':
-            cursor = archdb.cursor()
-            cursor.execute('SELECT * FROM archive WHERE id = ?', [conc_key])
-            row = cursor.fetchone()
-            return dict(data=json.loads(row[1]) if row is not None else None)
-        else:
-            ctrl.set_not_found()
-            return {}
-
-    return archive_concordance
 
 
 class ConcPersistence(AbstractConcPersistence):
@@ -274,7 +246,17 @@ class ConcPersistence(AbstractConcPersistence):
         if user_id != stored_user_id:
             raise ForbiddenException(
                 'Cannot change status of a concordance belonging to another user')
-        pass  # we don't have to do anything here as we archive all the queries by default
+
+        curr_time = time.time()
+        data = self.db.get(mk_key(conc_id))
+        cursor = self._archive.cursor()
+        if revoke:
+            cursor.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
+        else:
+            cursor.execute(
+                'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                (conc_id, json.dumps(data), curr_time, 0))
+        self._archive.commit()
 
     def is_archived(self, conc_id):
         return True  # we ignore archiver task delay and say "True" for all the items

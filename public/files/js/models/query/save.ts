@@ -158,11 +158,14 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             case 'QUERY_MAKE_CONCORDANCE_PERMANENT':
                 this.layoutModel.ajax<MakePermanentResponse>(
                     'POST',
-                    this.layoutModel.createActionUrl('archive_concordance'),
-                    {
-                        code: state.queryId,
-                        revoke: action.props['revoke'] ? '1' : '0'
-                    }
+                    this.layoutModel.createActionUrl(
+                        'archive_concordance',
+                        [
+                            ['code', state.queryId],
+                            ['revoke', action.props['revoke'] ? '1' : '0']
+                        ]
+                    ),
+                    {}
 
                 ).then(
                     (data) => {

@@ -295,8 +295,8 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def archive_concordance(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
-            revoke = bool(int(request.form['revoke']))
-            cp.archive(self.session_get('user', 'id'), request.form['code'], revoke=revoke)
+            revoke = bool(int(request.args['revoke']))
+            cp.archive(self.session_get('user', 'id'), request.args['code'], revoke=revoke)
         return dict(revoked=revoke)
 
     @exposed(access_level=1, return_type='json', skip_corpus_init=True)
