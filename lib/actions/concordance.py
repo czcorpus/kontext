@@ -296,8 +296,9 @@ class Actions(Querying):
     def archive_concordance(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
             revoke = bool(int(request.args['revoke']))
-            cp.archive(self.session_get('user', 'id'), request.args['code'], revoke=revoke)
-        return dict(revoked=revoke)
+            cn, row = cp.archive(self.session_get('user', 'id'),
+                                 request.args['code'], revoke=revoke)
+        return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
     @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def get_stored_conc_archived_status(self, request):

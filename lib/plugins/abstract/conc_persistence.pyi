@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, Any
 
 class AbstractConcPersistence(object):
 
@@ -28,7 +28,7 @@ class AbstractConcPersistence(object):
 
     def store(self, user_id:int, curr_data:Dict, prev_data:Optional[Dict]) -> str: ...
 
-    def archive(self, user_id:int, conc_id:str, revoke:Optional[bool]) -> None: ...
+    def archive(self, user_id:int, conc_id:str, revoke:Optional[bool]) -> Tuple[int, Dict[str, Any]]: ...
 
     def is_archived(self, conc_id:str) -> bool: ...
 
