@@ -204,6 +204,15 @@ class ConcPersistence(AbstractConcPersistence):
                     break
         return data
 
+    def find_key_db(self, data_id):
+        for arch_db in self._archives:
+            cursor = arch_db.cursor()
+            tmp = cursor.execute(
+                'SELECT COUNT(*) FROM archive WHERE id = ?', (data_id,)).fetchone()
+            if tmp[0] > 0:
+                return arch_db
+        return None
+
     def store(self, user_id, curr_data, prev_data=None):
         """
         Stores current operation (defined in curr_data) into the database. If also prev_date argument is
@@ -240,23 +249,43 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
     def archive(self, user_id, conc_id, revoke=False):
-        data = self.db.get(mk_key(conc_id))
-        if data is None:
-            raise NotFoundException('Concordance {0} not found'.format(conc_id))
-        stored_user_id = data.get('user_id', None)
-        if user_id != stored_user_id:
-            raise ForbiddenException(
-                'Cannot change status of a concordance belonging to another user')
-
-        curr_time = time.time()
-        cursor = self._archive.cursor()
-        if revoke:
-            cursor.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
-        else:
+        archive_db = self.find_key_db(conc_id)
+        if archive_db:
+            cursor = self._archive.cursor()
             cursor.execute(
-                'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                (conc_id, json.dumps(data), curr_time, 0))
+                'SELECT id, data, created integer, num_access, last_access FROM archive WHERE id = ? LIMIT 1',
+                (conc_id,))
+            archived_rec = json.loads(cursor.fetchone()[1])
+        else:
+            cursor = None
+            archived_rec = None
+
+        if revoke:
+            if archived_rec:
+                cursor.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
+                ans = 1
+            else:
+                raise NotFoundException('Concordance {0} not archived'.format(conc_id))
+        else:
+            cursor = self._archive.cursor()  # writing to the latest archive
+            data = self.db.get(mk_key(conc_id))
+            if data is None and archived_rec is not None:
+                raise NotFoundException('Concordance {0} not found'.format(conc_id))
+            elif archived_rec:
+                ans = 0
+            else:
+                stored_user_id = data.get('user_id', None)
+                if user_id != stored_user_id:
+                    raise ForbiddenException(
+                        'Cannot change status of a concordance belonging to another user')
+                curr_time = time.time()
+                cursor.execute(
+                    'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                    (conc_id, json.dumps(data), curr_time, 0))
+                archived_rec = data
+                ans = 1
         self._archive.commit()
+        return ans, archived_rec
 
     def is_archived(self, conc_id):
         return True  # we ignore archiver task delay and say "True" for all the items

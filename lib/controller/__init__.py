@@ -906,7 +906,6 @@ class Controller(object):
             self._headers['Content-Type'] = 'application/xml'
         elif return_type == 'plain':
             self._headers['Content-Type'] = 'text/plain'
-        logging.getLogger(__name__).debug('self._headers: {0}'.format(self._headers))
         ans = []
         for k, v in sorted([x for x in self._headers.items() if bool(x[1])], key=lambda item: item[0]):
             if type(v) is unicode:

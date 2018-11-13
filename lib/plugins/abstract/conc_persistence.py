@@ -93,6 +93,11 @@ class AbstractConcPersistence(object):
         arguments:
         user_id -- user who wants to perform the operation
         conc_id -- an identifier of the concordance
+
+        returns:
+        a 2-tuple:
+         0: number of updates performed (typically - 0 for no need to update anything, 1 - written archive item
+         1: respective data row
         """
         raise NotImplementedError()
 
