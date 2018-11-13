@@ -148,7 +148,7 @@ class QueryFormArgs(ConcFormArgs):
 
     def _add_corpus_metadata(self, corpus_id):
         with plugins.runtime.TAGHELPER as th:
-            self.tag_builder_support[corpus_id] = th.tag_variants_file_exists(corpus_id)
+            self.tag_builder_support[corpus_id] = th.tags_enabled_for(corpus_id)
 
         with plugins.runtime.CORPARCH as ca:
             corp_info = ca.get_corpus_info('en_US', corpus_id)
@@ -193,7 +193,7 @@ class FilterFormArgs(ConcFormArgs):
 
     def _add_corpus_metadata(self):
         with plugins.runtime.TAGHELPER as th:
-            self.tag_builder_support = th.tag_variants_file_exists(self.maincorp)
+            self.tag_builder_support = th.tags_enabled_for(self.maincorp)
 
         with plugins.runtime.CORPARCH as ca:
             corp_info = ca.get_corpus_info('en_US', self.maincorp)

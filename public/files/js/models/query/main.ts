@@ -540,6 +540,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
             const concArgs = this.pageModel.getConf<{[opKey:string]:AjaxResponse.QueryFormArgs}>('ConcFormsArgs');
             this.tagBuilderSupport = Immutable.Map<string, boolean>(concArgs['__new__'] ? concArgs['__new__'].tag_builder_support : {});
+            this.supportedWidgets = this.determineSupportedWidgets();
 
             this.notifyChangeListeners();
         }
