@@ -40,6 +40,7 @@ import hashlib
 import werkzeug.urls
 import werkzeug.http
 import werkzeug.exceptions
+from Cheetah.Template import Template
 
 import plugins
 import settings
@@ -768,6 +769,10 @@ class Controller(object):
         else:
             return dict(messages=[user_msg])
 
+    @staticmethod
+    def _is_allowed_explicit_out_format(f):
+        return f in ('json', 'html', 'xml', 'plain')
+
     def run(self, path=None):
         """
         This method wraps all the processing of an HTTP request.
@@ -794,6 +799,13 @@ class Controller(object):
             self.init_session()
             if self.is_action(methodname, action_metadata):
                 named_args = self.pre_dispatch(methodname, named_args, action_metadata)
+                if self.args.format:
+                    if self._is_allowed_explicit_out_format(self.args.format):
+                        return_type = self.args.format
+                    else:
+                        return_type = 'text'
+                        raise UserActionException(
+                            u'Unknown output format: {0}'.format(self.args.format))
                 self._pre_action_validate()
                 tmpl, result = self.process_action(methodname, named_args)
             else:
@@ -835,7 +847,8 @@ class Controller(object):
         headers += self.output_headers(return_type)
         output = StringIO.StringIO()
         if self._status < 300 or self._status >= 400:
-            self.output_result(methodname, tmpl, result, action_metadata, outf=output)
+            self.output_result(methodname, tmpl, result, action_metadata,
+                               return_type=return_type, outf=output)
         ans_body = output.getvalue()
         output.close()
         return self._export_status(), headers, self._uses_valid_sid, ans_body
@@ -866,7 +879,8 @@ class Controller(object):
             method_ans = self._invoke_legacy_action(method, named_args)
         tpl_path = action_metadata['template']
         if not tpl_path:
-            tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
+            tpl_path = os.path.join(self.get_mapping_url_prefix()[
+                                    1:], '{0}.tmpl'.format(methodname))
         return tpl_path, method_ans
 
     def urlencode(self, key_val_pairs):
@@ -890,7 +904,9 @@ class Controller(object):
             self._headers['Content-Type'] = 'application/json'
         elif return_type == 'xml':
             self._headers['Content-Type'] = 'application/xml'
-
+        elif return_type == 'plain':
+            self._headers['Content-Type'] = 'text/plain'
+        logging.getLogger(__name__).debug('self._headers: {0}'.format(self._headers))
         ans = []
         for k, v in sorted([x for x in self._headers.items() if bool(x[1])], key=lambda item: item[0]):
             if type(v) is unicode:
@@ -901,21 +917,19 @@ class Controller(object):
             ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
         return ans
 
-    def output_result(self, methodname, template, result, action_metadata, outf,
-                      return_template=False):
+    def output_result(self, methodname, template, result, action_metadata, return_type, outf):
         """
         Renders a response body
         """
-        from Cheetah.Template import Template
-        # any result with custom serialization
-        if action_metadata['return_type'] == 'plain':
-            outf.write(str(result))
-        elif callable(result):
+        if callable(result):
             outf.write(result())
-        # JSON with simple serialization (dict -> string)
-        elif action_metadata['return_type'] == 'json':
+        elif return_type == 'plain':
+            outf.write(str(result))
+        elif return_type == 'json':
             json.dump(result, outf)
-        # Template
+        elif return_type == 'xml':
+            from templating import Type2XML
+            outf.write(Type2XML.to_xml(result))
         elif type(result) is DictType:
             self.add_globals(result, methodname, action_metadata)
             if template.endswith('.tmpl'):
@@ -923,8 +937,6 @@ class Controller(object):
                 tpl_ans = template_class(searchList=[result, self.args])
             else:
                 tpl_ans = Template(template, searchList=[result, self.args])
-            if return_template:
-                return tpl_ans
             tpl_ans.respond(CheetahResponseFile(outf))
 
     def user_is_anonymous(self):
