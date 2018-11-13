@@ -920,7 +920,9 @@ export class ViewPage {
                 this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sample');
 
             } else {
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-filter');
+                if (!this.layoutModel.getConf<boolean>('anonymousUser')) {
+                    this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-filter');
+                }
                 this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sorting');
                 this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'shuffle');
                 this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sample');

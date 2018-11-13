@@ -150,9 +150,11 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     }> = (props) => {
 
         return (
-            <span className="disabled">
-                {props.data.label}
-            </span>
+            <li className="disabled">
+                <span>
+                    {props.data.label}
+                </span>
+            </li>
         );
     };
 
