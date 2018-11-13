@@ -293,7 +293,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 <>
                 {props.output.kwic.map((item, i, itemList) =>
                         <KwicChunk key={`kc-${i}`} i={i} item={item} itemList={itemList} prevBlockClosed={props.output.left.get(-1)}
-                                hasKwic={hasKwic} />)
+                                hasKwic={hasKwic} lineIdx={props.lineIdx} />)
                 }
                 </>
             </td>
@@ -344,6 +344,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     const KwicChunk:React.SFC<{
         i:number;
+        lineIdx:number;
         itemList:Immutable.Iterable<number, TextChunk>;
         item:TextChunk;
         prevBlockClosed:TextChunk;
@@ -355,11 +356,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         const renderFirst = () => {
             if (prevClosed && props.item.openLink) {
-                return <extras.AudioLink t="+" lineIdx={this.props.lineIdx}
+                return <extras.AudioLink t="+" lineIdx={props.lineIdx}
                                     chunks={[prevClosed, props.item]} />;
 
             } else if (props.i > 0 && props.itemList.get(props.i - 1).closeLink) {
-                return <extras.AudioLink t="+" lineIdx={this.props.lineIdx}
+                return <extras.AudioLink t="+" lineIdx={props.lineIdx}
                                     chunks={[props.itemList.get(props.i - 1), props.item]} />;
             }
             return null;
@@ -496,7 +497,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                                     corpusOutput.tokenNumber, this.props.lineIdx)}>
                         {corpusOutput.kwic.map((item, i, itemList) =>
                                 <KwicChunk key={`kc-${i}`} i={i} itemList={itemList} item={item}
-                                        prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic} />)
+                                        prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic}
+                                        lineIdx={this.props.lineIdx} />)
                         }
                     </span>
                     <span onClick={handleTokenClick}>
