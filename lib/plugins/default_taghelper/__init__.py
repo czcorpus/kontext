@@ -106,7 +106,7 @@ class Taghelper(AbstractTaghelper):
             raise TagHelperException('Empty corpus name')
         return '%s/%s' % (self._conf['default:tags_src_dir'], corpus_name)
 
-    def tag_variants_file_exists(self, corpus_name):
+    def tags_enabled_for(self, corpus_name):
         """
         Tests whether the path to the provided corpus_name exists
 

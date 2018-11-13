@@ -19,23 +19,22 @@
 
 class AbstractTaghelper(object):
 
-    def tag_variants_file_exists(self, corpus_id):
+    """
+    Please note that taghelper is not an instance of CorpusDependentPlugin
+    even if it would sound reasonable. The reason is that e.g. in case of
+    parallel corpora, tags may not be enabled for primary corpus but they
+    can be enabled for one or more aligned corpora. So it is easier to
+    enable the plug-in no matter what corpus in on and make some additional
+    tests when instantiating query/filter form properties (there we
+    use tags_enabled_for method).
+    """
+
+    def tags_enabled_for(self, corpus_id):
         """
         Test whether tag variant data exist for a specified
         corpus.
 
         arguments:
         corpus_id -- a corpus identifier
-        """
-        raise NotImplementedError()
-
-    def load_tag_descriptions(self, tagset_name, lang):
-        """
-        Load tags definition as specified by a respective
-        client-side widget.
-
-        arguments:
-        tagset_name -- an identifier used in tagset definition XML
-        lang -- user language (e.g. en_US, cs_CZ)
         """
         raise NotImplementedError()
