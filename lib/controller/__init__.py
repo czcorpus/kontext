@@ -922,13 +922,13 @@ class Controller(object):
         """
         if callable(result):
             outf.write(result())
-        elif return_type == 'plain':
-            outf.write(str(result))
         elif return_type == 'json':
             json.dump(result, outf)
         elif return_type == 'xml':
             from templating import Type2XML
             outf.write(Type2XML.to_xml(result))
+        elif return_type == 'plain' and type(result) is not DictType:
+            outf.write(str(result))
         elif type(result) is DictType:
             self.add_globals(result, methodname, action_metadata)
             if template.endswith('.tmpl'):

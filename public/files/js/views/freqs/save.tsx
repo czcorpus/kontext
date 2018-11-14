@@ -20,6 +20,7 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import {FreqResultsSaveModel} from '../../models/freqs/save';
 import {ActionDispatcher} from '../../app/dispatcher';
 
@@ -254,10 +255,10 @@ export function init(
 
         _renderFormatDependentOptions() {
             switch (this.state.saveformat) {
-                case 'xml':
+                case SaveData.Format.XML:
                     return <TRIncludeHeadingCheckbox value={this.state.includeHeading} />;
-                case 'csv':
-                case 'xlsx':
+                case SaveData.Format.CSV:
+                case SaveData.Format.XLSX:
                     return <TRColHeadersCheckbox value={this.state.includeColHeaders} />
                 default:
                 return <tr><td colSpan={2} /></tr>;

@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -47,7 +47,7 @@ export class FreqResultsSaveModel extends StatefulModel {
 
     private formIsActive:boolean;
 
-    private saveformat:string;
+    private saveformat:SaveData.Format;
 
     private includeColHeaders:boolean;
 
@@ -69,7 +69,7 @@ export class FreqResultsSaveModel extends StatefulModel {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formIsActive = false;
-        this.saveformat = 'csv';
+        this.saveformat = SaveData.Format.CSV;
         this.fromLine = {value: '1', isInvalid: false, isRequired: true};
         this.toLine = {value: '', isInvalid: false, isRequired: false};
         this.includeHeading = false;
@@ -165,7 +165,7 @@ export class FreqResultsSaveModel extends StatefulModel {
         args.set('to_line', this.toLine.value);
         args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
-            `frequencies.${this.saveformat}`,
+            `frequencies.${SaveData.formatToExt(this.saveformat)}`,
             this.layoutModel.createActionUrl('savefreq', args.items())
         );
     }
@@ -174,7 +174,7 @@ export class FreqResultsSaveModel extends StatefulModel {
         return this.formIsActive;
     }
 
-    getSaveformat():string {
+    getSaveformat():SaveData.Format {
         return this.saveformat;
     }
 

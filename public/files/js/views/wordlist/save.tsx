@@ -20,6 +20,7 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import {ActionDispatcher} from '../../app/dispatcher';
 import { WordlistSaveModel } from '../../models/wordlist/save';
 import {CommonViews} from '../common';
@@ -124,7 +125,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
         includeHeading:boolean;
 
     }> = (props) => {
-        if (props.saveFormat === 'csv' || props.saveFormat === 'xlsx') {
+        if (props.saveFormat === SaveData.Format.CSV || props.saveFormat === SaveData.Format.XLSX) {
             return <TRColHeadingSelector value={props.includeColHeaders} />;
 
         } else {
