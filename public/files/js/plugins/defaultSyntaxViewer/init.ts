@@ -20,7 +20,6 @@
 
 /// <reference path="./js-treex-view.d.ts" />
 
-import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -103,7 +102,10 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
             this.target.removeChild(this.target.firstChild);
         }
         const treexFrame = window.document.createElement('div');
-        treexFrame.style['width'] = `${(window.innerWidth - window.innerWidth * 0.05).toFixed(0)}px`;
+        treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;
+        treexFrame.style['height'] = `${(window.innerHeight - 70).toFixed(0)}px`;
+        treexFrame.style['overflow'] = 'auto';
+
         $(this.target).append(treexFrame);
         $(treexFrame).treexView(this.data);
     }
