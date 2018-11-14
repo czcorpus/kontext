@@ -19,6 +19,7 @@
  */
 
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
@@ -42,7 +43,7 @@ export class WordlistSaveModel extends StatefulModel {
 
     private toLine:Kontext.FormValue<string>;
 
-    private saveFormat:string;
+    private saveFormat:SaveData.Format;
 
     private includeHeading:boolean;
 
@@ -62,7 +63,7 @@ export class WordlistSaveModel extends StatefulModel {
         this.saveLinkFn = saveLinkFn;
         this.wordlistArgsProviderFn = wordlistArgsProviderFn;
         this.toLine = {value: '', isInvalid: false, isRequired: true};
-        this.saveFormat = 'csv';
+        this.saveFormat = SaveData.Format.CSV;
         this.includeHeading = false;
         this.includeColHeaders = false;
         this.formIsActive = false;
@@ -133,7 +134,7 @@ export class WordlistSaveModel extends StatefulModel {
         args.set('saveformat', this.saveFormat);
         args.set('from_line', '1');
         args.set('to_line', this.toLine.value);
-        if (this.saveFormat === 'csv' || this.saveFormat === 'xlsx') {
+        if (this.saveFormat === SaveData.Format.CSV || this.saveFormat === SaveData.Format.XLSX) {
             args.set('colheaders', this.includeColHeaders ? '1' : '0');
             args.remove('heading');
 
@@ -142,7 +143,7 @@ export class WordlistSaveModel extends StatefulModel {
             args.remove('colheaders');
         }
         this.saveLinkFn(
-            `word-list.${this.saveFormat}`,
+            `word-list.${SaveData.formatToExt(this.saveFormat)}`,
             this.layoutModel.createActionUrl('wordlist/savewl', args.items())
         );
     }
@@ -155,7 +156,7 @@ export class WordlistSaveModel extends StatefulModel {
         return this.toLine;
     }
 
-    getSaveFormat():string {
+    getSaveFormat():SaveData.Format {
         return this.saveFormat;
     }
 

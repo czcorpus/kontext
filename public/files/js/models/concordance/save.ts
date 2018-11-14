@@ -19,11 +19,10 @@
  */
 
 import {Kontext} from '../../types/common';
-import {MultiDict} from '../../util';
+import {SaveData} from '../../app/navigation';
 import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import * as Immutable from 'immutable';
 
 
 export interface ConcSaveModelArgs {
@@ -41,7 +40,7 @@ export class ConcSaveModel extends StatefulModel {
 
     private formIsActive:boolean;
 
-    private saveformat:string;
+    private saveformat:SaveData.Format;
 
     private includeHeading:boolean;
 
@@ -62,7 +61,7 @@ export class ConcSaveModel extends StatefulModel {
     constructor({dispatcher, layoutModel, concSize, quickSaveRowLimit, saveLinkFn}:ConcSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.saveformat = 'csv';
+        this.saveformat = SaveData.Format.CSV;
         this.fromLine = {value: '1', isInvalid: false, isRequired: true};
         this.toLine = {value: `${concSize}`, isInvalid: false, isRequired: true};
         this.alignKwic = false;
@@ -160,7 +159,7 @@ export class ConcSaveModel extends StatefulModel {
         args.set('numbering', this.includeLineNumbers ? '1' : '0');
         args.set('align_kwic', this.alignKwic ? '1' : '0');
         this.saveLinkFn(
-            `concordance.${this.getSaveFormat()}`,
+            `concordance.${SaveData.formatToExt(this.getSaveFormat())}`,
             this.layoutModel.createActionUrl('saveconc', args.items())
         );
     }
@@ -178,7 +177,7 @@ export class ConcSaveModel extends StatefulModel {
         return this.toLine;
     }
 
-    getSaveFormat():string {
+    getSaveFormat():SaveData.Format {
         return this.saveformat;
     }
 

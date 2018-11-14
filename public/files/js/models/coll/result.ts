@@ -19,6 +19,7 @@
  */
 
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/main';
@@ -68,7 +69,7 @@ export class CollResultsSaveModel extends StatefulModel {
 
     private formIsActive:boolean;
 
-    private saveformat:string;
+    private saveformat:SaveData.Format;
 
     private includeColHeaders:boolean;
 
@@ -93,7 +94,7 @@ export class CollResultsSaveModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.mainModel = mainModel;
         this.formIsActive = false;
-        this.saveformat = 'csv';
+        this.saveformat = SaveData.Format.CSV;
         this.fromLine = {value: '1', isInvalid: false, isRequired: true};
         this.toLine = {value: '', isInvalid: false, isRequired: true};
         this.includeColHeaders = false;
@@ -200,7 +201,7 @@ export class CollResultsSaveModel extends StatefulModel {
         args.set('from_line', this.fromLine.value);
         args.set('to_line', this.toLine.value);
         this.saveLinkFn(
-            `collocation.${this.saveformat}`,
+            `collocation.${SaveData.formatToExt(this.saveformat)}`,
             this.layoutModel.createActionUrl('savecoll', args.items())
         );
     }
@@ -215,7 +216,7 @@ export class CollResultsSaveModel extends StatefulModel {
         super.notifyChangeListeners();
     }
 
-    getSaveformat():string {
+    getSaveformat():SaveData.Format {
         return this.saveformat;
     }
 

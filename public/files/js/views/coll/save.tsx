@@ -21,6 +21,7 @@
 import * as React from 'react';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import { CollResultsSaveModel } from '../../models/coll/result';
 
 
@@ -250,10 +251,10 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         _renderFormatDependentOptions() {
             switch (this.state.saveformat) {
-                case 'xml':
+                case SaveData.Format.XML:
                     return <TRIncludeHeadingCheckbox value={this.state.includeHeading} />;
-                case 'csv':
-                case 'xlsx':
+                case SaveData.Format.CSV:
+                case SaveData.Format.XLSX:
                     return <TRColHeadersCheckbox value={this.state.includeColHeaders} />
                 default:
                 return <span />;

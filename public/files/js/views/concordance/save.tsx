@@ -21,6 +21,7 @@
 import * as React from 'react';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
+import {SaveData} from '../../app/navigation';
 import { ConcSaveModel } from '../../models/concordance/save';
 
 
@@ -265,14 +266,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         _renderFormatDependentOptions() {
             switch (this.state.saveFormat) {
-            case 'text':
+            case SaveData.Format.TEXT:
                 return <>
                         <TRAlignKwicCheckbox key="opt-ak" value={this.state.alignKwic} />
                         <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />
                 </>;
-            case 'xml':
-            case 'xlsx':
-            case 'csv':
+            case SaveData.Format.XML:
+            case SaveData.Format.XLSX:
+            case SaveData.Format.CSV:
                 return <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />;
             default:
                 return null;

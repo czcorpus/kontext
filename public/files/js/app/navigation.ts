@@ -47,6 +47,31 @@ export function parseUrlArgs(args:string):Array<[string, string]> {
 }
 
 
+export namespace SaveData {
+
+    export enum Format {
+        CSV = 'csv',
+        TEXT = 'text',
+        XML = 'xml',
+        XLSX = 'xlsx'
+    }
+
+    export const formatToExt = (sf:Format):string => {
+        switch (sf) {
+            case Format.CSV:
+                return 'csv';
+            case Format.TEXT:
+                return 'txt';
+            case Format.XLSX:
+                return 'xlsx';
+            case Format.XML:
+                return 'xml';
+            default:
+                throw new Error(`Unknown safe format ${sf}`);
+        }
+    }
+}
+
 /**
  * NullHistory is a fallback object to be used
  * in browsers where HTML5 history is not available.
