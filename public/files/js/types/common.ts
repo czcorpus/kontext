@@ -131,6 +131,7 @@ export namespace Kontext {
         name:string;
         usesubcorp?:string;
         origSubcorpName?:string;
+        foreignSubcorp?:boolean;
     }
 
     /**

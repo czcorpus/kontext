@@ -367,6 +367,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         if (favId === null) {
             const item:common.GeneratedFavListItem = {
                 subcorpus_id: null,
+                subcorpus_orig_id: null,
                 corpora:[corpusId]
             };
             return this.pluginApi.ajax<SetFavItemResponse>(

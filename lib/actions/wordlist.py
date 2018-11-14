@@ -98,7 +98,7 @@ class Wordlist(ConcActions):
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
         out['freq_figures'] = self.FREQ_FIGURES
-        self._export_subcorpora_list(self.args.corpname, out)
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
     @exposed(access_level=1, legacy=True, http_method='POST', page_model='wordlist')
@@ -225,7 +225,7 @@ class Wordlist(ConcActions):
             result['tasks'] = []
             result['SubcorpList'] = []
             result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
-            self._export_subcorpora_list(self.args.corpname, result)
+            self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
             return result
 
         except corplib.MissingSubCorpFreqFile as e:

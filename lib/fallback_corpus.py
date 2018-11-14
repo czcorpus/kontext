@@ -22,6 +22,12 @@ class EmptyCorpus(object):
     def __init__(self, **kwargs):
         self.cm = object()
         self.corpname = ''
+        self.subcname = None
+        self.is_published = False
+        self.orig_subcname = None
+        self.author = None
+        self.author_id = None
+        self.orig_spath = None
         for k, v in kwargs.items():
             if hasattr(self, k):
                 setattr(self, k, v)

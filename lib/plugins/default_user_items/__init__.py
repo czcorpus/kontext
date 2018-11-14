@@ -66,13 +66,15 @@ def set_favorite_item(ctrl, request):
         corp = ctrl.cm.get_Corpus(c_id, subcname=request.form['subcorpus_id'] if i == 0 else None)
         if i == 0:
             main_size = corp.search_size()
-        corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
+        corpora.append(dict(id=c_id, name=l10n.import_string(
+            corp.get_conf('NAME'), corp.get_conf('ENCODING'))))
     subcorpus_id = request.form['subcorpus_id']
+    subcorpus_orig_id = request.form['subcorpus_orig_id']
     item = FavoriteItem(dict(
-        name=' || '.join(c['name'] for c in corpora) +
-        (' / ' + subcorpus_id if subcorpus_id else ''),
+        name=u' || '.join(c['name'] for c in corpora) +
+        (u' / ' + subcorpus_orig_id if subcorpus_orig_id else u''),
         corpora=corpora,
-        subcorpus_id=request.form['subcorpus_id'],
+        subcorpus_id=subcorpus_id,
         size=main_size,
         size_info=l10n.simplify_num(main_size)
     ))

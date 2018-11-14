@@ -274,7 +274,7 @@ class Actions(Querying):
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        self._export_subcorpora_list(self.args.corpname, out)
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
 
         out['query_history_page_num_records'] = int(
             settings.get('plugins', 'query_storage')['page_num_records'])
@@ -376,7 +376,7 @@ class Actions(Querying):
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
-        self._export_subcorpora_list(self.args.corpname, out)
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         out['query_history_page_num_records'] = int(
             settings.get('plugins', 'query_storage')['page_num_records'])
         out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
@@ -1719,7 +1719,7 @@ class Actions(Querying):
                                               persist=False))
         self._attach_query_params(tmp_out)
         self._attach_aligned_query_params(tmp_out)
-        self._export_subcorpora_list(self.args.corpname, tmp_out)
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, tmp_out)
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)

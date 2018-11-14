@@ -50,7 +50,7 @@ class FavoriteItem(object):
         self.size = data.get('size', None)
         self.size_info = data.get('size_info', None)
         self.subcorpus_id = data.get('subcorpus_id', None)
-        self.ident = data.get('id', hashlib.md5(self.sort_key).hexdigest())
+        self.ident = data.get('id', hashlib.md5(self.sort_key.encode('utf-8')).hexdigest())
 
     @property
     def is_single_corpus(self):

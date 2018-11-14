@@ -187,6 +187,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 dataFavImp,
                 {
                     subcorpus_id: corpSelection.getCurrentSubcorpus(),
+                    subcorpus_orig_id: corpSelection.getCurrentSubcorpusOrigName(),
                     corpora: corpSelection.getCorpora().toArray()
                 }
             ),
@@ -650,7 +651,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      */
     getFullCorpusSelection():common.GeneratedFavListItem {
         return {
-            subcorpus_id: this.corpSelection.getCurrentSubcorpusOrigName(),
+            subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
+            subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
+            this.corpSelection.getCurrentSubcorpusOrigName() :
+                    this.corpSelection.getCurrentSubcorpus(),
             corpora: this.corpSelection.getCorpora().toArray()
         };
     };
