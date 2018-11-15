@@ -695,9 +695,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         const primaryCorpus = this.corpora.get(0);
         const args = this.pageModel.getConcArgs();
         args.set('corpname', primaryCorpus);
-        if (this.currentSubcorp) {
-            args.set('usesubcorp', this.currentSubcorp);
-        }
+        args.set('usesubcorp', this.currentSubcorp);
 
         if (this.corpora.size > 1) {
             args.set('maincorp', primaryCorpus);
