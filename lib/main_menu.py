@@ -317,7 +317,7 @@ class MenuGenerator(object):
             MenuItemInternal(MainMenu.NEW_QUERY('new-query'), te('Enter new query'), 'first_form')
             .add_args(
                 ('corpname', self._args['corpname']),
-                ('usecubcorp', self._args['usesubcorp']),
+                ('usesubcorp', self._args['usesubcorp']),
                 ('align', self._args['align'] if len(self._args['align']) else None))
             .mark_indirect()
         )
