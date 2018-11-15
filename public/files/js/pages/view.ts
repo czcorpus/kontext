@@ -34,7 +34,7 @@ import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../
 import {LineSelectionModel} from '../models/concordance/lineSelection';
 import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
 import {ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
-import {QueryFormProperties, QueryModel, fetchQueryFormArgs} from '../models/query/main';
+import {QueryFormProperties, QueryModel, fetchQueryFormArgs} from '../models/query/first';
 import {UsageTipsModel} from '../models/usageTips';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {QueryReplayModel, LocalQueryFormData} from '../models/query/replay';
@@ -54,7 +54,7 @@ import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/c
 import {ConcSaveModel} from '../models/concordance/save';
 import {ConcDashboard} from '../models/concordance/dashboard';
 import {TextTypesDistModel, TTCrit} from '../models/concordance/ttDistModel';
-import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/main';
+import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/first';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {init as sortFormInit, SortViews} from '../views/query/sort';

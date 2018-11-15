@@ -22,7 +22,7 @@ import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {GeneralQueryModel} from '../../models/query/main';
+import {GeneralQueryModel} from '../../models/query/common';
 
 
 export interface CQLEditorProps {

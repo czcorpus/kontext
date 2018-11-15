@@ -23,7 +23,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
 import {FilterModel} from '../../models/query/filter';
-import {WidgetsMap} from '../../models/query/main';
+import {WidgetsMap} from '../../models/query/common';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {FirstHitsModel} from '../../models/query/firstHits';

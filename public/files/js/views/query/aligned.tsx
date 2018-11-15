@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {InputModuleViews} from './input';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {WidgetsMap} from '../../models/query/main';
+import {WidgetsMap} from '../../models/query/common';
 import {PluginInterfaces} from '../../types/plugins';
 
 

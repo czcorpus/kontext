@@ -26,7 +26,7 @@ import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
 import {Kontext, KeyCodes} from '../../types/common';
-import {GeneralQueryModel} from '../../models/query/main';
+import {GeneralQueryModel} from '../../models/query/common';
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';

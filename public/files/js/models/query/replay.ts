@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {QueryModel} from './main';
+import {QueryModel} from './first';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {FilterModel} from './filter';
 import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from './sort';

@@ -23,7 +23,7 @@ import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {init as viewInit, Views as TreeCorparchViews} from './view';
-import {QueryModel} from '../../models/query/main';
+import {QueryModel} from '../../models/query/first';
 import { QuerySaveAsFormModel } from '../../models/query/save';
 
 declare var require:any;

@@ -24,7 +24,7 @@ import {StatelessModel} from '../../../models/base';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
-import {QueryInputSetQueryProps} from '../../../models/query/main';
+import {QueryInputSetQueryProps} from '../../../models/query/first';
 import {ActionDispatcher, ActionPayload, typedProps, SEDispatcher} from '../../../app/dispatcher';
 
 /**

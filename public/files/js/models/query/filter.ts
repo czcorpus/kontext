@@ -28,7 +28,7 @@ import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
-import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery, WidgetsMap} from './main';
+import {GeneralQueryFormProperties, GeneralQueryModel, appendQuery, WidgetsMap} from './common';
 
 
 /**
