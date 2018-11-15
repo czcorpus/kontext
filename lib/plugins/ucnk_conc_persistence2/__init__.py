@@ -251,7 +251,7 @@ class ConcPersistence(AbstractConcPersistence):
     def archive(self, user_id, conc_id, revoke=False):
         archive_db = self.find_key_db(conc_id)
         if archive_db:
-            cursor = self._archive.cursor()
+            cursor = archive_db.cursor()
             cursor.execute(
                 'SELECT id, data, created integer, num_access, last_access FROM archive WHERE id = ? LIMIT 1',
                 (conc_id,))
@@ -270,7 +270,7 @@ class ConcPersistence(AbstractConcPersistence):
         else:
             cursor = self._archive.cursor()  # writing to the latest archive
             data = self.db.get(mk_key(conc_id))
-            if data is None and archived_rec is not None:
+            if data is None and archived_rec is None:
                 raise NotFoundException('Concordance {0} not found'.format(conc_id))
             elif archived_rec:
                 ans = 0
