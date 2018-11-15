@@ -255,7 +255,8 @@ class ConcPersistence(AbstractConcPersistence):
             cursor.execute(
                 'SELECT id, data, created integer, num_access, last_access FROM archive WHERE id = ? LIMIT 1',
                 (conc_id,))
-            archived_rec = json.loads(cursor.fetchone()[1])
+            row = cursor.fetchone()
+            archived_rec = json.loads(row[1]) if row else None
         else:
             cursor = None
             archived_rec = None
