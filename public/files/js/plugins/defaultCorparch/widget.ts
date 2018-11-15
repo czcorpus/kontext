@@ -653,7 +653,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         return {
             subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
             subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
-            this.corpSelection.getCurrentSubcorpusOrigName() :
+            `#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
                     this.corpSelection.getCurrentSubcorpus(),
             corpora: this.corpSelection.getCorpora().toArray()
         };

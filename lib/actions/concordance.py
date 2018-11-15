@@ -1729,10 +1729,13 @@ class Actions(Querying):
             subcorpname=self.corp.subcname if corplib.is_subcorpus(self.corp) else None,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
-            corpusIdent=dict(id=self.args.corpname, name=self._human_readable_corpname(),
-                             variant=self._corpus_variant,
-                             usesubcorp=self.args.usesubcorp,
-                             origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp)),
+            corpusIdent=dict(
+                id=self.args.corpname, name=self._human_readable_corpname(),
+                variant=self._corpus_variant,
+                usesubcorp=self.args.usesubcorp,
+                origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp),
+                foreignSubcorp=(self.corp.author_id is not None and
+                                self.session_get('user', 'id') != self.corp.author_id)),
             currentArgs=[['corpname', self.args.corpname]],
             compiledQuery=[],
             concPersistenceOpId=None,

@@ -451,6 +451,7 @@ export class ViewPage {
             subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
             currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
             origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+            isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
             tagBuilderSupport: queryFormArgs.tag_builder_support,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),

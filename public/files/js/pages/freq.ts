@@ -237,6 +237,7 @@ class FreqPage {
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                 origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     actionPrefix: '',
@@ -387,6 +388,7 @@ class FreqPage {
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                     origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                     corpora: [this.layoutModel.getCorpusIdent().id],
                     availSubcorpora: []
                 });

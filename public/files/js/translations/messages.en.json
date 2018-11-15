@@ -156,6 +156,7 @@
         "global__public_subc_id_{id}": "The subcorpus is available via a permanent public code {id}",
         "global__click_to_see_help": "Click to see the help",
         "global__published_subcorp": "published",
+        "global__published_foreign_subcorp": "foreign",
         "global__published_subcorp_id": "public identifier",
         "global__markdown_supported": "Markdown supported",
         "global__subc_info_access_hd": "Access",

@@ -64,6 +64,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
     origSubcorpName:string;
+    isForeignSubcorpus:boolean;
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
@@ -340,6 +341,8 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
     private origSubcorpName:string;
 
+    private isForeignSubcorpus:boolean;
+
     private shuffleConcByDefault:boolean;
 
     private queries:Immutable.Map<string, string>; // corpname -> query
@@ -401,6 +404,7 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
         this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(props.subcorpList);
         this.currentSubcorp = props.currentSubcorp || '';
         this.origSubcorpName = props.origSubcorpName || '';
+        this.isForeignSubcorpus = !!props.isForeignSubcorpus;
         this.shuffleConcByDefault = props.shuffleConcByDefault;
         this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
         this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
@@ -441,11 +445,25 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                     if (payload.props['pubName']) {
                         this.currentSubcorp = payload.props['pubName'];
                         this.origSubcorpName = payload.props['subcorp'];
+                        this.isForeignSubcorpus = !!payload.props['foreign'];
 
                     } else {
                         this.currentSubcorp = payload.props['subcorp'];
                         this.origSubcorpName = payload.props['subcorp'];
+                        this.isForeignSubcorpus = false;
                     }
+                    const corpIdent = this.pageModel.getCorpusIdent();
+                    this.pageModel.setConf<Kontext.FullCorpusIdent>(
+                        'corpusIdent',
+                        {
+                            id: corpIdent.id,
+                            name: corpIdent.name,
+                            variant: corpIdent.variant,
+                            usesubcorp: this.currentSubcorp,
+                            origSubcorpName: this.origSubcorpName,
+                            foreignSubcorp: this.isForeignSubcorpus
+                        }
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
@@ -858,6 +876,10 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
 
     getCurrentSubcorpusOrigName():string {
         return this.origSubcorpName;
+    }
+
+    getIsForeignSubcorpus():boolean {
+        return this.isForeignSubcorpus;
     }
 
     getInputLanguages():Immutable.Map<string, string> {

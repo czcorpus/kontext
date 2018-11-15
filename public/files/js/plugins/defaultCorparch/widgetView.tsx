@@ -588,6 +588,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 props: {
                     subcorp: props.availSubcorpora.get(evt.target.value).v,
                     pubName: props.availSubcorpora.get(evt.target.value).pub,
+                    foreign: props.availSubcorpora.get(evt.target.value).foreign
                 }
             });
         };

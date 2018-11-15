@@ -156,6 +156,7 @@
         "global__public_subc_id_{id}": "Podkorpus je dostympny bez permanyntny kod publiczny {id}",
         "global__click_to_see_help": "Kliknij, żeby ôbejzdrzeć pōmoc",
         "global__published_subcorp": "ôpublikowane",
+        "global__published_foreign_subcorp": "foreign",
         "global__published_subcorp_id": "idyntyfikatōr publiczny",
         "global__markdown_supported": "Markdown je spiyrany",
         "global__subc_info_access_hd": "Dostymp",

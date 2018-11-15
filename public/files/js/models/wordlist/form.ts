@@ -59,11 +59,17 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     private layoutModel:PageModel;
 
-    private corpusIdent:Kontext.FullCorpusIdent;
+    private corpusId:string;
+
+    private corpusName:string;
+
+    private corpusVariant:string;
 
     private currentSubcorpus:string;
 
     private origSubcorpName:string;
+
+    private isForeignSubcorp:boolean;
 
     private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
@@ -105,9 +111,12 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
-        this.corpusIdent = corpusIdent;
+        this.corpusId = corpusIdent.id;
+        this.corpusName = corpusIdent.name;
+        this.corpusVariant = this.corpusVariant;
         this.currentSubcorpus = corpusIdent.usesubcorp;
         this.origSubcorpName = '';
+        this.isForeignSubcorp = corpusIdent.foreignSubcorp;
         this.layoutModel = layoutModel;
         this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
@@ -134,11 +143,25 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     if (payload.props['pubName']) {
                         this.currentSubcorpus = payload.props['pubName'];
                         this.origSubcorpName = payload.props['subcorp'];
+                        this.isForeignSubcorp = payload.props['foreign'];
 
                     } else {
                         this.currentSubcorpus = payload.props['subcorp'];
                         this.origSubcorpName = payload.props['subcorp'];
+                        this.isForeignSubcorp = false;
                     }
+                    const corpIdent = this.layoutModel.getCorpusIdent();
+                    this.layoutModel.setConf<Kontext.FullCorpusIdent>(
+                        'corpusIdent',
+                        {
+                            id: corpIdent.id,
+                            name: corpIdent.name,
+                            variant: corpIdent.variant,
+                            usesubcorp: this.currentSubcorpus,
+                            origSubcorpName: this.origSubcorpName,
+                            foreignSubcorp: this.isForeignSubcorp
+                        }
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SELECT_ATTR':
@@ -301,7 +324,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
 
     createSubmitArgs():MultiDict {
         const ans = new MultiDict();
-        ans.set('corpname', this.corpusIdent.id);
+        ans.set('corpname', this.corpusId);
         if (this.currentSubcorpus) {
             ans.set('usesubcorp', this.currentSubcorpus);
         }
@@ -446,7 +469,14 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
     }
 
     getCorpusIdent():Kontext.FullCorpusIdent {
-        return this.corpusIdent;
+        return {
+            id: this.corpusId,
+            name: this.corpusName,
+            variant: this.corpusVariant,
+            origSubcorpName: this.origSubcorpName,
+            usesubcorp: this.currentSubcorpus,
+            foreignSubcorp: this.isForeignSubcorp
+        };
     }
 
     getAllowsMultilevelWltype():boolean {

@@ -1324,7 +1324,7 @@ class Kontext(Controller):
                 srch = None
             if srch is None:
                 subcorp_list.insert(0, dict(v=self.corp.orig_subcname, n=self.corp.orig_subcname,
-                                            pub=self.corp.subcname))
+                                            pub=self.corp.subcname, foreign=True))
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
 

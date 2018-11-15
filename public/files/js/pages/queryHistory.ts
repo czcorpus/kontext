@@ -73,6 +73,7 @@ class QueryHistoryPage {
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                     origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                     corpora: [this.layoutModel.getCorpusIdent().id],
                     availSubcorpora: []
                 });

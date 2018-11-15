@@ -216,6 +216,7 @@ export class SubcorpForm {
                     dispatcher: this.layoutModel.dispatcher,
                     usesubcorp: this.corpusIdent.usesubcorp,
                     origSubcorpName: this.corpusIdent.origSubcorpName,
+                    foreignSubcorp: this.corpusIdent.foreignSubcorp,
                     corpora: [this.corpusIdent.id],
                     availSubcorpora: []
                 });

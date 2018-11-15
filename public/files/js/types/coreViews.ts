@@ -252,6 +252,7 @@ export namespace CoreViews {
             corpname:string;
             usesubcorp:string;
             origSubcorpName:string;
+            foreignSubcorp:boolean;
             humanCorpname:string;
         }
 
