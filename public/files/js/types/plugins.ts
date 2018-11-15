@@ -237,6 +237,7 @@ export namespace PluginInterfaces {
         export interface ICorpSelection extends Kontext.EventEmitter {
             getCurrentSubcorpus():string;
             getCurrentSubcorpusOrigName():string;
+            getIsForeignSubcorpus():boolean;
             getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
             getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
             getCorpora():Immutable.List<string>;

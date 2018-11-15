@@ -209,6 +209,10 @@ class DummyQueryModel implements PluginInterfaces.Corparch.ICorpSelection {
         return Immutable.List<string>();
     }
 
+    getIsForeignSubcorpus():boolean {
+        return false;
+    }
+
     addChangeListener(fn:()=>void):void {}
 
     removeChangeListener(fn:()=>void):void {}

@@ -22,6 +22,7 @@ import os
 import glob
 from hashlib import md5
 from datetime import datetime
+import json
 import logging
 try:
     from markdown import markdown
@@ -76,29 +77,45 @@ def corp_mtime(corpus):
     return max(reg_mtime, data_mtime)
 
 
+class PublishedSubcMetadata(object):
+
+    def __init__(self, **kw):
+        self.author_id = kw.get('author_id', None)
+        self.author_name = kw.get('author_name', None)
+        self.subcpath = kw.get('subcpath', None)
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    @staticmethod
+    def from_json(data):
+        return PublishedSubcMetadata(**json.loads(data))
+
+
 def _list_public_corp_dir(corpname, path, code_prefix, author_prefix):
     ans = []
     subc_root = os.path.dirname(os.path.dirname(path))
     for item in glob.glob(path + '/*.subc'):
         full_path = os.path.join(path, item)
-        orig_path, author, info = get_subcorp_pub_info(full_path)
-        if orig_path is None or info is None:
+        meta, desc = get_subcorp_pub_info(full_path)
+        if meta.subcpath is None or meta.author_name is None or not desc:
             logging.getLogger(__name__).warning(
-                'Missing .name file for published subcorpus {0}'.format(item))
+                'Missing metainformation for published subcorpus {0}'.format(item))
         else:
             try:
                 ident = os.path.splitext(os.path.basename(item))[0]
-                author_rev = ' '.join(reversed(author.split(' ') if author else [])).lower()
+                author_rev = ' '.join(reversed(meta.author_name.split(' ')
+                                               if meta.author_name else [])).lower()
                 author_prefix = author_prefix.lower() if author_prefix else None
                 if (code_prefix and ident.startswith(code_prefix) or author_prefix and
                         author_rev.startswith(author_prefix)):
                     ans.append(dict(
                         ident=ident,
-                        origName=os.path.splitext(os.path.basename(orig_path))[0],
+                        origName=os.path.splitext(os.path.basename(meta.subcpath))[0],
                         corpname=corpname,
-                        author=author,
-                        description=k_markdown(info),
-                        userId=int(orig_path.lstrip(subc_root).split(os.path.sep, 1)[0])
+                        author=meta.author_name,
+                        description=k_markdown(desc),
+                        userId=int(meta.subcpath.lstrip(subc_root).split(os.path.sep, 1)[0])
                     ))
             except Exception as ex:
                 logging.getLogger(__name__).warning(
@@ -183,28 +200,25 @@ def subcorpus_is_published(subcpath):
 
 
 def get_subcorp_pub_info(spath):
-    orig_path = None
     desc = None
-    author = None
     namepath = os.path.splitext(spath)[0] + '.name'
+    metadata = PublishedSubcMetadata()
 
     if os.path.isfile(namepath):
         with open(namepath, 'r') as nf:
             desc = ''
             for i, line in enumerate(nf):
                 if i == 0:
-                    orig_path = line.strip()
-                elif i == 1 and line.strip() != '':
-                    author = line.strip()
+                    metadata = PublishedSubcMetadata.from_json(line.decode('utf-8'))
                 elif i > 1:
                     desc += line
-    return orig_path, author.decode('utf-8') if author else None, desc.decode('utf-8') if desc else None
+    return metadata, desc.decode('utf-8') if desc else None
 
 
 def rewrite_subc_desc(publicpath, desc):
-    orig_path, _, _ = get_subcorp_pub_info(publicpath)
+    meta, _ = get_subcorp_pub_info(publicpath)
     with open(os.path.splitext(publicpath)[0] + '.name', 'w') as fw:
-        fw.write(orig_path + '\n\n')
+        fw.write(meta.to_json().encode('utf-8') + '\n\n')
         fw.write(desc.encode('utf-8'))
 
 
@@ -233,8 +247,12 @@ def mk_publish_links(subcpath, publicpath, author, desc):
         os.symlink(os.path.join(*link_elms), symlink_path)
         namefile_path = os.path.splitext(publicpath)[0] + '.name'
         with open(namefile_path, 'w') as namefile:
-            namefile.write(subcpath + '\n')
-            namefile.write(author.encode('utf-8') + '\n\n')
+            # TODO what if the path struct changes?
+            author_id = os.path.basename(os.path.dirname(os.path.dirname(subcpath)))
+            meta = PublishedSubcMetadata(
+                subcpath=subcpath, author_id=int(author_id) if author_id else None, author_name=author)
+            namefile.write(meta.to_json().encode('utf-8'))
+            namefile.write('\n\n')
             namefile.write(desc.encode('utf-8'))
     except Exception as ex:
         rm_silent(symlink_path)
@@ -276,14 +294,15 @@ class CorpusManager(object):
         subc.subchash = md5(open(spath).read()).hexdigest()
         subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
         subc.is_published = subcorpus_is_published(spath)
-        orig_path, author, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
-        if orig_path:
-            subc.orig_spath = orig_path
-            subc.orig_subcname = os.path.splitext(os.path.basename(orig_path))[0]
+        meta, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
+        if meta.subcpath:
+            subc.orig_spath = meta.subcpath
+            subc.orig_subcname = os.path.splitext(os.path.basename(meta.subcpath))[0]
         else:
             subc.orig_spath = None
             subc.orig_subcname = None
-        subc.author = author
+        subc.author = meta.author_name
+        subc.author_id = meta.author_id
         if desc:
             subc.description = k_markdown(desc) if decode_desc else desc
         else:
@@ -310,6 +329,9 @@ class CorpusManager(object):
         corp = manatee.Corpus(registry_file)
         corp.corpname = str(corpname)  # never unicode (paths)
         corp.is_published = False
+        corp.author = None
+        corp.author_id = None
+
         # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
         # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
         # KonText does not need such an attribute but to keep developers informed I leave

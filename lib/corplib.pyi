@@ -74,9 +74,16 @@ def subc_keywords_onstr(sc:SubCorpus, scref:SubCorpus, attrname:Optional[str], w
                         include_nonwords:Optional[int], wlnums:Optional[str]
                         ) -> Tuple[float, float, float, int, int, int, int, str]: ...
 
+
+class PublishedSubcMetadata(object):
+        author_id:int
+        author_name:unicode
+        subcpath:str
+
+
 def subcorpus_is_published(subcpath:str) -> bool: ...
 
-def get_subcorp_pub_info(spath:str) -> Tuple[str, unicode, unicode]: ...
+def get_subcorp_pub_info(spath:str) -> Tuple[PublishedSubcMetadata, unicode]: ...
 
 def mk_publish_links(subcpath:str, publicpath:str, author:unicode, description:unicode): ...
 

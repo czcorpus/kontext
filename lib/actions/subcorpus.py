@@ -294,7 +294,7 @@ class Subcorpus(Querying):
                     related_corpora.add(corp)
                 except RuntimeError as e:
                     logging.getLogger(__name__).warn(
-                        'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
+                        u'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
 
         if filter_args['corpname']:
             data = filter(lambda item: not filter_args['corpname'] or item['corpname'] == filter_args['corpname'],
@@ -392,7 +392,7 @@ class Subcorpus(Querying):
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
     def list_published(self, request):
-        min_author_prefix = 4
+        min_author_prefix = 3
         min_code_prefix = 2
         query = request.args.get('query', '')
         search_type = request.args.get('search_type', '')

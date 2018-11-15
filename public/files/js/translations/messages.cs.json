@@ -156,6 +156,7 @@
         "global__public_subc_id_{id}": "Korpus je veřejně k dispozici prostřednictvím permanentního identifikátoru {id}",
         "global__click_to_see_help": "Klikněte pro zobrazení nápovědy",
         "global__published_subcorp": "zveřejněný",
+        "global__published_foreign_subcorp": "cizí",
         "global__published_subcorp_id": "veřejný identifikátor",
         "global__markdown_supported": "je podporován Markdown",
         "global__subc_info_access_hd": "Přístup",

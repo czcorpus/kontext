@@ -38,21 +38,25 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
 
     private origSubcorpName:string;
 
+    private isForeignSubcorp:boolean;
+
     private availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
 
     private corpora:Immutable.List<string>;
 
-    constructor({layoutModel, dispatcher, usesubcorp, origSubcorpName, corpora, availSubcorpora=[]}:{
+    constructor({layoutModel, dispatcher, usesubcorp, origSubcorpName, foreignSubcorp, corpora, availSubcorpora=[]}:{
             layoutModel:PageModel;
             dispatcher:ActionDispatcher;
             usesubcorp:string;
             origSubcorpName:string;
+            foreignSubcorp:boolean;
             corpora:Array<string>;
             availSubcorpora:Array<Kontext.SubcorpListItem>}) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.currentSubcorp = usesubcorp;
         this.origSubcorpName = origSubcorpName;
+        this.isForeignSubcorp = foreignSubcorp;
         this.availSubcorpora = Immutable.List<Kontext.SubcorpListItem>(availSubcorpora);
         this.corpora = Immutable.List<string>(corpora);
 
@@ -62,11 +66,25 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
                     if (payload.props['pubName']) {
                         this.currentSubcorp = payload.props['pubName'];
                         this.origSubcorpName = payload.props['subcorp'];
+                        this.isForeignSubcorp = payload.props['foreign'];
 
                     } else {
                         this.currentSubcorp = payload.props['subcorp'];
                         this.origSubcorpName = payload.props['subcorp'];
+                        this.isForeignSubcorp = false;
                     }
+                    const corpIdent = this.layoutModel.getCorpusIdent();
+                    this.layoutModel.setConf<Kontext.FullCorpusIdent>(
+                        'corpusIdent',
+                        {
+                            id: corpIdent.id,
+                            name: corpIdent.name,
+                            variant: corpIdent.variant,
+                            usesubcorp: this.currentSubcorp,
+                            origSubcorpName: this.origSubcorpName,
+                            foreignSubcorp: this.isForeignSubcorp
+                        }
+                    );
                     this.notifyChangeListeners();
                 break;
             }
@@ -91,5 +109,9 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
 
     getCorpora():Immutable.List<string> {
         return this.corpora;
+    }
+
+    getIsForeignSubcorpus():boolean {
+        return this.isForeignSubcorp;
     }
 }

@@ -72,6 +72,7 @@ export interface QueryToolbarProps {
     humanCorpname:string;
     usesubcorp:string;
     origSubcorpName:string;
+    foreignSubcorp:boolean;
     queryFormProps:QueryFormLiteProps;
     filterFormProps:FilterFormProps;
     shuffleFormProps:ShuffleFormProps;
@@ -93,6 +94,7 @@ export interface NonViewPageQueryToolbarProps {
     humanCorpname:string;
     usesubcorp:string;
     origSubcorpName:string;
+    foreignSubcorp:boolean;
     queryFormProps?:QueryFormProps;
     filterFormProps?:FilterFormProps;
     shuffleFormProps?:ShuffleFormProps;
@@ -390,6 +392,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         humanCorpname:string;
         usesubcorp:string;
         origSubcorpName:string;
+        foreignSubcorp:boolean;
         queryFormProps:QueryFormLiteProps;
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
@@ -529,7 +532,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                         corpname={this.props.corpname}
                                         humanCorpname={this.props.humanCorpname}
                                         usesubcorp={this.props.usesubcorp}
-                                        origSubcorpName={this.props.origSubcorpName} />
+                                        origSubcorpName={this.props.origSubcorpName}
+                                        foreignSubcorp={this.props.foreignSubcorp} />
                                 : null}
                         {this.state.ops.map((item, i) => {
                             return <QueryOpInfo
@@ -561,6 +565,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         humanCorpname:string;
         usesubcorp:string;
         origSubcorpName:string;
+        foreignSubcorp:boolean;
         ops:Immutable.List<ExtendedQueryOperation>;
 
     }> = (props) => {
@@ -583,7 +588,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
                                     usesubcorp={props.usesubcorp}
-                                    origSubcorpName={props.origSubcorpName} />
+                                    origSubcorpName={props.origSubcorpName}
+                                    foreignSubcorp={props.foreignSubcorp} />
                             : null}
                     {props.ops.map((item, i) => {
                         return <QueryOpInfo

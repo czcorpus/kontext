@@ -62,6 +62,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     {
         usesubcorp:string;
         origSubcorpName:string;
+        foreignSubcorp:boolean;
 
     }> {
 
@@ -69,7 +70,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             super(props);
             this.state = {
                 usesubcorp: model.getCurrentSubcorpus(),
-                origSubcorpName: model.getCurrentSubcorpusOrigName()
+                origSubcorpName: model.getCurrentSubcorpusOrigName(),
+                foreignSubcorp: model.getIsForeignSubcorpus()
             };
             this.handleStoreChange = this.handleStoreChange.bind(this);
         }
@@ -77,7 +79,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         private handleStoreChange() {
             this.setState({
                 usesubcorp: model.getCurrentSubcorpus(),
-                origSubcorpName: model.getCurrentSubcorpusOrigName()
+                origSubcorpName: model.getCurrentSubcorpusOrigName(),
+                foreignSubcorp: model.getIsForeignSubcorpus()
             })
         }
 
@@ -97,7 +100,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 corpname={this.props.corpname}
                                 humanCorpname={this.props.humanCorpname}
                                 usesubcorp={this.state.usesubcorp}
-                                origSubcorpName={this.state.origSubcorpName} />
+                                origSubcorpName={this.state.origSubcorpName}
+                                foreignSubcorp={this.state.foreignSubcorp} />
                     </ul>
                 </div>
             );

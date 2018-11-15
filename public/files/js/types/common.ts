@@ -35,7 +35,7 @@ export namespace Kontext {
 
     export type ListOfPairs = Array<[string, string]>;
 
-    export type SubcorpListItem = {v:string; n:string; pub:string};
+    export type SubcorpListItem = {v:string; n:string; pub:string, foreign?:boolean};
 
     export type StructsAndAttrs = {[struct:string]:Array<string>};
 
@@ -131,6 +131,7 @@ export namespace Kontext {
         name:string;
         usesubcorp?:string;
         origSubcorpName?:string;
+        foreignSubcorp?:boolean;
     }
 
     /**

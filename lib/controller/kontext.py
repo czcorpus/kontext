@@ -972,11 +972,13 @@ class Kontext(Controller):
             self.args.usesubcorp = self.corp.subcname
 
         usesubcorp = self.args.usesubcorp if self.args.usesubcorp else None
-        result['corpus_ident'] = dict(id=self.args.corpname,
-                                      variant=self._corpus_variant,
-                                      name=self._human_readable_corpname(),
-                                      usesubcorp=usesubcorp,
-                                      origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp))
+        result['corpus_ident'] = dict(
+            id=self.args.corpname,
+            variant=self._corpus_variant,
+            name=self._human_readable_corpname(),
+            usesubcorp=usesubcorp,
+            origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp),
+            foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
 
         if self.args.usesubcorp:
             result['subcorp_size'] = self.corp.search_size()
@@ -1296,22 +1298,36 @@ class Kontext(Controller):
                                                                                             ans[id_attr]))
         return ans, bib_mapping
 
-    def _export_subcorpora_list(self, corpname, out):
+    def _export_subcorpora_list(self, corpname, curr_subcorp, out):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
         If there is a list already present in 'out' then it is extended
         by the new values.
 
+        The function also adds a current subcorpus in case it is a published
+        foreign (= of a different user) subcorpus.
+
         arguments:
         corpname -- corpus id
+        curr_subcorp -- current subcorpus (even a public foreign one)
         out -- a dictionary used by templating system
         """
         basecorpname = corpname.split(':')[0]
         subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
                                  loc=self.ui_lang, key=lambda x: x['n'])
+
+        if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
+            try:
+                srch = (x for x in subcorp_list if x['pub'] == self.corp.subcname).next()
+            except StopIteration:
+                srch = None
+            if srch is None:
+                subcorp_list.insert(0, dict(v=self.corp.orig_subcname, n=self.corp.orig_subcname,
+                                            pub=self.corp.subcname, foreign=True))
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
+
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []
         out['SubcorpList'].extend(subcorp_list)

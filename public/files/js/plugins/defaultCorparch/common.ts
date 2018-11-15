@@ -42,6 +42,7 @@ export interface ServerFavlistItem {
 
 export interface GeneratedFavListItem {
     subcorpus_id:string;
+    subcorpus_orig_id:string;
     corpora:Array<string>;
 }
 
