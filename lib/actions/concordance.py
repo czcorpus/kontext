@@ -1604,7 +1604,7 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', mutates_conc=True)
     def ajax_remove_selected_lines(self, request):
-        pnfilter = request.form.get('pnfilter', 'p')
+        pnfilter = request.args.get('pnfilter', 'p')
         rows = request.form.get('rows', '')
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
