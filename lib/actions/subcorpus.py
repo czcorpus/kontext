@@ -30,7 +30,7 @@ from texttypes import TextTypeCollector, get_tt
 import settings
 import argmapping
 
-TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
 class SubcorpusError(Exception):

@@ -56,7 +56,7 @@ def update_3(doc):
     srch = doc.find('/global/calc_backend')
     if srch is not None:
         parent = srch.getparent()
-        new_elm = etree.Element('calc_backend_time_limit')
+        new_elm = etree.Element('task_time_limit')
         new_elm.text = '300'
         new_elm.tail = '\n        '
         srch.tail = '\n        '
@@ -175,11 +175,11 @@ def update_10(doc):
         etree.SubElement(ce, 'status_service_url')
     cbt_srch = doc.find('global/calc_backend_time_limit')
     if cbt_srch is not None:
-        cbt_new = etree.SubElement(ce, 'time_limit')
+        cbt_new = etree.SubElement(ce, 'task_time_limit')
         cbt_new.text = cbt_srch.text
         cbt_srch.getparent().remove(cbt_srch)
     else:
-        cbt_new = etree.SubElement(ce, 'time_limit')
+        cbt_new = etree.SubElement(ce, 'task_time_limit')
         cbt_new.text = '300'
 
     glb_srch = doc.find('/calc_backend')
