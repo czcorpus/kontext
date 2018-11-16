@@ -63,7 +63,7 @@ export class SubcMixerModel extends StatefulModel {
 
     static DispatchToken:string;
 
-    static CATEGORY_SIZE_ERROR_TOLERANCE = 1.0; // in %
+    private static WARNING_SIZE_ERROR_RATIO = 0.01;
 
     pluginApi:IPluginApi;
 
@@ -78,8 +78,6 @@ export class SubcMixerModel extends StatefulModel {
     private corpusIdAttr:string;
 
     textTypesModel:TextTypes.ITextTypesModel;
-
-    private errorTolerance:number = SubcMixerModel.CATEGORY_SIZE_ERROR_TOLERANCE;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
             textTypesModel:TextTypes.ITextTypesModel,
@@ -130,17 +128,6 @@ export class SubcMixerModel extends StatefulModel {
                         }
                     )
                 break;
-                case 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE':
-                    const val = parseFloat(payload.props['value']);
-                    if (!isNaN(val) && val > 0 && val <= 100) {
-                        this.errorTolerance = val;
-
-                    } else {
-                        this.pluginApi.showMessage('error',
-                                this.pluginApi.translate('ucnk_subcm__invalid_value'));
-                    }
-                    this.notifyChangeListeners();
-                break;
             }
         });
     }
@@ -162,7 +149,7 @@ export class SubcMixerModel extends StatefulModel {
     private importResults(data:Array<[string, number]>):Immutable.List<[string, number, boolean]> {
         const evalDist = (v, idx) => {
             const userRatio = parseFloat(this.shares.get(idx).ratio) / 100;
-            return Math.abs(v - userRatio) < this.errorTolerance / 100;
+            return Math.abs(v - userRatio) < SubcMixerModel.WARNING_SIZE_ERROR_RATIO;
         };
         // We must first merge the tree-copied conditions back to
         // single ones. Here we assume that the conditions are split
@@ -354,12 +341,12 @@ export class SubcMixerModel extends StatefulModel {
         return 0;
     }
 
-    getErrorTolerance():number {
-        return this.errorTolerance;
-    }
-
     getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
         return this.getAlignedCorporaFn();
+    }
+
+    getRatioLimitPercent():number {
+        return SubcMixerModel.WARNING_SIZE_ERROR_RATIO * 100;
     }
 }
 
