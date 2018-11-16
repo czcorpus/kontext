@@ -44,8 +44,8 @@
     "ucnk_subc__ratio_error": "Chyba vypočtených velikostí",
     "ucnk_subcm__currently_disabled_refine_to_enable": "Tlačítko je neaktivní. Proveďte zúžení výběru pro aktivaci.",
     "ucnk_subc__ratios_th_expression": "Typ textu",
-    "ucnk_subc__ratios_th_required_ratio": "Vytvořený podíl",
-    "ucnk_subc__ratios_th_calculated_ratio": "Vy podíl",
+    "ucnk_subc__ratios_th_required_ratio": "Požadovaný podíl",
+    "ucnk_subc__ratios_th_calculated_ratio": "Vypočtený podíl",
     "ucnk_subc__ratios_th_orig_ratio": "Původní podíl",
     "ucnk_subcm__there_are_aligned_corpora_msg": "Výpočet proběhne pouze na položkách, které jsou zarovnané s následujícími korpusy",
     "ucnk_subcm__failed_to_find_suiteable_mix": "Nepodařilo se najít vyhovující mix textů. Zkuste omezit počet podmínek a/nebo nastavit podíly blíže jejich původním hodnotám."
