@@ -254,7 +254,6 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
-                case '@QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
                     this.notifyChangeListeners();
                 break;

@@ -217,7 +217,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
             case 'CQL_EDITOR_SET_RAW_QUERY': {
                 const args = typedProps<QueryInputSetQueryProps>(action.props);
                 dispatch({
-                    actionType: `@${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    actionType: `${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     props: {
                         sourceId: args.sourceId,
                         query: state.rawCode.get(args.sourceId)
