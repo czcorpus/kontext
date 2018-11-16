@@ -30,7 +30,7 @@ import {Freq2DFlatViewModel} from '../models/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
 import {IndirectQueryReplayModel} from '../models/query/replay';
 import {QuerySaveAsFormModel} from '../models/query/save';
-import {fetchQueryFormArgs} from '../models/query/main';
+import {fetchQueryFormArgs} from '../models/query/first';
 import {init as freqFormFactory} from '../views/freqs/forms';
 import {init as collFormFactory} from '../views/coll/forms';
 import {init as analysisFrameInit} from '../views/analysis';

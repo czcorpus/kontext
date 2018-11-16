@@ -27,7 +27,7 @@ import {Kontext} from '../../types/common';
 import {IQueryReplayModel, QueryReplayModel, ExtendedQueryOperation} from '../../models/query/replay';
 import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 import {ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps} from './miscActions';
-import {QueryFormLiteProps, QueryFormProps} from './main';
+import {QueryFormLiteProps, QueryFormProps} from './first';
 import {FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
 import { PluginInterfaces } from '../../types/plugins';
 import {SortFormProps} from './sort';

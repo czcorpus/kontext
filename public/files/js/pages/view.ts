@@ -34,11 +34,11 @@ import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../
 import {LineSelectionModel} from '../models/concordance/lineSelection';
 import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
 import {ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
-import {QueryFormProperties, QueryModel, fetchQueryFormArgs} from '../models/query/main';
+import {QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs} from '../models/query/first';
 import {UsageTipsModel} from '../models/usageTips';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {QueryReplayModel, LocalQueryFormData} from '../models/query/replay';
-import {FilterModel, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
+import {FilterFormModel, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
 import {ConcSampleModel, SampleFormProperties, fetchSampleFormArgs} from '../models/query/sample';
 import {SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs} from '../models/query/switchmc';
 import {QuerySaveAsFormModel} from '../models/query/save';
@@ -54,7 +54,7 @@ import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/c
 import {ConcSaveModel} from '../models/concordance/save';
 import {ConcDashboard} from '../models/concordance/dashboard';
 import {TextTypesDistModel, TTCrit} from '../models/concordance/ttDistModel';
-import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/main';
+import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/first';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
 import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
 import {init as sortFormInit, SortViews} from '../views/query/sort';
@@ -74,8 +74,8 @@ declare var require:any;
 require('styles/view.less');
 
 export class QueryModels {
-    queryModel:QueryModel;
-    filterModel:FilterModel;
+    queryModel:FirstQueryFormModel;
+    filterModel:FilterFormModel;
     textTypesModel:TextTypesModel;
     queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
@@ -469,7 +469,7 @@ export class ViewPage {
             tagAttr: this.layoutModel.getConf<string>('tagAttr')
         };
 
-        this.queryModels.queryModel = new QueryModel(
+        this.queryModels.queryModel = new FirstQueryFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.queryModels.textTypesModel,
@@ -537,7 +537,7 @@ export class ViewPage {
             tagAttr: this.layoutModel.getConf<string>('tagAttr')
         }
 
-        this.queryModels.filterModel = new FilterModel(
+        this.queryModels.filterModel = new FilterFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.queryModels.textTypesModel,

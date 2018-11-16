@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -24,26 +24,13 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
-import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
-
-
-export interface GeneralQueryFormProperties {
-    forcedAttr:string;
-    attrList:Array<Kontext.AttrItem>;
-    structAttrList:Array<Kontext.AttrItem>;
-    lemmaWindowSizes:Array<number>;
-    posWindowSizes:Array<number>;
-    wPoSList:Array<{v:string; n:string}>;
-    useCQLEditor:boolean;
-    tagAttr:string;
-}
+import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
 
 
 export interface QueryFormUserEntries {
@@ -71,30 +58,6 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     selectedTextTypes:{[structattr:string]:Array<string>};
     hasLemma:{[corpname:string]:boolean};
     tagsetDocs:{[corpname:string]:boolean};
-}
-
-/**
- *
- */
-export class WidgetsMap {
-
-    private data:Immutable.Map<string, Immutable.List<string>>;
-
-    constructor(data:Immutable.List<[string, Immutable.List<string>]>) {
-        this.data = Immutable.Map<string, Immutable.List<string>>(data);
-    }
-
-    get(key:string):Immutable.List<string> {
-        if (this.data.has(key)) {
-            return this.data.get(key);
-        }
-        return Immutable.List<string>();
-    }
-}
-
-
-export function appendQuery(origQuery:string, query:string, prependSpace:boolean):string {
-    return origQuery + (origQuery && prependSpace ? ' ' : '') + query;
 }
 
 export interface QueryInputSetQueryProps {
@@ -140,182 +103,6 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     }
 };
 
-
-
-/**
- *
- */
-export abstract class GeneralQueryModel extends SynchronizedModel {
-
-    protected pageModel:PageModel;
-
-    protected forcedAttr:string;
-
-    protected attrList:Immutable.List<Kontext.AttrItem>;
-
-    protected structAttrList:Immutable.List<Kontext.AttrItem>;
-
-    protected lemmaWindowSizes:Immutable.List<number>;
-
-    protected posWindowSizes:Immutable.List<number>;
-
-    protected wPoSList:Immutable.List<{v:string; n:string}>;
-
-    protected currentAction:string;
-
-    // ----- other models
-
-    protected textTypesModel:TextTypesModel;
-
-    protected queryContextModel:QueryContextModel;
-
-    protected queryTracer:ITracer;
-
-    // ----
-
-    protected useCQLEditor:boolean;
-
-    private tagAttr:string;
-
-    private widgetArgs:Kontext.GeneralProps;
-
-    protected supportedWidgets:WidgetsMap;
-
-
-    // -------
-
-
-    constructor(
-            dispatcher:ActionDispatcher,
-            pageModel:PageModel,
-            textTypesModel:TextTypesModel,
-            queryContextModel:QueryContextModel,
-            props:GeneralQueryFormProperties) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.textTypesModel = textTypesModel;
-        this.queryContextModel = queryContextModel;
-        this.forcedAttr = props.forcedAttr;
-        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
-        this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
-        this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
-        this.tagAttr = props.tagAttr;
-        this.queryTracer = {trace:(_)=>undefined};
-        this.useCQLEditor = props.useCQLEditor;
-
-        this.dispatcher.register(payload => {
-            switch (payload.actionType) {
-                case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
-                    this.setActiveWidget(payload.props['sourceId'], payload.props['value']);
-                    this.widgetArgs = payload.props['widgetArgs'] || {};
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
-    }
-
-    /**
-     * Returns a currently active widget identifier
-     * (one of 'tag', 'keyboard', 'within', 'history')
-     */
-    abstract getActiveWidget(sourceId:string):string;
-
-    /**
-     * Sets a currently active widget.
-     */
-    abstract setActiveWidget(sourceId:string, ident:string):void;
-
-
-    abstract getQueries():Immutable.Map<string, string>;
-
-    abstract getQuery(sourceId:string):string;
-
-    abstract getQueryTypes():Immutable.Map<string, string>;
-
-    /// ---------
-
-    getSupportedWidgets():WidgetsMap {
-        return this.supportedWidgets;
-    }
-
-    getWidgetArgs():Kontext.GeneralProps {
-        return this.widgetArgs;
-    }
-
-    getForcedAttr():string {
-        return this.forcedAttr;
-    }
-
-    getAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.attrList;
-    }
-
-    getStructAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.structAttrList;
-    }
-
-    getLemmaWindowSizes():Immutable.List<number> {
-        return this.lemmaWindowSizes;
-    }
-
-    getPosWindowSizes():Immutable.List<number> {
-        return this.posWindowSizes;
-    }
-
-    getwPoSList():Immutable.List<{v:string; n:string}> {
-        return this.wPoSList;
-    }
-
-    protected validateQuery(query:string, queryType:string):boolean {
-        const parseFn = ((query:string) => {
-            switch (queryType) {
-                case 'iquery':
-                    return () => {
-                        if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
-                            throw new Error();
-                        }
-                    }
-                case 'phrase':
-                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
-                case 'lemma':
-                case 'word':
-                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
-                case 'cql':
-                    return parseQuery.bind(null, query + ';', {tracer: this.queryTracer});
-                default:
-                    return () => {};
-            }
-        })(query.trim());
-
-        let mismatch;
-        try {
-            parseFn();
-            mismatch = false;
-
-        } catch (e) {
-            mismatch = true;
-            console.error(e);
-        }
-        return mismatch;
-    }
-
-
-    onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
-        this.useCQLEditor = optsModel.getUseCQLEditor();
-        this.notifyChangeListeners();
-    }
-
-    getTagAttr():string {
-        return this.tagAttr;
-    }
-
-    getUseCQLEditor():boolean {
-        return this.useCQLEditor;
-    }
-}
-
 /**
  *
  */
@@ -329,7 +116,7 @@ export interface CorpusSwitchPreserved {
 /**
  *
  */
-export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Corparch.ICorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+export class FirstQueryFormModel extends QueryFormModel implements PluginInterfaces.Corparch.ICorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
 
     private corpora:Immutable.List<string>;
 
@@ -467,7 +254,6 @@ export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Co
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
-                case '@QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
                     this.notifyChangeListeners();
                 break;
