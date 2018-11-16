@@ -39,7 +39,7 @@
     "ucnk_subc__subc_not_found": "Nepodařilo se najít vhodný subkorpus - všechny podmínky selhaly.",
     "ucnk_subc__missing_subc_name": "Chybí název subkorpusu",
     "ucnk_subc__multiple_attrs_mixing_warning{attrs}": "Berte prosím na vědomí, že použití více než jednoho strukturního atributu (aktuálně: {attrs}) může snadno vést k zadání, která nejsou splnitelná.",
-    "ucnk_subc__condition_failed_{limit}": "Podíl je více než {limit, plural, one{# procentní bod} few{# procentní body} other{# procentních bodů}} procentní od požadované hodnoty.",
+    "ucnk_subc__condition_failed_{limit}": "Podíl je více než {limit, plural, one{# procentní bod} few{# procentní body} other{# procentních bodů}} od požadované hodnoty.",
     "ucnk_subc__modify_params_btn": "Změnit parametry",
     "ucnk_subc__ratio_error": "Chyba vypočtených velikostí",
     "ucnk_subcm__currently_disabled_refine_to_enable": "Tlačítko je neaktivní. Proveďte zúžení výběru pro aktivaci.",
