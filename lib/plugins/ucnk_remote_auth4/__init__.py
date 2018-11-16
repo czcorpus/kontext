@@ -157,12 +157,12 @@ class CentralAuth(AbstractRemoteAuth):
             plugin_api.refresh_session_id()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
-                plugin_api.session['user'] = {
-                    'id': int(response_obj['user']['id']),
-                    'user': response_obj['user'].get('user'),  # TODO API unknown
-                    'fullname': u'%s %s' % (response_obj['user'].get('firstName'),
-                                            response_obj['user'].get('surname'))  # TODO API unknown
-                }
+                plugin_api.session['user'] = dict(
+                    id=int(response_obj['user']['id']),
+                    user=response_obj['user'].get('user'),
+                    fullname=u'%s %s' % (response_obj['user'].get('firstName'),
+                                         response_obj['user'].get('surname')),
+                    email=response_obj['user'].get('email'))
                 # reload available corpora from remote server
                 self.refresh_user_permissions(plugin_api)
             else:  # logout => clear current user's session data and set new credentials
