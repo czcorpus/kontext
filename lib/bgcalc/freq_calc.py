@@ -39,7 +39,7 @@ from controller.errors import UserActionException
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
-TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
 class FreqCalsArgs(FixedDict):

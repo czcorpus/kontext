@@ -29,7 +29,7 @@ from structures import FixedDict
 from bgcalc import UnfinishedConcordanceError
 from translation import ugettext as _
 
-TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
 class CollCalcArgs(FixedDict):

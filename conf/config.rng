@@ -311,6 +311,11 @@
                             <value>multiprocessing</value>
                         </choice>
                     </element>
+                    <optional>
+                        <element name="task_time_limit">
+                            <data type="nonNegativeInteger" />
+                        </element>
+                    </optional>
                     <element name="status_service_url">
                         <a:documentation>In case a bgcalc module supports realtime status update,
                                 KonText can be set to perform some async checking via WebSockets to decrease

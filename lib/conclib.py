@@ -35,7 +35,7 @@ from concworker import GeneralWorker
 import corplib
 
 
-TASK_TIME_LIMIT = settings.get_int('global', 'calc_backend_time_limit', 300)
+TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
 class ConcCalculationControlException(Exception):

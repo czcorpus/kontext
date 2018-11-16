@@ -40,6 +40,8 @@
     </global>
     <calc_backend>
         <type>celery</type>
+        <task_time_limit>300</task_time_limit>
+        <status_service_url />
         <celery_broker_url>redis://127.0.0.1:6379/2</celery_broker_url>
         <celery_result_backend>redis://127.0.0.1:6379/2</celery_result_backend>
         <celery_task_serializer>json</celery_task_serializer>
@@ -48,7 +50,6 @@
             <item>json</item>
         </celery_accept_content>
         <celery_timezone>Europe/Prague</celery_timezone>
-        <status_service_url />
     </calc_backend>
     <job_scheduler>
         <type>celery</type>
