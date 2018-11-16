@@ -59,6 +59,7 @@ class TestActions(unittest.TestCase):
         ctrl = Controller()
         req = Request(url='http://localhost/first_form',
                       form=dict(corpora=['intercorp_en', 'intercorp_cs'],
+                                subcorpus_orig_id='my_subc1_orig',
                                 subcorpus_id='my_subc1',
                                 corpname='intercorp_en'))
         ans = set_favorite_item(ctrl, req)
@@ -67,7 +68,7 @@ class TestActions(unittest.TestCase):
         self.assertTrue(added_obj['id'] == ans['id'])
         self.assertEqual(added_obj['size'], 4000)
         self.assertEqual(added_obj['size_info'], '4k')
-        self.assertEqual(added_obj['name'], 'intercorp_en || intercorp_cs / my_subc1')
+        self.assertEqual(added_obj['name'], 'intercorp_en || intercorp_cs / my_subc1_orig')
         self.assertEqual(added_obj['subcorpus_id'], 'my_subc1')
         self.assertDictEqual(added_obj['corpora'][0], dict(name='intercorp_en', id='intercorp_en'))
         self.assertDictEqual(added_obj['corpora'][1], dict(name='intercorp_cs', id='intercorp_cs'))
