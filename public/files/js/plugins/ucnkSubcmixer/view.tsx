@@ -48,6 +48,24 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         subcorpWithinFormModel: null
     });
 
+    // ------------ <CalculatedRatio /> -------------------------------------
+
+    const CalculatedRatio:React.SFC<{
+        ratio:number;
+        success:boolean;
+        limit:number;
+
+    }> = (props) => {
+        return <>
+            {props.success ?
+                null :
+                <img className="warning" src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')}
+                            title={he.translate('ucnk_subc__condition_failed_{limit}', {limit: props.limit})}/>
+            }
+            <strong>{he.formatNumber(props.ratio, 1) + '%'}</strong>
+        </>;
+    }
+
     // ------------ <ValueShare /> -------------------------------------
 
     const ValueShare:React.SFC<{
@@ -58,6 +76,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         baseRatio:string;
         ratio:string;
         result:[string, number, boolean];
+        ratioLimitPercent:number;
 
     }> = (props) => {
 
@@ -72,38 +91,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             });
         };
 
-        const renderEvalResult = () => {
-            if (props.result) {
-                const actualVal = props.result[1].toFixed(2);
-                if (props.result[2] === true) {
-                    return (
-                        <span className="checked"
-                            title={he.translate('ucnk_subc__condition_fulfilled_{actual_val}',
-                                {actual_val: actualVal})}>
-                            {'\u2713'}
-                        </span>
-                    );
-
-                } else {
-                    return (
-                        <span className="crossed" title={he.translate(
-                            'ucnk_subc__condition_failed_{actual_val}',
-                            {actual_val: actualVal})}>{'\u2717'}
-                        </span>
-                    );
-                }
-
-            } else {
-                return <span>-</span>;
-            }
-        };
-
         return (
-            <tr>
+            <tr className="ucnkSyntaxViewer_ValueShare">
                 <td className="num">{props.rowId}.</td>
                 <td className="expression">
                     <strong>{props.attrName} = </strong>
                     {'\u0022' + props.attrValue + '\u0022'}
+                </td>
+                <td className="num">
+                    {props.baseRatio}<strong>%</strong>
                 </td>
                 <td className="num">
                     <span>
@@ -115,10 +111,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     </span>
                 </td>
                 <td className="num">
-                    {props.baseRatio}<strong>%</strong>
-                </td>
-                <td className="status">
-                    {renderEvalResult()}
+                    {props.result ? <CalculatedRatio success={props.result[2]} limit={props.ratioLimitPercent}
+                                                ratio={props.result[1]} /> : <span>-</span>}
                 </td>
             </tr>
         );
@@ -130,6 +124,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         currentResults:CalculationResults;
         hasResults:boolean;
         items:Immutable.List<SubcMixerExpression>;
+        ratioLimitPercent:number;
 
     }> = (props) => {
 
@@ -139,9 +134,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     <tr>
                         <th />
                         <th>{he.translate('ucnk_subc__ratios_th_expression')}</th>
-                        <th>{he.translate('ucnk_subc__ratios_th_required_ratio')}</th>
                         <th>{he.translate('ucnk_subc__ratios_th_orig_ratio')}</th>
-                        <th>{he.translate('ucnk_subc__ratios_th_status')}</th>
+                        <th>{he.translate('ucnk_subc__ratios_th_required_ratio')}</th>
+                        <th>{he.translate('ucnk_subc__ratios_th_calculated_ratio')}</th>
                     </tr>
                     {props.items.map((item, i) => (
                         <ValueShare key={i}
@@ -151,7 +146,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 attrValue={item.attrValue}
                                 baseRatio={item.baseRatio}
                                 ratio={item.ratio}
-                                result={props.currentResults ? props.currentResults['attrs'].get(i) : null} />
+                                result={props.currentResults ? props.currentResults['attrs'].get(i) : null}
+                                ratioLimitPercent={props.ratioLimitPercent} />
                     ))}
                 </tbody>
             </table>
@@ -232,9 +228,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 );
 
             } else {
-                return he.translate('ucnk_subc__subc_found_with_errors{size}{num_errors}',
-                        {size: he.formatNumber(props.totalSize),
-                        num_errors: props.numErrors});
+                return he.translate('ucnk_subc__subc_found_with_errors{size}',
+                        {size: he.formatNumber(props.totalSize)});
             }
         };
 
@@ -268,11 +263,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 </div>) : null
                             }
                         </div>
-                        <button className="default-button" type="button"
-                                onClick={handleCreateSubcorpClick}>
-                            {he.translate('ucnk_subcm__create_subc')}
-                        </button>
-                        <ReenterArgsButton css={{display: 'inline-block', marginLeft: '0.7em'}} />
+                        <p>
+                            <button className="default-button" type="button"
+                                    onClick={handleCreateSubcorpClick}>
+                                {he.translate('ucnk_subcm__create_subc')}
+                            </button>
+                            <ReenterArgsButton css={{display: 'inline-block', marginLeft: '0.7em'}} />
+                        </p>
                     </div>
                 );
 
@@ -365,8 +362,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         numErrors:number;
         currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
-        errorTolerance:number;
         alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+        ratioLimitPercent:number;
         closeClickHandler:()=>void;
     },
     {
@@ -379,7 +376,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._setWaiting = this._setWaiting.bind(this);
-            this._handleErrorToleranceChange = this._handleErrorToleranceChange.bind(this);
             this.state = {
                 isWaiting: false,
                 isPublic: subcFormModel.getIsPublic(),
@@ -400,13 +396,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 isWaiting: true,
                 isPublic: subcFormModel.getIsPublic(),
                 description: subcFormModel.getDescription()
-            });
-        }
-
-        _handleErrorToleranceChange(evt) {
-            dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE',
-                props: {value: evt.target.value}
             });
         }
 
@@ -443,17 +432,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             {this.props.alignedCorpora.size > 0 ? this._renderAlignedCorpInfo() : null}
                             <ValuesTable items={this.props.selectedValues}
                                     currentResults={this.props.currentResults}
-                                    hasResults={hasResults} />
-                            <div className="error-tolerance-block">
-                                <label>{he.translate('ucnk_subc__error_tolerance')}
-                                :{'\u00a0\u00B1'}
-                                <input type="text" value={this.props.errorTolerance}
-                                        onChange={this._handleErrorToleranceChange} style={{width: '2em'}}
-                                        className={'num' + (hasResults ? ' disabled' : '')}
-                                        disabled={hasResults ? true : false} />
-                                %
-                                </label>
-                            </div>
+                                    hasResults={hasResults}
+                                    ratioLimitPercent={this.props.ratioLimitPercent} />
                             <Controls isWaiting={this.state.isWaiting}
                                     setWaitingFn={this._setWaiting}
                                     hasResults={!!this.props.currentResults}
@@ -480,8 +460,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         numErrors:number;
         currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
-        errorTolerance:number;
         alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+        ratioLimitPercent:number;
     }> {
 
         constructor(props) {
@@ -496,8 +476,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 numErrors: subcMixerModel.getNumOfErrors(),
                 currentSubcname: subcFormModel.getSubcName(),
                 usedAttributes: subcMixerModel.getUsedAttributes(),
-                errorTolerance: subcMixerModel.getErrorTolerance(),
-                alignedCorpora: subcMixerModel.getAlignedCorpora()
+                alignedCorpora: subcMixerModel.getAlignedCorpora(),
+                ratioLimitPercent: subcMixerModel.getRatioLimitPercent()
             };
         }
 
@@ -508,8 +488,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 currentResults: subcMixerModel.getCurrentCalculationResults(),
                 currentSubcname: subcFormModel.getSubcName(),
                 usedAttributes: subcMixerModel.getUsedAttributes(),
-                errorTolerance: subcMixerModel.getErrorTolerance(),
-                alignedCorpora: subcMixerModel.getAlignedCorpora()
+                alignedCorpora: subcMixerModel.getAlignedCorpora(),
+                ratioLimitPercent: subcMixerModel.getRatioLimitPercent()
             });
         }
 
@@ -525,7 +505,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 numErrors: 0,
                 currentSubcname: null,
                 usedAttributes: null,
-                errorTolerance: null,
                 alignedCorpora: subcMixerModel.getAlignedCorpora()
             });
         }
@@ -538,8 +517,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 numErrors: subcMixerModel.getNumOfErrors(),
                 currentSubcname: subcFormModel.getSubcName(),
                 usedAttributes: subcMixerModel.getUsedAttributes(),
-                errorTolerance: subcMixerModel.getErrorTolerance(),
-                alignedCorpora: subcMixerModel.getAlignedCorpora()
+                alignedCorpora: subcMixerModel.getAlignedCorpora(),
+                ratioLimitPercent: subcMixerModel.getRatioLimitPercent()
             });
         }
 
@@ -584,8 +563,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 numErrors={this.state.numErrors}
                                 currentSubcname={this.state.currentSubcname}
                                 usedAttributes={this.state.usedAttributes}
-                                errorTolerance={this.state.errorTolerance}
-                                alignedCorpora={this.state.alignedCorpora} />
+                                alignedCorpora={this.state.alignedCorpora}
+                                ratioLimitPercent={this.state.ratioLimitPercent} />
                         : null}
                 </div>
             );
