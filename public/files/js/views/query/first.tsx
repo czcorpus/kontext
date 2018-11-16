@@ -28,7 +28,7 @@ import {init as ttViewsInit} from '../textTypes';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, KeyCodes} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
-import {QueryModel} from '../../models/query/first';
+import {FirstQueryFormModel} from '../../models/query/first';
 import {WidgetsMap} from '../../models/query/common';
 import {UsageTipsModel} from '../../models/usageTips';
 import {TextTypesModel} from '../../models/textTypes/main';
@@ -42,7 +42,7 @@ export interface MainModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
-    queryModel:QueryModel;
+    queryModel:FirstQueryFormModel;
     textTypesModel:TextTypesModel;
     queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
@@ -74,7 +74,7 @@ export interface QueryFormLiteProps {
 }
 
 
-interface GeneralQueryFormState {
+interface FirstQueryFormState {
     corpora:Immutable.List<string>;
     queryTypes:Immutable.Map<string, string>;
     supportedWidgets:WidgetsMap;
@@ -96,13 +96,13 @@ interface GeneralQueryFormState {
 }
 
 
-interface QueryFormLiteState extends GeneralQueryFormState {
+interface QueryFormLiteState extends FirstQueryFormState {
     hasSelectedTextTypes:boolean;
     textTypeSelections:{[attr:string]:Array<string>};
 }
 
 
-interface QueryFormState extends GeneralQueryFormState {
+interface QueryFormState extends FirstQueryFormState {
     tagAttr:string;
     textTypesFormVisible:boolean;
     hasSelectedTextTypes:boolean;

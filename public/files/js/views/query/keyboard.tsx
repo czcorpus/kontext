@@ -21,7 +21,7 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {GeneralQueryModel} from '../../models/query/common';
+import {QueryFormModel} from '../../models/query/common';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 
 
@@ -49,7 +49,7 @@ export interface KeyboardViews {
 export interface KeyboardModuleArgs {
     dispatcher:ActionDispatcher;
     he:Kontext.ComponentHelpers;
-    queryModel:GeneralQueryModel;
+    queryModel:QueryFormModel;
     virtualKeyboardModel:VirtualKeyboardModel
 }
 

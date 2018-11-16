@@ -24,9 +24,9 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {QueryModel} from './first';
+import {FirstQueryFormModel} from './first';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {FilterModel} from './filter';
+import {FilterFormModel} from './filter';
 import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from './sort';
 import {ConcSampleModel} from './sample';
 import {SwitchMainCorpModel} from './switchmc';
@@ -126,8 +126,8 @@ export type LocalQueryFormData = {[ident:string]:AjaxResponse.ConcFormArgs};
  * Models required by QueryReplayModel to operate
  */
 export interface ReplayModelDeps {
-    queryModel:QueryModel;
-    filterModel:FilterModel;
+    queryModel:FirstQueryFormModel;
+    filterModel:FilterFormModel;
     sortModel:ConcSortModel;
     mlConcSortModel:MultiLevelConcSortModel;
     sampleModel:ConcSampleModel;
@@ -238,9 +238,9 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
 
     private replayOperations:Immutable.List<string>;
 
-    private queryModel:QueryModel;
+    private queryModel:FirstQueryFormModel;
 
-    private filterModel:FilterModel;
+    private filterModel:FilterFormModel;
 
     private sortModel:ConcSortModel;
 

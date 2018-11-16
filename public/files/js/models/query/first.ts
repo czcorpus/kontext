@@ -30,7 +30,7 @@ import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
-import {GeneralQueryFormProperties, GeneralQueryModel, WidgetsMap, appendQuery} from './common';
+import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
 
 
 export interface QueryFormUserEntries {
@@ -116,7 +116,7 @@ export interface CorpusSwitchPreserved {
 /**
  *
  */
-export class QueryModel extends GeneralQueryModel implements PluginInterfaces.Corparch.ICorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+export class FirstQueryFormModel extends QueryFormModel implements PluginInterfaces.Corparch.ICorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
 
     private corpora:Immutable.List<string>;
 

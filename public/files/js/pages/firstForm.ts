@@ -24,7 +24,7 @@ import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginName} from '../app/main';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import {TextTypesModel} from '../models/textTypes/main';
-import {QueryModel} from '../models/query/first';
+import {FirstQueryFormModel} from '../models/query/first';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
 import {WithinBuilderModel} from '../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
@@ -80,7 +80,7 @@ export class FirstFormPage {
 
     private layoutModel:PageModel;
 
-    private queryModel:QueryModel;
+    private queryModel:FirstQueryFormModel;
 
     private cqlEditorModel:CQLEditorModel;
 
@@ -94,7 +94,7 @@ export class FirstFormPage {
 
     private queryContextModel:QueryContextModel;
 
-    private onQueryModelReady:(qs:QueryModel)=>void;
+    private onQueryModelReady:(qs:FirstQueryFormModel)=>void;
 
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
@@ -211,10 +211,9 @@ export class FirstFormPage {
     }
 
     private initQueryModel():void {
-        const formCorpora = [this.layoutModel.getCorpusIdent().id];
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
-        this.queryModel = new QueryModel(
+        this.queryModel = new FirstQueryFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesModel,

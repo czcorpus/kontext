@@ -65,7 +65,7 @@ export class WidgetsMap {
 /**
  *
  */
-export abstract class GeneralQueryModel extends SynchronizedModel {
+export abstract class QueryFormModel extends SynchronizedModel {
 
     protected pageModel:PageModel;
 

@@ -23,8 +23,7 @@ import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {init as viewInit, Views as TreeCorparchViews} from './view';
-import {QueryModel} from '../../models/query/first';
-import { QuerySaveAsFormModel } from '../../models/query/save';
+import {FirstQueryFormModel} from '../../models/query/first';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -238,7 +237,7 @@ class Plugin {
      * @param targetAction - ignored here
      * @param options A configuration of the widget
      */
-    createWidget(targetAction:string, queryModel:QueryModel, options:Kontext.GeneralProps):React.ComponentClass {
+    createWidget(targetAction:string, queryModel:FirstQueryFormModel, options:Kontext.GeneralProps):React.ComponentClass {
         const widgetWrapper = window.document.createElement('div');
 
         const treeModel = new TreeWidgetModel(

@@ -22,7 +22,7 @@ import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {GeneralQueryModel} from '../../models/query/common';
+import {QueryFormModel} from '../../models/query/common';
 
 
 export interface CQLEditorProps {
@@ -46,7 +46,7 @@ export interface CQLEditorViews {
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
-            queryModel:GeneralQueryModel, editorModel:CQLEditorModel) {
+            queryModel:QueryFormModel, editorModel:CQLEditorModel) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
