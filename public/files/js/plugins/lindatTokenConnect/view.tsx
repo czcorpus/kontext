@@ -446,9 +446,23 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             return ""
         }
 
+        _toVallex() {
+            const TargetVallex = this.props.list[0][0].split(' : ')[0];
+            if (this.props.language == 'cz') {
+                const fullLink = 'https://lindat.mff.cuni.cz/services/CzEngVallex/CzEngVallex.html?vlanguage=cz&block=D&first_verb=' + TargetVallex + '&second_verb=ALL';
+                return fullLink
+            } else {
+                const fullLink = 'https://lindat.mff.cuni.cz/services/CzEngVallex/CzEngVallex.html?vlanguage=en&block=D&first_verb=' + TargetVallex + '&second_verb=ALL';
+                return fullLink
+            }
+        };
+
         render() {
             return (
                 <div>
+                    <div className="forVLink">
+                    <a className="vallexSense" href={this._toVallex()} target="_blank">Open in CzEngVallex</a>
+                    </div>
                     <div className="containerTC">{this._renderVerbInfo()}
                     </div>
                     <div>{this._renderToggle()}</div>
