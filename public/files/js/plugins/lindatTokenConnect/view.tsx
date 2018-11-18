@@ -495,9 +495,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
             <div>
                 <div className="vallexSum">
                     <span className="vallexSense">{props.name}</span>
-                    <div className="forVLink">
+                    {/*<div className="forVLink">
                     <a className="vallexSense" href={toVallex(props)} target="_blank">Open in CzEngVallex</a>
-                    </div>
+                    </div>*/}
                 </div>
                 {props.detail.map((sourceValue, h) => {
                     return (
