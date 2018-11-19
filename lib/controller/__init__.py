@@ -53,7 +53,7 @@ from templating import CheetahResponseFile
 
 def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=False, skip_corpus_init=False,
             mutates_conc=False, http_method='GET', accept_kwargs=None, apply_semi_persist_args=False,
-            return_type='html'):
+            return_type='template'):
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -70,7 +70,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
     http_method -- required HTTP method (POST, GET, PUT,...), either a single string or a tuple of strings
     accept_kwargs -- True/False
     apply_semi_persist_args -- if True hen use session to initialize action args first
-    return_type -- {plain, json, html}
+    return_type -- {plain, json, template, xml}
     """
     def wrapper(func):
         func.__dict__['access_level'] = access_level
@@ -771,7 +771,7 @@ class Controller(object):
 
     @staticmethod
     def _is_allowed_explicit_out_format(f):
-        return f in ('json', 'html', 'xml', 'plain')
+        return f in ('template', 'json', 'xml', 'plain')
 
     def run(self, path=None):
         """
@@ -889,7 +889,7 @@ class Controller(object):
         """
         return werkzeug.urls.url_encode(key_val_pairs)
 
-    def output_headers(self, return_type='html'):
+    def output_headers(self, return_type='template'):
         """
         Generates proper content-type signature and
         creates a cookie to store user's settings
@@ -906,6 +906,7 @@ class Controller(object):
             self._headers['Content-Type'] = 'application/xml'
         elif return_type == 'plain':
             self._headers['Content-Type'] = 'text/plain'
+        # Note: 'template' return type should never overwrite content type here as it is action-dependent
         ans = []
         for k, v in sorted([x for x in self._headers.items() if bool(x[1])], key=lambda item: item[0]):
             if type(v) is unicode:
