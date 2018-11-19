@@ -346,6 +346,9 @@ class MenuGenerator(object):
             .mark_indirect()
         )
 
+        with plugins.runtime.CORPARCH as corparch:
+            corparch.mod_corplist_menu(self.avail_corpora)
+
         self.my_subcorpora = (
             MenuItemInternal(MainMenu.CORPORA('my-subcorpora'),
                              te('My subcorpora'), 'subcorpus/subcorp_list')

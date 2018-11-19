@@ -82,9 +82,14 @@ class Backend(DatabaseBackend):
             'GROUP BY c.id ', (corp_id,))
         return cursor.fetchone()
 
-    def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
-        where_cond = ['c.active = ?', 'kcu.user_id = ?']
-        values_cond = [1, user_id]
+    def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+                         offset=0, limit=-1):
+        if requestable:
+            where_cond = ['c.active = ?', '(kcu.user_id = ? OR c.requestable = ?)']
+            values_cond = [1, user_id, 1]
+        else:
+            where_cond = ['c.active = ?', 'kcu.user_id = ?']
+            values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
                 where_cond.append(u'(rc.name LIKE ? OR c.id LIKE ? OR rc.info LIKE ?)')

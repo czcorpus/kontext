@@ -36,6 +36,9 @@ class _ID(object):
         self._optional = optional
         self._forced_module = None
 
+    def __repr__(self):
+        return 'Plugin {0} ({1})'.format(self._ident, self.instance)
+
     @property
     def instance(self):
         """
