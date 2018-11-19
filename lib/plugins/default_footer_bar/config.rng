@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="footer_bar">
+            <element name="module">
+                <value>default_footer_bar</value>
+            </element>
+            <element name="js_module">
+                <value>defaultFooterBar</value>
+            </element>
+            <element name="content_dir">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="default_lang">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+        </element>
+    </start>
+</grammar>
