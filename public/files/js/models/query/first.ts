@@ -332,11 +332,9 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     private restoreFromCorpSwitch(props:Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>):void {
         if (props.key === this.csGetStateKey()) {
             props.currCorpora.forEach((corp, i) => {
-                if (props.prevCorpora.size > i) {
-                    this.queries = this.queries.set(corp, props.data.queries.get(props.prevCorpora.get(i)));
-                    this.queryTypes = this.queryTypes.set(corp, props.data.queryTypes.get(props.prevCorpora.get(i)));
-                    this.matchCaseValues = this.matchCaseValues.set(corp, props.data.matchCases.get(props.prevCorpora.get(i)));
-                }
+                this.queries = this.queries.set(corp, props.data.queries.get(props.prevCorpora.get(i)) || '');
+                this.queryTypes = this.queryTypes.set(corp, props.data.queryTypes.get(props.prevCorpora.get(i)) || '');
+                this.matchCaseValues = this.matchCaseValues.set(corp, props.data.matchCases.get(props.prevCorpora.get(i)) || false);
             });
             this.queries = this.queries.filter((_, k) => props.currCorpora.includes(k)).toMap();
             this.queryTypes = this.queryTypes.filter((_, k) => props.currCorpora.includes(k)).toMap();
