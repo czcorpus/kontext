@@ -69,27 +69,39 @@ e.g.: <p>you're logged in as <strong>{username}</strong></p>
 
 import os
 import os.path
+import logging
 from plugins.abstract.appbar import AbstractApplicationBar
 import plugins
 
 
 class StaticApplicationBar(AbstractApplicationBar):
 
-    def __init__(self, html_dir, css_urls, js_urls, default_lang, auth):
+    def __init__(self, html_dir, css_urls, js_urls, default_lang, avail_langs, auth):
         super(StaticApplicationBar, self).__init__()
         self._css_urls = css_urls
         self._js_urls = js_urls
         self._auth = auth
         self._default_lang = default_lang
-        self._html_files = self._load_html(html_dir)
+        self._avail_langs = avail_langs
+        self._html_dir = os.path.normpath(html_dir)
+        self._html_files = self._load_html(self._html_dir)
+
+    def _is_in_avail_langs(self, v):
+        for a in self._avail_langs:
+            if a.startswith(v):
+                return True
+        return False
 
     def _load_html(self, dir_path):
         ans = {}
         for fname in os.listdir(dir_path):
             tmp = fname.split('.')
-            if len(tmp) == 3 and len(tmp[1]) == 2 and tmp[2] == 'html':
+            if len(tmp) == 3 and self._is_in_avail_langs(tmp[1]) and tmp[2] == 'html':
                 with open(os.path.join(dir_path, fname)) as fr:
                     ans[tmp[1]] = fr.read()
+            else:
+                logging.getLogger(__name__).warning(
+                    'Possible application bar contents file {0} will be ignored'.format(fname))
         return ans
 
     def get_styles(self, plugin_api):
@@ -101,7 +113,15 @@ class StaticApplicationBar(AbstractApplicationBar):
     def get_contents(self, plugin_api, return_url):
         user_info = self._auth.get_user_info(plugin_api)
         lang = plugin_api.user_lang.split('_')[0]
-        html = self._html_files.get(lang, self._default_lang)
+        html = self._html_files.get(lang)
+        if not html:
+            try:
+                html = self._html_files[self._default_lang]
+            except KeyError:
+                html = '<p>[Plug-in content error. See the log for more information]</p>'
+                logging.getLogger(__name__).error(
+                    'missing application bar default language file: {0}/[some name].{1}.html'.format(
+                        self._html_dir, self._default_lang))
         return html.format(**user_info)
 
     def get_fallback_content(self):
@@ -113,4 +133,5 @@ def create_instance(settings, auth):
     plg_conf = settings.get('plugins', 'application_bar')
     return StaticApplicationBar(html_dir=plg_conf['default:html_dir'], css_urls=plg_conf.get('default:css_urls', []),
                                 js_urls=plg_conf.get('default:js_urls', []),
-                                default_lang=plg_conf['default:default_lang'], auth=auth)
+                                default_lang=plg_conf['default:default_lang'],
+                                avail_langs=settings.get('global', 'translations'), auth=auth)
