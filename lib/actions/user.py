@@ -157,7 +157,7 @@ class User(Kontext):
             limit=limit
         )
 
-    @exposed(return_type='html', skip_corpus_init=True)
+    @exposed(return_type='template', skip_corpus_init=True)
     def ajax_get_toolbar(self, _):
         with plugins.runtime.APPLICATION_BAR as ab:
             return ab.get_contents(plugin_api=self._plugin_api, return_url=self.return_url)
@@ -171,7 +171,7 @@ class User(Kontext):
             else:
                 return {'user': {'username': user_info['username']}}
 
-    @exposed(return_type='html', template='user/profile.tmpl', page_model='userProfile',
+    @exposed(return_type='template', template='user/profile.tmpl', page_model='userProfile',
              skip_corpus_init=True, access_level=1)
     def profile(self, request):
         if not self._uses_internal_user_pages():

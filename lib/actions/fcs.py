@@ -150,8 +150,9 @@ class Actions(Kontext):
             for kwicline in page['Lines']
         ][start:][:max_rec]
 
-    @exposed(return_type='xml', template='fcs/v1_complete.tmpl', skip_corpus_init=True, http_method=('GET', 'HEAD'))
+    @exposed(return_type='template', template='fcs/v1_complete.tmpl', skip_corpus_init=True, http_method=('GET', 'HEAD'))
     def v1(self, req):
+        self._headers['Content-Type'] = 'application/xml'
         current_version = 1.2
 
         default_corp_list = settings.get('corpora', 'default_corpora', [])
@@ -316,7 +317,7 @@ class Actions(Kontext):
 
         return data
 
-    @exposed(return_type='text/xsl', template='fcs/fcs2html.tmpl', skip_corpus_init=True)
+    @exposed(return_type='template', template='fcs/fcs2html.tmpl', skip_corpus_init=True)
     def fcs2html(self, req):
         """
             Returns XSL template for rendering FCS XML.
