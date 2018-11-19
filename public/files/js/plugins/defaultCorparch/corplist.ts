@@ -419,6 +419,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 args.set(p, filters[p]);
             }
         }
+        args.set('requestable', '1');
         return this.pluginApi.ajax<CorplistDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),

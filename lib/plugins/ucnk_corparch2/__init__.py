@@ -112,10 +112,11 @@ class UcnkCorpArch2(RDBMSCorparch):
         obj.requestable = row['requestable']
         return obj
 
-    def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
+    def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+                     offset=0, limit=-1):
         return super(UcnkCorpArch2, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
-                                                       min_size=min_size, max_size=max_size, offset=offset,
-                                                       limit=limit if limit > -1 else 1000000000)
+                                                       min_size=min_size, max_size=max_size, requestable=requestable,
+                                                       offset=offset, limit=limit if limit > -1 else 1000000000)
 
     def export_favorite(self, plugin_api):
         ans = []
@@ -146,7 +147,8 @@ class UcnkCorpArch2(RDBMSCorparch):
             query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
         else:
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
-        query = (' '.join(query_substrs) + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords))
+        query = (' '.join(query_substrs) + ' ' + ' '.join('%s%s' %
+                                                          (self._tag_prefix, s) for s in query_keywords))
         return super(UcnkCorpArch2, self).search(plugin_api, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, plugin_api, custom_message):

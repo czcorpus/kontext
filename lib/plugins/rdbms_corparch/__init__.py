@@ -112,6 +112,10 @@ class DeafultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
+        if filter_dict.get('requestable'):
+            requestable = bool(int(filter_dict.get('requestable')))
+        else:
+            requestable = False
 
         if offset is None:
             offset = 0
@@ -144,8 +148,8 @@ class DeafultCorplistProvider(CorplistProvider):
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
         rows = self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
-                                           min_size=min_size, max_size=max_size, offset=offset, limit=limit + 1,
-                                           keywords=query_keywords).values()
+                                           min_size=min_size, max_size=max_size, requestable=requestable,
+                                           offset=offset, limit=limit + 1, keywords=query_keywords).values()
         ans = []
         for i, corp in enumerate(rows):
             used_keywords.update(corp.keywords)
@@ -156,7 +160,7 @@ class DeafultCorplistProvider(CorplistProvider):
             if i == limit - 1:
                 break
         return dict(rows=ans,
-                    nextOffset=offset+limit if len(rows) > limit else None,
+                    nextOffset=offset + limit if len(rows) > limit else None,
                     keywords=l10n.sort(used_keywords, loc=plugin_api.user_lang),
                     query=query,
                     current_keywords=query_keywords,
@@ -283,11 +287,13 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                               path=None,
                               keywords=keywords)
 
-    def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
+    def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+                     offset=0, limit=-1):
         user_id = plugin_api.user_dict['id']
         ans = OrderedDict()
         for row in self._backend.load_all_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
-                                                  max_size=max_size, offset=offset, limit=limit):
+                                                  max_size=max_size, requestable=requestable, offset=offset,
+                                                  limit=limit):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_api, row)
         return ans
 
@@ -390,6 +396,9 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
+
+    def mod_corplist_menu(self, menu_item):
+        menu_item.add_args(('requestable', '1'))
 
     def create_corplist_provider(self, plugin_api):
         return DeafultCorplistProvider(plugin_api, self, self._tag_prefix)

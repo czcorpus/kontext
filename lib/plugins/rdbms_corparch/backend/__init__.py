@@ -166,7 +166,8 @@ class DatabaseBackend(object):
     def load_corpus(self, corp_id):
         raise NotImplementedError()
 
-    def load_all_corpora(self, substrs=None, keywords=None, min_size=0, max_size=None, offset=0, limit=-1):
+    def load_all_corpora(self, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+                         offset=0, limit=-1):
         """
         """
         raise NotImplementedError()
