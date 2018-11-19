@@ -247,12 +247,10 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         if (props.key === this.csGetStateKey()) {
             ans = this.copyState(props.data);
             props.currCorpora.forEach((corp, i) => {
-                if (props.prevCorpora.size > i) {
-                    ans.rawCode = ans.rawCode.set(corp, ans.rawCode.get(props.prevCorpora.get(i) || ''));
-                    ans.richCode = ans.richCode.set(corp, ans.richCode.get(props.prevCorpora.get(i) || ''));
-                    ans.rawAnchorIdx = ans.rawAnchorIdx.set(corp, ans.rawAnchorIdx.get(props.prevCorpora.get(i) || ''));
-                    ans.rawFocusIdx = ans.rawFocusIdx.set(corp, ans.rawFocusIdx.get(props.prevCorpora.get(i) || ''));
-                }
+                ans.rawCode = ans.rawCode.set(corp, ans.rawCode.get(props.prevCorpora.get(i)) || '');
+                ans.richCode = ans.richCode.set(corp, ans.richCode.get(props.prevCorpora.get(i)) || '');
+                ans.rawAnchorIdx = ans.rawAnchorIdx.set(corp, ans.rawAnchorIdx.get(props.prevCorpora.get(i)) || 0);
+                ans.rawFocusIdx = ans.rawFocusIdx.set(corp, ans.rawFocusIdx.get(props.prevCorpora.get(i)) || 0);
             });
             ans.rawCode = ans.rawCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.richCode = ans.richCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
