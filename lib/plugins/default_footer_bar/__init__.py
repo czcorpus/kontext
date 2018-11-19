@@ -26,14 +26,7 @@ languages are always applicable.
 
 Required plug-in configuration:
 
-element footer_bar {
-  element module { "default_footer_bar" }
-  element js_module { "defaultFooterBar" }
-  element content_dir {
-    attribute extension-by { "default" }
-    text
-  }
-}
+please see ./config.rng
 """
 
 import os
@@ -66,13 +59,28 @@ class CustomContentFooterBar(AbstractFootbar):
     box in case debugging mode is on.
     """
 
-    def __init__(self, content_dir):
+    def __init__(self, content_dir, avail_langs, default_lang):
         self._content_dir = content_dir
-        self._lang_text_map = dict((item.split('.')[0].split('-')[1], self._get_text_path(item))
-                                   for item in os.listdir(self._content_dir))
-        if 'en' not in self._lang_text_map:
-            logging.getLogger(__name__).warning('Missing *en* version of a footer text. Found: %s' % (
-                ', '.join(self._lang_text_map)))
+        self._avail_langs = avail_langs
+        self._default_lang = default_lang
+        self._lang_text_map = {}
+        for item in os.listdir(self._content_dir):
+            key = item.split('.')[0].split('-')[1]
+            if not self._is_in_avail_langs(key):
+                logging.getLogger(__name__).warning(
+                    'Footer bar file {0} not compatible with installed translations.'.format(item))
+            self._lang_text_map[key] = self._get_text_path(item)
+
+        if self._default_lang not in self._lang_text_map:
+            logging.getLogger(__name__).warning(
+                'Missing default version ({0}) of a footer text. Found: {1}'.format(
+                    self._default_lang, ', '.join(self._lang_text_map)))
+
+    def _is_in_avail_langs(self, v):
+        for a in self._avail_langs:
+            if a.startswith(v):
+                return True
+        return False
 
     def _get_text_path(self, filename):
         return os.path.join(self._content_dir, filename)
@@ -80,13 +88,15 @@ class CustomContentFooterBar(AbstractFootbar):
     def get_contents(self, plugin_api, return_url=None):
         lang = plugin_api.user_lang[:2]
         if lang not in self._lang_text_map:
-            lang = 'en'
+            lang = self._default_lang
         with open(self._lang_text_map[lang], mode='rb') as fin:
             return markdown(fin.read().decode('utf-8'))
 
 
 def create_instance(conf):
-    content_dir = conf.get('plugins', 'footer_bar').get('content_dir', None)
+    plg_conf = conf.get('plugins', 'footer_bar')
+    content_dir = plg_conf.get('default:content_dir', None)
     if content_dir:
-        return CustomContentFooterBar(content_dir=content_dir)
+        return CustomContentFooterBar(content_dir=content_dir, avail_langs=conf.get('global', 'translations'),
+                                      default_lang=plg_conf['default:default_lang'])
     return ImplicitFooterBar()
