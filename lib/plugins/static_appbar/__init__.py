@@ -21,8 +21,9 @@ organization-specific heading.
 
 What is required:
 
-1) a directory where localized HTML files are stored. The name format
-is as follows:
+1) a directory where localized HTML files are stored. The files
+must use UTF-8 encoding. The name format is as follows:
+
 [some name].[two character lang code].html
 
 (e.g.: appbar.cs.html, appbar.en.html, appbar.pl.html)
@@ -98,7 +99,7 @@ class StaticApplicationBar(AbstractApplicationBar):
             tmp = fname.split('.')
             if len(tmp) == 3 and self._is_in_avail_langs(tmp[1]) and tmp[2] == 'html':
                 with open(os.path.join(dir_path, fname)) as fr:
-                    ans[tmp[1]] = fr.read()
+                    ans[tmp[1]] = fr.read().decode('utf-8')
             else:
                 logging.getLogger(__name__).warning(
                     'Possible application bar contents file {0} will be ignored'.format(fname))
