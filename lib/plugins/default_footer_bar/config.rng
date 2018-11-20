@@ -9,18 +9,20 @@
             <element name="js_module">
                 <value>defaultFooterBar</value>
             </element>
-            <element name="content_dir">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
-                <text />
-            </element>
-            <element name="default_lang">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
-                <text />
-            </element>
+            <optional>
+                <element name="content_dir">
+                    <attribute name="extension-by">
+                        <value>default</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="default_lang">
+                    <attribute name="extension-by">
+                        <value>default</value>
+                    </attribute>
+                    <text />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>
