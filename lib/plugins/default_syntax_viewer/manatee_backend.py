@@ -157,6 +157,13 @@ class ManateeBackendConf(object):
     def __init__(self, data):
         self._data = data
 
+    def get_detail_attrs(self, corpus_id, corpus=None):
+        for tc in self._data[corpus_id]['trees']:
+            if corpus is not None and "*" == (tc["detailAttrs"] or [""])[0]:
+                filtered = tc.get("filtered", [])
+                tc['detailAttrs'] = [x for x in corpus.get_conf(
+                    'ATTRLIST').split(',') if x not in filtered]
+
     def get_trees(self, corpus_id, corpus=None):
         d = {}
         for tc in self._data[corpus_id]['trees']:
@@ -193,6 +200,9 @@ class TreeNodeEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, TreeNode):
+            data = {}
+            data.update([('id',  obj.id)])
+            data.update(obj.data)
             ans = dict(
                 parent=obj.parent.id if obj.parent else None,
                 hint=None,
@@ -202,7 +212,7 @@ class TreeNodeEncoder(json.JSONEncoder):
                 rbrother=obj.rbrother.id if obj.rbrother else None,
                 lbrother=obj.lbrother.id if obj.lbrother else None,
                 depth=obj.depth,
-                data=[('id',  obj.id)] + obj.data,
+                data=data,
                 order=obj.idx)
             if obj.hidden:
                 ans['hidden'] = True
@@ -232,7 +242,7 @@ class TreeNode(object):
         """
         Args:
             idx (int): node order in the list (zero based)
-            data (List[Tuple[str, Any]]): a dict containing detailed information about the node
+            data (Dict[str, Any]): a dict containing detailed information about the node
             node_labels (list of str): a list of labels for the nodes
             word (str): a "word" value of the node (i.e. the actual word the node represents)
             parent (int): parent node
@@ -335,7 +345,7 @@ class TreeBuilder(object):
             return [k % (v if v is not None else '') for k, v in zip(tree_conf.label_templates, values)]
 
         nodes = [TreeNode(idx=i,
-                          data=self._dict_portion(d, tree_conf.detail_attrs),
+                          data=dict(self._dict_portion(d, tree_conf.detail_attrs)),
                           node_labels=export_labels(d),
                           parent=d[tree_conf.parent_attr],
                           word=d[tree_conf.word_attr],
@@ -491,6 +501,12 @@ class ManateeBackend(SearchBackend):
                     'Absolute parent position %d out of range 0..%d' % (abs_parent, len(data) - 1))
             data[i][parent_attr] = abs_parent if abs_parent is not None else 0
             self._process_attr_refs(data, i, attr_refs)
+
+    def get_detail_attr_orders(self, corpus_id, corpus):
+        ans = {}
+        for tree_id, conf in self._conf.get_trees(corpus_id, corpus).items():
+            ans[tree_id] = conf.detail_attrs
+        return ans
 
     def get_data(self, corpus, corpus_id, token_id, kwic_len):
         tree_configs = self._conf.get_trees(corpus_id, corpus)
