@@ -423,9 +423,16 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         }
     }
 
+    private hasAutoCompleteSupport():boolean {
+        return typeof this.textInputChangeCallback === 'function';
+    }
+
     private handleAttrTextInputAutoCompleteRequest(attrName:string, value:string):RSVP.Promise<any> {
-        if (typeof this.textInputChangeCallback === 'function') {
+        if (this.hasAutoCompleteSupport()) {
             return this.textInputChangeCallback(attrName, value);
+
+        } else {
+            return RSVP.Promise.resolve(null);
         }
     }
 
@@ -461,7 +468,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                             doc: attrItem.attr_doc,
                             docLabel: attrItem.attr_doc_label
                         },
-                        null,
+                        '',
                         Immutable.List([]), Immutable.List([]));
 
                 } else {
@@ -628,7 +635,17 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         const ans = {};
         this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {
             if (attrSel.hasUserChanges()) {
-                ans[attrSel.name !== this.bibLabelAttr ? attrSel.name : this.bibIdAttr] = attrSel.exportSelections(lockedOnesOnly);
+                if (this.hasAutoCompleteSupport()) {
+                    ans[attrSel.name !== this.bibLabelAttr ? attrSel.name : this.bibIdAttr] = attrSel.exportSelections(lockedOnesOnly);
+
+                } else {
+                    if (attrSel instanceof TextInputAttributeSelection) {
+                        ans[attrSel.name] = [attrSel.getTextFieldValue()];
+
+                    } else {
+                        ans[attrSel.name] = attrSel.exportSelections(lockedOnesOnly);
+                    }
+                }
             }
         });
         return ans;

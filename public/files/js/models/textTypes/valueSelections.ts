@@ -61,6 +61,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
         this.attrInfo = attrInfo;
         this.autoCompleteHints = autoCompleteHints ? autoCompleteHints : Immutable.List([]);
         this.values = values ? values : Immutable.List([]);
+        this.textFieldValue = textFieldValue;
     }
 
     mapValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
@@ -97,21 +98,19 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
     }
 
     hasUserChanges():boolean {
-        return this.values.find((item:TextTypes.AttributeValue) => {
-            return item.selected === true;
-        }) !== undefined;
+        const hasSelected = this.values.find((item:TextTypes.AttributeValue) => item.selected === true);
+        return hasSelected !== undefined || !!this.textFieldValue;
     }
 
-    exportSelections(lockedOnesOnly:boolean):any {
-        let items = lockedOnesOnly ?
-                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) : this.values;
+    exportSelections(lockedOnesOnly:boolean):Array<string> {
+        const items = lockedOnesOnly ?
+                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) :
+                this.values;
+
         return items
-            .filter((item:TextTypes.AttributeValue) => {
-                return item.selected === true;
-            })
-            .map((item:TextTypes.AttributeValue) => {
-                return item.ident;
-            }).toJS();
+            .filter((item:TextTypes.AttributeValue) => item.selected === true)
+            .map((item:TextTypes.AttributeValue) => item.ident)
+            .toJS();
     }
 
     updateItems(items:Array<string>):TextTypes.AttributeSelection {
@@ -383,15 +382,13 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
     }
 
     exportSelections(lockedOnesOnly:boolean):Array<string> {
-        let items = lockedOnesOnly ?
-                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) : this.values;
+        const items = lockedOnesOnly ?
+                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) :
+                this.values;
         return items
-            .filter((item:TextTypes.AttributeValue) => {
-                return item.selected === true;
-            })
-            .map((item:TextTypes.AttributeValue) => {
-                return item.ident;
-            }).toArray();
+            .filter((item:TextTypes.AttributeValue) => item.selected === true)
+            .map((item:TextTypes.AttributeValue) => item.ident)
+            .toJS();
     }
 
     updateItems(items:Array<string>):TextTypes.AttributeSelection {
