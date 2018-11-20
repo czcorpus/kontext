@@ -97,6 +97,23 @@ class SearchBackend(object):
         """
         raise NotImplementedError()
 
+    def get_detail_attr_orders(self, corpus_id, corpus):
+        """
+        The data format used by js-treex-view which we
+        are compliant with uses a dict type for
+        node detail which makes assuring of explicit order
+        for items impossible. This function provides a way
+        how to pass additional information to the client-side
+        of the plug-in where some order can be created.
+
+        Returns a dict containing orders of detail attributes
+        for individual trees. In case there is no data for
+        a specific corpus, the client-side should use some
+        other logic (either a default iteration of an object
+        or some sorting).
+        """
+        return {}
+
     @staticmethod
     def is_error_node(node):
         return isinstance(node, BackendDataParseException)

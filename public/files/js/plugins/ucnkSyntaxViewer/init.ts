@@ -19,12 +19,19 @@
  */
 
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {createGenerator, SourceData} from './ucnkTreeView';
+import {createGenerator, SourceData, DetailAttrOrders} from './ucnkTreeView';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
 require('./style.less'); // webpack
+
+
+interface ServerExportedData {
+    syntax_viewer:{
+        detail_attr_orders:DetailAttrOrders
+    };
+}
 
 /**
  *
@@ -51,7 +58,12 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
         const treexFrame = window.document.createElement('div');
         treexFrame.style.width = '90%';
         this.target.appendChild(treexFrame);
-        createGenerator(this.pluginApi.getComponentHelpers()).call(
+
+        createGenerator(
+            this.pluginApi.getComponentHelpers(),
+            this.pluginApi.getConf<ServerExportedData>('pluginData').syntax_viewer.detail_attr_orders || {}
+
+        ).call(
             null,
             this.data,
             'cs',

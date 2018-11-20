@@ -69,7 +69,8 @@ def get_syntax_data(ctrl, request):
                                          int(request.args.get('kwic_id')),
                                          int(request.args.get('kwic_len')))
     except MaximumContextExceeded:
-        raise UserActionException(_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
+        raise UserActionException(
+            _('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
 
 
 class SyntaxDataProviderError(Exception):
@@ -93,6 +94,10 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
 
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}
+
+    def export(self, plugin_api):
+        return dict(detail_attr_orders=self._backend.get_detail_attr_orders(plugin_api.current_corpus.corpname,
+                                                                            plugin_api.current_corpus))
 
 
 def load_plugin_conf(conf):
