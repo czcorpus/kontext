@@ -22,6 +22,7 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 * fully **editable query chain**
     * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed 
     and the whole sequence is then re-executed.
+* **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
 * support for **spoken corpora**
     * defined concordance segments can be played back as audio
     * KWIC detail provides a custom rendering with **easily distinguishable speeches**
@@ -32,18 +33,20 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
       availability changed ("which publishers are there in case only *fiction* is selected?")
     * a **custom text types ratio** can be defined ("give me 20% fiction and 80% journalism") 
     * a sub-corpus can be created by a custom CQL expression
+    * a sub-corpus can be published so other users can access it
     * subcorpora are backed up as CQL queries which makes further modification/restoring possible
 * **frequency distribution**
     * **2-dimensional frequency distribution** for both positional and structural attributes
     * result caching decreases time required to navigate between pages
     * on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
-* **persistent URLs for large queries** - you can send a link to someone even if the query was in megabytes
+* **persistent URL for any query** - you can send a link to someone even if the query string was megabytes long
 * access to **previous queries**, named queries
 * **access to favorite corpora** (subcorpora, aligned corpora)
 * **interactive PoS tag tool** - in case of positional PoS tag formats an interactive tool can be used to write tag queries
 * a concordance/frequency/collocation listing can be **saved in Excel format** (xlsx)
 * concordance tokens and KWICs can be connected to external data services (e.g. dictionaries, encyclopedias)
 * a correct (i.e. the one calculating only with selected text types) i.p.m. can be calculated on-demand for ad-hoc subcorpora
+* integrability with external data resources (e.g. dictionaries, media libraries)
 
 
 
