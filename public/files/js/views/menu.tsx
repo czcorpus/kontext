@@ -152,7 +152,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         return (
             <li className="disabled">
                 <span>
-                    {props.data.label}
+                    {he.translate(props.data.label)}
                 </span>
             </li>
         );
