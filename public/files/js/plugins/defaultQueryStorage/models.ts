@@ -26,7 +26,7 @@ import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
-import {highlightSyntaxStatic} from '../../models/query/cqleditor/main';
+import {highlightSyntaxStatic} from '../../models/query/cqleditor/parser';
 
 
 export interface InputBoxHistoryItem {
