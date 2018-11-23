@@ -127,7 +127,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 newState = this.copyState(state);
                 newState.isEnabled = false;
             break;
-            case 'QUERY_INPUT_MOVE_CURSOR':
+            case this.actionPrefix + 'QUERY_INPUT_MOVE_CURSOR':
                 newState = this.copyState(state);
                 newState.rawAnchorIdx = newState.rawAnchorIdx.set(
                     action.props['sourceId'],
@@ -145,7 +145,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                     )
                 );
             break;
-            case 'CQL_EDITOR_SET_RAW_QUERY': {
+            case this.actionPrefix + 'CQL_EDITOR_SET_RAW_QUERY': {
                 newState = this.copyState(state);
                 const args = typedProps<CQLEditorSetRawQueryProps>(action.props);
                 if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
@@ -164,7 +164,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 }
             }
             break;
-            case 'QUERY_INPUT_SET_QUERY':
+            case this.actionPrefix + 'QUERY_INPUT_SET_QUERY':
                 newState = this.copyState(state);
                 this.setRawQuery(
                     newState,
@@ -173,7 +173,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                     null
                 );
             break;
-            case 'QUERY_INPUT_APPEND_QUERY':
+            case this.actionPrefix + 'QUERY_INPUT_APPEND_QUERY':
                 newState = this.copyState(state);
                 this.setRawQuery(
                     newState,
@@ -186,22 +186,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 );
                 this.moveCursorToEnd(newState, action.props['sourceId']);
             break;
-            case 'FILTER_QUERY_INPUT_APPEND_QUERY': // TODO this is far from perfect (= explicit solution for filter here)
-                if (this.actionPrefix === 'FILTER_') {
-                    newState = this.copyState(state);
-                    this.setRawQuery(
-                        newState,
-                        <string>action.props['sourceId'],
-                        <string>action.props['query'],
-                        [
-                            this.getQueryLength(newState, action.props['sourceId']),
-                            this.getQueryLength(newState, action.props['sourceId'])
-                        ]
-                    );
-                    this.moveCursorToEnd(newState, action.props['sourceId']);
-                }
-            break;
-            case 'QUERY_INPUT_REMOVE_LAST_CHAR': {
+            case this.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR': {
                 newState = this.copyState(state);
                 const queryLength = newState.rawCode.get(action.props['sourceId']).length;
                 this.setRawQuery(
@@ -235,7 +220,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
 
     sideEffects(state:CQLEditorModelState, action:ActionPayload, dispatch:SEDispatcher) {
         switch (action.actionType) {
-            case 'CQL_EDITOR_SET_RAW_QUERY': {
+            case this.actionPrefix + 'CQL_EDITOR_SET_RAW_QUERY': {
                 const args = typedProps<QueryInputSetQueryProps>(action.props);
                 dispatch({
                     actionType: `${this.actionPrefix}QUERY_INPUT_SET_QUERY`,

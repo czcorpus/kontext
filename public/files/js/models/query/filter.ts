@@ -186,8 +186,26 @@ export class FilterFormModel extends QueryFormModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
-                case '@FILTER_QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
+                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
+                        payload.props['sourceId'],
+                        this.shouldDownArrowTriggerHistory(
+                            payload.props['query'],
+                            payload.props['cursorPos'],
+                            payload.props['focusIdx']
+                        )
+                    );
+                    this.notifyChangeListeners();
+                break;
+                case 'FILTER_QUERY_INPUT_MOVE_CURSOR':
+                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
+                        payload.props['sourceId'],
+                        this.shouldDownArrowTriggerHistory(
+                            this.queries.get(payload.props['sourceId']),
+                            payload.props['anchorIdx'],
+                            payload.props['focusIdx']
+                        )
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_APPEND_QUERY':

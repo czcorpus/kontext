@@ -26,6 +26,7 @@ import {QueryFormModel} from '../../models/query/common';
 
 
 export interface CQLEditorProps {
+    actionPrefix:string;
     sourceId:string;
     takeFocus:boolean;
     initialValue:string;
@@ -148,7 +149,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
 
             dispatcher.dispatch({
-                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
                 props: {
                     sourceId: this.props.sourceId,
                     query: src.map(v => v[0]).join(''),
@@ -205,7 +206,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 dispatcher.dispatch({
-                    actionType: 'QUERY_INPUT_MOVE_CURSOR',
+                    actionType: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
                     props: {
                         sourceId: this.props.sourceId,
                         anchorIdx: anchorIdx,
@@ -223,7 +224,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
                 if (rawAnchorIdx === rawFocusIdx) {
                     dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
                         props: {
                             query: evt.keyCode === KeyCodes.BACKSPACE ?
                                 rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
@@ -240,7 +241,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
                 } else if (rawAnchorIdx < rawFocusIdx) {
                     dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
                         props: {
                             query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
                             sourceId: this.props.sourceId,
@@ -255,7 +256,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
                 } else {
                     dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
                         props: {
                             query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
                             sourceId: this.props.sourceId,
@@ -275,7 +276,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const rawSrc = src.map(v => v[0]).join('');
                 dispatcher.dispatch({
-                    actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                    actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
                     props: {
                         query: rawSrc + '\n ',
                         sourceId: this.props.sourceId,
@@ -320,7 +321,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
             if (this.props.initialValue) {
                 dispatcher.dispatch({
-                    actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                    actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
                     props: {
                         query: this.props.initialValue,
                         sourceId: this.props.sourceId,

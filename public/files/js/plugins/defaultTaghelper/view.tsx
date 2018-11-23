@@ -132,7 +132,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
                     dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        actionType: props.actionPrefix + 'CQL_EDITOR_SET_RAW_QUERY',
                         props: {
                             sourceId: props.sourceId,
                             query: `"${props.displayPattern}"`,

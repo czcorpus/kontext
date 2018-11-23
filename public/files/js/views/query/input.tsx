@@ -872,6 +872,7 @@ export function init({
                 case 'cql':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
+                                actionPrefix={this.props.actionPrefix}
                                 sourceId={this.props.sourceId}
                                 initialValue={this.state.query}
                                 takeFocus={this.props.takeFocus}
