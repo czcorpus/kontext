@@ -154,7 +154,7 @@ export abstract class QueryFormModel extends SynchronizedModel {
 
     abstract getQueryTypes():Immutable.Map<string, string>;
 
-    abstract getHasNewlineAfterCursor(sourceId:string):boolean;
+    abstract getDownArrowTriggersHistory(sourceId:string):boolean;
 
     /// ---------
 
@@ -223,8 +223,13 @@ export abstract class QueryFormModel extends SynchronizedModel {
         return mismatch;
     }
 
-    protected hasNewLineAfterPosition(query:string, pos:number):boolean {
-        return query.substr(pos).search(/[\n\r]/) > -1;
+    protected shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
+        if (anchorIdx === focusIdx) {
+            return query.substr(anchorIdx+1).search(/[\n\r]/) === -1;
+
+        } else {
+            return false;
+        }
     }
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {

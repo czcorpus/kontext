@@ -29,6 +29,7 @@ export interface CQLEditorProps {
     sourceId:string;
     takeFocus:boolean;
     initialValue:string;
+    inputRef:React.RefObject<HTMLPreElement>;
     inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
     inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
@@ -70,8 +71,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class CQLEditor extends React.Component<CQLEditorProps, CQLEditorModelState> {
 
-        private _queryInputElement:React.RefObject<HTMLPreElement>;
-
         constructor(props:CQLEditorProps) {
             super(props);
             this.state = editorModel.getState();
@@ -79,7 +78,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.handleEditorClick = this.handleEditorClick.bind(this);
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
-            this._queryInputElement = React.createRef();
         }
 
         private handleModelChange(state:CQLEditorModelState) {
@@ -104,9 +102,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
             const sel = window.getSelection();
-            const src = this.extractText(this._queryInputElement.current);
-            let anchorNode = this._queryInputElement.current;
-            let focusNode = this._queryInputElement.current;
+            const src = this.extractText(this.props.inputRef.current);
+            let anchorNode = this.props.inputRef.current;
+            let focusNode = this.props.inputRef.current;
             let currIdx = 0;
             let anchorIdx = 0;
             let focusIdx = 0;
@@ -146,7 +144,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleInputChange() {
-            const src = this.extractText(this._queryInputElement.current);
+            const src = this.extractText(this.props.inputRef.current);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
 
             dispatcher.dispatch({
@@ -162,7 +160,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
             let curr = elm;
-            while (curr !== this._queryInputElement.current) {
+            while (curr !== this.props.inputRef.current) {
                 if (curr.nodeName === 'A') {
                     return curr;
                 }
@@ -204,12 +202,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private inputKeyUpHandler(evt) {
             if (KeyCodes.isArrowKey(evt.keyCode)) {
-                const src = this.extractText(this._queryInputElement.current);
+                const src = this.extractText(this.props.inputRef.current);
+                const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 dispatcher.dispatch({
                     actionType: 'QUERY_INPUT_MOVE_CURSOR',
                     props: {
                         sourceId: this.props.sourceId,
-                        cursorPos: this.getRawSelection(src)[1]
+                        anchorIdx: anchorIdx,
+                        focusIdx: focusIdx
                     }
                 });
             }
@@ -217,7 +217,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private ffKeyDownHandler(evt:KeyboardEvent) {
             if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
-                const src = this.extractText(this._queryInputElement.current);
+                const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const rawSrc = src.map(v => v[0]).join('');
 
@@ -271,7 +271,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 evt.preventDefault();
 
             } else if (evt.keyCode === KeyCodes.ENTER && evt.shiftKey) {
-                const src = this.extractText(this._queryInputElement.current);
+                const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const rawSrc = src.map(v => v[0]).join('');
                 dispatcher.dispatch({
@@ -314,8 +314,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidMount() {
             editorModel.addChangeListener(this.handleModelChange);
-            if (this.props.takeFocus && this._queryInputElement.current) {
-                this._queryInputElement.current.focus();
+            if (this.props.takeFocus && this.props.inputRef.current) {
+                this.props.inputRef.current.focus();
             }
 
             if (this.props.initialValue) {
@@ -331,14 +331,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
 
             if (he.browserInfo.isFirefox()) {
-                this._queryInputElement.current.addEventListener('keydown', this.ffKeyDownHandler);
+                this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
         }
 
         componentWillUnmount() {
             editorModel.removeChangeListener(this.handleModelChange);
             if (he.browserInfo.isFirefox()) {
-                this._queryInputElement.current.removeEventListener('keydown', this.ffKeyDownHandler);
+                this.props.inputRef.current.removeEventListener('keydown', this.ffKeyDownHandler);
             }
         }
 
@@ -348,7 +348,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             onInput={(evt) => this.handleInputChange()}
                             onClick={this.handleEditorClick}
                             className="cql-input"
-                            ref={this._queryInputElement}
+                            ref={this.props.inputRef}
                             dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
                             onKeyDown={this.props.inputKeyHandler}
                             onKeyUp={this.inputKeyUpHandler} />;

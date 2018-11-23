@@ -76,7 +76,7 @@ export interface TRQueryInputFieldState {
     query:string;
     historyVisible:boolean;
     cqlEditorMessage:string;
-    hasNewlineAfterCursor:boolean;
+    downArrowTriggersHistory:boolean;
 }
 
 
@@ -755,27 +755,29 @@ export function init({
             this._inputChangeHandler = this._inputChangeHandler.bind(this)
             this.state = {
                 query: queryModel.getQuery(this.props.sourceId),
-                hasNewlineAfterCursor: queryModel.getHasNewlineAfterCursor(this.props.sourceId),
+                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId),
                 historyVisible: false,
                 cqlEditorMessage: cqlEditorModel.getState().message.get(this.props.sourceId)
             };
         }
 
-        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement>) {
-            dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
-                props: {
-                    sourceId: this.props.sourceId,
-                    query: evt.target.value,
-                    cursorPos: this._queryInputElement.current.selectionStart
-                }
-            });
+        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
+            if (evt.target instanceof HTMLTextAreaElement || evt.target instanceof HTMLInputElement) {
+                dispatcher.dispatch({
+                    actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                    props: {
+                        sourceId: this.props.sourceId,
+                        query: evt.target.value,
+                        cursorPos: this._queryInputElement.current.selectionStart
+                    }
+                });
+            }
         }
 
         _handleModelChange(state) {
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
-                hasNewlineAfterCursor: queryModel.getHasNewlineAfterCursor(this.props.sourceId),
+                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId),
                 historyVisible: this.state.historyVisible,
                 cqlEditorMessage: state ? state.message.get(this.props.sourceId) : this.state.cqlEditorMessage
             });
@@ -787,16 +789,18 @@ export function init({
                     actionType: 'QUERY_INPUT_MOVE_CURSOR',
                     props: {
                         sourceId: this.props.sourceId,
-                        cursorPos: this._queryInputElement.current.selectionStart
+                        anchorIdx: this._queryInputElement.current.selectionStart,
+                        focusIdx: this._queryInputElement.current.selectionEnd
                     }
                 });
             }
         }
 
         _inputKeyHandler(evt) {
-                if (this.props.widgets.indexOf('history') > -1 &&
-                    !this.state.hasNewlineAfterCursor &&
-                    evt.keyCode === KeyCodes.DOWN_ARROW && !this.state.historyVisible) {
+                if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+                    this.props.widgets.indexOf('history') > -1 &&
+                    this.state.downArrowTriggersHistory &&
+                    !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -818,11 +822,15 @@ export function init({
         _inputChangeHandler() {}
 
         _toggleHistoryWidget() {
+            const newVisibility = !this.state.historyVisible;
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
-                historyVisible: !this.state.historyVisible,
+                historyVisible: newVisibility,
                 cqlEditorMessage: this.state.cqlEditorMessage
             });
+            if (!newVisibility && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
         }
 
         componentDidMount() {
@@ -868,7 +876,8 @@ export function init({
                                 initialValue={this.state.query}
                                 takeFocus={this.props.takeFocus}
                                 inputKeyHandler={this._inputKeyHandler}
-                                inputChangeHandler={this._inputChangeHandler} /> :
+                                inputChangeHandler={this._inputChangeHandler}
+                                inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
                         <cqlEditorViews.CQLEditorFallback
                             value={this.state.query}
                             inputRef={this._queryInputElement as React.RefObject<HTMLTextAreaElement>}

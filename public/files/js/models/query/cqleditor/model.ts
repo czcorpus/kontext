@@ -42,7 +42,7 @@ export interface CQLEditorModelState {
 
     rawFocusIdx:Immutable.Map<string, number>;
 
-    hasNewlineAfterCursor:Immutable.Map<string, boolean>;
+    downArrowTriggersHistory:Immutable.Map<string, boolean>;
 
     isEnabled:boolean;
 
@@ -93,7 +93,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 rawAnchorIdx: Immutable.Map<string, number>(),
                 rawFocusIdx: Immutable.Map<string, number>(),
                 isEnabled: isEnabled,
-                hasNewlineAfterCursor: Immutable.Map<string, boolean>()
+                downArrowTriggersHistory: Immutable.Map<string, boolean>()
             }
         );
         this.attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
@@ -131,11 +131,18 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 newState = this.copyState(state);
                 newState.rawAnchorIdx = newState.rawAnchorIdx.set(
                     action.props['sourceId'],
-                    action.props['cursorPos']
+                    action.props['anchorIdx']
                 );
                 newState.rawFocusIdx = newState.rawFocusIdx.set(
                     action.props['sourceId'],
-                    action.props['cursorPos']
+                    action.props['focusIdx']
+                );
+                newState.downArrowTriggersHistory = newState.downArrowTriggersHistory.set(
+                    action.props['sourceId'],
+                    this.shouldDownArrowTriggerHistory(
+                        newState,
+                        action.props['sourceId']
+                    )
                 );
             break;
             case 'CQL_EDITOR_SET_RAW_QUERY': {
@@ -265,13 +272,13 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 ans.richCode = ans.richCode.set(corp, ans.richCode.get(props.prevCorpora.get(i)) || '');
                 ans.rawAnchorIdx = ans.rawAnchorIdx.set(corp, ans.rawAnchorIdx.get(props.prevCorpora.get(i)) || 0);
                 ans.rawFocusIdx = ans.rawFocusIdx.set(corp, ans.rawFocusIdx.get(props.prevCorpora.get(i)) || 0);
-                ans.hasNewlineAfterCursor = ans.hasNewlineAfterCursor.set(corp, ans.hasNewlineAfterCursor.get(props.prevCorpora.get(i)) || false);
+                ans.downArrowTriggersHistory = ans.downArrowTriggersHistory.set(corp, ans.downArrowTriggersHistory.get(props.prevCorpora.get(i)) || false);
             });
             ans.rawCode = ans.rawCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.richCode = ans.richCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.rawAnchorIdx = ans.rawAnchorIdx.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.rawFocusIdx = ans.rawFocusIdx.filter((_, k) => props.currCorpora.includes(k)).toMap();
-            ans.hasNewlineAfterCursor = ans.hasNewlineAfterCursor.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            ans.downArrowTriggersHistory = ans.downArrowTriggersHistory.filter((_, k) => props.currCorpora.includes(k)).toMap();
 
         } else {
             ans = state;
@@ -286,14 +293,25 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     private moveCursorToPos(state:CQLEditorModelState, sourceId:string, posIdx:number):void {
         state.rawAnchorIdx = state.rawAnchorIdx.set(sourceId, posIdx);
         state.rawFocusIdx = state.rawFocusIdx.set(sourceId, posIdx);
+        state.downArrowTriggersHistory = state.downArrowTriggersHistory.set(
+            sourceId, this.shouldDownArrowTriggerHistory(state, sourceId));
     }
 
     private moveCursorToEnd(state:CQLEditorModelState, sourceId:string):void {
         this.moveCursorToPos(state, sourceId, state.rawCode.get(sourceId).length);
     }
 
-    private hasNewLineAfterPosition(rawQuery:string, pos:number):boolean {
-        return rawQuery.substr(pos).search(/[\n\r]/) > -1;
+    private shouldDownArrowTriggerHistory(state:CQLEditorModelState, sourceId:string):boolean {
+        const q = state.rawCode.get(sourceId);
+        const anchorIdx = state.rawAnchorIdx.get(sourceId);
+        const focusIdx = state.rawFocusIdx.get(sourceId);
+
+        if (anchorIdx === focusIdx) {
+            return q.substr(anchorIdx+1).search(/[\n\r]/) === -1;
+
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -319,9 +337,9 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
             newQuery
         );
 
-        state.hasNewlineAfterCursor = state.hasNewlineAfterCursor.set(
+        state.downArrowTriggersHistory = state.downArrowTriggersHistory.set(
             sourceId,
-            this.hasNewLineAfterPosition(state.rawCode.get(sourceId), state.rawFocusIdx.get(sourceId))
+            this.shouldDownArrowTriggerHistory(state, sourceId)
         );
 
         if (state.isEnabled) {

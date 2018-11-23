@@ -83,7 +83,7 @@ export class FilterFormModel extends QueryFormModel {
 
     private queries:Immutable.Map<string, string>;
 
-    private hasNewlineAfterCursor:Immutable.Map<string, boolean>;
+    private downArrowTriggersHistory:Immutable.Map<string, boolean>;
 
     private cursorPosition:Immutable.Map<string, number>;
 
@@ -152,7 +152,7 @@ export class FilterFormModel extends QueryFormModel {
             this.queries = this.queries.set('__new__', '');
         }
         this.cursorPosition = Immutable.Map<string, number>(this.queries.map((q, sourceId) => [sourceId, q.length]));
-        this.hasNewlineAfterCursor = Immutable.Map<string, boolean>(this.queries.map((_, sourceId) => [sourceId, false]));
+        this.downArrowTriggersHistory = Immutable.Map<string, boolean>(this.queries.map((_, sourceId) => [sourceId, false]));
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
         if (!this.queryTypes.has('__new__')) {
             this.queryTypes = this.queries.set('__new__', 'iquery');
@@ -490,7 +490,7 @@ export class FilterFormModel extends QueryFormModel {
         return this.tagsetDocs;
     }
 
-    getHasNewlineAfterCursor(sourceId:string):boolean {
-        return this.hasNewlineAfterCursor.get(sourceId);
+    getDownArrowTriggersHistory(sourceId:string):boolean {
+        return this.downArrowTriggersHistory.get(sourceId);
     }
 }
