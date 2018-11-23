@@ -154,6 +154,8 @@ export abstract class QueryFormModel extends SynchronizedModel {
 
     abstract getQueryTypes():Immutable.Map<string, string>;
 
+    abstract getHasNewlineAfterCursor(sourceId:string):boolean;
+
     /// ---------
 
     getSupportedWidgets():WidgetsMap {
@@ -221,6 +223,9 @@ export abstract class QueryFormModel extends SynchronizedModel {
         return mismatch;
     }
 
+    protected hasNewLineAfterPosition(query:string, pos:number):boolean {
+        return query.substr(pos).search(/[\n\r]/) > -1;
+    }
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
         this.useCQLEditor = optsModel.getUseCQLEditor();

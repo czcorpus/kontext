@@ -35,8 +35,10 @@ export interface CQLEditorProps {
 
 export interface CQLEditorFallbackProps {
     value:string;
-    takeFocus:boolean;
+    inputRef:React.RefObject<HTMLTextAreaElement>;
     inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
+    inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
+    inputKeyUpHandler:(evt:React.KeyboardEvent<{}>)=>void;
 }
 
 export interface CQLEditorViews {
@@ -53,24 +55,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps> {
 
-        private _queryInputElement:React.RefObject<HTMLTextAreaElement>;
-
-        constructor(props) {
-            super(props);
-            this._queryInputElement = React.createRef();
-        }
-
-        componentDidMount() {
-            if (this.props.takeFocus && this._queryInputElement.current) {
-                this._queryInputElement.current.focus();
-            }
-        }
-
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
-                                ref={this._queryInputElement}
+                                ref={this.props.inputRef}
                                 value={this.props.value}
                                 onChange={this.props.inputChangeHandler}
+                                onKeyDown={this.props.inputKeyHandler}
+                                onKeyUp={this.props.inputKeyUpHandler}
                                 spellCheck={false} />;
         }
     }
@@ -86,6 +77,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.state = editorModel.getState();
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
+            this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
+            this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
             this._queryInputElement = React.createRef();
         }
 
@@ -209,6 +202,95 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
+        private inputKeyUpHandler(evt) {
+            if (KeyCodes.isArrowKey(evt.keyCode)) {
+                const src = this.extractText(this._queryInputElement.current);
+                dispatcher.dispatch({
+                    actionType: 'QUERY_INPUT_MOVE_CURSOR',
+                    props: {
+                        sourceId: this.props.sourceId,
+                        cursorPos: this.getRawSelection(src)[1]
+                    }
+                });
+            }
+        }
+
+        private ffKeyDownHandler(evt:KeyboardEvent) {
+            if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
+                const src = this.extractText(this._queryInputElement.current);
+                const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+                const rawSrc = src.map(v => v[0]).join('');
+
+                if (rawAnchorIdx === rawFocusIdx) {
+                    dispatcher.dispatch({
+                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        props: {
+                            query: evt.keyCode === KeyCodes.BACKSPACE ?
+                                rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
+                                rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
+                            sourceId: this.props.sourceId,
+                            rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
+                        }
+                    });
+                    this.reapplySelection(
+                        evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
+                        evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
+                    );
+
+                } else if (rawAnchorIdx < rawFocusIdx) {
+                    dispatcher.dispatch({
+                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        props: {
+                            query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
+                            sourceId: this.props.sourceId,
+                            rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                        }
+                    });
+                    this.reapplySelection(
+                        evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                        evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx
+                    );
+
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        props: {
+                            query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
+                            sourceId: this.props.sourceId,
+                            rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                        }
+                    });
+                    this.reapplySelection(
+                        evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                        evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx
+                    );
+                }
+                evt.preventDefault();
+
+            } else if (evt.keyCode === KeyCodes.ENTER && evt.shiftKey) {
+                const src = this.extractText(this._queryInputElement.current);
+                const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+                const rawSrc = src.map(v => v[0]).join('');
+                dispatcher.dispatch({
+                    actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                    props: {
+                        query: rawSrc + '\n ',
+                        sourceId: this.props.sourceId,
+                        rawAnchorIdx: rawAnchorIdx + 1,
+                        rawFocusIdx: rawFocusIdx + 1,
+                    }
+                });
+                this.reapplySelection(
+                    rawAnchorIdx + 1,
+                    rawAnchorIdx + 1
+                );
+                evt.preventDefault();
+            }
+        }
+
         shouldComponentUpdate(nextProps, nextState) {
             return this.state.rawAnchorIdx.get(this.props.sourceId) !== nextState.rawAnchorIdx.get(this.props.sourceId) ||
                     this.state.rawFocusIdx.get(this.props.sourceId) !== nextState.rawFocusIdx.get(this.props.sourceId) ||
@@ -249,86 +331,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             }
 
             if (he.browserInfo.isFirefox()) {
-                this._queryInputElement.current.addEventListener('keydown', (evt:KeyboardEvent) => {
-                    if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
-                        const src = this.extractText(this._queryInputElement.current);
-                        const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-                        const rawSrc = src.map(v => v[0]).join('');
-
-                        if (rawAnchorIdx === rawFocusIdx) {
-                            dispatcher.dispatch({
-                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                                props: {
-                                    query: evt.keyCode === KeyCodes.BACKSPACE ?
-                                        rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
-                                        rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
-                                    sourceId: this.props.sourceId,
-                                    rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                                    rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
-                                }
-                            });
-                            this.reapplySelection(
-                                evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                                evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
-                            );
-
-                        } else if (rawAnchorIdx < rawFocusIdx) {
-                            dispatcher.dispatch({
-                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                                props: {
-                                    query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
-                                    sourceId: this.props.sourceId,
-                                    rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                                    rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                                }
-                            });
-                            this.reapplySelection(
-                                evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                                evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx
-                            );
-
-                        } else {
-                            dispatcher.dispatch({
-                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                                props: {
-                                    query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
-                                    sourceId: this.props.sourceId,
-                                    rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                                    rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                                }
-                            });
-                            this.reapplySelection(
-                                evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                                evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx
-                            );
-                        }
-                        evt.preventDefault();
-
-                    } else if (evt.keyCode === KeyCodes.ENTER && evt.shiftKey) {
-                        const src = this.extractText(this._queryInputElement.current);
-                        const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-                        const rawSrc = src.map(v => v[0]).join('');
-                        dispatcher.dispatch({
-                            actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                            props: {
-                                query: rawSrc + '\n ',
-                                sourceId: this.props.sourceId,
-                                rawAnchorIdx: rawAnchorIdx + 1,
-                                rawFocusIdx: rawFocusIdx + 1,
-                            }
-                        });
-                        this.reapplySelection(
-                            rawAnchorIdx + 1,
-                            rawAnchorIdx + 1
-                        );
-                        evt.preventDefault();
-                    }
-                });
+                this._queryInputElement.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
         }
 
         componentWillUnmount() {
             editorModel.removeChangeListener(this.handleModelChange);
+            if (he.browserInfo.isFirefox()) {
+                this._queryInputElement.current.removeEventListener('keydown', this.ffKeyDownHandler);
+            }
         }
 
         render() {
@@ -339,7 +350,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             className="cql-input"
                             ref={this._queryInputElement}
                             dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
-                            onKeyDown={this.props.inputKeyHandler} />;
+                            onKeyDown={this.props.inputKeyHandler}
+                            onKeyUp={this.inputKeyUpHandler} />;
         }
     }
 

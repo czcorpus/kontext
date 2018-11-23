@@ -42,6 +42,8 @@ export interface CQLEditorModelState {
 
     rawFocusIdx:Immutable.Map<string, number>;
 
+    hasNewlineAfterCursor:Immutable.Map<string, boolean>;
+
     isEnabled:boolean;
 
 }
@@ -90,7 +92,8 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 message: Immutable.Map<string, string>(),
                 rawAnchorIdx: Immutable.Map<string, number>(),
                 rawFocusIdx: Immutable.Map<string, number>(),
-                isEnabled: isEnabled
+                isEnabled: isEnabled,
+                hasNewlineAfterCursor: Immutable.Map<string, boolean>()
             }
         );
         this.attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
@@ -123,6 +126,17 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
             case 'CQL_EDITOR_DISABLE':
                 newState = this.copyState(state);
                 newState.isEnabled = false;
+            break;
+            case 'QUERY_INPUT_MOVE_CURSOR':
+                newState = this.copyState(state);
+                newState.rawAnchorIdx = newState.rawAnchorIdx.set(
+                    action.props['sourceId'],
+                    action.props['cursorPos']
+                );
+                newState.rawFocusIdx = newState.rawFocusIdx.set(
+                    action.props['sourceId'],
+                    action.props['cursorPos']
+                );
             break;
             case 'CQL_EDITOR_SET_RAW_QUERY': {
                 newState = this.copyState(state);
@@ -251,11 +265,13 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 ans.richCode = ans.richCode.set(corp, ans.richCode.get(props.prevCorpora.get(i)) || '');
                 ans.rawAnchorIdx = ans.rawAnchorIdx.set(corp, ans.rawAnchorIdx.get(props.prevCorpora.get(i)) || 0);
                 ans.rawFocusIdx = ans.rawFocusIdx.set(corp, ans.rawFocusIdx.get(props.prevCorpora.get(i)) || 0);
+                ans.hasNewlineAfterCursor = ans.hasNewlineAfterCursor.set(corp, ans.hasNewlineAfterCursor.get(props.prevCorpora.get(i)) || false);
             });
             ans.rawCode = ans.rawCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.richCode = ans.richCode.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.rawAnchorIdx = ans.rawAnchorIdx.filter((_, k) => props.currCorpora.includes(k)).toMap();
             ans.rawFocusIdx = ans.rawFocusIdx.filter((_, k) => props.currCorpora.includes(k)).toMap();
+            ans.hasNewlineAfterCursor = ans.hasNewlineAfterCursor.filter((_, k) => props.currCorpora.includes(k)).toMap();
 
         } else {
             ans = state;
@@ -274,6 +290,10 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
 
     private moveCursorToEnd(state:CQLEditorModelState, sourceId:string):void {
         this.moveCursorToPos(state, sourceId, state.rawCode.get(sourceId).length);
+    }
+
+    private hasNewLineAfterPosition(rawQuery:string, pos:number):boolean {
+        return rawQuery.substr(pos).search(/[\n\r]/) > -1;
     }
 
     /**
@@ -297,6 +317,11 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         state.rawCode = state.rawCode.set(
             sourceId,
             newQuery
+        );
+
+        state.hasNewlineAfterCursor = state.hasNewlineAfterCursor.set(
+            sourceId,
+            this.hasNewLineAfterPosition(state.rawCode.get(sourceId), state.rawFocusIdx.get(sourceId))
         );
 
         if (state.isEnabled) {

@@ -83,6 +83,10 @@ export class FilterFormModel extends QueryFormModel {
 
     private queries:Immutable.Map<string, string>;
 
+    private hasNewlineAfterCursor:Immutable.Map<string, boolean>;
+
+    private cursorPosition:Immutable.Map<string, number>;
+
     private queryTypes:Immutable.Map<string, string>;
 
     private lposValues:Immutable.Map<string, string>;
@@ -147,6 +151,8 @@ export class FilterFormModel extends QueryFormModel {
         if (!this.queries.has('__new__')) {
             this.queries = this.queries.set('__new__', '');
         }
+        this.cursorPosition = Immutable.Map<string, number>(this.queries.map((q, sourceId) => [sourceId, q.length]));
+        this.hasNewlineAfterCursor = Immutable.Map<string, boolean>(this.queries.map((_, sourceId) => [sourceId, false]));
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
         if (!this.queryTypes.has('__new__')) {
             this.queryTypes = this.queries.set('__new__', 'iquery');
@@ -482,5 +488,9 @@ export class FilterFormModel extends QueryFormModel {
 
     getTagsetDocUrls():Immutable.Map<string, string> {
         return this.tagsetDocs;
+    }
+
+    getHasNewlineAfterCursor(sourceId:string):boolean {
+        return this.hasNewlineAfterCursor.get(sourceId);
     }
 }

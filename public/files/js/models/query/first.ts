@@ -134,6 +134,10 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
 
     private queries:Immutable.Map<string, string>; // corpname -> query
 
+    private hasNewlineAfterCursor:Immutable.Map<string, boolean>;
+
+    private cursorPosition:Immutable.Map<string, number>;
+
     private lposValues:Immutable.Map<string, string>; // corpname -> lpos
 
     private matchCaseValues:Immutable.Map<string, boolean>; // corpname -> qmcase
@@ -194,6 +198,8 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         this.isForeignSubcorpus = !!props.isForeignSubcorpus;
         this.shuffleConcByDefault = props.shuffleConcByDefault;
         this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
+        this.cursorPosition = Immutable.Map<string, number>(props.corpora.map(item => [item, (props.currQueries[item] || '').length]));
+        this.hasNewlineAfterCursor = Immutable.Map<string, boolean>(props.corpora.map(item => [item, false]));
         this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
         this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false]));
         this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
@@ -253,8 +259,25 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                     );
                     this.notifyChangeListeners();
                 break;
+                case 'QUERY_INPUT_MOVE_CURSOR':
+                    this.hasNewlineAfterCursor = this.hasNewlineAfterCursor.set(
+                        payload.props['sourceId'],
+                        this.hasNewLineAfterPosition(
+                            this.queries.get(payload.props['sourceId']),
+                            payload.props['cursorPos']
+                        )
+                    );
+                    this.notifyChangeListeners();
+                break;
                 case 'QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
+                    this.hasNewlineAfterCursor = this.hasNewlineAfterCursor.set(
+                        payload.props['sourceId'],
+                        this.hasNewLineAfterPosition(
+                            payload.props['query'],
+                            payload.props['cursorPos']
+                        )
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
@@ -682,5 +705,9 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
 
     getTagsetDocUrls():Immutable.Map<string, string> {
         return this.tagsetDocs;
+    }
+
+    getHasNewlineAfterCursor(sourceId:string):boolean {
+        return this.hasNewlineAfterCursor.get(sourceId);
     }
 }

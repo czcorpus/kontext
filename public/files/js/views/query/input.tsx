@@ -76,6 +76,7 @@ export interface TRQueryInputFieldState {
     query:string;
     historyVisible:boolean;
     cqlEditorMessage:string;
+    hasNewlineAfterCursor:boolean;
 }
 
 
@@ -741,7 +742,7 @@ export function init({
 
     class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
 
-        private _queryInputElement:React.RefObject<HTMLInputElement>;
+        private _queryInputElement:React.RefObject<HTMLInputElement|HTMLTextAreaElement>;
 
         constructor(props) {
             super(props);
@@ -749,10 +750,12 @@ export function init({
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
+            this._inputKeyUpHandler = this._inputKeyUpHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
-            this._inputChangeHandler = this._inputChangeHandler.bind(this);
+            this._inputChangeHandler = this._inputChangeHandler.bind(this)
             this.state = {
                 query: queryModel.getQuery(this.props.sourceId),
+                hasNewlineAfterCursor: queryModel.getHasNewlineAfterCursor(this.props.sourceId),
                 historyVisible: false,
                 cqlEditorMessage: cqlEditorModel.getState().message.get(this.props.sourceId)
             };
@@ -763,7 +766,8 @@ export function init({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
                     sourceId: this.props.sourceId,
-                    query: evt.target.value
+                    query: evt.target.value,
+                    cursorPos: this._queryInputElement.current.selectionStart
                 }
             });
         }
@@ -771,19 +775,33 @@ export function init({
         _handleModelChange(state) {
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
+                hasNewlineAfterCursor: queryModel.getHasNewlineAfterCursor(this.props.sourceId),
                 historyVisible: this.state.historyVisible,
                 cqlEditorMessage: state ? state.message.get(this.props.sourceId) : this.state.cqlEditorMessage
             });
         }
 
+        _inputKeyUpHandler(evt) {
+            if (KeyCodes.isArrowKey(evt.keyCode)) {
+                dispatcher.dispatch({
+                    actionType: 'QUERY_INPUT_MOVE_CURSOR',
+                    props: {
+                        sourceId: this.props.sourceId,
+                        cursorPos: this._queryInputElement.current.selectionStart
+                    }
+                });
+            }
+        }
+
         _inputKeyHandler(evt) {
-            if (this.props.widgets.indexOf('history') > -1 &&
+                if (this.props.widgets.indexOf('history') > -1 &&
+                    !this.state.hasNewlineAfterCursor &&
                     evt.keyCode === KeyCodes.DOWN_ARROW && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
                 evt.preventDefault();
 
-            } else if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
+            }  else if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 this.props.onEnterKey();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -808,6 +826,10 @@ export function init({
         }
 
         componentDidMount() {
+            // TODO here it looks like we listen just for cql editor model
+            // but actually we listen also for queryModel (which is triggered
+            // by the very same events) and, more importantly - we read values
+            // from queryModel which makes a nice ANTIpattern.
             cqlEditorModel.addChangeListener(this._handleModelChange);
             if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
@@ -834,10 +856,11 @@ export function init({
                 case 'char':
                     return <input className="simple-input" type="text"
                                 spellCheck={false}
-                                ref={this._queryInputElement}
+                                ref={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 onChange={this._handleInputChange}
                                 value={this.state.query}
-                                onKeyDown={this._inputKeyHandler} />;
+                                onKeyDown={this._inputKeyHandler}
+                                onKeyUp={this._inputKeyUpHandler} />;
                 case 'cql':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
@@ -848,7 +871,9 @@ export function init({
                                 inputChangeHandler={this._inputChangeHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
                             value={this.state.query}
-                            takeFocus={this.props.takeFocus}
+                            inputRef={this._queryInputElement as React.RefObject<HTMLTextAreaElement>}
+                            inputKeyHandler={this._inputKeyHandler}
+                            inputKeyUpHandler={this._inputKeyUpHandler}
                             inputChangeHandler={this._handleInputChange} />;
             }
         }
