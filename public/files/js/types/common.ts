@@ -1152,6 +1152,8 @@ export namespace KeyCodes {
     export const RIGHT_ARROW = 39;
     export const BACKSPACE = 8;
     export const DEL = 46;
+    export const HOME = 36;
+    export const END = 35;
 
     export const isArrowKey = (code:number):boolean => {
         return code === UP_ARROW || code === DOWN_ARROW ||

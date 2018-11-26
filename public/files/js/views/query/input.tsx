@@ -784,7 +784,7 @@ export function init({
         }
 
         _inputKeyUpHandler(evt) {
-            if (KeyCodes.isArrowKey(evt.keyCode)) {
+            if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
                 dispatcher.dispatch({
                     actionType: 'QUERY_INPUT_MOVE_CURSOR',
                     props: {

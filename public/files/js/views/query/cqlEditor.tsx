@@ -202,7 +202,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt) {
-            if (KeyCodes.isArrowKey(evt.keyCode)) {
+            if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 dispatcher.dispatch({
