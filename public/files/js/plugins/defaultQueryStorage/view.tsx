@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import { QueryStorageModel, InputBoxHistoryItem } from './models';
 
 
@@ -60,13 +60,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
             this._keyPressHandler = this._keyPressHandler.bind(this);
             this._handleClickSelection = this._handleClickSelection.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
-            this._globalKeyEventHandler = this._globalKeyEventHandler.bind(this);
             this._handleBlurEvent = this._handleBlurEvent.bind(this);
             this._handleFocusEvent = this._handleFocusEvent.bind(this);
         }
 
         _keyPressHandler(evt) {
-            const inc = Number({38: this.state.data.size - 1, 40: 1}[evt.keyCode]);
+            const inc = Number({
+                [KeyCodes.UP_ARROW]: this.state.data.size - 1,
+                [KeyCodes.DOWN_ARROW]: 1
+            }[evt.keyCode]);
             const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
             if (!isNaN(inc)) {
                 this.setState({
@@ -75,7 +77,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
                     currentItem: (this.state.currentItem + inc) % modulo
                 });
 
-            } else if (evt.keyCode === 13) { // ENTER key
+            } else if (evt.keyCode === KeyCodes.ENTER) {
                 const historyItem = this.state.data.get(this.state.currentItem);
                 dispatcher.dispatch({
                     actionType: 'QUERY_INPUT_SELECT_TYPE',
@@ -93,7 +95,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
                 });
                 this.props.onCloseTrigger();
 
-            } else if (evt.keyCode === 27) { // ESC key
+            } else {
                 this.props.onCloseTrigger();
             }
             evt.preventDefault();
@@ -129,7 +131,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
 
         componentWillUnmount() {
             queryStorageModel.removeChangeListener(this._handleModelChange);
-            he.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
         }
 
         _handleModelChange() {
@@ -140,18 +141,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
             });
         }
 
-        _globalKeyEventHandler(evt) {
-            if (evt.keyCode === 27) {
-                this.props.onCloseTrigger();
-            }
-        }
-
         _handleBlurEvent(evt) {
-            he.addGlobalKeyEventHandler(this._globalKeyEventHandler);
+            this.props.onCloseTrigger();
         }
 
         _handleFocusEvent(evt) {
-            he.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
         }
 
         _renderContents() {

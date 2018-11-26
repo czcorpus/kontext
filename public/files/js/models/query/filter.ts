@@ -83,6 +83,10 @@ export class FilterFormModel extends QueryFormModel {
 
     private queries:Immutable.Map<string, string>;
 
+    private downArrowTriggersHistory:Immutable.Map<string, boolean>;
+
+    private cursorPosition:Immutable.Map<string, number>;
+
     private queryTypes:Immutable.Map<string, string>;
 
     private lposValues:Immutable.Map<string, string>;
@@ -147,6 +151,8 @@ export class FilterFormModel extends QueryFormModel {
         if (!this.queries.has('__new__')) {
             this.queries = this.queries.set('__new__', '');
         }
+        this.cursorPosition = Immutable.Map<string, number>(this.queries.map((q, sourceId) => [sourceId, q.length]));
+        this.downArrowTriggersHistory = Immutable.Map<string, boolean>(this.queries.map((_, sourceId) => [sourceId, false]));
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
         if (!this.queryTypes.has('__new__')) {
             this.queryTypes = this.queries.set('__new__', 'iquery');
@@ -180,8 +186,26 @@ export class FilterFormModel extends QueryFormModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
-                case '@FILTER_QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
+                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
+                        payload.props['sourceId'],
+                        this.shouldDownArrowTriggerHistory(
+                            payload.props['query'],
+                            payload.props['cursorPos'],
+                            payload.props['focusIdx']
+                        )
+                    );
+                    this.notifyChangeListeners();
+                break;
+                case 'FILTER_QUERY_INPUT_MOVE_CURSOR':
+                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
+                        payload.props['sourceId'],
+                        this.shouldDownArrowTriggerHistory(
+                            this.queries.get(payload.props['sourceId']),
+                            payload.props['anchorIdx'],
+                            payload.props['focusIdx']
+                        )
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_APPEND_QUERY':
@@ -482,5 +506,9 @@ export class FilterFormModel extends QueryFormModel {
 
     getTagsetDocUrls():Immutable.Map<string, string> {
         return this.tagsetDocs;
+    }
+
+    getDownArrowTriggersHistory(sourceId:string):boolean {
+        return this.downArrowTriggersHistory.get(sourceId);
     }
 }

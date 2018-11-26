@@ -154,6 +154,8 @@ export abstract class QueryFormModel extends SynchronizedModel {
 
     abstract getQueryTypes():Immutable.Map<string, string>;
 
+    abstract getDownArrowTriggersHistory(sourceId:string):boolean;
+
     /// ---------
 
     getSupportedWidgets():WidgetsMap {
@@ -221,6 +223,14 @@ export abstract class QueryFormModel extends SynchronizedModel {
         return mismatch;
     }
 
+    protected shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
+        if (anchorIdx === focusIdx) {
+            return query.substr(anchorIdx+1).search(/[\n\r]/) === -1;
+
+        } else {
+            return false;
+        }
+    }
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
         this.useCQLEditor = optsModel.getUseCQLEditor();

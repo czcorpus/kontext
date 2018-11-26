@@ -76,6 +76,7 @@ export interface TRQueryInputFieldState {
     query:string;
     historyVisible:boolean;
     cqlEditorMessage:string;
+    downArrowTriggersHistory:boolean;
 }
 
 
@@ -741,7 +742,7 @@ export function init({
 
     class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
 
-        private _queryInputElement:React.RefObject<HTMLInputElement>;
+        private _queryInputElement:React.RefObject<HTMLInputElement|HTMLTextAreaElement>;
 
         constructor(props) {
             super(props);
@@ -749,41 +750,62 @@ export function init({
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
+            this._inputKeyUpHandler = this._inputKeyUpHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
-            this._inputChangeHandler = this._inputChangeHandler.bind(this);
+            this._inputChangeHandler = this._inputChangeHandler.bind(this)
             this.state = {
                 query: queryModel.getQuery(this.props.sourceId),
+                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId),
                 historyVisible: false,
                 cqlEditorMessage: cqlEditorModel.getState().message.get(this.props.sourceId)
             };
         }
 
-        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement>) {
-            dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
-                props: {
-                    sourceId: this.props.sourceId,
-                    query: evt.target.value
-                }
-            });
+        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
+            if (evt.target instanceof HTMLTextAreaElement || evt.target instanceof HTMLInputElement) {
+                dispatcher.dispatch({
+                    actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                    props: {
+                        sourceId: this.props.sourceId,
+                        query: evt.target.value,
+                        cursorPos: this._queryInputElement.current.selectionStart
+                    }
+                });
+            }
         }
 
         _handleModelChange(state) {
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
+                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId),
                 historyVisible: this.state.historyVisible,
                 cqlEditorMessage: state ? state.message.get(this.props.sourceId) : this.state.cqlEditorMessage
             });
         }
 
+        _inputKeyUpHandler(evt) {
+            if (KeyCodes.isArrowKey(evt.keyCode)) {
+                dispatcher.dispatch({
+                    actionType: 'QUERY_INPUT_MOVE_CURSOR',
+                    props: {
+                        sourceId: this.props.sourceId,
+                        anchorIdx: this._queryInputElement.current.selectionStart,
+                        focusIdx: this._queryInputElement.current.selectionEnd
+                    }
+                });
+            }
+        }
+
         _inputKeyHandler(evt) {
-            if (this.props.widgets.indexOf('history') > -1 &&
-                    evt.keyCode === KeyCodes.DOWN_ARROW && !this.state.historyVisible) {
+                if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+                    this.props.widgets.indexOf('history') > -1 &&
+                    this.state.downArrowTriggersHistory &&
+                    !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
                 evt.preventDefault();
 
-            } else if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
+            }  else if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 this.props.onEnterKey();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -800,14 +822,22 @@ export function init({
         _inputChangeHandler() {}
 
         _toggleHistoryWidget() {
+            const newVisibility = !this.state.historyVisible;
             this.setState({
                 query: queryModel.getQuery(this.props.sourceId),
-                historyVisible: !this.state.historyVisible,
+                historyVisible: newVisibility,
                 cqlEditorMessage: this.state.cqlEditorMessage
             });
+            if (!newVisibility && this._queryInputElement.current) {
+                this._queryInputElement.current.focus();
+            }
         }
 
         componentDidMount() {
+            // TODO here it looks like we listen just for cql editor model
+            // but actually we listen also for queryModel (which is triggered
+            // by the very same events) and, more importantly - we read values
+            // from queryModel which makes a nice ANTIpattern.
             cqlEditorModel.addChangeListener(this._handleModelChange);
             if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
@@ -834,21 +864,26 @@ export function init({
                 case 'char':
                     return <input className="simple-input" type="text"
                                 spellCheck={false}
-                                ref={this._queryInputElement}
+                                ref={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 onChange={this._handleInputChange}
                                 value={this.state.query}
-                                onKeyDown={this._inputKeyHandler} />;
+                                onKeyDown={this._inputKeyHandler}
+                                onKeyUp={this._inputKeyUpHandler} />;
                 case 'cql':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
+                                actionPrefix={this.props.actionPrefix}
                                 sourceId={this.props.sourceId}
                                 initialValue={this.state.query}
                                 takeFocus={this.props.takeFocus}
                                 inputKeyHandler={this._inputKeyHandler}
-                                inputChangeHandler={this._inputChangeHandler} /> :
+                                inputChangeHandler={this._inputChangeHandler}
+                                inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
                         <cqlEditorViews.CQLEditorFallback
                             value={this.state.query}
-                            takeFocus={this.props.takeFocus}
+                            inputRef={this._queryInputElement as React.RefObject<HTMLTextAreaElement>}
+                            inputKeyHandler={this._inputKeyHandler}
+                            inputKeyUpHandler={this._inputKeyUpHandler}
                             inputChangeHandler={this._handleInputChange} />;
             }
         }
