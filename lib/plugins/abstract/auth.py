@@ -78,7 +78,9 @@ class AbstractAuth(object):
         if corpname:
             raise CorpusForbiddenException(corpname, corp_variant)
         else:
-            raise UserActionException()
+            # normally, this happens only with flawed configuration
+            # (e.g. no default accessible corpus for the current user)
+            raise UserActionException('Cannot find any usable corpus for the user.')
 
     def get_user_info(self, plugin_api):
         """
