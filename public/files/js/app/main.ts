@@ -23,6 +23,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as Rx from '@reactivex/rxjs';
 import RSVP from 'rsvp';
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
@@ -267,6 +268,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
         return this.appNavig.ajax(method, url, args, options);
+    }
+
+    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Rx.Observable<T> {
+        return this.appNavig.ajax$(method, url, args, options);
     }
 
     /**
