@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 
 export class FirstHitsModel extends StatefulModel {
@@ -37,10 +37,10 @@ export class FirstHitsModel extends StatefulModel {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.docStructValues = Immutable.Map<string, string>();
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FILTER_FIRST_HITS_SUBMIT':
-                    this.submitForm(payload.props['opKey']);
+                    this.submitForm(action.props['opKey']);
                     // app leaves here
                 break;
             }

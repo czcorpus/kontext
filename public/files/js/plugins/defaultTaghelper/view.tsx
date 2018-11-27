@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionPayload, ActionDispatcher} from '../../app/dispatcher';
+import {Action, ActionDispatcher} from '../../app/dispatcher';
 import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';

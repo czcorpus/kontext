@@ -21,7 +21,7 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
@@ -139,7 +139,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
     }
 
-    reduce(state:CorplistTableModelState, action:ActionPayload):CorplistTableModelState {
+    reduce(state:CorplistTableModelState, action:Action):CorplistTableModelState {
         const newState = this.copyState(state);
         switch (action.actionType) {
             case 'LOAD_DATA_DONE':
@@ -243,7 +243,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         return newState;
     }
 
-    sideEffects(state:CorplistTableModelState, action:ActionPayload, dispatch:SEDispatcher):void {
+    sideEffects(state:CorplistTableModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.actionType) {
             case 'KEYWORD_CLICKED':
             case 'KEYWORD_RESET_CLICKED':

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {ActionPayload} from '../../app/dispatcher';
+import {Action} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
@@ -88,18 +88,18 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
-                    this.queryType = payload.props['value'];
+                    this.queryType = action.props['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
-                    this.currentCorpusOnly = payload.props['value'];
+                    this.currentCorpusOnly = action.props['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_SET_ARCHIVED_ONLY':
-                    this.archivedOnly = payload.props['value'];
+                    this.archivedOnly = action.props['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_LOAD_MORE':
@@ -111,11 +111,11 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_OPEN_QUERY_FORM':
-                    this.openQueryForm(payload.props['idx']);
+                    this.openQueryForm(action.props['idx']);
                     // page leaves here
                 break;
                 case 'QUERY_STORAGE_SET_EDITING_QUERY_ID':
-                    this.editingQueryId = payload.props['value'];
+                    this.editingQueryId = action.props['value'];
                     const srch = this.data.find(v => v.query_id === this.editingQueryId);
                     if (srch) {
                         this.editingQueryName = srch.name ? srch.name : '';
@@ -128,11 +128,11 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_STORAGE_EDITOR_SET_NAME':
-                    this.editingQueryName = payload.props['value'];
+                    this.editingQueryName = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_STORAGE_DO_NOT_ARCHIVE':
-                    this.saveItem(payload.props['queryId'], null).then(
+                    this.saveItem(action.props['queryId'], null).then(
                         (msg) => {
                             this.isBusy = false;
                             this.notifyChangeListeners();

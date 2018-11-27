@@ -23,7 +23,7 @@ import {StatefulModel, validateGzNumber} from '../base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -84,38 +84,38 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         this.submitResponseHandlers = Immutable.List<()=>void>();
         this.isBusy = false;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE':
-                    this.pageSize.value = payload.props['value'];
+                    this.pageSize.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE':
-                    this.newCtxSize.value = payload.props['value'];
+                    this.newCtxSize.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS':
-                    this.lineNumbers = payload.props['value'];
+                    this.lineNumbers = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE':
-                    this.shuffle = payload.props['value'];
+                    this.shuffle = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR':
-                    this.useCQLEditor = payload.props['value'];
+                    this.useCQLEditor = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE':
-                    this.wlpagesize.value = payload.props['value'];
+                    this.wlpagesize.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS':
-                    this.fmaxitems.value = payload.props['value'];
+                    this.fmaxitems.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE':
-                    this.citemsperpage.value = payload.props['value'];
+                    this.citemsperpage.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SUBMIT':

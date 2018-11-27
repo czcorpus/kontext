@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
@@ -175,86 +175,86 @@ export class FilterFormModel extends QueryFormModel {
         this.currentAction = 'filter_form';
         this.supportedWidgets = this.determineSupportedWidgets();
 
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcherRegister((action:Action) => {
+            switch (action.actionType) {
                 case 'CQL_EDITOR_DISABLE':
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SELECT_TYPE':
-                    this.queryTypes = this.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
+                    this.queryTypes = this.queryTypes.set(action.props['sourceId'], action.props['queryType']);
                     this.supportedWidgets = this.determineSupportedWidgets();
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
-                    this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
+                    this.queries = this.queries.set(action.props['sourceId'], action.props['query']);
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        payload.props['sourceId'],
+                        action.props['sourceId'],
                         this.shouldDownArrowTriggerHistory(
-                            payload.props['query'],
-                            payload.props['cursorPos'],
-                            payload.props['focusIdx']
+                            action.props['query'],
+                            action.props['cursorPos'],
+                            action.props['focusIdx']
                         )
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_MOVE_CURSOR':
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        payload.props['sourceId'],
+                        action.props['sourceId'],
                         this.shouldDownArrowTriggerHistory(
-                            this.queries.get(payload.props['sourceId']),
-                            payload.props['anchorIdx'],
-                            payload.props['focusIdx']
+                            this.queries.get(action.props['sourceId']),
+                            action.props['anchorIdx'],
+                            action.props['focusIdx']
                         )
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_APPEND_QUERY':
                     this.queries = this.queries.set(
-                        payload.props['sourceId'],
+                        action.props['sourceId'],
                         appendQuery(
-                            this.queries.get(payload.props['sourceId']),
-                            payload.props['query'],
-                            !!payload.props['prependSpace']
+                            this.queries.get(action.props['sourceId']),
+                            action.props['query'],
+                            !!action.props['prependSpace']
                         )
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_LPOS':
-                    this.lposValues = this.lposValues.set(payload.props['sourceId'], payload.props['lpos']);
+                    this.lposValues = this.lposValues.set(action.props['sourceId'], action.props['lpos']);
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_MATCH_CASE':
-                    this.matchCaseValues = this.matchCaseValues.set(payload.props['sourceId'], payload.props['value']);
+                    this.matchCaseValues = this.matchCaseValues.set(action.props['sourceId'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_DEFAULT_ATTR':
-                    this.defaultAttrValues = this.defaultAttrValues.set(payload.props['sourceId'], payload.props['value']);
+                    this.defaultAttrValues = this.defaultAttrValues.set(action.props['sourceId'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_SET_POS_NEG':
-                    this.pnFilterValues = this.pnFilterValues.set(payload.props['filterId'], payload.props['value']);
+                    this.pnFilterValues = this.pnFilterValues.set(action.props['filterId'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_SET_FILFL':
-                    this.filflValues = this.filflValues.set(payload.props['filterId'], payload.props['value']);
+                    this.filflValues = this.filflValues.set(action.props['filterId'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_SET_RANGE':
                     this.setFilPosValue(
-                        payload.props['filterId'],
-                        payload.props['value'],
-                        payload.props['rangeId']
+                        action.props['filterId'],
+                        action.props['value'],
+                        action.props['rangeId']
                     );
                     this.notifyChangeListeners();
                 break;
                 case'FILTER_QUERY_SET_INCL_KWIC':
-                    this.inclkwicValues = this.inclkwicValues.set(payload.props['filterId'], payload.props['value']);
+                    this.inclkwicValues = this.inclkwicValues.set(action.props['filterId'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_APPLY_FILTER':
-                    const err = this.validateForm(payload.props['filterId']);
+                    const err = this.validateForm(action.props['filterId']);
                     if (!err) {
-                        this.submitQuery(payload.props['filterId']);
+                        this.submitQuery(action.props['filterId']);
                         this.notifyChangeListeners();
 
                     } else {

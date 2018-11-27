@@ -117,14 +117,6 @@ export namespace Kontext {
         addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void;
     }
 
-    /**
-     * TODO remove once all the JSX templates are transformed to TSX
-     */
-    export interface ActionDispatcher {
-        register(callback:(payload:any)=>void):Rx.Subscription;
-        dispatch(payload:any):void;
-    }
-
     export interface FullCorpusIdent {
         id:string;
         variant:string;

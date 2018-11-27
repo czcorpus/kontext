@@ -22,7 +22,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
 import {PageModel} from '../../app/main';
-import {ActionPayload, ActionDispatcher, SEDispatcher} from '../../app/dispatcher';
+import {Action, ActionDispatcher, SEDispatcher} from '../../app/dispatcher';
 import {StatelessModel} from '../base';
 import { MultiDict } from '../../util';
 import { Kontext } from '../../types/common';
@@ -96,7 +96,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         this.pageModel = pageModel;
     }
 
-    reduce(state:PublicSubcorpListState, action:ActionPayload):PublicSubcorpListState {
+    reduce(state:PublicSubcorpListState, action:Action):PublicSubcorpListState {
         let newState:PublicSubcorpListState;
 
         switch (action.actionType) {
@@ -130,7 +130,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         }
     }
 
-    sideEffects(state:PublicSubcorpListState, action:ActionPayload, dispatch:SEDispatcher):void {
+    sideEffects(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
 
         switch (action.actionType) {
             case Actions.SET_SEARCH_TYPE:

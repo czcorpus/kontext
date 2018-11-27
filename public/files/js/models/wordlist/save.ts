@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 
@@ -69,8 +69,8 @@ export class WordlistSaveModel extends StatefulModel {
         this.formIsActive = false;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcherRegister((action:Action) => {
+            switch (action.actionType) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;
                 this.notifyChangeListeners();
@@ -80,19 +80,19 @@ export class WordlistSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SET_TO_LINE':
-                this.toLine.value = payload.props['value'];
+                this.toLine.value = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SET_FORMAT':
-                this.saveFormat = payload.props['value'];
+                this.saveFormat = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_SET_INCLUDE_HEADING':
-                this.includeHeading = payload.props['value'];
+                this.includeHeading = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS':
-                this.includeColHeaders = payload.props['value'];
+                this.includeColHeaders = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_SAVE_FORM_SUBMIT':
@@ -107,7 +107,7 @@ export class WordlistSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
-                this.saveFormat = payload.props['saveformat'];
+                this.saveFormat = action.props['saveformat'];
                 this.toLine.value = `${this.quickSaveRowLimit}`;
                 this.submit();
                 this.toLine.value = '';

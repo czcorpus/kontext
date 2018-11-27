@@ -21,12 +21,12 @@
 import {TextTypes} from '../../types/common';
 import {PageModel, DownloadType} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
-import {CTFormProperties, roundFloat, Dimensions} from './ctFreqForm';
+import {CTFormProperties, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
 
@@ -210,23 +210,23 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         // TODO attrs from form model:
         // 1.
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
-                    this.alphaLevel = payload.props['value'];
+                    this.alphaLevel = action.props['value'];
                     this.recalculateConfIntervals();
                     this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
-                    this.minFreqType = payload.props['value'];
+                    this.minFreqType = action.props['value'];
                     this.isWaiting = true;
                     this.notifyChangeListeners();
                     this.waitAndReload(true);
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ':
-                    if (this.validateMinAbsFreqAttr(payload.props['value'])) {
-                        this.minFreq = payload.props['value'];
+                    if (this.validateMinAbsFreqAttr(action.props['value'])) {
+                        this.minFreq = action.props['value'];
                         this.isWaiting = true;
                         this.notifyChangeListeners();
                         this.waitAndReload(false);
@@ -237,7 +237,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
                     }
                 break;
                 case 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY':
-                    this.filterZeroVectors = payload.props['value'];
+                    this.filterZeroVectors = action.props['value'];
                     this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
@@ -247,24 +247,24 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
                 break;
                 case 'FREQ_CT_SORT_BY_DIMENSION':
                     this.sortByDimension(
-                        payload.props['dim'],
-                        payload.props['attr']
+                        action.props['dim'],
+                        action.props['attr']
                     );
                     this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_DISPLAY_QUANTITY':
-                    this.displayQuantity = payload.props['value'];
+                    this.displayQuantity = action.props['value'];
                     this.recalcHeatmap();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_COLOR_MAPPING':
-                    this.colorMapping = payload.props['value'];
+                    this.colorMapping = action.props['value'];
                     this.recalcHeatmap();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_HIGHLIGHTED_GROUP':
-                    this.highlightedGroup = payload.props['value'];
+                    this.highlightedGroup = action.props['value'];
                     this.notifyChangeListeners();
                 break;
             }

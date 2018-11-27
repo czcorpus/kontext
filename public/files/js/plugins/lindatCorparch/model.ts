@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import { StatefulModel } from '../../models/base';
 import { IPluginApi } from '../../types/plugins';
 import * as Immutable from 'immutable';
-import { ActionPayload } from '../../app/dispatcher';
+import { Action } from '../../app/dispatcher';
 import RSVP from 'rsvp';
 
 export enum ParallelType {
@@ -149,10 +149,10 @@ export class TreeWidgetModel extends StatefulModel {
         this.sortedCorplist = Immutable.List<Node>();
 
         this.dispatcher.register(
-            (payload:ActionPayload) => {
-                switch (payload.actionType) {
+            (action:Action) => {
+                switch (action.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        this.toggleNodeActiveStatus(payload.props['nodeId']);
+                        this.toggleNodeActiveStatus(action.props['nodeId']);
                         this.notifyChangeListeners();
                         break;
                     case 'TREE_CORPARCH_EXPAND_ALL':
@@ -175,7 +175,7 @@ export class TreeWidgetModel extends StatefulModel {
                         );
                         break;
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
-                        this.corpusClickHandler(payload.props['ident']);
+                        this.corpusClickHandler(action.props['ident']);
                         break;
                     case 'TREE_CORPARCH_SEARCH':
                         break;

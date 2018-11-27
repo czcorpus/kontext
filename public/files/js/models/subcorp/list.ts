@@ -25,7 +25,7 @@ import RSVP from 'rsvp';
 
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../base';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import { MultiDict } from '../../util';
 import { AsyncTaskStatus } from '../asyncTask';
 
@@ -114,10 +114,10 @@ export class SubcorpListModel extends StatefulModel {
             }
         });
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'SUBCORP_LIST_SORT_LINES':
-                    this.sortItems(payload.props['colName'], payload.props['reverse']).then(
+                    this.sortItems(action.props['colName'], action.props['reverse']).then(
                         (data) => {
                             this.notifyChangeListeners();
                         },
@@ -128,7 +128,7 @@ export class SubcorpListModel extends StatefulModel {
                     )
                 break;
                 case 'SUBCORP_LIST_DELETE_SUBCORPUS':
-                    this.deleteSubcorpus(payload.props['rowIdx']).then(
+                    this.deleteSubcorpus(action.props['rowIdx']).then(
                         (data) => {
                             this.notifyChangeListeners();
                             this.layoutModel.showMessage(
@@ -143,7 +143,7 @@ export class SubcorpListModel extends StatefulModel {
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_FILTER':
-                    this.filterItems(<SubcListFilter>payload.props).then(
+                    this.filterItems(<SubcListFilter>action.props).then(
                         (data) => {
                             this.notifyChangeListeners();
                         },
@@ -154,8 +154,8 @@ export class SubcorpListModel extends StatefulModel {
                     )
                 break;
                 case 'SUBCORP_LIST_SHOW_ACTION_WINDOW':
-                    this.actionBoxVisibleRow = payload.props['value'];
-                    this.actionBoxActionType = payload.props['action'];
+                    this.actionBoxVisibleRow = action.props['value'];
+                    this.actionBoxActionType = action.props['action'];
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_LIST_HIDE_ACTION_WINDOW':
@@ -163,11 +163,11 @@ export class SubcorpListModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_LIST_SET_ACTION_BOX_TYPE':
-                    this.actionBoxActionType = payload.props['value'];
+                    this.actionBoxActionType = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_LIST_WIPE_SUBCORPUS':
-                    this.wipeSubcorpus(payload.props['idx']).then(
+                    this.wipeSubcorpus(action.props['idx']).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
@@ -182,7 +182,7 @@ export class SubcorpListModel extends StatefulModel {
                     );
                 break;
                 case 'SUBCORP_LIST_RESTORE_SUBCORPUS':
-                    this.createSubcorpus(payload.props['idx'], true).then(
+                    this.createSubcorpus(action.props['idx'], true).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
@@ -197,7 +197,7 @@ export class SubcorpListModel extends StatefulModel {
                     );
                 break;
                 case 'SUBCORP_LIST_REUSE_QUERY':
-                    this.createSubcorpus(payload.props['idx'], false, payload.props['newName'], payload.props['newCql']).then(
+                    this.createSubcorpus(action.props['idx'], false, action.props['newName'], action.props['newCql']).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
@@ -215,8 +215,8 @@ export class SubcorpListModel extends StatefulModel {
                     this.isBusy = true;
                     this.notifyChangeListeners();
                     this.publishSubcorpus(
-                                payload.props['rowIdx'],
-                                payload.props['description']).then(
+                                action.props['rowIdx'],
+                                action.props['description']).then(
                         (_) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage(
@@ -236,7 +236,7 @@ export class SubcorpListModel extends StatefulModel {
                 break;
                 case 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION': {
                     try {
-                        this.updateSubcDesc(payload.props['rowIdx'], payload.props['description']);
+                        this.updateSubcDesc(action.props['rowIdx'], action.props['description']);
 
                     } catch (e) {
                         this.layoutModel.showMessage('error', e);
@@ -248,7 +248,7 @@ export class SubcorpListModel extends StatefulModel {
                     this.isBusy = true;
                     this.notifyChangeListeners();
                     this.updateSubcorpusDescSubmit(
-                            payload.props['rowIdx']).then(
+                            action.props['rowIdx']).then(
                         (_) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage(

@@ -22,7 +22,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
 import {Kontext} from '../../types/common';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
@@ -137,17 +137,17 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
         this.includeNonwords = false;
 
 
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcherRegister((action:Action) => {
+            switch (action.actionType) {
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (payload.props['pubName']) {
-                        this.currentSubcorpus = payload.props['pubName'];
-                        this.origSubcorpName = payload.props['subcorp'];
-                        this.isForeignSubcorp = payload.props['foreign'];
+                    if (action.props['pubName']) {
+                        this.currentSubcorpus = action.props['pubName'];
+                        this.origSubcorpName = action.props['subcorp'];
+                        this.isForeignSubcorp = action.props['foreign'];
 
                     } else {
-                        this.currentSubcorpus = payload.props['subcorp'];
-                        this.origSubcorpName = payload.props['subcorp'];
+                        this.currentSubcorpus = action.props['subcorp'];
+                        this.origSubcorpName = action.props['subcorp'];
                         this.isForeignSubcorp = false;
                     }
                     const corpIdent = this.layoutModel.getCorpusIdent();
@@ -165,31 +165,31 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SELECT_ATTR':
-                    this.wlattr = payload.props['value'];
+                    this.wlattr = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_WLPAT':
-                    this.wlpat = payload.props['value'];
+                    this.wlpat = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_WLNUMS':
-                    this.wlnums = payload.props['value'];
+                    this.wlnums = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SELECT_WLPOSATTR':
-                    this.wlposattrs[payload.props['position'] - 1] = payload.props['value'];
+                    this.wlposattrs[action.props['position'] - 1] = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_WLTYPE':
-                    this.wltype = payload.props['value'];
+                    this.wltype = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_WLMINFREQ':
-                    this.wlminfreq.value = payload.props['value'];
+                    this.wlminfreq.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
-                    this.includeNonwords = payload.props['value'];
+                    this.includeNonwords = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_ADD_POSATTR_LEVEL':
@@ -197,9 +197,9 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SET_FILTER_FILE':
-                    const file:File = payload.props['value'];
+                    const file:File = action.props['value'];
                     if (file) {
-                        this.handleFilterFileSelection(file, payload.props['target']).then(
+                        this.handleFilterFileSelection(file, action.props['target']).then(
                             () => {
                                 this.notifyChangeListeners();
                             },
@@ -211,17 +211,17 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     }
                 break;
                 case 'WORDLIST_FORM_UPDATE_EDITOR':
-                    this.filterEditorData.data = payload.props['value'];
+                    this.filterEditorData.data = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_REOPEN_EDITOR':
                     this.filterEditorData = {
-                        target: payload.props['target'],
+                        target: action.props['target'],
                         data: '',
                         fileName: ''
                     };
                     this.doWhiteOrBlackOp(
-                        payload.props['target'],
+                        action.props['target'],
                         () => {
                             this.filterEditorData.data = this.wlwords;
                             this.filterEditorData.fileName = this.wlFileName;
@@ -236,7 +236,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                 case 'WORDLIST_FORM_CLEAR_FILTER_FILE':
                     if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
                         this.doWhiteOrBlackOp(
-                            payload.props['target'],
+                            action.props['target'],
                             () => { this.wlwords = ''; this.wlFileName = '' },
                             () => { this.blacklist = ''; this.blFileName = '' }
                         );
@@ -253,7 +253,7 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_RESULT_SET_SORT_COLUMN':
-                    this.wlsort = payload.props['sortKey'];
+                    this.wlsort = action.props['sortKey'];
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_FORM_SUBMIT':
@@ -267,8 +267,8 @@ export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusS
                     this.notifyChangeListeners();
                 break;
                 case 'CORPUS_SWITCH_MODEL_RESTORE':
-                if (payload.props['key'] === this.csGetStateKey()) {
-                    this.csSetState(payload.props['data']);
+                if (action.props['key'] === this.csGetStateKey()) {
+                    this.csSetState(action.props['data']);
                     this.notifyChangeListeners();
                 }
                 break;

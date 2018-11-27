@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ConcLineModel} from './lines';
 
@@ -132,10 +132,10 @@ export class TextTypesDistModel extends StatefulModel {
         this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
         this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
         this.isBusy = this.concLineModel.isUnfinishedCalculation();
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcherRegister((action:Action) => {
+            switch (action.actionType) {
                 case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.blockedByAsyncConc = payload.props['isUnfinished'];
+                    this.blockedByAsyncConc = action.props['isUnfinished'];
                     this.performDataLoad();
                 break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':

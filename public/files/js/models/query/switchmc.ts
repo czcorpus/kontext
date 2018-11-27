@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -55,10 +55,10 @@ export class SwitchMainCorpModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.maincorpValues = Immutable.Map<string, string>(data);
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'SWITCH_MC_FORM_SUBMIT':
-                    window.location.href = this.getSubmitUrl(payload.props['operationId']);
+                    window.location.href = this.getSubmitUrl(action.props['operationId']);
                 break;
             }
         });

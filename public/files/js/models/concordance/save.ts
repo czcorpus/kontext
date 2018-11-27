@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 
 export interface ConcSaveModelArgs {
@@ -71,14 +71,14 @@ export class ConcSaveModel extends StatefulModel {
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;
                 this.notifyChangeListeners();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
-                this.saveformat = payload.props['saveformat'];
+                this.saveformat = action.props['saveformat'];
                 const tmp = this.toLine;
                 this.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
                 this.submit();
@@ -90,27 +90,27 @@ export class ConcSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_FORMAT':
-                this.saveformat = payload.props['value'];
+                this.saveformat = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE':
-                 this.fromLine.value = payload.props['value'];
+                 this.fromLine.value = action.props['value'];
                  this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_TO_LINE':
-                this.toLine.value = payload.props['value'];
+                this.toLine.value = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC':
-                this.alignKwic = payload.props['value'];
+                this.alignKwic = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS':
-                this.includeLineNumbers = payload.props['value'];
+                this.includeLineNumbers = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_HEADING':
-                this.includeHeading = payload.props['value'];
+                this.includeHeading = action.props['value'];
                 this.notifyChangeListeners();
             break;
             case 'COLL_SAVE_FORM_SUBMIT':

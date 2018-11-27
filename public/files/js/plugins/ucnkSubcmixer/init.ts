@@ -19,7 +19,7 @@
 import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {init as viewInit} from './view';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
@@ -90,12 +90,12 @@ export class SubcMixerModel extends StatefulModel {
         this.shares = Immutable.List<SubcMixerExpression>();
         this.getAlignedCorporaFn = getAlignedCorporaFn;
         this.corpusIdAttr = corpusIdAttr;
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'UCNK_SUBCMIXER_SET_RATIO':
                     try {
-                        this.updateRatio(payload.props['attrName'], payload.props['attrValue'],
-                            payload.props['ratio']);
+                        this.updateRatio(action.props['attrName'], action.props['attrValue'],
+                            action.props['ratio']);
                         this.notifyChangeListeners();
 
                     } catch (e) {

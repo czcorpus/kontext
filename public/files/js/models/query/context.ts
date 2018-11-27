@@ -19,7 +19,7 @@
  */
 
 import {StatefulModel} from '..//base';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 
 
@@ -40,10 +40,10 @@ export class QueryContextModel extends StatefulModel {
             fc_pos_type: 'all'
         });
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM':
-                    this.formData = this.formData.set(payload.props['name'], payload.props['value']);
+                    this.formData = this.formData.set(action.props['name'], action.props['value']);
 
                     this.notifyChangeListeners();
                 break;

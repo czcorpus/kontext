@@ -20,7 +20,7 @@
 
 import {Kontext} from '../types/common';
 import * as Rx from '@reactivex/rxjs';
-import {ActionDispatcher, ActionPayload, IReducer, SEDispatcher} from '../app/dispatcher';
+import {ActionDispatcher, Action, IReducer, SEDispatcher} from '../app/dispatcher';
 
 /**
  * A base class for KonText's legacy models.
@@ -38,7 +38,7 @@ export class StatefulModel implements Kontext.EventEmitter {
         this.changeListeners = [];
     }
 
-    dispatcherRegister(fn:(payload:ActionPayload)=>void):void {
+    dispatcherRegister(fn:(action:Action)=>void):void {
         this.dispatcher.register(fn);
     }
 
@@ -174,9 +174,9 @@ export abstract class StatelessModel<T> implements IReducer<T> {
      * response is the original state (which makes React rendering
      * more effective).
      */
-    abstract reduce(state:T, action:ActionPayload):T;
+    abstract reduce(state:T, action:Action):T;
 
-    sideEffects(state:T, action:ActionPayload, dispatch:SEDispatcher):void {};
+    sideEffects(state:T, action:Action, dispatch:SEDispatcher):void {};
 
     /**
      * A function used by React component to listen for

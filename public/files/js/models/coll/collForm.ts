@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 /**

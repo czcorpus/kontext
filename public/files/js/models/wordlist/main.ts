@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {WordlistFormModel} from './form';
 import {MultiDict} from '../../util';
 import {WordlistSaveModel} from './save';
@@ -109,8 +109,8 @@ export class WordlistResultModel extends StatefulModel {
         this.numItems = null;
 
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'WORDLIST_RESULT_VIEW_CONC':
                     const args = new MultiDict();
                     args.set('corpname', this.formModel.getCorpusIdent().id);
@@ -118,7 +118,7 @@ export class WordlistResultModel extends StatefulModel {
                     args.set('default_attr', this.formModel.getWlattr());
                     args.set('qmcase', '1');
                     args.set('queryselector', 'cqlrow');
-                    args.set('cql', this.createPQuery(payload.props['word']));
+                    args.set('cql', this.createPQuery(action.props['word']));
                     window.location.href = this.layoutModel.createActionUrl('first', args.items());
                 break;
                 case 'WORDLIST_RESULT_RELOAD':
@@ -147,8 +147,8 @@ export class WordlistResultModel extends StatefulModel {
                     }
                 break;
                 case 'WORDLIST_RESULT_SET_PAGE':
-                    if (validateGzNumber(payload.props['page'])) {
-                        this.currPageInput = payload.props['page'];
+                    if (validateGzNumber(action.props['page'])) {
+                        this.currPageInput = action.props['page'];
 
                     } else {
                         this.layoutModel.showMessage('error',

@@ -23,7 +23,7 @@ import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
 import { StatefulModel } from './base';
-import { ActionDispatcher, ActionPayload } from '../app/dispatcher';
+import { ActionDispatcher, Action } from '../app/dispatcher';
 
 /**
  * Fixed corpus, selectable subcorpus. This is used as an alternative to query model
@@ -60,17 +60,17 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
         this.availSubcorpora = Immutable.List<Kontext.SubcorpListItem>(availSubcorpora);
         this.corpora = Immutable.List<string>(corpora);
 
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcherRegister((action:Action) => {
+            switch (action.actionType) {
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (payload.props['pubName']) {
-                        this.currentSubcorp = payload.props['pubName'];
-                        this.origSubcorpName = payload.props['subcorp'];
-                        this.isForeignSubcorp = payload.props['foreign'];
+                    if (action.props['pubName']) {
+                        this.currentSubcorp = action.props['pubName'];
+                        this.origSubcorpName = action.props['subcorp'];
+                        this.isForeignSubcorp = action.props['foreign'];
 
                     } else {
-                        this.currentSubcorp = payload.props['subcorp'];
-                        this.origSubcorpName = payload.props['subcorp'];
+                        this.currentSubcorp = action.props['subcorp'];
+                        this.origSubcorpName = action.props['subcorp'];
                         this.isForeignSubcorp = false;
                     }
                     const corpIdent = this.layoutModel.getCorpusIdent();

@@ -21,7 +21,7 @@
 import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 
@@ -169,10 +169,10 @@ export class Freq2DFormModel extends StatefulModel {
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
         this.adhocSubcDetector = adhocSubcIdentifier;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
-                    this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
+                    this.setDimensionAttr(action.props['dimension'], action.props['value']);
                     const err1 = this.validateAttrs();
                     if (err1) {
                         this.pageModel.showMessage('error', err1);
@@ -180,11 +180,11 @@ export class Freq2DFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE':
-                    this.minFreqType = payload.props['value'];
+                    this.minFreqType = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ':
-                    this.minFreq = payload.props['value'];
+                    this.minFreq = action.props['value'];
                     const err2 = this.validateMinFreq();
                     if (err2) {
                         this.pageModel.showMessage('error', err2);
@@ -192,20 +192,20 @@ export class Freq2DFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_CTX':
-                    if (payload.props['dim'] === 1) {
-                        this.ctxIndex1 = payload.props['value'];
+                    if (action.props['dim'] === 1) {
+                        this.ctxIndex1 = action.props['value'];
 
-                    } else if (payload.props['dim'] === 2) {
-                        this.ctxIndex2 = payload.props['value'];
+                    } else if (action.props['dim'] === 2) {
+                        this.ctxIndex2 = action.props['value'];
                     }
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_ALIGN_TYPE':
-                    if (payload.props['dim'] === 1) {
-                        this.alignType1 = payload.props['value'];
+                    if (action.props['dim'] === 1) {
+                        this.alignType1 = action.props['value'];
 
-                    } else if (payload.props['dim'] === 2) {
-                        this.alignType2 = payload.props['value'];
+                    } else if (action.props['dim'] === 2) {
+                        this.alignType2 = action.props['value'];
                     }
                     this.notifyChangeListeners();
                 break;

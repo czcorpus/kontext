@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 
@@ -38,8 +38,8 @@ export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
         this.layoutModel = layoutModel;
         this.userData = null;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'USER_INFO_REQUESTED':
                     this.loadUserInfo().then(
                         (_) => {

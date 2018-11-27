@@ -25,7 +25,7 @@ import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './parser';
 import {QueryInputSetQueryProps} from '../../../models/query/first';
-import {ActionDispatcher, ActionPayload, typedProps, SEDispatcher} from '../../../app/dispatcher';
+import {ActionDispatcher, Action, typedProps, SEDispatcher} from '../../../app/dispatcher';
 
 /**
  *
@@ -104,7 +104,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         }
     }
 
-    reduce(state:CQLEditorModelState, action:ActionPayload):CQLEditorModelState {
+    reduce(state:CQLEditorModelState, action:Action):CQLEditorModelState {
         let newState:CQLEditorModelState;
         switch (action.actionType) {
             case 'CQL_EDITOR_ENABLE':
@@ -218,7 +218,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         return newState;
     }
 
-    sideEffects(state:CQLEditorModelState, action:ActionPayload, dispatch:SEDispatcher) {
+    sideEffects(state:CQLEditorModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.actionType) {
             case this.actionPrefix + 'CQL_EDITOR_SET_RAW_QUERY': {
                 const args = typedProps<QueryInputSetQueryProps>(action.props);

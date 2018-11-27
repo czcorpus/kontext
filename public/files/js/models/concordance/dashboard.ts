@@ -20,7 +20,7 @@
 
 import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 
 export interface ConcDashboardConf {
     showFreqInfo:boolean;
@@ -52,7 +52,7 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
         this.layoutModel = layoutModel;
     }
 
-    reduce(state:ConcDashboardState, action:ActionPayload) {
+    reduce(state:ConcDashboardState, action:Action) {
         let newState:ConcDashboardState;
         switch (action.actionType) {
             case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
@@ -73,7 +73,7 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
         }
     }
 
-    sideEffects(state:ConcDashboardState, action:ActionPayload, dispatch:SEDispatcher) {
+    sideEffects(state:ConcDashboardState, action:Action, dispatch:SEDispatcher) {
         switch (action.actionType) {
             case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
             case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':

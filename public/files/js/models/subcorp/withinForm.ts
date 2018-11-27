@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {StatelessModel} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import { InputMode } from './common';
 import {SubcorpFormModel} from './form';
 import { MultiDict } from '../../util';
@@ -88,7 +88,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
     }
 
 
-    reduce(state:SubcorpWithinFormModelState, action:ActionPayload):SubcorpWithinFormModelState {
+    reduce(state:SubcorpWithinFormModelState, action:Action):SubcorpWithinFormModelState {
         let newState:SubcorpWithinFormModelState;
 
         switch (action.actionType) {
@@ -135,7 +135,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         return newState;
     }
 
-    sideEffects(state:SubcorpWithinFormModelState, action:ActionPayload, dispatch:SEDispatcher):void {
+    sideEffects(state:SubcorpWithinFormModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.actionType) {
             case 'SUBCORP_FORM_SUBMIT':
                 if (state.inputMode === InputMode.RAW) {

@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
@@ -46,11 +46,11 @@ export class UserStatusModel extends StatefulModel {
         this.loginFormVisible = false;
         this.returnUrl = null;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     this.loginFormVisible = true;
-                    this.returnUrl = payload.props['returnUrl'];
+                    this.returnUrl = action.props['returnUrl'];
                     this.notifyChangeListeners();
                 break;
                 case 'USER_HIDE_LOGIN_DIALOG':

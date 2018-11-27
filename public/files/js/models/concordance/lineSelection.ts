@@ -23,7 +23,7 @@ import {MultiDict} from '../../util';
 import {StatefulModel} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {ConcLineModel} from './lines';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
@@ -96,12 +96,12 @@ export class LineSelectionModel extends StatefulModel {
         this._isBusy = false;
         this.emailDialogCredentials = null;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'LINE_SELECTION_SELECT_LINE':
-                    let val = payload.props['value'];
+                    let val = action.props['value'];
                     if (this.validateGroupId(val)) {
-                        this.selectLine(val, payload.props['tokenNumber'], payload.props['kwicLength']);
+                        this.selectLine(val, action.props['tokenNumber'], action.props['kwicLength']);
                         this.notifyChangeListeners();
 
                     } else {
@@ -184,7 +184,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_GROUP_RENAME':
                     this._isBusy = true;
                     this.notifyChangeListeners();
-                    this.renameLineGroup(payload.props['srcGroupNum'], payload.props['dstGroupNum']).then(
+                    this.renameLineGroup(action.props['srcGroupNum'], action.props['dstGroupNum']).then(
                         (args:MultiDict) => {
                             this._isBusy = false;
                             this.concLineModel.notifyChangeListeners();
@@ -201,7 +201,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
                     this._isBusy = true;
                     this.notifyChangeListeners();
-                    this.sendSelectionUrlToEmail(payload.props['email']).then(
+                    this.sendSelectionUrlToEmail(action.props['email']).then(
                         (data) => {
                             this._isBusy = false;
                             this.notifyChangeListeners();
@@ -217,7 +217,7 @@ export class LineSelectionModel extends StatefulModel {
                     this.sortLines(); // this redirects ...
                     break;
                 case 'CONCORDANCE_SET_LINE_SELECTION_MODE':
-                    if (this.setMode(payload.props['mode'])) {
+                    if (this.setMode(action.props['mode'])) {
                         this.notifyChangeListeners();
                     }
                     break;

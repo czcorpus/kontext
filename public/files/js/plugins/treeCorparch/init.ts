@@ -18,7 +18,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionPayload} from '../../app/dispatcher';
+import {Action} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
@@ -65,10 +65,10 @@ export class TreeWidgetModel extends StatefulModel {
         this.queryModel = queryModel;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
-        this.dispatcher.register((payload:ActionPayload) => {
-                switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+                switch (action.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        let item = this.idMap.get(payload.props['nodeId']);
+                        let item = this.idMap.get(action.props['nodeId']);
                         item.active = !item.active;
                         this.notifyChangeListeners();
                     break;
@@ -82,7 +82,7 @@ export class TreeWidgetModel extends StatefulModel {
                     break;
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
                         this.corpusClickHandler(
-                            [payload.props['ident']],
+                            [action.props['ident']],
                             this.queryModel.getCurrentSubcorpus()
                         );
                     break;

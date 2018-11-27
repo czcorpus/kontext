@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -139,42 +139,42 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
         this.sposValues = Immutable.Map<string, string>(props.spos);
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'SORT_SET_ACTIVE_STORE':
                     this.isActiveActionValues = this.isActiveActionValues.set(
-                        payload.props['sortId'], payload.props['formAction'] === 'sortx'
+                        action.props['sortId'], action.props['formAction'] === 'sortx'
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'SORT_FORM_SUBMIT':
-                    this.submit(payload.props['sortId']);
+                    this.submit(action.props['sortId']);
                     // no need to notify anybody - we're leaving the page here
                 break;
                 case 'SORT_FORM_SET_SATTR':
-                    this.sattrValues = this.sattrValues.set(payload.props['sortId'],
-                            payload.props['value']);
+                    this.sattrValues = this.sattrValues.set(action.props['sortId'],
+                            action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'SORT_FORM_SET_SKEY':
-                    this.skeyValues = this.skeyValues.set(payload.props['sortId'],
-                            payload.props['value']);
+                    this.skeyValues = this.skeyValues.set(action.props['sortId'],
+                            action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'SORT_FORM_SET_SBWARD':
-                    this.sbwardValues = this.sbwardValues.set(payload.props['sortId'],
-                            payload.props['value']);
+                    this.sbwardValues = this.sbwardValues.set(action.props['sortId'],
+                            action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'SORT_FORM_SET_SICASE':
-                    this.sicaseValues = this.sicaseValues.set(payload.props['sortId'],
-                            payload.props['value']);
+                    this.sicaseValues = this.sicaseValues.set(action.props['sortId'],
+                            action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'SORT_FORM_SET_SPOS':
-                    if (/^([1-9]\d*)*$/.exec(payload.props['value'])) {
-                        this.sposValues = this.sposValues.set(payload.props['sortId'],
-                                payload.props['value']);
+                    if (/^([1-9]\d*)*$/.exec(action.props['value'])) {
+                        this.sposValues = this.sposValues.set(action.props['sortId'],
+                                action.props['value']);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('query__sort_set_spos_error_msg'));
@@ -326,58 +326,58 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
 
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'ML_SORT_FORM_SUBMIT':
-                    this.submit(payload.props['sortId']);
+                    this.submit(action.props['sortId']);
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_ADD_LEVEL':
-                    this.addLevel(payload.props['sortId']);
+                    this.addLevel(action.props['sortId']);
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_REMOVE_LEVEL':
-                    this.removeLevel(payload.props['sortId'], payload.props['levelIdx']);
+                    this.removeLevel(action.props['sortId'], action.props['levelIdx']);
                     this.notifyChangeListeners();
                 break;
                 case 'SORT_SET_ACTIVE_STORE':
                     this.isActiveActionValues = this.isActiveActionValues.set(
-                        payload.props['sortId'], payload.props['formAction'] === 'mlsortx'
+                        action.props['sortId'], action.props['formAction'] === 'mlsortx'
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_SET_SATTR':
                     this.mlxattrValues = this.mlxattrValues.set(
-                        payload.props['sortId'],
-                        this.mlxattrValues.get(payload.props['sortId']).set(payload.props['levelIdx'], payload.props['value'])
+                        action.props['sortId'],
+                        this.mlxattrValues.get(action.props['sortId']).set(action.props['levelIdx'], action.props['value'])
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_SET_SICASE':
                     this.mlxicaseValues = this.mlxicaseValues.set(
-                        payload.props['sortId'],
-                        this.mlxicaseValues.get(payload.props['sortId']).set(payload.props['levelIdx'], payload.props['value'])
+                        action.props['sortId'],
+                        this.mlxicaseValues.get(action.props['sortId']).set(action.props['levelIdx'], action.props['value'])
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_SET_SBWARD':
                     this.mlxbwardValues = this.mlxbwardValues.set(
-                        payload.props['sortId'],
-                        this.mlxbwardValues.get(payload.props['sortId']).set(payload.props['levelIdx'], payload.props['value'])
+                        action.props['sortId'],
+                        this.mlxbwardValues.get(action.props['sortId']).set(action.props['levelIdx'], action.props['value'])
                     )
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_SET_CTX':
                     this.ctxIndexValues = this.ctxIndexValues.set(
-                        payload.props['sortId'],
-                        this.ctxIndexValues.get(payload.props['sortId']).set(payload.props['levelIdx'], payload.props['index'])
+                        action.props['sortId'],
+                        this.ctxIndexValues.get(action.props['sortId']).set(action.props['levelIdx'], action.props['index'])
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_SET_CTX_ALIGN':
                     this.ctxAlignValues = this.ctxAlignValues.set(
-                        payload.props['sortId'],
-                        this.ctxAlignValues.get(payload.props['sortId']).set(payload.props['levelIdx'], payload.props['value'])
+                        action.props['sortId'],
+                        this.ctxAlignValues.get(action.props['sortId']).set(action.props['levelIdx'], action.props['value'])
                     );
                     this.notifyChangeListeners();
                 break;

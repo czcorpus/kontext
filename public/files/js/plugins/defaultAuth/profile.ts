@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../../types/common';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
@@ -45,18 +45,18 @@ export class UserProfileModel extends StatefulModel {
         this.currPasswd = '';
         this.newPasswd = '';
         this.newPasswd2 = '';
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'USER_PROFILE_SET_CURR_PASSWD':
-                    this.currPasswd = payload.props['value'];
+                    this.currPasswd = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'USER_PROFILE_SET_NEW_PASSWD':
-                    this.newPasswd = payload.props['value'];
+                    this.newPasswd = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'USER_PROFILE_SET_NEW_PASSWD2':
-                    this.newPasswd2 = payload.props['value'];
+                    this.newPasswd2 = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'USER_PROFILE_SUBMIT_NEW_PASSWORD':

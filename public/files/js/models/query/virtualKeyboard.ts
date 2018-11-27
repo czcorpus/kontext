@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 declare var require:(ident:string)=>any; // Webpack
 const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');
@@ -53,11 +53,11 @@ export class VirtualKeyboardModel extends StatefulModel {
         this.pageModel = pageModel;
         this.currLayout = 0;
 
-        this.dispatcher.register((payload:ActionPayload) => {
+        this.dispatcher.register((action:Action) => {
 
-            switch (payload.actionType) {
+            switch (action.actionType) {
                 case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':
-                    this.externalKeyHit = payload.props['keyCode'];
+                    this.externalKeyHit = action.props['keyCode'];
                     this.notifyChangeListeners();
                     let timeout;
                     const clickSim = () => {
@@ -68,7 +68,7 @@ export class VirtualKeyboardModel extends StatefulModel {
                     timeout = window.setTimeout(clickSim, 200);
                 break;
                 case 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT':
-                    this.currLayout = payload.props['idx'];
+                    this.currLayout = action.props['idx'];
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS': // TODO this a legacy action (now we have kb bundled)

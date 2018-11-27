@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
 
@@ -95,10 +95,10 @@ export class MLFreqFormModel extends StatefulModel {
         this.alignType = Immutable.List<AlignTypes>(props.alignType);
         this.maxNumLevels = maxNumLevels;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_ML_SET_FLIMIT':
-                    this.flimit.value = payload.props['value'];
+                    this.flimit.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_ADD_LEVEL':
@@ -111,35 +111,35 @@ export class MLFreqFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_REMOVE_LEVEL':
-                    this.removeLevel(payload.props['levelIdx']);
+                    this.removeLevel(action.props['levelIdx']);
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_CHANGE_LEVEL':
-                    this.changeLevel(payload.props['levelIdx'], payload.props['direction']);
+                    this.changeLevel(action.props['levelIdx'], action.props['direction']);
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_SET_MLXATTR':
-                    this.mlxattr = this.mlxattr.set(payload.props['levelIdx'], payload.props['value']);
+                    this.mlxattr = this.mlxattr.set(action.props['levelIdx'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_SET_MLXICASE':
                     this.mlxicase = this.mlxicase.set(
-                        payload.props['levelIdx'],
-                        !this.mlxicase.get(payload.props['levelIdx'])
+                        action.props['levelIdx'],
+                        !this.mlxicase.get(action.props['levelIdx'])
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_SET_MLXCTX_INDEX':
                     this.mlxctxIndices = this.mlxctxIndices.set(
-                        payload.props['levelIdx'],
-                        Number(payload.props['value'])
+                        action.props['levelIdx'],
+                        Number(action.props['value'])
                     );
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_ML_SET_ALIGN_TYPE':
                     this.alignType = this.alignType.set(
-                        payload.props['levelIdx'],
-                        payload.props['value']
+                        action.props['levelIdx'],
+                        action.props['value']
                     );
                     this.notifyChangeListeners();
                 break;
@@ -289,14 +289,14 @@ export class TTFreqFormModel extends StatefulModel {
         this.flimit = {value: props.flimit, isInvalid: false, isRequired: true};
         this.freqSort = props.freq_sort;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_TT_SET_FTTATTR':
-                    if (this.fttattr.contains(payload.props['value'])) {
-                        this.fttattr = this.fttattr.remove((payload.props['value']));
+                    if (this.fttattr.contains(action.props['value'])) {
+                        this.fttattr = this.fttattr.remove((action.props['value']));
 
                     } else {
-                        this.fttattr = this.fttattr.add(payload.props['value']);
+                        this.fttattr = this.fttattr.add(action.props['value']);
                     }
                     this.notifyChangeListeners();
                 break;
@@ -305,7 +305,7 @@ export class TTFreqFormModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_TT_SET_FLIMIT':
-                    this.flimit.value = payload.props['value'];
+                    this.flimit.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_TT_SUBMIT':

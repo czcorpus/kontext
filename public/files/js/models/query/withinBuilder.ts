@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 /**
  *
@@ -46,8 +46,8 @@ export class WithinBuilderModel extends StatefulModel {
         this.currAttrIdx = 0;
         const self = this;
 
-        this.dispatcher.register(function (payload:ActionPayload) {
-            switch (payload.actionType) {
+        this.dispatcher.register(function (action:Action) {
+            switch (action.actionType) {
                 case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
                     self.loadAttrs().then(
                         () => {
@@ -60,11 +60,11 @@ export class WithinBuilderModel extends StatefulModel {
                     );
                 break;
                 case 'QUERY_INPUT_SET_WITHIN_VALUE':
-                    self.query = payload.props['value'];
+                    self.query = action.props['value'];
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_WITHIN_ATTR':
-                    self.currAttrIdx = payload.props['idx'];
+                    self.currAttrIdx = action.props['idx'];
                     self.notifyChangeListeners();
                 break;
             }

@@ -27,7 +27,7 @@ import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
-import {ActionPayload} from '../../app/dispatcher';
+import {Action} from '../../app/dispatcher';
 import {TreeWidgetModel} from './model';
 import {Views as CorplistViews, init as corplistViewInit} from './view';
 import {Views as WidgetViews, init as widgetViewInit} from './widget';

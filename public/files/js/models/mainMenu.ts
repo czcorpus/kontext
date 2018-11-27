@@ -21,7 +21,7 @@
 import {Kontext} from '../types/common';
 import {StatefulModel} from './base';
 import {PageModel} from '../app/main';
-import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
+import {ActionDispatcher, Action} from '../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import { MultiDict } from '../util';
@@ -150,27 +150,27 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         this.data = importMenuData(initialData);
         this._isBusy = false;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            if (payload.actionType === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
-                this.visibleSubmenu = payload.props['value'];
+        this.dispatcher.register((action:Action) => {
+            if (action.actionType === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
+                this.visibleSubmenu = action.props['value'];
                 this.notifyChangeListeners();
 
-            } else if (payload.actionType === 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU') {
+            } else if (action.actionType === 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU') {
                 this.visibleSubmenu = null;
                 this.notifyChangeListeners();
 
-            } else if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
+            } else if (action.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
                 this.activeItem = null;
                 this.notifyChangeListeners();
 
-            } else if (payload.actionType.indexOf('MAIN_MENU_') === 0) {
-                if (this.selectionListeners.has(payload.actionType)) {
+            } else if (action.actionType.indexOf('MAIN_MENU_') === 0) {
+                if (this.selectionListeners.has(action.actionType)) {
                     this._isBusy = true;
-                    this.selectionListeners.get(payload.actionType).reduce<RSVP.Promise<any>>(
+                    this.selectionListeners.get(action.actionType).reduce<RSVP.Promise<any>>(
                         (red, curr) => {
                             return red.then(
                                 () => {
-                                    return curr(payload.props);
+                                    return curr(action.props);
                                 }
                             );
                         },
@@ -179,8 +179,8 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                     ).then(
                         () => {
                             this.activeItem = {
-                                actionName: payload.actionType,
-                                actionArgs: payload.props
+                                actionName: action.actionType,
+                                actionArgs: action.props
                             };
                             this._isBusy = false;
                             this.notifyChangeListeners();
@@ -195,8 +195,8 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
                 } else {
                     this.activeItem = {
-                        actionName: payload.actionType,
-                        actionArgs: payload.props
+                        actionName: action.actionType,
+                        actionArgs: action.props
                     };
                     this.notifyChangeListeners();
                 }

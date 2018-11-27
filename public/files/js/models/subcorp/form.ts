@@ -23,7 +23,7 @@ import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {TextTypesModel} from '../../models/textTypes/main';
 import {InputMode} from './common';
 import RSVP from 'rsvp';
@@ -62,23 +62,23 @@ export class SubcorpFormModel extends StatefulModel {
         this.description = {value: '', isRequired: false, isInvalid: false};
         this.isBusy = false;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
-                    this.inputMode = payload.props['value'];
+                    this.inputMode = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SET_SUBCNAME':
-                    this.subcname = Kontext.updateFormValue(this.subcname, {value: payload.props['value']});
+                    this.subcname = Kontext.updateFormValue(this.subcname, {value: action.props['value']});
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC':
-                    this.isPublic = payload.props['value'];
+                    this.isPublic = action.props['value'];
                     this.description = Kontext.updateFormValue(this.description, {isRequired: this.isPublic});
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SET_DESCRIPTION':
-                    this.description = Kontext.updateFormValue(this.description, {value: payload.props['value']});
+                    this.description = Kontext.updateFormValue(this.description, {value: action.props['value']});
                     this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_FORM_SUBMIT':

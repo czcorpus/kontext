@@ -22,7 +22,7 @@ import {TextTypes} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
@@ -205,27 +205,27 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         this._isBusy = false;
         this.minimizedBoxes = Immutable.Map<string, boolean>(this.attributes.map(v => [v.name, false]));
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
-                    this.changeValueSelection(payload.props['attrName'], payload.props['itemIdx']);
+                    this.changeValueSelection(action.props['attrName'], action.props['itemIdx']);
                     break;
                 case 'TT_SELECT_ALL_CHECKBOX_CLICKED':
-                    this.applySelectAll(payload.props['attrName']);
+                    this.applySelectAll(action.props['attrName']);
                     break;
                 case 'TT_RANGE_BUTTON_CLICKED':
-                    this.applyRange(payload.props['attrName'], payload.props['fromVal'],
-                            payload.props['toVal'], payload.props['strictInterval'],
-                            payload.props['keepCurrent']);
+                    this.applyRange(action.props['attrName'], action.props['fromVal'],
+                            action.props['toVal'], action.props['strictInterval'],
+                            action.props['keepCurrent']);
                     break;
                 case 'TT_TOGGLE_RANGE_MODE':
-                    this.setRangeMode(payload.props['attrName'], !this.getRangeModes().get(payload.props['attrName']));
+                    this.setRangeMode(action.props['attrName'], !this.getRangeModes().get(action.props['attrName']));
                     this.notifyChangeListeners();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
                     this._isBusy = true;
                     this.notifyChangeListeners();
-                    this.fetchExtendedInfo(payload.props['attrName'], payload.props['ident']).then(
+                    this.fetchExtendedInfo(action.props['attrName'], action.props['ident']).then(
                         (v) => {
                             this._isBusy = false;
                             this.notifyChangeListeners();
@@ -238,24 +238,24 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     );
                     break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    this.clearExtendedInfo(payload.props['attrName'], payload.props['ident']);
+                    this.clearExtendedInfo(action.props['attrName'], action.props['ident']);
                     this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
-                    this.setTextInputAttrValue(payload.props['attrName'], payload.props['ident'],
-                            payload.props['label'], payload.props['append']);
+                    this.setTextInputAttrValue(action.props['attrName'], action.props['ident'],
+                            action.props['label'], action.props['append']);
                     this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
-                    this.handleAttrTextInputChange(payload.props['attrName'], payload.props['value']);
+                    this.handleAttrTextInputChange(action.props['attrName'], action.props['value']);
                     this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET':
-                    this.resetAutoComplete(payload.props['attrName']);
+                    this.resetAutoComplete(action.props['attrName']);
                     this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
-                    this.handleAttrTextInputAutoCompleteRequest(payload.props['attrName'], payload.props['value']).then(
+                    this.handleAttrTextInputAutoCompleteRequest(action.props['attrName'], action.props['value']).then(
                         (v) => {
                             this.notifyChangeListeners();
                         },
@@ -275,8 +275,8 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                 break;
                 case 'TT_TOGGLE_MINIMIZE_ITEM':
                     this.minimizedBoxes = this.minimizedBoxes.set(
-                        payload.props['ident'],
-                        !this.minimizedBoxes.get(payload.props['ident'])
+                        action.props['ident'],
+                        !this.minimizedBoxes.get(action.props['ident'])
                     );
                     this.notifyChangeListeners();
                 break;
