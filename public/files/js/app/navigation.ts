@@ -21,6 +21,7 @@
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
 import RSVP from 'rsvp';
+import * as Rx from '@reactivex/rxjs';
 import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'immutable';
 
@@ -83,6 +84,18 @@ export class NullHistory implements Kontext.IHistory {
     replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
     pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
     setOnPopState(fn:(event:PopStateEvent)=>void):void {}
+}
+
+/**
+ *
+ */
+interface AjaxRequestProps {
+    accept:string,
+    contentType:string,
+    responseType:string,
+    method:string,
+    requestBody:string,
+    url:string
 }
 
 /**
@@ -257,18 +270,7 @@ export class AppNavigation implements Kontext.IURLHandler {
                 (urlArgs ? '?' + urlArgs : '');
     }
 
-    /**
-     *
-     * Notes:
-     * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'
-     * - default accept is 'application/json'
-     *
-     * @param method A HTTP method (GET, POST, PUT,...)
-     * @param url A URL of the resource
-     * @param args Parameters to be passed along with request
-     * @param options Additional settings
-     */
-    ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
+    private prepareAjax(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):AjaxRequestProps {
         if (options === undefined) {
             options = {};
         }
@@ -335,14 +337,46 @@ export class AppNavigation implements Kontext.IURLHandler {
             }
         }
 
-        return rsvpAjax.requestObject<string>({
+        return {
             accept: options.accept,
             contentType: options.contentType,
             responseType: options.responseType,
             method: method,
             requestBody: body,
             url: url
-        });
+        }
+    }
+
+    /**
+     *
+     * Notes:
+     * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'
+     * - default accept is 'application/json'
+     *
+     * @param method A HTTP method (GET, POST, PUT,...)
+     * @param url A URL of the resource
+     * @param args Parameters to be passed along with request
+     * @param options Additional settings
+     */
+    ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
+        return rsvpAjax.requestObject<string>(this.prepareAjax(method, url, args, options));
+    }
+
+    /**
+     * This method behaves exactly the same as "normal" ajax() method above except that
+     * it produces Observable.
+     */
+    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Rx.Observable<T> {
+        const callArgs = this.prepareAjax(method, url, args, options);
+        return Rx.Observable.ajax({
+            url: callArgs.url,
+            body: callArgs.requestBody,
+            method: callArgs.method,
+            responseType: callArgs.responseType,
+            headers: {
+                'Content-Type': callArgs.contentType
+            }
+        }).map<Rx.AjaxResponse, T>(v => v.response);
     }
 
 

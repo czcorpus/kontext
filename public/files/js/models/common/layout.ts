@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {StatelessModel, StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
-import {MultiDict, uid} from '../../util';
+import {uid} from '../../util';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import * as Rx from '@reactivex/rxjs';
@@ -294,7 +294,7 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
         });
     }
 
-    private loadCorpusInfo(corpusId:string):RSVP.Promise<any> {
+    private loadCorpusInfo(corpusId:string):Rx.Observable<any> {
         if (this.corpusData && this.currentCorpus === corpusId) {
             return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
                 resolve(this.corpusData);
