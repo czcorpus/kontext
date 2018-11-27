@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import * as common from './common';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 
@@ -207,7 +207,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.corpSelection = corpSelection;
     }
 
-    reduce(state:CorplistWidgetModelState, action:ActionPayload):CorplistWidgetModelState {
+    reduce(state:CorplistWidgetModelState, action:Action):CorplistWidgetModelState {
         let newState:CorplistWidgetModelState;
         switch (action.actionType) {
             case 'DEFAULT_CORPARCH_WIDGET_SHOW':
@@ -427,7 +427,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    sideEffects(state:CorplistWidgetModelState, action:ActionPayload, dispatch:SEDispatcher) {
+    sideEffects(state:CorplistWidgetModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.actionType) {
             case 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM':
                 if (state.activeListItem[0] === 0) {

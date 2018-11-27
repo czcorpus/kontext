@@ -25,7 +25,7 @@ import {Kontext} from '../types/common';
 /**
  * A general flux/redux-like action object.
  */
-export interface ActionPayload {
+export interface Action {
 
     /**
      * Upper case action identifier
@@ -51,14 +51,17 @@ export interface ActionPayload {
 export const typedProps = <T>(props) => <T>props;
 
 /**
- * In KonText, an action can be also an observable
- * stream (e.g. for asynchronous actions
- * [fetch data]...[apply data])).
+ * More generally (and internally), KonText works not just
+ * with actions (= user actions) but also with streams of
+ * actions which are used to resolve more complicated
+ * operations (e.g. chains of promises with more involved
+ * models). In the realm of the Dispatcher we call both
+ * of these 'events'.
  */
-export type Action = ActionPayload|Rx.Observable<ActionPayload>;
+export type Event = Action|Rx.Observable<Action>;
 
 export interface SEDispatcher {
-    (seAction:ActionPayload):void;
+    (seAction:Action):void;
 }
 
 /**
@@ -66,8 +69,8 @@ export interface SEDispatcher {
  */
 export interface IReducer<T> {
 
-    reduce(state:T, action:ActionPayload):T;
-    sideEffects(state:T, action:ActionPayload, dispatch:SEDispatcher):void;
+    reduce(state:T, action:Action):T;
+    sideEffects(state:T, action:Action, dispatch:SEDispatcher):void;
 
 }
 
@@ -85,16 +88,16 @@ export class ActionDispatcher {
          * (typical for simple sync actions) or an Observable
          * (typical for asynchronous actions).
          */
-        private inStream$:Rx.Subject<Action>;
+        private inStream$:Rx.Subject<Event>;
 
         /**
          * These are flattened user actions (i.e. even action streams
          * are here as individual actions).
          */
-        private action$:Rx.Observable<ActionPayload>;
+        private action$:Rx.Observable<Action>;
 
         constructor() {
-            this.inStream$ = new Rx.Subject<Action>();
+            this.inStream$ = new Rx.Subject<Event>();
             this.action$ = this.inStream$.flatMap(v => {
                 if (v instanceof Rx.Observable) {
                     return v;
@@ -106,17 +109,23 @@ export class ActionDispatcher {
             this.dispatch = this.dispatch.bind(this);
         }
 
-        register(callback:(payload:ActionPayload)=>void):Rx.Subscription {
+        register(callback:(action:Action)=>void):Rx.Subscription {
             return this.action$.subscribe(callback);
         }
 
         /**
-         * Dispatch an action. It can be either an
-         * action object (for synchronous actions)
-         * or an Rx.Observable (for asynchronous ones).
+         * Dispatch an action.
          */
         dispatch(action:Action):void {
             this.inStream$.next(action);
+        }
+
+        /**
+         * Inject an observable stream as
+         * a 'complex event'.
+         */
+        inject(obs:Rx.Observable<Action>) {
+            this.inStream$.next(obs);
         }
 
         /**
@@ -132,16 +141,24 @@ export class ActionDispatcher {
             this.action$
                 .startWith(null)
                 .scan(
-                    (state:T, action:ActionPayload) => {
+                    (state:T, action:Action) => {
                         const newState = action !== null ? model.reduce(state, action) : state;
                         action !== null ?
                             model.sideEffects(
                                 newState,
                                 action,
-                                (seAction:Action) => {
+                                (seAction:Event) => {
                                     window.setTimeout(() => {
                                         if (seAction instanceof Rx.Observable) {
-                                            // TODO
+                                            this.inject(seAction.map(v => {
+                                                return {
+                                                    isSideEffect: true,
+                                                    actionType: v.actionType,
+                                                    props: v.props,
+                                                    error: v.error
+                                                }
+                                            }));
+
                                         } else {
                                             this.dispatch({
                                                 isSideEffect: true,

@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -55,12 +55,12 @@ export class ConcSampleModel extends StatefulModel {
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'SAMPLE_FORM_SET_RLINES':
-                    const v = payload.props['value'];
+                    const v = action.props['value'];
                     if (/^([1-9]\d*)?$/.exec(v)) {
-                        this.rlinesValues = this.rlinesValues.set(payload.props['sampleId'], v);
+                        this.rlinesValues = this.rlinesValues.set(action.props['sampleId'], v);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('query__sample_value_must_be_gt_zero'));
@@ -68,7 +68,7 @@ export class ConcSampleModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'SAMPLE_FORM_SUBMIT':
-                    this.submitQuery(payload.props['sampleId']);
+                    this.submitQuery(action.props['sampleId']);
                     this.notifyChangeListeners(); // actually - currently there is no need for this (window.location changed here...)
                 break;
             }

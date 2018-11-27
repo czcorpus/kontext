@@ -24,7 +24,7 @@ import {PluginInterfaces} from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 export class AppBarModel extends StatefulModel {
 
@@ -32,19 +32,18 @@ export class AppBarModel extends StatefulModel {
 
     constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);
-        const self = this;
 
-        this.dispatcher.register(function (payload:ActionPayload) {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     try {
                         toolbar.openLoginDialog();
 
                     } catch (e) {
                         console.error(e);
-                        self.layoutModel.showMessage('error', self.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
+                        this.layoutModel.showMessage('error', this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
                     }
-                    break;
+                break;
             }
         });
     }

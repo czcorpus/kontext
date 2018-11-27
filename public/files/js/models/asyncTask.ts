@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {Kontext} from '../types/common';
 import {IPluginApi} from '../types/plugins';
 import {StatefulModel} from './base';
-import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
+import {ActionDispatcher, Action} from '../app/dispatcher';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
@@ -76,8 +76,8 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         this.asyncTaskCheckerInterval = null;
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
                     this.deleteFinishedTaskInfo().then(
                         (data) => {
@@ -93,22 +93,22 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
                 case 'INBOX_ADD_ASYNC_TASK':
                     this.asyncTasks = this.asyncTasks.push({
                         status: AsyncTaskStatus.PENDING,
-                        ident: payload.props['ident'],
+                        ident: action.props['ident'],
                         created: new Date().getTime() / 1000,
-                        label: payload.props['label'],
-                        category: payload.props['category'],
+                        label: action.props['label'],
+                        category: action.props['category'],
                         error: null,
                         args: {}
                     });
                     this.notifyChangeListeners();
                 break;
                 case 'INBOX_UPDATE_ASYNC_TASK':
-                    const srchIdx = this.asyncTasks.findIndex(v => v.ident === payload.props['ident']);
+                    const srchIdx = this.asyncTasks.findIndex(v => v.ident === action.props['ident']);
                     if (srchIdx > -1) {
                         const old = this.asyncTasks.get(srchIdx);
                         this.asyncTasks = this.asyncTasks.set(srchIdx, {
-                            status: payload.props['status'],
-                            ident: payload.props['ident'],
+                            status: action.props['status'],
+                            ident: action.props['ident'],
                             created: old.created,
                             label: old.label,
                             category: old.category,

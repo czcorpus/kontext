@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {StatelessModel, StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
@@ -57,7 +57,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         this.autoRemoveMessages = autoRemoveMessages;
     }
 
-    reduce(state:MessageModelState, action:ActionPayload):MessageModelState {
+    reduce(state:MessageModelState, action:Action):MessageModelState {
         let newState;
         switch (action.actionType) {
             case 'MESSAGE_ADD':
@@ -90,7 +90,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         return newState;
     }
 
-    sideEffects(state:MessageModelState, action:ActionPayload, dispatch:SEDispatcher):void {
+    sideEffects(state:MessageModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.actionType) {
             case 'MESSAGE_ADD':
                 if (this.autoRemoveMessages) {
@@ -231,8 +231,8 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'OVERVIEW_CLOSE':
                     this.currentInfoType = null;
                     this.notifyChangeListeners();
@@ -240,9 +240,9 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                 case 'OVERVIEW_CORPUS_INFO_REQUIRED':
                     this.isWaiting = true;
                     this.notifyChangeListeners();
-                    this.loadCorpusInfo(payload.props['corpusId']).then(
+                    this.loadCorpusInfo(action.props['corpusId']).then(
                         (data) => {
-                            this.currentCorpus = payload.props['corpusId'];
+                            this.currentCorpus = action.props['corpusId'];
                             this.currentInfoType = CorpusInfoType.CORPUS;
                             this.isWaiting = false;
                             this.notifyChangeListeners();
@@ -256,9 +256,9 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                     case 'OVERVIEW_SHOW_CITATION_INFO':
                         this.isWaiting = true;
                         this.notifyChangeListeners();
-                        this.loadCorpusInfo(payload.props['corpusId']).then(
+                        this.loadCorpusInfo(action.props['corpusId']).then(
                             (data) => {
-                                this.currentCorpus = payload.props['corpusId'];
+                                this.currentCorpus = action.props['corpusId'];
                                 this.currentInfoType = CorpusInfoType.CITATION;
                                 this.isWaiting = false;
                                 this.notifyChangeListeners();
@@ -272,10 +272,10 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                     case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
                         this.isWaiting = true;
                         this.notifyChangeListeners();
-                        this.loadSubcorpusInfo(payload.props['corpusId'], payload.props['subcorpusId']).then(
+                        this.loadSubcorpusInfo(action.props['corpusId'], action.props['subcorpusId']).then(
                             (data) => {
-                                this.currentCorpus = payload.props['corpusId'];
-                                this.currentSubcorpus = payload.props['subcorpusId'];
+                                this.currentCorpus = action.props['corpusId'];
+                                this.currentSubcorpus = action.props['subcorpusId'];
                                 this.currentInfoType = CorpusInfoType.SUBCORPUS;
                                 this.isWaiting = false;
                                 this.notifyChangeListeners();

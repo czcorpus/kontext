@@ -20,7 +20,7 @@ import {IPluginApi} from '../../types/plugins';
 import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -113,7 +113,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
 
-    reduce(state:TagHelperModelState, action:ActionPayload):TagHelperModelState {
+    reduce(state:TagHelperModelState, action:Action):TagHelperModelState {
         const newState = this.copyState(state);
         switch (action.actionType) {
             case 'TAGHELPER_PRESET_PATTERN':
@@ -169,7 +169,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         return newState;
     }
 
-    sideEffects(state:TagHelperModelState, action:ActionPayload, dispatch:SEDispatcher) {
+    sideEffects(state:TagHelperModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.actionType) {
             case 'TAGHELPER_GET_INITIAL_DATA':
                 if (state.data.last().size === 0) {

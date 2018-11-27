@@ -25,7 +25,7 @@ import RSVP from 'rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {FirstQueryFormModel} from './first';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {FilterFormModel} from './filter';
 import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from './sort';
 import {ConcSampleModel} from './sample';
@@ -176,8 +176,8 @@ export class QueryInfoModel extends SynchronizedModel {
         super(dispatcher);
         this.pageModel = pageModel;
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'CLEAR_QUERY_OVERVIEW_DATA':
                     this.currentQueryOverview = null;
                     this.notifyChangeListeners();
@@ -1112,14 +1112,14 @@ export class IndirectQueryReplayModel extends QueryInfoModel implements IQueryRe
         this.currEncodedOperations = importEncodedOperations(currentOperations);
         this.currQueryOverivew = Immutable.List<Kontext.QueryOperation>(currentOperations);
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'REDIRECT_TO_EDIT_QUERY_OPERATION':
                     window.location.replace(
                         this.pageModel.createActionUrl(
                             'view',
                             this.pageModel.getConcArgs().items()
-                        ) + '#edit_op/operationIdx=' + payload.props['operationIdx']
+                        ) + '#edit_op/operationIdx=' + action.props['operationIdx']
                     );
                 break;
             }

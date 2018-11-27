@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionPayload} from '../../app/dispatcher';
+import {Action} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
 
@@ -41,14 +41,14 @@ export class IssueReportingModel extends StatefulModel {
         this._isBusy = false;
         this._isActive = false;
 
-        pluginApi.dispatcher().register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        pluginApi.dispatcher().register((action:Action) => {
+            switch (action.actionType) {
                 case 'ISSUE_REPORTING_SET_VISIBILITY':
-                    this._isActive = payload.props['value'];
+                    this._isActive = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'ISSUE_REPORTING_UPDATE_ISSUE_BODY':
-                    this.issueBody = payload.props['value'];
+                    this.issueBody = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'ISSUE_REPORTING_SUBMIT_ISSUE':

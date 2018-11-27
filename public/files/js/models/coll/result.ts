@@ -23,7 +23,7 @@ import {SaveData} from '../../app/navigation';
 import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {CollFormModel} from '../../models/coll/collForm';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
@@ -104,15 +104,15 @@ export class CollResultsSaveModel extends StatefulModel {
         this.quickSaveRowLimit = quickSaveRowLimit;
         this.saveCollMaxLines = saveCollMaxLines;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
                     this.toLine.value = '';
                     this.notifyChangeListeners();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
-                    this.saveformat = payload.props['saveformat'];
+                    this.saveformat = action.props['saveformat'];
                     this.toLine.value = `${this.quickSaveRowLimit}`;
                     this.submit();
                     this.toLine.value = '';
@@ -123,23 +123,23 @@ export class CollResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_FORMAT':
-                    this.saveformat = payload.props['value'];
+                    this.saveformat = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine.value = payload.props['value'];
+                    this.fromLine.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_TO_LINE':
-                    this.toLine.value = payload.props['value'];
+                    this.toLine.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
-                    this.includeColHeaders = payload.props['value'];
+                    this.includeColHeaders = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SET_INCLUDE_HEADING':
-                    this.includeHeading = payload.props['value'];
+                    this.includeHeading = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SUBMIT':
@@ -413,10 +413,10 @@ export class CollResultModel extends StatefulModel {
             this.calcWatchdog.startWatching();
         }
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'COLL_RESULT_SET_PAGE_INPUT_VAL':
-                    this.currPageInput = payload.props['value'];
+                    this.currPageInput = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_RESULT_GET_NEXT_PAGE':
@@ -447,11 +447,11 @@ export class CollResultModel extends StatefulModel {
                 case 'COLL_RESULT_SORT_BY_COLUMN':
                     this.isWaiting = true;
                     this.notifyChangeListeners();
-                    this.sortFn = payload.props['sortFn'];
+                    this.sortFn = action.props['sortFn'];
                     this.processDataReload();
                 break;
                 case 'COLL_RESULT_APPLY_QUICK_FILTER':
-                    this.applyQuickFilter(payload.props['args']);
+                    this.applyQuickFilter(action.props['args']);
                     // a new page is loaded here
                 break;
             }

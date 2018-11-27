@@ -38,7 +38,7 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
-import { ActionDispatcher, ActionPayload } from '../app/dispatcher';
+import { ActionDispatcher, Action } from '../app/dispatcher';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -56,7 +56,7 @@ class ConfigWrapper extends StatefulModel {
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.dispatcherRegister((action:ActionPayload) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.actionType) {
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');

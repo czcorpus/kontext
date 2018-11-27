@@ -22,7 +22,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload, SEDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import { Kontext } from '../../types/common';
 
@@ -70,7 +70,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         this.layoutModel = layoutModel;
     }
 
-    reduce(state:QuerySaveAsFormModelState, action:ActionPayload):QuerySaveAsFormModelState {
+    reduce(state:QuerySaveAsFormModelState, action:Action):QuerySaveAsFormModelState {
         const newState = this.copyState(state);
 
         switch (action.actionType) {
@@ -129,7 +129,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         return newState;
     }
 
-    sideEffects(state:QuerySaveAsFormModelState, action:ActionPayload, dispatch:SEDispatcher):void {
+    sideEffects(state:QuerySaveAsFormModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.actionType) {
             case 'QUERY_SAVE_AS_FORM_SUBMIT':
                 if (!state.isValidated) {

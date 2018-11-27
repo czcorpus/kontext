@@ -20,7 +20,7 @@
 
 import * as Immutable from 'immutable';
 import { StatelessModel } from './base';
-import { ActionDispatcher, ActionPayload } from '../app/dispatcher';
+import { ActionDispatcher, Action } from '../app/dispatcher';
 
 
 
@@ -93,7 +93,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
         this.translatorFn = translatorFn;
     }
 
-    reduce(state:UsageTipsState, action:ActionPayload):UsageTipsState {
+    reduce(state:UsageTipsState, action:Action):UsageTipsState {
         let newState:UsageTipsState;
         switch (action.actionType) {
             case 'NEXT_QUERY_HINT':

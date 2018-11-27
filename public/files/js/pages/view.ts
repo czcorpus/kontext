@@ -27,7 +27,7 @@ import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, DownloadType} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
-import {ActionPayload} from '../app/dispatcher';
+import {Action} from '../app/dispatcher';
 import {MultiDict, updateProps} from '../util';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
@@ -168,13 +168,13 @@ export class ViewPage {
         return this.layoutModel.translate(s, values);
     }
 
-    private deserializeHashAction(v:string):ActionPayload {
+    private deserializeHashAction(v:string):Action {
         const tmp = v.substr(1).split('/');
         const args = tmp[1] ? new MultiDict(parseUrlArgs(tmp[1])) : undefined;
         return this.createFormAction(tmp[0], args);
     }
 
-    private createFormAction(actionName:string, args:Kontext.IMultiDict):ActionPayload {
+    private createFormAction(actionName:string, args:Kontext.IMultiDict):Action {
         switch (actionName) {
             case 'filter':
                 return {

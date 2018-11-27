@@ -20,7 +20,7 @@ import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
 
@@ -59,10 +59,10 @@ export class CorpusAccessRequestModel extends StatefulModel {
         const self = this;
         this.pluginApi = pluginApi;
         this.dispatcher.register(
-            function (payload:ActionPayload) {
-                switch (payload.actionType) {
+            function (action:Action) {
+                switch (action.actionType) {
                     case 'CORPUS_ACCESS_REQ_SUBMITTED':
-                        self.askForAccess(payload.props).then(
+                        self.askForAccess(action.props).then(
                             (ans) => {
                                 self.pluginApi.showMessage('info',
                                     self.pluginApi.translate('ucnkCorparch__your_message_sent'));

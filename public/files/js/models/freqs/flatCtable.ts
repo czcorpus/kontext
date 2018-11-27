@@ -21,7 +21,7 @@
 import {TextTypes} from '../../types/common';
 import {PageModel, DownloadType} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
@@ -83,11 +83,11 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
         this.sortBy = 'ipm';
         this.sortReversed = true;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_CT_SET_MIN_FREQ':
-                    if (this.validateMinAbsFreqAttr(payload.props['value'])) {
-                        this.minFreq = payload.props['value'];
+                    if (this.validateMinAbsFreqAttr(action.props['value'])) {
+                        this.minFreq = action.props['value'];
                         if (this.data) {
                             this.updateData();
                         }
@@ -98,18 +98,18 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
-                    this.minFreqType = payload.props['value'];
+                    this.minFreqType = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
-                    this.alphaLevel = payload.props['value'];
+                    this.alphaLevel = action.props['value'];
                     this.recalculateConfIntervals();
                     this.updateData();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SORT_FLAT_LIST':
-                    this.sortBy = payload.props['value'];
-                    this.sortReversed = payload.props['reversed'];
+                    this.sortBy = action.props['value'];
+                    this.sortReversed = action.props['reversed'];
                     this.updateData();
                     this.notifyChangeListeners();
                 break;

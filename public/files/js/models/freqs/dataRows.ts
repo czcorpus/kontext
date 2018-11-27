@@ -21,7 +21,7 @@
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {FreqFormInputs} from './freqForms';
@@ -102,11 +102,11 @@ export class FreqDataRowsModel extends StatefulModel {
             quickSaveRowLimit: quickSaveRowLimit
         });
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_RESULT_SET_MIN_FREQ_VAL':
-                    if (this.validateNumber(payload.props['value'], 0)) {
-                        this.flimit = payload.props['value'];
+                    if (this.validateNumber(action.props['value'], 0)) {
+                        this.flimit = action.props['value'];
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__limit_invalid_val'));
@@ -128,7 +128,7 @@ export class FreqDataRowsModel extends StatefulModel {
                     );
                 break;
                 case 'FREQ_RESULT_SORT_BY_COLUMN':
-                    this.sortColumn = payload.props['value'];
+                    this.sortColumn = action.props['value'];
                     this.loadPage().then(
                         (data) => {
                             this.notifyChangeListeners();
@@ -140,8 +140,8 @@ export class FreqDataRowsModel extends StatefulModel {
                     );
                 break;
                 case 'FREQ_RESULT_SET_CURRENT_PAGE':
-                    if (this.validateNumber(payload.props['value'], 1)) {
-                        this.currentPage = payload.props['value'];
+                    if (this.validateNumber(action.props['value'], 1)) {
+                        this.currentPage = action.props['value'];
                         this.loadPage().then(
                             (data) => {
                                 this.notifyChangeListeners();

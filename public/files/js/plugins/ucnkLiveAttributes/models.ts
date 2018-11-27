@@ -21,7 +21,7 @@
 import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import { SelectedTextTypes } from '../../models/textTypes/main';
@@ -166,8 +166,8 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         // initial enabled/disabled state:
         this.setControlsEnabled(args.refineEnabled);
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     this.isBusy = true;
                     this.notifyChangeListeners();
@@ -187,7 +187,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     );
                 break;
                 case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED': {
-                    const item = this.alignedCorpora.get(payload.props['idx']);
+                    const item = this.alignedCorpora.get(action.props['idx']);
                     if (item) {
                         const idx = this.alignedCorpora.indexOf(item);
                         const newItem:TextTypes.AlignedLanguageItem = {
@@ -236,7 +236,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                 break;
                 case '@QUERY_INPUT_ADD_ALIGNED_CORPUS':
                     this.reset();
-                    this.updateAlignedItem(payload.props['corpname'], orig => ({
+                    this.updateAlignedItem(action.props['corpname'], orig => ({
                         value: orig.value,
                         label: orig.label,
                         locked: true,
@@ -246,7 +246,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                 break;
                 case '@QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
                     this.reset();
-                    this.updateAlignedItem(payload.props['corpname'], orig => ({
+                    this.updateAlignedItem(action.props['corpname'], orig => ({
                         value: orig.value,
                         label: orig.label,
                         locked: false,

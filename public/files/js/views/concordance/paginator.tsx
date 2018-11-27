@@ -193,7 +193,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
                     <span className="overlay">
                         <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')} />
                     </span>
-                    <input type="text" value="" />
+                    <input type="text" />
                 </>;
 
             } else if (totalPages > 1) {

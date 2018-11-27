@@ -21,7 +21,7 @@
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import { StatelessModel } from "../../models/base";
-import { ActionPayload, ActionDispatcher, typedProps, SEDispatcher } from "../../app/dispatcher";
+import { Action, ActionDispatcher, typedProps, SEDispatcher } from "../../app/dispatcher";
 import { IPluginApi, PluginInterfaces } from "../../types/plugins";
 import { Kontext } from "../../types/common";
 import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
@@ -136,7 +136,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         this.concLinesProvider = concLinesProvider;
     }
 
-    reduce(state:KwicConnectState, action:ActionPayload):KwicConnectState {
+    reduce(state:KwicConnectState, action:Action):KwicConnectState {
         let newState:KwicConnectState;
         switch (action.actionType) {
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
@@ -167,7 +167,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         }
     }
 
-    sideEffects(state:KwicConnectState, action:ActionPayload, dispatch:SEDispatcher) {
+    sideEffects(state:KwicConnectState, action:Action, dispatch:SEDispatcher) {
         switch (action.actionType) {
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
             case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED': {

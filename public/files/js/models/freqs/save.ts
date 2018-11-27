@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
@@ -78,15 +78,15 @@ export class FreqResultsSaveModel extends StatefulModel {
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
                     this.toLine.value = '';
                     this.notifyChangeListeners();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
-                    this.saveformat = payload.props['saveformat'];
+                    this.saveformat = action.props['saveformat'];
                     this.toLine.value = `${this.quickSaveRowLimit}`;
                     this.submit();
                     this.toLine.value = '';
@@ -97,23 +97,23 @@ export class FreqResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_FORMAT':
-                    this.saveformat = payload.props['value'];
+                    this.saveformat = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine.value = payload.props['value'];
+                    this.fromLine.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_TO_LINE':
-                    this.toLine.value = payload.props['value'];
+                    this.toLine.value = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING':
-                    this.includeHeading = payload.props['value'];
+                    this.includeHeading = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
-                    this.includeColHeaders = payload.props['value'];
+                    this.includeColHeaders = action.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SUBMIT':
@@ -211,17 +211,17 @@ export class FreqCTResultsSaveModel extends StatefulModel {
         this.ctTableModel = ctTableModel;
         this.ctFlatModel = ctFlatModel;
 
-        dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'FREQ_CT_SET_SAVE_MODE':
-                    this.saveMode = payload.props['value'];
+                    this.saveMode = action.props['value'];
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     if (this.saveMode === 'table') {
-                        this.ctTableModel.submitDataConversion(payload.props['saveformat']);
+                        this.ctTableModel.submitDataConversion(action.props['saveformat']);
 
                     } else if (this.saveMode === 'list') {
-                        this.ctFlatModel.submitDataConversion(payload.props['saveformat']);
+                        this.ctFlatModel.submitDataConversion(action.props['saveformat']);
                     }
                 break;
             }

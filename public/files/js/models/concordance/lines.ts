@@ -24,10 +24,10 @@ import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {StatefulModel, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {KWICSection} from './line';
-import {Line, LangSection, TextChunk, IConcLinesProvider} from '../../types/concordance';
+import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
 import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
@@ -384,25 +384,24 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
             }
         );
 
-        this.dispatcherRegister((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcherRegister((action:Action) => {
+            switch (action.actionType) {
                 case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
-                    this.changeMainCorpus(payload.props['maincorp']);
+                    this.changeMainCorpus(action.props['maincorp']);
                 break;
                 case 'CONCORDANCE_PLAY_AUDIO_SEGMENT':
-                    this.playAudio(payload.props['chunksIds']);
+                    this.playAudio(action.props['chunksIds']);
                     this.notifyChangeListeners();
                 break;
                 case 'AUDIO_PLAYER_CLICK_CONTROL':
-                    this.handlePlayerControls(payload.props['action']);
+                    this.handlePlayerControls(action.props['action']);
                     this.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_CHANGE_PAGE':
                 case 'CONCORDANCE_REVISIT_PAGE':
-                    const action = payload.props['action'];
-                    this.changePage(payload.props['action'], payload.props['pageNum']).then(
+                    this.changePage(action.props['action'], action.props['pageNum']).then(
                         (data) => {
-                            if (payload.actionType === 'CONCORDANCE_CHANGE_PAGE') {
+                            if (action.actionType === 'CONCORDANCE_CHANGE_PAGE') {
                                 this.pushHistoryState(this.currentPage);
                             }
                             this.notifyChangeListeners();
@@ -414,15 +413,15 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
                     );
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.unfinishedCalculation = !payload.props['finished'];
-                    this.concSummary.concSize = payload.props['concsize'];
-                    this.concSummary.fullSize = payload.props['fullsize'];
-                    this.concSummary.ipm = payload.props['relconcsize'];
-                    this.concSummary.arf = payload.props['arf'];
-                    this.pagination.lastPage = payload.props['availPages'];
+                    this.unfinishedCalculation = !action.props['finished'];
+                    this.concSummary.concSize = action.props['concsize'];
+                    this.concSummary.fullSize = action.props['fullsize'];
+                    this.concSummary.ipm = action.props['relconcsize'];
+                    this.concSummary.arf = action.props['arf'];
+                    this.pagination.lastPage = action.props['availPages'];
                     this.notifyChangeListeners();
                     this.synchronize(
-                        payload.actionType,
+                        action.actionType,
                         {
                             isUnfinished: this.isUnfinishedCalculation()
                         }
@@ -455,7 +454,7 @@ export class ConcLineModel extends SynchronizedModel implements IConcLinesProvid
                     );
                 break;
                 case 'CONCORDANCE_CHANGE_LANG_VISIBILITY':
-                    this.changeColVisibility(payload.props['corpusId'], payload.props['value']);
+                    this.changeColVisibility(action.props['corpusId'], action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_SWITCH_KWIC_SENT_MODE':

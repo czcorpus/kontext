@@ -22,7 +22,7 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import RSVP from 'rsvp';
 import { MultiDict } from '../../util';
 
@@ -91,8 +91,8 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         this.isWaiting = false;
         this.corpusUsesRTLText = layoutModel.getConf<boolean>('TextDirectionRTL');
 
-        this.dispatcher.register((payload:ActionPayload) => {
-            switch (payload.actionType) {
+        this.dispatcher.register((action:Action) => {
+            switch (action.actionType) {
                 case 'VIEW_OPTIONS_LOAD_DATA':
                     this.loadData().then(
                         (data) => {
@@ -104,11 +104,11 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                     );
                 break;
                 case 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY':
-                    this.setAttrVisibilityMode(payload.props['value']);
+                    this.setAttrVisibilityMode(action.props['value']);
                     this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE':
-                    this.toggleAttribute(payload.props['idx']);
+                    this.toggleAttribute(action.props['idx']);
                     this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES':
@@ -116,12 +116,12 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                     this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_STRUCTURE':
-                    this.toggleStructure(payload.props['structIdent'],
-                        payload.props['structAttrIdent']);
+                    this.toggleStructure(action.props['structIdent'],
+                        action.props['structAttrIdent']);
                     this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_REFERENCE':
-                    this.toggleReference(payload.props['idx']);
+                    this.toggleReference(action.props['idx']);
                     this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES':
