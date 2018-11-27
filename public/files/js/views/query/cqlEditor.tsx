@@ -20,6 +20,7 @@
 
 import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
+import * as Rx from '@reactivex/rxjs';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {QueryFormModel} from '../../models/query/common';
@@ -147,16 +148,28 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         private handleInputChange() {
             const src = this.extractText(this.props.inputRef.current);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+            const query = src.map(v => v[0]).join('');
 
-            dispatcher.dispatch({
-                actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
-                props: {
-                    sourceId: this.props.sourceId,
-                    query: src.map(v => v[0]).join(''),
-                    rawAnchorIdx: rawAnchorIdx,
-                    rawFocusIdx: rawFocusIdx
-                }
-            });
+            dispatcher.insert(
+                Rx.Observable.from([
+                    {
+                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
+                        props: {
+                            sourceId: this.props.sourceId,
+                            query: query,
+                            rawAnchorIdx: rawAnchorIdx,
+                            rawFocusIdx: rawFocusIdx
+                        }
+                    },
+                    {
+                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                        props: {
+                            sourceId: this.props.sourceId,
+                            query: query,
+                        }
+                    }
+                ])
+            );
         }
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
