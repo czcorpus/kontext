@@ -112,7 +112,7 @@ export class StatefulModel implements Kontext.EventEmitter {
  * function which is more general but it can easily
  * handle synchronization too.
  */
-export class SynchronizedModel extends StatefulModel {
+export class UNSAFE_SynchronizedModel extends StatefulModel {
 
     constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);

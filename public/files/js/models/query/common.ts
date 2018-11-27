@@ -21,7 +21,7 @@
 import * as Immutable from 'immutable';
 import {Kontext, ViewOptions} from '../../types/common';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {SynchronizedModel} from '../base';
+import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
@@ -65,7 +65,7 @@ export class WidgetsMap {
 /**
  *
  */
-export abstract class QueryFormModel extends SynchronizedModel {
+export abstract class QueryFormModel extends StatefulModel {
 
     protected pageModel:PageModel;
 

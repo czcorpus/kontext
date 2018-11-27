@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import * as Rx from '@reactivex/rxjs';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {InputModuleViews} from './input';
@@ -104,12 +105,20 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleCloseClick() {
-            dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-                props: {
-                    corpname: this.props.corpname
+            dispatcher.insert(Rx.Observable.from([
+                {
+                    actionType: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+                    props: {
+                        corpname: this.props.corpname
+                    }
+                },
+                {   // additional action for dependent models
+                    actionType: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE',
+                    props: {
+                        corpname: this.props.corpname
+                    }
                 }
-            });
+            ]));
         }
 
         handleMakeMainClick() {
@@ -177,12 +186,20 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     const AlignedCorpora:React.SFC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-                props: {
-                    corpname: evt.target.value
+            dispatcher.insert(Rx.Observable.from([
+                {
+                    actionType: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+                    props: {
+                        corpname: evt.target.value
+                    }
+                },
+                {   // action for dependent models
+                    actionType: 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE',
+                    props: {
+                        corpname: evt.target.value
+                    }
                 }
-            });
+            ]));
         };
 
         const findCorpusLabel = (corpname) => {

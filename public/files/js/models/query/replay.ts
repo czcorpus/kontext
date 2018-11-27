@@ -22,7 +22,7 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {SynchronizedModel} from '../base';
+import {UNSAFE_SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {FirstQueryFormModel} from './first';
 import {ActionDispatcher, Action} from '../../app/dispatcher';
@@ -162,7 +162,7 @@ function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>
  * returning to the 'view' page in case user wants to use
  * some of its functions.
  */
-export class QueryInfoModel extends SynchronizedModel {
+export class QueryInfoModel extends UNSAFE_SynchronizedModel {
 
     /**
      * This is a little bit independent from the rest. It just

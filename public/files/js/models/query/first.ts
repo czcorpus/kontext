@@ -315,18 +315,10 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
                     this.addAlignedCorpus(payload.props['corpname']);
                     this.notifyChangeListeners();
-                    this.synchronize(
-                        'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-                        payload.props
-                    );
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
                     this.removeAlignedCorpus(payload.props['corpname']);
                     this.notifyChangeListeners();
-                    this.synchronize(
-                        'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-                        payload.props
-                    );
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     this.pcqPosNegValues = this.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);

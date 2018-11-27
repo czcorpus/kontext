@@ -22,7 +22,7 @@ import {Kontext, TextTypes, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
-import {StatefulModel, SynchronizedModel} from '../base';
+import {StatefulModel, UNSAFE_SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
@@ -283,7 +283,7 @@ export class DummySyntaxViewModel extends StatefulModel implements PluginInterfa
 /**
  *
  */
-export class ConcLineModel extends SynchronizedModel implements IConcLinesProvider {
+export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLinesProvider {
 
     private layoutModel:PageModel;
 
