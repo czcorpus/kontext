@@ -234,7 +234,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     this.isTTListMinimized = !this.isTTListMinimized;
                     this.notifyChangeListeners();
                 break;
-                case '@QUERY_INPUT_ADD_ALIGNED_CORPUS':
+                case 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE':
                     this.reset();
                     this.updateAlignedItem(action.props['corpname'], orig => ({
                         value: orig.value,
@@ -244,7 +244,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     this.textTypesModel.notifyChangeListeners();
                     this.notifyChangeListeners();
                 break;
-                case '@QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
+                case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE':
                     this.reset();
                     this.updateAlignedItem(action.props['corpname'], orig => ({
                         value: orig.value,

@@ -121,10 +121,10 @@ export class ActionDispatcher {
         }
 
         /**
-         * Inject an observable stream as
+         * Insert an observable stream as
          * a 'complex event'.
          */
-        inject(obs:Rx.Observable<Action>) {
+        insert(obs:Rx.Observable<Action>) {
             this.inStream$.next(obs);
         }
 
@@ -150,7 +150,7 @@ export class ActionDispatcher {
                                 (seAction:Event) => {
                                     window.setTimeout(() => {
                                         if (seAction instanceof Rx.Observable) {
-                                            this.inject(seAction.map(v => {
+                                            this.insert(seAction.map(v => {
                                                 return {
                                                     isSideEffect: true,
                                                     actionType: v.actionType,
