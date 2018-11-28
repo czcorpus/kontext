@@ -967,6 +967,10 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
     }
 
+    ajax$<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):Rx.Observable<T> {
+        return this.pageModel.ajax$.call(this.pageModel, method, url, args, options);
+    }
+
     showMessage(type, message) {
         return this.pageModel.showMessage(type, message);
     }

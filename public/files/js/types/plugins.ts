@@ -19,6 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
+import * as Rx from '@reactivex/rxjs';
 import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {ActionDispatcher} from '../app/dispatcher';
@@ -35,6 +36,7 @@ export interface IPluginApi {
     createStaticUrl(path:string):string;
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
     ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T>;
+    ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Rx.Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     translate(text:string, values?:any):string;
     formatNumber(v:number):string;
