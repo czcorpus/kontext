@@ -273,10 +273,11 @@ class Actions(Kontext):
 
             # simple concordancer
             elif operation == 'searchRetrieve':
+                # TODO we should review the args here (especially x-cmd-context, resultSetTTL)
                 self._check_args(
                     req, supported_args,
                     ['query', 'startRecord', 'maximumRecords', 'recordPacking',
-                        'recordSchema', 'resultSetTTL', 'x-cmd-context']
+                        'recordSchema', 'resultSetTTL', 'x-cmd-context', 'x-fcs-context']
                 )
                 if 'x-cmd-context' in req.args:
                     req_corpname = req.args['x-cmd-context']
