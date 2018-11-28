@@ -20,6 +20,22 @@
 A corparch-plugin database backend for MySQL with some minor UCNK-specific stuff added (requestable corpus).
 It can be used along with rdbms_corparch as an alternative backend to the sqlite3 one - in such case
 you have to copy the whole 'mysql' directory/package to rdbms_corparch/backend directory.
+
+From performance reasons (tens of seconds vs. tenths of a second), this module requires a following stuff
+in UCNK MySQL database:
+
+--------
+CREATE FUNCTION user_id_global_func() returns INTEGER DETERMINISTIC NO SQL return @user_id_global;
+
+CREATE VIEW user_corpus_parametrized AS select user_corpus_relation.user_id AS user_id,
+user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited
+FROM user_corpus_relation WHERE (user_corpus_relation.user_id = user_id_global_func())
+UNION
+SELECT user_id_global_func() AS user_id, relation.corpora AS corpus_id, relation.limited AS limited
+FROM relation WHERE (relation.corplist = (SELECT user.corplist FROM user
+WHERE (user.id = user_id_global_func()))) utf8mb4 utf8mb4_general_ci;
+
+--------
 """
 
 from __future__ import absolute_import
@@ -201,8 +217,8 @@ class Backend(DatabaseBackend):
                          offset=0, limit=10000000000):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
-        where_cond2 = ['c.active = %s', 'kcu.user_id = %s']
-        values_cond2 = [1, user_id]
+        where_cond2 = ['c.active = %s']
+        values_cond2 = [user_id, 1]  # the first item belongs to setting a special @ variable
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
@@ -231,8 +247,8 @@ class Backend(DatabaseBackend):
             values_cond1.append(max_size)
             where_cond2.append('(c.size <= %s)')
             values_cond2.append(max_size)
-        values_cond1.append(len(keywords) if keywords else 0)
-        values_cond2.append(len(keywords) if keywords else 0)
+        values_cond1.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
+        values_cond2.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
 
         c = self._db.cursor()
         # performance note: using UNION instead of 'WHERE user_id = x OR c.requestable = 1' increased
@@ -269,10 +285,12 @@ class Backend(DatabaseBackend):
             'c.group_name AS g_name, c.version AS version, '
             '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
             'WHERE kcx.corpus_name = c.name) AS keywords '
-            'FROM corpora AS c '
+            'FROM '
+            '(SELECT @user_id_global := %s AS p) AS param '
+            'JOIN corpora AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'LEFT JOIN kontext_corpus_user AS kcu ON c.name = kcu.corpus_name '
+            'LEFT JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
             'WHERE {where2} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
@@ -372,53 +390,12 @@ class Backend(DatabaseBackend):
             (corpus_id,))
         return cursor.fetchall()
 
-    # TODO this function should be improved as it loads all the registry info to cache user permissions
-    # -- we should get rid of this caching and join our selects directly to a list of user avail. corpora
-    def refresh_user_permissions(self, user_id):
-        cursor = self._db.cursor(dictionary=False)
-        cursor.callproc('user_corpus_proc', (user_id,))
-        # stored procedure returns: user_id, corpus_id, limited, name
-        rows = []
-        for result in cursor.stored_results():
-            rows = result.fetchall()
-        curr_perm = []
-        for row in rows:
-            curr_perm.append((user_id, row[3].split('/')[-1] if row[2]
-                              else row[3], 'omezeni' if row[2] else None))
-
-        cursor.execute(
-            'SELECT user_id, corpus_name, variant FROM kontext_corpus_user WHERE user_id = %s', (user_id,))
-        cached_perm = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
-
-        curr_perm = set(curr_perm)
-        cached_perm = set(cached_perm)
-        to_del = cached_perm - curr_perm
-        to_add = curr_perm - cached_perm
-
-        for item in to_del:
-            if item[2] is None:
-                cursor.execute('DELETE FROM kontext_corpus_user '
-                               'WHERE user_id = %s AND corpus_name = %s AND variant IS NULL', (user_id, item[1]))
-            else:
-                cursor.execute('DELETE FROM kontext_corpus_user '
-                               'WHERE user_id = %s AND corpus_name = %s AND variant = %s',
-                               (user_id, item[1], item[2]))
-        try:
-            cursor.executemany(
-                'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
-                list(to_add))
-        except mysql.connector.errors.IntegrityError:
-            pass  # we deliberately ignore this
-        self._db.commit()
-        if len(to_del) > 0 or len(to_add) > 0:
-            logging.getLogger(__name__).info('Corp permissions sync: added {0}, removed {1}, user: {2}'.format(
-                len(to_add), len(to_del), user_id))
-
     def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT kcu.corpus_name AS corpus_id, kcu.variant '
-                       'FROM kontext_corpus_user AS kcu '
-                       'WHERE kcu.user_id = %s', (user_id,))
+        cursor.execute('SELECT ucp.user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+                       'FROM (SELECT @user_id_global := %s p) AS param '
+                       'JOIN user_corpus_parametrized AS ucp '
+                       'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, ))
         return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
 
     def load_interval_attrs(self, corpus_id):

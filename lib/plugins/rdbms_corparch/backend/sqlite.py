@@ -222,21 +222,6 @@ class Backend(DatabaseBackend):
             'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
         return cursor.fetchall()
 
-    # TODO this function should be improved as it loads all the registry info to cache user permissions
-    # -- we should get rid of this caching and join our selects directly to a list of user avail. corpora
-    def refresh_user_permissions(self, user_id):
-        cursor = self._db.cursor(dictionary=False)
-        cursor.execute('DELETE FROM kontext_corpus_user WHERE user_id = ?', (user_id,))
-        cursor.callproc('user_corpus_proc', (user_id,))
-        # stored procedure returns: user_id, corpus_id, limited, name
-        for result in cursor.stored_results():
-            rows = result.fetchall()
-        for row in rows:
-            cursor.execute(
-                'INSERT INTO kontext_corpus_user (user_id, corpus_id, variant) VALUES (?, ?, ?)',
-                (user_id, row[3], 'omezeni' if row[2] else None))
-        self._db.commit()
-
     def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT kcu.corpus_id AS corpus_id, kcu.variant '
