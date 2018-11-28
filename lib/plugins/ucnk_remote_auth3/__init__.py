@@ -232,8 +232,6 @@ class CentralAuth(AbstractRemoteAuth):
                     'fullname': u'%s %s' % (response_obj['user'].get('firstName'),
                                             response_obj['user'].get('surname'))  # TODO API unknown
                 }
-                # reload available corpora from remote server
-                self.refresh_user_permissions(plugin_api)
             else:  # logout => clear current user's session data and set new credentials
                 plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()

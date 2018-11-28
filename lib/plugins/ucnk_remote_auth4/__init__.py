@@ -164,7 +164,6 @@ class CentralAuth(AbstractRemoteAuth):
                                          response_obj['user'].get('surname')),
                     email=response_obj['user'].get('email'))
                 # reload available corpora from remote server
-                self.refresh_user_permissions(plugin_api)
             else:  # logout => clear current user's session data and set new credentials
                 plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()
@@ -183,10 +182,6 @@ class CentralAuth(AbstractRemoteAuth):
         if (IMPLICIT_CORPUS, None) not in corpora:
             corpora.append((IMPLICIT_CORPUS, None))
         return dict((c, pref) for c, pref in corpora)
-
-    def refresh_user_permissions(self, plugin_api):
-        self._db.refresh_user_permissions(
-            user_id=plugin_api.session.get('user', {'id': None})['id'])
 
     def get_user_info(self, plugin_api):
         ans = {}

@@ -699,10 +699,6 @@ class Kontext(Controller):
             if not action_metadata['skip_corpus_init']:
                 corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
                 has_access, variant = validate_access(corpname, allowed_corpora)
-                if not has_access and callable(getattr(auth, 'refresh_user_permissions', None)):
-                    auth.refresh_user_permissions(self._plugin_api)
-                    has_access, variant = validate_access(
-                        corpname, auth.permitted_corpora(self.session_get('user')))
                 if has_access and redirect:
                     url_pref = self.get_mapping_url_prefix()
                     if len(url_pref) > 0:

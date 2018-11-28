@@ -192,15 +192,6 @@ class AbstractRemoteAuth(AbstractAuth):
         """
         raise NotImplementedError()
 
-    def refresh_user_permissions(self, plugin_api):
-        """
-        Forces KonText to reload corpus access permissions for the current user
-        from a remote server. This is triggered in case user cannot access an
-        explicit corpus. But the auth plug-in may use this in other procedures as
-        well (e.g. during 'revalidate()' or when session ID changes).
-        """
-        pass
-
 
 class AuthException(Exception):
     """
