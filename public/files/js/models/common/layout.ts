@@ -240,49 +240,52 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                 case 'OVERVIEW_CORPUS_INFO_REQUIRED':
                     this.isWaiting = true;
                     this.notifyChangeListeners();
-                    this.loadCorpusInfo(action.props['corpusId']).then(
-                        (data) => {
+                    this.loadCorpusInfo(action.props['corpusId']).subscribe(
+                        null,
+                        (err) => {
+                            this.isWaiting = false;
+                            this.pluginApi.showMessage('error', err);
+                        },
+                        () => {
                             this.currentCorpus = action.props['corpusId'];
                             this.currentInfoType = CorpusInfoType.CORPUS;
                             this.isWaiting = false;
                             this.notifyChangeListeners();
                         },
-                        (err) => {
-                            this.isWaiting = false;
-                            this.pluginApi.showMessage('error', err);
-                        }
                     )
                     break;
                     case 'OVERVIEW_SHOW_CITATION_INFO':
                         this.isWaiting = true;
                         this.notifyChangeListeners();
-                        this.loadCorpusInfo(action.props['corpusId']).then(
-                            (data) => {
+                        this.loadCorpusInfo(action.props['corpusId']).subscribe(
+                            null,
+                            (err) => {
+                                this.isWaiting = false;
+                                this.pluginApi.showMessage('error', err);
+                            },
+                            () => {
                                 this.currentCorpus = action.props['corpusId'];
                                 this.currentInfoType = CorpusInfoType.CITATION;
                                 this.isWaiting = false;
                                 this.notifyChangeListeners();
                             },
-                            (err) => {
-                                this.isWaiting = false;
-                                this.pluginApi.showMessage('error', err);
-                            }
                         );
                     break;
                     case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
                         this.isWaiting = true;
                         this.notifyChangeListeners();
-                        this.loadSubcorpusInfo(action.props['corpusId'], action.props['subcorpusId']).then(
-                            (data) => {
+                        this.loadSubcorpusInfo(action.props['corpusId'], action.props['subcorpusId']).subscribe(
+                            null,
+                            (err) => {
+                                this.isWaiting = false;
+                                this.pluginApi.showMessage('error', err);
+                            },
+                            () => {
                                 this.currentCorpus = action.props['corpusId'];
                                 this.currentSubcorpus = action.props['subcorpusId'];
                                 this.currentInfoType = CorpusInfoType.SUBCORPUS;
                                 this.isWaiting = false;
                                 this.notifyChangeListeners();
-                            },
-                            (err) => {
-                                this.isWaiting = false;
-                                this.pluginApi.showMessage('error', err);
                             }
                         )
                     break;
@@ -296,65 +299,52 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
 
     private loadCorpusInfo(corpusId:string):Rx.Observable<any> {
         if (this.corpusData && this.currentCorpus === corpusId) {
-            return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                resolve(this.corpusData);
-            });
+            return Rx.Observable.of(this.corpusData);
 
         } else {
-            return this.pluginApi.ajax<CorpusInfoResponse>(
+            return this.pluginApi.ajax$<CorpusInfoResponse>(
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
                 {
                     corpname: this.pluginApi.getCorpusIdent().id
                 }
-            ).then(
+            ).concatMap(
                 (data) => {
                     this.corpusData = data;
                     this.currentCorpus = corpusId;
-                    return data;
+                    return Rx.Observable.of(data);
                 }
             );
         }
     }
 
-    private loadSubcorpusInfo(corpusId:string, subcorpusId:string):RSVP.Promise<any> {
+    private loadSubcorpusInfo(corpusId:string, subcorpusId:string):Rx.Observable<any> {
 
-        let prom;
-        if (corpusId !== this.currentCorpus) {
-            prom = this.loadCorpusInfo(corpusId);
-
-        } else {
-            prom = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                resolve(this.corpusData);
-            });
-        }
+        const prom = corpusId !== this.currentCorpus ?
+            this.loadCorpusInfo(corpusId) :
+            Rx.Observable.of(this.corpusData);
 
         if (this.subcorpusData && this.currentSubcorpus === subcorpusId) {
-            return prom.then(
-                (data) => {
-                    return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                        resolve(this.subcorpusData);
-                    });
-                }
-            );
+            return prom.concatMap((_) => Rx.Observable.of(this.subcorpusData));
 
         } else {
-            return prom.then(
+            return prom.concatMap(
                 (data) => {
-                    return this.pluginApi.ajax<SubcorpusInfoResponse>(
+                    return this.pluginApi.ajax$<SubcorpusInfoResponse>(
                         'GET',
                         this.pluginApi.createActionUrl('subcorpus/ajax_subcorp_info'),
                         {
                             'corpname': corpusId,
                             'subcname': subcorpusId
                         }
-                    ).then(
+                    ).concatMap(
                         (data) => {
                             if (!data.extended_info) {
                                 data.extended_info = {cql: '-'};
                             }
                             this.currentSubcorpus = subcorpusId;
                             this.subcorpusData = data;
+                            return Rx.Observable.empty();
                         }
                     );
                 }
