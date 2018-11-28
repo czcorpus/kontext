@@ -250,8 +250,8 @@ class Actions(Kontext):
                 import_str = partial(l10n.import_string, from_encoding=corpus.get_conf('ENCODING'))
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
-                data['corpus_desc'] = u'Corpus {0} (size: {1} tokens)'.format(
-                    import_str(corpus.get_conf('NAME')), corpus.size())
+                data['corpus_desc'] = u'Corpus {0} ({1} tokens)'.format(
+                    import_str(corpus.get_conf('NAME')), l10n.simplify_num(corpus.size()))
                 data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
                 data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
                                               else False)
@@ -273,10 +273,11 @@ class Actions(Kontext):
 
             # simple concordancer
             elif operation == 'searchRetrieve':
+                # TODO we should review the args here (especially x-cmd-context, resultSetTTL)
                 self._check_args(
                     req, supported_args,
                     ['query', 'startRecord', 'maximumRecords', 'recordPacking',
-                        'recordSchema', 'resultSetTTL', 'x-cmd-context']
+                        'recordSchema', 'resultSetTTL', 'x-cmd-context', 'x-fcs-context']
                 )
                 if 'x-cmd-context' in req.args:
                     req_corpname = req.args['x-cmd-context']
