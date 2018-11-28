@@ -250,8 +250,8 @@ class Actions(Kontext):
                 import_str = partial(l10n.import_string, from_encoding=corpus.get_conf('ENCODING'))
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
-                data['corpus_desc'] = u'Corpus {0} (size: {1} tokens)'.format(
-                    import_str(corpus.get_conf('NAME')), corpus.size())
+                data['corpus_desc'] = u'Corpus {0} ({1} tokens)'.format(
+                    import_str(corpus.get_conf('NAME')), l10n.simplify_num(corpus.size()))
                 data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
                 data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
                                               else False)
