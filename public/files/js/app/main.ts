@@ -380,24 +380,30 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      *                  be used.
      */
     showMessage(msgType:string, message:any):void {
+
+        const fetchJsonError = (message:XMLHttpRequest|Rx.AjaxError) => {
+            const respObj = message.response || {};
+            if (respObj['error_code']) {
+                return this.translate(respObj['error_code'], respObj['error_args'] || {});
+
+            } else if (respObj['messages']) {
+                return respObj['messages'].join(', ');
+
+            } else {
+                return `${message.status}: ${message instanceof Rx.AjaxError ? message.message : message.statusText}`;
+            }
+        };
+
         let outMsg;
         if (msgType === 'error') {
             if (this.getConf<boolean>('isDebug')) {
                 console.error(message);
             }
+
             if (message instanceof XMLHttpRequest) {
                 switch (message.responseType) {
                     case 'json': {
-                        const respObj = message.response || {};
-                        if (respObj['error_code']) {
-                            outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
-
-                        } else if (respObj['messages']) {
-                            outMsg = respObj['messages'].join(', ');
-
-                        } else {
-                            outMsg = `${message.status}: ${message.statusText}`;
-                        }
+                        outMsg = fetchJsonError(message);
                     }
                     break;
                     case 'text':
@@ -407,7 +413,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                     default:
                         outMsg = `${message.status}: ${message.statusText}`
                     break;
+                }
 
+            } else if (message instanceof Rx.AjaxError) {
+                if (message.responseType === 'json') {
+                    outMsg = fetchJsonError(message);
+
+                } else {
+                    outMsg = message.message;
                 }
 
             } else if (message instanceof Error) {

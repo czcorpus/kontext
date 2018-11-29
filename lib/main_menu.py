@@ -308,7 +308,7 @@ class EventTriggeringItem(HideOnCustomCondItem):
 
 class MenuGenerator(object):
 
-    def __init__(self, tpl_data, args):
+    def __init__(self, tpl_data, args, plugin_api):
         self._args = OutData(tpl_data, args)
 
         # -------------------------- menu-new-query -------------------------------------
@@ -347,7 +347,7 @@ class MenuGenerator(object):
         )
 
         with plugins.runtime.CORPARCH as corparch:
-            corparch.mod_corplist_menu(self.avail_corpora)
+            corparch.mod_corplist_menu(plugin_api, self.avail_corpora)
 
         self.my_subcorpora = (
             MenuItemInternal(MainMenu.CORPORA('my-subcorpora'),

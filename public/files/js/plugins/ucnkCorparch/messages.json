@@ -9,9 +9,8 @@
     "ucnkCorparch__load_all": "Load all",
     "ucnkCorparch__next_{num}": "Load next {num}",
     "ucnkCorparch__your_message_sent": "Your request has been sent. You will be informed by e-mail once it is resolved.",
-    "ucnkCorparch__your_message_failed": "Failed to send the request. Please try again later or contact support.",
     "ucnkCorparch__tmp_hint_alt": "Corpus selection tool change explained",
-    "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Confused by the new way of selecting corpora? With the update of KonText to release 0.7, we had to abandon the former way of displaying available corpora (in the form of a hierarchical tree) and introduce a new system that can better adjust to the rapidly growing number of corpora and their versions. The new corpus selection mechanism features direct access to selected corpora, including favourite corpora chosen by the user, and uses labels that provide a basic characteristic of all available corpora.</p><p class=\"boxed-par\">For a detailed description of the new system and its features please see the KonText <a target=\"_blank\" href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manual</a>.</p>"
+    "ucnkCorparch__not_avail_for_public": "Not available for public access"
   },
     "cs-CZ": {
     "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProsím o přístup ke korpusu {corpname}\u201D",
@@ -23,9 +22,8 @@
     "ucnkCorparch__load_all": "Nahrát vše",
     "ucnkCorparch__next_{num}": "Nahrát {num, plural, few{další #} other{dalších #}}",
     "ucnkCorparch__your_message_sent": "Váš požadavek byl odeslán. Jakmile ho vyřídíme, budete informováni e-mailem.",
-    "ucnkCorparch__your_message_failed": "Požadavek se nepodařilo odeslat. Zkuste to prosím později nebo kontaktujte podporu.",
     "ucnkCorparch__tmp_hint_alt": "Vysvětlení změn ve způsobu výběru korpusu",
-    "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Překvapil vás nový způsob výběru korpusu? Od KonTextu verze 0.7 jsme byli nuceni nahradit zobrazování korpusů v podobě hierarchizovaného stromu jiným systémem, protože dosavadní způsob přestal být vzhledem k rostoucímu počtu korpusů a jejich verzí přehledný a do budoucna udržitelný. Nová podoba výběru korpusů umožňuje jednak využít rychlou volbu včetně uživateli definovaných oblíbených korpusů, jednak prohledávat seznam všech dostupných korpusů pomocí tzv. štítků se základní charakteristikou každého z nich.</p><p class=\"boxed-par\">Popis práce s novým systémem najdete v <a target=\"_blank\"  href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manuálu</a>.</p>"
+    "ucnkCorparch__not_avail_for_public": "Není k dispozici pro veřejný přístup"
   },
   "szl": {
     "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProszã ô dostymp do korpusu {corpname}\u201D",
@@ -37,8 +35,7 @@
     "ucnkCorparch__load_all": "Laduj wszyjsko",
     "ucnkCorparch__next_{num}": "Load next {num}",
     "ucnkCorparch__your_message_sent": "Twoja prośba była wysłanŏ. Na twojã adresã emailowõ bydzie posłanŏ wiadōmość, jak bydzie decyzyjŏ.",
-    "ucnkCorparch__your_message_failed": "Niy szło wysłać prośby. Sprōbuj zaś niyskorzij abo skōntaktuj sie z pōmocōm.",
     "ucnkCorparch__tmp_hint_alt": "Wyeklerowanie zmian nŏczyniŏ wyboru korpusu",
-    "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Niy radzisz sie ze nowym spusobym ôbiyraniŏ korpusu? Ze aktualizacyjōm KonTextu musieli my pociepnōńć starõ metodã pokazowaniŏ dostympnych korpusōw i wkludzić nowy system, co może lepij dostosować sie do corŏz wiynkszyj wielości korpusōw i jejich wersyji. Nowy mechanizm wybiyraniŏ korpusu mŏ bezpostrzedni dostymp do ôbranych korpusōw, w tym podryncznych korpusōw ôbranych ôd używŏcza, i używŏ etyket co dŏwajōm podstawowõ charakterystykã wszyjskich dostympnych korpusōw.</p><p class=\"boxed-par\">Po szczegōłowy ôpis nowego systymu i jego funkcyji wejzdrzij do <a target=\"_blank\" href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manuala</a>.</p>"
+    "ucnkCorparch__not_avail_for_public": "Not available for public access"
   }
 }
