@@ -24,8 +24,7 @@ import {StatelessModel} from '../../../models/base';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './parser';
-import {QueryInputSetQueryProps} from '../../../models/query/first';
-import {ActionDispatcher, Action, typedProps, SEDispatcher} from '../../../app/dispatcher';
+import {ActionDispatcher, Action, typedProps} from '../../../app/dispatcher';
 
 /**
  *
@@ -46,14 +45,16 @@ export interface CQLEditorModelState {
 
     isEnabled:boolean;
 
+    cqlEditorMessage:Immutable.Map<string, string>;
+
 }
 
 interface CQLEditorSetRawQueryProps {
     sourceId:string;
     query:string;
-    range?:[number, number];
     rawFocusIdx:number;
     rawAnchorIdx:number;
+    insertRange:[number, number]|null;
 }
 
 
@@ -92,6 +93,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 message: Immutable.Map<string, string>(),
                 rawAnchorIdx: Immutable.Map<string, number>(),
                 rawFocusIdx: Immutable.Map<string, number>(),
+                cqlEditorMessage: Immutable.Map<string, string>(),
                 isEnabled: isEnabled,
                 downArrowTriggersHistory: Immutable.Map<string, boolean>()
             }
@@ -131,11 +133,11 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 newState = this.copyState(state);
                 newState.rawAnchorIdx = newState.rawAnchorIdx.set(
                     action.props['sourceId'],
-                    action.props['anchorIdx']
+                    action.props['rawAnchorIdx']
                 );
                 newState.rawFocusIdx = newState.rawFocusIdx.set(
                     action.props['sourceId'],
-                    action.props['focusIdx']
+                    action.props['rawFocusIdx']
                 );
                 newState.downArrowTriggersHistory = newState.downArrowTriggersHistory.set(
                     action.props['sourceId'],
@@ -145,33 +147,24 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                     )
                 );
             break;
-            case this.actionPrefix + 'CQL_EDITOR_SET_RAW_QUERY': {
+            case this.actionPrefix + 'QUERY_INPUT_SET_QUERY': {
                 newState = this.copyState(state);
                 const args = typedProps<CQLEditorSetRawQueryProps>(action.props);
                 if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
-                    newState.rawAnchorIdx = newState.rawAnchorIdx.set(args.sourceId, args.rawAnchorIdx);
-                    newState.rawFocusIdx = newState.rawFocusIdx.set(args.sourceId, args.rawFocusIdx);
+                    newState.rawAnchorIdx = newState.rawAnchorIdx.set(args.sourceId, args.rawAnchorIdx || args.query.length);
+                    newState.rawFocusIdx = newState.rawFocusIdx.set(args.sourceId, args.rawFocusIdx || args.query.length);
                 }
                 this.setRawQuery(
                     newState,
                     args.sourceId,
                     args.query,
-                    args.range
+                    args.insertRange
                 );
-                if (args.range) {
+                if (args.rawAnchorIdx === null && args.rawFocusIdx === null) {
                     this.moveCursorToPos(
-                        newState, args.sourceId, args.range[0] + args.query.length - 1);
+                        newState, args.sourceId, newState.rawCode.get(args.sourceId).length);
                 }
             }
-            break;
-            case this.actionPrefix + 'QUERY_INPUT_SET_QUERY':
-                newState = this.copyState(state);
-                this.setRawQuery(
-                    newState,
-                    <string>action.props['sourceId'],
-                    <string>action.props['query'],
-                    null
-                );
             break;
             case this.actionPrefix + 'QUERY_INPUT_APPEND_QUERY':
                 newState = this.copyState(state);
@@ -271,7 +264,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     }
 
     private shouldDownArrowTriggerHistory(state:CQLEditorModelState, sourceId:string):boolean {
-        const q = state.rawCode.get(sourceId);
+        const q = state.rawCode.get(sourceId) || '';
         const anchorIdx = state.rawAnchorIdx.get(sourceId);
         const focusIdx = state.rawFocusIdx.get(sourceId);
 
@@ -287,15 +280,15 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
      * @param range in case we want to insert a CQL snipped into an existing code;
      *              if undefined then whole query is replaced
      */
-    private setRawQuery(state:CQLEditorModelState, sourceId:string, query:string, range:[number, number]):void {
+    private setRawQuery(state:CQLEditorModelState, sourceId:string, query:string, insertRange:[number, number]|null):void {
         let newQuery:string;
 
         if (!state.rawCode.has(sourceId)) {
             state.rawCode = state.rawCode.set(sourceId, '');
         }
-        if (Array.isArray(range)) {
-            newQuery = state.rawCode.get(sourceId).substring(0, range[0]) + query +
-                state.rawCode.get(sourceId).substr(range[1]);
+        if (insertRange !== null) {
+            newQuery = state.rawCode.get(sourceId).substring(0, insertRange[0]) + query +
+                state.rawCode.get(sourceId).substr(insertRange[1]);
 
         } else {
             newQuery = query;

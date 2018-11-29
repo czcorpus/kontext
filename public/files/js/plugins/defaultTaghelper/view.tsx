@@ -25,6 +25,7 @@ import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} fro
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
+import { SetQueryInputAction } from '../../models/query/common';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
@@ -131,12 +132,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                    dispatcher.dispatch({
-                        actionType: props.actionPrefix + 'CQL_EDITOR_SET_RAW_QUERY',
+                    const query = `"${props.displayPattern}"`;
+                    dispatcher.dispatch<SetQueryInputAction>({
+                        actionType: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                         props: {
                             sourceId: props.sourceId,
-                            query: `"${props.displayPattern}"`,
-                            range: props.range
+                            query: query,
+                            insertRange: [props.range[0], props.range[1]],
+                            rawAnchorIdx: null,
+                            rawFocusIdx: null
                         }
                     });
 

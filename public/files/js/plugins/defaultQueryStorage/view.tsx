@@ -23,6 +23,7 @@ import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, KeyCodes} from '../../types/common';
 import { QueryStorageModel, InputBoxHistoryItem } from './models';
+import { SetQueryInputAction } from '../../models/query/common';
 
 
 export interface QueryStorageProps {
@@ -86,11 +87,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
                         queryType: historyItem.query_type
                     }
                 });
-                dispatcher.dispatch({
+                dispatcher.dispatch<SetQueryInputAction>({
                     actionType: 'QUERY_INPUT_SET_QUERY',
                     props: {
                         sourceId: this.props.sourceId,
-                        query: historyItem.query
+                        query: historyItem.query,
+                        rawAnchorIdx: null,
+                        rawFocusIdx: null,
+                        insertRange: null
                     }
                 });
                 this.props.onCloseTrigger();
@@ -111,11 +115,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
                     queryType: historyItem.query_type
                 }
             });
-            dispatcher.dispatch({
+            dispatcher.dispatch<SetQueryInputAction>({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
                     sourceId: this.props.sourceId,
-                    query: historyItem.query
+                    query: historyItem.query,
+                    rawAnchorIdx: null,
+                    rawFocusIdx: null,
+                    insertRange: null
                 }
             });
             this.props.onCloseTrigger();
