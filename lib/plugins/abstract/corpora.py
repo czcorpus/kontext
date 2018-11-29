@@ -219,7 +219,7 @@ class AbstractCorporaArchive(object):
         """
         raise NotImplementedError()
 
-    def mod_corplist_menu(self, menu_item):
+    def mod_corplist_menu(self, plugin_api, menu_item):
         """
         The method allows the plug-in to customize main menu link from "Corpora -> Available corpora".
         """

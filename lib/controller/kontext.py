@@ -1214,10 +1214,11 @@ class Kontext(Controller):
             'global', 'explicit_conc_persistence_ui', False)
 
         # main menu
-        menu_items = MenuGenerator(result, self.args).generate(disabled_items=self.disabled_menu_items,
-                                                               save_items=self._save_menu,
-                                                               corpus_dependent=result['uses_corp_instance'],
-                                                               ui_lang=self.ui_lang)
+        menu_items = MenuGenerator(result, self.args, self._plugin_api).generate(
+            disabled_items=self.disabled_menu_items,
+            save_items=self._save_menu,
+            corpus_dependent=result['uses_corp_instance'],
+            ui_lang=self.ui_lang)
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten
         # as soon as JS stuff is initiated. It can be used e.g. by search engines.

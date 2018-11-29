@@ -1745,11 +1745,11 @@ class Actions(Querying):
             queryOverview=[],
             numQueryOps=0,
             textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True),
-            menuData=MenuGenerator(tmp_out, self.args).generate(disabled_items=self.disabled_menu_items,
-                                                                save_items=self._save_menu,
-                                                                corpus_dependent=tmp_out['uses_corp_instance'],
-                                                                ui_lang=self.ui_lang),
-
+            menuData=MenuGenerator(tmp_out, self.args, self._plugin_api).generate(
+                disabled_items=self.disabled_menu_items,
+                save_items=self._save_menu,
+                corpus_dependent=tmp_out['uses_corp_instance'],
+                ui_lang=self.ui_lang),
             Wposlist=[{'n': x[0], 'v': x[1]} for x in poslist],
             Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],

@@ -38,11 +38,12 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
                 {}
             );
 
-            corplistData['anonymousUser'] = layoutModel.getConf('anonymousUser'); // TODO not a very good solution
             layoutModel.renderReactComponent(
                 pagePlugin.getList(),
                 document.getElementById('corplist'),
-                {}
+                {
+                    anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
+                }
             );
         }
 

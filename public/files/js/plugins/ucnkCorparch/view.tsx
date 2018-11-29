@@ -232,6 +232,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     const CorplistRow:React.SFC<{
         row:CorplistItemUcnk;
         enableUserActions:boolean;
+        userIsAnonymous:boolean;
         detailClickHandler:(corpusId:string)=>void;
 
     }> = (props) => {
@@ -247,6 +248,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
 
         let userAction = null;
         let corpLink;
+
         if (props.enableUserActions) {
             if (props.row.requestable) {
                 corpLink = <span className="inaccessible">{props.row.name}</span>;
@@ -262,7 +264,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             }
 
         } else {
-            corpLink = <a href={link}>{props.row.name}</a>;
+            corpLink = <span title={he.translate('ucnkCorparch__not_avail_for_public')}>{props.row.name}</span>;
+            userAction = <span>{'\u26D4'}</span>;
         }
         return (
             <tr>
@@ -355,6 +358,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             const rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
                                     enableUserActions={!this.props.anonymousUser}
+                                    userIsAnonymous={this.props.anonymousUser}
                                     detailClickHandler={this._detailClickHandler} />;
             });
 

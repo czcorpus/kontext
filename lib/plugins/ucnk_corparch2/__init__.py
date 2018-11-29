@@ -43,6 +43,7 @@ from plugins.rdbms_corparch import RDBMSCorparch, CorpusListItem, parse_query
 from plugins.abstract.corpora import CorpusInfo
 from plugins.ucnk_remote_auth4.backend.mysql import Backend, MySQLConf
 from controller import exposed
+from controller.errors import ForbiddenException
 import actions.user
 from translation import ugettext as _
 
@@ -77,9 +78,12 @@ def get_favorite_corpora(ctrl, request):
 @exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
 def ask_corpus_access(ctrl, request):
     ans = {}
+    plugin_api = getattr(ctrl, '_plugin_api')
     with plugins.runtime.CORPARCH as ca:
+        if plugin_api.user_is_anonymous:
+            raise ForbiddenException('Anonymous user cannot send the request')
         status = ca.send_request_email(corpus_id=request.form['corpusId'],
-                                       plugin_api=getattr(ctrl, '_plugin_api'),
+                                       plugin_api=plugin_api,
                                        custom_message=request.form['customMessage'])
     if status is False:
         ans['error'] = _(

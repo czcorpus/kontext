@@ -16,13 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
+import * as Rx from '@reactivex/rxjs';
 import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
+import { Kontext } from '../../types/common';
 
 
 export interface CorplistTableModelState extends corplistDefault.CorplistTableModelState {
@@ -55,36 +56,36 @@ export class CorpusAccessRequestModel extends StatefulModel {
     static DispatchToken:string;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
-        super(pluginApi.dispatcher());
-        const self = this;
+        super(dispatcher);
         this.pluginApi = pluginApi;
-        this.dispatcher.register(
-            function (action:Action) {
-                switch (action.actionType) {
-                    case 'CORPUS_ACCESS_REQ_SUBMITTED':
-                        self.askForAccess(action.props).then(
-                            (ans) => {
-                                self.pluginApi.showMessage('info',
-                                    self.pluginApi.translate('ucnkCorparch__your_message_sent'));
-                                    self.notifyChangeListeners();
-                            },
-                            (error) => {
-                                self.pluginApi.showMessage('error',
-                                    self.pluginApi.translate('ucnkCorparch__your_message_failed'));
-                                console.error(error);
-                            }
-                        );
-                        break;
-                }
+        dispatcher.register((action:Action) => {
+            switch (action.actionType) {
+                case 'CORPUS_ACCESS_REQ_SUBMITTED':
+                    this.askForAccess(action.props['corpusId'], action.props['corpusName'], action.props['customMessage']).subscribe(
+                        null,
+                        (error) => {
+                            this.pluginApi.showMessage('error', error);
+                        },
+                        () => {
+                            this.pluginApi.showMessage('info',
+                                this.pluginApi.translate('ucnkCorparch__your_message_sent'));
+                                this.notifyChangeListeners();
+                        },
+                    );
+                    break;
             }
-        );
+        });
     }
 
-    private askForAccess(data:{[key:string]:string}):RSVP.Promise<any> {
-        return this.pluginApi.ajax<any>(
+    private askForAccess(corpusId:string, corpusName:string, customMessage:string):Rx.Observable<Kontext.AjaxResponse> {
+        return this.pluginApi.ajax$<Kontext.AjaxResponse>(
             'POST',
             this.pluginApi.createActionUrl('user/ask_corpus_access'),
-            data
+            {
+                corpusId: corpusId,
+                corpusName: corpusName,
+                customMessage: customMessage
+            }
         );
     }
 }

@@ -397,8 +397,9 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         else:
             return BrokenCorpusInfo()
 
-    def mod_corplist_menu(self, menu_item):
-        menu_item.add_args(('requestable', '1'))
+    def mod_corplist_menu(self, plugin_api, menu_item):
+        if not plugin_api.user_is_anonymous:
+            menu_item.add_args(('requestable', '1'))
 
     def create_corplist_provider(self, plugin_api):
         return DeafultCorplistProvider(plugin_api, self, self._tag_prefix)
