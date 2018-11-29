@@ -253,7 +253,10 @@ class Backend(DatabaseBackend):
         c = self._db.cursor()
         # performance note: using UNION instead of 'WHERE user_id = x OR c.requestable = 1' increased
         # mysql performance significantly (more than 10x faster).
-        sql = ''
+        sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, tagset, collator_locale, '
+               'speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val, use_safe_font, featured, '
+               '`database`, label_attr, id_attr, reference_default, reference_other, ttdesc_id, num_match_keys, size, '
+               'info, name, encoding, language, g_name, version, keywords FROM (')
         where = []
         if requestable:
             where.extend(values_cond1)
@@ -290,11 +293,13 @@ class Backend(DatabaseBackend):
             'JOIN corpora AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'LEFT JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
+            'JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
             'WHERE {where2} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
             'ORDER BY g_name, version DESC, id '
+            ') AS ans '
+            'GROUP BY id '
             'LIMIT %s '
             'OFFSET %s').format(where2=' AND '.join('(' + wc + ')' for wc in where_cond2))
         c.execute(sql, where + [limit, offset])
