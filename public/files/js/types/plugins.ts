@@ -149,6 +149,7 @@ export namespace PluginInterfaces {
             render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
             close():void;
             onPageResize():void;
+            registerOnError(fn:(e:Error)=>void):void;
             isWaiting():boolean;
         }
 

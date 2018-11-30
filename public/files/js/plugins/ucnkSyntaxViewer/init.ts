@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as Rx from '@reactivex/rxjs';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {createGenerator, SourceData, DetailAttrOrders} from './ucnkTreeView';
 import {StatefulModel} from '../../models/base';
@@ -47,6 +48,8 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
     private target:HTMLElement; // the value changes on each render() call
 
     private resizeThrottleTimer:number;
+
+    private errorHandler:(e:Error)=>void;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
@@ -88,6 +91,10 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
         );
     }
 
+    registerOnError(fn:(e:Error)=>void):void {
+        this.errorHandler = fn;
+    }
+
     isWaiting():boolean {
         return this.waitingStatus;
     }
@@ -114,7 +121,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
         this.waitingStatus = true;
         this.notifyChangeListeners();
 
-        this.pluginApi.ajax(
+        this.pluginApi.ajax$(
             'GET',
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
@@ -123,19 +130,26 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
                 kwic_len: kwicLength
             }
 
-        ).then(
+        ).concatMap(
             (data:any) => {
                 this.data = data;
-                window.addEventListener('resize', this.onPageResize);
-                this.renderTree();
-                this.waitingStatus = false;
-                this.notifyChangeListeners();
+                return Rx.Observable.empty();
             }
-        ).catch(
+        ).subscribe(
+            null,
             (error) => {
                 this.waitingStatus = false;
                 this.close();
                 this.pluginApi.showMessage('error', error);
+                this.notifyChangeListeners();
+                if (this.errorHandler) {
+                    this.errorHandler(error);
+                }
+            },
+            () => {
+                window.addEventListener('resize', this.onPageResize);
+                this.renderTree();
+                this.waitingStatus = false;
                 this.notifyChangeListeners();
             }
         );

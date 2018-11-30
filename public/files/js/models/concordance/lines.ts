@@ -277,6 +277,8 @@ export class DummySyntaxViewModel extends StatefulModel implements PluginInterfa
     isWaiting():boolean {
         return false;
     }
+
+    registerOnError(fn:(e:Error)=>void):void {}
 }
 
 

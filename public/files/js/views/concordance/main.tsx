@@ -92,7 +92,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     const layoutViews = he.getLayoutViews();
 
     const lconcSaveModel = lineViewModel.getSaveModel();
-    const syntaxViewModel = lineViewModel.getSyntaxViewModel();
+    const syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin = lineViewModel.getSyntaxViewModel();
 
     const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionModel);
     const paginationViews = paginatorViewsInit(dispatcher, he, lineViewModel);
@@ -759,6 +759,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             lconcSaveModel.addChangeListener(this._handleModelChange);
             concDetailModel.addChangeListener(this._handleModelChange);
             refsDetailModel.addChangeListener(this._handleModelChange);
+            syntaxViewModel.registerOnError(() => {
+                const newState = he.cloneState(this.state);
+                    newState.syntaxBoxData = null;
+                    this.setState(newState);
+                this.setState(newState);
+            })
         }
 
         componentWillUnmount() {

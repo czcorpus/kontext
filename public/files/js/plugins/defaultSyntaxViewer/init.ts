@@ -20,6 +20,7 @@
 
 /// <reference path="./js-treex-view.d.ts" />
 
+import * as Rx from '@reactivex/rxjs';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -43,6 +44,8 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
     private target:HTMLElement;
 
     private resizeThrottleTimer:number;
+
+    private errorHandler:(e:Error)=>void;
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
@@ -75,7 +78,7 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
         this.waitingStatus = true;
         this.notifyChangeListeners();
 
-        this.pluginApi.ajax(
+        this.pluginApi.ajax$(
             'GET',
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
@@ -84,17 +87,29 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
                 kwic_len: kwicLength
             }
 
-        ).then(
+        ).concatMap(
             (data) => {
                 this.data = data;
-                this.renderTree();
-                window.addEventListener('resize', this.onPageResize);
-            },
+                return Rx.Observable.empty();
+            }
+        ).subscribe(
+            null,
             (error) => {
                 this.close();
                 this.pluginApi.showMessage('error', error);
+                if (this.errorHandler) {
+                    this.errorHandler(error);
+                }
+            },
+            () => {
+                this.renderTree();
+                window.addEventListener('resize', this.onPageResize);
             }
         );
+    }
+
+    registerOnError(fn:(e:Error)=>void):void {
+        this.errorHandler = fn;
     }
 
     private renderTree():void {
