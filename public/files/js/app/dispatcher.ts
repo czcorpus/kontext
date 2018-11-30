@@ -25,7 +25,7 @@ import {Kontext} from '../types/common';
 /**
  * A general flux/redux-like action object.
  */
-export interface Action {
+export interface Action<T extends Kontext.GeneralProps={}> {
 
     /**
      * Upper case action identifier
@@ -36,7 +36,7 @@ export interface Action {
      * Action's arguments. A defined, non-null
      * object should be always used.
      */
-    props:Kontext.GeneralProps;
+    props:T;
 
     /**
      * An optional action error. If not empty
@@ -116,7 +116,7 @@ export class ActionDispatcher {
         /**
          * Dispatch an action.
          */
-        dispatch(action:Action):void {
+        dispatch<T extends Action>(action:T):void {
             this.inStream$.next(action);
         }
 

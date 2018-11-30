@@ -20,7 +20,7 @@
 
 import * as Immutable from 'immutable';
 import {Kontext, ViewOptions} from '../../types/common';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {TextTypesModel} from '../textTypes/main';
@@ -62,6 +62,21 @@ export class WidgetsMap {
     }
 }
 
+export interface SetQueryInputAction extends Action<{
+    sourceId:string;
+    query:string;
+    insertRange:[number, number]|null;
+    rawAnchorIdx:number|null;
+    rawFocusIdx:number|null;
+}> {};
+
+export interface MoveCursorInputAction extends Action<{
+    sourceId:string;
+    rawAnchorIdx:number|null;
+    rawFocusIdx:number|null;
+}> {};
+
+
 /**
  *
  */
@@ -82,6 +97,8 @@ export abstract class QueryFormModel extends StatefulModel {
     protected wPoSList:Immutable.List<{v:string; n:string}>;
 
     protected currentAction:string;
+
+    protected queries:Immutable.Map<string, string>; // corpname|filter_id -> query
 
     // ----- other models
 
@@ -124,6 +141,7 @@ export abstract class QueryFormModel extends StatefulModel {
         this.tagAttr = props.tagAttr;
         this.queryTracer = {trace:(_)=>undefined};
         this.useCQLEditor = props.useCQLEditor;
+        this.queries = Immutable.Map<string, string>();
 
         this.dispatcher.register(payload => {
             switch (payload.actionType) {
@@ -225,11 +243,19 @@ export abstract class QueryFormModel extends StatefulModel {
 
     protected shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
         if (anchorIdx === focusIdx) {
-            return query.substr(anchorIdx+1).search(/[\n\r]/) === -1;
+            return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
 
         } else {
             return false;
         }
+    }
+
+    protected addQueryInfix(sourceId:string, query:string, insertRange:[number, number]):void {
+        this.queries = this.queries.set(
+            sourceId,
+            this.queries.get(sourceId).substring(0, insertRange[0]) + query +
+                this.queries.get(sourceId).substr(insertRange[1])
+        );
     }
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {

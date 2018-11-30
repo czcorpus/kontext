@@ -81,11 +81,7 @@ export class FilterFormModel extends QueryFormModel {
 
     private maincorps:Immutable.Map<string, string>;
 
-    private queries:Immutable.Map<string, string>;
-
     private downArrowTriggersHistory:Immutable.Map<string, boolean>;
-
-    private cursorPosition:Immutable.Map<string, number>;
 
     private queryTypes:Immutable.Map<string, string>;
 
@@ -147,11 +143,9 @@ export class FilterFormModel extends QueryFormModel {
         super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
 
         this.maincorps = Immutable.Map<string, string>(props.maincorps);
-        this.queries = Immutable.Map<string, string>(props.currQueries);
         if (!this.queries.has('__new__')) {
             this.queries = this.queries.set('__new__', '');
         }
-        this.cursorPosition = Immutable.Map<string, number>(this.queries.map((q, sourceId) => [sourceId, q.length]));
         this.downArrowTriggersHistory = Immutable.Map<string, boolean>(this.queries.map((_, sourceId) => [sourceId, false]));
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
         if (!this.queryTypes.has('__new__')) {

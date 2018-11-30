@@ -165,7 +165,7 @@ div.query-form-spa {
     background-color: #FFFFFF;
 
     > textarea,
-    > pre,
+    pre.cql-input,
     > input[type=text] {
         padding: 0.5em 0.3em 0.3em 0.3em;
         border-style: solid;
@@ -216,6 +216,10 @@ div.query-form-spa {
         .next-hint a:hover {
             color: @color-logo-blue;
         }
+    }
+
+    .cql-editor-messages {
+        padding: 0.3em;
 
         .cql-editor-message {
             color: @color-logo-pink;

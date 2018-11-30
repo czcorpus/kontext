@@ -22,6 +22,7 @@ import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
 import * as Rx from '@reactivex/rxjs';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
+import {SetQueryInputAction, MoveCursorInputAction} from '../../models/query/common';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {QueryFormModel} from '../../models/query/common';
 
@@ -30,18 +31,21 @@ export interface CQLEditorProps {
     actionPrefix:string;
     sourceId:string;
     takeFocus:boolean;
-    initialValue:string;
+    hasHistoryWidget:boolean;
+    historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLPreElement>;
-    inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
-    inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
+    onReqHistory:()=>void;
+    onEsc:()=>void;
 }
 
 export interface CQLEditorFallbackProps {
-    value:string;
+    sourceId:string;
+    actionPrefix:string;
+    hasHistoryWidget:boolean;
+    historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLTextAreaElement>;
-    inputChangeHandler:(evt:React.ChangeEvent<HTMLTextAreaElement>)=>void;
-    inputKeyHandler:(evt:React.KeyboardEvent<{}>)=>void;
-    inputKeyUpHandler:(evt:React.KeyboardEvent<{}>)=>void;
+    onReqHistory:()=>void;
+    onEsc:()=>void;
 }
 
 export interface CQLEditorViews {
@@ -56,15 +60,83 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps> {
+    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps, {
+        query:string;
+        downArrowTriggersHistory:boolean;
+    }> {
+
+        constructor(props) {
+            super(props);
+            this.handleKeyDown = this.handleKeyDown.bind(this);
+            this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
+            this.handleModelChange = this.handleModelChange.bind(this);
+            this.handleInputChange = this.handleInputChange.bind(this);
+            this.state = {
+                query: queryModel.getQuery(this.props.sourceId),
+                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
+            };
+        }
+
+        private inputKeyUpHandler(evt) {
+            if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
+                dispatcher.dispatch<MoveCursorInputAction>({
+                    actionType: 'QUERY_INPUT_MOVE_CURSOR',
+                    props: {
+                        sourceId: this.props.sourceId,
+                        rawAnchorIdx: this.props.inputRef.current.selectionStart,
+                        rawFocusIdx: this.props.inputRef.current.selectionEnd
+                    }
+                });
+            }
+        }
+
+        private handleKeyDown(evt) {
+            if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+                    this.props.hasHistoryWidget &&
+                    this.state.downArrowTriggersHistory &&
+                    !this.props.historyIsVisible) {
+                this.props.onReqHistory();
+
+            } else if (evt.keyCode === KeyCodes.ESC) {
+                this.props.onEsc();
+            }
+        }
+
+        private handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
+            dispatcher.dispatch<SetQueryInputAction>({
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                props: {
+                    sourceId: this.props.sourceId,
+                    query: evt.target.value,
+                    rawAnchorIdx: this.props.inputRef.current.selectionStart,
+                    rawFocusIdx: this.props.inputRef.current.selectionEnd,
+                    insertRange: null
+                }
+            });
+        }
+
+        private handleModelChange() {
+            this.setState({
+                query: queryModel.getQuery(this.props.sourceId),
+                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
+            });
+        }
+
+        componentDidMount() {
+            queryModel.addChangeListener(this.handleModelChange);
+        }
+
+        componentWillUnmount() {
+            queryModel.removeChangeListener(this.handleModelChange);
+        }
 
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={this.props.inputRef}
-                                value={this.props.value}
-                                onChange={this.props.inputChangeHandler}
-                                onKeyDown={this.props.inputKeyHandler}
-                                onKeyUp={this.props.inputKeyUpHandler}
+                                value={this.state.query}
+                                onChange={this.handleInputChange}
+                                onKeyDown={this.handleKeyDown}
+                                onKeyUp={this.inputKeyUpHandler}
                                 spellCheck={false} />;
         }
     }
@@ -79,6 +151,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
+            this.inputKeyDownHandler = this.inputKeyDownHandler.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
         }
 
@@ -150,26 +223,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
             const query = src.map(v => v[0]).join('');
 
-            dispatcher.insert(
-                Rx.Observable.from([
-                    {
-                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
-                        props: {
-                            sourceId: this.props.sourceId,
-                            query: query,
-                            rawAnchorIdx: rawAnchorIdx,
-                            rawFocusIdx: rawFocusIdx
-                        }
-                    },
-                    {
-                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                        props: {
-                            sourceId: this.props.sourceId,
-                            query: query,
-                        }
-                    }
-                ])
-            );
+            dispatcher.dispatch<SetQueryInputAction>({
+                actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                props: {
+                    sourceId: this.props.sourceId,
+                    query: query,
+                    rawAnchorIdx: rawAnchorIdx,
+                    rawFocusIdx: rawFocusIdx,
+                    insertRange: null
+                }
+            });
         }
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
@@ -191,41 +254,55 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = Number(a.getAttribute('data-leftIdx'));
                         const rightIdx = Number(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.dispatch({
-                            actionType: 'TAGHELPER_PRESET_PATTERN',
-                            props: {
-                                sourceId: this.props.sourceId,
-                                pattern: this.state.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
-                            }
-                        });
-                        dispatcher.dispatch({
-                            actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                            props: {
-                                sourceId: this.props.sourceId,
-                                value: 'tag',
-                                widgetArgs: {
-                                    leftIdx: leftIdx,
-                                    rightIdx: rightIdx
+                        dispatcher.insert(Rx.Observable.of(
+                            {
+                                actionType: 'TAGHELPER_PRESET_PATTERN',
+                                props: {
+                                    sourceId: this.props.sourceId,
+                                    pattern: this.state.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                                }
+                            },
+                            {
+                                actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+                                props: {
+                                    sourceId: this.props.sourceId,
+                                    value: 'tag',
+                                    widgetArgs: {
+                                        leftIdx: leftIdx,
+                                        rightIdx: rightIdx
+                                    }
                                 }
                             }
-                        });
+                        ));
                     break;
                 }
             }
         }
 
-        private inputKeyUpHandler(evt) {
+        private inputKeyUpHandler(evt:React.KeyboardEvent) {
             if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
-                dispatcher.dispatch({
+                dispatcher.dispatch<MoveCursorInputAction>({
                     actionType: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
                     props: {
                         sourceId: this.props.sourceId,
-                        anchorIdx: anchorIdx,
-                        focusIdx: focusIdx
+                        rawAnchorIdx: anchorIdx,
+                        rawFocusIdx: focusIdx
                     }
                 });
+            }
+        }
+
+        private inputKeyDownHandler(evt:React.KeyboardEvent) {
+            if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+                    this.props.hasHistoryWidget &&
+                    this.state.downArrowTriggersHistory.get(this.props.sourceId) &&
+                    !this.props.historyIsVisible) {
+                this.props.onReqHistory();
+
+            } else if (evt.keyCode === KeyCodes.ESC) {
+                this.props.onEsc();
             }
         }
 
@@ -236,15 +313,18 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const rawSrc = src.map(v => v[0]).join('');
 
                 if (rawAnchorIdx === rawFocusIdx) {
-                    dispatcher.dispatch({
-                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
+                    const query = evt.keyCode === KeyCodes.BACKSPACE ?
+                            rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
+                            rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
+
+                    dispatcher.dispatch<SetQueryInputAction>({
+                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                         props: {
-                            query: evt.keyCode === KeyCodes.BACKSPACE ?
-                                rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
-                                rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
                             sourceId: this.props.sourceId,
+                            query: query,
                             rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
+                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
+                            insertRange: null
                         }
                     });
                     this.reapplySelection(
@@ -253,13 +333,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     );
 
                 } else if (rawAnchorIdx < rawFocusIdx) {
-                    dispatcher.dispatch({
-                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
+                    const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
+                    dispatcher.dispatch<SetQueryInputAction>({
+                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                         props: {
-                            query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
                             sourceId: this.props.sourceId,
+                            query: query,
                             rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
                             rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                            insertRange: null
                         }
                     });
                     this.reapplySelection(
@@ -268,13 +350,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     );
 
                 } else {
-                    dispatcher.dispatch({
-                        actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
+                    const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
+                    dispatcher.dispatch<SetQueryInputAction>({
+                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                         props: {
-                            query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
                             sourceId: this.props.sourceId,
+                            query: query,
                             rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
                             rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                            insertRange: null
                         }
                     });
                     this.reapplySelection(
@@ -288,13 +372,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const rawSrc = src.map(v => v[0]).join('');
-                dispatcher.dispatch({
-                    actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
+                const query = rawSrc + '\n ';
+                dispatcher.dispatch<SetQueryInputAction>({
+                    actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     props: {
-                        query: rawSrc + '\n ',
                         sourceId: this.props.sourceId,
+                        query: query,
                         rawAnchorIdx: rawAnchorIdx + 1,
                         rawFocusIdx: rawFocusIdx + 1,
+                        insertRange: null
                     }
                 });
                 this.reapplySelection(
@@ -332,18 +418,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 this.props.inputRef.current.focus();
             }
 
-            if (this.props.initialValue) {
-                dispatcher.dispatch({
-                    actionType: `${this.props.actionPrefix}CQL_EDITOR_SET_RAW_QUERY`,
-                    props: {
-                        query: this.props.initialValue,
-                        sourceId: this.props.sourceId,
-                        rawAnchorIdx: this.props.initialValue.length,
-                        rawFocusIdx: this.props.initialValue.length
-                    }
-                });
-            }
-
             if (he.browserInfo.isFirefox()) {
                 this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
@@ -357,15 +431,26 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
-            return <pre contentEditable={true}
-                            spellCheck={false}
-                            onInput={(evt) => this.handleInputChange()}
-                            onClick={this.handleEditorClick}
-                            className="cql-input"
-                            ref={this.props.inputRef}
-                            dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
-                            onKeyDown={this.props.inputKeyHandler}
-                            onKeyUp={this.inputKeyUpHandler} />;
+            return (
+                <div>
+                    <pre contentEditable={true}
+                                spellCheck={false}
+                                onInput={(evt) => this.handleInputChange()}
+                                onClick={this.handleEditorClick}
+                                className="cql-input"
+                                ref={this.props.inputRef}
+                                dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
+                                onKeyDown={this.inputKeyDownHandler}
+                                onKeyUp={this.inputKeyUpHandler} />
+                    <div className="cql-editor-messages">
+                        {
+                            this.state.cqlEditorMessage ?
+                            <div className="cql-editor-message"
+                                    dangerouslySetInnerHTML={{__html: this.state.message.get(this.props.sourceId)}} /> : null
+                        }
+                    </div>
+                </div>
+            );
         }
     }
 
