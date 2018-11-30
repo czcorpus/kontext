@@ -30,6 +30,10 @@ class WritableBackend(Backend):
     to import existing corpora.xml/registry files etc.
     """
 
+    def __init__(self, conf=None):
+        super(WritableBackend, self).__init__(conf)
+        self.autocommit = False
+
     def commit(self):
         """
         Commits the transaction. Please note that

@@ -63,6 +63,7 @@ class MySQLConf(object):
 
     def __init__(self, conf=None):
         self.pool_name = 'kontext_mysql_pool'
+        self.autocommit = True
         if isinstance(conf, ModuleType):
             if conf.get('plugins', 'auth', {}).get('module') == 'ucnk_remote_auth4':
                 self.host = conf.get('plugins', 'auth')['ucnk:sync_host']
@@ -104,7 +105,8 @@ class MySQLConf(object):
     @property
     def conn_dict(self):
         return dict(host=self.host, database=self.database, user=self.user,
-                    password=self.password, pool_size=self.pool_size, pool_name=self.pool_name)
+                    password=self.password, pool_size=self.pool_size, pool_name=self.pool_name,
+                    autocommit=self.autocommit)
 
 
 class MySQL(object):
