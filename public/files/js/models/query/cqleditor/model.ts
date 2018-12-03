@@ -66,6 +66,7 @@ export interface CQLEditorModelInitArgs {
     tagAttr:string;
     actionPrefix:string;
     isEnabled:boolean;
+    currQueries?:{[sourceId:string]:string};
 }
 
 
@@ -84,12 +85,24 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
 
 
     constructor({dispatcher, pageModel, attrList, structAttrList, tagAttr,
-                    actionPrefix, isEnabled}:CQLEditorModelInitArgs) {
+                    actionPrefix, isEnabled, currQueries}:CQLEditorModelInitArgs) {
+        const attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
         super(
             dispatcher,
             {
-                rawCode: Immutable.Map<string, string>(),
-                richCode: Immutable.Map<string, string>(),
+                rawCode: Immutable.Map<string, string>(currQueries || {}),
+                richCode: Immutable.Map<string, string>((() => (
+                    Object.keys(currQueries).map(sourceId => [
+                        sourceId,
+                        highlightSyntax(
+                            currQueries[sourceId],
+                            'cql',
+                            pageModel.getComponentHelpers(),
+                            attrHelper,
+                            (_) => () => undefined
+                        )
+                    ])
+                ))()),
                 message: Immutable.Map<string, string>(),
                 rawAnchorIdx: Immutable.Map<string, number>(),
                 rawFocusIdx: Immutable.Map<string, number>(),
@@ -98,7 +111,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 downArrowTriggersHistory: Immutable.Map<string, boolean>()
             }
         );
-        this.attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
+        this.attrHelper = attrHelper;
         this.pageModel = pageModel;
         this.actionPrefix = actionPrefix;
         this.hintListener = (state, sourceId, msg) => {
