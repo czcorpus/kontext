@@ -92,15 +92,15 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
             {
                 rawCode: Immutable.Map<string, string>(currQueries || {}),
                 richCode: Immutable.Map<string, string>((() => (
-                    Object.keys(currQueries).map(sourceId => [
+                    Object.keys(currQueries || {}).map(sourceId => [
                         sourceId,
-                        highlightSyntax(
-                            currQueries[sourceId],
-                            'cql',
-                            pageModel.getComponentHelpers(),
-                            attrHelper,
-                            (_) => () => undefined
-                        )
+                        currQueries[sourceId] ? highlightSyntax(
+                                currQueries[sourceId],
+                                'cql',
+                                pageModel.getComponentHelpers(),
+                                attrHelper,
+                                (_) => () => undefined
+                            ) : ''
                     ])
                 ))()),
                 message: Immutable.Map<string, string>(),
