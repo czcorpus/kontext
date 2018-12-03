@@ -357,7 +357,7 @@
         "query__unrecognized_input_{wrongChar}{position}": "Feler składnie - niyôczekowany znak \"{wrongChar}\" we placu {position}.",
         "query__tip_01": "Możesz użyć knefla \u0022strzałki w dōł\u0022, żeby ôbejzdrzeć ôstatnie zapytania",
         "query__tip_02": "We trybie CQL Możesz użyć knefli Shift+ENTER, żeby wkludzić nowõ linijõ",
-        "query__tip_03": "Możesz przeskakować miyndzy prostym i ulepszōnym edytorym CQL we myni \"Widok\" \u2192 \"Ôgōlne sztelōnki widoku\"",
+        "query__tip_03": "In case of compatibility problems with advanced CQL editor and your browser, you can switch back to basic CQL editor in \"View\" \u2192 \"General view options\"",
         "query__tip_04": "Możesz trzimać Ctrl i kliknōńć wertã tagu, żeby go edytować we interktywnym nŏczyniu",
         "query__tip_05": "In case of aligned corpora, it is faster to search only within texts included in all the searched languages. To find such texts, 'restrict search - refine selection' function can be used.",
         "query__contains_selected_text_types": "Niykere typy tekstu sōm zaznaczōne",

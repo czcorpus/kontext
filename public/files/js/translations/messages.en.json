@@ -357,7 +357,7 @@
         "query__unrecognized_input_{wrongChar}{position}": "Syntax error - unexpected character \"{wrongChar}\" at position {position}.",
         "query__tip_01": "You can use the \u0022down arrow\u0022 key to view recent queries",
         "query__tip_02": "In CQL mode you can use Shift+ENTER to enter a new line",
-        "query__tip_03": "You can switch between simple and rich CQL editor in \"View\" \u2192 \"General view options\"",
+        "query__tip_03": "In case of compatibility problems with advanced CQL editor and your browser, you can switch back to basic CQL editor in \"View\" \u2192 \"General view options\"",
         "query__tip_04": "You can click a tag value while holding CTRL to edit the tag using an interactive tool",
         "query__tip_05": "In case of aligned corpora, it is faster to search only within texts included in all the searched languages. To find such texts, 'restrict search - refine selection' function can be used.",
         "query__contains_selected_text_types": "Some text types are selected",
