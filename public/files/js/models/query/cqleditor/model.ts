@@ -277,7 +277,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     }
 
     /**
-     * @param range in case we want to insert a CQL snipped into an existing code;
+     * @param range in case we want to insert a CQL snippet into an existing code;
      *              if undefined then whole query is replaced
      */
     private setRawQuery(state:CQLEditorModelState, sourceId:string, query:string, insertRange:[number, number]|null):void {
@@ -288,7 +288,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         }
         if (insertRange !== null) {
             newQuery = state.rawCode.get(sourceId).substring(0, insertRange[0]) + query +
-                state.rawCode.get(sourceId).substr(insertRange[1]);
+                    state.rawCode.get(sourceId).substr(insertRange[1]);
 
         } else {
             newQuery = query;

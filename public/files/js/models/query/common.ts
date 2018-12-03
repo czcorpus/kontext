@@ -76,6 +76,14 @@ export interface MoveCursorInputAction extends Action<{
     rawFocusIdx:number|null;
 }> {};
 
+export interface AppendQueryInputAction extends Action<{
+    sourceId:string;
+    query:string;
+    prependSpace?:boolean;
+    closeWhenDone?:boolean;
+    triggeredKey?:[number, number]; // from virtual keyboard
+}> {};
+
 
 /**
  *

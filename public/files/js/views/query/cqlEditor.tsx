@@ -371,22 +371,32 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             } else if (evt.keyCode === KeyCodes.ENTER && evt.shiftKey) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-                const rawSrc = src.map(v => v[0]).join('');
-                const query = rawSrc + '\n ';
+                const query = src.map(v => v[0]).join('');
                 dispatcher.dispatch<SetQueryInputAction>({
                     actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     props: {
                         sourceId: this.props.sourceId,
-                        query: query,
-                        rawAnchorIdx: rawAnchorIdx + 1,
-                        rawFocusIdx: rawFocusIdx + 1,
-                        insertRange: null
+                        // we have to add a single whitespace here because otherwise FF cannot handle cursor position properly
+                        query: rawFocusIdx === query.length ? '\n ' : '\n',
+                        rawAnchorIdx: null,
+                        rawFocusIdx: null,
+                        insertRange: [rawAnchorIdx, rawFocusIdx]
                     }
                 });
-                this.reapplySelection(
-                    rawAnchorIdx + 1,
-                    rawAnchorIdx + 1
-                );
+                evt.preventDefault();
+
+            } else if (evt.keyCode === KeyCodes.END) {
+                const src = this.extractText(this.props.inputRef.current);
+                const [anchorIdx, focusIdx] = this.getRawSelection(src);
+                const query = src.map(v => v[0]).join('');
+                dispatcher.dispatch<MoveCursorInputAction>({
+                    actionType: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                    props: {
+                        sourceId: this.props.sourceId,
+                        rawAnchorIdx: anchorIdx === focusIdx ? query.length : anchorIdx,
+                        rawFocusIdx: query.length
+                    }
+                });
                 evt.preventDefault();
             }
         }
@@ -439,7 +449,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
                                 ref={this.props.inputRef}
-                                dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
+                                dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId) || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
