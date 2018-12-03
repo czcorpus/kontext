@@ -25,7 +25,7 @@ import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} fro
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { SetQueryInputAction } from '../../models/query/common';
+import { SetQueryInputAction, AppendQueryInputAction } from '../../models/query/common';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
@@ -145,7 +145,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                     });
 
                 } else {
-                    dispatcher.dispatch({
+                    dispatcher.dispatch<AppendQueryInputAction>({
                         actionType: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                         props: {
                             sourceId: props.sourceId,

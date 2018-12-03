@@ -21,7 +21,7 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {QueryFormModel} from '../../models/query/common';
+import {QueryFormModel, AppendQueryInputAction} from '../../models/query/common';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 
 
@@ -295,7 +295,7 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
         }
 
         _handleClick(v) {
-            dispatcher.dispatch({
+            dispatcher.dispatch<AppendQueryInputAction>({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 props: {
                     sourceId: this.props.sourceId,

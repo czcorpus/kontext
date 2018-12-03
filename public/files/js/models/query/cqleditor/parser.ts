@@ -301,7 +301,7 @@ class RuleCharMap {
 
         switch (rule) {
             case '_':
-                return this.query.substring(startIdx, endIdx)
+                return this.query.substring(startIdx, endIdx);
             case 'RBRACKET':
                 return `<span class="${CLASS_BRACKETS}">]</span>`;
             case 'LBRACKET':
@@ -510,7 +510,7 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
             return ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial;
         }
     }
-    return ans + wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError);
+    return ans + (query.substr(lastPos).length > 0 ? wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError) : '');
 }
 
 function getApplyRules(queryType:string):Array<string> {
@@ -538,6 +538,7 @@ export function highlightSyntax(
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         onHintChange:(message:string)=>void):string {
+
     return _highlightSyntax({
         query: query,
         applyRules: getApplyRules(queryType),

@@ -26,7 +26,7 @@ import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
 import {Kontext, KeyCodes} from '../../types/common';
-import {QueryFormModel, SetQueryInputAction} from '../../models/query/common';
+import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction} from '../../models/query/common';
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
@@ -407,7 +407,7 @@ export function init({
         }
 
         _handleInsert() {
-            dispatcher.dispatch({
+            dispatcher.dispatch<AppendQueryInputAction>({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 props: {
                     sourceId: this.props.sourceId,
