@@ -24,7 +24,7 @@ import {PluginInterfaces} from '../types/plugins';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {WordlistFormModel} from '../models/wordlist/form';
+import {WordlistFormModel, WlnumsTypes, WlTypes} from '../models/wordlist/form';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import createCorparch from 'plugins/corparch/init';
 
@@ -110,7 +110,19 @@ class WordlistFormPage {
                     this.corpusIdent,
                     this.layoutModel.getConf<Array<string>>('SubcorpList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                    {
+                        includeNonwords: 0,
+                        wlminfreq: 5,
+                        subcnorm: '',
+                        wlnums: WlnumsTypes.FRQ,
+                        blacklist: '',
+                        wlwords: '',
+                        wlpat: '',
+                        wlsort: 'f',
+                        wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
+                        wltype: WlTypes.SIMPLE
+                    }
                 );
                 this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormModel);
                 const corparchWidget = this.initCorparchPlugin();

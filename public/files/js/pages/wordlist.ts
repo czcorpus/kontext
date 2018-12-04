@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../types/common';
 import {PageModel, DownloadType} from '../app/main';
 import {MultiDict} from '../util';
@@ -25,13 +26,22 @@ import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordli
 import {init as wordlistResultViewInit} from '../views/wordlist/result';
 import {init as wordlistSaveViewInit} from '../views/wordlist/save';
 import {StatefulModel} from '../models/base';
-import {WordlistResultModel, ResultData, ResultItem, HeadingItem} from '../models/wordlist/main';
-import {WordlistFormModel, WordlistFormProps} from '../models/wordlist/form';
+import {WordlistResultModel, ResultItem} from '../models/wordlist/main';
+import {WordlistFormModel, WordlistModelInitialArgs} from '../models/wordlist/form';
 import {WordlistSaveModel} from '../models/wordlist/save';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/wordlist.less');
+
+
+interface AsyncProcessResponse {
+    status:number;
+}
+
+interface AsyncProcessStatus extends AsyncProcessResponse {
+    numUnchanged:number;
+}
 
 /**
  *
@@ -39,8 +49,6 @@ require('styles/wordlist.less');
 export class WordlistPage extends StatefulModel  {
 
     private layoutModel:PageModel;
-
-    private checkIntervalId:number;
 
     private numErrors:number;
 
@@ -54,32 +62,16 @@ export class WordlistPage extends StatefulModel  {
 
     static MAX_NUM_NO_CHANGE = 20;
 
+    static MAX_NUM_STATUS_CHECK = 300;
+
     constructor(layoutModel:PageModel) {
         super(layoutModel.dispatcher);
         this.layoutModel = layoutModel;
     }
 
-    private stopWithError():void {
-        this.stopWatching();
-        this.layoutModel.showMessage(
-                'error',
-                this.layoutModel.translate('global__bg_calculation_failed')
-        );
-    }
+    private checkStatus():Rx.Observable<any> {
 
-    private checkStatus():void {
-        const args = new MultiDict([
-            ['corpname', this.layoutModel.getCorpusIdent().id],
-            ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
-            ['attrname', this.layoutModel.getConf<string>('attrname')]
-        ]);
-        this.layoutModel.getConf<Array<string>>('WorkerTasks').forEach(taskId => {
-            args.add('worker_tasks', taskId);
-        });
-        this.layoutModel.ajax(
-            'GET',
-            this.layoutModel.createActionUrl('wordlist/process'),
-            args
+        /*
 
         ).then(
             (data:Kontext.AjaxResponse) => {
@@ -103,21 +95,52 @@ export class WordlistPage extends StatefulModel  {
                 this.stopWithError();
             }
         );
-    }
-
-    private startWatching():void {
-        this.numNoChange = 0;
-        this.checkIntervalId = window.setInterval(this.checkStatus.bind(this), 2000);
-    }
-
-    private stopWatching():void {
-        clearTimeout(this.checkIntervalId);
-    }
-
-    private setupContextHelp(message):void {
-        /*
-        bindPopupBox($('#progress_message a.context-help'), message, {width: 'nice'});
         */
+       return null;
+    }
+
+    private startWatching():Rx.Observable<AsyncProcessStatus> {
+        const args = new MultiDict([
+            ['corpname', this.layoutModel.getCorpusIdent().id],
+            ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
+            ['attrname', this.layoutModel.getConf<string>('attrname')]
+        ]);
+        this.layoutModel.getConf<Array<string>>('WorkerTasks').forEach(taskId => {
+            args.add('worker_tasks', taskId);
+        });
+
+        return Rx.Observable.interval(2000).concatMap((v, i) => {
+            return this.layoutModel.ajax$<AsyncProcessResponse>(
+                'GET',
+                this.layoutModel.createActionUrl('wordlist/process'),
+                args
+            );
+
+        }).scan(
+            (acc:AsyncProcessStatus, v:AsyncProcessResponse, i:number) => {
+                if (v.status === acc.status) {
+                    if (acc.numUnchanged + 1 >= WordlistPage.MAX_NUM_NO_CHANGE ||
+                                i >= WordlistPage.MAX_NUM_STATUS_CHECK) {
+                        throw new Error('No change for too long...');
+                    }
+                    return {
+                        status: v.status,
+                        numUnchanged: acc.numUnchanged + 1
+                    };
+
+                } else {
+                    return {
+                        status: v.status,
+                        numUnchanged: 0
+                    };
+                }
+            },
+            {status: 0, numUnchanged: 0}
+
+        ).takeWhile(
+            (resp) => resp.status < 100 || resp.numUnchanged < 1
+
+        );
     }
 
     private initCorpInfoToolbar():void {
@@ -149,9 +172,39 @@ export class WordlistPage extends StatefulModel  {
     init():void {
         this.layoutModel.init().then(
             (data) => {
-                this.setupContextHelp(this.layoutModel.translate('global__wl_calc_info'));
                 if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
-                    this.startWatching();
+                    const updateStream = this.startWatching();
+                    updateStream.subscribe(
+                        (data) => {
+                            this.layoutModel.dispatcher.dispatch({
+                                actionType: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                                props: data
+                            });
+                        }
+                    );
+                    updateStream.last().subscribe(
+                        (data) => {
+                            if (data.status === 100) {
+                                window.location.href = this.layoutModel.createActionUrl(
+                                    'wordlist/result',
+                                    new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
+                                );
+
+                            } else {
+                                this.layoutModel.showMessage(
+                                    'error',
+                                    this.layoutModel.translate('global__bg_calculation_failed')
+                                );
+                            }
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage(
+                                'error',
+                                this.layoutModel.translate('global__bg_calculation_failed')
+                            );
+                            console.error(err);
+                        }
+                    )
                 }
                 const formModel = new WordlistFormModel(
                     this.layoutModel.dispatcher,
@@ -159,16 +212,16 @@ export class WordlistPage extends StatefulModel  {
                     this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
                     this.layoutModel.getConf<Array<string>>('SubcorpList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                    this.layoutModel.getConf<WordlistModelInitialArgs>('FormArgs')
                 );
-                formModel.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
 
                 this.saveModel = new WordlistSaveModel({
                     dispatcher: this.layoutModel.dispatcher,
                     layoutModel: this.layoutModel,
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
                     saveLinkFn: this.setDownloadLink.bind(this),
-                    wordlistArgsProviderFn: () => formModel.createSubmitArgs()
+                    wordlistArgsProviderFn: () => formModel.createSubmitArgs(formModel.getState())
                 });
 
                 const resultModel = new WordlistResultModel(
@@ -190,7 +243,8 @@ export class WordlistPage extends StatefulModel  {
                             str: this.layoutModel.getConf<string>('freqFigure'),
                             sortKey: 'f'
                         }
-                    ]
+                    ],
+                    this.layoutModel.getConf<boolean>('IsUnfinished')
                 );
 
                 const saveViews = wordlistSaveViewInit({
@@ -216,12 +270,14 @@ export class WordlistPage extends StatefulModel  {
 
                 this.initCorpInfoToolbar();
 
+                /*
                 this.layoutModel.getHistory().replaceState(
-                    'wordlist/result',
+                    'wordlist/form',
                     new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
                     {},
                     ''
                 )
+                */
             }
 
         ).then(

@@ -1,5 +1,54 @@
 #wordlist-result-mount {
-    margin: 0;
+    margin: 1em;
+}
+
+.WordlistResult {
+
+    .ktx-pagination {
+        text-align: right;
+        padding: 0.7em;
+
+        form {
+            display: inline-block;
+        }
+    }
+
+    .data {
+        margin: 1em;
+    }
+}
+
+.WordlistResult_progress-message {
+
+    h3 {
+
+    }
+
+    p.calc-info {
+
+        img.icon {
+            width: 1em;
+            display: inline-block;
+            margin-right: 0.3em;
+        }
+
+        width: 30em;
+        text-align: justify;
+    }
+
+    .processbar-wrapper {
+
+        border-width: 1px;
+        border-radius: @border-radius-default;
+        border-style: solid;
+        border-color: @color-light-pink;
+        width: 5em;
+
+        .processbar {
+            background-color: @color-logo-pink;
+            height: 1em;
+        }
+    }
 }
 
 @import "./layoutMobile.less";

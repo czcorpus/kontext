@@ -26,7 +26,6 @@ import {PageModel} from '../../app/main';
 import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {WordlistFormModel} from './form';
 import {MultiDict} from '../../util';
-import {WordlistSaveModel} from './save';
 
 
 export type ResultData = {
@@ -68,21 +67,21 @@ export interface WlSizeAjaxResponse extends Kontext.AjaxResponse {
  */
 export class WordlistResultModel extends StatefulModel {
 
-    layoutModel:PageModel;
+    private layoutModel:PageModel;
 
-    formModel:WordlistFormModel;
+    private formModel:WordlistFormModel;
 
-    data:Immutable.List<IndexedResultItem>;
+    private data:Immutable.List<IndexedResultItem>;
 
-    headings:Immutable.List<HeadingItem>;
+    private headings:Immutable.List<HeadingItem>;
 
-    currPage:number;
+    private currPage:number;
 
-    currPageInput:string;
+    private currPageInput:string;
 
-    pageSize:number;
+    private pageSize:number;
 
-    isLastPage:boolean;
+    private isLastPage:boolean;
 
      /*
       * this is not obtained automatically as a
@@ -92,10 +91,14 @@ export class WordlistResultModel extends StatefulModel {
       */
     private numItems:number;
 
-    isBusy:boolean;
+    private isBusy:boolean;
+
+    private isUnfinished:boolean;
+
+    private bgCalcStatus:number; // per-cent value
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
-            data:ResultData, headings:Array<HeadingItem>) {
+            data:ResultData, headings:Array<HeadingItem>, isUnfinished:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formModel = formModel;
@@ -107,15 +110,17 @@ export class WordlistResultModel extends StatefulModel {
         this.headings = Immutable.List<HeadingItem>(headings);
         this.isBusy = false;
         this.numItems = null;
+        this.isUnfinished = isUnfinished;
+        this.bgCalcStatus = 0;
 
 
         dispatcher.register((action:Action) => {
             switch (action.actionType) {
                 case 'WORDLIST_RESULT_VIEW_CONC':
                     const args = new MultiDict();
-                    args.set('corpname', this.formModel.getCorpusIdent().id);
-                    args.set('usesubcorp', this.formModel.getCurrentSubcorpus());
-                    args.set('default_attr', this.formModel.getWlattr());
+                    args.set('corpname', this.formModel.getState().corpusId);
+                    args.set('usesubcorp', this.formModel.getState().currentSubcorpus);
+                    args.set('default_attr', this.formModel.getState().wlattr);
                     args.set('qmcase', '1');
                     args.set('queryselector', 'cqlrow');
                     args.set('cql', this.createPQuery(action.props['word']));
@@ -180,12 +185,16 @@ export class WordlistResultModel extends StatefulModel {
                     this.currPage = 1;
                     this.processPageLoad();
                 break;
+                case 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED':
+                    this.bgCalcStatus = action.props['status'];
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
 
     private fetchLastPage():RSVP.Promise<boolean> {
-        const args = this.formModel.createSubmitArgs();
+        const args = this.formModel.createSubmitArgs(this.formModel.getState());
         return (() => {
             if (this.numItems === null) {
                 return this.layoutModel.ajax<WlSizeAjaxResponse>(
@@ -214,7 +223,7 @@ export class WordlistResultModel extends StatefulModel {
     }
 
     private createPQuery(s:string):string {
-        return `[${this.formModel.getWlattr()}="${s.replace(/([.?+*\[\]{}])/g, '\\$1')}"]`;
+        return `[${this.formModel.getState().wlattr}="${s.replace(/([.?+*\[\]{}])/g, '\\$1')}"]`;
     }
 
     private processPageLoad():void {
@@ -245,7 +254,7 @@ export class WordlistResultModel extends StatefulModel {
     }
 
     private loadData():RSVP.Promise<DataAjaxResponse> {
-        const args = this.formModel.createSubmitArgs();
+        const args = this.formModel.createSubmitArgs(this.formModel.getState());
         args.set('wlpage', this.currPage);
         args.set('format', 'json');
 
@@ -287,10 +296,18 @@ export class WordlistResultModel extends StatefulModel {
     }
 
     usesStructAttr():boolean {
-        return this.formModel.getWlattr().indexOf('.') > -1;
+        return this.formModel.getState().wlattr.indexOf('.') > -1;
     }
 
     getWlsort():string {
-        return this.formModel.getWlsort();
+        return this.formModel.getState().wlsort;
+    }
+
+    getIsUnfinished():boolean {
+        return this.isUnfinished;
+    }
+
+    getBgCalcStatus():number {
+        return this.bgCalcStatus;
     }
 }

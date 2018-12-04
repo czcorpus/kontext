@@ -101,7 +101,7 @@ class Wordlist(ConcActions):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
-    @exposed(access_level=1, legacy=True, http_method='POST', page_model='wordlist')
+    @exposed(access_level=1, legacy=True, http_method=('POST', 'GET'), page_model='wordlist')
     def result(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
                ref_usesubcorp='', paginate=True, wlhash='', blhash=''):
         """
@@ -126,8 +126,13 @@ class Wordlist(ConcActions):
                 'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
                 'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
                 'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
-                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums
-            }.items()}
+                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums}.items(),
+            'form_args': dict(
+                wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
+                subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
+                wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
+                wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
+        }
         try:
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.args.corpname, subcname=usesubcorp),
@@ -202,12 +207,6 @@ class Wordlist(ConcActions):
             result['freq_figure'] = translate(self.FREQ_FIGURES.get(self.args.wlnums, '?'))
             result['processing'] = None
 
-            result['form_args'] = dict(
-                wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
-                subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
-                wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
-                wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
-
             self._add_save_menu_item('CSV', save_format='csv',
                                      hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                          self.WORDLIST_QUICK_SAVE_MAX_LINES)))
@@ -245,7 +244,6 @@ class Wordlist(ConcActions):
             result['SubcorpList'] = []
             result['freq_figure'] = ''
             result['lastpage'] = None
-            result['form_args'] = {}
             return result
 
     @exposed(template='freqs.tmpl', page_model='freq', http_method='POST', mutates_conc=True)

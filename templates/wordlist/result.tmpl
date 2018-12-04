@@ -51,17 +51,6 @@ wordlistPage.init(__conf);
 <section>
     <h2>$_("Word list")</h2>
     <div id="wordlist-result-mount"></div>
-
-    #if $processing is not None
-        <div id="progress_message">
-           <div class="progress-info">
-                <div>$_('calculating ...')
-                    <a class="context-help" href="#"><img data-alt-img="${files_path}/img/question-mark_s.svg" src="${files_path}/img/question-mark.svg" class="over-img"></a>
-                </div>
-                <div id="progress_scale"><div id="processbar" style="width:$processing%;"></div></div>
-            </div>
-        </div>
-    #end if
     <a id="download-link" style="display:none"></a>
 </section>
 #end def

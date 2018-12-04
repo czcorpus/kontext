@@ -48,6 +48,8 @@ export interface WordlistResultState {
     wlsort:string;
     saveFormActive:boolean;
     isLastPage:boolean;
+    isUnfinished:boolean;
+    bgCalcStatus:number;
 }
 
 export interface WordlistResultViews {
@@ -59,6 +61,8 @@ export interface WordlistResultViews {
  */
 export function init({dispatcher, utils, wordlistSaveViews,
                       wordlistResultModel, wordlistSaveModel}:WordlistResultViewsArgs):WordlistResultViews {
+
+    const layoutViews = utils.getLayoutViews();
 
     // ---------------------- <THSortableColumn /> -------------------
 
@@ -302,7 +306,9 @@ export function init({dispatcher, utils, wordlistSaveViews,
                 usesStructAttr: wordlistResultModel.usesStructAttr(),
                 wlsort: wordlistResultModel.getWlsort(),
                 saveFormActive: wordlistSaveModel.getFormIsActive(),
-                isLastPage: wordlistResultModel.getIsLastPage()
+                isLastPage: wordlistResultModel.getIsLastPage(),
+                isUnfinished: wordlistResultModel.getIsUnfinished(),
+                bgCalcStatus: wordlistResultModel.getBgCalcStatus()
             };
         }
 
@@ -347,8 +353,29 @@ export function init({dispatcher, utils, wordlistSaveViews,
                         {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
                     </div>
                 );
+
+            } else if (this.state.isUnfinished) {
+                return (
+                    <div className="WordlistResult_progress-message">
+                        <div className="progress-info">
+                            <p className="calc-info">
+                                <layoutViews.ImgWithMouseover src={utils.createStaticUrl('img/info-icon.svg')}
+                                    alt={utils.translate('global__info_icon')}
+                                    htmlClass="icon" />
+                                {utils.translate('global__wl_calc_info')}
+                            </p>
+                            <h3>{utils.translate('global__calculating_imtermediate_data')}{'\u2026'}</h3>
+                            <div className="processbar-wrapper">
+                                <div className="processbar" style={{width: `${(this.state.bgCalcStatus / 100 * 5 + 3).toFixed()}em`}}
+                                        title={`${this.state.bgCalcStatus.toFixed()}%`} />
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            } else {
+                return <div>{utils.translate('global__no_result')}</div>;
             }
-            return <div />;
         }
     }
 

@@ -116,7 +116,7 @@ export function init(
                             <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} />
                         </span>
-                        <input type="text" value="" />
+                        <input type="text" />
                 </>;
 
             } else {
