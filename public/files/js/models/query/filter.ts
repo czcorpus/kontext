@@ -180,13 +180,18 @@ export class FilterFormModel extends QueryFormModel {
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
-                    this.queries = this.queries.set(action.props['sourceId'], action.props['query']);
+                    if (action.props['insertRange']) {
+                        this.addQueryInfix(action.props['sourceId'], action.props['query'], action.props['insertRange']);
+
+                    } else {
+                        this.queries = this.queries.set(action.props['sourceId'], action.props['query']);
+                    }
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
                         action.props['sourceId'],
                         this.shouldDownArrowTriggerHistory(
                             action.props['query'],
-                            action.props['cursorPos'],
-                            action.props['focusIdx']
+                            action.props['rawAnchorIdx'],
+                            action.props['rawFocusIdx']
                         )
                     );
                     this.notifyChangeListeners();
