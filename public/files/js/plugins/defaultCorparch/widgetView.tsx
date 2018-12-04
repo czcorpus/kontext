@@ -568,7 +568,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                     className={`util-button${props.isWaitingToSwitch ? ' waiting': ''}`}
                     onClick={props.onClick} onKeyDown={handleKeyDown}>
                 {props.isWaitingToSwitch ? <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> : null }
-                <span className="corpus-name" title={props.corpusIdent.name}>{props.corpusIdent.id}</span>
+                <span className="corpus-name" title={props.corpusIdent.id}>{props.corpusIdent.name}</span>
             </button>
         );
     };
