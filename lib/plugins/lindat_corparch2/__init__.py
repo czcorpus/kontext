@@ -531,7 +531,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         parallel = node.attrib['parallel'] if 'parallel' in node.attrib else 'other'
         pmltq = node.attrib['pmltq'] if 'pmltq' in node.attrib else 'no'
         access = [group.strip()
-                  for group in node.attrib['access'].split(',')]
+                  for group in node.attrib.get('access', '').split(',')]
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
