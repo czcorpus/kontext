@@ -528,6 +528,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         corpus_id = node.attrib['ident'].lower()
         web_url = node.attrib['repo'] if 'repo' in node.attrib else None
         sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
+        parallel = node.attrib['parallel'] if 'parallel' in node.attrib else 'other'
+        pmltq = node.attrib['pmltq'] if 'pmltq' in node.attrib else 'no'
+        access = [group.strip()
+                  for group in node.attrib['access'].split(',')]
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
@@ -544,16 +548,21 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
         ans.sample_size = node.attrib.get('sample_size', -1)
         ans.use_safe_font = self._decode_bool(node.attrib.get('use_safe_font', 'false'))
+        ans.parallel = parallel
+        ans.pmltq = pmltq
+        ans.access = access
 
-        ref_elm = node.find('reference')
-        if ref_elm is not None:
-            ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
-                                                                     'text', None))
-            articles = [translate_markup(getattr(x, 'text', None))
-                        for x in ref_elm.findall('article')]
-            ans.citation_info.article_ref = articles
-            ans.citation_info.other_bibliography = translate_markup(
-                getattr(ref_elm.find('other_bibliography'), 'text', None))
+        #ref_elm = node.find('reference')
+        #if ref_elm is not None:
+        #    ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
+        #                                                             'text', None))
+        #    articles = [translate_markup(getattr(x, 'text', None))
+        #                for x in ref_elm.findall('article')]
+        #    ans.citation_info.article_ref = articles
+        #    ans.citation_info.other_bibliography = translate_markup(
+        #        getattr(ref_elm.find('other_bibliography'), 'text', None))
+
+        ans.citation_info.default_ref = node.attrib['repo'] if 'repo' in node.attrib else None
 
         meta_elm = node.find('metadata')
         if meta_elm is not None:
@@ -562,7 +571,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
             ans.metadata.sort_attrs = True if meta_elm.find(
                 self.SORT_ATTRS_KEY) is not None else False
-            ans.metadata.desc = self._parse_meta_desc(meta_elm)
+            #ans.metadata.desc = self._parse_meta_desc(meta_elm)
+            ans.metadata.desc = self._manatee_corpora.get_info(ans.id).description
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
             ans.metadata.group_duplicates = True if meta_elm.find(
