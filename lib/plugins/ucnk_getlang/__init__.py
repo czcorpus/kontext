@@ -44,7 +44,7 @@ class GetLang(AbstractGetLang):
     fallback_lang -- language code to be used in case no setting is found (default is '')
     """
 
-    def __init__(self, cookie_name, fallback_lang='en_US'):
+    def __init__(self, cookie_name, fallback_lang):
         self.cookie_name = cookie_name
         self.fallback_lang = fallback_lang
         self._translations = self.fetch_translations()
@@ -52,6 +52,7 @@ class GetLang(AbstractGetLang):
     @staticmethod
     def fetch_translations():
         ans = defaultdict(lambda: [])
+        ans['en'].append('en-US')
         root_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'locale')
         for item in os.listdir(root_dir):
             c = item.split('_')[0]
@@ -73,8 +74,8 @@ class GetLang(AbstractGetLang):
         if not isinstance(source, Cookie.BaseCookie):
             raise TypeError('%s plugin expects Cookie.BaseCookie instance as a source' % __file__)
         if self.cookie_name in source:
-            code = normalize_lang(source[self.cookie_name].value).split('_')[0]
-            variants = self._translations[code]
+            key = normalize_lang(source[self.cookie_name].value).split('_')[0]
+            variants = self._translations[key]
             if len(variants) > 0:
                 code = variants[0]
         return code
