@@ -25,8 +25,12 @@ element getlang {
 """
 import os
 import Cookie
+from collections import defaultdict
 
 from plugins.abstract.getlang import AbstractGetLang
+
+
+def normalize_lang(s): return s.replace('-', '_')
 
 
 class GetLang(AbstractGetLang):
@@ -47,12 +51,10 @@ class GetLang(AbstractGetLang):
 
     @staticmethod
     def fetch_translations():
-        ans = {}
+        ans = defaultdict(lambda: [])
         root_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'locale')
         for item in os.listdir(root_dir):
             c = item.split('_')[0]
-            if c not in ans:
-                ans[c] = []
             ans[c].append(item)
         return ans
 
@@ -67,24 +69,15 @@ class GetLang(AbstractGetLang):
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or an empty string in case no value was found
         """
+        code = self.fallback_lang
         if not isinstance(source, Cookie.BaseCookie):
             raise TypeError('%s plugin expects Cookie.BaseCookie instance as a source' % __file__)
         if self.cookie_name in source:
-            code = source[self.cookie_name].value
-            if '_' not in code:
-                code = self._translations.get(code, (None,))[0]
-            return code
-        return None
-
-    def get_fallback_language(self):
-        """
-        This is an optional method (i.e. KonText calls this only if
-        a plugin implements this method).
-
-        This specific implementation requires you to specify either an empty value
-        or underscore-separated ISO 639 language code and ISO 3166 country code
-        """
-        return self.fallback_lang
+            code = normalize_lang(source[self.cookie_name].value).split('_')[0]
+            variants = self._translations[code]
+            if len(variants) > 0:
+                code = variants[0]
+        return code
 
 
 def create_instance(conf):
@@ -93,8 +86,5 @@ def create_instance(conf):
     conf -- settings module or some compatible object (a compatible get() method is enough here)
     """
     cookie_name = conf.get('plugins', 'getlang')['ucnk:cookie']
-    fallback_lang = conf.get('plugins', 'getlang').get('ucnk:fallback_lang', '')
-    if fallback_lang is None:  # this is important ('' == default locale while None produces error)
-        fallback_lang = ''
-    return GetLang(cookie_name=cookie_name, fallback_lang=fallback_lang)
-
+    fallback_lang = conf.get('plugins', 'getlang').get('ucnk:fallback_lang', 'en-US')
+    return GetLang(cookie_name=cookie_name, fallback_lang=normalize_lang(fallback_lang))

@@ -45,16 +45,6 @@ class GetLang(object):
         """
         return self.fallback_lang
 
-    def get_fallback_language(self):
-        """
-        This is an optional method (i.e. KonText calls this only if
-        a plugin implements this method).
-
-        This specific implementation requires you to specify either an empty value
-        or underscore-separated ISO 639 language code and ISO 3166 country code
-        """
-        return self.fallback_lang
-
 
 def create_instance(conf):
     """
