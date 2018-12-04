@@ -620,11 +620,11 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         """
         ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
-        desc = ans.metadata.desc
-        if lang_code in desc:
-            ans.metadata.desc = desc[lang_code]
-        else:
-            ans.metadata.desc = ''
+        #desc = ans.metadata.desc
+        #if lang_code in desc:
+        #    ans.metadata.desc = desc[lang_code]
+        #else:
+        #    ans.metadata.desc = ''
 
         translated_k = OrderedDict()
         for keyword, label in ans.metadata.keywords.items():
