@@ -25,6 +25,7 @@ class AttrArgs(object):
     leads to the following SQL "component": (key1 = ? OR key1 = ?) AND (key2 = ?)
     and attached values: ('value1_1', 'value1_2', 'value2_1')
     """
+
     def __init__(self, data, bib_id, bib_label, autocomplete_attr, empty_val_placeholder):
         """
         arguments:
@@ -75,13 +76,15 @@ class AttrArgs(object):
                         cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
                         sql_values.append(self.import_value(value))
                     else:
-                        cnf_item.append('%s.%s %s ?' % (item_prefix, self._bib_label, cmp_operator(value[1:])))
+                        cnf_item.append('%s.%s %s ?' %
+                                        (item_prefix, self._bib_label, cmp_operator(value[1:])))
                         sql_values.append(self.import_value(value[1:]))
 
             elif is_range_argument(values):
                 pass  # a range query  TODO
             else:
-                cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(values)))
+                cnf_item.append('ktx_lower(%s.%s) %s ktx_lower(?)' %
+                                (item_prefix, key, cmp_operator(values)))
                 sql_values.append(self.import_value(values))
 
             if len(cnf_item) > 0:

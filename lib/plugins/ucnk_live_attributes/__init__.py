@@ -16,6 +16,8 @@
 Interactive (ad hoc) subcorpus selection.
 
 Required XML configuration: please see config.rng
+
+It is recommended to install Unidecode package (pip install Unidecode)
 """
 
 import re
@@ -25,6 +27,14 @@ from hashlib import md5
 from functools import partial
 from collections import defaultdict, OrderedDict, Iterable
 import sqlite3
+import logging
+try:
+    from unidecode import unidecode
+except ImportError:
+    logging.getLogger(__name__).warning(
+        'Package unidecode not found - you can improve ucnk_live_attributes search abilities by installing it.')
+
+    def unidecode(v): return v
 
 import l10n
 from plugins import inject
@@ -118,6 +128,8 @@ class LiveAttributes(AbstractLiveAttributes):
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
+                self.databases[corpname].create_function(
+                    'ktx_lower', 1, lambda x: unidecode(x.lower()))
             else:
                 self.databases[corpname] = None
         return self.databases[corpname]
