@@ -327,10 +327,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             insertRange: null
                         }
                     });
-                    this.reapplySelection(
-                        evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                        evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx
-                    );
 
                 } else if (rawAnchorIdx < rawFocusIdx) {
                     const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
@@ -344,10 +340,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             insertRange: null
                         }
                     });
-                    this.reapplySelection(
-                        evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                        evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx
-                    );
 
                 } else {
                     const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
@@ -361,10 +353,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             insertRange: null
                         }
                     });
-                    this.reapplySelection(
-                        evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                        evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx
-                    );
                 }
                 evt.preventDefault();
 
@@ -376,10 +364,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     props: {
                         sourceId: this.props.sourceId,
-                        // we have to add a single whitespace here because otherwise FF cannot handle cursor position properly
+                        // We have to add a single whitespace here because otherwise FF cannot handle cursor
+                        // position properly (normally it inserts its custom br type=_moz element which is
+                        // even worse to handle). This is not ideal but by far the most cheap solution.
                         query: rawFocusIdx === query.length ? '\n ' : '\n',
-                        rawAnchorIdx: null,
-                        rawFocusIdx: null,
+                        rawAnchorIdx: rawFocusIdx === query.length ? rawAnchorIdx + 2 : rawAnchorIdx + 1,
+                        rawFocusIdx: rawFocusIdx === query.length ? rawFocusIdx + 2 : rawFocusIdx + 1,
                         insertRange: [rawAnchorIdx, rawFocusIdx]
                     }
                 });
