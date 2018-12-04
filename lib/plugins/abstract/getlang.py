@@ -40,13 +40,3 @@ class AbstractGetLang(object):
         of the detected language or None in case no value was found
         """
         raise NotImplementedError()
-
-    def get_fallback_language(self):
-        """
-        An optional method providing a fallback language to be used in case
-        KonText fails to detect anything reasonable.
-
-        returns:
-        underscore-separated ISO 639 language code and ISO 3166 country code
-        """
-        pass
