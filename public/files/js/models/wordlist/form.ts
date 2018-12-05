@@ -19,467 +19,414 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
+import * as Rx from '@reactivex/rxjs';
 
 import {Kontext} from '../../types/common';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
-import {StatefulModel, validateGzNumber} from '../base';
+import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
+import {validateGzNumber, StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
+
+
+export enum FileTarget {
+    WHITELIST = "wlwords",
+    BLACKLIST = "blacklist",
+    EMPTY = "empty'"
+}
 
 /**
  *
  */
 export interface WLFilterEditorData {
+    target: FileTarget.WHITELIST;
     fileName:string;
-    target: string;
-    data: string;
+    data:string;
 }
 
-export interface WordlistFormProps {
+export interface BLFilterEditorData {
+    target: FileTarget.BLACKLIST;
+    fileName:string;
+    data:string;
+}
+
+export interface EmptyFilterEditorData {
+    target: FileTarget.EMPTY;
+}
+
+export type FilterEditorData = WLFilterEditorData|BLFilterEditorData|EmptyFilterEditorData;
+
+export enum WlnumsTypes {
+    FRQ = 'frq',
+    DOCF = 'docf',
+    ARF = 'arf'
+}
+
+export enum WlTypes {
+    SIMPLE = 'simple',
+    MULTILEVEL = 'multilevel'
+}
+
+export interface WordlistFormState {
+    corpusId:string;
+    corpusName:string;
+    corpusVariant:string;
+    subcorpList:Immutable.List<Kontext.SubcorpListItem>;
+    attrList:Immutable.List<Kontext.AttrItem>;
+    structAttrList:Immutable.List<Kontext.AttrItem>;
     wlattr:string;
     wlpat:string;
     wlsort:string;
     subcnorm:string;
-    wltype:string;
-    wlnums:string;
-    wlminfreq:string
+    wlnums:WlnumsTypes;
     wlposattrs:[string, string, string];
+    numWlPosattrLevels:number;
+    wltype:WlTypes;
+    wlminfreq:Kontext.FormValue<string>;
     wlwords:string;
     blacklist:string;
+    filterEditorData:FilterEditorData;
     wlFileName:string;
     blFileName:string;
     includeNonwords:boolean;
+    isForeignSubcorp:boolean;
+    currentSubcorpus:string;
+    origSubcorpName:string;
 }
+
+export interface WordlistModelInitialArgs {
+    includeNonwords:number; // boolean like
+    wlminfreq:number;
+    subcnorm:string;
+    wlnums:WlnumsTypes;
+    blacklist:string;
+    wlpat:string;
+    wlwords:string;
+    wlsort:string;
+    wlattr:string;
+    wltype:WlTypes;
+}
+
 
 /**
  *
  */
-export class WordlistFormModel extends StatefulModel implements Kontext.ICorpusSwitchAware<WordlistFormProps> {
+export class WordlistFormModel extends StatelessModel<WordlistFormState> implements Kontext.ICorpusSwitchAware<WordlistFormState> {
 
     private layoutModel:PageModel;
 
-    private corpusId:string;
-
-    private corpusName:string;
-
-    private corpusVariant:string;
-
-    private currentSubcorpus:string;
-
-    private origSubcorpName:string;
-
-    private isForeignSubcorp:boolean;
-
-    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
-
-    private attrList:Immutable.List<Kontext.AttrItem>;
-
-    private structAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private wlattr:string;
-
-    private wlpat:string;
-
-    private wlsort:string;
-
-    private subcnorm:string;
-
-    private wlnums:string; // frq/docf/arf
-
-    private wlposattrs:[string, string, string];
-
-    private numWlPosattrLevels:number;
-
-    private wltype:string; // simple/multilevel
-
-    private wlminfreq:Kontext.FormValue<string>;
-
-    private wlwords:string;
-
-    private blacklist:string;
-
-    private filterEditorData:WLFilterEditorData;
-
-    private wlFileName:string;
-
-    private blFileName:string;
-
-    private includeNonwords:boolean;
-
-
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
-            subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
-        super(dispatcher);
-        this.corpusId = corpusIdent.id;
-        this.corpusName = corpusIdent.name;
-        this.corpusVariant = this.corpusVariant;
-        this.currentSubcorpus = corpusIdent.usesubcorp;
-        this.origSubcorpName = '';
-        this.isForeignSubcorp = corpusIdent.foreignSubcorp;
-        this.layoutModel = layoutModel;
-        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(subcorpList);
-        this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
-        this.wlpat = '';
-        this.wlattr = this.attrList.get(0).n;
-        this.wlnums = 'frq';
-        this.wltype = 'simple';
-        this.wlminfreq = {value: '5', isInvalid: false, isRequired: true};
-        this.wlsort = 'f';
-        this.wlposattrs = ['', '', ''];
-        this.numWlPosattrLevels = 1;
-        this.wlwords = '';
-        this.blacklist = '';
-        this.wlFileName = '';
-        this.blFileName = '';
-        this.subcnorm = '';
-        this.includeNonwords = false;
-
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
-                case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (action.props['pubName']) {
-                        this.currentSubcorpus = action.props['pubName'];
-                        this.origSubcorpName = action.props['subcorp'];
-                        this.isForeignSubcorp = action.props['foreign'];
-
-                    } else {
-                        this.currentSubcorpus = action.props['subcorp'];
-                        this.origSubcorpName = action.props['subcorp'];
-                        this.isForeignSubcorp = false;
-                    }
-                    const corpIdent = this.layoutModel.getCorpusIdent();
-                    this.layoutModel.setConf<Kontext.FullCorpusIdent>(
-                        'corpusIdent',
-                        {
-                            id: corpIdent.id,
-                            name: corpIdent.name,
-                            variant: corpIdent.variant,
-                            usesubcorp: this.currentSubcorpus,
-                            origSubcorpName: this.origSubcorpName,
-                            foreignSubcorp: this.isForeignSubcorp
-                        }
-                    );
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SELECT_ATTR':
-                    this.wlattr = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SET_WLPAT':
-                    this.wlpat = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SET_WLNUMS':
-                    this.wlnums = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SELECT_WLPOSATTR':
-                    this.wlposattrs[action.props['position'] - 1] = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SET_WLTYPE':
-                    this.wltype = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SET_WLMINFREQ':
-                    this.wlminfreq.value = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
-                    this.includeNonwords = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_ADD_POSATTR_LEVEL':
-                    this.numWlPosattrLevels += 1;
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SET_FILTER_FILE':
-                    const file:File = action.props['value'];
-                    if (file) {
-                        this.handleFilterFileSelection(file, action.props['target']).then(
-                            () => {
-                                this.notifyChangeListeners();
-                            },
-                            (err) => {
-                                this.layoutModel.showMessage('error', err);
-                                this.notifyChangeListeners();
-                            }
-                        );
-                    }
-                break;
-                case 'WORDLIST_FORM_UPDATE_EDITOR':
-                    this.filterEditorData.data = action.props['value'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_REOPEN_EDITOR':
-                    this.filterEditorData = {
-                        target: action.props['target'],
-                        data: '',
-                        fileName: ''
-                    };
-                    this.doWhiteOrBlackOp(
-                        action.props['target'],
-                        () => {
-                            this.filterEditorData.data = this.wlwords;
-                            this.filterEditorData.fileName = this.wlFileName;
-                        },
-                        () => {
-                            this.filterEditorData.data = this.blacklist;
-                            this.filterEditorData.fileName = this.blFileName;
-                        }
-                    );
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_CLEAR_FILTER_FILE':
-                    if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
-                        this.doWhiteOrBlackOp(
-                            action.props['target'],
-                            () => { this.wlwords = ''; this.wlFileName = '' },
-                            () => { this.blacklist = ''; this.blFileName = '' }
-                        );
-                        this.notifyChangeListeners();
-                    }
-                break;
-                case 'WORDLIST_FORM_CLOSE_EDITOR':
-                    this.doWhiteOrBlackOp(
-                        this.filterEditorData.target,
-                        () => this.wlwords = this.filterEditorData.data,
-                        () => this.blacklist = this.filterEditorData.data
-                    );
-                    this.filterEditorData = null;
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_RESULT_SET_SORT_COLUMN':
-                    this.wlsort = action.props['sortKey'];
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_FORM_SUBMIT':
-                    const err = this.validateForm();
-                    if (!err) {
-                        this.submit();
-
-                    } else {
-                        this.layoutModel.showMessage('error', err);
-                    }
-                    this.notifyChangeListeners();
-                break;
-                case 'CORPUS_SWITCH_MODEL_RESTORE':
-                if (action.props['key'] === this.csGetStateKey()) {
-                    this.csSetState(action.props['data']);
-                    this.notifyChangeListeners();
-                }
-                break;
+            subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
+            initialArgs:WordlistModelInitialArgs) {
+        super(
+            dispatcher,
+            {
+                corpusId: corpusIdent.id,
+                corpusName: corpusIdent.name,
+                corpusVariant: corpusIdent.variant,
+                subcorpList: Immutable.List<Kontext.SubcorpListItem>(subcorpList),
+                attrList: Immutable.List<Kontext.AttrItem>(attrList),
+                structAttrList: Immutable.List<Kontext.AttrItem>(structAttrList),
+                wlpat: initialArgs.wlpat,
+                wlattr: initialArgs.wlattr,
+                wlnums: initialArgs.wlnums,
+                wltype: initialArgs.wltype,
+                wlminfreq: {value: initialArgs.wlminfreq.toFixed(), isInvalid: false, isRequired: true},
+                wlsort: initialArgs.wlsort,
+                wlposattrs: ['', '', ''],
+                numWlPosattrLevels: 1,
+                wlwords: initialArgs.wlwords,
+                blacklist: initialArgs.blacklist,
+                wlFileName: '',
+                blFileName: '',
+                subcnorm: initialArgs.subcnorm,
+                includeNonwords: !!initialArgs.includeNonwords,
+                filterEditorData: {
+                    target: FileTarget.EMPTY
+                },
+                isForeignSubcorp: corpusIdent.foreignSubcorp,
+                currentSubcorpus: corpusIdent.usesubcorp,
+                origSubcorpName: ''
             }
-        });
+        );
+        this.layoutModel = layoutModel;
     }
 
-    private validateForm():Error|null {
-        if (validateGzNumber(this.wlminfreq.value)) {
-            this.wlminfreq.isInvalid = false;
+
+    reduce(state:WordlistFormState, action:Action):WordlistFormState {
+        let newState:WordlistFormState;
+        switch (action.actionType) {
+            case 'QUERY_INPUT_SELECT_SUBCORP':
+                newState = this.copyState(state);
+                if (action.props['pubName']) {
+                    newState.currentSubcorpus = action.props['pubName'];
+                    newState.origSubcorpName = action.props['subcorp'];
+                    newState.isForeignSubcorp = action.props['foreign'];
+
+                } else {
+                    newState.currentSubcorpus = action.props['subcorp'];
+                    newState.origSubcorpName = action.props['subcorp'];
+                    newState.isForeignSubcorp = false;
+                }
+            break;
+            case 'WORDLIST_FORM_SELECT_ATTR':
+                newState = this.copyState(state);
+                newState.wlattr = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_SET_WLPAT':
+                newState = this.copyState(state);
+                newState.wlpat = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_SET_WLNUMS':
+                newState = this.copyState(state);
+                newState.wlnums = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_SELECT_WLPOSATTR':
+                newState = this.copyState(state);
+                newState.wlposattrs[action.props['position'] - 1] = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_SET_WLTYPE':
+                newState = this.copyState(state);
+                newState.wltype = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_SET_WLMINFREQ':
+                newState = this.copyState(state);
+                newState.wlminfreq.value = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
+                newState = this.copyState(state);
+                newState.includeNonwords = action.props['value'];
+            break;
+            case 'WORDLIST_FORM_ADD_POSATTR_LEVEL':
+                newState = this.copyState(state);
+                newState.numWlPosattrLevels += 1;
+            break;
+            case 'WORDLIST_FORM_SET_FILTER_FILE_DONE': {
+                newState = this.copyState(state);
+                const props = action.props['data'] as FilterEditorData;
+                if (props.target === FileTarget.BLACKLIST) {
+                    newState.filterEditorData = {
+                        target: FileTarget.BLACKLIST,
+                        fileName: props.fileName,
+                        data: props.data
+                    };
+
+                } else if (props.target === FileTarget.WHITELIST) {
+                    newState.filterEditorData = {
+                        target: FileTarget.WHITELIST,
+                        fileName: props.fileName,
+                        data: props.data
+                    };
+                }
+            }
+            break;
+            case 'WORDLIST_FORM_UPDATE_EDITOR':
+                newState = this.copyState(state);
+                if (newState.filterEditorData.target !== FileTarget.EMPTY) {
+                    if (newState.filterEditorData.target === FileTarget.BLACKLIST) {
+                        newState.filterEditorData = {
+                            target: FileTarget.BLACKLIST,
+                            data: action.props['value'] as string,
+                            fileName: newState.filterEditorData.fileName
+                        };
+
+                    } else {
+                        newState.filterEditorData = {
+                            target: FileTarget.WHITELIST,
+                            data: action.props['value'] as string,
+                            fileName: newState.filterEditorData.fileName
+                        };
+                    }
+                }
+            break;
+            case 'WORDLIST_FORM_REOPEN_EDITOR':
+                newState = this.copyState(state);
+                newState.filterEditorData = {
+                    target: action.props['target'],
+                    data: '',
+                    fileName: ''
+                };
+                if (action.props['target'] === FileTarget.WHITELIST) {
+                    newState.filterEditorData = {
+                        target: FileTarget.WHITELIST,
+                        data: state.wlwords,
+                        fileName: state.wlFileName
+                    };
+
+                } else if (action.props['target'] === FileTarget.BLACKLIST) {
+                    newState.filterEditorData = {
+                        target: FileTarget.BLACKLIST,
+                        data: state.blacklist,
+                        fileName: state.blFileName
+                    };
+                }
+            break;
+            case 'WORDLIST_FORM_CLEAR_FILTER_FILE':
+                newState = this.copyState(state);
+                if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
+                    if (action.props['target'] === FileTarget.WHITELIST) {
+                        newState.wlwords = '';
+                        newState.wlFileName = ''
+
+                    } else if (action.props['target'] === FileTarget.BLACKLIST) {
+                        newState.blacklist = '';
+                        newState.blFileName = ''
+                    }
+                }
+            break;
+            case 'WORDLIST_FORM_CLOSE_EDITOR':
+                newState = this.copyState(state);
+                if (newState.filterEditorData.target === FileTarget.WHITELIST) {
+                    newState.wlwords = newState.filterEditorData.data;
+                    newState.filterEditorData = {target: FileTarget.EMPTY};
+
+                } else if (newState.filterEditorData.target === FileTarget.BLACKLIST) {
+                    newState.blacklist = newState.filterEditorData.data;
+                    newState.filterEditorData = {target: FileTarget.EMPTY};
+                }
+            break;
+            case 'WORDLIST_RESULT_SET_SORT_COLUMN':
+                newState = this.copyState(state);
+                newState.wlsort = action.props['sortKey'];
+            break;
+            case 'CORPUS_SWITCH_MODEL_RESTORE':
+                if (action.props['key'] === this.csGetStateKey()) {
+                    const props = action.props as Kontext.CorpusSwitchActionProps<WordlistFormState>;
+                    newState = props.data;
+
+                } else {
+                    newState = state;
+                }
+            break;
+            default:
+                newState = state;
+            break;
+        }
+        return newState;
+    }
+
+    sideEffects(state:WordlistFormState, action:Action, dispatch:SEDispatcher):void {
+        switch (action.actionType) {
+            case 'QUERY_INPUT_SELECT_SUBCORP':
+                const corpIdent = this.layoutModel.getCorpusIdent();
+                this.layoutModel.setConf<Kontext.FullCorpusIdent>(
+                    'corpusIdent',
+                    {
+                        id: corpIdent.id,
+                        name: corpIdent.name,
+                        variant: corpIdent.variant,
+                        usesubcorp: state.currentSubcorpus,
+                        origSubcorpName: state.origSubcorpName,
+                        foreignSubcorp: state.isForeignSubcorp
+                    }
+                );
+            break;
+            case 'WORDLIST_FORM_SET_FILTER_FILE': {
+                const file:File = action.props['value'];
+                if (file) {
+                    this.handleFilterFileSelection(state, file, action.props['target']).subscribe(
+                        (data) => {
+                            dispatch({
+                                actionType: 'WORDLIST_FORM_SET_FILTER_FILE_DONE',
+                                props: {
+                                    data: data
+                                }
+                            });
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                }
+            }
+            break;
+            case 'WORDLIST_FORM_SUBMIT':
+                const err = this.validateForm(state);
+                if (!err) {
+                    this.submit(state);
+
+                } else {
+                    this.layoutModel.showMessage('error', err);
+                }
+            break;
+        }
+    }
+
+    private validateForm(state:WordlistFormState):Error|null {
+        if (validateGzNumber(state.wlminfreq.value)) {
+            state.wlminfreq.isInvalid = false;
             return null;
 
         } else {
-            this.wlminfreq.isInvalid = true;
+            state.wlminfreq.isInvalid = true;
             return new Error(this.layoutModel.translate('wordlist__minfreq_err'));
         }
     }
 
-    private doWhiteOrBlackOp(value:string, wlop:()=>void, blop:()=>void):void {
-        switch (value) {
-            case 'wlwords':
-                wlop();
-            break;
-            case 'blacklist':
-                blop();
-            break;
-        }
-    }
-
-    private handleFilterFileSelection(file:File, target:string):RSVP.Promise<any> {
-        return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+    private handleFilterFileSelection(state:WordlistFormState, file:File, target:string):Rx.Observable<FilterEditorData> {
+        return Rx.Observable.create((observer:Rx.Observer<any>) => {
             const fr = new FileReader();
             fr.onload = (evt:any) => { // TODO TypeScript seems to have no type for this
-                resolve(evt.target.result);
+                observer.next(evt.target.result);
+                observer.complete();
             };
             fr.readAsText(file);
 
-        }).then(
+        }).concatMap(
             (data) => {
-                this.doWhiteOrBlackOp(
-                    target,
-                    () => this.wlFileName = file.name,
-                    () => this.blFileName = file.name
-                );
-                this.filterEditorData = {
+                return Rx.Observable.of({
                     target: target,
                     data: data,
                     fileName: file.name
-                };
+                });
             }
         );
     }
 
-    createSubmitArgs():MultiDict {
+    createSubmitArgs(state:WordlistFormState):MultiDict {
         const ans = new MultiDict();
-        ans.set('corpname', this.corpusId);
-        if (this.currentSubcorpus) {
-            ans.set('usesubcorp', this.currentSubcorpus);
+        ans.set('corpname', state.corpusId);
+        if (state.currentSubcorpus) {
+            ans.set('usesubcorp', state.currentSubcorpus);
         }
-        ans.set('wlattr', this.wlattr);
-        ans.set('wlpat', this.wlpat);
-        ans.set('wlminfreq', this.wlminfreq.value);
-        ans.set('wlnums', this.wlnums);
-        ans.set('wltype', this.wltype);
-        ans.set('wlsort', this.wlsort);
-        if (this.wlwords.trim()) {
-            ans.set('wlwords', this.wlwords.trim());
+        ans.set('wlattr', state.wlattr);
+        ans.set('wlpat', state.wlpat);
+        ans.set('wlminfreq', state.wlminfreq.value);
+        ans.set('wlnums', state.wlnums);
+        ans.set('wltype', state.wltype);
+        ans.set('wlsort', state.wlsort);
+        if (state.wlwords.trim()) {
+            ans.set('wlwords', state.wlwords.trim());
         }
-        if (this.blacklist.trim()) {
-            ans.set('blacklist', this.blacklist.trim());
+        if (state.blacklist.trim()) {
+            ans.set('blacklist', state.blacklist.trim());
         }
-        ans.set('include_nonwords', this.includeNonwords ? '1' : '0');
-        if (this.wltype === 'multilevel') {
-            ans.set('wlposattr1', this.wlposattrs[0]);
-            ans.set('wlposattr2', this.wlposattrs[1]);
-            ans.set('wlposattr3', this.wlposattrs[2]);
+        ans.set('include_nonwords', state.includeNonwords ? '1' : '0');
+        if (state.wltype === WlTypes.MULTILEVEL) {
+            ans.set('wlposattr1', state.wlposattrs[0]);
+            ans.set('wlposattr2', state.wlposattrs[1]);
+            ans.set('wlposattr3', state.wlposattrs[2]);
         }
         return ans;
     }
 
-    private submit():void {
-        const args = this.createSubmitArgs();
-        const action = this.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/result';
+    private submit(state:WordlistFormState):void {
+        const args = this.createSubmitArgs(state);
+        const action = state.wltype === WlTypes.MULTILEVEL ? 'wordlist/struct_result' : 'wordlist/result';
         this.layoutModel.setLocationPost(
             this.layoutModel.createActionUrl(action),
             args.items()
         );
     }
 
-    csExportState():WordlistFormProps {
-        return {
-            wlattr: '', // this is likely different between corpora
-            wlpat: this.wlpat,
-            wlsort: this.wlsort,
-            subcnorm: this.subcnorm,
-            wltype: this.wltype,
-            wlnums: this.wlnums,
-            wlminfreq: this.wlminfreq.value,
-            wlposattrs: ['', '', ''], // this is likely different between corpora
-            wlwords: this.wlwords,
-            blacklist: this.blacklist,
-            wlFileName: this.wlFileName,
-            blFileName: this.blFileName,
-            includeNonwords: this.includeNonwords
-        };
-    }
-
-    csSetState(state:WordlistFormProps):void {
-        this.wlattr = state.wlattr ? state.wlattr : 'word';
-        this.wlpat = state.wlpat;
-        this.wlsort = state.wlsort;
-        this.subcnorm = state.subcnorm;
-        this.wltype = state.wltype;
-        this.wlnums = state.wlnums;
-        this.wlminfreq = {value: state.wlminfreq, isInvalid: false, isRequired: true};
-        this.wlposattrs = state.wlposattrs;
-        this.wlwords = state.wlwords;
-        this.blacklist = state.blacklist;
-        this.wlFileName = state.wlFileName;
-        this.blFileName = state.blFileName;
-        this.includeNonwords = state.includeNonwords;
+    csExportState():WordlistFormState {
+        return this.getState();
     }
 
     csGetStateKey():string {
         return 'wordlist-form';
     }
 
-    getAvailableSubcorpora():Immutable.List<{n:string; v:string}> {
-        return this.subcorpList;
-    }
-
-    getCurrentSubcorpus():string {
-        return this.currentSubcorpus;
-    }
-
-    getAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.attrList;
-    }
-
-    getStructAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.structAttrList;
-    }
-
-    getWlpat():string {
-        return this.wlpat;
-    }
-
-    getWlattr():string {
-        return this.wlattr;
-    }
-
-    getWlnums():string {
-        return this.wlnums;
-    }
-
-    getWposattrs():[string, string, string] {
-        return this.wlposattrs;
-    }
-
-    getNumWlPosattrLevels():number {
-        return this.numWlPosattrLevels;
-    }
-
-    getWltype():string {
-        return this.wltype;
-    }
-
-    getWlsort():string {
-        return this.wlsort;
-    }
-
-    getWlminfreq():Kontext.FormValue<string> {
-        return this.wlminfreq;
-    }
-
-    getFilterEditorData():WLFilterEditorData {
-        return this.filterEditorData;
-    }
-
-    hasWlwords():boolean {
-        return !!this.wlwords;
-    }
-
-    hasBlacklist():boolean {
-        return !!this.blacklist;
-    }
-
-    getWlFileName():string {
-        return this.wlFileName;
-    }
-
-    getBlFileName():string {
-        return this.blFileName;
-    }
-
-    getIncludeNonwords():boolean {
-        return this.includeNonwords;
-    }
-
-    getCorpusIdent():Kontext.FullCorpusIdent {
-        return {
-            id: this.corpusId,
-            name: this.corpusName,
-            variant: this.corpusVariant,
-            origSubcorpName: this.origSubcorpName,
-            usesubcorp: this.currentSubcorpus,
-            foreignSubcorp: this.isForeignSubcorp
-        };
-    }
-
-    getAllowsMultilevelWltype():boolean {
-        return this.wlnums === 'frq';
+    getAllowsMultilevelWltype(state:WordlistFormState):boolean {
+        return state.wlnums === WlnumsTypes.FRQ;
     }
 }

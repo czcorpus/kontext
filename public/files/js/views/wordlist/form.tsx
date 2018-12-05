@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import {WordlistFormModel, WLFilterEditorData} from '../../models/wordlist/form';
+import {WordlistFormModel, WordlistFormState, WlnumsTypes, FileTarget} from '../../models/wordlist/form';
 import {PluginInterfaces} from '../../types/plugins';
 
 export interface WordlistFormViewArgs {
@@ -43,27 +43,6 @@ export interface CorpInfoToolbarProps {
 export interface WordlistFormExportViews {
     WordListForm:React.ComponentClass<{}>;
     CorpInfoToolbar:React.SFC<CorpInfoToolbarProps>;
-}
-
-
-export interface WordListFormState {
-    wltype:string;
-    currentSubcorp:string;
-    attrList:Immutable.List<Kontext.AttrItem>;
-    structAttrList:Immutable.List<Kontext.AttrItem>;
-    wlattr:string;
-    wlpat:string;
-    wlnums:string;
-    wposattrs:[string, string, string];
-    numWlPosattrLevels:number;
-    wlminfreq:Kontext.FormValue<string>;
-    filterEditorData:WLFilterEditorData;
-    hasWlwords:boolean;
-    hasBlacklist:boolean;
-    wlFileName:string;
-    blFileName:string;
-    includeNonwords:boolean;
-    allowsMultilevelWltype:boolean;
 }
 
 
@@ -253,7 +232,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         );
     }
 
-    // --------------------- <TROutputType /> -------------------------------
+    // --------------------- <MultiLevelPosAttr /> -------------------------------
 
     const MultiLevelPosAttr:React.SFC<{
         attrList:Immutable.List<Kontext.AttrItem>;
@@ -357,7 +336,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             </li>) :
                             (<li>
                                 <label>
-                                    <input type="radio" disabled={true} />
+                                    <input type="radio" disabled={true} onChange={handleOutTypeChange} value="" checked={false} />
                                     {he.translate('wordlist__out_type_multi_label')}
                                 </label>:
                                 {'\u00a0'}
@@ -656,36 +635,14 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------- <WordListForm /> ------------------------
 
-    class WordListForm extends React.Component<{}, WordListFormState> {
+    class WordListForm extends React.Component<{}, WordlistFormState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
+            this.state = wordlistFormModel.getState();
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleKeyPress = this._handleKeyPress.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                wltype: wordlistFormModel.getWltype(),
-                currentSubcorp: wordlistFormModel.getCurrentSubcorpus(),
-                attrList: wordlistFormModel.getAttrList(),
-                structAttrList: wordlistFormModel.getStructAttrList(),
-                wlattr: wordlistFormModel.getWlattr(),
-                wlpat: wordlistFormModel.getWlpat(),
-                wlnums: wordlistFormModel.getWlnums(),
-                wposattrs: wordlistFormModel.getWposattrs(),
-                numWlPosattrLevels: wordlistFormModel.getNumWlPosattrLevels(),
-                wlminfreq: wordlistFormModel.getWlminfreq(),
-                filterEditorData: wordlistFormModel.getFilterEditorData(),
-                hasWlwords: wordlistFormModel.hasWlwords(),
-                hasBlacklist: wordlistFormModel.hasBlacklist(),
-                wlFileName: wordlistFormModel.getWlFileName(),
-                blFileName: wordlistFormModel.getBlFileName(),
-                includeNonwords: wordlistFormModel.getIncludeNonwords(),
-                allowsMultilevelWltype: wordlistFormModel.getAllowsMultilevelWltype()
-            };
         }
 
         _handleSubmitClick() {
@@ -695,8 +652,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             });
         }
 
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
+        _handleModelChange(state:WordlistFormState) {
+            this.setState(state);
         }
 
         _handleKeyPress(evt) {
@@ -718,7 +675,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         render() {
             return (
                 <form className="wordlist_form" onKeyDown={this._handleKeyPress}>
-                    {this.state.filterEditorData ? <FileEditor data={this.state.filterEditorData} /> : null}
+                    {this.state.filterEditorData.target !== FileTarget.EMPTY ? <FileEditor data={this.state.filterEditorData} /> : null}
                     <table className="form">
                         <tbody>
                             <tr>
@@ -726,7 +683,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                     <table>
                                         <tbody>
                                             <TRCorpusField corparchWidget={CorparchWidget}
-                                                    currentSubcorp={this.state.currentSubcorp} />
+                                                    currentSubcorp={this.state.currentSubcorpus} />
                                         </tbody>
                                     </table>
                                 </td>
@@ -744,19 +701,19 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                         wlattr={this.state.wlattr} />
                                 <TRWlpatternInput wlpat={this.state.wlpat} />
                                 <TRWlminfreqInput wlminfreq={this.state.wlminfreq} />
-                                <TRFilterFile label={he.translate('wordlist__whitelist_label')} target="wlwords"
-                                            hasValue={this.state.hasWlwords} fileName={this.state.wlFileName} />
-                                <TRFilterFile label={he.translate('wordlist__blacklist_label')} target="blacklist"
-                                            hasValue={this.state.hasBlacklist} fileName={this.state.blFileName} />
+                                <TRFilterFile label={he.translate('wordlist__whitelist_label')} target={FileTarget.WHITELIST}
+                                            hasValue={!!this.state.wlwords} fileName={this.state.wlFileName} />
+                                <TRFilterFile label={he.translate('wordlist__blacklist_label')} target={FileTarget.BLACKLIST}
+                                            hasValue={!!this.state.blacklist} fileName={this.state.blFileName} />
                                 <TRFileFormatHint />
                                 <TRIncludeNonWordsCheckbox value={this.state.includeNonwords} />
                             </tbody>
                         </table>
                     </fieldset>
-                    <FieldsetOutputOptions wlnums={this.state.wlnums} wposattrs={this.state.wposattrs}
+                    <FieldsetOutputOptions wlnums={this.state.wlnums} wposattrs={this.state.wlposattrs}
                             numWlPosattrLevels={this.state.numWlPosattrLevels}
                             attrList={this.state.attrList} wltype={this.state.wltype} wlattr={this.state.wlattr}
-                            allowsMultilevelWltype={this.state.allowsMultilevelWltype} />
+                            allowsMultilevelWltype={this.state.wlnums === WlnumsTypes.FRQ} />
                     <div className="buttons">
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>

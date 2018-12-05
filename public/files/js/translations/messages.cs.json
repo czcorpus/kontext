@@ -168,6 +168,8 @@
         "global__click_or_esc_to_close": "Klikněte nebo zmáčněte ESC pro zavření okna",
         "global__restore_dashboard": "Obnovit okno s doplňujícími informacemi",
         "global__lightbulb_icon": "Ikonka žárovky",
+        "global__no_result": "Žádný výsledek",
+        "global__calculating_imtermediate_data": "Počítám pomocná data",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",
