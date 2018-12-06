@@ -78,12 +78,17 @@ export class ConcSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
-                this.saveformat = action.props['saveformat'];
-                const tmp = this.toLine;
-                this.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
-                this.submit();
-                this.toLine = tmp;
-                this.notifyChangeListeners();
+                if (window.confirm(this.layoutModel.translate(
+                        'global__quicksave_limit_warning_{format}{lines}',
+                        {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                ))) {
+                    this.saveformat = action.props['saveformat'];
+                    const tmp = this.toLine;
+                    this.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
+                    this.submit();
+                    this.toLine = tmp;
+                    this.notifyChangeListeners();
+                }
             break;
             case 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM':
                 this.formIsActive = false;

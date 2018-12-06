@@ -21,7 +21,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {ActionDispatcher} from '../../app/dispatcher';
 import { WordlistSaveModel } from '../../models/wordlist/save';
 import {WordlistResultModel, IndexedResultItem, HeadingItem} from '../../models/wordlist/main';
@@ -43,6 +43,7 @@ export interface WordlistResultState {
     data:Immutable.List<IndexedResultItem>;
     headings:Immutable.List<HeadingItem>;
     currPageInput:string;
+    currPage:number;
     modelIsBusy:boolean;
     usesStructAttr:boolean;
     wlsort:string;
@@ -50,6 +51,8 @@ export interface WordlistResultState {
     isLastPage:boolean;
     isUnfinished:boolean;
     bgCalcStatus:number;
+    wlpat:string;
+    isError:boolean;
 }
 
 export interface WordlistResultViews {
@@ -169,6 +172,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const PaginatorTextInput:React.SFC<{
         modelIsBusy:boolean;
         value:string;
+        hint:string;
 
      }> = (props) => {
 
@@ -182,7 +186,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         };
 
         return (
-            <span className="curr-page">
+            <span className="curr-page" title={props.hint}>
                 {props.modelIsBusy ?
                     <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={utils.translate('global__loading')} /> :
@@ -257,14 +261,15 @@ export function init({dispatcher, utils, wordlistSaveViews,
     // ---------------------- <Paginator /> -------------------
 
     const Paginator:React.SFC<{
-        currPage:string;
+        currPage:number;
+        currPageInput:string;
         modelIsBusy:boolean;
         isLastPage:boolean;
 
      }> = (props) => {
 
         const handleKeyPress = (evt) => {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 dispatcher.dispatch({
@@ -277,15 +282,53 @@ export function init({dispatcher, utils, wordlistSaveViews,
         return (
             <div className="ktx-pagination">
                 <form onKeyDown={handleKeyPress}>
-                    {parseInt(props.currPage) > 1 ? <PaginatorLeftArrows /> : null}
+                    {props.currPage > 1 ? <PaginatorLeftArrows /> : null}
                     <div className="ktx-pagination-core">
-                        <PaginatorTextInput value={props.currPage} modelIsBusy={props.modelIsBusy} />
+                        <PaginatorTextInput value={props.currPageInput} modelIsBusy={props.modelIsBusy}
+                                hint={props.currPage !== parseInt(props.currPageInput) ? utils.translate('global__hit_enter_to_confirm') : null} />
                     </div>
                     {!props.isLastPage ? <PaginatorRightArrows /> : null}
                 </form>
             </div>
         );
     }
+
+    // ---------------------- <CalculationStatus /> -------------------
+
+    const CalculationStatus:React.SFC<{
+        progressPercent:number;
+        isError:boolean;
+
+    }> = (props) => {
+        if (props.isError) {
+            return (
+                <div className="WordlistResult_progress-message">
+                    <img src={utils.createStaticUrl('img/crisis.svg')} style={{width: '1.5em'}}
+                            alt={utils.translate('global__error_icon')} />
+                    <p>{utils.translate('global__bg_calculation_failed')}</p>
+                </div>
+            );
+
+        } else {
+            return (
+                <div className="WordlistResult_progress-message">
+                    <div className="progress-info">
+                        <p className="calc-info">
+                            <layoutViews.ImgWithMouseover src={utils.createStaticUrl('img/info-icon.svg')}
+                                alt={utils.translate('global__info_icon')}
+                                htmlClass="icon" />
+                            {utils.translate('global__wl_calc_info')}
+                        </p>
+                        <h3>{utils.translate('global__calculating_imtermediate_data')}{'\u2026'}</h3>
+                        <div className="processbar-wrapper">
+                            <div className="processbar" style={{width: `${(props.progressPercent / 100 * 5).toFixed()}em`}}
+                                    title={`${props.progressPercent.toFixed()}%`} />
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    };
 
     // ---------------------- <WordlistResult /> -------------------
 
@@ -302,13 +345,16 @@ export function init({dispatcher, utils, wordlistSaveViews,
                 data: wordlistResultModel.getData(),
                 headings: wordlistResultModel.getHeadings(),
                 currPageInput: wordlistResultModel.getCurrPageInput(),
+                currPage: wordlistResultModel.getCurrPage(),
                 modelIsBusy: wordlistResultModel.getIsBusy(),
                 usesStructAttr: wordlistResultModel.usesStructAttr(),
                 wlsort: wordlistResultModel.getWlsort(),
                 saveFormActive: wordlistSaveModel.getFormIsActive(),
                 isLastPage: wordlistResultModel.getIsLastPage(),
                 isUnfinished: wordlistResultModel.getIsUnfinished(),
-                bgCalcStatus: wordlistResultModel.getBgCalcStatus()
+                bgCalcStatus: wordlistResultModel.getBgCalcStatus(),
+                wlpat: wordlistResultModel.getWlpat(),
+                isError: wordlistResultModel.getIsError()
             };
         }
 
@@ -327,54 +373,45 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
 
         render() {
-            if (this.state.data.size > 0) {
+            if (this.state.isUnfinished) {
                 return (
                     <div className="WordlistResult">
-                        <Paginator currPage={this.state.currPageInput} modelIsBusy={this.state.modelIsBusy}
-                                    isLastPage={this.state.isLastPage} />
-                        <table className="data">
-                            <thead>
-                                <tr>
-                                    <th />
-                                    <th>
-                                        {utils.translate('wordlist__filter_th')}
-                                    </th>
-                                    {this.state.headings.map(item =>
-                                        <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
-                                                isActive={this.state.wlsort === item.sortKey} />)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {this.state.data.map((item, i) =>
-                                    <TRResultRow key={item.idx} idx={item.idx} str={item.str} freq={item.freq}
-                                            usesStructAttr={this.state.usesStructAttr} />)}
-                            </tbody>
-                        </table>
-                        {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
-                    </div>
-                );
-
-            } else if (this.state.isUnfinished) {
-                return (
-                    <div className="WordlistResult_progress-message">
-                        <div className="progress-info">
-                            <p className="calc-info">
-                                <layoutViews.ImgWithMouseover src={utils.createStaticUrl('img/info-icon.svg')}
-                                    alt={utils.translate('global__info_icon')}
-                                    htmlClass="icon" />
-                                {utils.translate('global__wl_calc_info')}
-                            </p>
-                            <h3>{utils.translate('global__calculating_imtermediate_data')}{'\u2026'}</h3>
-                            <div className="processbar-wrapper">
-                                <div className="processbar" style={{width: `${(this.state.bgCalcStatus / 100 * 5 + 3).toFixed()}em`}}
-                                        title={`${this.state.bgCalcStatus.toFixed()}%`} />
-                            </div>
-                        </div>
+                        <CalculationStatus progressPercent={this.state.bgCalcStatus}
+                                isError={this.state.isError} />
                     </div>
                 );
 
             } else {
-                return <div>{utils.translate('global__no_result')}</div>;
+                return (
+                    <div className="WordlistResult">
+                        {this.state.data.size > 0  ?
+                            <>
+                                <Paginator currPageInput={this.state.currPageInput} modelIsBusy={this.state.modelIsBusy}
+                                            currPage={this.state.currPage} isLastPage={this.state.isLastPage} />
+                                <table className="data">
+                                    <thead>
+                                        <tr>
+                                            <th />
+                                            <th>
+                                                {utils.translate('wordlist__filter_th')}
+                                            </th>
+                                            {this.state.headings.map(item =>
+                                                <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
+                                                        isActive={this.state.wlsort === item.sortKey} />)}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {this.state.data.map((item, i) =>
+                                            <TRResultRow key={item.idx} idx={item.idx} str={item.str} freq={item.freq}
+                                                    usesStructAttr={this.state.usesStructAttr} />)}
+                                    </tbody>
+                                </table>
+                                {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
+                            </> :
+                            <p className="no-result">{utils.translate('wordlist__no_result_for_{wlpat}', {wlpat: this.state.wlpat})}</p>
+                        }
+                    </div>
+                );
             }
         }
     }

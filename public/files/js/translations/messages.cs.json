@@ -102,7 +102,7 @@
         "global__subc_search_in_subc": "Hledat v korpusu",
         "global__subc_all_the_tokens": "Vyber všechny pozice splňující podmínku",
         "global__subc_all_the_matching_tokens_{prev}": "... Z nich vyber pozice splňující podmínku",
-        "global__coll_save_max_lines_warning_{max_coll_save_size}": "Berte prosím na vědomí, že z důvodu výkonnostních omezení KonText uloží maximálně {max_coll_save_size} položek.",
+        "global__coll_save_max_lines_warning_{max_coll_save_size}": "Berte prosím na vědomí, že z důvodu výkonnostních omezení KonText uloží maximálně {max_coll_save_size, plural one{# položka} few{# položky} other{# položek}}.",
         "global__calculate": "Spočítat",
         "global__unknown_error": "Neznámá chyba",
         "global__warning_icon": "Ikonka varování",
@@ -168,8 +168,8 @@
         "global__click_or_esc_to_close": "Klikněte nebo zmáčněte ESC pro zavření okna",
         "global__restore_dashboard": "Obnovit okno s doplňujícími informacemi",
         "global__lightbulb_icon": "Ikonka žárovky",
-        "global__no_result": "Žádný výsledek",
         "global__calculating_imtermediate_data": "Počítám pomocná data",
+        "global__quicksave_limit_warning_{format}{lines}": "Stažení do formátu {format} na jedno-kliknutí uloží maximálně {lines, plural, one{# řádek} few{# řádky} other{# řádků}}. OK?",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",
@@ -708,6 +708,7 @@
         "wordlist__save_form_heading": "Uložit seznam slov",
         "wordlist__minfreq_err": "Musí být použito číslo větší než nula.",
         "wordlist__ml_not_avail": "Není k dispozici",
-        "wordlist__add_attr": "Přidat atribut"
+        "wordlist__add_attr": "Přidat atribut",
+        "wordlist__no_result_for_{wlpat}": "Žádný odpovídající výsledek k dotazu \"{wlpat}\""
     }
 }

@@ -274,6 +274,23 @@ export function init(
         }
     }
 
+    // ------------------------------ <ImgWithHighlight /> -----------------------------
+
+    const ImgWithHighlight:CoreViews.ImgWithHighlight.Component = (props) => {
+
+        const mkAltSrc = (s) => {
+            const tmp = s.split('.');
+            return `${tmp.slice(0, -1).join('.')}_s.${tmp[tmp.length - 1]}`;
+        };
+
+        const src2 = props.src2 ? props.src2 : mkAltSrc(props.src);
+        return <img className={props.htmlClass}
+                    src={props.isHighlighted ? src2 : props.src}
+                    alt={props.alt}
+                    title={props.alt}
+                    style={props.style ? props.style : null} />;
+    };
+
     // ------------------------------ <ImgWithMouseover /> -----------------------------
 
     class ImgWithMouseover extends React.Component<CoreViews.ImgWithMouseover.Props, CoreViews.ImgWithMouseover.State> {
@@ -747,6 +764,7 @@ export function init(
         Abbreviation: Abbreviation,
         Messages: Messages,
         CorpnameInfoTrigger: CorpnameInfoTrigger,
+        ImgWithHighlight: ImgWithHighlight,
         ImgWithMouseover: ImgWithMouseover,
         IssueReportingLink: IssueReportingLink,
         AjaxLoaderImage: AjaxLoaderImage,
