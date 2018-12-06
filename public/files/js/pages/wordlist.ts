@@ -220,6 +220,7 @@ export class WordlistPage extends StatefulModel  {
                             sortKey: 'f'
                         }
                     ],
+                    this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'),
                     this.layoutModel.getConf<boolean>('IsUnfinished')
                 );
 
@@ -246,14 +247,15 @@ export class WordlistPage extends StatefulModel  {
 
                 this.initCorpInfoToolbar();
 
-                /*
                 this.layoutModel.getHistory().replaceState(
-                    'wordlist/form',
+                    'wordlist/result',
                     new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
-                    {},
+                    {
+                        pagination: true,
+                        page: 1
+                    },
                     ''
                 )
-                */
             }
 
         ).then(

@@ -709,6 +709,7 @@
         "wordlist__minfreq_err": "A number greater that zero must be used",
         "wordlist__ml_not_avail": "Not available",
         "wordlist__add_attr": "Add attribute",
-        "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\""
+        "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\"",
+        "wordlist__create_filter_list": "Create"
     }
 }

@@ -99,8 +99,10 @@ export class WordlistResultModel extends StatefulModel {
 
     private isError:boolean;
 
+    private reloadArgs:Kontext.ListOfPairs;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
-            data:ResultData, headings:Array<HeadingItem>, isUnfinished:boolean) {
+            data:ResultData, headings:Array<HeadingItem>, reloadArgs:Kontext.ListOfPairs, isUnfinished:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formModel = formModel;
@@ -115,7 +117,15 @@ export class WordlistResultModel extends StatefulModel {
         this.isUnfinished = isUnfinished;
         this.bgCalcStatus = 0;
         this.isError = false;
+        this.reloadArgs = reloadArgs;
 
+        this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
+            if (evt.state['pagination']) {
+                this.currPage = evt.state['page'];
+                this.currPageInput = evt.state['page'].toFixed();
+                this.processPageLoad(true);
+            }
+        });
 
         dispatcher.register((action:Action) => {
             switch (action.actionType) {
@@ -230,7 +240,7 @@ export class WordlistResultModel extends StatefulModel {
         return `[${this.formModel.getState().wlattr}="${s.replace(/([.?+*\[\]{}])/g, '\\$1')}"]`;
     }
 
-    private processPageLoad():void {
+    private processPageLoad(skipHistory=false):void {
         this.isBusy = true;
         this.notifyChangeListeners();
         this.loadData().subscribe(
@@ -243,6 +253,16 @@ export class WordlistResultModel extends StatefulModel {
             () => {
                 this.isBusy = false;
                 this.notifyChangeListeners();
+                if (!skipHistory) {
+                    this.layoutModel.getHistory().pushState(
+                        'wordlist/result',
+                        new MultiDict(this.reloadArgs.concat([['wlpage', this.currPage.toString()]])),
+                        {
+                            pagination: true,
+                            page: this.currPage
+                        }
+                    );
+                    }
             }
         );
     }
