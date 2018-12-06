@@ -196,7 +196,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                         {props.lineLimitHintVisible ?
                             <layoutViews.PopupBox onCloseClick={()=>props.onLineLimitHintShow(false)}>
                                 {utils.translate('global__coll_save_max_lines_warning_{max_coll_save_size}',
-                                    {max_coll_save_size: utils.formatNumber(props.saveLinesLimit)})}
+                                    {max_coll_save_size: props.saveLinesLimit})}
                             </layoutViews.PopupBox> :
                             null
                         }

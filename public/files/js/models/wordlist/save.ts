@@ -107,12 +107,17 @@ export class WordlistSaveModel extends StatefulModel {
                 this.notifyChangeListeners();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
-                this.saveFormat = action.props['saveformat'];
-                this.toLine.value = `${this.quickSaveRowLimit}`;
-                this.submit();
-                this.toLine.value = '';
-                this.notifyChangeListeners();
-                break;
+                if (window.confirm(this.layoutModel.translate(
+                    'global__quicksave_limit_warning_{format}{lines}',
+                    {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                ))) {
+                    this.saveFormat = action.props['saveformat'];
+                    this.toLine.value = `${this.quickSaveRowLimit}`;
+                    this.submit();
+                    this.toLine.value = '';
+                    this.notifyChangeListeners();
+                }
+            break;
             }
         });
     }

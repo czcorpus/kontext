@@ -86,11 +86,16 @@ export class FreqResultsSaveModel extends StatefulModel {
                     this.notifyChangeListeners();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
-                    this.saveformat = action.props['saveformat'];
-                    this.toLine.value = `${this.quickSaveRowLimit}`;
-                    this.submit();
-                    this.toLine.value = '';
-                    this.notifyChangeListeners();
+                    if (window.confirm(this.layoutModel.translate(
+                        'global__quicksave_limit_warning_{format}{lines}',
+                        {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                    ))) {
+                        this.saveformat = action.props['saveformat'];
+                        this.toLine.value = `${this.quickSaveRowLimit}`;
+                        this.submit();
+                        this.toLine.value = '';
+                        this.notifyChangeListeners();
+                    }
                 break;
                 case 'FREQ_RESULT_CLOSE_SAVE_FORM':
                     this.formIsActive = false;
