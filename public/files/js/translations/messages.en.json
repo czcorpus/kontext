@@ -168,7 +168,6 @@
         "global__click_or_esc_to_close": "Click or hit ESC to close the window",
         "global__restore_dashboard": "Restore additional information window",
         "global__lightbulb_icon": "Lightbulb icon",
-        "global__no_result": "No result",
         "global__calculating_imtermediate_data": "Calculating imtermediate data.",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
@@ -708,6 +707,7 @@
         "wordlist__save_form_heading": "Save word list",
         "wordlist__minfreq_err": "A number greater that zero must be used",
         "wordlist__ml_not_avail": "Not available",
-        "wordlist__add_attr": "Add attribute"
+        "wordlist__add_attr": "Add attribute",
+        "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\""
     }
 }

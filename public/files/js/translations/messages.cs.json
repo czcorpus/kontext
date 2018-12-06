@@ -168,7 +168,6 @@
         "global__click_or_esc_to_close": "Klikněte nebo zmáčněte ESC pro zavření okna",
         "global__restore_dashboard": "Obnovit okno s doplňujícími informacemi",
         "global__lightbulb_icon": "Ikonka žárovky",
-        "global__no_result": "Žádný výsledek",
         "global__calculating_imtermediate_data": "Počítám pomocná data",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
@@ -708,6 +707,7 @@
         "wordlist__save_form_heading": "Uložit seznam slov",
         "wordlist__minfreq_err": "Musí být použito číslo větší než nula.",
         "wordlist__ml_not_avail": "Není k dispozici",
-        "wordlist__add_attr": "Přidat atribut"
+        "wordlist__add_attr": "Přidat atribut",
+        "wordlist__no_result_for_{wlpat}": "Žádný odpovídající výsledek k dotazu \"{wlpat}\""
     }
 }

@@ -50,53 +50,19 @@ export class WordlistPage extends StatefulModel  {
 
     private layoutModel:PageModel;
 
-    private numErrors:number;
-
-    private numNoChange:number;
-
-    private lastStatus:number;
-
     private saveModel:WordlistSaveModel;
 
     private wordlistViews:WordlistFormExportViews;
 
-    static MAX_NUM_NO_CHANGE = 20;
+    static MAX_NUM_NO_CHANGE = 30;
 
     static MAX_NUM_STATUS_CHECK = 300;
+
+    static STATUS_CHECK_INTERVAL = 3000;
 
     constructor(layoutModel:PageModel) {
         super(layoutModel.dispatcher);
         this.layoutModel = layoutModel;
-    }
-
-    private checkStatus():Rx.Observable<any> {
-
-        /*
-
-        ).then(
-            (data:Kontext.AjaxResponse) => {
-                if (data['status'] === 100) {
-                    this.stopWatching(); // just for sure
-                    window.location.href = this.layoutModel.createActionUrl(
-                        'wordlist/result',
-                        new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
-                    );
-
-                } else if (this.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
-                    this.stopWithError();
-
-                } else if (data['status'] === this.lastStatus) {
-                    this.numNoChange += 1;
-                }
-                this.lastStatus = data['status'];
-            }
-        ).catch(
-            (err) => {
-                this.stopWithError();
-            }
-        );
-        */
-       return null;
     }
 
     private startWatching():Rx.Observable<AsyncProcessStatus> {
@@ -109,37 +75,37 @@ export class WordlistPage extends StatefulModel  {
             args.add('worker_tasks', taskId);
         });
 
-        return Rx.Observable.interval(2000).concatMap((v, i) => {
-            return this.layoutModel.ajax$<AsyncProcessResponse>(
-                'GET',
-                this.layoutModel.createActionUrl('wordlist/process'),
-                args
-            );
+        return Rx.Observable.interval(WordlistPage.STATUS_CHECK_INTERVAL)
+            .concatMap((v, i) => {
+                return this.layoutModel.ajax$<AsyncProcessResponse>(
+                    'GET',
+                    this.layoutModel.createActionUrl('wordlist/process'),
+                    args
+                );
+            })
+            .scan(
+                (acc:AsyncProcessStatus, v:AsyncProcessResponse, i:number) => {
+                    if (v.status === acc.status) {
+                        if (acc.numUnchanged + 1 >= WordlistPage.MAX_NUM_NO_CHANGE ||
+                                    i >= WordlistPage.MAX_NUM_STATUS_CHECK) {
+                            throw new Error('No change for too long...');
+                        }
+                        return {
+                            status: v.status,
+                            numUnchanged: acc.numUnchanged + 1
+                        };
 
-        }).scan(
-            (acc:AsyncProcessStatus, v:AsyncProcessResponse, i:number) => {
-                if (v.status === acc.status) {
-                    if (acc.numUnchanged + 1 >= WordlistPage.MAX_NUM_NO_CHANGE ||
-                                i >= WordlistPage.MAX_NUM_STATUS_CHECK) {
-                        throw new Error('No change for too long...');
+                    } else {
+                        return {
+                            status: v.status,
+                            numUnchanged: 0
+                        };
                     }
-                    return {
-                        status: v.status,
-                        numUnchanged: acc.numUnchanged + 1
-                    };
-
-                } else {
-                    return {
-                        status: v.status,
-                        numUnchanged: 0
-                    };
-                }
-            },
-            {status: 0, numUnchanged: 0}
-
-        ).takeWhile(
+                },
+                {status: 0, numUnchanged: 0}
+        )
+        .takeWhile(
             (resp) => resp.status < 100 || resp.numUnchanged < 1
-
         );
     }
 
@@ -191,6 +157,11 @@ export class WordlistPage extends StatefulModel  {
                                 );
 
                             } else {
+                                this.layoutModel.dispatcher.dispatch({
+                                    actionType: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                                    props: data,
+                                    error: new Error(this.layoutModel.translate('global__bg_calculation_failed'))
+                                });
                                 this.layoutModel.showMessage(
                                     'error',
                                     this.layoutModel.translate('global__bg_calculation_failed')
@@ -202,6 +173,11 @@ export class WordlistPage extends StatefulModel  {
                                 'error',
                                 this.layoutModel.translate('global__bg_calculation_failed')
                             );
+                            this.layoutModel.dispatcher.dispatch({
+                                actionType: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                                props: data,
+                                error: err
+                            });
                             console.error(err);
                         }
                     )

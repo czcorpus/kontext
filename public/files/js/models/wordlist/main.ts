@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
+import * as Rx from '@reactivex/rxjs';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, Action} from '../../app/dispatcher';
@@ -97,6 +97,8 @@ export class WordlistResultModel extends StatefulModel {
 
     private bgCalcStatus:number; // per-cent value
 
+    private isError:boolean;
+
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
             data:ResultData, headings:Array<HeadingItem>, isUnfinished:boolean) {
         super(dispatcher);
@@ -112,6 +114,7 @@ export class WordlistResultModel extends StatefulModel {
         this.numItems = null;
         this.isUnfinished = isUnfinished;
         this.bgCalcStatus = 0;
+        this.isError = false;
 
 
         dispatcher.register((action:Action) => {
@@ -168,17 +171,17 @@ export class WordlistResultModel extends StatefulModel {
                 case 'WORDLIST_GO_TO_LAST_PAGE':
                     this.isBusy = true;
                     this.notifyChangeListeners();
-                    this.fetchLastPage().then(
-                        (ans) => {
-                            this.processPageLoad();
-                        }
-                    ).catch(
+                    this.fetchLastPage().subscribe(
+                        null,
                         (err) => {
                             this.isBusy = false;
                             this.notifyChangeListeners();
                             this.layoutModel.showMessage('error', err);
+                        },
+                        () => {
+                            this.processPageLoad();
                         }
-                    )
+                    );
                 break;
                 case 'WORDLIST_GO_TO_FIRST_PAGE':
                     this.currPageInput = '1';
@@ -187,37 +190,38 @@ export class WordlistResultModel extends StatefulModel {
                 break;
                 case 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED':
                     this.bgCalcStatus = action.props['status'];
+                    if (action.error) {
+                        this.isError = true;
+                    }
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
 
-    private fetchLastPage():RSVP.Promise<boolean> {
+    private fetchLastPage():Rx.Observable<boolean> {
         const args = this.formModel.createSubmitArgs(this.formModel.getState());
         return (() => {
             if (this.numItems === null) {
-                return this.layoutModel.ajax<WlSizeAjaxResponse>(
+                return this.layoutModel.ajax$<WlSizeAjaxResponse>(
                     'GET',
-                    this.layoutModel.createActionUrl('ajax_get_wordlist_size'),
+                    this.layoutModel.createActionUrl('wordlist/ajax_get_wordlist_size'),
                     args
 
                 );
 
             } else {
-                return new RSVP.Promise<WlSizeAjaxResponse>((resolve:(d)=>void, reject:(err)=>void) => {
-                    resolve({
+                return Rx.Observable.of({
                         messages: [],
                         size: this.numItems
-                    });
                 });
             }
-        })().then(
+        })().concatMap(
             (data) => {
                 this.numItems = data.size;
                 this.currPage = ~~Math.ceil(this.numItems / this.pageSize);
                 this.currPageInput = String(this.currPage);
-                return true;
+                return Rx.Observable.of(true);
             }
         );
     }
@@ -229,15 +233,15 @@ export class WordlistResultModel extends StatefulModel {
     private processPageLoad():void {
         this.isBusy = true;
         this.notifyChangeListeners();
-        this.loadData().then(
-            () => {
-                this.isBusy = false;
-                this.notifyChangeListeners();
-            }
-        ).catch(
+        this.loadData().subscribe(
+            null,
             (err) => {
                 this.isBusy = false;
                 this.layoutModel.showMessage('error', err);
+                this.notifyChangeListeners();
+            },
+            () => {
+                this.isBusy = false;
                 this.notifyChangeListeners();
             }
         );
@@ -253,24 +257,24 @@ export class WordlistResultModel extends StatefulModel {
         }));
     }
 
-    private loadData():RSVP.Promise<DataAjaxResponse> {
+    private loadData():Rx.Observable<DataAjaxResponse> {
         const args = this.formModel.createSubmitArgs(this.formModel.getState());
         args.set('wlpage', this.currPage);
         args.set('format', 'json');
 
-        return this.layoutModel.ajax<DataAjaxResponse>(
+        return this.layoutModel.ajax$<DataAjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('wordlist/result'),
             args
 
-        ).then(
+        ).concatMap(
             (data) => {
                 if (data.lastpage && data.Items.length === 0) {
                     throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
                 }
                 this.data = this.importData(data.Items);
                 this.isLastPage = !!data.lastpage;
-                return data;
+                return Rx.Observable.of(data);
             }
         );
     }
@@ -285,6 +289,10 @@ export class WordlistResultModel extends StatefulModel {
 
     getCurrPageInput():string {
         return this.currPageInput;
+    }
+
+    getCurrPage():number {
+        return this.currPage;
     }
 
     getIsLastPage():boolean {
@@ -309,5 +317,13 @@ export class WordlistResultModel extends StatefulModel {
 
     getBgCalcStatus():number {
         return this.bgCalcStatus;
+    }
+
+    getWlpat():string {
+        return this.formModel.getState().wlpat;
+    }
+
+    getIsError():boolean {
+        return this.isError;
     }
 }

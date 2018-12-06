@@ -168,7 +168,6 @@
         "global__click_or_esc_to_close": "Kliknij abo wciś ESC, żeby zawrzić ôkno",
         "global__restore_dashboard": "Prziwrōć ôkno ekstra informacyji",
         "global__lightbulb_icon": "Ikōna byrny",
-        "global__no_result": "No result",
         "global__calculating_imtermediate_data": "Calculating imtermediate data.",
         "linesel__remove_selected_lines": "Skasuj ôznaczōne linije",
         "linesel__remove_all_but_selected_lines": "Ôstŏw ino ôznaczōne linije",
@@ -708,6 +707,7 @@
         "wordlist__save_form_heading": "Zapisz listã słōw",
         "wordlist__minfreq_err": "Musi być użyty numer srogszy ôd zera",
         "wordlist__ml_not_avail": "Niydostympne",
-        "wordlist__add_attr": "Przidej atrybut"
+        "wordlist__add_attr": "Przidej atrybut",
+        "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\""
     }
 }
