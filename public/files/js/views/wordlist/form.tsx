@@ -414,7 +414,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     // -------------------- <TRFilterFileUploadInput /> ----------------------------------------
 
     const TDFilterFileUploadInput:React.SFC<{
-        target:string;
+        target:FileTarget;
 
     }> = (props) => {
 
@@ -428,9 +428,18 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             });
         };
 
+        const handleNewFileClick = (evt) => {
+            dispatcher.dispatch({
+                actionType: props.target === FileTarget.WHITELIST ?
+                        'WORDLIST_FORM_CREATE_WHITELIST' :
+                        'WORDLIST_FORM_CREATE_BLACKLIST',
+                props: {}
+            })
+        }
+
         return (
             <td>
-                <input type="file" onChange={handleInputChange} />
+                <a onClick={handleNewFileClick}>{he.translate('wordlist__create_filter_list')}</a> / <input type="file" onChange={handleInputChange} />
             </td>
         );
 
@@ -482,7 +491,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     const TRFilterFile:React.SFC<{
         label:string;
         hasValue:boolean;
-        target:string;
+        target:FileTarget;
         fileName:string;
 
     }> = (props) => {

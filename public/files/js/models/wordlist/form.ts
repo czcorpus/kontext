@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {validateGzNumber, StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {MultiDict} from '../../util';
+import {MultiDict, uid} from '../../util';
 
 
 export enum FileTarget {
@@ -199,6 +199,22 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             case 'WORDLIST_FORM_ADD_POSATTR_LEVEL':
                 newState = this.copyState(state);
                 newState.numWlPosattrLevels += 1;
+            break;
+            case 'WORDLIST_FORM_CREATE_WHITELIST':
+                newState = this.copyState(state);
+                newState.filterEditorData = {
+                    target: FileTarget.WHITELIST,
+                    fileName: `tmpfile-${uid()}`,
+                    data: ''
+                };
+            break;
+            case 'WORDLIST_FORM_CREATE_BLACKLIST':
+                newState = this.copyState(state);
+                newState.filterEditorData = {
+                    target: FileTarget.BLACKLIST,
+                    fileName: `file-${uid()}`,
+                    data: ''
+                };
             break;
             case 'WORDLIST_FORM_SET_FILTER_FILE_DONE': {
                 newState = this.copyState(state);

@@ -709,6 +709,7 @@
         "wordlist__minfreq_err": "Musí být použito číslo větší než nula.",
         "wordlist__ml_not_avail": "Není k dispozici",
         "wordlist__add_attr": "Přidat atribut",
-        "wordlist__no_result_for_{wlpat}": "Žádný odpovídající výsledek k dotazu \"{wlpat}\""
+        "wordlist__no_result_for_{wlpat}": "Žádný odpovídající výsledek k dotazu \"{wlpat}\"",
+        "wordlist__create_filter_list": "Vytvořit"
     }
 }
