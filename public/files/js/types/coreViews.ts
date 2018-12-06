@@ -105,6 +105,23 @@ export namespace CoreViews {
 
     // -------------------------------
 
+    export namespace ImgWithHighlight {
+
+        export interface Props {
+            src:string;
+            src2?:string;
+            alt:string;
+            isHighlighted:boolean;
+            htmlClass?:string;
+            title?:string;
+            style?:{[prop:string]:string};
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
+    // -------------------------------
+
     export namespace ImgWithMouseover {
 
         export interface Props {
@@ -332,6 +349,7 @@ export namespace CoreViews {
         ErrorBoundary: ErrorBoundary.Component;
         ModalOverlay: ModalOverlay.Component;
         PopupBox:PopupBox.Component;
+        ImgWithHighlight:ImgWithHighlight.Component;
         ImgWithMouseover:ImgWithMouseover.Component;
         CloseableFrame:CloseableFrame.Component;
         InlineHelp:InlineHelp.Component;

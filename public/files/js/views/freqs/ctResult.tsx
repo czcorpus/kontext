@@ -334,20 +334,52 @@ export function init(
         );
     };
 
-    /**
-     *
-     * @param {*} props
-     */
-    const ExpandActionLegend = (props) => {
+    // ------------------------- <ExpandActionLegend /> ----------------------
 
-        return (
-            <legend>
-                <a onClick={props.onClick} className={props.isExpanded ?
-                        'form-extension-switch collapse' : 'form-extension-switch expand'} >
-                    {he.translate('freq__ct_advanced_fieldset_legend')}
-                </a>
-            </legend>
-        );
+    class ExpandActionLegend extends React.Component<{
+        isExpanded:boolean;
+        onClick:()=>void;
+    }, {
+        isMouseover:boolean;
+
+    }> {
+
+        constructor(props) {
+            super(props);
+            this.handleMouseout = this.handleMouseout.bind(this);
+            this.handleMouseover = this.handleMouseover.bind(this);
+            this.state = {isMouseover: false};
+        }
+
+        private handleMouseover():void {
+            this.setState({isMouseover: true});
+        }
+
+        private handleMouseout():void {
+            this.setState({isMouseover: false});
+        }
+
+        render() {
+            return (
+                <legend>
+                    {this.props.isExpanded ?
+                        <layoutViews.ImgWithHighlight src={he.createStaticUrl('img/sort_desc.svg')}
+                                alt={he.translate('global__click_to_hide')}
+                                htmlClass="expand-collapse"
+                                isHighlighted={this.state.isMouseover} /> :
+                        <layoutViews.ImgWithHighlight src={he.createStaticUrl('img/next-page.svg')}
+                                alt={he.translate('global__click_to_expand')}
+                                htmlClass="expand-collapse"
+                                isHighlighted={this.state.isMouseover} />
+                    }
+                    <a onClick={this.props.onClick} className={this.props.isExpanded ?
+                            'form-extension-switch collapse' : 'form-extension-switch expand'}
+                            onMouseOver={this.handleMouseover} onMouseOut={this.handleMouseout}>
+                        {he.translate('freq__ct_advanced_fieldset_legend')}
+                    </a>
+                </legend>
+            );
+        }
     };
 
     // ------------------------- <FieldsetAdvancedOptions /> ----------------------
