@@ -52,7 +52,7 @@ class GetLang(AbstractGetLang):
     @staticmethod
     def fetch_translations():
         ans = defaultdict(lambda: [])
-        ans['en'].append('en-US')
+        ans['en'].append('en_US')
         root_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'locale')
         for item in os.listdir(root_dir):
             c = item.split('_')[0]
