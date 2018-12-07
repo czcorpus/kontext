@@ -710,6 +710,7 @@
         "wordlist__ml_not_avail": "Není k dispozici",
         "wordlist__add_attr": "Přidat atribut",
         "wordlist__no_result_for_{wlpat}": "Žádný odpovídající výsledek k dotazu \"{wlpat}\"",
-        "wordlist__create_filter_list": "Vytvořit"
+        "wordlist__create_filter_list": "Vytvořit",
+        "wordlist__use_ctrl_enter_for_newline": "Pro přechod na nový řádek použijte Ctrl+ENTER"
     }
 }

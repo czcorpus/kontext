@@ -485,6 +485,11 @@ class Kontext(Controller):
                 else:
                     raise UserActionException(translate('Invalid or expired query'))
 
+    def user_subc_names(self, corpname):
+        if self.user_is_anonymous():
+            return []
+        return self.cm.subcorp_names(corpname)
+
     def get_saveable_conc_data(self):
         """
         Return values to be stored as a representation
@@ -1311,7 +1316,7 @@ class Kontext(Controller):
         out -- a dictionary used by templating system
         """
         basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
+        subcorp_list = l10n.sort(self.user_subc_names(basecorpname),
                                  loc=self.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:

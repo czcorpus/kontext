@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {StatelessModel, StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
-import {uid} from '../../util';
+import {puid} from '../../util';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import * as Rx from '@reactivex/rxjs';
@@ -129,7 +129,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         state.messages = state.messages.push({
             messageType: messageType,
             messageText: messageText,
-            messageId: uid(),
+            messageId: puid(),
             ttl: this.calcMessageTTL(messageType),
             timeFadeout: MessageModel.TIME_FADEOUT
         });

@@ -276,7 +276,7 @@ class Subcorpus(Querying):
             self.session_get('user')).keys()
         related_corpora = set()
         for corp in user_corpora:
-            for item in self.cm.subcorp_names(corp):
+            for item in self.user_subc_names(corp):
                 try:
                     sc = self.cm.get_Corpus(corp, subcname=item['n'], decode_desc=False)
                     data.append({

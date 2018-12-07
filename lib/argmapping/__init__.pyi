@@ -93,7 +93,6 @@ class GlobalArgs(object):
     wlsort:str
     keywords:str
     Keywords:List[str]
-    ref_corpname:str
     Items:List[str]
     selected:str
     pages:int
