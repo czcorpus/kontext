@@ -231,7 +231,7 @@ export function init(
         }
 
         _handleKeyPress(evt) {
-            if (evt.keyCode === 27) {
+            if (evt.keyCode === KeyCodes.ESC) {
                  this._closeClickHandler();
             }
             if (typeof this.props.keyPressHandler === 'function') {

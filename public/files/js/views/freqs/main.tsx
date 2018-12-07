@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
 import {FreqDataRowsModel, ResultBlock} from '../../models/freqs/dataRows';
@@ -170,7 +170,7 @@ export function init(
         };
 
         const inputKeyDownHandler = (evt:React.KeyboardEvent<{}>) => {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                 props.setLoadingFlag();
                 dispatcher.dispatch({
                     actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',

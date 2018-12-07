@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {Action, ActionDispatcher} from '../../app/dispatcher';
 import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
 import * as Rx from '@reactivex/rxjs';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { SetQueryInputAction, AppendQueryInputAction } from '../../models/query/common';
 
@@ -44,7 +44,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
             evt.preventDefault();
             evt.stopPropagation();
-            if (typeof props.onEscKey === 'function' && evt.keyCode === 27) {
+            if (typeof props.onEscKey === 'function' && evt.keyCode === KeyCodes.ESC) {
                 props.onEscKey();
             }
         };

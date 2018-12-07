@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import{QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 
 
@@ -118,7 +118,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleKeyDown(evt:React.KeyboardEvent<{}>):void {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                 this.submit();
                 evt.preventDefault();
                 evt.stopPropagation();

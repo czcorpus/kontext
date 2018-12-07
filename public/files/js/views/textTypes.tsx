@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../app/dispatcher';
 import {PluginInterfaces} from '../types/plugins';
-import {Kontext, TextTypes} from '../types/common';
+import {Kontext, TextTypes, KeyCodes} from '../types/common';
 import { ExtendedInfo } from '../models/textTypes/valueSelections';
 import { CoreViews } from '../types/coreViews';
 
@@ -116,7 +116,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         _keyboardHandler(evt) {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                 this._confirmClickHandler();
                 evt.preventDefault();
             }

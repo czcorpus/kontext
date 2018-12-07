@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {WordlistFormModel, WordlistFormState, WlnumsTypes, FileTarget} from '../../models/wordlist/form';
 import {PluginInterfaces} from '../../types/plugins';
 
@@ -538,7 +538,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         const handleKeyDown = (evt:React.KeyboardEvent<{}>) => {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                 if (evt.shiftKey) {
                     dispatcher.dispatch({
                         actionType: 'WORDLIST_FORM_UPDATE_EDITOR',
@@ -669,7 +669,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         _handleKeyPress(evt) {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 this._handleSubmitClick();
