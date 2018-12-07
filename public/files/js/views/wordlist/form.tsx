@@ -559,6 +559,9 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             <layoutViews.ModalOverlay onCloseKey={handleClose}>
                 <layoutViews.CloseableFrame onCloseClick={handleClose}
                         label={props.data.fileName}>
+                    <p className="note">
+                        {he.translate('wordlist__use_ctrl_enter_for_newline')}
+                    </p>
                     <textarea rows={30} cols={80} value={props.data.data} onChange={handleWriting}
                         onKeyDown={handleKeyDown} ref={item => item ? item.focus() : null} />
                     <button className="default-button" onClick={handleClose}>

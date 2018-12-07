@@ -204,7 +204,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 newState = this.copyState(state);
                 newState.filterEditorData = {
                     target: FileTarget.WHITELIST,
-                    fileName: `tmpfile-${puid()}`,
+                    fileName: `unsaved-file-${puid().substr(0, 5)}`,
                     data: ''
                 };
             break;
@@ -212,7 +212,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 newState = this.copyState(state);
                 newState.filterEditorData = {
                     target: FileTarget.BLACKLIST,
-                    fileName: `file-${puid()}`,
+                    fileName: `unsaved-file-${puid().substr(0, 5)}`,
                     data: ''
                 };
             break;
@@ -256,11 +256,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             break;
             case 'WORDLIST_FORM_REOPEN_EDITOR':
                 newState = this.copyState(state);
-                newState.filterEditorData = {
-                    target: action.props['target'],
-                    data: '',
-                    fileName: ''
-                };
                 if (action.props['target'] === FileTarget.WHITELIST) {
                     newState.filterEditorData = {
                         target: FileTarget.WHITELIST,
@@ -293,10 +288,12 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 newState = this.copyState(state);
                 if (newState.filterEditorData.target === FileTarget.WHITELIST) {
                     newState.wlwords = newState.filterEditorData.data;
+                    newState.wlFileName = newState.filterEditorData.fileName;
                     newState.filterEditorData = {target: FileTarget.EMPTY};
 
                 } else if (newState.filterEditorData.target === FileTarget.BLACKLIST) {
                     newState.blacklist = newState.filterEditorData.data;
+                    newState.blFileName = newState.filterEditorData.fileName;
                     newState.filterEditorData = {target: FileTarget.EMPTY};
                 }
             break;
