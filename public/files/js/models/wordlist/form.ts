@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {validateGzNumber, StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {MultiDict, uid} from '../../util';
+import {MultiDict, puid} from '../../util';
 
 
 export enum FileTarget {
@@ -204,7 +204,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 newState = this.copyState(state);
                 newState.filterEditorData = {
                     target: FileTarget.WHITELIST,
-                    fileName: `tmpfile-${uid()}`,
+                    fileName: `tmpfile-${puid()}`,
                     data: ''
                 };
             break;
@@ -212,7 +212,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 newState = this.copyState(state);
                 newState.filterEditorData = {
                     target: FileTarget.BLACKLIST,
-                    fileName: `file-${uid()}`,
+                    fileName: `file-${puid()}`,
                     data: ''
                 };
             break;
