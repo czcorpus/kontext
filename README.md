@@ -20,7 +20,7 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 ### new features
 
 * fully **editable query chain**
-    * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed 
+    * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed
     and the whole sequence is then re-executed.
 * **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
 * support for **spoken corpora**
@@ -29,9 +29,9 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 * support for **user-defined line groups**
     * user can define custom numeric tags attached to concordance lines, filter out other lines, review groups ratios
 * **improved subcorpus creation**
-    * user can easily examine corpus structure by selecting some text types and see how other text type attributes 
+    * user can easily examine corpus structure by selecting some text types and see how other text type attributes
       availability changed ("which publishers are there in case only *fiction* is selected?")
-    * a **custom text types ratio** can be defined ("give me 20% fiction and 80% journalism") 
+    * a **custom text types ratio** can be defined ("give me 20% fiction and 80% journalism")
     * a sub-corpus can be created by a custom CQL expression
     * a sub-corpus can be published so other users can access it
     * subcorpora are backed up as CQL queries which makes further modification/restoring possible
@@ -56,7 +56,7 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 * modern client-side application (event stream architecture, React components, extensible, written in TypeScript)
 * modular code design with dynamically loadable plug-ins providing custom functionality implementation (e.g. custom database
 adapters, authentication method, corpus listing widgets, HTTP session management)
-* fully **decoupled background concordance/frequency/collocation calculation** based on the 
+* fully **decoupled background concordance/frequency/collocation calculation** based on the
 [Celery task queue](http://www.celeryproject.org/)  (alternatively, Python's *multiprocessing* package can be used)
 * improved logging, error processing and debugging support
 * improved code documentation
@@ -66,7 +66,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 * WSGI-compatible server
     * [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
-* Rerverse proxy server        
+* Rerverse proxy server
   + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested)
 * Python *2.7* and:
     * [Cheetah](http://www.cheetahtemplate.org/) Template Engine
@@ -78,7 +78,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske)
     * versions from *2.83.3* to *2.158.8* are supported (the latest one is highly recommended); unless there is an incompatible change in Manatee, newer versions should work too
 * a key-value storage
-    * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default) 
+    * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default)
 * (optional) [Celery task queue](http://www.celeryproject.org/) task queue for (asynchronous) background calculations and maintenance tasks
 
 
@@ -96,3 +96,4 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 * [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
 * [LINDAT](https://ufal.mff.cuni.cz/lindat-kontext)
 * [Clarin-PL](https://kontext.clarin-pl.eu/)
+* [Інститут української](https://mova.institute/kontext/first_form)
