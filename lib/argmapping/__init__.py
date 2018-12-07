@@ -191,7 +191,6 @@ class GlobalArgs(object):
     wlsort = Parameter(u'')
     keywords = Parameter(u'')
     Keywords = Parameter([])
-    ref_corpname = Parameter(u'')
     Items = Parameter([])  # TODO check and remove
     selected = Parameter(u'')
     pages = Parameter(0)

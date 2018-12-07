@@ -92,18 +92,12 @@ class Wordlist(ConcActions):
         """
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
-        out = {}
-        ref_corpname = request.args.get('ref_corpname', self.args.corpname)
-        refcm = corplib.CorpusManager(self.subcpath)
-        out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
-        out['ref_corpname'] = ref_corpname
-        out['freq_figures'] = self.FREQ_FIGURES
+        out = dict(freq_figures=self.FREQ_FIGURES)
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
     @exposed(access_level=1, legacy=True, http_method=('POST', 'GET'), page_model='wordlist')
-    def result(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
-               ref_usesubcorp='', paginate=True, wlhash='', blhash=''):
+    def result(self, wlpat='', paginate=True, wlhash='', blhash=''):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
@@ -134,58 +128,41 @@ class Wordlist(ConcActions):
                 wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
         }
         try:
-            if wltype == 'keywords':
-                args = (self.cm.get_Corpus(self.args.corpname, subcname=usesubcorp),
-                        self.cm.get_Corpus(ref_corpname, subcname=ref_usesubcorp))
-                kw_func = getattr(corplib, 'subc_keywords_onstr')
-                args = args + (self.args.wlattr, )
-                out = self.call_function(kw_func, args, wlmaxitems=wlmaxitems)[wlstart:]
-                ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
-                result.update({'Keywords': [{'str': w, 'score': round(s, 1),
-                                             'freq': round(f, 1),
-                                             'freq_ref': round(fr, 1),
-                                             'rel': round(rel, 1),
-                                             'rel_ref': round(relref, 1)}
-                                            for s, rel, relref, f, fr, w in out],
-                               'ref_corp_full_name': ref_name
-                               })
-                result_list = result['Keywords']
-            else:  # ordinary list
-                if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
-                    self.args.wlsort = ''
+            if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
+                self.args.wlsort = ''
 
-                white_words = self.args.wlwords
-                black_words = self.args.blacklist
+            white_words = self.args.wlwords
+            black_words = self.args.blacklist
 
-                if wlhash != '':
-                    white_words = self.load_bw_file(wlhash)
+            if wlhash != '':
+                white_words = self.load_bw_file(wlhash)
 
-                if blhash != '':
-                    black_words = self.load_bw_file(blhash)
+            if blhash != '':
+                black_words = self.load_bw_file(blhash)
 
-                whitelist = [w for w in re.split('\s+', white_words.strip()) if w]
-                blacklist = [w for w in re.split('\s+', black_words.strip()) if w]
+            whitelist = [w for w in re.split('\s+', white_words.strip()) if w]
+            blacklist = [w for w in re.split('\s+', black_words.strip()) if w]
 
-                if wlhash == '' and len(self.args.wlwords) > 0:
-                    wlhash = self.save_bw_file(self.args.wlwords)
+            if wlhash == '' and len(self.args.wlwords) > 0:
+                wlhash = self.save_bw_file(self.args.wlwords)
 
-                if blhash == '' and len(self.args.blacklist) > 0:
-                    blhash = self.save_bw_file(self.args.blacklist)
+            if blhash == '' and len(self.args.blacklist) > 0:
+                blhash = self.save_bw_file(self.args.blacklist)
 
-                result['reload_args'] = {
-                    'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
-                    'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
-                    'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
-                    'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums,
-                    'wlhash': wlhash, 'blhash': blhash
-                }.items()
+            result['reload_args'] = {
+                'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
+                'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
+                'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
+                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums,
+                'wlhash': wlhash, 'blhash': blhash
+            }.items()
 
-                result_list = self.call_function(corplib.wordlist,
-                                                 (self.corp,),
-                                                 wlmaxitems=wlmaxitems,
-                                                 words=whitelist,
-                                                 blacklist=blacklist)[wlstart:]
-                result['Items'] = result_list
+            result_list = self.call_function(corplib.wordlist,
+                                             (self.corp,),
+                                             wlmaxitems=wlmaxitems,
+                                             words=whitelist,
+                                             blacklist=blacklist)[wlstart:]
+            result['Items'] = result_list
             if len(result_list) < self.args.wlpagesize + 1:
                 result['lastpage'] = 1
             else:
@@ -273,17 +250,14 @@ class Wordlist(ConcActions):
                            ml3attr=self.args.wlposattr3)
 
     @exposed(access_level=1, legacy=True, template='txtexport/savewl.tmpl', return_type='plain')
-    def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
-               ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
+    def savewl(self, from_line=1, to_line='', usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
         save word list
         """
         from_line = int(from_line)
         to_line = int(to_line) if to_line else sys.maxint
         self.args.wlpage = 1
-        ans = self.result(wlpat=self.args.wlpat, wltype=wltype, usesubcorp=usesubcorp,
-                          ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp,
-                          paginate=False)
+        ans = self.result(wlpat=self.args.wlpat, paginate=False)
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
         saved_filename = self.args.corpname
 
