@@ -298,10 +298,10 @@ class Backend(DatabaseBackend):
             'JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
             'WHERE {where2} '
             'GROUP BY c.name '
-            'HAVING num_match_keys >= %s ) '
-            'ORDER BY g_name, version DESC, id '
+            'HAVING num_match_keys >= %s ) '            
             ') AS ans '
             'GROUP BY id '
+            'ORDER BY g_name, version DESC, id '
             'LIMIT %s '
             'OFFSET %s').format(where2=' AND '.join('(' + wc + ')' for wc in where_cond2))
         c.execute(sql, where + [limit, offset])
