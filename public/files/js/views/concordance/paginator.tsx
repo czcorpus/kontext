@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {ConcLineModel} from '../../models/concordance/lines';
 
 
@@ -262,7 +262,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
         }
 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
-            if (evt.keyCode === 13) {
+            if (evt.keyCode === KeyCodes.ENTER) {
                this._navigActionHandler();
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_CHANGE_PAGE',

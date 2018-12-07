@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 
 
@@ -346,12 +346,12 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleKeyDown = (evt) => {
-            if (evt.keyCode === 27) {
+            if (evt.keyCode === KeyCodes.ESC) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleCloseClick();
 
-            } else if (evt.keyCode === 13) {
+            } else if (evt.keyCode === KeyCodes.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleSubmitClick();

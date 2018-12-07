@@ -390,7 +390,7 @@ export function init({
         }
 
         _handleKeyDown(evt) {
-            if (evt.keyCode === 27) {
+            if (evt.keyCode === KeyCodes.ESC) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 this.props.closeClickHandler();

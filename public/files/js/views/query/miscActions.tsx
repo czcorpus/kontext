@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
+import {Kontext, KeyCodes} from '../../types/common';
 import {ConcSampleModel} from '../../models/query/sample';
 import {SwitchMainCorpModel} from '../../models/query/switchmc';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -107,7 +107,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmitEvent(evt) {
-            if (evt.keyCode === undefined || evt.keyCode === 13) {
+            if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
                         actionType: 'BRANCH_QUERY',
@@ -254,7 +254,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmitEvent(evt) {
-            if (evt.keyCode === undefined || evt.keyCode === 13) {
+            if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
                         actionType: 'BRANCH_QUERY',
