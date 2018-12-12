@@ -28,7 +28,7 @@ import {PageModel, DownloadType} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
 import {Action} from '../app/dispatcher';
-import {MultiDict, updateProps} from '../util';
+import {MultiDict, updateProps, nTimes} from '../util';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
 import {LineSelectionModel} from '../models/concordance/lineSelection';
@@ -844,6 +844,7 @@ export class ViewPage {
         // ------------------ freq ------------
         const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
+        const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
 
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
@@ -852,10 +853,10 @@ export class ViewPage {
             flimit: freqFormInputs.flimit,
             freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
-            mlxattr: [attrs[0].n],
-            mlxicase: [false],
-            mlxctx: ['0>0'],  // = "Node'"
-            alignType: ['left']
+            mlxattr: nTimes(attrs[0].n, initFreqLevel),
+            mlxicase: nTimes(false, initFreqLevel),
+            mlxctx: nTimes('0>0', initFreqLevel),  // = "Node'"
+            alignType: nTimes('left', initFreqLevel),
         }
         this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,

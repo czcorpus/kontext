@@ -1129,7 +1129,9 @@ class Kontext(Controller):
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
-        result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this
+        result['last_freq_level'] = self.session_get('last_freq_level')  # TODO enable this
+        if result['last_freq_level'] is None:
+            result['last_freq_level'] = 1
 
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)

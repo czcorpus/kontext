@@ -19,7 +19,7 @@
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel, DownloadType} from '../app/main';
-import {MultiDict, dictToPairs} from '../util';
+import {MultiDict, dictToPairs, nTimes} from '../util';
 import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
 import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
@@ -71,6 +71,7 @@ export class CollPage {
         const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
         const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
+        const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
 
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
@@ -79,10 +80,10 @@ export class CollPage {
             flimit: freqFormInputs.flimit,
             freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
-            mlxattr: [attrs[0].n],
-            mlxicase: [false],
-            mlxctx: ['0>0'],  // = "Node'"
-            alignType: ['left']
+            mlxattr: nTimes(attrs[0].n, initFreqLevel),
+            mlxicase: nTimes(false, initFreqLevel),
+            mlxctx: nTimes('0>0', initFreqLevel),  // = "Node'"
+            alignType: nTimes('left', initFreqLevel)
         }
 
         this.mlFreqModel = new MLFreqFormModel(

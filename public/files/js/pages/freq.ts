@@ -22,7 +22,7 @@ import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
 import {PageModel, DownloadType} from '../app/main';
-import {MultiDict, dictToPairs} from '../util';
+import {MultiDict, dictToPairs, nTimes} from '../util';
 import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
 import {Freq2DTableModel} from '../models/freqs/ctable';
@@ -86,15 +86,16 @@ class FreqPage {
         // -------------------- freq form -------------------
 
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
+        const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
             ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
             freq_sort: 'freq',
-            mlxattr: freqFormInputs.mlxattr || [attrs[0].n],
-            mlxicase: freqFormInputs.mlxicase || [false],
-            mlxctx: freqFormInputs.mlxctx || ['0>0'],
-            alignType: freqFormInputs.alignType || ['left'],
+            mlxattr: freqFormInputs.mlxattr || nTimes(attrs[0].n, initFreqLevel),
+            mlxicase: freqFormInputs.mlxicase || nTimes(false, initFreqLevel),
+            mlxctx: freqFormInputs.mlxctx || nTimes('0>0', initFreqLevel),
+            alignType: freqFormInputs.alignType || nTimes('left', initFreqLevel),
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };

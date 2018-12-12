@@ -67,6 +67,15 @@ export function updateProps(myProps:Kontext.GeneralProps,
 }
 
 
+export function nTimes<T>(v:T, n:number):Array<T> {
+    const ans:Array<T> = [];
+    for (let i = 0; i < n; i += 1) {
+        ans.push(v);
+    }
+    return ans;
+}
+
+
 /**
  * A dictionary which mimics Werkzeug's Multidict
  * type. It provides:
