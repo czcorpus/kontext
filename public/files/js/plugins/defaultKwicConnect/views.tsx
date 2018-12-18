@@ -83,7 +83,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
                                         {output.data.size > 0 ?
                                             <>
                                                 {output.data.map((item, j) =>
-                                                <output.renderer key={`provider:${j}`} data={item} corpora={this.state.corpora} />)}
+                                                    React.createElement(
+                                                        output.renderer,
+                                                        {
+                                                            key: `provider:${j}`,
+                                                            data: item,
+                                                            corpora: this.state.corpora
+                                                        }
+                                                    ))
+                                                }
                                             </> :
                                             <p className="data-not-avail">
                                                 <img src={he.createStaticUrl('img/info-icon.svg')} />
