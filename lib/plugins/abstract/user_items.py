@@ -50,6 +50,7 @@ class FavoriteItem(object):
         self.size = data.get('size', None)
         self.size_info = data.get('size_info', None)
         self.subcorpus_id = data.get('subcorpus_id', None)
+        self.subcorpus_orig_id = data.get('subcorpus_orig_id', self.subcorpus_id)
         self.ident = data.get('id', hashlib.md5(self.sort_key.encode('utf-8')).hexdigest())
 
     @property
@@ -71,7 +72,8 @@ class FavoriteItem(object):
             size=self.size,
             size_info=self.size_info,
             corpora=self.corpora,
-            subcorpus_id=self.subcorpus_id
+            subcorpus_id=self.subcorpus_id,
+            subcorpus_orig_id=self.subcorpus_orig_id
         )
 
 

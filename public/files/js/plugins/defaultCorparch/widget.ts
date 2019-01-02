@@ -73,6 +73,7 @@ const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => {
         id: item.id,
         name: item.name,
         subcorpus_id: item.subcorpus_id,
+        subcorpus_orig_id: item.subcorpus_orig_id,
         size: item.size,
         size_info: item.size_info,
         corpora: item.corpora,
@@ -262,6 +263,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         id: item.id,
                         name: item.name,
                         subcorpus_id: item.subcorpus_id,
+                        subcorpus_orig_id: item.subcorpus_orig_id,
                         size: item.size,
                         size_info: item.size_info,
                         corpora: item.corpora,
@@ -654,7 +656,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
             subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
             `#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
-                    this.corpSelection.getCurrentSubcorpus(),
+                    this.corpSelection.getCurrentSubcorpusOrigName(),
             corpora: this.corpSelection.getCorpora().toArray()
         };
     };
@@ -695,8 +697,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 'POST',
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
+                    corpora: trashedItem.corpora.map(v => v.id),
                     subcorpus_id: trashedItem.subcorpus_id,
-                    corpora: trashedItem.corpora.map(v => v.id)
+                    subcorpus_orig_id: trashedItem.subcorpus_orig_id,
                 }
             );
 
@@ -713,6 +716,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 id: item.id,
                 name: item.name,
                 subcorpus_id: item.subcorpus_id,
+                subcorpus_orig_id: item.subcorpus_orig_id,
                 size: item.size,
                 size_info: item.size_info,
                 corpora: item.corpora,
@@ -731,6 +735,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             id: item.id,
             name: item.name,
             subcorpus_id: item.subcorpus_id,
+            subcorpus_orig_id: item.subcorpus_orig_id,
             size: item.size,
             size_info: item.size_info,
             corpora: item.corpora,
@@ -828,10 +833,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
     }
-
-
-
-    // TODO: this.dataFav = this.importServerItems(favItems);
 
     private setFavItem(state:CorplistWidgetModelState, showMessage:boolean=true):RSVP.Promise<FavitemsList> {
         const message = showMessage ?
