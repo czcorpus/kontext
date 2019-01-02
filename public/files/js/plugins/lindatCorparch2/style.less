@@ -379,3 +379,29 @@ table.corplist td img.starred {
     vertical-align: middle;
     color: @color-logo-blue;
 }
+
+.md-transparent {
+    /* IE 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+    /* IE 5-7 */
+    filter: alpha(opacity=50);
+    /* Netscape */
+    -moz-opacity: 0.5;
+    /* Safari 1.x */
+    -khtml-opacity: 0.5;
+    /* Good browsers */
+    opacity: 0.5;
+}
+
+table.corplist td a button.pmltq {
+    padding: 6px 0px;
+}
+
+table.corplist td a button img.lindat-pmltq-logo {
+    /* TODO currently no defined solution for custom imgs */
+    background: url('../../../img/syntax-tree-icon.svg');
+    background-size: 1.7em;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding: 16px 18px;
+  }

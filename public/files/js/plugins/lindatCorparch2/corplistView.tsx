@@ -143,6 +143,13 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         });
         const link = he.createActionLink('first_form', [['corpname', props.row.id]]);
         const size = props.row.size_info ? props.row.size_info : '-';
+        const pmltq = () => {
+            if (props.row.pmltq !== 'no') {
+            return <a href={props.row.pmltq} className="md-transparent" title={"Inspect " + props.row.name + " in PML-TQ"}>
+                    <button className="pmltq" style={{background: this._myColor()}}>
+                        <span className="lindat-pmltq-logo"></span></button></a>
+            }
+        }
 
         return (
             <tr>
@@ -159,6 +166,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 </td>
                 <td>
                     {renderFavStar()}
+                    {pmltq()}
                 </td>
                 <td>
                     <p className="desc" style={{display: 'none'}}></p>

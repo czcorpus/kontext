@@ -66,6 +66,7 @@ export interface CorplistItem {
     fav_id:string;
     featured:boolean;
     keywords:Array<[string, string]>;
+    pmltq:string;
 }
 
 
