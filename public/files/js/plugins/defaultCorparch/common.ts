@@ -34,6 +34,7 @@ export interface ServerFavlistItem {
     id:string;
     name:string;
     subcorpus_id:string;
+    subcorpus_orig_id:string;
     size:number;
     size_info:string;
     corpora:Array<{id:string; name:string}>;

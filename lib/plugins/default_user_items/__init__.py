@@ -36,6 +36,7 @@ def import_legacy_record(data):
                 logging.getLogger(__name__).warning(
                     u'Failed to import legacy fav. item record component: {0}'.format(ex))
     ans.subcorpus_id = data.get('subcorpus_id', None)
+    ans.subcorpus_orig_id = data.get('subcorpus_orig_id', ans.subcorpus_id)
     ans.size = data.get('size', None)
     ans.size_info = data.get('size_info', None)
     return ans
@@ -75,6 +76,7 @@ def set_favorite_item(ctrl, request):
         (u' / ' + subcorpus_orig_id if subcorpus_orig_id else u''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
+        subcorpus_orig_id=subcorpus_orig_id,
         size=main_size,
         size_info=l10n.simplify_num(main_size)
     ))
