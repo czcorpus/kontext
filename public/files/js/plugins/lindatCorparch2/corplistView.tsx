@@ -145,9 +145,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const size = props.row.size_info ? props.row.size_info : '-';
         const pmltq = () => {
             if (props.row.pmltq !== 'no') {
-            return <a href={props.row.pmltq} className="md-transparent" title={"Inspect " + props.row.name + " in PML-TQ"}>
-                    <button className="pmltq" style={{background: this._myColor()}}>
-                        <span className="lindat-pmltq-logo"></span></button></a>
+            return <a href={props.row.pmltq} title={"Inspect " + props.row.name + " in PML-TQ"}>
+                        <span className="lindat-pmltq-logo"></span></a>
             }
         }
 
