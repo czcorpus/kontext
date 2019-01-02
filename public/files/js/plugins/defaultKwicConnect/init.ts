@@ -41,12 +41,14 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
     constructor(pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider, maxKwicWords:number, loadChunkSize:number) {
         this.pluginApi = pluginApi;
+        const concArgs = this.pluginApi.getConcArgs();
+
         this.model = new KwicConnectModel({
             dispatcher: pluginApi.dispatcher(),
             pluginApi: pluginApi,
             corpora: [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
                     .concat(...pluginApi.getConf<Array<string>>('alignedCorpora')),
-            mainCorp: this.pluginApi.getConcArgs()['maincorp'],
+            mainCorp: 'maincorp' in concArgs ? concArgs['maincorp'] : concArgs['corpname'],
             rendererMap: this.selectRenderer.bind(this),
             concLinesProvider: concLinesProvider,
             loadChunkSize: loadChunkSize,
