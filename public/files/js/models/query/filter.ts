@@ -383,7 +383,7 @@ export class FilterFormModel extends QueryFormModel {
         } else {
             args.remove('within');
         }
-        args.set(this.queryTypes.get(filterId), this.queries.get(filterId));
+        args.set(this.queryTypes.get(filterId), this.getQueryUnicodeNFC(filterId));
         return args;
     }
 

@@ -278,4 +278,8 @@ export abstract class QueryFormModel extends StatefulModel {
     getUseCQLEditor():boolean {
         return this.useCQLEditor;
     }
+
+    getQueryUnicodeNFC(queryId:string):string {
+        return this.queries.has(queryId) ? this.queries.get(queryId).normalize() : undefined;
+    }
 }

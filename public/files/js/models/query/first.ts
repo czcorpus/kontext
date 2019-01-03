@@ -519,7 +519,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
             // characters as while the client's cql parser and CQL widget are ok with that
             // server is unable to parse this
             args.add(createArgname(this.queryTypes.get(corpname), corpname),
-                     this.queries.get(corpname));
+                     this.getQueryUnicodeNFC(corpname));
 
             if (this.lposValues.get(corpname)) {
                 switch (this.queryTypes.get(corpname)) {
