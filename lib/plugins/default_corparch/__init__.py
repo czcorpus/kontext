@@ -582,6 +582,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         self.customize_corpus_info(ans, node)
         data.append(ans)
+        return ans
 
     def _parse_corplist_node(self, root, path, lang, data):
         """
