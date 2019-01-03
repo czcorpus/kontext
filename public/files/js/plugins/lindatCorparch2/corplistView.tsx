@@ -145,8 +145,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const size = props.row.size_info ? props.row.size_info : '-';
         const pmltq = () => {
             if (props.row.pmltq !== 'no') {
-            return <a href={props.row.pmltq} title={"Inspect " + props.row.name + " in PML-TQ"}>
-                        <span className="lindat-pmltq-logo"></span></a>
+            console.log(props)
+            return <a href={props.row.pmltq} title={"Inspect " + props.row.name + " in PML-TQ"}>!!!</a>
             }
         }
 
