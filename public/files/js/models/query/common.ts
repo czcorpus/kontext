@@ -280,6 +280,7 @@ export abstract class QueryFormModel extends StatefulModel {
     }
 
     getQueryUnicodeNFC(queryId:string):string {
-        return this.queries.has(queryId) ? this.queries.get(queryId).normalize() : undefined;
+         // TODO ES2015 stuff here
+        return this.queries.has(queryId) ? this.queries.get(queryId)['normalize']() : undefined;
     }
 }

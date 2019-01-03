@@ -402,7 +402,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ans.set('usesubcorp', state.currentSubcorpus);
         }
         ans.set('wlattr', state.wlattr);
-        ans.set('wlpat', state.wlpat.normalize());
+        ans.set('wlpat', state.wlpat['normalize']()); // TODO ES2015 stuff here
         ans.set('wlminfreq', state.wlminfreq.value);
         ans.set('wlnums', state.wlnums);
         ans.set('wltype', state.wltype);
