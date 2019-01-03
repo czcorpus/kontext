@@ -22,11 +22,12 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit, View} from './views';
 import {init as renderersInit, Views as RenderersView} from './renderers';
-import {KwicConnectModel} from './model';
+import {KwicConnectModel, KnownRenderers} from './model';
 import { IConcLinesProvider } from '../../types/concordance';
 
 declare var require:any;
 require('./style.less'); // webpack
+
 
 export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IPlugin {
 
@@ -60,14 +61,16 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         return this.views.KwicConnectContainer;
     }
 
-    selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
+    selectRenderer(typeId:KnownRenderers):PluginInterfaces.TokenConnect.Renderer {
         switch (typeId) {
-            case 'raw-html':
+            case KnownRenderers.RAW_HTML:
                 return this.renderers.RawHtmlRenderer;
-            case 'datamuse-json':
+            case KnownRenderers.DATAMUSE:
                 return this.renderers.DataMuseSimilarWords;
-            case 'treq-json':
+            case KnownRenderers.TREQ:
                 return this.renderers.TreqRenderer;
+            case KnownRenderers.MESSAGE:
+                return this.renderers.CustomMessageRenderer;
             default:
                 return this.renderers.UnsupportedRenderer;
         }

@@ -4,20 +4,23 @@
         "default_kwic_connect__translation_not_found": "translation not found",
         "default_kwic_connect__using_attr_for_srch_{attr}": "Using attribute [{attr}] for the search",
         "default_kwic_connect__abs_freq": "Abs. frequency",
-        "default_kwic_connect__use_as_filter_in_2nd_corp": "Use as a filter in the second corpus"
+        "default_kwic_connect__use_as_filter_in_2nd_corp": "Use as a filter in the second corpus",
+        "default_kwic_connect__item_been_ommitted_due_size": "One or more items has been omitted due to KWIC size"
     },
     "cs-CZ": {
         "default_kwic_connect__view_in_treq": "zobrazit v Trequ",
         "default_kwic_connect__translation_not_found": "překlad nenalezen",
         "default_kwic_connect__using_attr_for_srch_{attr}": "Hledám pomocí atributu [{attr}]",
         "default_kwic_connect__abs_freq": "Abs. frekvence",
-        "default_kwic_connect__use_as_filter_in_2nd_corp": "Použít jako filtr v druhém korpusu"
+        "default_kwic_connect__use_as_filter_in_2nd_corp": "Použít jako filtr v druhém korpusu",
+        "default_kwic_connect__item_been_ommitted_due_size": "Jedna či více položek bylo vynecháno kvůli velikosti KWICu"
     },
     "szl": {
         "default_kwic_connect__view_in_treq": "pokŏż w Trequ",
         "default_kwic_connect__translation_not_found": "przekłŏd niyznaleziōny",
         "default_kwic_connect__using_attr_for_srch_{attr}": "Używōm atrybutu [{attr}] do szukaniŏ",
         "default_kwic_connect__abs_freq": "Abs. frequency",
-        "default_kwic_connect__use_as_filter_in_2nd_corp": "Use as a filter in the second corpus"
+        "default_kwic_connect__use_as_filter_in_2nd_corp": "Use as a filter in the second corpus",
+        "default_kwic_connect__item_been_ommitted_due_size": "One or more items has been omitted due to KWIC size"
     }
 }

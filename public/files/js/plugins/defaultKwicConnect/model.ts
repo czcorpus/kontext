@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
+import * as Rx from '@reactivex/rxjs';
 import * as Immutable from 'immutable';
 import { StatelessModel } from "../../models/base";
-import { Action, ActionDispatcher, typedProps, SEDispatcher } from "../../app/dispatcher";
+import { Action, ActionDispatcher, SEDispatcher } from "../../app/dispatcher";
 import { IPluginApi, PluginInterfaces } from "../../types/plugins";
 import { Kontext } from "../../types/common";
 import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
@@ -29,15 +29,23 @@ import { MultiDict } from '../../util';
 import {IConcLinesProvider} from '../../types/concordance';
 
 
+export enum KnownRenderers {
+    RAW_HTML = 'raw-html',
+    DATAMUSE = 'datamuse-json',
+    TREQ = 'treq-json',
+    MESSAGE = 'custom-message'
+}
+
+
 export interface RendererMap {
-    (id:string):PluginInterfaces.TokenConnect.Renderer;
+    (id:KnownRenderers):PluginInterfaces.TokenConnect.Renderer;
 }
 
 
 export interface ProviderOutputResponse {
     heading:string;
     note:string;
-    renderer:string;
+    renderer:KnownRenderers;
     data:Array<{
         status:boolean;
         kwic:string;
@@ -73,6 +81,7 @@ export interface KwicConnectState {
     freqType:FreqDistType;
     data:Immutable.List<ProviderWordMatch>;
     blockedByAsyncConc:boolean;
+    hasOmittedItems:boolean;
 }
 
 export enum Actions {
@@ -98,6 +107,10 @@ export interface KwicConnectModelArgs {
 }
 
 export class KwicConnectModel extends StatelessModel<KwicConnectState> {
+
+    private static UNIQ_KWIC_FREQ_PAGESIZE = 10;
+
+    private static MAX_WORDS_PER_PHRASE = 2;
 
     private pluginApi:IPluginApi;
 
@@ -126,7 +139,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 corpora: Immutable.List<string>(corpora),
                 mainCorp: mainCorp,
                 freqType: FreqDistType.LEMMA,
-                blockedByAsyncConc: concLinesProvider.isUnfinishedCalculation()
+                blockedByAsyncConc: concLinesProvider.isUnfinishedCalculation(),
+                hasOmittedItems: false
             }
         );
         this.pluginApi = pluginApi;
@@ -175,51 +189,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     return;
                 }
                 const freqType = this.selectFreqType();
-                this.fetchUniqValues(freqType).then(
-                    (data) => {
-                        const procData = this.makeStringGroups(data.slice(0, this.maxKwicWords),
-                                this.loadChunkSize);
-                        if (procData.length > 0) {
-                            return procData.reduce(
-                                (prev, curr) => {
-                                    return prev.then(
-                                        (data) => {
-                                            if (data !== null) {
-                                                dispatch({
-                                                    actionType: Actions.FETCH_PARTIAL_INFO_DONE,
-                                                    props: {
-                                                        data: data
-                                                    }
-                                                });
-                                            }
-                                            return this.fetchKwicInfo(state, curr);
-                                        }
-                                    );
-                                },
-                                RSVP.Promise.resolve(Immutable.List<ProviderWordMatch>())
-                            );
-
-                        } else {
-                            return this.pluginApi.ajax<AjaxResponseListProviders>(
-                                'GET',
-                                'get_corpus_kc_providers',
-                                {corpname: state.corpora.get(0)}
-
-                            ).then(
-                                (data) => {
-                                    return Immutable.List<ProviderWordMatch>(data.providers.map(p => {
-                                        return {
-                                            heading: p.label,
-                                            note: null,
-                                            renderer: null,
-                                            data: Immutable.List<ProviderOutput>()
-                                        };
-                                    }));
-                                }
-                            );
-                        }
-                    }
-                ).then(
+                this.fetchResponses(state, freqType, dispatch).subscribe(
                     (data) => {
                         dispatch({
                             actionType: Actions.FETCH_INFO_DONE,
@@ -230,6 +200,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                         });
                     },
                     (err) => {
+                        this.pluginApi.showMessage('error', err);
                         dispatch({
                             actionType: Actions.FETCH_INFO_DONE,
                             props: {
@@ -242,6 +213,82 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             }
             break;
         }
+    }
+
+    private fetchResponses(state:KwicConnectState, freqType:FreqDistType, dispatch:SEDispatcher):Rx.Observable<Immutable.List<ProviderWordMatch>> {
+
+        return this.fetchUniqValues(freqType).concatMap(
+            (kwics) => {
+                const procItems = kwics.filter(v => v.split(' ').length <= KwicConnectModel.MAX_WORDS_PER_PHRASE);
+                const procData = this.makeStringGroups(procItems.slice(0, this.maxKwicWords), this.loadChunkSize);
+                let ans:Rx.Observable<Immutable.List<ProviderWordMatch>>;
+
+                if (procData.length > 0) {
+                    ans = procData.reduce(
+                        (prev, curr) => {
+                            return prev.concatMap(
+                                (data) => {
+                                    if (data !== null) {
+                                        dispatch({
+                                            actionType: Actions.FETCH_PARTIAL_INFO_DONE,
+                                            props: {
+                                                data: data
+                                            }
+                                        });
+                                    }
+                                    return this.fetchKwicInfo(state, curr);
+                                }
+                            );
+                        },
+                        Rx.Observable.of(Immutable.List<ProviderWordMatch>())
+                    );
+
+                } else {
+                    ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
+                        'GET',
+                        'get_corpus_kc_providers',
+                        {corpname: state.corpora.get(0)}
+
+                    ).concatMap(
+                        (data) => Rx.Observable.of(Immutable.List<ProviderWordMatch>(
+                            data.providers.map(p => {
+                                return {
+                                    heading: p.label,
+                                    note: null,
+                                    renderer: null,
+                                    data: Immutable.List<ProviderOutput>()
+                                };
+                            })
+                        ))
+                    );
+                }
+
+                if (procItems.length < kwics.length) {
+                    ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
+                        'GET',
+                        'get_corpus_kc_providers',
+                        {corpname: state.corpora.get(0)}
+
+                    ).concatMap(
+                        (data) => Rx.Observable.of(Immutable.List<ProviderWordMatch>(
+                            data.providers.map(p => ({
+                                data: Immutable.List<ProviderOutput>([
+                                    this.pluginApi.translate('default_kwic_connect__item_been_ommitted_due_size')
+                                ]),
+                                heading: p.label,
+                                note: null,
+                                renderer: this.rendererMap(KnownRenderers.MESSAGE)
+                            }))
+                        ))
+
+                    ).concat(ans);
+                }
+
+                return ans;
+            }
+        );
+
+
     }
 
     /**
@@ -293,54 +340,58 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         return ans;
     };
 
-    private fetchKwicInfo(state:KwicConnectState, items:Array<string>):RSVP.Promise<Immutable.List<ProviderWordMatch>> {
+    private fetchKwicInfo(state:KwicConnectState, items:Array<string>):Rx.Observable<Immutable.List<ProviderWordMatch>> {
         const args = new MultiDict();
         args.set('corpname', state.mainCorp);
         args.replace('align', state.corpora.filter(v => v !== state.mainCorp).toArray());
-        items.slice(0, 10).forEach(v => args.add('w', v));
-        return this.pluginApi.ajax<AjaxResponseFetchData>(
-            'GET',
-            this.pluginApi.createActionUrl('fetch_external_kwic_info'),
-            args
+        const procItems = items.slice(0, KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE);
+        if (procItems.length > 0) {
+            procItems.forEach(v => args.add('w', v));
+            return this.pluginApi.ajax$<AjaxResponseFetchData>(
+                'GET',
+                this.pluginApi.createActionUrl('fetch_external_kwic_info'),
+                args
 
-        ).then(
-            (responseData) => {
-                return Immutable.List<ProviderWordMatch>(responseData.data.map(provider => {
-                    return {
-                        data: Immutable.List<ProviderOutput>(provider.data.map(item => {
-                            return {
-                                contents: item.contents,
-                                found: item.status,
-                                kwic: item.kwic
-                            };
-                        })),
-                        heading: provider.heading,
-                        note: provider.note,
-                        renderer: this.rendererMap(provider.renderer)
-                    };
-                }));
-            }
-        );
+            ).concatMap(
+                (responseData) => {
+                    return Rx.Observable.of(Immutable.List<ProviderWordMatch>(responseData.data.map(provider => {
+                        return {
+                            data: Immutable.List<ProviderOutput>(provider.data.map(item => {
+                                return {
+                                    contents: item.contents,
+                                    found: item.status,
+                                    kwic: item.kwic
+                                };
+                            })),
+                            heading: provider.heading,
+                            note: provider.note,
+                            renderer: this.rendererMap(provider.renderer)
+                        };
+                    })));
+                }
+            );
+
+        } else {
+            return Rx.Observable.of(Immutable.List<ProviderWordMatch>());
+        }
     }
 
-    private fetchUniqValues(fDistType:FreqDistType):RSVP.Promise<Array<string>> {
+    private fetchUniqValues(fDistType:FreqDistType):Rx.Observable<Array<string>> {
         const args = this.pluginApi.getConcArgs();
         args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
         args.set('flimit', this.concLinesProvider.getRecommOverviewMinFreq());
         args.set('freq_sort', 'freq');
-        args.set('pagesize', 10);
+        args.set('fmaxitems', KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE);
         args.set('format', 'json');
-        return this.pluginApi.ajax<TTDistResponse.FreqData>(
+        return this.pluginApi.ajax$<TTDistResponse.FreqData>(
             'GET',
             this.pluginApi.createActionUrl('freqs'),
             args
-        ).then(
-            (data) => {
-                return data.Blocks[0].Items.map(item => {
-                    return item.Word.map(w => w.n.replace(/\s+/, ' ')).join(' ');
-                });
-            }
+        ).concatMap(
+            (data) => Rx.Observable.of(
+                data.Blocks[0].Items.map(
+                    item => item.Word.map(w => w.n.replace(/\s+/, ' ')).join(' ')))
         );
     }
 

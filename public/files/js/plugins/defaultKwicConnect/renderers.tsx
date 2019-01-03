@@ -41,6 +41,10 @@ export interface Views {
         corpora: Immutable.List<string>;
         data:any;
     }>;
+    CustomMessageRenderer:React.SFC<{
+        corpora: Immutable.List<string>;
+        data:any;
+    }>;
 }
 
 
@@ -164,9 +168,19 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
         );
     };
 
+    // --------------------------- Unsupported renderer replacement --------------------------------------------------
+
     const UnsupportedRenderer:Views['UnsupportedRenderer'] = (props) => {
         return (
             <p>Unsupported renderer {props.data}</p>
+        );
+    };
+
+    // --------------------------- A custom message passed instead of a configured renderer --------------------------------
+
+    const CustomMessageRenderer:Views['CustomMessageRenderer'] = (props) => {
+        return (
+            <p>{props.data}</p>
         );
     };
 
@@ -174,7 +188,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):V
         RawHtmlRenderer: RawHtmlRenderer,
         DataMuseSimilarWords: DataMuseSimilarWords,
         TreqRenderer: TreqRenderer,
-        UnsupportedRenderer: UnsupportedRenderer
+        UnsupportedRenderer: UnsupportedRenderer,
+        CustomMessageRenderer: CustomMessageRenderer
     };
-
 }
