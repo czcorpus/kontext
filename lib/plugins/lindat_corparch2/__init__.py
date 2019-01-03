@@ -323,6 +323,9 @@ class DeafultCorplistProvider(CorplistProvider):
                     corp['fav_id'] = fav_id(corp['id'])
                     # because of client-side fav/feat/search items compatibility
                     corp['corpus_id'] = corp['id']
+                    corp['pmltq'] = full_data['pmltq']
+                    corp['parallel'] = full_data['parallel']
+                    corp['access'] = full_data['access']
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
