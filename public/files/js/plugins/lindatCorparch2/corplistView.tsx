@@ -146,7 +146,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const pmltq = () => {
             if (props.row.pmltq !== 'no') {
             return <a href={props.row.pmltq} title={"Inspect " + props.row.name + " in PML-TQ"}>
-                     <span className="lindat-pmltq-logo"></span></a>
+                     <img src={he.createStaticUrl('img/syntax-tree-icon.svg')} className="lindat-pmltq-logo"></img></a>
             }
         }
 
