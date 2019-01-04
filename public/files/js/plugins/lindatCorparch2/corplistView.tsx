@@ -157,7 +157,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         const access = () => {
-            if (props.row.access !== ['anonymous']) {
+            if (props.row.access.indexOf("anonymous") == -1) {
             return <div><img src={he.createStaticUrl('img/locked.svg')} className="locked-logo"></img></div>
             }
         }
