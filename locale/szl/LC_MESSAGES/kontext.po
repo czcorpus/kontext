@@ -16,8 +16,8 @@ msgstr ""
 msgid "anonymous"
 msgstr "anōnimowy"
 
-msgid "The string must be at least 5 characters long."
-msgstr "Fraza musi mieć aby piyńć znakōw."
+msgid "The string must be at least %s characters long."
+msgstr "Fraza musi mieć aby %s znakōw."
 
 msgid "Unknown concordance action: %s"
 msgstr "Niyznōmŏ akcyjŏ kōnkordancyje: %s"
@@ -411,8 +411,9 @@ msgstr "Skasuj zagniyżdżōne wyniki"
 msgid "First hits in documents"
 msgstr "Piyrsze trefiynia we dokumyntach"
 
-msgid "Open login form"
-msgstr "Ôtwōrz formular logowaniŏ"
+# "Sign in"
+# msgid "Open login form"
+# msgstr "Ôtwōrz formular logowaniŏ"
 
 msgid "Continue as anonymous user"
 msgstr "Kōntynuuj jako  anōnimowy użytkownik"

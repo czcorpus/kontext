@@ -21,11 +21,11 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {PageModel} from '../../app/main';
 import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
+import {init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
 import {UserProfileModel} from './profile';
 
 
@@ -86,6 +86,8 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
 
     private userProfileViews:UserProfileViews;
 
+    private userSignUpViews:UserSignUpViews;
+
     constructor(profileModel:UserProfileModel, model:UserStatusModel, pluginApi:IPluginApi) {
         this.profileModel = profileModel;
         this.model = model;
@@ -101,6 +103,13 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
             pluginApi.getComponentHelpers(),
             this.profileModel
         );
+
+        this.userSignUpViews = userSignUpViewsFactory(
+            pluginApi.dispatcher(),
+            pluginApi.getComponentHelpers(),
+            this.profileModel,
+            this.userProfileViews
+        );
     }
 
     getProfileView():React.ComponentClass {
@@ -110,15 +119,28 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
     getUserPaneView():React.ComponentClass {
         return this.userPaneViews.UserPane;
     }
+
+    getSignUpView():React.ComponentClass {
+        return this.userSignUpViews.SignUpForm;
+    }
 }
 
 
 const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
+    const userCredentials = pluginApi.getConf<Kontext.UserCredentials>('User') ||
+        {username: '', firstname: '', lastname: '', email: '', active: false};
     const plugin = new AuthPlugin(
         new UserProfileModel(
             pluginApi.dispatcher(),
             pluginApi,
-            pluginApi.getConf<Kontext.UserCredentials>('User')
+            {
+                id: -1,
+                username: userCredentials.username || '',
+                firstname: userCredentials.firstname || '',
+                lastname: userCredentials.lastname || '',
+                email: userCredentials.email || '',
+                active: userCredentials.active || false
+            }
         ),
         new UserStatusModel(
             pluginApi.dispatcher(),

@@ -15,8 +15,8 @@ msgstr ""
 msgid "anonymous"
 msgstr "anonymní"
 
-msgid "The string must be at least 5 characters long."
-msgstr "Řetězec musí být alespoň 5 znaků dlouhý."
+msgid "The string must be at least %s characters long."
+msgstr "Řetězec musí být alespoň %s znaků dlouhý."
 
 msgid "Unknown concordance action: %s"
 msgstr "Neznámá akce na konkordanci: %s"
@@ -417,8 +417,8 @@ msgstr "Odstranit vnořené shody"
 msgid "First hits in documents"
 msgstr "První nálezy v dokumentech"
 
-msgid "Open login form"
-msgstr "Otevřít přihlašovací formulář"
+msgid "Sign in"
+msgstr "Přihlášení"
 
 msgid "Continue as anonymous user"
 msgstr "Pokračovat jako anonymní uživatel"
@@ -470,3 +470,60 @@ msgstr "předinstalováno ve Windows 10"
 
 msgid "pre-installed on Apple macOS"
 msgstr "předinstalováno v Apple macOS"
+
+msgid "User"
+msgstr "Uživatel"
+
+msgid "Failed to sign up user"
+msgstr "Registrace uživatele se nezdařila"
+
+msgid "Username not available"
+msgstr "Uživatelské jméno není k dispozici"
+
+msgid "Username not valid"
+msgstr "Uživatelské není platné"
+
+msgid "Password not valid"
+msgstr "Heslo není platné"
+
+msgid "First name not valid"
+msgstr "Křestní jméno není platné"
+
+msgid "Last name not valid"
+msgstr "Příjmení není platné"
+
+msgid "E-mail not valid"
+msgstr "E-mail není platný"
+
+msgid "The value must be at least %s characters long and must contain only a..z, A..Z, 0..9, _, - characters"
+msgstr "Hodnota musí být nejméně %s znaků dlouhá a musí obsahovat pouze znaky a..z, A..Z, 0..9, _, -"
+
+msgid "KonText sign up confirmation"
+msgstr "Potvrzení registrace do KonTextu"
+
+msgid "Hello"
+msgstr "Dobrý den"
+
+msgid "thank you for using KonText at {url}."
+msgstr "děkujeme, že využíváte KonText na adrese {url}."
+
+msgid "To verify your new account {username} (full name: {first_name} {last_name}) please click the link below"
+msgstr "Pro ověření vašeho nového účtu {username} (celé jméno: {first_name} {last_name}) prosím klikněte na odkaz níže"
+
+msgid "The confirmation link will expire on %m/%d/%Y at %H:%M"
+msgstr "Platnost potvrzovacího odkazu vyprší %d.%d.%Y v %H:%M"
+
+msgid "This e-mail has been generated automatically - please do not reply to it."
+msgstr "Tento e-mail byl vygenerován automaticky - neodepisujte na něj prosím."
+
+msgid "Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try again. Alternatively you can report a problem."
+msgstr "Nepodařilo se odeslat potvrzovací e-mail. Zkontrolujte prosím, zda jste zadali platný e-mail a zkuste akci zopakovat. Případně můžete ohlásit problém."
+
+msgid "Verification key confirmation"
+msgstr "Potvrzení ověřovacího klíče"
+
+msgid "confirmed"
+msgstr "potvrzeno"
+
+msgid "Confirmation key not found"
+msgstr "Potvrzovací klíč nebyl nalezen"

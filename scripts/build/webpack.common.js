@@ -56,7 +56,9 @@ module.exports = {
             wordlist: mkpath('js/pages/wordlist.ts'),
             wordlistForm: mkpath('js/pages/wordlistForm.ts'),
             login: mkpath('js/pages/login.ts'),
-            userProfile: mkpath('js/pages/userProfile.ts')
+            userProfile: mkpath('js/pages/userProfile.ts'),
+            userSignUp: mkpath('js/pages/userSignUp.ts'),
+            userTokenConfirm: mkpath('js/pages/userTokenConfirm.ts')
         },
         output: {
             filename: '[name].js',

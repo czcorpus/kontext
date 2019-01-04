@@ -18,6 +18,7 @@ from controller.kontext import Kontext
 from main_menu import MainMenu
 from translation import ugettext as _
 import plugins
+from plugins.abstract.auth import AuthException
 import settings
 
 
@@ -69,12 +70,45 @@ class User(Kontext):
         self.redirect(self.create_url('first_form', {}))
         return {}
 
-    @exposed(access_level=0, return_type='json')
-    def validate_password_props(self, request):
+    @exposed(access_level=0, template='user/administration.tmpl', skip_corpus_init=True, page_model='userSignUp',
+             http_method='GET')
+    def sign_up_form(self, request):
         with plugins.runtime.AUTH as auth:
-            if not auth.validate_new_password(request.args['password']):
-                raise UserActionException(auth.get_required_password_properties())
-        return {}
+            if not self.user_is_anonymous():
+                raise UserActionException('You are already registered')
+            else:
+                return dict(user=dict(username=None), sign_up_form={})
+
+    @exposed(access_level=0, skip_corpus_init=True, return_type='json', http_method='POST')
+    def sign_up(self, request):
+        with plugins.runtime.AUTH as auth:
+            errors = auth.sign_up_user(self._plugin_api, dict(
+                username=request.form['username'],
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                email=request.form['email'],
+                password=request.form['password'],
+                password2=request.form['password2']
+            ))
+        if len(errors) == 0:
+            return dict(ok=True)
+        else:
+            raise UserActionException(_('Failed to sign up user'), error_args=errors)
+
+    @exposed(access_level=0, skip_corpus_init=True, return_type='json', http_method='GET')
+    def test_username(self, request):
+        with plugins.runtime.AUTH as auth:
+            available, valid = auth.validate_new_username(
+                self._plugin_api, request.args['username'])
+            return dict(available=available if available and valid else False, valid=valid)
+
+    @exposed(access_level=0, skip_corpus_init=True, http_method='GET', template='user/token_confirm.tmpl',
+             page_model='userTokenConfirm')
+    def sign_up_confirm_email(self, request):
+        with plugins.runtime.AUTH as auth:
+            ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
+            ans.update(auth.sign_up_confirm(self._plugin_api, request.args['key']))
+            return ans
 
     @exposed(access_level=1, http_method='POST', skip_corpus_init=True, return_type='json')
     def set_user_password(self, request):
@@ -82,6 +116,8 @@ class User(Kontext):
             curr_passwd = request.form['curr_passwd']
             new_passwd = request.form['new_passwd']
             new_passwd2 = request.form['new_passwd2']
+            fields = dict(curr_passwd=True, new_passwd=True, new_passwd2=True)
+            ans = dict(fields=fields, messages=[])
 
             if not self._uses_internal_user_pages():
                 raise UserActionException(_('This function is disabled.'))
@@ -89,15 +125,24 @@ class User(Kontext):
                 self._plugin_api, self.session_get('user', 'user'), curr_passwd)
 
             if self._is_anonymous_id(logged_in['id']):
-                raise UserActionException(_('Invalid user or password'))
+                fields['curr_passwd'] = False
+                ans['messages'].append(_('Invalid user or password'))
+                return ans
+
             if new_passwd != new_passwd2:
-                raise UserActionException(_('New password and its confirmation do not match.'))
+                fields['new_passwd'] = False
+                fields['new_passwd2'] = False
+                ans['messages'].append(_('New password and its confirmation do not match.'))
+                return ans
 
             if not auth.validate_new_password(new_passwd):
-                raise UserActionException(auth.get_required_password_properties())
+                ans['messages'].append(auth.get_required_password_properties())
+                fields['new_passwd'] = False
+                fields['new_passwd2'] = False
+                return ans
 
             auth.update_user_password(self.session_get('user', 'id'), new_passwd)
-            return {}
+            return ans
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus, archived_only):
         if plugins.runtime.QUERY_STORAGE.exists:
@@ -171,7 +216,7 @@ class User(Kontext):
             else:
                 return {'user': {'username': user_info['username']}}
 
-    @exposed(return_type='template', template='user/profile.tmpl', page_model='userProfile',
+    @exposed(return_type='template', template='user/administration.tmpl', page_model='userProfile',
              skip_corpus_init=True, access_level=1)
     def profile(self, request):
         if not self._uses_internal_user_pages():

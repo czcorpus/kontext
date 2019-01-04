@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
-         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
     <start>
         <element name="auth">
             <element name="module">
@@ -21,6 +22,27 @@
             <element name="logout_url">
                 <text />
             </element>
+            <optional>
+                <element name="confirmation_token_ttl">
+                    <a:documentation>
+                        Number of seconds a confirmation token (typically for sign up process)
+                        is valid.
+                    </a:documentation>
+                    <text />
+                </element>
+            </optional>
+            <optional>
+                <element name="on_register_get_corpora">
+                    <a:documentation>
+                        A list of corpora a registered user will get access to
+                    </a:documentation>
+                    <oneOrMore>
+                        <element name="item">
+                            <text />
+                        </element>
+                    </oneOrMore>
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

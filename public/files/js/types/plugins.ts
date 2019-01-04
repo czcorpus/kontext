@@ -73,6 +73,7 @@ export namespace PluginInterfaces {
         export interface IPlugin {
             getUserPaneView():React.ComponentClass;
             getProfileView():React.ComponentClass;
+            getSignUpView():React.ComponentClass|null;
         }
 
         export interface Factory {

@@ -93,8 +93,6 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
 
     private pluginApi:IPluginApi;
 
-    private userData:Kontext.UserCredentials;
-
     private textTypesModel:TextTypes.ITextTypesModel;
 
     private selectionSteps:Immutable.List<SelectionStep>;
@@ -140,7 +138,6 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
             args:PluginInterfaces.LiveAttributes.InitArgs) {
         super(dispatcher);
         this.pluginApi = pluginApi;
-        this.userData = null;
         this.bibliographyAttribute = args.bibAttr;
         this.manualAlignCorporaMode = args.manualAlignCorporaMode;
         this.controlsEnabled = false; // it is enabled when user selects one or more items

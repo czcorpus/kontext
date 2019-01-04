@@ -315,6 +315,7 @@ export namespace CoreViews {
 
         export interface Props {
             invalid:boolean;
+            errorDesc?:string;
         }
 
         export type Component = React.SFC<Props>;

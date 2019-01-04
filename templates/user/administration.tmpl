@@ -1,5 +1,7 @@
 #*
-Copyright (c) 2013 Institute of the Czech National Corpus
+Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,22 +23,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #extends document
 
 #def title
-$_("Login options")#slurp
+$_("User profile")#slurp
 #end def
 
 #def bodyonload
-loginPage.init(__conf);
+__conf.User = $to_json($user);
+#if not $user['username']
+__conf.SignUpForm = $to_json($sign_up_form);
+userSignUpPage.init(__conf);
+#else
+userProfilePage.init(__conf);
+#end if
 #end def
-
 
 #def main
 <section>
-    <h2>$_("Login options")</h2>
-    <p>
-        <a id="try-login" class="util-button">$_('Sign in')</a>
-    </p>
-    <p>
-        <a id="go-to-query" class="util-button">$_('Continue as anonymous user')</a>
-    </p>
+    <h2>$_("User")</h2>
+    <div id="user-administration-mount"></div>
 </section>
 #end def

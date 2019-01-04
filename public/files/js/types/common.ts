@@ -47,6 +47,8 @@ export namespace Kontext {
 
         isInvalid:boolean;
 
+        errorDesc?:string;
+
     }
 
     export var isFormValue = <T>(v:any):v is FormValue<T> => {
@@ -66,9 +68,18 @@ export namespace Kontext {
         return {
             value: data.value !== undefined ? data.value : formValue.value,
             isInvalid: data.isInvalid !== undefined ? data.isInvalid : formValue.isInvalid,
-            isRequired: data.isRequired !== undefined ? data.isRequired : formValue.isRequired
+            isRequired: data.isRequired !== undefined ? data.isRequired : formValue.isRequired,
+            errorDesc: data.errorDesc !== undefined ? data.errorDesc : formValue.errorDesc
         };
     }
+
+    export var newFormValue = <T>(v:T, isRequired:boolean):FormValue<T> => {
+        return {value: v, isInvalid: false, isRequired: isRequired, errorDesc: undefined};
+    }
+
+    export var resetFormValue = <T>(formValue:FormValue<T>, val:T) => {
+        return {value: val, isInvalid: false, isRequired: formValue.isRequired, errorDesc: undefined};
+    };
 
     /**
      * Represents possible sources for MultiDict
@@ -77,23 +88,12 @@ export namespace Kontext {
     export type MultiDictSrc = Array<[string,any]>|GeneralProps;
 
     export interface UserCredentials {
-        context_limit:number;
-        sketches:boolean;
-        never_expire:boolean;
+        id:number;
         firstname:string;
-        country:string;
-        regist:any; // TODO
+        lastname:string;
         email:string;
         username:string;
-        affiliation:string;
-        expire:any; // TODO
-        lastname:string;
-        address:string;
         active:boolean;
-        affiliation_country:string;
-        category:string;
-        id:number;
-        recovery_until:any; // TODO
     }
 
     export interface IUserSettings {

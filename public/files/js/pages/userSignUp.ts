@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2019 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2019 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ import {PageModel} from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
-require('styles/userProfile.less');
+require('styles/userSignUp.less');
 
 
 export function init(conf:Kontext.Conf):void {
@@ -32,7 +32,7 @@ export function init(conf:Kontext.Conf):void {
     layoutModel.init().then(
         () => {
             layoutModel.renderReactComponent(
-                layoutModel.getAuthPlugin().getProfileView(),
+                layoutModel.getAuthPlugin().getSignUpView(),
                 document.getElementById('user-administration-mount'),
                 {}
             );

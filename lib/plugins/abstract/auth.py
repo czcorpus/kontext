@@ -167,6 +167,22 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
         raise NotImplementedError()
 
+    def get_required_username_properties(self, plugin_api):
+        raise NotImplementedError()
+
+    def validate_new_username(self, plugin_api, username):
+        """
+        returns:
+            a 2-tuple (availability, validity) (both bool)
+        """
+        raise NotImplementedError()
+
+    def sign_up_user(self, plugin_api, credentials):
+        raise NotImplementedError()
+
+    def sign_up_confirm(self, plugin_api, key):
+        raise NotImplementedError()
+
 
 class AbstractRemoteAuth(AbstractAuth):
     """

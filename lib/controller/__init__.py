@@ -763,11 +763,10 @@ class Controller(object):
             user_msg = translate('Failed to process your request. '
                                  'Please try again later or contact system support.')
         if return_type == 'json':
-            return dict(messages=[user_msg],
-                        error_code=getattr(ex, 'error_code', None),
+            return dict(error_code=getattr(ex, 'error_code', None),
                         error_args=getattr(ex, 'error_args', {}))
         else:
-            return dict(messages=[user_msg])
+            return dict()
 
     @staticmethod
     def _is_allowed_explicit_out_format(f):
@@ -822,9 +821,8 @@ class Controller(object):
         except UserActionException as ex:
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, return_type)
-            named_args.update(msg_args)
             tmpl, result = self._run_message_action(
-                named_args, action_metadata, 'error', ex.message)
+                msg_args, action_metadata, 'error', ex.message)
         except werkzeug.exceptions.BadRequest as ex:
             self._status = ex.code
             tmpl, result = self._run_message_action(named_args, action_metadata,

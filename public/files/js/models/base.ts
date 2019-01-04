@@ -230,7 +230,8 @@ export abstract class StatelessModel<T> implements IReducer<T> {
                     ans[p] = {
                         value: v.value,
                         isRequired: v.isRequired,
-                        isInvalid: v.isInvalid
+                        isInvalid: v.isInvalid,
+                        errorDesc: v.errorDesc
                     };
 
                 } else {
