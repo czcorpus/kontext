@@ -67,6 +67,9 @@ export interface CorplistItem {
     featured:boolean;
     keywords:Array<[string, string]>;
     pmltq:string;
+    tokenConnect:Array<string>;
+    access:Array<string>;
+    repo:string;
 }
 
 

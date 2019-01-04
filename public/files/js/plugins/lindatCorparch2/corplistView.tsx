@@ -149,6 +149,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                      <img src={he.createStaticUrl('img/syntax-tree-icon.svg')} className="lindat-pmltq-logo"></img></a>
             }
         }
+        const tconnect = () => {
+            if (props.row.tokenConnect.length > 0) {
+            return <div title="Dictionaries are avaliable for this corpus">
+                     <img src={he.createStaticUrl('img/book.svg')} className="dict-logo"></img></div>
+            }
+        }
 
         return (
             <tr>
@@ -166,6 +172,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 <td>
                     {renderFavStar()}
                     {pmltq()}
+                    {tconnect()}
                 </td>
                 <td>
                     <p className="desc" style={{display: 'none'}}></p>
