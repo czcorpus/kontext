@@ -324,9 +324,9 @@ class DeafultCorplistProvider(CorplistProvider):
                     # because of client-side fav/feat/search items compatibility
                     corp['corpus_id'] = corp['id']
                     corp['pmltq'] = full_data['pmltq']
-                    corp['repo'] = full_data['repo']
+                    corp['repo'] = full_data['web']
                     corp['access'] = full_data['access']
-                    corp['tokenConnect'] = full_data['tokenConnect']
+                    corp['tokenConnect'] = full_data['token_connect']['providers']
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):

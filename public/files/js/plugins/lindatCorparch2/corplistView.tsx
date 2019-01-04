@@ -156,6 +156,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             }
         }
 
+        const access = () => {
+            if (props.row.access !== ['anonymous']) {
+            return <div><img src={he.createStaticUrl('img/locked.svg')} className="locked-logo"></img></div>
+            }
+        }
+
         return (
             <tr>
                 <td className="corpname">
@@ -173,6 +179,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     {renderFavStar()}
                     {pmltq()}
                     {tconnect()}
+                    {access()}
                 </td>
                 <td>
                     <p className="desc" style={{display: 'none'}}></p>
