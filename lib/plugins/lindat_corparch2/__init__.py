@@ -293,7 +293,7 @@ class DeafultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
-        for corp in self._corparch.get_list(plugin_api, permitted_corpora):
+        for corp in self._corparch.get_list(plugin_api, self._raw_list(plugin_api.user_lang).values()):
             full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 keywords = [k for k in full_data['metadata']['keywords'].keys()]
@@ -535,7 +535,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         parallel = node.attrib['parallel'] if 'parallel' in node.attrib else 'other'
         pmltq = node.attrib['pmltq'] if 'pmltq' in node.attrib else 'no'
         access = [group.strip()
-                  for group in node.attrib.get('access', '').split(',')]
+                  for group in node.attrib.get('access', 'anonymous').split(',')]
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
