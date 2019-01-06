@@ -162,6 +162,13 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             }
         }
 
+        const download = () => {
+            if (props.row.access.indexOf("anonymous") == 0 && props.row.repo !== 'no') {
+            return <a href={props.row.repo} title={"Download " + props.row.name}>
+                     <img src={he.createStaticUrl('img/download-button.svg')} className="download-logo"></img></a>
+            }
+        }
+
         return (
             <tr>
                 <td className="corpname">
@@ -180,6 +187,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     {pmltq()}
                     {tconnect()}
                     {access()}
+                    {download()}
                 </td>
                 <td>
                     <p className="desc" style={{display: 'none'}}></p>
