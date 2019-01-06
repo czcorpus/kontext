@@ -205,7 +205,7 @@ def parse_query(tag_prefix, query):
     return substrs, query_keywords
 
 
-class DeafultCorplistProvider(CorplistProvider):
+class DefaultCorplistProvider(CorplistProvider):
     """
     Corpus listing and filtering service
     """
@@ -293,7 +293,7 @@ class DeafultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
-        for corp in self._corparch.get_list(plugin_api, self._raw_list(plugin_api.user_lang).values()):
+        for corp in self._corparch.get_list(plugin_api):
             full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 keywords = [k for k in full_data['metadata']['keywords'].keys()]
@@ -414,7 +414,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def customize_corpus_info(self, corpus_info, node):
         pass
 
-    def get_list(self, plugin_api, user_allowed_corpora):
+    def get_list(self, plugin_api, user_allowed_corpora=None):
         """
         arguments:
         user_allowed_corpora -- a dict (corpus_id, corpus_variant) containing corpora ids
@@ -423,7 +423,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         cl = []
         for item in self._raw_list(plugin_api.user_lang).values():
             corp_id, path, web = item['id'], item['path'], item['sentence_struct']
-            if corp_id in user_allowed_corpora:
+            if user_allowed_corpora is None or corp_id in user_allowed_corpora:
                 try:
                     corp_info = self.manatee_corpora.get_info(corp_id)
                     cl.append({'id': corp_id,
@@ -445,7 +445,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return cl
 
     def create_corplist_provider(self, plugin_api):
-        return DeafultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
+        return DefaultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
 
     def _get_corplist_title(self, elm, lang):
         """
