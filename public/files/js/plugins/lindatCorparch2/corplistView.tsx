@@ -151,14 +151,14 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
         const tconnect = () => {
             if (props.row.tokenConnect.length > 0) {
-            return <div title="Dictionaries are avaliable for this corpus">
-                     <img src={he.createStaticUrl('img/book.svg')} className="dict-logo"></img></div>
+            return <span title="Dictionaries are avaliable for this corpus">
+                     <img src={he.createStaticUrl('img/book.svg')} className="dict-logo"></img></span>
             }
         }
 
         const access = () => {
-            if (props.row.access.indexOf("anonymous") == -1) {
-            return <div><img src={he.createStaticUrl('img/locked.svg')} className="locked-logo"></img></div>
+            if (props.row.access.indexOf("anonymous") == -1 && !props.enableUserActions) {
+            return <span><img src={he.createStaticUrl('img/locked.svg')} className="locked-logo"></img></span>
             }
         }
 
