@@ -31,7 +31,9 @@ class AuthTest(unittest.TestCase):
         super(AuthTest, self).__init__(*args, **kwargs)
         self.mck_rds_cmn = MockRedisCommon()
         self.mock_redis_plugin = MockRedisPlugin(self.mck_rds_cmn.users)
-        self.auth_handler = DefaultAuthHandler(self.mock_redis_plugin, None, 0, None, None)
+        self.auth_handler = DefaultAuthHandler(db=self.mock_redis_plugin, sessions=None, anonymous_user_id=0,
+                                               login_url=None, logout_url=None, smtp_server=None, mail_sender=None,
+                                               confirmation_token_ttl=None, on_register_get_corpora=None)
 
     def setUp(self):
         self.mock_redis_plugin.clear()
@@ -56,8 +58,10 @@ class AuthTest(unittest.TestCase):
         """
         test the auxiliary method to add a user to the mocked redis db, both using the old and the new hashing
         """
-        self.mock_redis_plugin.add_user(2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
-        self.mock_redis_plugin.add_user_old_hashing(3, 'ann', 'annspassword', 'Ann', 'Rose', 'ann.rose@localhost')
+        self.mock_redis_plugin.add_user(2, 'mary', 'maryspassword',
+                                        'Mary', 'White', 'mary.white@localhost')
+        self.mock_redis_plugin.add_user_old_hashing(
+            3, 'ann', 'annspassword', 'Ann', 'Rose', 'ann.rose@localhost')
         self.assertEquals('user:2', self.mock_redis_plugin.hash_get('user_index', 'mary'))
         self.assertEquals('mary', self.mock_redis_plugin.get('user:2').get('username'))
         self.assertEquals('user:3', self.mock_redis_plugin.hash_get('user_index', 'ann'))
@@ -93,10 +97,12 @@ class AuthTest(unittest.TestCase):
         """
         orig_keys = {'algo': 'sha512', 'iterations': 1000, 'keylen': 64}
         salt = os.urandom(orig_keys['keylen']).encode('hex')
-        hashed = mk_pwd_hash('password', salt, orig_keys['iterations'], orig_keys['keylen'], orig_keys['algo'])
+        hashed = mk_pwd_hash(
+            'password', salt, orig_keys['iterations'], orig_keys['keylen'], orig_keys['algo'])
         split = split_pwd_hash(hashed)
         for key in orig_keys:
-            self.assertEqual(orig_keys[key], split[key], "key values for hashed and unhashed pwd do not match")
+            self.assertEqual(orig_keys[key], split[key],
+                             "key values for hashed and unhashed pwd do not match")
         self.assertTrue(len(split['salt']) == len(split['data']) == 2 * split['keylen'], "length of salt or data does "
                                                                                          "not match the keylen value")
 
@@ -127,10 +133,12 @@ class AuthTest(unittest.TestCase):
         """
         self.load_users()
         msg = "failed to authenticate as sample user jodoe"
-        self.assertEquals('jodoe', self.auth_handler.validate_user(None, 'jodoe', 'mypassword').get('user'), msg)
+        self.assertEquals('jodoe', self.auth_handler.validate_user(
+            None, 'jodoe', 'mypassword').get('user'), msg)
 
         msg = "validation failed to return anonymous user for a non-existing user"
-        self.assertEquals(0, self.auth_handler.validate_user(None, 'jimmy', 'doesNotExist').get('id'), msg)
+        self.assertEquals(0, self.auth_handler.validate_user(
+            None, 'jimmy', 'doesNotExist').get('id'), msg)
 
     def test_validate_user_old_hashing_and_update_password(self):
         """
@@ -138,21 +146,25 @@ class AuthTest(unittest.TestCase):
         update her password using the new default method, check whether the new hash has proper format, try to
         authenticate using the new password
         """
-        self.mock_redis_plugin.add_user_old_hashing(2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
+        self.mock_redis_plugin.add_user_old_hashing(
+            2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
 
         msg = "wrong length of pwd_hash created using the legacy method"
         self.assertEquals(len(self.auth_handler._find_user('mary').get('pwd_hash')), 32, msg)
 
         msg = "failed to authenticate using the old hashing method"
-        self.assertEquals('mary', self.auth_handler.validate_user(None, 'mary', 'maryspassword').get('user'), msg)
+        self.assertEquals('mary', self.auth_handler.validate_user(
+            None, 'mary', 'maryspassword').get('user'), msg)
 
         self.auth_handler.update_user_password(2, 'marysnewpassword')
         split_new = split_pwd_hash(self.auth_handler._find_user('mary').get('pwd_hash'))
         msg = "the password update method failed"
-        self.assertTrue(len(split_new['salt']) == len(split_new['data']) == 2 * split_new['keylen'], msg)
+        self.assertTrue(len(split_new['salt']) == len(
+            split_new['data']) == 2 * split_new['keylen'], msg)
 
         msg = "failed to authenticate using the new hashing method"
-        self.assertEquals('mary', self.auth_handler.validate_user(None, 'mary', 'marysnewpassword').get('user'), msg)
+        self.assertEquals('mary', self.auth_handler.validate_user(
+            None, 'mary', 'marysnewpassword').get('user'), msg)
 
 
 if __name__ == '__main__':
