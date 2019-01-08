@@ -80,6 +80,9 @@ class PluginApi(object):
     def root_url(self):
         return self._controller.get_root_url()
 
+    def create_url(self, action, params):
+        return self._controller.create_url(action, params)
+
     def updated_current_url(self, args):
         return self._controller.updated_current_url(args)
 

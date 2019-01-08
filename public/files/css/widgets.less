@@ -919,7 +919,14 @@ table.MLSingleLevelFields {
 
 }
 
-.ValidatedItem.invalid > * {
+.ValidatedItem .error-desc {
+    font-size: 80%;
+    color: #ffb4b4;
+    padding-left: 2em;
+}
+
+.ValidatedItem.invalid input,
+.ValidatedItem.invalid textarea {
     background-color: #ffb4b4;
 }
 

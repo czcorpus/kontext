@@ -722,7 +722,10 @@ export function init(
     // ------------------------------------------------------------------------------------
 
     const ValidatedItem:CoreViews.ValidatedItem.Component = (props) => {
-        return <span className={`ValidatedItem${props.invalid ? ' invalid' : ''}`}>{props.children}</span>;
+        return <span className={`ValidatedItem${props.invalid ? ' invalid' : ''}`}>
+            {props.children}
+            {props.errorDesc ? <><br /><span className="error-desc">{props.errorDesc}</span></> : null}
+        </span>;
     };
 
     // ------------------------------------------------------------------------------------

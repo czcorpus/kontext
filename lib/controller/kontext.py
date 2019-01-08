@@ -1441,7 +1441,7 @@ class Kontext(Controller):
         kwargs['popup_server_messages'] = False
         return kwargs
 
-    @exposed(accept_kwargs=True, skip_corpus_init=True, return_type='json')
+    @exposed(accept_kwargs=True, legacy=True, skip_corpus_init=True, return_type='json')
     def message_json(self, *args, **kwargs):
         return self.message(*args, **kwargs)
 

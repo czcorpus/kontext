@@ -17,9 +17,7 @@
  */
 
 declare var AAI:any; // TODO (webpack)
-import {Kontext} from '../../types/common';
-import {IPluginApi, PluginInterfaces} from '../../types/plugins';
-import RSVP from 'rsvp';
+import {PluginInterfaces} from '../../types/plugins';
 /// <reference path="./aai.d.ts" />
 
 
@@ -31,6 +29,10 @@ class Plugin implements PluginInterfaces.Auth.IPlugin {
 
     getProfileView():React.ComponentClass {
         return null; // TODO
+    }
+
+    getSignUpView():React.ComponentClass|null {
+        return null;
     }
 }
 
@@ -46,7 +48,7 @@ const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
     opts.metadataFeed = pluginConfig.metadataFeed;
     // We need to double encode the window.location.href as it has url params
     // and we put it into url param (returnTo)
-    opts.target = pluginConfig.login_url + 
+    opts.target = pluginConfig.login_url +
                     encodeURIComponent(encodeURIComponent(window.location.href));
     opts.serviceName = pluginConfig.service_name;
     opts.responseUrl = pluginConfig.response_url;

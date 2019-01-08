@@ -20,34 +20,47 @@
 
 import * as React from 'react';
 import {Kontext} from '../../../types/common';
-import {UserProfileModel} from '../profile';
+import {UserProfileModel, UserProfileState} from '../profile';
 import { ReactElement } from 'react';
 import {ActionDispatcher} from '../../../app/dispatcher';
 
 export interface UserProfileViews {
     UserProfileView:React.ComponentClass;
+    TRNewPasswdInput:React.SFC<{
+        value:Kontext.FormValue<string>;
+        isRegistration:boolean;
+    }>;
+    TRNewPasswdInput2:React.SFC<{
+        value:Kontext.FormValue<string>;
+        isRegistration:boolean;
+    }>;
+    TrUserFirstNameInput:React.SFC<{
+        onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
+        value:Kontext.FormValue<string>;
+    }>;
+    TrUserLastNameInput:React.SFC<{
+        onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
+        value:Kontext.FormValue<string>;
+    }>;
+    TrUserEmailInput:React.SFC<{
+        onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
+        value:Kontext.FormValue<string>;
+    }>;
 }
 
 export interface UserProfileViewProps {
 
 }
 
-export interface UserProfileViewState {
-    currPasswd:string;
-    newPasswd:string;
-    newPasswd2:string;
-    firstname:string;
-    lastname:string;
-    email:string;
-}
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, profileModel:UserProfileModel):UserProfileViews {
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, profileModel:UserProfileModel) {
+    const layoutViews = he.getLayoutViews();
 
     /**
      *
      * @param props
      */
-    const TRCurrPasswdInput = (props:{value:string}) => {
+    const TRCurrPasswdInput = (props:{value:Kontext.FormValue<string>}) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -64,8 +77,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
                     {he.translate('user__current_password')}:
                 </th>
                 <td>
-                    <input type="password" value={props.value} autoComplete="off"
-                            onChange={handleInputChange} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="password" value={props.value.value} autoComplete="off"
+                                onChange={handleInputChange} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         );
@@ -75,7 +90,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
      *
      * @param props
      */
-    const TRNewPasswdInput = (props:{value:string}) => {
+    const TRNewPasswdInput:UserProfileViews['TRNewPasswdInput'] = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -89,11 +104,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
         return (
             <tr className="required">
                 <th>
-                    {he.translate('user__new_password')}:
+                    {props.isRegistration ? he.translate('user__password') : he.translate('user__new_password')}:
                 </th>
                 <td>
-                    <input type="password" value={props.value}
-                            onChange={handleInputChange} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
+                        <input type="password" value={props.value.value}
+                                onChange={handleInputChange} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         )
@@ -102,7 +119,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
     /**
      *
      */
-    const TRNewPasswdInput2 = (props:{value:string}) => {
+    const TRNewPasswdInput2:UserProfileViews['TRNewPasswdInput2'] = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -116,20 +133,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
         return (
             <tr className="required">
                 <th>
-                    {he.translate('user__new_password_again')}:
+                    {props.isRegistration ? he.translate('user__password_again') : he.translate('user__new_password_again')}:
                 </th>
                 <td>
-                    <input type="password" value={props.value}
-                            onChange={handleInputChange} />
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
+                        <input type="password" value={props.value.value}
+                                onChange={handleInputChange} />
+                    </layoutViews.ValidatedItem>
                 </td>
             </tr>
         )
     };
 
     const PasswordChangeForm = (props:{
-        currPasswd:string;
-        newPasswd:string;
-        newPasswd2:string;
+        currPasswd:Kontext.FormValue<string>;
+        newPasswd:Kontext.FormValue<string>;
+        newPasswd2:Kontext.FormValue<string>;
     }) => {
 
         const handleSubmitClick = (props) => {
@@ -146,8 +165,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
                     <table className="form">
                         <tbody>
                             <TRCurrPasswdInput value={props.currPasswd} />
-                            <TRNewPasswdInput value={props.newPasswd} />
-                            <TRNewPasswdInput2 value={props.newPasswd2} />
+                            <TRNewPasswdInput value={props.newPasswd} isRegistration={false} />
+                            <TRNewPasswdInput2 value={props.newPasswd2} isRegistration={false} />
                         </tbody>
                     </table>
                 </fieldset>
@@ -161,31 +180,67 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
         );
     };
 
+    // ----------------------- <TrUserFirstNameInput /> ----------------
 
-    /**
-     *
-     */
-    class UserProfileView extends React.Component<UserProfileViewProps, UserProfileViewState> {
+    const TrUserFirstNameInput:UserProfileViews['TrUserFirstNameInput'] = (props) => {
+        return <tr>
+            <th>
+                {he.translate('user__firstname')}:
+            </th>
+            <td>
+                <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
+                    <input type="text" readOnly={!props.onChange} value={props.value.value}
+                            style={{width: '10em'}} onChange={props.onChange} />
+                </layoutViews.ValidatedItem>
+            </td>
+        </tr>;
+    };
+
+
+    // ----------------------- <TrUserLastNameInput /> ----------------
+
+    const TrUserLastNameInput:UserProfileViews['TrUserLastNameInput'] = (props) => {
+        return <tr>
+            <th>
+                {he.translate('user__lastname')}:
+            </th>
+            <td>
+                <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
+                    <input type="text" readOnly={!props.onChange} value={props.value.value}
+                            style={{width: '10em'}} onChange={props.onChange} />
+                </layoutViews.ValidatedItem>
+            </td>
+        </tr>;
+    };
+
+    // ----------------------- <TrUserEmailInput /> ------------------------
+
+    const TrUserEmailInput:UserProfileViews['TrUserEmailInput'] = (props) => {
+        return <tr>
+            <th>
+                {he.translate('user__email')}:
+            </th>
+            <td>
+                <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
+                    <input type="text" readOnly={!props.onChange} value={props.value.value}
+                            style={{width: '20em'}} onChange={props.onChange} />
+                </layoutViews.ValidatedItem>
+            </td>
+        </tr>;
+    };
+
+    // ----------------------- <UserProfileView /> ------------------------
+
+    class UserProfileView extends React.Component<UserProfileViewProps, UserProfileState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
+            this.state = profileModel.getState();
             this._handleModelChange = this._handleModelChange.bind(this);
         }
 
-        _fetchModelState():UserProfileViewState {
-            return {
-                currPasswd: profileModel.getCurrPasswd(),
-                newPasswd: profileModel.getNewPasswd(),
-                newPasswd2: profileModel.getNewPasswd2(),
-                firstname: profileModel.getFirstname(),
-                lastname: profileModel.getLastname(),
-                email: profileModel.getEmail()
-            }
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
+        _handleModelChange(state:UserProfileState) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -206,33 +261,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
                             </legend>
                             <table className="form">
                                 <tbody>
-                                    <tr>
-                                        <th>
-                                            {he.translate('user__firstname')}:
-                                        </th>
-                                        <td>
-                                            <input type="text" readOnly={true} value={this.state.firstname}
-                                                    style={{width: '10em'}} />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>
-                                            {he.translate('user__firstname')}:
-                                        </th>
-                                        <td>
-                                            <input type="text" readOnly={true} value={this.state.lastname}
-                                                    style={{width: '10em'}} />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>
-                                            {he.translate('user__email')}:
-                                        </th>
-                                        <td>
-                                            <input type="text" readOnly={true} value={this.state.email}
-                                                    style={{width: '20em'}} />
-                                        </td>
-                                    </tr>
+                                    <TrUserFirstNameInput value={this.state.firstName} />
+                                    <TrUserLastNameInput value={this.state.lastName} />
+                                    <TrUserEmailInput value={this.state.email} />
                                 </tbody>
                             </table>
                         </fieldset>
@@ -247,6 +278,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
     }
 
     return {
-        UserProfileView: UserProfileView
-    }
+        UserProfileView: UserProfileView,
+        TRNewPasswdInput: TRNewPasswdInput,
+        TRNewPasswdInput2: TRNewPasswdInput2,
+        TrUserFirstNameInput: TrUserFirstNameInput,
+        TrUserLastNameInput: TrUserLastNameInput,
+        TrUserEmailInput: TrUserEmailInput
+    };
 }

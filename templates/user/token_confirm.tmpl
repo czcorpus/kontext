@@ -1,7 +1,7 @@
 #*
-Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+Copyright (c) 2019 Charles University, Faculty of Arts,
                    Institute of the Czech National Corpus
-Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+Copyright (c) 2019 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,17 +23,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #extends document
 
 #def title
-$_("User profile")#slurp
+$_("Verification key confirmation")#slurp
 #end def
 
 #def bodyonload
-__conf.User = $to_json($user);
-userProfilePage.init(__conf);
+userTokenConfirmPage.init(__conf);
 #end def
 
 #def main
 <section>
-    <h2>$_("User profile")</h2>
-    <div id="user-profile-mount"></div>
+    <h2>$_("Verification key confirmation")</h2>
+    <div>
+    #if $ok
+        <p class="token-confirmation">$label - $_('confirmed')<p>
+        <p>
+            <a id="try-login" class="util-button">$_('Sign in')</a>
+        </p>
+    #else
+        <p class="token-confirmation">
+            $_('Confirmation key not found')
+        </p>
+        <p>
+            <a class="util-button" href=${sign_up_url}>$_('Sign up')</a>
+        </p>
+    #end if
+    </p>
 </section>
 #end def

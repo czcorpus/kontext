@@ -59,52 +59,70 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 <layoutViews.CloseableFrame onCloseClick={props.onCloseClick}
                         label={he.translate('user__login_header')}>
                     <form className="login" action={he.createActionLink('user/login', args)} method="POST">
+                        <table className="form">
+                            <tbody>
+                                <tr>
+                                    <th>
+                                        {he.translate('user__username')}:
+                                    </th>
+                                    <td>
+                                        <input type="text" name="username" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        {he.translate('user__password')}:
+                                    </th>
+                                    <td>
+                                        <input type="password" name="password" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                         <p>
-                            <strong>
-                                {he.translate('user__username')}:
-                            </strong>
-                            <input type="text" name="username" />
+                            <button type="submit" className="default-button">
+                                {he.translate('user__login_btn')}
+                            </button>
                         </p>
-                        <p>
-                            <strong>
-                                {he.translate('user__password')}:
-                            </strong>
-                            <input type="password" name="password" />
-                        </p>
-                        <button type="submit" className="default-button">
-                            {he.translate('user__login_btn')}
-                        </button>
                     </form>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );
     };
 
-    /**
-     *
-     * @param props
-     */
-    const LoginButton = (props:{
-            isAnonymous:string;
-            fullname:string,
-            onLogoutClick:()=>void,
-            onLoginClick:()=>void,
-            onNameClick:()=>void}) => {
+
+
+    // -------------------------- <LoginButton /> ---------------------------------
+
+    const LoginButton:React.SFC<{
+        isAnonymous:string;
+        fullname:string,
+        onLogoutClick:()=>void,
+        onLoginClick:()=>void,
+        onNameClick:()=>void
+     }> = (props) => {
 
         if (props.isAnonymous) {
-            return <a onClick={props.onLoginClick}>({he.translate('user__login_btn')})</a>;
+            return <a onClick={props.onLoginClick}>{he.translate('user__login_btn')}</a>;
 
         } else {
             return (
                 <span><a className="username" onClick={props.onNameClick}>{props.fullname}</a>{'\u00a0'}
-                (<a onClick={props.onLogoutClick}>{he.translate('user__logout_btn')}</a>)</span>
+                <a onClick={props.onLogoutClick}>{he.translate('user__logout_btn')}</a></span>
             );
         }
     };
 
+    // -------------------------- <SignUpButton /> ---------------------------------
 
-    /**
-     */
+    const SignUpButton:React.SFC<{
+
+    }> = (props) => {
+        return <a href={he.createActionLink('user/sign_up_form')}>{he.translate('user__signup_btn')}</a>;
+    }
+
+    // -------------------------- <UserPane /> ---------------------------------
+
     class UserPane extends React.Component<{isAnonymous:string; fullname:string}, UserPaneState> {
 
         constructor(props) {
@@ -173,10 +191,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                                 onLogoutClick={this.handleLogoutClick}
                                 onLoginClick={this.handleLoginClick}
                                 onNameClick={this.handleProfileTrigger} />
+                        {this.props.isAnonymous ?
+                            <>{'\u00a0/\u00a0'}<SignUpButton /></> :
+                            null
+                        }
                     </span>
                     {this.state.loginFormVisible ?
-                        <LoginForm onCloseClick={this.handleFormClose}
-                            returnUrl={this.state.returnUrl} /> :
+                            <LoginForm onCloseClick={this.handleFormClose}
+                                returnUrl={this.state.returnUrl} /> :
                         null
                     }
                 </div>
