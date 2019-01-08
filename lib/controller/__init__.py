@@ -51,7 +51,7 @@ from controller.errors import (UserActionException, NotFoundException, get_trace
 from templating import CheetahResponseFile
 
 
-def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=False, skip_corpus_init=False,
+def exposed(access_level=0, template=None, vars=(), page_model=None, func_arg_mapped=False, skip_corpus_init=False,
             mutates_conc=False, http_method='GET', accept_kwargs=None, apply_semi_persist_args=False,
             return_type='template'):
     """
@@ -64,7 +64,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
     template -- a Cheetah template source path
     vars -- deprecated; do not use
     page_model -- a JavaScript page module
-    legacy -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
+    func_arg_mapped -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
     skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
     mutates_conc -- store a new conc action under a new key to a conc_peristence db
     http_method -- required HTTP method (POST, GET, PUT,...), either a single string or a tuple of strings
@@ -77,7 +77,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
         func.__dict__['template'] = template
         func.__dict__['vars'] = vars
         func.__dict__['page_model'] = page_model
-        func.__dict__['legacy'] = legacy
+        func.__dict__['func_arg_mapped'] = func_arg_mapped
         func.__dict__['skip_corpus_init'] = skip_corpus_init
         func.__dict__['mutates_conc'] = mutates_conc
         func.__dict__['http_method'] = http_method
@@ -92,7 +92,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, legacy=Fals
 def _function_defaults(fun):
     """
     Returns a dictionary containing default argument names and
-    their respective values. This is used when invoking legacy
+    their respective values. This is used when invoking func_arg_mapped
     action method for URL -> func mapping.
 
     arguments:
@@ -476,12 +476,12 @@ class Controller(object):
                 raise err
 
     @staticmethod
-    def _invoke_legacy_action(action, named_args):
+    def _invoke_func_arg_mapped_action(action, named_args):
         """
         Calls an action method (= method with the @exposed annotation) in the
         "bonito" way (i.e. with automatic mapping between request args to target
-        method args). Such action must have legacy=True meta-information.
-        Non-legacy actions are called with werkzeug.wrappers.Request instance
+        method args). Such action must have func_arg_mapped=True meta-information.
+        Non-func_arg_mapped actions are called with werkzeug.wrappers.Request instance
         as the first argument.
 
         arguments:
@@ -857,11 +857,11 @@ class Controller(object):
         The method expects 'methodname' argument to be a valid @exposed method.
 
         Please note that 'request' and 'named_args' are used in a mutually exclusive
-        way (the former is passed to 'new style' actions, the latter is used for legacy ones).
+        way (the former is passed to 'new style' actions, the latter is used for func_arg_mapped ones).
 
         arguments:
             methodname -- a string name of a processed method
-            named_args -- named args for the method (legacy actions)
+            named_args -- named args for the method (func_arg_mapped actions)
 
         returns: tuple of 3 elements
           0 = template name
@@ -870,11 +870,11 @@ class Controller(object):
         action_metadata = self._get_method_metadata(methodname)
         method = getattr(self, methodname)
 
-        if not action_metadata['legacy']:
+        if not action_metadata['func_arg_mapped']:
             # new-style actions use werkzeug.wrappers.Request
             method_ans = method(self._request)
         else:
-            method_ans = self._invoke_legacy_action(method, named_args)
+            method_ans = self._invoke_func_arg_mapped_action(method, named_args)
         tpl_path = action_metadata['template']
         if not tpl_path:
             tpl_path = os.path.join(self.get_mapping_url_prefix()[

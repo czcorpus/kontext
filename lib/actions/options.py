@@ -109,7 +109,7 @@ class Options(Kontext):
         out['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         return out
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
+    @exposed(access_level=0, template='view.tmpl', page_model='view', func_arg_mapped=True, http_method='POST')
     def viewattrsx(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
                    setstructattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
@@ -142,7 +142,7 @@ class Options(Kontext):
             cql_editor=self.args.cql_editor
         )
 
-    @exposed(access_level=0, return_type='json', http_method='POST', legacy=True, skip_corpus_init=True)
+    @exposed(access_level=0, return_type='json', http_method='POST', func_arg_mapped=True, skip_corpus_init=True)
     def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, cql_editor=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
                                cql_editor=cql_editor)

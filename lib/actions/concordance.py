@@ -413,7 +413,7 @@ class Actions(Querying):
                     relconcsize=1e6 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, mutates_conc=True)
+    @exposed(access_level=1, template='view.tmpl', page_model='view', func_arg_mapped=True, mutates_conc=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
@@ -883,7 +883,7 @@ class Actions(Querying):
         self.args.q.append('D')
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=False,
+    @exposed(access_level=0, template='view.tmpl', page_model='view', func_arg_mapped=False,
              mutates_conc=True)
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
@@ -893,7 +893,7 @@ class Actions(Querying):
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view()
 
-    @exposed(access_level=0, legacy=True, page_model='freq')
+    @exposed(access_level=0, func_arg_mapped=True, page_model='freq')
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, force_cache=0):
         """
         display a frequency list
@@ -1091,7 +1091,7 @@ class Actions(Querying):
             qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
         self.args.q = [u'q[' + '&'.join(qparts) + ']']
 
-    @exposed(access_level=1, legacy=True, template='txtexport/savefreq.tmpl', return_type='plain')
+    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.tmpl', return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1147,7 +1147,7 @@ class Actions(Querying):
             output = writer.raw_content()
         return output
 
-    @exposed(access_level=0, template='freqs.tmpl', page_model='freq', accept_kwargs=True, legacy=True)
+    @exposed(access_level=0, template='freqs.tmpl', page_model='freq', accept_kwargs=True, func_arg_mapped=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
@@ -1171,7 +1171,7 @@ class Actions(Querying):
         result['freq_form_args'] = tmp
         return result
 
-    @exposed(access_level=1, template='freqs.tmpl', page_model='freq', legacy=True)
+    @exposed(access_level=1, template='freqs.tmpl', page_model='freq', func_arg_mapped=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
             raise ConcError(translate('No text type selected'))
@@ -1235,7 +1235,7 @@ class Actions(Querying):
                 self.args.corpname)
         return exporter.raw_content()
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
+    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=0):
         """
         list collocations
@@ -1294,7 +1294,8 @@ class Actions(Querying):
         ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
         return ans
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')
+    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/savecoll.tmpl',
+             return_type='plain')
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
         """
         save collocations
@@ -1336,7 +1337,7 @@ class Actions(Querying):
             raise UserActionException('Unknown format: %s' % (saveformat,))
         return out_data
 
-    @exposed(access_level=1, legacy=True, return_type='json')
+    @exposed(access_level=1, func_arg_mapped=True, return_type='json')
     def structctx(self, pos=0, struct='doc'):
         """
         display a hit in a context of a structure"
@@ -1375,7 +1376,8 @@ class Actions(Querying):
         pos = int(request.args.get('pos', '0'))
         return self.call_function(conclib.get_full_ref, (self.corp, pos))
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl', return_type='plain')
+    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/saveconc.tmpl',
+             return_type='plain')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0):
 
         def merge_conc_line_parts(items):
@@ -1611,7 +1613,7 @@ class Actions(Querying):
         self.add_conc_form_args(LockedOpFormsArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', legacy=False)
+    @exposed(return_type='json', http_method='POST', func_arg_mapped=False)
     def ajax_send_group_selection_link_to_mail(self, request):
         import mailing
         ans = mailing.send_concordance_url(plugins.runtime.AUTH.instance, self._plugin_api,
