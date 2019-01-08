@@ -152,7 +152,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const tconnect = () => {
             if (props.row.tokenConnect.length > 0) {
             return <span title="Dictionaries are avaliable for this corpus">
-                     <img src={he.createStaticUrl('img/book.svg')} className="dict-logo"></img></span>
+                     <img src={he.createStaticUrl('img/book-solid.gif')} className="dict-logo"></img></span>
             }
         }
 
@@ -165,7 +165,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const download = () => {
             if (props.row.access.indexOf("anonymous") == 0 && props.row.repo !== 'no') {
             return <a href={props.row.repo} title={"Download " + props.row.name}>
-                     <img src={he.createStaticUrl('img/download-button.svg')} className="download-logo"></img></a>
+                     <img src={he.createStaticUrl('img/download-solid.gif')} className="download-logo"></img></a>
             }
         }
 
