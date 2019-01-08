@@ -96,7 +96,7 @@ class Wordlist(ConcActions):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
-    @exposed(access_level=1, legacy=True, http_method=('POST', 'GET'), page_model='wordlist')
+    @exposed(access_level=1, func_arg_mapped=True, http_method=('POST', 'GET'), page_model='wordlist')
     def result(self, wlpat='', paginate=True, wlhash='', blhash=''):
         """
         """
@@ -249,7 +249,7 @@ class Wordlist(ConcActions):
                            ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
                            ml3attr=self.args.wlposattr3)
 
-    @exposed(access_level=1, legacy=True, template='txtexport/savewl.tmpl', return_type='plain')
+    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savewl.tmpl', return_type='plain')
     def savewl(self, from_line=1, to_line='', usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
         save word list
@@ -292,7 +292,7 @@ class Wordlist(ConcActions):
             out_data = writer.raw_content()
         return out_data
 
-    @exposed(legacy=True, return_type='json')
+    @exposed(func_arg_mapped=True, return_type='json')
     def process(self, attrname='', worker_tasks=None):
         backend = settings.get('calc_backend', 'type')
         if worker_tasks and backend in ('celery', 'konserver'):
