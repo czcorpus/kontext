@@ -1617,13 +1617,13 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', func_arg_mapped=False)
     def ajax_send_group_selection_link_to_mail(self, request):
-        with plugins.rumtime.AUTH as auth:
+        with plugins.runtime.AUTH as auth:
             user_info = auth.get_user_info(self._plugin_api)
             user_email = user_info['email']
             username = user_info['username']
             smtp_server = mailing.smtp_factory()
-            url = request.form.get('url')
-            recip_email = request.form.get('email')
+            url = request.args.get('url')
+            recip_email = request.args.get('email')
 
             text = translate('KonText user %s has sent a concordance link to you') % (username,) + ':'
             text += '\n\n'

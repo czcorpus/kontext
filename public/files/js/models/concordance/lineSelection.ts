@@ -328,14 +328,15 @@ export class LineSelectionModel extends StatefulModel {
     private sendSelectionUrlToEmail(email:string):RSVP.Promise<boolean> {
         const prom = this.layoutModel.ajax<SendSelToMailResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_send_group_selection_link_to_mail'),
-            {
-                'email': email,
-                'url': window.location.href
-            },
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
+            this.layoutModel.createActionUrl(
+                'ajax_send_group_selection_link_to_mail',
+                [
+                    ['corpname', this.layoutModel.getCorpusIdent().id],
+                    ['email', email],
+                    ['url', window.location.href]
+                ]
+            ),
+            {}
         );
 
         return prom.then(
@@ -448,8 +449,7 @@ export class LineSelectionModel extends StatefulModel {
                 'ajax_reedit_line_selection',
                 this.layoutModel.getConcArgs().items()
             ),
-            {},
-            {contentType : 'application/x-www-form-urlencoded'}
+            {}
 
         ).then<MultiDict>(
             (data) => {
@@ -538,10 +538,7 @@ export class LineSelectionModel extends StatefulModel {
             'POST',
             this.layoutModel.createActionUrl('ajax_sort_group_lines',
                     this.layoutModel.getConcArgs().items()),
-            {},
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
+            {}
         );
         this.finishAjaxActionWithRedirect(prom);
     }
