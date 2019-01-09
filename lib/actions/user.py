@@ -11,14 +11,15 @@
 # GNU General Public License for more details.
 
 import time
+import logging
 
 from controller import exposed
-from controller.errors import UserActionException
+from controller.errors import UserActionException, ImmediateRedirectException
 from controller.kontext import Kontext
 from main_menu import MainMenu
 from translation import ugettext as _
 import plugins
-from plugins.abstract.auth import AuthException
+from plugins.abstract.auth import SignUpNeedsUpdateException
 import settings
 
 
@@ -73,19 +74,30 @@ class User(Kontext):
     @exposed(access_level=0, template='user/administration.tmpl', skip_corpus_init=True, page_model='userSignUp',
              http_method='GET')
     def sign_up_form(self, request):
+        ans = dict(credentials_form={}, username_taken=False, user_registered=False)
         with plugins.runtime.AUTH as auth:
+            token_key = request.args.get('key')
+            username_taken = bool(int(request.args.get('username_taken', '0')))
+            if token_key:
+                credentials = auth.get_form_props_from_token(token_key)
+                if not credentials:
+                    raise UserActionException('Invalid confirmation token')
+                del credentials['password']
+                ans['credentials_form'] = credentials
+                ans['username_taken'] = username_taken
             if not self.user_is_anonymous():
                 raise UserActionException('You are already registered')
             else:
-                return dict(user=dict(username=None), sign_up_form={})
+                ans['user'] = dict(username=None)
+        return ans
 
     @exposed(access_level=0, skip_corpus_init=True, return_type='json', http_method='POST')
     def sign_up(self, request):
         with plugins.runtime.AUTH as auth:
             errors = auth.sign_up_user(self._plugin_api, dict(
                 username=request.form['username'],
-                first_name=request.form['first_name'],
-                last_name=request.form['last_name'],
+                firstname=request.form['firstname'],
+                lastname=request.form['lastname'],
                 email=request.form['email'],
                 password=request.form['password'],
                 password2=request.form['password2']
@@ -106,9 +118,15 @@ class User(Kontext):
              page_model='userTokenConfirm')
     def sign_up_confirm_email(self, request):
         with plugins.runtime.AUTH as auth:
-            ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
-            ans.update(auth.sign_up_confirm(self._plugin_api, request.args['key']))
-            return ans
+            try:
+                key = request.args['key']
+                ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
+                ans.update(auth.sign_up_confirm(self._plugin_api, key))
+                return ans
+            except SignUpNeedsUpdateException as ex:
+                logging.getLogger(__name__).warning(ex)
+                raise ImmediateRedirectException(self.create_url('user/sign_up_form',
+                                                                 dict(key=key, username_taken=1)))
 
     @exposed(access_level=1, http_method='POST', skip_corpus_init=True, return_type='json')
     def set_user_password(self, request):
@@ -224,9 +242,9 @@ class User(Kontext):
         with plugins.runtime.AUTH as auth:
             user_info = auth.get_user_info(self._plugin_api)
             if not self.user_is_anonymous():
-                return {'user': user_info}
+                return dict(credentials_form=user_info, user_registered=True)
             else:
-                return {'user': {'username': user_info['username']}}
+                return dict(credentials_form=dict(username=user_info['username']), user_registered=False)
 
     @exposed(skip_corpus_init=True, http_method='POST', access_level=0)
     def switch_language(self, request):

@@ -16,41 +16,49 @@
 
 import smtplib
 from email.mime.text import MIMEText
-import time
 import logging
-
-from translation import ugettext as _
 import settings
 
 
-def send_concordance_url(auth, plugin_api, recipient, url):
-    user_info = auth.get_user_info(plugin_api)
-    user_email = user_info['email']
-    username = user_info['username']
-    smtp_server = settings.get('mailing', 'smtp_server')
-    sender = settings.get('mailing', 'sender')
+def smtp_factory():
+    """
+    Create a new SMTP instance with some predefined stuff
+    :return:
+    """
+    username = settings.get('mailing', 'auth_username')
+    password = settings.get('mailing', 'auth_password')
+    port = settings.get_int('maining', 'smtp_port', 25)
+    use_tsl = settings.get_bool('mailing', 'use_tsl', False)
+    server = smtplib.SMTP(settings.get('mailing', 'smtp_server'), port=port)
+    if use_tsl:
+        server.starttls()
+    if username and password:
+        server.login(username, password)
+    return server
 
-    text = _('KonText user %s has sent a concordance link to you') % (username, ) + ':'
-    text += '\n\n'
-    text += url + '\n\n'
-    text += '\n---------------------\n'
-    text += time.strftime('%d.%m. %Y %H:%M')
-    text += '\n'
 
-    s = smtplib.SMTP(smtp_server)
-
+def message_factory(recipients, subject, text, reply_to=None):
+    """
+    Create message instance with some predefined properties
+    """
     msg = MIMEText(text, 'plain', 'utf-8')
-    msg['Subject'] = _('KonText concordance link')
-    msg['From'] = sender
-    msg['To'] = recipient
-    msg.add_header('Reply-To', user_email)
+    msg['Subject'] = subject
+    msg['From'] = settings.get('mailing', 'sender')
+    msg['To'] = recipients[0]
+    if reply_to:
+        msg.add_header('Reply-To', reply_to)
+    return msg
+
+
+def send_mail(server, msg, recipients):
+    sender = settings.get('mailing', 'sender')
     try:
-        s.sendmail(sender, [recipient], msg.as_string())
+        server.sendmail(sender, recipients, msg.as_string())
         ans = True
     except Exception as ex:
         logging.getLogger(__name__).warn(
-            'There were errors sending concordance link via e-mail(s): %s' % (ex,))
+            'There were errors sending e-mail: %s' % (ex,))
         ans = False
     finally:
-        s.quit()
+        server.quit()
     return ans

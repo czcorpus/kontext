@@ -27,9 +27,9 @@ $_("User profile")#slurp
 #end def
 
 #def bodyonload
-__conf.User = $to_json($user);
-#if not $user['username']
-__conf.SignUpForm = $to_json($sign_up_form);
+__conf.CredentialsForm = $to_json($credentials_form);
+#if not $user_registered
+__conf.UsernameTaken = $to_json($username_taken);
 userSignUpPage.init(__conf);
 #else
 userProfilePage.init(__conf);

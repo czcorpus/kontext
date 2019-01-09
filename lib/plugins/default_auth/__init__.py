@@ -24,11 +24,10 @@ import re
 import uuid
 import time
 import datetime
-import smtplib
-from email.mime.text import MIMEText
-import logging
+import mailing
 from werkzeug.security import pbkdf2_hex
-from plugins.abstract.auth import AbstractInternalAuth, AuthException
+from controller.errors import ImmediateRedirectException
+from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
 from translation import ugettext as _
 import plugins
 from plugins import inject
@@ -298,10 +297,10 @@ class DefaultAuthHandler(AbstractInternalAuth):
         if not self.validate_new_password(credentials['password']):
             errors.append(('password', _('Password not valid') + '. ' +
                            self.get_required_password_properties()))
-        if not credentials['first_name']:
-            errors.append(('first_name', _('First name not valid')))
-        if not credentials['last_name']:
-            errors.append(('last_name', _('Last name not valid')))
+        if not credentials['firstname']:
+            errors.append(('firstname', _('First name not valid')))
+        if not credentials['lastname']:
+            errors.append(('lastname', _('Last name not valid')))
         if re.match(r'^[^@]+@[^@]+\.[^@]+$', credentials['email']) is None:  # just a basic e-mail syntax validation
             errors.append(('email', _('E-mail not valid')))
 
@@ -310,22 +309,24 @@ class DefaultAuthHandler(AbstractInternalAuth):
         if len(errors) == 0:
             token.save(self.db)
             ok = self.send_confirmation_mail(plugin_api, credentials['email'], credentials['username'],
-                                             credentials['first_name'], credentials['last_name'], token)
+                                             credentials['firstname'], credentials['lastname'], token)
             if not ok:
                 raise Exception(
                     _('Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try again. Alternatively you can report a problem.'))
 
         return errors
 
-    def send_confirmation_mail(self, plugin_api, user_email, username, first_name, last_name, token):
+    def send_confirmation_mail(self, plugin_api, user_email, username, firstname, lastname, token):
         expir_date = datetime.datetime.now() + datetime.timedelta(0, self._confirmation_token_ttl)
-        text = _('Hello')
+        text = u''
+        text += _('Hello')
         text += ',\n\n'
         text += _('thank you for using KonText at {url}.').format(url=plugin_api.root_url)
         text += '\n'
-        text += _(
-            'To verify your new account {username} (full name: {first_name} {last_name}) please click the link below').format(
-            username=username, first_name=first_name, last_name=last_name)
+        tmp = _('To verify your new account {username} (full name: {firstname} {lastname}) please click the link below')
+        if type(tmp) is str:
+            tmp = tmp.decode('utf-8')
+        text += tmp.format(username=username, firstname=firstname, lastname=lastname)
         text += ':\n\n'
         text += plugin_api.create_url('user/sign_up_confirm_email', dict(key=token.value))
         text += '\n\n'
@@ -335,24 +336,11 @@ class DefaultAuthHandler(AbstractInternalAuth):
         text += _('This e-mail has been generated automatically - please do not reply to it.')
         text += '\n'
 
-        s = smtplib.SMTP(self._smtp_server)
-
-        msg = MIMEText(text, 'plain', 'utf-8')
-        msg['Subject'] = _('KonText sign up confirmation')
-        msg['From'] = self._mail_sender
-        msg['To'] = user_email
-        msg.add_header('Reply-To', user_email)
-
-        try:
-            s.sendmail(self._mail_sender, [user_email], msg.as_string())
-            ans = True
-        except Exception as ex:
-            logging.getLogger(__name__).warn(
-                'There were errors sending registration confirmation link via e-mail(s): %s' % (ex,))
-            ans = False
-        finally:
-            s.quit()
-        return ans
+        server = mailing.smtp_factory()
+        msg = mailing.message_factory(
+            recipients=[user_email], subject=_('KonText sign up confirmation'),
+            text=text, reply_to=None)
+        return mailing.send_mail(server, msg, [user_email])
 
     def find_free_user_id(self):
         v = self.db.get(self.LAST_USER_ID_KEY)
@@ -368,10 +356,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
         token = SignUpToken(value=key)
         token.load(self.db)
         if token.is_stored():
+            user_test = self.db.hash_get(self.USER_INDEX_KEY, token.user['username'])
+            if user_test:
+                raise SignUpNeedsUpdateException()
             new_id = self.find_free_user_id()
             self.db.set(self._mk_user_key(new_id),
-                        dict(id=new_id, username=token.user['username'], firstname=token.user['first_name'],
-                             lastname=token.user['last_name'], email=token.user['email'],
+                        dict(id=new_id, username=token.user['username'], firstname=token.user['firstname'],
+                             lastname=token.user['lastname'], email=token.user['email'],
                              pwd_hash=token.user['password']))
             self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], self._mk_user_key(new_id))
             self.db.set(self.LAST_USER_ID_KEY, new_id)
@@ -380,6 +371,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
             return dict(ok=True, label=token.label)
         else:
             return dict(ok=False)
+
+    def get_form_props_from_token(self, key):
+        token = SignUpToken(value=key)
+        token.load(self.db)
+        if token.is_stored():
+            return token.user
+        return None
 
 
 @inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
@@ -398,4 +396,4 @@ def create_instance(conf, db, sessions):
                               mail_sender=conf.get('mailing', 'sender'),
                               confirmation_token_ttl=int(plugin_conf.get('confirmation_token_ttl',
                                                                          DefaultAuthHandler.DEFAULT_CONFIRM_TOKEN_TTL)),
-                              on_register_get_corpora=plugin_conf['on_register_get_corpora'])
+                              on_register_get_corpora=plugin_conf.get('on_register_get_corpora', ('susanne',)))
