@@ -681,6 +681,7 @@
         "user__confirm_mail_has_been_sent_{email}": "Na adresu {email} byl odeslán potvrzovací e-mail. Abyste svůj účet aktivovali, postupujte prosím podle instrukcí v e-mailu.",
         "user__new_sign_up": "Nová registrace",
         "user__go_main_page": "Hlavní stránka",
+        "user__sorry_username_taken": "Je nám líto, ale někdo jiný potvrdil jeho/její registraci se stejným uživatelským jménem o něco dříve než vy. Vyberte si prosím jiné uživatelské jméno a odešlete registraci znovu.",
         "wordlist__cannot_save_empty": "Prázdný výsledek nelze uložit.",
         "wordlist__save_wl_as_header": "Uložit seznam slov jako",
         "wordlist__include_col_headers": "Připojit nadpisy sloupců",

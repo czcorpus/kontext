@@ -224,6 +224,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
             } else {
                 return (
                     <form className="SignUpForm">
+                        {this.state.message ?
+                        <p className="message"><layoutViews.StatusIcon inline={true} status="warning" />{this.state.message}</p> :
+                        null}
                         <fieldset>
                             <legend>{he.translate('user__signup_heading')}</legend>
                             <table className="form">

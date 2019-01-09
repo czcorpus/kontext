@@ -127,7 +127,7 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
 
 
 const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
-    const userCredentials = pluginApi.getConf<Kontext.UserCredentials>('User') ||
+    const userCredentials = pluginApi.getConf<Kontext.UserCredentials>('CredentialsForm') ||
         {username: '', firstname: '', lastname: '', email: '', active: false};
     const plugin = new AuthPlugin(
         new UserProfileModel(
@@ -140,7 +140,10 @@ const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
                 lastname: userCredentials.lastname || '',
                 email: userCredentials.email || '',
                 active: userCredentials.active || false
-            }
+            },
+            pluginApi.getConf<string>('UsernameTaken') ?
+                pluginApi.translate('user__sorry_username_taken') :
+                ''
         ),
         new UserStatusModel(
             pluginApi.dispatcher(),

@@ -65,6 +65,7 @@ export interface UserProfileState {
     newPasswd2:Kontext.FormValue<string>;
     isBusy:boolean;
     isFinished:boolean;
+    message:string;
 }
 
 interface PasswordSetResponse extends Kontext.AjaxResponse {
@@ -108,7 +109,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
 
     private pluginApi:IPluginApi;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials,
+            message:string) {
         super(
             dispatcher,
             {
@@ -124,7 +126,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 newPasswd: Kontext.newFormValue('', true),
                 newPasswd2: Kontext.newFormValue('', true),
                 isBusy: false,
-                isFinished: false
+                isFinished: false,
+                message: message
             }
         );
         this.pluginApi = pluginApi;
@@ -283,7 +286,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
     sideEffects(state:UserProfileState, action:Action, dispatch:SEDispatcher):void {
         switch (action.actionType) {
             case Actions.SUBMIT_NEW_PASSWORD:
-                this.submitSignUp(state).subscribe(
+                this.submitNewPassword(state).subscribe(
                     (validationStatus) => {
                         if (validationStatusHasErrors(validationStatus)) {
                             dispatch({
@@ -351,8 +354,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     this.pluginApi.createActionUrl('user/sign_up'),
                     {
                         username: state.username.value,
-                        first_name: state.firstName.value,
-                        last_name: state.lastName.value,
+                        firstname: state.firstName.value,
+                        lastname: state.lastName.value,
                         email: state.email.value,
                         password: state.newPasswd.value,
                         password2: state.newPasswd2.value
@@ -383,7 +386,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         }
     }
 
-    private submitSignUp(state:UserProfileState):Rx.Observable<ValidationStatus> {
+    private submitNewPassword(state:UserProfileState):Rx.Observable<ValidationStatus> {
         const args = new MultiDict();
         args.set('curr_passwd', state.currPasswd.value);
         args.set('new_passwd', state.newPasswd.value);

@@ -681,6 +681,7 @@
         "user__confirm_mail_has_been_sent_{email}": "A confirmation e-mail has been sent to the address {email}. Please follow the instructions in the e-mail to activate your account.",
         "user__new_sign_up": "New sign up",
         "user__go_main_page": "Main page",
+        "user__sorry_username_taken": "We are sorry but other user confirmed his/her e-mail with the same username sooner than you. Please select a different username and send the form again.",
         "wordlist__cannot_save_empty": "Niy idzie zapisać prōznego wyniku",
         "wordlist__save_wl_as_header": "Zapisz listã słōw za",
         "wordlist__include_col_headers": "Ze nŏgōwkami kolumn",

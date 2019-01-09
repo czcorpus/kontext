@@ -400,7 +400,22 @@
                         <element name="smtp_server">
                             <text />
                         </element>
+                        <element name="smtp_port">
+                            <a:documentation>
+                                If omitted, port 25 is used
+                            </a:documentation>
+                            <data type="positiveInteger" />
+                        </element>
+                        <element name="use_tls">
+                            <ref name="boolValues" />
+                        </element>
                         <element name="sender">
+                            <text />
+                        </element>
+                        <element name="auth_username">
+                            <text />
+                        </element>
+                        <element name="auth_password">
                             <text />
                         </element>
                     </optional>

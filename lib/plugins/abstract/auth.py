@@ -183,6 +183,9 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
     def sign_up_confirm(self, plugin_api, key):
         raise NotImplementedError()
 
+    def get_form_props_from_token(self, key):
+        raise NotImplementedError()
+
 
 class AbstractRemoteAuth(AbstractAuth):
     """
@@ -213,4 +216,8 @@ class AuthException(Exception):
     """
     General authentication/authorization exception
     """
+    pass
+
+
+class SignUpNeedsUpdateException(AuthException):
     pass

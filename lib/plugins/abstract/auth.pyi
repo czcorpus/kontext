@@ -65,6 +65,8 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
 
     def validate_new_username(self, plugin_api:PluginApi, username:str) -> Tuple[bool, bool]: ...
 
+    def get_form_props_from_token(self, key:str) -> Dict[str, Any]: ...
+
 
 class AbstractRemoteAuth(AbstractAuth):
 
@@ -74,3 +76,6 @@ class AbstractRemoteAuth(AbstractAuth):
 class AuthException(Exception):
     pass
 
+
+class SignUpNeedsUpdateException(AuthException):
+    pass

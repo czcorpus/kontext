@@ -19,6 +19,7 @@ import sys
 import re
 import json
 from collections import defaultdict
+import time
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
@@ -42,6 +43,7 @@ from texttypes import TextTypeCollector, get_tt
 from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
 import templating
+import mailing
 
 
 class ConcError(UserActionException):
@@ -143,10 +145,10 @@ class Actions(Querying):
         if contains_within:
             return translate('related to the subset defined by the selected text types')
         elif hasattr(self.corp, 'subcname'):
-            return (_(u'related to the whole %s') % (corpus_name,)) + \
+            return (translate(u'related to the whole %s') % (corpus_name,)) + \
                 ':%s' % self.corp.subcname
         else:
-            return _(u'related to the whole %s') % corpus_name
+            return translate(u'related to the whole %s') % corpus_name
 
     @staticmethod
     def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
@@ -1615,11 +1617,27 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', func_arg_mapped=False)
     def ajax_send_group_selection_link_to_mail(self, request):
-        import mailing
-        ans = mailing.send_concordance_url(plugins.runtime.AUTH.instance, self._plugin_api,
-                                           request.form.get('email'),
-                                           request.form.get('url'))
-        return dict(ok=ans)
+        with plugins.rumtime.AUTH as auth:
+            user_info = auth.get_user_info(self._plugin_api)
+            user_email = user_info['email']
+            username = user_info['username']
+            smtp_server = mailing.smtp_factory()
+            url = request.form.get('url')
+            recip_email = request.form.get('email')
+
+            text = translate('KonText user %s has sent a concordance link to you') % (username,) + ':'
+            text += '\n\n'
+            text += url + '\n\n'
+            text += '\n---------------------\n'
+            text += time.strftime('%d.%m. %Y %H:%M')
+            text += '\n'
+
+            msg = mailing.message_factory(
+                recipients=[recip_email],
+                subject=translate('KonText concordance link'),
+                text=text,
+                reply_to=user_email)
+            return dict(ok=mailing.send_mail(smtp_server, msg, [recip_email]))
 
     @exposed(return_type='json', http_method='POST', mutates_conc=True)
     def ajax_reedit_line_selection(self, _):
