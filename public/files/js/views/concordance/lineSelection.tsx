@@ -365,10 +365,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _fetchModelState() {
+            const userCreds = lineSelectionModel.getEmailDialogCredentials();
             return {
-                emailDialogCredentials: lineSelectionModel.getEmailDialogCredentials(),
+                emailDialogCredentials: userCreds,
                 renameLabelDialog: false,
-                email: null,
+                email: userCreds ? userCreds.email : '',
                 waiting: lineSelectionModel.isBusy(),
                 lastCheckpointUrl: lineSelectionModel.getLastCheckpointUrl()
             };
@@ -455,6 +456,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     email: this.state.email
                 }
             });
+            if (typeof this.props.chartCallback === 'function') {
+                this.props.chartCallback(false);
+            }
         }
 
         componentWillUnmount() {
@@ -463,8 +467,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidUpdate(prevProps, prevState) {
             // we must inform non-react chart building function to redraw d3 charts
-            if (typeof this.props.chartCallback === 'function') {
-                this.props.chartCallback(prevState.lastCheckpointUrl !== this.state.lastCheckpointUrl); // = false => do not use prev data
+            if (typeof this.props.chartCallback === 'function'
+                    && prevState.lastCheckpointUrl !== this.state.lastCheckpointUrl) {
+                this.props.chartCallback(false); // = false => do not use prev data
             }
         }
 
