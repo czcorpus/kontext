@@ -425,13 +425,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         return (
             <fieldset className="keywords">
                 <legend>{props.label}</legend>
-                {props.keywords.sort(function(a, b) {
-                    if (a.label.toLowerCase() > b.label.toLowerCase()) {
-                        return 1; }
-                    if (a.label.toLowerCase() < b.label.toLowerCase()) {
-                        return -1; }
-                    return 0;
-                }).filter(v => v.visible).map((keyword, i) =>
+                {props.keywords.filter(v => v.visible).map((keyword, i) =>
                         <KeywordLink key={i} keyword={keyword} />
                 )}
                 {hasSelectedKeywords() ? <ResetLink  /> : null}
@@ -439,6 +433,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
                 </div>
             </fieldset>
+
         );
     };
 
