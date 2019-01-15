@@ -314,7 +314,7 @@ class Actions(Querying):
                                      request.form['name'])
         return dict(saved=ans)
 
-    @exposed(access_level=1, return_type='json', http_method='POST')
+    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def delete_query(self, request):
         with plugins.runtime.QUERY_STORAGE as qs:
             ans = qs.delete(self.session_get('user', 'id'), request.form['query_id'])
