@@ -210,7 +210,7 @@ class DefaultCorplistProvider(CorplistProvider):
     Corpus listing and filtering service
     """
 
-    def __init__(self, plugin_api, auth, corparch, tag_prefix):
+    def __init__(self, plugin_api, auth, corparch, tag_prefix, session_keywords_key, default_label):
         """
         arguments:
         plugin_api -- a controller.PluginApi instance
@@ -222,6 +222,9 @@ class DefaultCorplistProvider(CorplistProvider):
         self._auth = auth
         self._corparch = corparch
         self._tag_prefix = tag_prefix
+        self.SESSION_KEYWORDS_KEY = session_keywords_key
+        self.default_label = default_label
+
 
     @staticmethod
     def cut_result(res, offset, limit):
@@ -269,7 +272,7 @@ class DefaultCorplistProvider(CorplistProvider):
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
-        
+
         ans = {'rows': []}
         permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
         used_keywords = set()
@@ -459,7 +462,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return cl
 
     def create_corplist_provider(self, plugin_api):
-        return DefaultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
+        return DefaultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix, self.SESSION_KEYWORDS_KEY, self.default_label)
 
     def _get_corplist_title(self, elm, lang):
         """
