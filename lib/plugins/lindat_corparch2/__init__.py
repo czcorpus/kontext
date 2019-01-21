@@ -257,8 +257,19 @@ class DefaultCorplistProvider(CorplistProvider):
         return True
 
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
-        if query is False:  # False means 'use default values'
+        if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
+            plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
+        initial_query = query
+        if query is False:
             query = ''
+        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+        if len(query_keywords) == 0 and initial_query is False:
+            query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+        else:
+            plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
+        query = ' '.join(query_substrs) \
+                + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
+        
         ans = {'rows': []}
         permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
         used_keywords = set()
@@ -360,8 +371,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
+    SESSION_KEYWORDS_KEY = 'plugin_lindatcorparch_default_keywords'
+
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
-                 max_page_size, registry_lang):
+                 max_page_size, default_label, registry_lang):
         super(CorpusArchive, self).__init__()
         self._auth = auth
         self._user_items = user_items
@@ -376,6 +389,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
         self._manatee_corpora = ManateeCorpora()
+        self.default_label = default_label
 
     @property
     def max_page_size(self):
@@ -721,6 +735,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
+            initial_keywords = plugin_api.session.get(
+            self.SESSION_KEYWORDS_KEY, [self.default_label]),
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )
@@ -756,4 +772,5 @@ def create_instance(conf, auth, user_items):
                          max_num_hints=conf.get('plugins', 'corparch')['lindat:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get('lindat:default_page_list_size',
                                                                            None),
+                         default_label=conf.get('plugins', 'corparch')['lindat:default_label'],
                          registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
