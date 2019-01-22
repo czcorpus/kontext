@@ -283,17 +283,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 return null;
             }
         }
-
-        _hts() {
-            this.state.rows.sort(function(a, b) {
-                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                        return 1; }
-                    if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                        return -1; }
-                    return 0;
-                })
-        }
-
+        
         render() {
             let rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
@@ -312,7 +302,6 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     <table className="data corplist">
                         <tbody>
                             <CorplistHeader />
-                            {this._hts()}
                             {rows}
                             {expansion}
                         </tbody>
