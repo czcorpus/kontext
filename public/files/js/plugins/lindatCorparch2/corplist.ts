@@ -489,7 +489,9 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 
     constructor(pluginApi:IPluginApi, initialData:CorplistServerData, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi, initialData, []);
+        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(),
+            pluginApi, initialData,
+            pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []);
         this.components = viewsInit(this.corplistTableModel);
     }
 

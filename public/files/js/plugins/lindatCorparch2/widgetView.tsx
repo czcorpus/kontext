@@ -351,7 +351,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_KEYWORD_CLICKED',
+                actionType: 'LINDAT_CORPARCH_KEYWORD_CLICKED',
                 props: {
                     keywordId: props.id,
                     status: !props.selected,

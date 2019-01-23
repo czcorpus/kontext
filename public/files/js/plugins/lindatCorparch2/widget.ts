@@ -323,7 +323,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 newState.currSearchResult = Immutable.List<SearchResultRow>();
                 newState.focusedRowIdx = -1;
                 return newState;
-            case 'DEFAULT_CORPARCH_KEYWORD_CLICKED':
+            case 'LINDAT_CORPARCH_KEYWORD_CLICKED':
                 newState = this.copyState(state);
                 newState.isBusy = true;
                 newState.focusedRowIdx = -1;
@@ -592,7 +592,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 );
             break;
             case 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED':
-            case 'DEFAULT_CORPARCH_KEYWORD_CLICKED':
+            case 'LINDAT_CORPARCH_KEYWORD_CLICKED':
             case 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED':
                 this.searchDelayed(state).then(
                     (data) => {
