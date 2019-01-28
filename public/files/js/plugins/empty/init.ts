@@ -18,8 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../types/plugins';
-
+/**
+ * This type is used by KonText build scripts whenever
+ * an optional plugin is set to none (i.e. a tag without children
+ * is used in config.xml for the plug-in).
+ *
+ * TODO: This is generally better than returning null/undefined but
+ * without a common interface for all the plug-ins, we're in
+ * similar situation as in case of 'null' (we must test the plug-in
+ * instance first and then call a method of choice).
+ *
+ * See also PageModel.isNotEmptyPlugin()
+ */
 export class EmptyPlugin {
 
     getViews() {

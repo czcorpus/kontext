@@ -1148,7 +1148,7 @@ export class ViewPage {
                 );
                 const ttModel = this.initTextTypesModel();
                 let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
-                if (!syntaxViewerModel) {
+                if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
                     syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
                 }
                 const tokenConnectPlg = this.initTokenConnect();
