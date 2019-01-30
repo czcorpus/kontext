@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="corparch">
+            <element name="module">
+                <value>default_corparch</value>
+            </element>
+            <element name="js_module">
+                <value>defaultCorparch</value>
+            </element>
+            <element name="file">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="root_elm_path">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="tag_prefix">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <element name="max_num_hints">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="positiveInteger" />
+            </element>
+            <element name="default_page_list_size">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="positiveInteger" />
+            </element>
+        </element>
+    </start>
+</grammar>
