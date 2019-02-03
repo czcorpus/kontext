@@ -41,6 +41,7 @@ export interface Filters {
     maxSize:string;
     minSize:string;
     name:string;
+    sortBySize:boolean;
     query?:string;
 }
 
@@ -124,7 +125,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         super(
             dispatcher,
             {
-                filters: { maxSize: '', minSize: '', name: '' },
+                filters: { maxSize: '', minSize: '', name: '', sortBySize: false},
                 keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo(preselectedKeywords))),
                 detailData: null,
                 isBusy: false,
@@ -461,7 +462,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         state.filters = {
             maxSize: inData.filters.maxSize,
             minSize: inData.filters.minSize,
-            name: inData.filters.name
+            name: inData.filters.name,
+            sortBySize: inData.filters.sortBySize
         };
     }
 
@@ -469,7 +471,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         state.filters = {
             maxSize: data.filters.maxSize,
             minSize: data.filters.minSize,
-            name: data.filters.name
+            name: data.filters.name,
+            sortBySize: data.filters.sortBySize
         };
         state.nextOffset = data.nextOffset;
         state.rows = state.rows.concat(data.rows).toList();

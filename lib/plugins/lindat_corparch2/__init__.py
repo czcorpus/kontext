@@ -241,10 +241,10 @@ class DefaultCorplistProvider(CorplistProvider):
                 (not min_size or int(item_size) >= int(min_size)) and
                 (not max_size or int(item_size) <= int(max_size)))
 
-    def sort(self, plugin_api, data, *fields):
-        def corp_cmp_key(c):
-            return c.get('name') if c.get('name') is not None else ''
-        return l10n.sort(data, loc=plugin_api.user_lang, key=corp_cmp_key)
+    def sort(self, plugin_api, data, field='name', *fields):
+        def corp_cmp_key(c, field):
+            return c.get(field) if c.get(field) is not None else ''
+        return l10n.sort(data, loc=plugin_api.user_lang, key=lambda c: corp_cmp_key(c, field))
 
     def should_fetch_next(self, ans, offset, limit):
         """
@@ -281,6 +281,10 @@ class DefaultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
+        if filter_dict.get('sortBySize') is True:
+            sorting_field = 'size'
+        else:
+            sorting_field = 'name'
 
         if offset is None:
             offset = 0
@@ -341,8 +345,9 @@ class DefaultCorplistProvider(CorplistProvider):
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
                         break
+
         ans['rows'], ans['nextOffset'] = self.cut_result(
-            self.sort(plugin_api, ans['rows']), offset, limit)
+            self.sort(plugin_api, ans['rows'], field=sorting_field), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=plugin_api.user_lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
@@ -750,7 +755,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             'filters': {
                 'maxSize': filter_dict.getlist('maxSize'),
                 'minSize': filter_dict.getlist('minSize'),
-                'name': query_substrs
+                'name': query_substrs,
+                'sortBySize': ''
             }
         }
 

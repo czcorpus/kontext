@@ -481,6 +481,28 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                         onChange={changeHandler} />;
     };
 
+        // -------------------------------- <SortBySizeCheckbox /> -----------------
+
+    /**
+     * An input to specify sorting by corpus size
+     */
+    const SortBySizeCheckbox:React.SFC<{
+        value:boolean;
+
+    }> = (props) => {
+
+        const changeHandler = (e) => {
+            dispatcher.dispatch({
+                actionType: 'FILTER_CHANGED',
+                props: {sortBySizeCheckbox: e.target.value}
+            });
+        };
+
+        return <input className="sortBySize" type="checkbox"
+                        checked={props.value}
+                        onChange={changeHandler} />;
+    };
+
     // -------------------------------- <NameSearchInput /> -----------------
 
     class NameSearchInput extends React.PureComponent<{
@@ -557,6 +579,9 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                             <span>
                             {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
                             <NameSearchInput value={this.props.filters.name} />
+                        </p>
+                        <p>
+                            <SortBySizeCheckbox value={this.props.filters.sortBySize}/> Sort by size
                         </p>
                     </div>
                 );
