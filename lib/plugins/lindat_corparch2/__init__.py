@@ -235,10 +235,6 @@ class DefaultCorplistProvider(CorplistProvider):
         return new_res, right_lim
 
     @staticmethod
-    def matches_all(d):
-        return reduce(lambda prev, curr: prev and curr, d, True)
-
-    @staticmethod
     def matches_size(d, min_size, max_size):
         item_size = d.get('size', None)
         return (item_size is not None and
@@ -329,7 +325,7 @@ class DefaultCorplistProvider(CorplistProvider):
                 tests.append(self._corparch.custom_filter(
                     self._plugin_api, full_data, permitted_corpora))
 
-                if self.matches_all(tests):
+                if all(test for test in tests):
                     corp['size'] = corp['size']
                     corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
