@@ -281,7 +281,7 @@ class DefaultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
-        if filter_dict.get('sortBySize') is True:
+        if filter_dict.get('sortBySize') == 'sort':
             sorting_field = 'size'
         else:
             sorting_field = 'name'

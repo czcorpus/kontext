@@ -41,7 +41,7 @@ export interface Filters {
     maxSize:string;
     minSize:string;
     name:string;
-    sortBySize:boolean;
+    sortBySize:string;
     query?:string;
 }
 
@@ -125,7 +125,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         super(
             dispatcher,
             {
-                filters: { maxSize: '', minSize: '', name: '', sortBySize: false},
+                filters: { maxSize: '', minSize: '', name: '', sortBySize: ''},
                 keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo(preselectedKeywords))),
                 detailData: null,
                 isBusy: false,
