@@ -500,7 +500,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         return <input className="sortBySizeCheckbox" type="checkbox"
                         name="sortBySize"
                         value="sort"
-                        onChange={changeHandler} />;
+                        onClick={changeHandler} />;
     };
 
     // -------------------------------- <NameSearchInput /> -----------------
