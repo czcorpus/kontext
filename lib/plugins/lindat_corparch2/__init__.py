@@ -242,9 +242,12 @@ class DefaultCorplistProvider(CorplistProvider):
                 (not max_size or int(item_size) <= int(max_size)))
 
     def sort(self, plugin_api, data, field='name', *fields):
-        def corp_cmp_key(c, field):
-            return c.get(field) if c.get(field) is not None else ''
-        return l10n.sort(data, loc=plugin_api.user_lang, key=lambda c: corp_cmp_key(c, field))
+        if field == 'size':
+            return sorted(data, key=lambda c: c.get(field, 0))
+        else:
+            def corp_cmp_key(c, field):
+                return c.get(field) if c.get(field) is not None else ''
+            return l10n.sort(data, loc=plugin_api.user_lang, key=lambda c: corp_cmp_key(c, field))
 
     def should_fetch_next(self, ans, offset, limit):
         """

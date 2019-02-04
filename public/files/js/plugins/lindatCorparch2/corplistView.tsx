@@ -493,7 +493,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const changeHandler = (e) => {
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
-                props: {sortBySize: e.target.name}
+                props: {sortBySize: e.target.value}
             });
         };
 
