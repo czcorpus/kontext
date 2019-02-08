@@ -1090,6 +1090,9 @@ class Kontext(Controller):
             logo_title = unicode(logo_href)
 
         theme_favicon = settings.get('theme', 'favicon', None)
+        if (theme_favicon and not (theme_favicon.startswith('/') or theme_favicon.startswith('http://') or
+                                   theme_favicon.startswith('https://'))):
+            theme_favicon = '{0}/themes/{1}/{2}'.format(self._files_path, theme_name, theme_favicon)
 
         data['theme'] = dict(
             name=settings.get('theme', 'name'),
@@ -1101,7 +1104,7 @@ class Kontext(Controller):
             logo_title=logo_title,
             logo_inline_css=settings.get('theme', 'logo_inline_css', ''),
             online_fonts=settings.get_list('theme', 'fonts'),
-            favicon='{0}/{1}'.format(theme_name, theme_favicon) if theme_favicon else None
+            favicon=theme_favicon
         )
 
     def _configure_auth_urls(self, out):
