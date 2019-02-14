@@ -103,11 +103,12 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     USER_INDEX_KEY = 'user_index'
 
-    def __init__(self, db, sessions, anonymous_user_id, login_url, logout_url, smtp_server, mail_sender,
+    def __init__(self, db, sessions, anonymous_user_id, lowercase_names: bool,
+                 login_url, logout_url, smtp_server, mail_sender,
                  confirmation_token_ttl, on_register_get_corpora):
         """
         """
-        super(DefaultAuthHandler, self).__init__(anonymous_user_id)
+        super(DefaultAuthHandler, self).__init__(anonymous_user_id, lowercase_names)
         self.db = db
         self.sessions = sessions
         self._login_url = login_url
@@ -355,6 +356,7 @@ def create_instance(conf, db, sessions):
     return DefaultAuthHandler(db=db,
                               sessions=sessions,
                               anonymous_user_id=int(plugin_conf['anonymous_user_id']),
+                              lowercase_names=conf.get('corpora', 'lowercase_names') == 'true',  # _decode_bool from default_corparch?
                               login_url=plugin_conf.get('login_url', '/user/login'),
                               logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
                               smtp_server=conf.get('mailing', 'smtp_server'),

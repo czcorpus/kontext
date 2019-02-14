@@ -26,7 +26,7 @@ from controller.errors import CorpusForbiddenException, UserActionException
 class MetaAbstractAuth(abc.ABCMeta):
     """
     This meta-class is used to wrap calls for permitted_corpora
-    and normalize all the corpora IDs to lowercase without requiring
+    and optionally normalize all the corpora IDs to lowercase without requiring
     this from individual plug-ins or different code chunks where
     the method is called.
     """
@@ -34,7 +34,13 @@ class MetaAbstractAuth(abc.ABCMeta):
         super().__init__(name, bases, clsdict)
         if 'permitted_corpora' in clsdict:
             def wrapped_perm_corp(self, user_dict):
-                return dict((c.lower(), v) for c, v in clsdict['permitted_corpora'](self, user_dict).items())
+                corpora = clsdict['permitted_corpora'](self, user_dict)
+
+                if not self._lowercase_names:
+                    return corpora
+
+                return dict((c.lower(), v) for c, v in corpora.items())
+
             setattr(cls, 'permitted_corpora', wrapped_perm_corp)
 
 
@@ -44,12 +50,15 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
     Custom implementations should inherit from this.
     """
 
-    def __init__(self, anonymous_id: int) -> None:
+    def __init__(self, anonymous_id: int,
+                 lowercase_names: bool=True) -> None:
         """
         arguments:
         anonymous_id -- a numeric ID of anonymous user
+        lowercase_names -- whether to normalize corpus names to lowercase
         """
         self._anonymous_id = anonymous_id
+        self._lowercase_names = lowercase_names
 
     def anonymous_user(self) -> Dict[str, Any]:
         """
@@ -121,6 +130,12 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         """
         pass
 
+    @property
+    def lowercase_corpora_names(self) -> bool:
+        """
+        Returns whether to normalize corpus names to lowercase.
+        """
+        return self._lowercase_names
 
 class AbstractSemiInternalAuth(AbstractAuth):
 

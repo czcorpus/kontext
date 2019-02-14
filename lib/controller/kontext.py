@@ -615,9 +615,12 @@ class Kontext(Controller):
 
         Returns: a 2-tuple (copus id, corpus variant)
         """
-        def validate_access(cn, allowed):
-            if cn and cn.lower() in allowed:
-                return True, allowed[cn.lower()]
+        def validate_access(cn, allowed, lowercase_names: bool):
+            if cn and lowercase_names:
+                cn = cn.lower()
+
+            if cn and cn in allowed:
+                return True, allowed[cn]
             else:
                 return False, ''
 
@@ -625,7 +628,8 @@ class Kontext(Controller):
             allowed_corpora = auth.permitted_corpora(self.session_get('user'))
             if not action_metadata['skip_corpus_init']:
                 corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
-                has_access, variant = validate_access(corpname, allowed_corpora)
+                lowercase_names = auth.lowercase_corpora_names
+                has_access, variant = validate_access(corpname, allowed_corpora, lowercase_names)
                 if has_access and redirect:
                     url_pref = self.get_mapping_url_prefix()
                     if len(url_pref) > 0:
@@ -635,7 +639,7 @@ class Kontext(Controller):
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                 for al_corp in form.getlist('align'):
-                    al_access, al_variant = validate_access(al_corp, allowed_corpora)
+                    al_access, al_variant = validate_access(al_corp, allowed_corpora, lowercase_names)
                     # we cannot accept aligned corpora without access right
                     # or with different variant (from implementation reasons in this case)
                     # than the main corpus has

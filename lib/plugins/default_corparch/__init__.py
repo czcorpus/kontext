@@ -52,7 +52,7 @@ element corpus {
         text  # a structural attribute specifying a sentence (used to switch between kwic and sentence view mode)
     }
     attribute ident {
-        text  # a corpus identifier (case insensitive)
+        text  # a corpus identifier (case insensitive by default)
     }
     attribute tagset {
         text  #  an optional positional tagset identifier (used by tag-builder widget)
@@ -365,7 +365,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
-                 max_page_size, registry_lang):
+                 max_page_size, registry_lang, lowercase_names: bool):
         super(CorpusArchive, self).__init__()
         self._auth = auth
         self._user_items = user_items
@@ -376,6 +376,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         self._max_num_hints = int(max_num_hints)
         self._max_page_size = max_page_size
         self._registry_lang = registry_lang
+        self._lowercase_names = lowercase_names
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
@@ -534,7 +535,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return self._colors.get(label_id, None)
 
     def _process_corpus_node(self, node, path, data):
-        corpus_id = node.attrib['ident'].lower()
+        corpus_id = node.attrib['ident'].lower() if self._lowercase_names else node.attrib['ident']
         web_url = node.attrib['web'] if 'web' in node.attrib else None
         sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
 
@@ -660,7 +661,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def get_corpus_info(self, user_lang, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
-            corp_name = corp_name.split('/')[-1].lower()
+            corp_name = corp_name.split('/')[-1]
+            if self._lowercase_names:
+                corp_name = corp_name.lower()
             if corp_name in self._raw_list(user_lang):
                 if user_lang is not None:
                     ans = self._localize_corpus_info(self._raw_list(user_lang)[corp_name],
@@ -684,7 +687,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             root = xml.find(self.root_xpath)
             if root is not None:
                 self._parse_corplist_node(root, '/', lang, data)
-        self._corplist = OrderedDict([(item['id'].lower(), item) for item in data])
+        if self._lowercase_names:
+            self._corplist = OrderedDict([(item['id'].lower(), item) for item in data])
+        else:
+            self._corplist = OrderedDict([(item['id'], item) for item in data])
 
     def _raw_list(self, lang):
         """
@@ -774,4 +780,6 @@ def create_instance(conf, auth, user_items):
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
                                                                            20),
-                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
+                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'),
+                         lowercase_names=conf.get('corpora', 'lowercase_names') == 'true',  # _decode_bool, auth.lowercase_copora_names?
+                         )
