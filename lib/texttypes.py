@@ -53,6 +53,9 @@ class TextTypesCache(object):
             self._db.set(self._mk_cache_key(corp.corpname), text_types)
         return text_types
 
+    def clear(self, corp):
+        self._db.remove(self._mk_cache_key(corp.corpname))
+
 
 class StructNormsCalc(object):
     """
@@ -283,12 +286,21 @@ class TextTypes(object):
                 k = item.split('.')[0]
                 struct_calc[k] = CachedStructNormsCalc(
                     self._corp, k, subcnorm, db=plugins.runtime.DB.instance)
+            cache_ok = True
             for col in reduce(lambda p, c: p + c['Line'], tt, []):
                 if 'textboxlength' not in col:
                     structname, attrname = col['name'].split('.')
                     for val in col['Values']:
-                        v = struct_calc[structname].compute_norm(attrname, val['v'])
+                        try:
+                            v = struct_calc[structname].compute_norm(attrname, val['v'])
+                        except KeyError:
+                            v = 0  # no problem here as the value is actually not required by subcorpattrs
+                            cache_ok = False
                         val['xcnt'] = v
+            if not cache_ok:
+                self._tt_cache.clear(self._corp)
+                logging.getLogger(__name__).warning(
+                    'Removed invalid tt cache entry for corpus {0}'.format(self._corpname))
             ans['Blocks'] = tt
             ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
         else:
