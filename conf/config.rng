@@ -117,6 +117,10 @@
                                 <a:documentation>Favicon file name (not a full path)</a:documentation>
                                 <text />
                             </element>
+                            <element name="favicon_type">
+                                <a:documentation>a proper mime type for the icon (e.g. image/x-icon)</a:documentation>
+                                <text />
+                            </element>
                         </optional>
                     </interleave>
                     <zeroOrMore>
