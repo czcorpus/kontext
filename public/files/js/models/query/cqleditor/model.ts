@@ -262,7 +262,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     }
 
     private getQueryLength(state:CQLEditorModelState, sourceId:string):number {
-        return state.rawCode.has(sourceId) ? state.rawCode.get(sourceId).length : 0;
+        return state.rawCode.get(sourceId) ? (state.rawCode.get(sourceId, '')).length : 0;
     }
 
     private moveCursorToPos(state:CQLEditorModelState, sourceId:string, posIdx:number):void {
@@ -296,7 +296,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     private setRawQuery(state:CQLEditorModelState, sourceId:string, query:string, insertRange:[number, number]|null):void {
         let newQuery:string;
 
-        if (!state.rawCode.has(sourceId)) {
+        if (!state.rawCode.get(sourceId)) {
             state.rawCode = state.rawCode.set(sourceId, '');
         }
         if (insertRange !== null) {
