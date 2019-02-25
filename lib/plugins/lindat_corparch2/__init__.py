@@ -243,7 +243,7 @@ class DefaultCorplistProvider(CorplistProvider):
 
     def sort(self, plugin_api, data, field='name', *fields):
         if field == 'size':
-            return sorted(data, key=lambda c: c.get(field, 0))
+            return sorted(data, key=lambda c: c.get(field, 0), reverse=True)
         else:
             def corp_cmp_key(c, field):
                 return c.get(field) if c.get(field) is not None else ''
