@@ -12,12 +12,20 @@
             <element name="anonymous_user_id">
                 <data type="nonNegativeInteger" />
             </element>
-            <element name="api_key_cookie_name">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
-                <text />
-            </element>
+            <choice>
+                <element name="api_key_cookie_name">
+                    <attribute name="extension-by">
+                        <value>default</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="api_key_http_header">
+                    <attribute name="extension-by">
+                        <value>default</value>
+                    </attribute>
+                    <text />
+                </element>
+            </choice>
             <element name="api_key">
                 <attribute name="extension-by">
                     <value>default</value>
