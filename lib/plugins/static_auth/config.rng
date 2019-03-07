@@ -6,11 +6,17 @@
             <element name="module">
                 <value>static_auth</value>
             </element>
+            <element name="anonymous_user_id">
+                <data type="nonNegativeInteger" />
+            </element>
             <element name="auth_cookie_name">
                 <text />
             </element>
-            <element name="anonymous_user_id">
-                <data type="nonNegativeInteger" />
+            <element name="login_url">
+                <empty />
+            </element>
+            <element name="logout_url">
+                <empty />
             </element>
             <choice>
                 <element name="api_key_cookie_name">
