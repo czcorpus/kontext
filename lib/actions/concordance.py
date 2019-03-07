@@ -1218,7 +1218,7 @@ class Actions(Querying):
         self._attach_query_params(ans)
         return ans
 
-    @exposed(access_level=1, return_type='plain')
+    @exposed(access_level=1, return_type='plain', http_method='POST')
     def export_freqct(self, request):
         with plugins.runtime.EXPORT_FREQ2D as plg:
             data = json.loads(request.form['data'])
@@ -1625,7 +1625,8 @@ class Actions(Querying):
             url = request.args.get('url')
             recip_email = request.args.get('email')
 
-            text = translate('KonText user %s has sent a concordance link to you') % (username,) + ':'
+            text = translate('KonText user %s has sent a concordance link to you') % (
+                username,) + ':'
             text += '\n\n'
             text += url + '\n\n'
             text += '\n---------------------\n'
