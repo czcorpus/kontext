@@ -1218,7 +1218,7 @@ class Actions(Querying):
         self._attach_query_params(ans)
         return ans
 
-    @exposed(access_level=1, return_type='plain', http_method='POST')
+    @exposed(access_level=1, return_type='plain', http_method='POST', skip_corpus_init=True)
     def export_freqct(self, request):
         with plugins.runtime.EXPORT_FREQ2D as plg:
             data = json.loads(request.form['data'])
