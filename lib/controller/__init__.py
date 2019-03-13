@@ -668,6 +668,14 @@ class Controller(object):
         """
         if action_metadata is None:
             action_metadata = {}
+
+        if 'format' in self._request.args:
+            if self._is_allowed_explicit_out_format(self._request.args['format']):
+                action_metadata['return_type'] = self._request.args['format']
+            else:
+                action_metadata['return_type'] = 'text'
+                raise UserActionException(
+                    u'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return args
 
@@ -678,8 +686,6 @@ class Controller(object):
         """
         if type(result) is dict:
             result['messages'] = result.get('messages', []) + self._system_messages
-        if self._request.args.get('format') == 'json' or self._request.form.get('format') == 'json':
-            action_metadata['return_type'] = 'json'
 
     def is_action(self, action_name, metadata):
         return callable(getattr(self, action_name, None)) and '__exposed__' in metadata
@@ -793,18 +799,10 @@ class Controller(object):
             def null(): pass
             action_metadata = {}
             action_metadata.update(exposed()(null).__dict__)
-        return_type = action_metadata['return_type']
         try:
             self.init_session()
             if self.is_action(methodname, action_metadata):
                 named_args = self.pre_dispatch(methodname, named_args, action_metadata)
-                if self.args.format:
-                    if self._is_allowed_explicit_out_format(self.args.format):
-                        return_type = self.args.format
-                    else:
-                        return_type = 'text'
-                        raise UserActionException(
-                            u'Unknown output format: {0}'.format(self.args.format))
                 self._pre_action_validate()
                 tmpl, result = self.process_action(methodname, named_args)
             else:
@@ -820,7 +818,7 @@ class Controller(object):
             self.redirect(ex.url, ex.code)
         except UserActionException as ex:
             self._status = ex.code
-            msg_args = self._create_user_action_err_result(ex, return_type)
+            msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
                 msg_args, action_metadata, 'error', ex.message)
         except werkzeug.exceptions.BadRequest as ex:
@@ -842,11 +840,11 @@ class Controller(object):
         self._proc_time = round(time.time() - self._proc_time, 4)
         self.post_dispatch(methodname, action_metadata, tmpl, result)
         # response rendering
-        headers += self.output_headers(return_type)
+        headers += self.output_headers(action_metadata['return_type'])
         output = StringIO.StringIO()
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata,
-                               return_type=return_type, outf=output)
+                               return_type=action_metadata['return_type'], outf=output)
         ans_body = output.getvalue()
         output.close()
         return self._export_status(), headers, self._uses_valid_sid, ans_body

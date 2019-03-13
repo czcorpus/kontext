@@ -50,28 +50,34 @@ def cached(f):
         cache_path = self.get_cache_path()
         if cache_path:
             key = mk_token_connect_cache_key(self.provider_id, corpora, lang, query_args)
-            conn = sqlite3.connect(cache_path)
-            curs = conn.cursor()
-            res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
-            # if no result is found in the cache, call the backend function
-            if res is None:
-                res = f(self, corpora, lang, query_args)
-                # if a result is returned by the backend function, encode and zip its data part and store it in
-                # the cache along with the "found" parameter
-                if res:
-                    zipped = buffer(zlib.compress(res[0].encode('utf-8')))
-                    curs.execute("INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
-                                 (key, self.provider_id, zipped, 1 if res[1] else 0, int(round(time.time()))))
-            else:
-                logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for args {1}'.format(
-                    key[:6], query_args))
-                # unzip and decode the cached result, convert the "found" parameter value back to boolean
-                res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
-                # update last access
-                curs.execute("UPDATE cache SET last_access = ? WHERE key = ?",
-                             (int(round(time.time())), key))
-            conn.commit()
-            conn.close()
+            with sqlite3.connect(cache_path) as conn:
+                res = conn.execute('PRAGMA journal_mode=WAL').fetchone()
+                imode = res[0] if res else 'undefined'
+                if imode != 'wal':
+                    logging.getLogger(__name__).warning(
+                        'Unable to set WAL mode for SQLite. Actual mode: {0}'.format(imode))
+                curs = conn.cursor()
+                res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
+                # if no result is found in the cache, call the backend function
+                if res is None:
+                    res = f(self, corpora, lang, query_args)
+                    # if a result is returned by the backend function, encode and zip its data part and store it in
+                    # the cache along with the "found" parameter
+                    if res:
+                        zipped = buffer(zlib.compress(res[0].encode('utf-8')))
+                        curs.execute(
+                            "INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
+                            (key, self.provider_id, zipped, 1 if res[1] else 0, int(round(time.time()))))
+                else:
+                    logging.getLogger(__name__).debug(u'token/kwic_connect cache hit {0} for args {1}'.format(
+                        key[:6], query_args))
+                    # unzip and decode the cached result, convert the "found" parameter value back to boolean
+                    res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
+                    # update last access
+                    curs.execute("UPDATE cache SET last_access = ? WHERE key = ?",
+                                 (int(round(time.time())), key))
+                curs.close()
+                # commited automatically via context manager
         else:
             res = f(self, corpora, lang, query_args)
         return res if res else ('', False)

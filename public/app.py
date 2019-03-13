@@ -34,7 +34,7 @@ from werkzeug.wrappers import Request, Response
 sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # application libraries
 sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # compiled template modules
 
-CONF_PATH = os.path.realpath('%s/../conf/config.xml' % os.path.dirname(__file__))
+CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath('%s/../conf/config.xml' % os.path.dirname(__file__)))
 
 import plugins
 import plugins.export
