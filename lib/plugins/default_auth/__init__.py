@@ -117,6 +117,18 @@ class SignUpToken(object):
         return self.bound
 
 
+def mk_list_key(user_id):
+    return 'corplist:user:%s' % user_id
+
+
+def mk_user_key(user_id):
+    return 'user:%d' % user_id
+
+
+def get_user_id_from_key(user_key):
+    return int(user_key.split(':')[1])
+
+
 class DefaultAuthHandler(AbstractInternalAuth):
     """
     Sample authentication handler
@@ -145,14 +157,6 @@ class DefaultAuthHandler(AbstractInternalAuth):
         self._mail_sender = mail_sender
         self._confirmation_token_ttl = confirmation_token_ttl
         self._on_register_get_corpora = on_register_get_corpora
-
-    @staticmethod
-    def _mk_user_key(user_id):
-        return 'user:%d' % user_id
-
-    @staticmethod
-    def _mk_list_key(user_id):
-        return 'corplist:user:%s' % user_id
 
     def validate_user(self, plugin_api, username, password):
         user_data = self._find_user(username)
@@ -198,7 +202,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_id -- a database ID of a user
         password -- new password
         """
-        user_key = self._mk_user_key(user_id)
+        user_key = mk_user_key(user_id)
         user_data = self.db.get(user_key)
         if user_data:
             user_data['pwd_hash'] = mk_pwd_hash_default(password)
@@ -211,13 +215,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
 
     def permitted_corpora(self, user_dict):
-        corpora = self.db.get(self._mk_list_key(user_dict['id']), [])
+        corpora = self.db.get(mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict((c, self._variant_prefix(c)) for c in corpora)
 
     def get_user_info(self, plugin_api):
-        user_key = self._mk_user_key(plugin_api.user_id)
+        user_key = mk_user_key(plugin_api.user_id)
         info = self.db.get(user_key)
         info.pop('pwd_hash', None)
         info.pop('recovery_hash', None)
@@ -350,7 +354,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         avail = False
         while not avail:
             v += 1
-            avail = (self.db.get(self._mk_user_key(v)) is None)
+            avail = (self.db.get(mk_user_key(v)) is None)
         return v
 
     def sign_up_confirm(self, plugin_api, key):
@@ -361,13 +365,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
             if user_test:
                 raise SignUpNeedsUpdateException()
             new_id = self.find_free_user_id()
-            self.db.set(self._mk_user_key(new_id),
+            self.db.set(mk_user_key(new_id),
                         dict(id=new_id, username=token.user['username'], firstname=token.user['firstname'],
                              lastname=token.user['lastname'], email=token.user['email'],
                              pwd_hash=token.user['password']))
-            self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], self._mk_user_key(new_id))
+            self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], mk_user_key(new_id))
             self.db.set(self.LAST_USER_ID_KEY, new_id)
-            self.db.set(self._mk_list_key(new_id), self._on_register_get_corpora)
+            self.db.set(mk_list_key(new_id), self._on_register_get_corpora)
             token.delete(self.db)
             return dict(ok=True, label=token.label)
         else:
