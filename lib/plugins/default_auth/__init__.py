@@ -268,7 +268,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         a dictionary containing user data or None if nothing is found
         """
         user_key = self.db.hash_get(self.USER_INDEX_KEY, username)
-        return self.db.get(user_key)
+        return None if user_key is None else self.db.get(user_key)
 
     def get_required_username_properties(self, plugin_api):
         return (_(
@@ -323,7 +323,8 @@ class DefaultAuthHandler(AbstractInternalAuth):
         text += ',\n\n'
         text += _('thank you for using KonText at {url}.').format(url=plugin_api.root_url)
         text += '\n'
-        tmp = _('To verify your new account {username} (full name: {firstname} {lastname}) please click the link below')
+        tmp = _(
+            'To verify your new account {username} (full name: {firstname} {lastname}) please click the link below')
         if type(tmp) is str:
             tmp = tmp.decode('utf-8')
         text += tmp.format(username=username, firstname=firstname, lastname=lastname)
