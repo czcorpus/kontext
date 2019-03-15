@@ -114,7 +114,6 @@ export class SubcorpFormModel extends StatefulModel {
         args.set('publish', this.isPublic ? '1' : '0');
         args.set('description', this.description.value);
         args.set('method', this.inputMode);
-        args.set('format', 'json');
         const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
             args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
@@ -156,7 +155,7 @@ export class SubcorpFormModel extends StatefulModel {
         if (err === null) {
             return this.pageModel.ajax<any>(
                 'POST',
-                this.pageModel.createActionUrl('/subcorpus/subcorp'),
+                this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
                 args
             );
 

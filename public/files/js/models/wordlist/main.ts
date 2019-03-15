@@ -280,15 +280,15 @@ export class WordlistResultModel extends StatefulModel {
     private loadData():Rx.Observable<DataAjaxResponse> {
         const args = this.formModel.createSubmitArgs(this.formModel.getState());
         args.set('wlpage', this.currPage);
-        args.set('format', 'json');
 
         return this.layoutModel.ajax$<DataAjaxResponse>(
             'POST',
-            this.layoutModel.createActionUrl('wordlist/result'),
+            this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
             args
 
         ).concatMap(
             (data) => {
+                console.log('data: ', data);
                 if (data.lastpage && data.Items.length === 0) {
                     throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
                 }
