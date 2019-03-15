@@ -145,7 +145,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                         if (err === null) {
                             return this.pageModel.ajax<any>(
                                 'POST',
-                                this.pageModel.createActionUrl('/subcorpus/subcorp'),
+                                this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
                                 args
                             );
 
@@ -248,7 +248,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         args.set('publish', this.subcFormModel.getIsPublic() ? '1' : '0');
         args.set('description', this.subcFormModel.getDescription().value);
         args.set('method', state.inputMode);
-        args.set('format', 'json');
         const alignedCorpora = this.subcFormModel.getAlignedCorpora().map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
             args.replace('aligned_corpora', this.subcFormModel.getAlignedCorpora().map(v => v.value).toArray());
