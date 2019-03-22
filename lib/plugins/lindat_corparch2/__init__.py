@@ -243,7 +243,7 @@ class DefaultCorplistProvider(CorplistProvider):
 
     def sort(self, plugin_api, data, field='name', *fields):
         if field == 'size':
-            return sorted(data, key=lambda c: c.get(field, 0))
+            return sorted(data, key=lambda c: c.get(field, 0), reverse=True)
         else:
             def corp_cmp_key(c, field):
                 return c.get(field) if c.get(field) is not None else ''
@@ -285,10 +285,7 @@ class DefaultCorplistProvider(CorplistProvider):
         else:
             max_size = None
 
-        if filter_dict.get('sortBySize') == 'sort':
-            sorting_field = 'size'
-        else:
-            sorting_field = 'name'
+        sorting_field = filter_dict.get('sortBySize', 'name')
 
         if offset is None:
             offset = 0
@@ -760,7 +757,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 'maxSize': filter_dict.getlist('maxSize'),
                 'minSize': filter_dict.getlist('minSize'),
                 'name': query_substrs,
-                'sortBySize': ''
+                'sortBySize': 'name'
             }
         }
 

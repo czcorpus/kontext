@@ -487,28 +487,35 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      * An input to specify sorting by corpus size
      */
     class SortBySizeCheckbox extends React.Component<{
+    },
+    {
+        sortBySize:boolean;
     }> {
-        private _sort:string;
 
         constructor(props) {
             super(props);
-            this._sort =  "name";
+            this.state = {
+              sortBySize: false,
+            };
             this._changeHandler = this._changeHandler.bind(this);
         }
 
         _changeHandler(e) {
-            this._sort = this._sort == "name" ? "size": "name";
+            const value = e.target.checked ? "size" : "name";
+            this.setState({
+              sortBySize: !this.state.sortBySize
+            }); 
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
-                props: {sortBySize: e.target.value}
+                props: {sortBySize: value}
             });
         };
 
         render() {
             return <input className="sortBySizeCheckbox" type="checkbox"
                           name="sortBySize"
-                          value={this._sort}
-                          onClick={this._changeHandler}/>;
+                          checked={this.state.sortBySize}
+                          onChange={this._changeHandler}/>;
         }
     };
 
