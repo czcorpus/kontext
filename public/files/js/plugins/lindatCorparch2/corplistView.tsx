@@ -486,21 +486,30 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * An input to specify sorting by corpus size
      */
-    const SortBySizeCheckbox:React.SFC<{
+    class SortBySizeCheckbox extends React.Component<{
+    }> {
+        private _sort:string;
 
-    }> = (props) => {
+        constructor(props) {
+            super(props);
+            this._sort =  "name";
+            this._changeHandler = this._changeHandler.bind(this);
+        }
 
-        const changeHandler = (e) => {
+        _changeHandler(e) {
+            this._sort = this._sort == "name" ? "size": "name";
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
                 props: {sortBySize: e.target.value}
             });
         };
 
-        return <input className="sortBySizeCheckbox" type="checkbox"
-                        name="sortBySize"
-                        value="sort"
-                        onClick={changeHandler} />;
+        render() {
+            return <input className="sortBySizeCheckbox" type="checkbox"
+                          name="sortBySize"
+                          value={this._sort}
+                          onClick={this._changeHandler}/>;
+        }
     };
 
     // -------------------------------- <NameSearchInput /> -----------------

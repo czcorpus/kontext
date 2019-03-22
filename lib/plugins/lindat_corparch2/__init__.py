@@ -243,7 +243,7 @@ class DefaultCorplistProvider(CorplistProvider):
 
     def sort(self, plugin_api, data, field='name', *fields):
         if field == 'size':
-            return sorted(data, key=lambda c: c.get(field, 0), reverse=True)
+            return sorted(data, key=lambda c: c.get(field, 0))
         else:
             def corp_cmp_key(c, field):
                 return c.get(field) if c.get(field) is not None else ''
@@ -284,6 +284,7 @@ class DefaultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
+
         if filter_dict.get('sortBySize') == 'sort':
             sorting_field = 'size'
         else:
