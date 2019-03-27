@@ -27,7 +27,7 @@ def smtp_factory():
     """
     username = settings.get('mailing', 'auth_username')
     password = settings.get('mailing', 'auth_password')
-    port = settings.get_int('maining', 'smtp_port', 25)
+    port = settings.get_int('mailing', 'smtp_port', 25)
     use_tls = settings.get_bool('mailing', 'use_tls', False)
     server = smtplib.SMTP(settings.get('mailing', 'smtp_server'), port=port)
     if use_tls:
