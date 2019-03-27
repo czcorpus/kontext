@@ -507,8 +507,8 @@ msgstr "Dobrý den"
 msgid "thank you for using KonText at {url}."
 msgstr "děkujeme, že využíváte KonText na adrese {url}."
 
-msgid "To verify your new account {username} (full name: {first_name} {last_name}) please click the link below"
-msgstr "Pro ověření vašeho nového účtu {username} (celé jméno: {first_name} {last_name}) prosím klikněte na odkaz níže"
+msgid "To verify your new account {username} (full name: {firstname} {lastname}) please click the link below"
+msgstr "Pro ověření vašeho nového účtu {username} (celé jméno: {firstname} {lastname}) prosím klikněte na odkaz níže"
 
 msgid "The confirmation link will expire on %m/%d/%Y at %H:%M"
 msgstr "Platnost potvrzovacího odkazu vyprší %d.%d.%Y v %H:%M"
