@@ -19,10 +19,10 @@ from texttypes import get_tt
 
 class PluginApi(object):
 
-    def __init__(self, controller, cookies, session):
+    def __init__(self, controller, request, cookies):
         self._controller = controller
+        self._request = request
         self._cookies = cookies
-        self._session = session
         self._shared_data = {}
 
     def set_shared(self, key, value):
@@ -38,12 +38,16 @@ class PluginApi(object):
         return self._controller.environ.get(key, default)
 
     @property
+    def request(self):
+        return self._request
+
+    @property
     def cookies(self):
         return self._cookies
 
     @property
     def session(self):
-        return self._session
+        return self._request.session
 
     def refresh_session_id(self):
         return self._controller.refresh_session_id()
@@ -54,11 +58,11 @@ class PluginApi(object):
 
     @property
     def user_id(self):
-        return self._session.get('user', {'id': None}).get('id')
+        return self._request.session.get('user', {'id': None}).get('id')
 
     @property
     def user_dict(self):
-        return self._session.get('user', {'id': None})
+        return self._request.session.get('user', {'id': None})
 
     @property
     def user_is_anonymous(self):

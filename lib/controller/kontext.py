@@ -254,7 +254,7 @@ class Kontext(Controller):
         # data of the current manual concordance line selection/categorization
         self._lines_groups = LinesGroups(data=[])
 
-        self._plugin_api = PluginApi(self, self._cookies, self._request.session)
+        self._plugin_api = PluginApi(self, self._request, self._cookies)
         self.get_corpus_info = partial(
             plugins.runtime.CORPARCH.instance.get_corpus_info, self._plugin_api.user_lang)
 
