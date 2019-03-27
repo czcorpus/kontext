@@ -194,7 +194,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             return props.kwicTokenNum + props.chunkOffset + i;
         };
 
-        const splitTokens = (text) => {
+        const splitTokens = () => {
             const ans = [];
             props.data.text.forEach((s, i) => {
                 ans.push(' ');
@@ -221,9 +221,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 );
 
             } else {
+                const s = props.data.text.join(' ');
                 return (
-                    <span key={mkKey()} className={props.data.className} title={title}>
-                        {props.data.text.join(' ')}
+                    <span key={mkKey()} className={s !== '' ? props.data.className : null} title={title}>
+                        {s || ' '}
                     </span>
                 );
             }
@@ -231,7 +232,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         } else {
             return (
                 <span key={mkKey()} title={title}>
-                    {splitTokens(props.data.text)}
+                    {splitTokens()}
                 </span>
             );
         }
