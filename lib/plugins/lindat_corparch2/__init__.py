@@ -258,17 +258,27 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         return True
 
+    def _map_keywords(self, keywords):
+        return keywords
+
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
-        if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
-            plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
-        initial_query = query
-        if query is False:
-            query = ''
-        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        if len(query_keywords) == 0 and initial_query is False:
-            query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+        external_keywords = filter_dict.getlist('keyword')
+        if len(external_keywords) != 0:
+            external_keywords = self._map_keywords(external_keywords)
+            query_substrs = []
+            query_keywords = external_keywords + [self.default_label]
         else:
-            plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
+
+            if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
+                plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
+            initial_query = query
+            if query is False:
+                query = ''
+            query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+            if len(query_keywords) == 0 and initial_query is False:
+                query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+            else:
+                plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
 
@@ -735,13 +745,17 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return ans
 
     def export(self, plugin_api):
+        initial_keywords = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
+        external_keywords = plugin_api.request.args.getlist('keyword')
+        if len(external_keywords) != 0:
+            initial_keywords += external_keywords
+
         return dict(
             favorite=self.export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
-            initial_keywords = plugin_api.session.get(
-            self.SESSION_KEYWORDS_KEY, [self.default_label]),
+            initial_keywords = initial_keywords,
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )
