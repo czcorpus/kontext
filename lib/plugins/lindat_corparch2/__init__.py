@@ -235,20 +235,19 @@ class DefaultCorplistProvider(CorplistProvider):
         return new_res, right_lim
 
     @staticmethod
-    def matches_all(d):
-        return reduce(lambda prev, curr: prev and curr, d, True)
-
-    @staticmethod
     def matches_size(d, min_size, max_size):
         item_size = d.get('size', None)
         return (item_size is not None and
                 (not min_size or int(item_size) >= int(min_size)) and
                 (not max_size or int(item_size) <= int(max_size)))
 
-    def sort(self, plugin_api, data, *fields):
-        def corp_cmp_key(c):
-            return c.get('name') if c.get('name') is not None else ''
-        return l10n.sort(data, loc=plugin_api.user_lang, key=corp_cmp_key)
+    def sort(self, plugin_api, data, field='name', *fields):
+        if field == 'size':
+            return sorted(data, key=lambda c: c.get(field, 0), reverse=True)
+        else:
+            def corp_cmp_key(c, field):
+                return c.get(field) if c.get(field) is not None else ''
+            return l10n.sort(data, loc=plugin_api.user_lang, key=lambda c: corp_cmp_key(c, field))
 
     def should_fetch_next(self, ans, offset, limit):
         """
@@ -285,6 +284,8 @@ class DefaultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
+
+        sorting_field = filter_dict.get('sortBySize', 'name')
 
         if offset is None:
             offset = 0
@@ -329,7 +330,7 @@ class DefaultCorplistProvider(CorplistProvider):
                 tests.append(self._corparch.custom_filter(
                     self._plugin_api, full_data, permitted_corpora))
 
-                if self.matches_all(tests):
+                if all(test for test in tests):
                     corp['size'] = corp['size']
                     corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
@@ -345,8 +346,9 @@ class DefaultCorplistProvider(CorplistProvider):
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
                         break
+
         ans['rows'], ans['nextOffset'] = self.cut_result(
-            self.sort(plugin_api, ans['rows']), offset, limit)
+            self.sort(plugin_api, ans['rows'], field=sorting_field), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=plugin_api.user_lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
@@ -754,7 +756,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             'filters': {
                 'maxSize': filter_dict.getlist('maxSize'),
                 'minSize': filter_dict.getlist('minSize'),
-                'name': query_substrs
+                'name': query_substrs,
+                'sortBySize': 'name'
             }
         }
 
