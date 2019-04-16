@@ -136,6 +136,8 @@ class Actions(Kontext):
         kwic_args = kwiclib.KwicPageArgs(Args(), base_attr=Kontext.BASE_ATTR)
         kwic_args.fromp = fromp
         kwic_args.pagesize = max_rec * 2
+        kwic_args.leftctx = '-{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
+        kwic_args.rightctx = '{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
         page = kwic.kwicpage(kwic_args)  # convert concordance
 
         local_offset = (start - 1) % max_rec
