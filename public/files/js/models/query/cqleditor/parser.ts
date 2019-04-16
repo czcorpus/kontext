@@ -317,6 +317,7 @@ class RuleCharMap {
                 return `<span class="${CLASS_BRACKETS}">${this.query.substring(startIdx, endIdx)}</span>`;
             case 'LETTER':
             case 'LETTER_PHON':
+            case 'RG_NON_LETTER':
             case 'QUOT':
                 return `<span class="${CLASS_REGEXP}">${this.query.substring(startIdx, endIdx)}</span>`;
             case 'ASCII_LETTERS':
