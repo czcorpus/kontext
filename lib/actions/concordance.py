@@ -672,10 +672,10 @@ class Actions(Querying):
             pq = self._compile_basic_query(suff='_' + al_corpname,
                                            cname=al_corpname)
             if pq:
-                par_query += ' within%s %s:%s' % (wnot, al_corpname, pq)
+                par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
                 nopq.append(al_corpname)
-        self.args.q = [qbase + self._compile_query() + ttquery + par_query]
+        self.args.q = [qbase + self._compile_query() + ' ' + ttquery + ' ' + par_query]
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
                           fc_lemword.split(),
