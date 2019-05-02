@@ -30,7 +30,7 @@ import { LineSelectionModel, LineSelectionModelState }
     from '../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../models/concordance/detail';
 import { KWICSection } from '../../models/concordance/line';
-import { TextChunk, ConcToken } from '../../types/concordance';
+import { TextChunkBase, TextChunk } from '../../types/concordance';
 import { Actions, ActionName } from '../../models/concordance/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../../models/mainMenu/actions';
@@ -52,6 +52,9 @@ export interface LinesViews {
 
 const ATTR_SEPARATOR = '/';
 const EMPTY_ATTRS_PLACEHOLDER = '\u00a0'; // non-breaking space
+
+// https://stackoverflow.com/questions/22015684/how-do-i-zip-two-arrays-in-javascript
+const zip = (a, b) => a.map((k, i) => [k, b[i]]);
 
 
 export function init({dispatcher, he, lineModel, lineSelectionModel,
@@ -173,15 +176,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     const Token:React.FC<{
         tokenId:number;
-        data:ConcToken;
+        data:TextChunkBase;
         viewMode:ViewOptions.AttrViewMode;
         isKwic:boolean;
         supportsTokenConnect:boolean;
 
     }> = (props) => {
 
-        const attrs = props.data.tailPosAttrs.filter(
-            (val) => val // .length > 0
+        const attrs = zip(props.data.viewAttrs, props.data.tailPosAttrs).filter(
+            ([_, val]) => val // .length > 0
         );
 
         const mkClass = () => `${props.supportsTokenConnect ? 'active' : ''} ${props.data.className}`;
@@ -191,7 +194,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
                 props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
-            const title = attrs.length > 0 ? attrs.join(ATTR_SEPARATOR) : null;
+            const title = attrs.length > 0 ? attrs.map(([attr, val]) => `${attr}: ${val}`).join('\n') : null;
             return <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>{props.data.text.join(' ')}</mark>;
 
         } else {
@@ -212,7 +215,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
     // ------------------------- <TokenAttributes /> -------------------------
 
     const TokenAttributes: React.FC<{
-        attrs: Array<string>;
+        attrs: Array<[string, string]>;
         viewMode: ViewOptions.AttrViewMode;
 
     }> = (props) => {
@@ -222,11 +225,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
                 {
                     props.attrs.length > 0 ?
-                        // props.attrs.join(ATTR_SEPARATOR) :
-                        props.attrs.map((val, i) =>
-                            <React.Fragment key={i}>
+                        props.attrs.map(([attr, val], i) =>
+                            <React.Fragment key={attr}>
                                 {i !== 0 ? ATTR_SEPARATOR : ''}
-                                <span>{val}</span>
+                                <span className={attr} title={attr}>{val}</span>
                             </React.Fragment>
                         ) :
                         EMPTY_ATTRS_PLACEHOLDER
@@ -243,7 +245,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         chunkOffset:number;
         idx:number;
         supportsTokenConnect:boolean;
-        data:ConcToken;
+        data:TextChunkBase;
         attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
@@ -279,7 +281,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         } else {
             return (
             <>
-                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []})).map((data, i) => (
+                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: [], viewAttrs: props.data.viewAttrs})).map((data, i) => (
                     <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
                         {i > 0 ? ' ' : ''}
                         <span className={getViewModeClass(props.attrViewMode)}>

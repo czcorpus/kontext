@@ -25,15 +25,20 @@ export interface ConcToken {
 }
 
 
-export class TextChunk {
-    id:string;
+export class TextChunkBase implements ConcToken {
     className:string;
     text:Array<string>;
+    tailPosAttrs:Array<string>;
+    viewAttrs:Array<string>;
+}
+
+
+export class TextChunk extends TextChunkBase {
+    id:string;
     openLink:{speechPath:string};
     closeLink:{speechPath:string};
     continued:boolean;
     showAudioPlayer:boolean;
-    tailPosAttrs:Array<string>;
 }
 
 

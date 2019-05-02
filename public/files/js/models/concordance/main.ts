@@ -46,7 +46,7 @@ import { SwitchMainCorpServerArgs } from '../query/common';
 /**
  *
  */
-function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line> {
+function importLines(data:Array<ServerLineData>, viewAttrs:Array<string>, mainAttrIdx:number):Array<Line> {
     let ans:Array<Line> = [];
 
     function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
@@ -59,7 +59,8 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
                 closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
                 continued: item.continued,
                 showAudioPlayer: false,
-                tailPosAttrs: item.tail_posattrs || []
+                tailPosAttrs: item.tail_posattrs || [],
+                viewAttrs: viewAttrs,
             };
 
         } else {
@@ -74,7 +75,8 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
                 closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
                 continued: item.continued,
                 showAudioPlayer: false,
-                tailPosAttrs: tailPosattrs
+                tailPosAttrs: tailPosattrs,
+                viewAttrs: viewAttrs,
             };
         }
     }
@@ -237,7 +239,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 providesAdHocIpm,
                 concSummary: lineViewProps.concSummary,
                 baseViewAttr: lineViewProps.baseViewAttr,
-                lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
+                lines: importLines(initialData, viewAttrs, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess
@@ -853,9 +855,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private importData(state:ConcordanceModelState, data:AjaxConcResponse):void {
+        const viewAttrs = this.getViewAttrs();
         state.lines = importLines(
             data.Lines,
-            this.getViewAttrs().indexOf(state.baseViewAttr) - 1
+            viewAttrs,
+            viewAttrs.indexOf(state.baseViewAttr) - 1
         );
         state.numItemsInLockedGroups = data.num_lines_in_groups;
         state.pagination = data.pagination;
