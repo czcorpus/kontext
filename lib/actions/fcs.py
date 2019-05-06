@@ -76,7 +76,6 @@ class Actions(Kontext):
             exact_match = True
 
         attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
-        rq = ''  # query for manatee
         try:  # parse query
             if '=' in query:  # lemma=word | lemma="word" | lemma="w1 w2" | word=""
                 attr, term = query.split('=')
@@ -128,14 +127,14 @@ class Actions(Kontext):
         try:
             anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
             q = ['q' + rq]
-            conc = conclib.get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec * 2, async=0)
+            conc = conclib.get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, async=0)
         except Exception as e:
             raise Exception(10, repr(e), 'Query syntax error')
 
         kwic = kwiclib.Kwic(corp, corpname, conc)
         kwic_args = kwiclib.KwicPageArgs(Args(), base_attr=Kontext.BASE_ATTR)
         kwic_args.fromp = fromp
-        kwic_args.pagesize = max_rec * 2
+        kwic_args.pagesize = max_rec
         kwic_args.leftctx = '-{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
         kwic_args.rightctx = '{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
         page = kwic.kwicpage(kwic_args)  # convert concordance
