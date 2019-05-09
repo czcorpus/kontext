@@ -477,6 +477,8 @@
         "options__coll_page_size": "Page size (number of lines)",
         "options__this_applies_for_all_the_corpora": "Following settings apply for all the corpora.",
         "options__submit": "Apply view options",
+        "options__max_items_per_page_exceeded_{num}": "Maximum number of {num, plural, one{# item} other{# items}} per page exceeded",
+        "options__max_context_exceeded_{num}": "Maximum context size {num} exceeded",
         "subcform__create_subcorpus": "Create subcorpus",
         "subcform__mode_attr_list": "Attribute list",
         "subcform__mode_raw_within": "Custom 'within' condition",
