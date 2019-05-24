@@ -352,7 +352,13 @@ class Actions(Querying):
         if self.args.queryselector:
             q_type = self.args.queryselector[:-3]
             qf_args.curr_query_types[cid] = q_type
-            qf_args.curr_queries[cid] = getattr(self.args, q_type)
+            try:  # chasing rare error here
+                qf_args.curr_queries[cid] = getattr(self.args, q_type)
+            except AttributeError:
+                qf_args.curr_queries[cid] = 'iquery'
+                logging.getLogger(__name__).warning(
+                    'Error in queryselector - empty value; user: {0}; args: {1}'.format(
+                        self.session_get('user', 'id'), self._session.get('semi_persistent_attrs', [])))
             qf_args.curr_lpos_values[cid] = request.args.get('lpos')
             qf_args.curr_qmcase_values[cid] = bool(int(request.args.get('qmcase', '0')))
             qf_args.curr_pcq_pos_neg_values[cid] = request.args.get('pcq_pos_neg')
