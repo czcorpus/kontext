@@ -112,25 +112,33 @@ class QueryStorage(AbstractQueryStorage):
             ans.update(data)
             form_data = edata['lastop_form']
             main_corp = edata['corpora'][0]
-            ans['query_type'] = form_data['curr_query_types'][main_corp]
-            ans['query'] = form_data['curr_queries'][main_corp]
-            ans['corpname'] = main_corp
-            ans['subcorpname'] = edata['usesubcorp']
-            ans['default_attr'] = form_data['curr_default_attr_values'][main_corp]
-            ans['lpos'] = form_data['curr_lpos_values'][main_corp]
-            ans['qmcase'] = form_data['curr_qmcase_values'][main_corp]
-            ans['pcq_pos_neg'] = form_data['curr_pcq_pos_neg_values'][main_corp]
-            ans['selected_text_types'] = form_data.get('selected_text_types', {})
-            ans['aligned'] = []
-            for aitem in edata['corpora'][1:]:
-                ans['aligned'].append(dict(corpname=aitem,
-                                           query=form_data['curr_queries'][aitem],
-                                           query_type=form_data['curr_query_types'][aitem],
-                                           default_attr=form_data['curr_default_attr_values'][aitem],
-                                           lpos=form_data['curr_lpos_values'][aitem],
-                                           qmcase=form_data['curr_qmcase_values'][aitem],
-                                           pcq_pos_neg=form_data['curr_pcq_pos_neg_values'][aitem],
-                                           include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
+
+            if form_data['form_type'] == 'query':
+                ans['query_type'] = form_data['curr_query_types'][main_corp]
+                ans['query'] = form_data['curr_queries'][main_corp]
+                ans['corpname'] = main_corp
+                ans['subcorpname'] = edata['usesubcorp']
+                ans['default_attr'] = form_data['curr_default_attr_values'][main_corp]
+                ans['lpos'] = form_data['curr_lpos_values'][main_corp]
+                ans['qmcase'] = form_data['curr_qmcase_values'][main_corp]
+                ans['pcq_pos_neg'] = form_data['curr_pcq_pos_neg_values'][main_corp]
+                ans['selected_text_types'] = form_data.get('selected_text_types', {})
+                ans['aligned'] = []
+                for aitem in edata['corpora'][1:]:
+                    ans['aligned'].append(dict(corpname=aitem,
+                                               query=form_data['curr_queries'][aitem],
+                                               query_type=form_data['curr_query_types'][aitem],
+                                               default_attr=form_data['curr_default_attr_values'][aitem],
+                                               lpos=form_data['curr_lpos_values'][aitem],
+                                               qmcase=form_data['curr_qmcase_values'][aitem],
+                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'][aitem],
+                                               include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
+            elif form_data['form_type'] == 'filter':
+                ans.update(form_data)
+                ans['corpname'] = main_corp
+                ans['subcorpname'] = edata['usesubcorp']
+                ans['aligned'] = []
+                ans['selected_text_types'] = {}
             return ans
         else:
             return None   # persistent result not available
