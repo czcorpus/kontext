@@ -259,16 +259,23 @@ class DefaultCorplistProvider(CorplistProvider):
         return True
 
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
-        if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
-            plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
-        initial_query = query
-        if query is False:
-            query = ''
-        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        if len(query_keywords) == 0 and initial_query is False:
-            query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+        external_keywords = filter_dict.getlist('keyword')
+        external_keywords = self._corparch.map_external_keywords(external_keywords, plugin_api.user_lang)
+        if len(external_keywords) != 0:
+            query_substrs = []
+            query_keywords = external_keywords + [self.default_label]
         else:
-            plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
+
+            if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
+                plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
+            initial_query = query
+            if query is False:
+                query = ''
+            query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+            if len(query_keywords) == 0 and initial_query is False:
+                query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+            else:
+                plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
 
@@ -395,10 +402,33 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         self._colors = {}
         self._manatee_corpora = ManateeCorpora()
         self.default_label = default_label
+        self._external_keyword_mapping = None
 
     @property
     def max_page_size(self):
         return self._max_page_size
+
+    def external_keywords_mapping(self, lang):
+        if self._external_keyword_mapping is None:
+            mapping = {}
+            if self._keywords is None:
+                self._load(lang)
+            for label_key in self._keywords:
+                for lang_key in self._keywords[label_key]:
+                    new_key = self._keywords[label_key][lang_key]
+                    mapping[new_key.lower()] = label_key
+                mapping[label_key] = label_key
+            self._external_keyword_mapping = mapping
+        return copy.deepcopy(self._external_keyword_mapping)
+
+    def map_external_keywords(self, external_keywords, lang):
+        mapping = self.external_keywords_mapping(lang)
+        mapped = []
+        for external_keyword in external_keywords:
+            external_keyword = external_keyword.lower()
+            if external_keyword in mapping:
+                mapped.append(mapping[external_keyword])
+        return mapped
 
     def all_keywords(self, lang):
         ans = []
@@ -735,13 +765,18 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return ans
 
     def export(self, plugin_api):
+        initial_keywords = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
+        external_keywords = plugin_api.request.args.getlist('keyword')
+        mapped_external_keywords = self.map_external_keywords(external_keywords, plugin_api.user_lang)
+        if len(mapped_external_keywords) != 0:
+            initial_keywords.extend(mapped_external_keywords)
+
         return dict(
             favorite=self.export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
-            initial_keywords = plugin_api.session.get(
-            self.SESSION_KEYWORDS_KEY, [self.default_label]),
+            initial_keywords = initial_keywords,
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )
