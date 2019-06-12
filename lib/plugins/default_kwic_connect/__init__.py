@@ -21,7 +21,7 @@ Required XML configuration: please see ./config.rng
 """
 
 from plugins.abstract.kwic_connect import AbstractKwicConnect
-from plugins.default_token_connect import setup_providers, ProviderWrapper
+from plugins.default_token_connect import setup_providers
 import plugins
 import logging
 from actions import concordance
@@ -41,9 +41,9 @@ def merge_results(curr, new, word):
 
 
 def handle_word_req(args):
-    word, corpora, ui_lang, providers = args
+    word, corpora, providers, ui_lang = args
     with plugins.runtime.KWIC_CONNECT as kc:
-        return word, kc.fetch_data(providers, corpora, ui_lang, word)
+        return word, kc.fetch_data(providers, corpora, word, ui_lang)
 
 
 @exposed(return_type='json')
@@ -51,7 +51,7 @@ def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
     with plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
-        args = [(w, [self.corp.corpname] + self.args.align, self.ui_lang, corpus_info.kwic_connect.providers)
+        args = [(w, [self.corp.corpname] + self.args.align, corpus_info.kwic_connect.providers, self.ui_lang)
                 for w in words]
         results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
         provider_all = []
@@ -76,13 +76,27 @@ def get_corpus_kc_providers(self, _):
                     providers=[dict(id=b.provider_id, label=f.get_heading(self.ui_lang)) for b, f in mp])
 
 
-class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
+class DefaultKwicConnect(AbstractKwicConnect):
 
     def __init__(self, providers, corparch, max_kwic_words, load_chunk_size):
-        super(DefaultKwicConnect, self).__init__(providers)
         self._corparch = corparch
         self._max_kwic_words = max_kwic_words
         self._load_chunk_size = load_chunk_size
+
+        self._providers = providers
+        self._cache_path = None
+
+    def map_providers(self, provider_ids):
+        return [self._providers[ident] for ident in provider_ids]
+
+    def set_cache_path(self, path):
+        self._cache_path = path
+        for backend, frontend in self.map_providers(self._providers):
+            backend.set_cache_path(path)
+
+    @property
+    def cache_path(self):
+        return self._cache_path
 
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
@@ -96,12 +110,12 @@ class DefaultKwicConnect(ProviderWrapper, AbstractKwicConnect):
     def export_actions(self):
         return {concordance.Actions: [fetch_external_kwic_info, get_corpus_kc_providers]}
 
-    def fetch_data(self, provider_ids, corpora, lang, lemma):
+    def fetch_data(self, provider_ids, corpora, lemma, lang):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
                 if backend.enabled_for_corpora(corpora):
-                    data, status = backend.fetch_data(corpora, lang, dict(lemma=lemma))
+                    data, status = backend.fetch(corpora, None, None, dict(lemma=lemma), lang)
                     ans.append(frontend.export_data(data, status, lang).to_dict())
             except EnvironmentError as ex:
                 logging.getLogger(__name__).error(u'KwicConnect backend error: {0}'.format(ex))
