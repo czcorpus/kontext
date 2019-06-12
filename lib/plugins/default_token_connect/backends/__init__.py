@@ -33,7 +33,7 @@ class SQLite3Backend(AbstractBackend):
         self._query_tpl = conf['query']
 
     @cached
-    def fetch_data(self, corpora, lang, query_args):
+    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
         cur = self._db.cursor()
         cur.execute(self._query_tpl, (query_args['word'], query_args['lemma']))
         ans = cur.fetchone()
@@ -83,12 +83,13 @@ class HTTPBackend(AbstractBackend):
         return self._conf.get('posAttrs', [])
 
     @cached
-    def fetch_data(self, corpora, lang, query_args):
+    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
         connection = self.create_connection()
         try:
             args = dict(
                 ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
                 corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
+                token_id=token_id, num_tokens=num_tokens,
                 **dict((k, self.enc_val(v)) for k, v in query_args.items()))
             logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
 

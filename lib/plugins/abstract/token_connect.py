@@ -93,7 +93,7 @@ class AbstractBackend(object):
     def provider_id(self):
         return self._provider_id
 
-    def fetch_data(self, corpora, lang, query_args):
+    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
         raise NotImplementedError()
 
     def set_cache_path(self, path):
@@ -185,7 +185,10 @@ def find_implementation(path):
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids, maincorp_obj, corpora, lang, token_id, num_tokens):
+    def map_providers(self, provider_ids):
+        raise NotImplementedError()
+
+    def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
@@ -195,9 +198,9 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         maincorp_obj -- corpus object used to fetch actual positional attributes used
                         to query the providers
         corpora -- list of involved corpora IDs
-        lang -- user interface language (so we know how to localize the returned stuff)
         token_id -- internal token ID user ask information about
         num_tokens -- how many tokens from the token_id to include in query (multi-word queries); min is 1
+        lang -- user interface language (so we know how to localize the returned stuff)
         """
         raise NotImplementedError()
 
