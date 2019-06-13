@@ -43,6 +43,10 @@ interface ViewOptsResponse extends Kontext.AjaxResponse {
 
 export class GeneralViewOptionsModel extends StatefulModel implements ViewOptions.IGeneralViewOptionsModel {
 
+    private static readonly MAX_ITEMS_PER_PAGE = 500;
+
+    private static readonly MAX_CTX_SIZE = 100;
+
     private layoutModel:PageModel;
 
     // ---- concordance opts
@@ -146,6 +150,22 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         });
     }
 
+    private testMaxPageSize(v:string):Error|null {
+        if (parseInt(v) > GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE) {
+            return new Error(this.layoutModel.translate('options__max_items_per_page_exceeded_{num}',
+                    {num: GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE}));
+        }
+        return null;
+    }
+
+    private testMaxCtxSize(v:string):Error|null {
+        if (parseInt(v) > GeneralViewOptionsModel.MAX_CTX_SIZE) {
+            return new Error(this.layoutModel.translate('options__max_context_exceeded_{num}',
+                    {num: GeneralViewOptionsModel.MAX_CTX_SIZE}));
+        }
+        return null;
+    }
+
     private validateForm():Error|null {
         const valItems = [this.pageSize, this.newCtxSize, this.wlpagesize,
                           this.fmaxitems, this.citemsperpage];
@@ -156,6 +176,22 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
             } else {
                 valItems[i].isInvalid = true;
                 return new Error(this.layoutModel.translate('global__invalid_number_format'));
+            }
+        }
+
+        const pagingItems = [this.pageSize, this.wlpagesize, this.fmaxitems, this.citemsperpage];
+        for (let i = 0; i < pagingItems.length; i += 1) {
+            const err = this.testMaxPageSize(pagingItems[i].value);
+            if (err) {
+                return err;
+            }
+        }
+
+        const ctxItems = [this.newCtxSize];
+        for (let i = 0; i < ctxItems.length; i += 1) {
+            const err = this.testMaxCtxSize(ctxItems[i].value);
+            if (err) {
+                return err;
             }
         }
         return null;

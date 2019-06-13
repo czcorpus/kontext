@@ -10,6 +10,7 @@ import plugins
 import settings
 import urlparse
 import logging
+import math
 
 _logger = logging.getLogger(__name__)
 
@@ -75,7 +76,6 @@ class Actions(Kontext):
             exact_match = True
 
         attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
-        rq = ''  # query for manatee
         try:  # parse query
             if '=' in query:  # lemma=word | lemma="word" | lemma="w1 w2" | word=""
                 attr, term = query.split('=')
@@ -122,25 +122,27 @@ class Actions(Kontext):
         if attr not in attrs:
             raise Exception(16, attr, 'Unsupported index')
 
+        fromp = int(math.floor((start - 1) / max_rec)) + 1
         # try to get concordance
         try:
             anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
             q = ['q' + rq]
-            # q = ['aword,[lc="havel"]']
-            conc = conclib.get_conc(corp, anon_id, q=q)
+            conc = conclib.get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, async=0)
         except Exception as e:
             raise Exception(10, repr(e), 'Query syntax error')
 
         kwic = kwiclib.Kwic(corp, corpname, conc)
         kwic_args = kwiclib.KwicPageArgs(Args(), base_attr=Kontext.BASE_ATTR)
+        kwic_args.fromp = fromp
+        kwic_args.pagesize = max_rec
+        kwic_args.leftctx = '-{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
+        kwic_args.rightctx = '{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
         page = kwic.kwicpage(kwic_args)  # convert concordance
 
-        # start starts with 1
-        start -= 1
-
-        if len(page['Lines']) < start:
+        local_offset = (start - 1) % max_rec
+        if start > conc.size():
             raise Exception(61, 'startRecord', 'First record position out of range')
-        return [
+        rows = [
             (
                 kwicline['Left'][0]['str'],
                 kwicline['Kwic'][0]['str'],
@@ -148,7 +150,8 @@ class Actions(Kontext):
                 kwicline['ref']
             )
             for kwicline in page['Lines']
-        ][start:][:max_rec]
+        ][local_offset:local_offset + max_rec]
+        return rows, conc.size()
 
     @exposed(return_type='template', template='fcs/v1_complete.tmpl', skip_corpus_init=True, http_method=('GET', 'HEAD'))
     def v1(self, req):
@@ -297,9 +300,8 @@ class Actions(Kontext):
                 corpus = self.cm.get_Corpus(corpname)
                 if 0 == len(query):
                     raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
-                data['result'] = self.fcs_search(
+                data['result'], data['numberOfRecords'] = self.fcs_search(
                     corpus, corpname, query, maximumRecords, startRecord)
-                data['numberOfRecords'] = len(data['result'])
 
             # unsupported operation
             else:

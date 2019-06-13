@@ -110,7 +110,7 @@ class TreqBackend(HTTPBackend):
         return ('http://' + self._conf['server']).encode('utf-8')
 
     @cached
-    def fetch_data(self, corpora, lang, query_args):
+    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -123,7 +123,8 @@ class TreqBackend(HTTPBackend):
                         **query_args)
             t_args = self.mk_page_args(**args)
             treq_link = (self.mk_server_addr() + '/index.php', t_args)
-            ta_args = self.mk_api_args(lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma'])
+            ta_args = self.mk_api_args(lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'],
+                                       lemma=args['lemma'])
             connection = self.create_connection()
             try:
                 logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(ta_args))

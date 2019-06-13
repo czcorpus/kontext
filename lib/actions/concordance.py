@@ -352,7 +352,13 @@ class Actions(Querying):
         if self.args.queryselector:
             q_type = self.args.queryselector[:-3]
             qf_args.curr_query_types[cid] = q_type
-            qf_args.curr_queries[cid] = getattr(self.args, q_type)
+            try:  # chasing rare error here
+                qf_args.curr_queries[cid] = getattr(self.args, q_type)
+            except AttributeError:
+                qf_args.curr_queries[cid] = 'iquery'
+                logging.getLogger(__name__).warning(
+                    'Error in queryselector - empty value; user: {0}; args: {1}'.format(
+                        self.session_get('user', 'id'), self._session.get('semi_persistent_attrs', [])))
             qf_args.curr_lpos_values[cid] = request.args.get('lpos')
             qf_args.curr_qmcase_values[cid] = bool(int(request.args.get('qmcase', '0')))
             qf_args.curr_pcq_pos_neg_values[cid] = request.args.get('pcq_pos_neg')
@@ -672,10 +678,10 @@ class Actions(Querying):
             pq = self._compile_basic_query(suff='_' + al_corpname,
                                            cname=al_corpname)
             if pq:
-                par_query += ' within%s %s:%s' % (wnot, al_corpname, pq)
+                par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
                 nopq.append(al_corpname)
-        self.args.q = [qbase + self._compile_query() + ttquery + par_query]
+        self.args.q = [qbase + self._compile_query() + ' ' + ttquery + ' ' + par_query]
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
                           fc_lemword.split(),
@@ -783,7 +789,7 @@ class Actions(Querying):
             self.args.q.append(q)
         return self.view()
 
-    @exposed(template='view.tmpl', page_model='view')
+    @exposed(template='view.tmpl', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
         self.args.q.append('x-{0}'.format(maincorp))

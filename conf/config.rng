@@ -602,6 +602,13 @@
                             </oneOrMore>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="kwic_context">
+                            <a:documentation>KWIC context for left and right size. Please note that registry file
+                            defined MAXCONTEXT has priority over this.</a:documentation>
+                            <data type="positiveInteger" />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="plugins">

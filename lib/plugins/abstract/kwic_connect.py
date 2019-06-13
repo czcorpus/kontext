@@ -21,8 +21,11 @@ from plugins.abstract import CorpusDependentPlugin
 
 class AbstractKwicConnect(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids, corpora, lang, lemma):
-        pass
+    def map_providers(self, provider_ids):
+        raise NotImplementedError()
+
+    def fetch_data(self, provider_ids, corpora, lemma, lang):
+        raise NotImplementedError()
 
     def gives_kwic_hints(self, corpora):
         return [False for _ in corpora]

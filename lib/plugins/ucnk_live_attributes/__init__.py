@@ -46,13 +46,16 @@ from actions import concordance
 import query
 
 
-def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, autocomplete_attr, limit_lists):
+CACHE_MAIN_KEY = 'liveattrs_cache:%s'
+
+
+def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr, limit_lists):
     """
     Generates a cache key based on the relevant parameters.
     Returned value is hashed.
     """
-    return md5('%r %r %r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora,
-                                      autocomplete_attr, limit_lists)).hexdigest()
+    return md5('%r%r%r%r%r' % (attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr,
+                               limit_lists)).hexdigest()
 
 
 def cached(f):
@@ -64,18 +67,17 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        db = self.db(plugin_api.user_lang, corpus.corpname)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora,
+            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
                                    autocomplete_attr, limit_lists)
-            ans = self.from_cache(db, key)
+            ans = self.from_cache(corpus.corpname, key)
             if ans:
                 return ans
         ans = f(self, plugin_api, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora,
-                                   autocomplete_attr, limit_lists)
-            self.to_cache(db, key, ans)
+            key = create_cache_key(attr_map, self.max_attr_list_size,
+                                   aligned_corpora, autocomplete_attr, limit_lists)
+            self.to_cache(corpus.corpname, key, ans)
         return self.export_num_strings(ans)
     return wrapper
 
@@ -102,9 +104,10 @@ def attr_val_autocomplete(self, request):
 
 class LiveAttributes(AbstractLiveAttributes):
 
-    def __init__(self, corparch, max_attr_list_size, empty_val_placeholder,
+    def __init__(self, corparch, db, max_attr_list_size, empty_val_placeholder,
                  max_attr_visible_chars):
         self.corparch = corparch
+        self.kvdb = db
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
@@ -162,7 +165,7 @@ class LiveAttributes(AbstractLiveAttributes):
                     data[k] = int(data[k])
         return data
 
-    def from_cache(self, db, key):
+    def from_cache(self, corpname, key):
         """
         Loads a value from cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -174,12 +177,10 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a stored value matching provided argument or None if nothing is found
         """
-        ans = self.execute_sql(db, "SELECT value FROM cache WHERE key = ?", (key,)).fetchone()
-        if ans:
-            return LiveAttributes.export_num_strings(json.loads(str(ans[0])))
-        return None
+        v = self.kvdb.hash_get(CACHE_MAIN_KEY % (corpname,), key)
+        return LiveAttributes.export_num_strings(v) if v else None
 
-    def to_cache(self, db, key, values):
+    def to_cache(self, corpname, key, values):
         """
         Stores a data object "values" into the cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -189,10 +190,7 @@ class LiveAttributes(AbstractLiveAttributes):
         key -- a cache key
         values -- a dictionary with arbitrary nesting level
         """
-        value = json.dumps(values)
-        self.execute_sql(db, 'BEGIN IMMEDIATE')
-        self.execute_sql(db, "INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
-        db.commit()
+        self.kvdb.hash_set(CACHE_MAIN_KEY % (corpname,), key, values)
 
     @staticmethod
     def export_key(k):
@@ -411,8 +409,8 @@ class LiveAttributes(AbstractLiveAttributes):
         return [(r[0], r[1]) for r in ans]
 
 
-@inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch):
+@inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
+def create_instance(settings, corparch, db):
     """
     creates an instance of the plugin
 
@@ -421,6 +419,7 @@ def create_instance(settings, corparch):
     """
     la_settings = settings.get('plugins', 'live_attributes')
     return LiveAttributes(corparch=corparch,
+                          db=db,
                           max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
                           empty_val_placeholder=settings.get(
                               'corpora', 'empty_attr_value_placeholder'),
