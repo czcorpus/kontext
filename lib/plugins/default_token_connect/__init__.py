@@ -28,7 +28,9 @@ a set of providers where a provider always contains a backend, frontend and iden
 
 
 The JSON config file defines a template of an abstract path identifying a resource. It can be a URL path, SQL
-or a filesystem path. Such a template can use the following values: word, lemma, pos, ui_lang, other_lang.
+or a filesystem path. Such a template can use values defined in conf.attrs. Structural attribute names are
+modified from x.y to x__y. E.g. attrs = ["word", "lemma", "doc.id"] can be used in a URL template like this:
+my_server/my/path?word={word}&lemma={lemma}&docid={doc__id}
 
 Required XML configuration: please see config.rng
 """
@@ -62,7 +64,7 @@ def fetch_token_detail(self, request):
         pos = ''
 
     """
-    token_id = request.args['token_id']
+    token_id = int(request.args['token_id'])
     num_tokens = int(request.args['num_tokens'])
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
@@ -92,18 +94,25 @@ class DefaultTokenConnect(AbstractTokenConnect):
 
     @staticmethod
     def fetch_attr(corp, attr, token_id, num_tokens):
-        mattr = corp.get_attr(attr)
         ans = []
-        for i in range(num_tokens):
-            ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
-        return ' '.join(ans)
+        if '.' in attr:
+            struct_name, attr_name = attr.split('.')
+            struct = corp.get_struct(struct_name)
+            attr_obj = struct.get_attr(attr_name)
+            # here we return struct info for first token only; otherwise it won't make much sense
+            return import_string(attr_obj.id2str(int(token_id)), corp.get_conf('ENCODING'))
+        else:
+            mattr = corp.get_attr(attr)
+            for i in range(num_tokens):
+                ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
+            return ' '.join(ans)
 
     def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
-                args = dict((attr, self.fetch_attr(maincorp_obj, attr, token_id, num_tokens))
-                            for attr in backend.get_required_posattrs())
+                args = dict((attr.replace('.', '__'), self.fetch_attr(maincorp_obj, attr, token_id, num_tokens))
+                            for attr in backend.get_required_attrs())
                 data, status = backend.fetch(corpora, token_id, num_tokens, args, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:

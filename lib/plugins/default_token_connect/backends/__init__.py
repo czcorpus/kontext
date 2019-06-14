@@ -79,8 +79,13 @@ class HTTPBackend(AbstractBackend):
             return urllib.quote(s.encode('utf-8'))
         return urllib.quote(s)
 
-    def get_required_posattrs(self):
-        return self._conf.get('posAttrs', [])
+    def get_required_attrs(self):
+        if 'posAttrs' in self._conf:
+            logging.getLogger(__name__).warning(
+                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
+            return self._conf.get('posAttrs', [])
+        else:
+            return self._conf.get('attrs', [])
 
     @cached
     def fetch(self, corpora, token_id, num_tokens, query_args, lang):
