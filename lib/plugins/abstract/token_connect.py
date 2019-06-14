@@ -111,9 +111,9 @@ class AbstractBackend(object):
         """
         return True
 
-    def get_required_posattrs(self):
+    def get_required_attrs(self):
         """
-        Which positional attributes are needed to
+        Which positional and structural attributes are needed to
         perform a query against the provider.
 
         This is typically configured in provider's
