@@ -29,7 +29,12 @@ def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query
     """
     Returns a hashed cache key based on the passed parameters.
     """
-    args = sorted(query_args.items(), key=lambda x: x[0])
+    args = []
+    for x, y in sorted(query_args.items(), key=lambda x: x[0]):
+        if type(y) is dict:
+            args.append((x, sorted([(x2, y2) for x2, y2 in y.items()], key=lambda x: x[0])))
+        else:
+            args.append((x, y))
     return md5('%r%r%r%r%r%r' % (provider_id, corpora, token_id, num_tokens, args, lang)).hexdigest()
 
 
@@ -49,7 +54,8 @@ def cached(fn):
         """
         cache_path = self.get_cache_path()
         if cache_path:
-            key = mk_token_connect_cache_key(self.provider_id, corpora, token_id, num_tokens, query_args, lang)
+            key = mk_token_connect_cache_key(
+                self.provider_id, corpora, token_id, num_tokens, query_args, lang)
             with sqlite3.connect(cache_path) as conn:
                 res = conn.execute('PRAGMA journal_mode=WAL').fetchone()
                 imode = res[0] if res else 'undefined'
@@ -71,7 +77,7 @@ def cached(fn):
                 else:
                     logging.getLogger(__name__).debug(
                         u'TC/KC cache hit, key prefix: {0} for token_id {1}, num_tokens: {2}, args {3}'.format(
-                        key[:6], token_id, num_tokens, query_args))
+                            key[:6], token_id, num_tokens, query_args))
                     # unzip and decode the cached result, convert the "found" parameter value back to boolean
                     res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
                     # update last access

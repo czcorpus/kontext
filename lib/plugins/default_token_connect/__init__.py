@@ -26,11 +26,8 @@ a set of providers where a provider always contains a backend, frontend and iden
 * **frontend** specifies an object used to export fetched data (server part) and render them (client part),
 * **identifier** is referred in corplist.xml by individual corpora to attach one or more providers per corpus.
 
-
-The JSON config file defines a template of an abstract path identifying a resource. It can be a URL path, SQL
-or a filesystem path. Such a template can use values defined in conf.attrs. Structural attribute names are
-modified from x.y to x__y. E.g. attrs = ["word", "lemma", "doc.id"] can be used in a URL template like this:
-my_server/my/path?word={word}&lemma={lemma}&docid={doc__id}
+The JSON config file defines a list of attributes (both structural and positional) we want to reveal for our
+backends (see especially HTTP backend which uses these attributes to construct a service URL).
 
 Required XML configuration: please see config.rng
 """
@@ -38,8 +35,8 @@ Required XML configuration: please see config.rng
 import json
 import logging
 import os
-
 import manatee
+
 import plugins
 from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
 from l10n import import_string
@@ -73,6 +70,44 @@ def fetch_token_detail(self, request):
     return dict(token=token, items=[item for item in resp_data])
 
 
+def fetch_posattr(corp, attr, token_id, num_tokens):
+    ans = []
+    mattr = corp.get_attr(attr)
+    for i in range(num_tokens):
+        ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
+    return ' '.join(ans)
+
+
+def add_structattr_support(corp, attrs, token_id):
+    """
+    A decorator function which turns 'fetch_posattr' into
+    a more general function which is able to load
+    structural attributes too. The load is performed only
+    once for all possible structural attributes.
+    """
+
+    data = {}
+    refs = [x for x in attrs if '.' in x]
+    if len(refs) > 0:
+        conc = manatee.Concordance(corp, '[#{}]'.format(int(token_id)), 1, -1)
+        conc.sync()
+        rs = conc.RS(True, 0, 0)
+        kl = manatee.KWICLines(corp, rs, '-1', '1', 'word', '', '', ','.join(refs))
+        if kl.nextline():
+            refs_str = kl.get_refs()
+            for kv in refs_str.split(','):
+                k, v = kv.split('=')
+                data[k] = import_string(v, corp.get_conf('ENCODING'))
+
+    def decorator(fn):
+        def wrapper(corp, attr, token_id, num_tokens):
+            if '.' in attr:
+                return data[attr]
+            return fn(corp, attr, token_id, num_tokens)
+        return wrapper
+    return decorator
+
+
 class DefaultTokenConnect(AbstractTokenConnect):
 
     def __init__(self, providers, corparch):
@@ -92,27 +127,31 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def cache_path(self):
         return self._cache_path
 
-    @staticmethod
-    def fetch_attr(corp, attr, token_id, num_tokens):
-        ans = []
-        if '.' in attr:
-            struct_name, attr_name = attr.split('.')
-            struct = corp.get_struct(struct_name)
-            attr_obj = struct.get_attr(attr_name)
-            # here we return struct info for first token only; otherwise it won't make much sense
-            return import_string(attr_obj.id2str(int(token_id)), corp.get_conf('ENCODING'))
-        else:
-            mattr = corp.get_attr(attr)
-            for i in range(num_tokens):
-                ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
-            return ' '.join(ans)
-
     def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
         ans = []
+
+        # first, we pre-load all possible required (struct/pos) attributes all
+        # the defined providers need
+        all_attrs = set()
+        for backend, _ in self.map_providers(provider_ids):
+            all_attrs.update(backend.get_required_attrs())
+
+        @add_structattr_support(maincorp_obj, all_attrs, token_id)
+        def fetch_any_attr(corp, att, t_id, num_t):
+            return fetch_posattr(corp, att, t_id, num_t)
+
         for backend, frontend in self.map_providers(provider_ids):
             try:
-                args = dict((attr.replace('.', '__'), self.fetch_attr(maincorp_obj, attr, token_id, num_tokens))
-                            for attr in backend.get_required_attrs())
+                args = {}
+                for attr in backend.get_required_attrs():
+                    v = fetch_any_attr(maincorp_obj, attr, token_id, num_tokens)
+                    if '.' in attr:
+                        s, sa = attr.split('.')
+                        if s not in args:
+                            args[s] = {}
+                        args[s][sa] = v
+                    else:
+                        args[attr] = v
                 data, status = backend.fetch(corpora, token_id, num_tokens, args, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
@@ -121,7 +160,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                 ans.append(err_frontend.export_data(
                     dict(error=u'{0}'.format(ex)), False, lang).to_dict())
 
-        word = self.fetch_attr(maincorp_obj, 'word', token_id, num_tokens)
+        word = fetch_posattr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans
 
     def is_enabled_for(self, plugin_api, corpname):
