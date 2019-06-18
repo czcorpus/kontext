@@ -215,44 +215,6 @@
         return filePath;
     }
 
-    /**
-     * Configures a special module "vendor/common" which contains all the 3rd
-     * party libs merged into a single file
-     */
-    module.exports.listPackedModules = function (confDoc, pluginsPath, isProduction) {
-        let modules = [
-            'rsvp',
-            'vendor/rsvp-ajax',
-            'react',
-            'react-dom',
-            '@reactivex/rxjs',
-            'immutable',
-            'SoundManager',
-            'vendor/intl-messageformat',
-            'vendor/d3',
-            'vendor/d3-color',
-            'vendor/cookies'
-        ];
-        if (isProduction) {
-            modules.push('translations');
-
-        } else {
-            let pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
-            for (let p in pluginBuildConf) {
-                const remapModules = pluginBuildConf[p]['remapModules'] || {};
-                for (let p in remapModules) {
-                    modules.push(p);
-                }
-            }
-        }
-        return [
-            {
-                'name': 'vendor/common',
-                'include': modules
-            }
-        ];
-    };
-
     function findConfiguredLanguages(confDoc) {
         const glb = confDoc.getElementsByTagName('global');
         const trn = glb[0].getElementsByTagName('translations');
