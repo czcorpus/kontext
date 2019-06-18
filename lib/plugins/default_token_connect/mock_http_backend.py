@@ -51,5 +51,5 @@ class MockHTTPBackend(AbstractBackend):
     def get_path():
         return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'backends/__init__.py')
 
-    def get_required_posattrs(self):
+    def get_required_attrs(self):
         return self._conf['posAttrs']

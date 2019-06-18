@@ -44,6 +44,20 @@ class SQLite3Backend(AbstractBackend):
 
 
 class HTTPBackend(AbstractBackend):
+    """
+    The default_token_connect's JSON config file defines a template of an abstract path identifying a resource.
+    It can be a URL path, SQL or a filesystem path. Such a template can use values defined in conf.attrs. Structural
+    attribute names are accessed like this: struct[attr]. E.g. attrs = ["word", "lemma", "doc.id"] can be used in
+    a URL template like this: my_server/my/path?word={word}&lemma={lemma}&docid={doc[id]}.
+
+    There are also some predefined attributes (with lower priority, i.e. you can overwrite then with your attrs spec.):
+        - ui_lang
+        - corpus
+        - corpus2 (= first aligned corpus)
+        - token_id (numeric token index specifies an absolute order of the token in corpus)
+        - num_tokens (mainly for multi-word kwics)
+    """
+
     def __init__(self, conf, ident):
         super(HTTPBackend, self).__init__(ident)
         self._conf = conf
@@ -79,8 +93,13 @@ class HTTPBackend(AbstractBackend):
             return urllib.quote(s.encode('utf-8'))
         return urllib.quote(s)
 
-    def get_required_posattrs(self):
-        return self._conf.get('posAttrs', [])
+    def get_required_attrs(self):
+        if 'posAttrs' in self._conf:
+            logging.getLogger(__name__).warning(
+                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
+            return self._conf.get('posAttrs', [])
+        else:
+            return self._conf.get('attrs', [])
 
     @cached
     def fetch(self, corpora, token_id, num_tokens, query_args, lang):
@@ -90,7 +109,8 @@ class HTTPBackend(AbstractBackend):
                 ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
                 corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
                 token_id=token_id, num_tokens=num_tokens,
-                **dict((k, self.enc_val(v)) for k, v in query_args.items()))
+                **dict((k, dict((k2, self.enc_val(v2)) for k2, v2 in v.items()) if type(v) is dict else self.enc_val(v)
+                        ) for k, v in query_args.items()))
             logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
 
             try:
