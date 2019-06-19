@@ -62,8 +62,14 @@ Seq =
 
 Repetition =
     AtomQuery RepOpt?
-    / LSTRUCT Structure _ SLASH? RSTRUCT
-    / LSTRUCT SLASH _ Structure RSTRUCT
+    / OpenStructTag
+    / CloseStructTag
+
+OpenStructTag =
+    LSTRUCT Structure _ SLASH? RSTRUCT
+
+CloseStructTag =
+    LSTRUCT SLASH _ Structure RSTRUCT
 
 AtomQuery =
     Position
