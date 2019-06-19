@@ -265,6 +265,7 @@ export class FirstFormPage {
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryModel.getTagAttr() : null,
             actionPrefix: '',
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
