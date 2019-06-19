@@ -63,6 +63,7 @@ export interface CQLEditorModelInitArgs {
     pageModel:PageModel;
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
+    structList:Array<string>;
     tagAttr:string;
     actionPrefix:string;
     isEnabled:boolean;
@@ -84,9 +85,9 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     private hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
 
 
-    constructor({dispatcher, pageModel, attrList, structAttrList, tagAttr,
+    constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
                     actionPrefix, isEnabled, currQueries}:CQLEditorModelInitArgs) {
-        const attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
+        const attrHelper = new AttrHelper(attrList, structAttrList, structList, tagAttr);
         super(
             dispatcher,
             {

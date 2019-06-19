@@ -387,8 +387,6 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         out['query_history_page_num_records'] = int(
             settings.get('plugins', 'query_storage')['page_num_records'])
-        out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
-                                 for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',') if n]
         return out
 
     @exposed(return_type='json')
@@ -1727,8 +1725,9 @@ class Actions(Querying):
             self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
 
         tmp_out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
-                                     for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',')
+                                     for n in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(',')
                                      if n]
+        tmp_out['StructList'] = corpus_get_conf(self.corp, 'STRUCTLIST').split(',')
         sref = corpus_get_conf(self.corp, 'SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
@@ -1781,6 +1780,7 @@ class Actions(Querying):
             Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],
             StructAttrList=tmp_out['StructAttrList'],
+            StructList=tmp_out['StructList'],
             InputLanguages=tmp_out['input_languages'],
             ConcFormsArgs=tmp_out['conc_forms_args'],
             CurrentSubcorp=self.args.usesubcorp,

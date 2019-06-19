@@ -485,6 +485,7 @@ export class ViewPage {
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             actionPrefix: '',
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
@@ -550,6 +551,7 @@ export class ViewPage {
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             actionPrefix: 'FILTER_',
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')

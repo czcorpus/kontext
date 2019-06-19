@@ -214,7 +214,8 @@ export namespace AjaxResponse {
         menuData:any; // TODO type
         Wposlist:Array<any>; // TODO type
         AttrList:Array<any>; // TODO type
-        StructAttrList:Array<any>; // TODO type
+        StructAttrList:Array<Kontext.AttrItem>;
+        StructList:Array<string>;
         InputLanguages:{[corpname:string]:string};
         ConcFormsArgs:any; // TODO type
         CurrentSubcorp:string;
