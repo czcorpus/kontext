@@ -647,7 +647,8 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         if (this.hasKwic(corpusId)) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');
-            window.location.href = this.layoutModel.createActionUrl('switch_main_corp', args.items());
+            this.layoutModel.setLocationPost(
+                this.layoutModel.createActionUrl('switch_main_corp', args.items()), []);
 
         } else {
             throw new Error('Cannot set corpus as main - no KWIC');

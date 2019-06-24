@@ -787,7 +787,7 @@ class Actions(Querying):
             self.args.q.append(q)
         return self.view()
 
-    @exposed(template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(http_method='POST', template='view.tmpl', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
         self.args.q.append('x-{0}'.format(maincorp))
