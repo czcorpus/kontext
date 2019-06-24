@@ -1496,7 +1496,7 @@ class Actions(Querying):
                         used_refs = ([('#', translate('Token number')), (doc_struct, translate('Document number'))] +
                                      [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
                         used_refs = [x[1] for x in used_refs if x[0] in refs_args]
-                        writer.write_ref_headings(used_refs)
+                        writer.write_ref_headings([''] + used_refs if numbering else used_refs)
 
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
