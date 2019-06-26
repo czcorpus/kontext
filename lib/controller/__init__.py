@@ -679,10 +679,17 @@ class Controller(object):
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return args
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result):
+    def post_dispatch(self, methodname, action_metadata, tmpl, result, err):
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
+
+        arguments:
+        methodname -- a name of the action ("exposed") method currently processed
+        action_metadata -- method annotations
+        tmpl -- a template used to process the output
+        result -- method output
+        err -- a possible error thrown from within the action
         """
         if type(result) is dict:
             result['messages'] = result.get('messages', []) + self._system_messages
@@ -794,6 +801,7 @@ class Controller(object):
         methodname = path[0]
         named_args = {}
         headers = []
+        err = None
         action_metadata = self._get_method_metadata(methodname)
         if not action_metadata:
             def null(): pass
@@ -810,24 +818,29 @@ class Controller(object):
                 methodname = 'message'
                 raise NotFoundException(translate('Unknown action [%s]') % orig_method)
         except CorpusForbiddenException as ex:
+            err = ex
             self._status = ex.code
             tmpl, result = self._run_message_action(
                 named_args, action_metadata, 'error', ex.message)
         except ImmediateRedirectException as ex:
+            err = ex
             tmpl, result = None, None
             self.redirect(ex.url, ex.code)
         except UserActionException as ex:
+            err = ex
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
                 msg_args, action_metadata, 'error', ex.message)
         except werkzeug.exceptions.BadRequest as ex:
+            err = ex
             self._status = ex.code
             tmpl, result = self._run_message_action(named_args, action_metadata,
                                                     'error', '{0}: {1}'.format(ex.name, ex.description))
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
+            err = ex
             logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
             self._status = 500
             if settings.is_debug_mode():
@@ -838,7 +851,7 @@ class Controller(object):
             tmpl, result = self._run_message_action(named_args, action_metadata, 'error', message)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
-        self.post_dispatch(methodname, action_metadata, tmpl, result)
+        self.post_dispatch(methodname, action_metadata, tmpl, result, err)
         # response rendering
         headers += self.output_headers(action_metadata['return_type'])
         output = StringIO.StringIO()
