@@ -36,6 +36,7 @@ import re
 from functools import partial
 import types
 import hashlib
+import uuid
 
 import werkzeug.urls
 import werkzeug.http
@@ -679,7 +680,7 @@ class Controller(object):
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return args
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result, err):
+    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
@@ -689,7 +690,7 @@ class Controller(object):
         action_metadata -- method annotations
         tmpl -- a template used to process the output
         result -- method output
-        err -- a possible error thrown from within the action
+        err_desc -- a 2-tuple: possible error thrown from within the action along with its unique id
         """
         if type(result) is dict:
             result['messages'] = result.get('messages', []) + self._system_messages
@@ -801,7 +802,7 @@ class Controller(object):
         methodname = path[0]
         named_args = {}
         headers = []
-        err = None
+        err = (None, None)
         action_metadata = self._get_method_metadata(methodname)
         if not action_metadata:
             def null(): pass
@@ -818,30 +819,31 @@ class Controller(object):
                 methodname = 'message'
                 raise NotFoundException(translate('Unknown action [%s]') % orig_method)
         except CorpusForbiddenException as ex:
-            err = ex
+            err = (ex, None)
             self._status = ex.code
             tmpl, result = self._run_message_action(
                 named_args, action_metadata, 'error', ex.message)
         except ImmediateRedirectException as ex:
-            err = ex
+            err = (ex, None)
             tmpl, result = None, None
             self.redirect(ex.url, ex.code)
         except UserActionException as ex:
-            err = ex
+            err = (ex, None)
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
                 msg_args, action_metadata, 'error', ex.message)
         except werkzeug.exceptions.BadRequest as ex:
-            err = ex
+            err = (ex, None)
             self._status = ex.code
             tmpl, result = self._run_message_action(named_args, action_metadata,
                                                     'error', '{0}: {1}'.format(ex.name, ex.description))
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
-            err = ex
-            logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
+            err_id = hashlib.sha1(str(uuid.uuid1())).hexdigest()
+            err = (ex, err_id)
+            logging.getLogger(__name__).error(u'{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
             self._status = 500
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)

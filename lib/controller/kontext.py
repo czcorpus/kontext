@@ -266,14 +266,14 @@ class Kontext(Controller):
     def get_mapping_url_prefix(self):
         return super(Kontext, self).get_mapping_url_prefix()
 
-    def _create_action_log(self, user_settings, action_name, err_name, proc_time=None):
+    def _create_action_log(self, user_settings, action_name, err_desc, proc_time=None):
         """
         Logs user's request by storing URL parameters, user settings and user name
 
         arguments:
         user_settings -- a dict containing user settings
         action_name -- name of current action
-        err_name -- Exception class name or None
+        err_desc -- 2-tuple (Exception class name along with optional application log anchor ID) or None
         proc_time -- float specifying how long the action took;
         default is None - in such case no information is stored
 
@@ -285,8 +285,8 @@ class Kontext(Controller):
         logged_values = settings.get('logging', 'values', ())
         log_data = {}
 
-        if err_name:
-            log_data['error'] = err_name
+        if err_desc:
+            log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
 
         params = {}
         if self.environ.get('QUERY_STRING'):
@@ -828,7 +828,7 @@ class Kontext(Controller):
                 p.instance.setup(self)
         return named_args
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result, err):
+    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
@@ -836,9 +836,9 @@ class Kontext(Controller):
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(
                 set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
-        super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result, err)
+        super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
 
-        def encode_err(e): return None if e is None else e.__class__.__name__
+        def encode_err(e): return None if e[0] is None else (e[0].__class__.__name__, e[1])
 
         # create and store concordance query key
         if type(result) is DictType:
@@ -850,7 +850,7 @@ class Kontext(Controller):
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
-                                           err_name=encode_err(err), proc_time=self._proc_time)
+                                           err_desc=encode_err(err_desc), proc_time=self._proc_time)
         if not settings.get_bool('logging', 'skip_user_actions', False):
             logging.getLogger('QUERY').info(json.dumps(log_data))
         with plugins.runtime.DISPATCH_HOOK as dhook:
