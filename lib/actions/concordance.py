@@ -1529,9 +1529,10 @@ class Actions(Querying):
         access corpus 'X' then all related audio files are accessible).
         """
         chunk = request.args.get('chunk', '')
-        path = os.path.join(settings.get('corpora', 'speech_files_path'), self.args.corpname, chunk)
-        rpath = os.path.realpath(path)
-        if os.path.isfile(rpath) and rpath.startswith(settings.get('corpora', 'speech_files_path')):
+        rpath = os.path.realpath(os.path.join(settings.get(
+            'corpora', 'speech_files_path'), self.args.corpname, chunk))
+        basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
+        if os.path.isfile(rpath) and rpath.startswith(basepath):
             with open(rpath, 'r') as f:
                 file_size = os.path.getsize(rpath)
                 self._headers['Content-Type'] = 'audio/mpeg'
