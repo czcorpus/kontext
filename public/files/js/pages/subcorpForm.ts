@@ -21,7 +21,7 @@ import * as Immutable from 'immutable';
 import * as React from 'react';
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/main';
+import {PageModel, PluginName} from '../app/main';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpFormModel} from '../models/subcorp/form';
 import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
@@ -119,6 +119,7 @@ export class SubcorpForm {
         const liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
+            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
             null, // no corplist provider => manual aligned corp. selection mode
             () => this.textTypesModel.hasSelectedItems(),
             {
