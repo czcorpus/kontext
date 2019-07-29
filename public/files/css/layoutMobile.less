@@ -1,6 +1,6 @@
 @import "./shared/globals.less";
 
-@media screen and (max-width: 800px), screen and (orientation:portrait) {
+@media screen and (max-width: 1200px), screen and (orientation:portrait) {
 
     #conc-dashboard-mount {
 
@@ -24,7 +24,11 @@
                 }
             }
         }
+    }
 
+    .tooltip-box.refs-detail {
+        bottom: 1em;
+        width: 85%;
     }
 
 }
@@ -157,7 +161,14 @@
     #result-info {
         width: 100% !important;
     }
+
+    .tooltip-box.refs-detail {
+        left: 0;
+        bottom: 1em;
+        transform: none;
+        width: calc(100% - 3.7em);
+        min-width: initial;
+    }
 }
 
-@import "./layoutMobile.less";
 @import "~custom-styles/theme.less";

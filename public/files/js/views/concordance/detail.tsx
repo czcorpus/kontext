@@ -172,7 +172,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail"
                         takeFocus={true}>
-                    {this._renderContents()}
+                    <div className="wrapper">
+                        {this._renderContents()}
+                    </div>
                 </layoutViews.PopupBox>
             );
         }
