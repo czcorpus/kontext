@@ -190,6 +190,9 @@ class Actions(Querying):
         if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
             self.args.refs = self.corp.get_conf('SHORTREF')
 
+        if self.args.fromp < 1:
+            raise UserActionException(translate('Invalid page number'))
+
         self._apply_viewmode(corpus_info['sentence_struct'])
 
         i = 0
