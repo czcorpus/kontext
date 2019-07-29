@@ -334,6 +334,7 @@ export namespace PluginInterfaces {
             (
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
+                isEnabled:boolean,
                 selectedCorporaProvider:()=>Immutable.List<string>,
                 ttCheckStatusProvider:()=>boolean,
                 args:PluginInterfaces.LiveAttributes.InitArgs

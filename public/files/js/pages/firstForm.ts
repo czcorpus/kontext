@@ -167,6 +167,7 @@ export class FirstFormPage {
         const liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
+            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
             () => this.queryModel.getCorpora(),
             () => this.textTypesModel.hasSelectedItems(),
             {

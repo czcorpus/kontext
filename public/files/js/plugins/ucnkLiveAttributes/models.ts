@@ -115,6 +115,8 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
 
     private isTTListMinimized:boolean;
 
+    private readonly isEnabled:boolean;
+
     private selectedCorporaProvider:()=>Immutable.List<string>;
 
     /**
@@ -133,6 +135,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
      */
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
             textTypesModel:TextTypes.ITextTypesModel,
+            isEnabled:boolean,
             selectedCorporaProvider:()=>Immutable.List<string>,
             ttCheckStatusProvider:()=>boolean,
             args:PluginInterfaces.LiveAttributes.InitArgs) {
@@ -142,6 +145,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         this.manualAlignCorporaMode = args.manualAlignCorporaMode;
         this.controlsEnabled = false; // it is enabled when user selects one or more items
         this.textTypesModel = textTypesModel;
+        this.isEnabled = isEnabled;
         this.isBusy = false;
         this.isTTListMinimized = false;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
@@ -580,7 +584,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
     }
 
     getTextInputPlaceholder():string {
-        if (this.controlsEnabled) {
+        if (this.isEnabled) {
             return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
         }
         return this.pluginApi.translate('ucnkLA__too_many_values_placeholder');

@@ -109,12 +109,13 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
 const create:PluginInterfaces.LiveAttributes.Factory = (
-        pluginApi, textTypesModel, selectedCorporaProvider, ttCheckStatusProvider, args) => {
+        pluginApi, textTypesModel, isEnabled, selectedCorporaProvider, ttCheckStatusProvider, args) => {
 
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),
         pluginApi,
         textTypesModel,
+        isEnabled,
         selectedCorporaProvider,
         ttCheckStatusProvider,
         args
