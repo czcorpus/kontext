@@ -580,7 +580,10 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
     }
 
     getTextInputPlaceholder():string {
-        return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
+        if (this.controlsEnabled) {
+            return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
+        }
+        return this.pluginApi.translate('ucnkLA__too_many_values_placeholder');
     }
 
     getControlsEnabled():boolean {
