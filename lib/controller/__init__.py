@@ -759,6 +759,9 @@ class Controller(object):
         if action_metadata['return_type'] == 'json':
             tpl_path, method_ans = self.process_action('message_json', named_args)
             action_metadata.update(self._get_method_metadata('message_json'))
+        elif action_metadata['return_type'] == 'xml':
+            tpl_path, method_ans = self.process_action('message_xml', named_args)
+            action_metadata.update(self._get_method_metadata('message_xml'))
         else:
             tpl_path, method_ans = self.process_action('message', named_args)
             action_metadata.update(self._get_method_metadata('message'))
@@ -843,7 +846,8 @@ class Controller(object):
             # post_dispatch etc.)
             err_id = hashlib.sha1(str(uuid.uuid1())).hexdigest()
             err = (ex, err_id)
-            logging.getLogger(__name__).error(u'{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
+            logging.getLogger(__name__).error(
+                u'{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
             self._status = 500
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)
