@@ -24,7 +24,6 @@ import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {StatefulModel, UNSAFE_SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {KWICSection} from './line';
 import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
@@ -32,6 +31,7 @@ import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 import {transformVmode} from '../options/structsAttrs';
+import { IActionDispatcher, Action } from 'kombo';
 
 export interface ServerTextChunk {
     class:string;
@@ -340,7 +340,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     private isBusy:boolean;
 
 
-    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:IActionDispatcher,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
             ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
@@ -371,59 +371,59 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             () => {
                 this.setStopStatus();
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             () => {
                 this.audioPlayer.stop();
                 this.setStopStatus();
-                this.notifyChangeListeners();
+                this.emitChange();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
         );
 
         this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+            switch (action.name) {
                 case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
-                    this.changeMainCorpus(action.props['maincorp']);
+                    this.changeMainCorpus(action.payload['maincorp']);
                 break;
                 case 'CONCORDANCE_PLAY_AUDIO_SEGMENT':
-                    this.playAudio(action.props['chunksIds']);
-                    this.notifyChangeListeners();
+                    this.playAudio(action.payload['chunksIds']);
+                    this.emitChange();
                 break;
                 case 'AUDIO_PLAYER_CLICK_CONTROL':
-                    this.handlePlayerControls(action.props['action']);
-                    this.notifyChangeListeners();
+                    this.handlePlayerControls(action.payload['action']);
+                    this.emitChange();
                 break;
                 case 'CONCORDANCE_CHANGE_PAGE':
                 case 'CONCORDANCE_REVISIT_PAGE':
-                    this.changePage(action.props['action'], action.props['pageNum']).then(
+                    this.changePage(action.payload['action'], action.payload['pageNum']).then(
                         (data) => {
-                            if (action.actionType === 'CONCORDANCE_CHANGE_PAGE') {
+                            if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
                                 this.pushHistoryState(this.currentPage);
                             }
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.unfinishedCalculation = !action.props['finished'];
-                    this.concSummary.concSize = action.props['concsize'];
-                    this.concSummary.fullSize = action.props['fullsize'];
-                    this.concSummary.ipm = action.props['relconcsize'];
-                    this.concSummary.arf = action.props['arf'];
-                    this.pagination.lastPage = action.props['availPages'];
-                    this.notifyChangeListeners();
+                    this.unfinishedCalculation = !action.payload['finished'];
+                    this.concSummary.concSize = action.payload['concsize'];
+                    this.concSummary.fullSize = action.payload['fullsize'];
+                    this.concSummary.ipm = action.payload['relconcsize'];
+                    this.concSummary.arf = action.payload['arf'];
+                    this.pagination.lastPage = action.payload['availPages'];
+                    this.emitChange();
                     this.synchronize(
-                        action.actionType,
+                        action.name,
                         {
                             isUnfinished: this.isUnfinishedCalculation()
                         }
@@ -437,37 +437,37 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     this.concSummary.arf = 0;
                     this.pagination.lastPage = 0;
                     this.lines = this.lines.clear();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.calculateAdHocIpm().then(
                         (data) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             console.error(err);
                             this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
                         }
                     );
                 break;
                 case 'CONCORDANCE_CHANGE_LANG_VISIBILITY':
-                    this.changeColVisibility(action.props['corpusId'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.changeColVisibility(action.payload['corpusId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'CONCORDANCE_SWITCH_KWIC_SENT_MODE':
                     this.changeViewMode().then(
                         () => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             console.error(err);
                             this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
@@ -497,7 +497,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.reloadPage().then(
             (data) => {
                 this.pushHistoryState(this.currentPage);
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);
@@ -511,7 +511,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.reloadPage().then(
             (data) => {
                 this.pushHistoryState(this.currentPage);
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);
@@ -725,7 +725,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
             case 'stop':
                 this.audioPlayer.stop();
                 this.setStopStatus();
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
         }
     }

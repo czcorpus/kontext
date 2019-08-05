@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Observable, Subscription } from 'rxjs';
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
 import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
-import {ActionDispatcher} from '../app/dispatcher';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
+import { IActionDispatcher, IEventEmitter } from 'kombo';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -36,13 +36,13 @@ export interface IPluginApi {
     createStaticUrl(path:string):string;
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
     ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T>;
-    ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Rx.Observable<T>;
+    ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     translate(text:string, values?:any):string;
     formatNumber(v:number):string;
     formatDate(d:Date, timeFormat?:number):string;
     userIsAnonymous():boolean;
-    dispatcher():ActionDispatcher;
+    dispatcher():IActionDispatcher;
     getComponentHelpers():Kontext.ComponentHelpers;
     renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
                             target:HTMLElement, props?:T):void;
@@ -124,8 +124,7 @@ export namespace PluginInterfaces {
             getIsPublic():boolean;
             getDescription():Kontext.FormValue<string>;
             getSubcName():Kontext.FormValue<string>;
-            addChangeListener(fn:Kontext.ModelListener):void;
-            removeChangeListener(fn:Kontext.ModelListener):void;
+            addListener(fn:Kontext.ModelListener):Subscription;
             validateForm():Error|null;
         }
 
@@ -146,7 +145,7 @@ export namespace PluginInterfaces {
 
     export namespace SyntaxViewer {
 
-        export interface IPlugin extends Kontext.EventEmitter {
+        export interface IPlugin extends IEventEmitter {
             render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
             close():void;
             onPageResize():void;
@@ -189,7 +188,7 @@ export namespace PluginInterfaces {
 
     export namespace QueryStorage {
 
-        export interface IModel extends Kontext.EventEmitter {
+        export interface IModel extends IEventEmitter {
 
             getCurrentCorpusOnly():boolean;
             getData():Immutable.List<Kontext.QueryHistoryItem>;
@@ -238,7 +237,7 @@ export namespace PluginInterfaces {
         export type WidgetView = React.ComponentClass<{}>;
 
 
-        export interface ICorpSelection extends Kontext.EventEmitter {
+        export interface ICorpSelection extends IEventEmitter {
             getCurrentSubcorpus():string;
             getCurrentSubcorpusOrigName():string;
             getIsForeignSubcorpus():boolean;
@@ -289,7 +288,7 @@ export namespace PluginInterfaces {
             getTextInputPlaceholder():string;
             getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
             getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
-            notifyChangeListeners():void;
+            emitChange():void;
         }
 
         /**

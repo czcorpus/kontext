@@ -19,9 +19,10 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, KeyCodes} from '../../types/common';
 import{QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
+import { Subscription } from 'rxjs';
 
 
 export interface QuerySaveAsFormProps {
@@ -33,7 +34,7 @@ export interface SaveViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             saveAsFormModel:QuerySaveAsFormModel):SaveViews {
 
     const layoutViews = he.getLayoutViews();
@@ -49,8 +50,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_SAVE_AS_FORM_SET_NAME',
-                props: {
+                name: 'QUERY_SAVE_AS_FORM_SET_NAME',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -102,6 +103,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class QuerySaveAsForm extends React.Component<QuerySaveAsFormProps, QuerySaveAsFormModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleCloseEvent = this._handleCloseEvent.bind(this);
@@ -112,8 +115,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private _handleCloseEvent() {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                props: {}
+                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                payload: {}
             });
         }
 
@@ -127,8 +130,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private submit() {
             dispatcher.dispatch({
-                actionType: 'QUERY_SAVE_AS_FORM_SUBMIT',
-                props: {}
+                name: 'QUERY_SAVE_AS_FORM_SUBMIT',
+                payload: {}
             });
         }
 
@@ -137,11 +140,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            saveAsFormModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = saveAsFormModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            saveAsFormModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

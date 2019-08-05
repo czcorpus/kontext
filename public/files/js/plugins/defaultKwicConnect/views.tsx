@@ -18,10 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import { ActionDispatcher } from '../../app/dispatcher';
 import { Kontext } from '../../types/common';
 import { KwicConnectModel, KwicConnectState } from './model';
 import {PluginInterfaces} from '../../types/plugins';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 export interface KwicConnectContainerProps {
 
@@ -32,13 +33,15 @@ export interface View {
     KwicConnectContainer:React.ComponentClass<KwicConnectContainerProps>;
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, model:KwicConnectModel):View {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:KwicConnectModel):View {
 
     const layoutViews = he.getLayoutViews();
 
     // --------------------- <KwicConnectContainer /> ------------------------------------
 
     class KwicConnectContainer extends React.Component<KwicConnectContainerProps, KwicConnectState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -51,15 +54,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
         }
 
         componentDidMount() {
-            model.addChangeListener(this.stateChangeHandler);
+            this.modelSubscription = model.addListener(this.stateChangeHandler);
             dispatcher.dispatch({
-                actionType: PluginInterfaces.KwicConnect.Actions.FETCH_INFO,
-                props: {}
+                name: PluginInterfaces.KwicConnect.Actions.FETCH_INFO,
+                payload: {}
             });
         }
 
         componentWillUnmount() {
-            model.removeChangeListener(this.stateChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

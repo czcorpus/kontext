@@ -20,9 +20,10 @@ import {Kontext, KeyCodes} from '../types/common';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {ActionDispatcher} from '../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {isTouchDevice} from '../util';
 import {MessageModel, MessageModelState} from '../models/common/layout';
+import { Subscription } from 'rxjs';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -42,7 +43,7 @@ const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
 
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         modelProvider:Kontext.LayoutModel,
         messageModel:MessageModel):CoreViews.Runtime {
@@ -502,8 +503,8 @@ export function init(
         const handleCloseClick = (e) => {
             e.preventDefault();
             dispatcher.dispatch({
-                actionType: 'MESSAGE_CLOSED',
-                props: {
+                name: 'MESSAGE_CLOSED',
+                payload: {
                     messageId: props.messageId
                 }
             });
@@ -556,6 +557,8 @@ export function init(
 
     class Messages extends React.Component<CoreViews.Messages.Props, MessageModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
@@ -567,11 +570,11 @@ export function init(
         }
 
         componentDidMount() {
-            messageModel.addChangeListener(this._changeListener);
+            this.modelSubscription = messageModel.addListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            messageModel.removeChangeListener(this._changeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -596,8 +599,8 @@ export function init(
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch({
-                actionType: 'OVERVIEW_CORPUS_INFO_REQUIRED',
-                props: {
+                name: 'OVERVIEW_CORPUS_INFO_REQUIRED',
+                payload: {
                     corpusId: props.corpname
                 }
             });
@@ -605,8 +608,8 @@ export function init(
 
         const handleSubcnameClick = () => {
             dispatcher.dispatch({
-                actionType: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
-                props: {
+                name: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+                payload: {
                     corpusId: props.corpname,
                     subcorpusId: props.usesubcorp
                 }

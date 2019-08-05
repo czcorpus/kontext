@@ -18,11 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {Action} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
+import { Action } from 'kombo';
 
 
 export class IssueReportingModel extends StatefulModel {
@@ -41,19 +40,19 @@ export class IssueReportingModel extends StatefulModel {
         this._isBusy = false;
         this._isActive = false;
 
-        pluginApi.dispatcher().register((action:Action) => {
-            switch (action.actionType) {
+        pluginApi.dispatcher().registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'ISSUE_REPORTING_SET_VISIBILITY':
-                    this._isActive = action.props['value'];
-                    this.notifyChangeListeners();
+                    this._isActive = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'ISSUE_REPORTING_UPDATE_ISSUE_BODY':
-                    this.issueBody = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.issueBody = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'ISSUE_REPORTING_SUBMIT_ISSUE':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.pluginApi.ajax(
                         'POST',
                         this.pluginApi.createActionUrl('user/submit_issue'),
@@ -66,12 +65,12 @@ export class IssueReportingModel extends StatefulModel {
                             this._isBusy = false;
                             this._isActive = false;
                             this.pluginApi.showMessage('info', this.pluginApi.translate('defaultIR__message_sent'));
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this._isBusy = false;
                             this.pluginApi.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;

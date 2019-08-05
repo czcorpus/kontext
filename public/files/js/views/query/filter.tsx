@@ -28,9 +28,10 @@ import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {FirstHitsModel} from '../../models/query/firstHits';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {PluginInterfaces} from '../../types/plugins';
 import { UsageTipsModel } from '../../models/usageTips';
+import { Subscription } from 'rxjs';
 
 
 
@@ -106,7 +107,7 @@ export interface FirstHitsFormState {
 // ---------
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         filterModel:FilterFormModel,
         queryHintModel:UsageTipsModel,
@@ -130,6 +131,8 @@ export function init(
     // -------- <FilterForm /> ---------------------------------------
 
     class FilterForm extends React.Component<FilterFormProps, FilterFormState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -178,17 +181,17 @@ export function init(
         }
 
         componentDidMount() {
-            filterModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = filterModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            filterModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _handlePosNegSelect(evt) {
             dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_POS_NEG',
-                props: {
+                name: 'FILTER_QUERY_SET_POS_NEG',
+                payload: {
                     filterId: this.props.filterId,
                     value: evt.target.value
                 }
@@ -197,8 +200,8 @@ export function init(
 
         _handleSelTokenSelect(evt) {
             dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_FILFL',
-                props: {
+                name: 'FILTER_QUERY_SET_FILFL',
+                payload: {
                     filterId: this.props.filterId,
                     value: evt.target.value
                 }
@@ -207,8 +210,8 @@ export function init(
 
         _handleToFromRangeValChange(pos, evt) {
             dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_RANGE',
-                props: {
+                name: 'FILTER_QUERY_SET_RANGE',
+                payload: {
                     filterId: this.props.filterId,
                     rangeId: ({from: 'filfpos', to: 'filtpos'})[pos],
                     value: evt.target.value
@@ -220,14 +223,14 @@ export function init(
             if (evt.keyCode === KeyCodes.ENTER && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
-                        actionType: 'BRANCH_QUERY',
-                        props: {operationIdx: this.props.operationIdx}
+                        name: 'BRANCH_QUERY',
+                        payload: {operationIdx: this.props.operationIdx}
                     });
 
                 } else {
                     dispatcher.dispatch({
-                        actionType: 'FILTER_QUERY_APPLY_FILTER',
-                        props: {
+                        name: 'FILTER_QUERY_APPLY_FILTER',
+                        payload: {
                             filterId: this.props.filterId
                         }
                     });
@@ -240,14 +243,14 @@ export function init(
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
-                    actionType: 'BRANCH_QUERY',
-                    props: {operationIdx: this.props.operationIdx}
+                    name: 'BRANCH_QUERY',
+                    payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
                 dispatcher.dispatch({
-                    actionType: 'FILTER_QUERY_APPLY_FILTER',
-                    props: {
+                    name: 'FILTER_QUERY_APPLY_FILTER',
+                    payload: {
                         filterId: this.props.filterId
                     }
                 });
@@ -256,8 +259,8 @@ export function init(
 
         _handleInclKwicCheckbox(evt) {
             dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_INCL_KWIC',
-                props: {
+                name: 'FILTER_QUERY_SET_INCL_KWIC',
+                payload: {
                     filterId: this.props.filterId,
                     value: !this.state.inclKwicValue
                 }
@@ -517,14 +520,14 @@ export function init(
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
-                    actionType: 'BRANCH_QUERY',
-                    props: {operationIdx: this.props.operationIdx}
+                    name: 'BRANCH_QUERY',
+                    payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
                 dispatcher.dispatch({
-                    actionType: 'FILTER_FIRST_HITS_SUBMIT',
-                    props: {
+                    name: 'FILTER_FIRST_HITS_SUBMIT',
+                    payload: {
                         opKey: this.props.opKey
                     }
                 });

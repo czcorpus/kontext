@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Rx from '@reactivex/rxjs';
 import * as Immutable from 'immutable';
-import { StatelessModel } from "../../models/base";
-import { Action, ActionDispatcher, SEDispatcher } from "../../app/dispatcher";
-import { IPluginApi, PluginInterfaces } from "../../types/plugins";
+import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { Kontext } from "../../types/common";
 import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
 import { MultiDict } from '../../util';
 import {IConcLinesProvider} from '../../types/concordance';
+import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { concatMap, concat } from 'rxjs/operators';
 
 
 export enum KnownRenderers {
@@ -96,7 +96,7 @@ enum FreqDistType {
 
 
 export interface KwicConnectModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     pluginApi:IPluginApi;
     corpora:Array<string>;
     mainCorp:string;
@@ -152,7 +152,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
     reduce(state:KwicConnectState, action:Action):KwicConnectState {
         let newState:KwicConnectState;
-        switch (action.actionType) {
+        switch (action.name) {
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
                 newState = this.copyState(state);
                 if (newState.data.size === 0) {
@@ -161,20 +161,20 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 return newState;
             case Actions.FETCH_PARTIAL_INFO_DONE:
                 newState = this.copyState(state);
-                this.mergeDataOfProviders(newState, action.props['data']);
+                this.mergeDataOfProviders(newState, action.payload['data']);
                 return newState;
             case Actions.FETCH_INFO_DONE:
                 newState = this.copyState(state);
                 newState.isBusy = false;
-                newState.freqType = action.props['freqType'];
-                this.mergeDataOfProviders(newState, action.props['data']);
+                newState.freqType = action.payload['freqType'];
+                this.mergeDataOfProviders(newState, action.payload['data']);
                 return newState;
             case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
                 // Please note that this action breaks (de facto) the 'no side effect chain'
                 // rule (it is produced by async action of a StatefulModel and triggers a side
                 // effect here). But currently we have no solution to this.
                 newState = this.copyState(state);
-                newState.blockedByAsyncConc = action.props['isUnfinished'];
+                newState.blockedByAsyncConc = action.payload['isUnfinished'];
                 return newState;
             default:
                 return state;
@@ -182,7 +182,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     }
 
     sideEffects(state:KwicConnectState, action:Action, dispatch:SEDispatcher) {
-        switch (action.actionType) {
+        switch (action.name) {
             case PluginInterfaces.KwicConnect.Actions.FETCH_INFO:
             case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED': {
                 if (state.blockedByAsyncConc || state.data.size > 0) {
@@ -192,8 +192,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 this.fetchResponses(state, freqType, dispatch).subscribe(
                     (data) => {
                         dispatch({
-                            actionType: Actions.FETCH_INFO_DONE,
-                            props: {
+                            name: Actions.FETCH_INFO_DONE,
+                            payload: {
                                 data: data,
                                 freqType: freqType
                             }
@@ -202,8 +202,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     (err) => {
                         this.pluginApi.showMessage('error', err);
                         dispatch({
-                            actionType: Actions.FETCH_INFO_DONE,
-                            props: {
+                            name: Actions.FETCH_INFO_DONE,
+                            payload: {
                                 data: Immutable.List<ProviderWordMatch>()
                             },
                             error: err
@@ -215,77 +215,85 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         }
     }
 
-    private fetchResponses(state:KwicConnectState, freqType:FreqDistType, dispatch:SEDispatcher):Rx.Observable<Immutable.List<ProviderWordMatch>> {
+    private fetchResponses(state:KwicConnectState, freqType:FreqDistType, dispatch:SEDispatcher):Observable<Immutable.List<ProviderWordMatch>> {
 
-        return this.fetchUniqValues(freqType).concatMap(
-            (kwics) => {
-                const procItems = kwics.filter(v => v.split(' ').length <= KwicConnectModel.MAX_WORDS_PER_PHRASE);
-                const procData = this.makeStringGroups(procItems.slice(0, this.maxKwicWords), this.loadChunkSize);
-                let ans:Rx.Observable<Immutable.List<ProviderWordMatch>>;
+        return this.fetchUniqValues(freqType).pipe(
+            concatMap(
+                (kwics) => {
+                    const procItems = kwics.filter(v => v.split(' ').length <= KwicConnectModel.MAX_WORDS_PER_PHRASE);
+                    const procData = this.makeStringGroups(procItems.slice(0, this.maxKwicWords), this.loadChunkSize);
+                    let ans:Observable<Immutable.List<ProviderWordMatch>>;
 
-                if (procData.length > 0) {
-                    ans = procData.reduce(
-                        (prev, curr) => {
-                            return prev.concatMap(
-                                (data) => {
-                                    if (data !== null) {
-                                        dispatch({
-                                            actionType: Actions.FETCH_PARTIAL_INFO_DONE,
-                                            props: {
-                                                data: data
+                    if (procData.length > 0) {
+                        ans = procData.reduce(
+                            (prev, curr) => {
+                                return prev.pipe(
+                                    concatMap(
+                                        (data) => {
+                                            if (data !== null) {
+                                                dispatch({
+                                                    name: Actions.FETCH_PARTIAL_INFO_DONE,
+                                                    payload: {
+                                                        data: data
+                                                    }
+                                                });
                                             }
-                                        });
-                                    }
-                                    return this.fetchKwicInfo(state, curr);
-                                }
-                            );
-                        },
-                        Rx.Observable.of(Immutable.List<ProviderWordMatch>())
-                    );
+                                            return this.fetchKwicInfo(state, curr);
+                                        }
+                                    )
+                                );
+                            },
+                            rxOf(Immutable.List<ProviderWordMatch>())
+                        );
 
-                } else {
-                    ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
-                        'GET',
-                        'get_corpus_kc_providers',
-                        {corpname: state.corpora.get(0)}
+                    } else {
+                        ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
+                            'GET',
+                            'get_corpus_kc_providers',
+                            {corpname: state.corpora.get(0)}
 
-                    ).concatMap(
-                        (data) => Rx.Observable.of(Immutable.List<ProviderWordMatch>(
-                            data.providers.map(p => {
-                                return {
-                                    heading: p.label,
-                                    note: null,
-                                    renderer: null,
-                                    data: Immutable.List<ProviderOutput>()
-                                };
-                            })
-                        ))
-                    );
+                        ).pipe(
+                            concatMap(
+                                (data) => rxOf(Immutable.List<ProviderWordMatch>(
+                                    data.providers.map(p => {
+                                        return {
+                                            heading: p.label,
+                                            note: null,
+                                            renderer: null,
+                                            data: Immutable.List<ProviderOutput>()
+                                        };
+                                    })
+                                ))
+                            )
+                        );
+                    }
+
+                    if (procItems.length < kwics.length) {
+                        ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
+                            'GET',
+                            'get_corpus_kc_providers',
+                            {corpname: state.corpora.get(0)}
+
+                        ).pipe(
+                            concatMap(
+                                (data) => rxOf(Immutable.List<ProviderWordMatch>(
+                                    data.providers.map(p => ({
+                                        data: Immutable.List<ProviderOutput>([
+                                            this.pluginApi.translate('default_kwic_connect__item_been_ommitted_due_size')
+                                        ]),
+                                        heading: p.label,
+                                        note: null,
+                                        renderer: this.rendererMap(KnownRenderers.MESSAGE)
+                                    }))
+                                ))
+                            ),
+                            concat(ans)
+                        );
+                    }
+
+                    return ans;
                 }
-
-                if (procItems.length < kwics.length) {
-                    ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
-                        'GET',
-                        'get_corpus_kc_providers',
-                        {corpname: state.corpora.get(0)}
-
-                    ).concatMap(
-                        (data) => Rx.Observable.of(Immutable.List<ProviderWordMatch>(
-                            data.providers.map(p => ({
-                                data: Immutable.List<ProviderOutput>([
-                                    this.pluginApi.translate('default_kwic_connect__item_been_ommitted_due_size')
-                                ]),
-                                heading: p.label,
-                                note: null,
-                                renderer: this.rendererMap(KnownRenderers.MESSAGE)
-                            }))
-                        ))
-
-                    ).concat(ans);
-                }
-
-                return ans;
-            }
+            )
         );
 
 
@@ -340,7 +348,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         return ans;
     };
 
-    private fetchKwicInfo(state:KwicConnectState, items:Array<string>):Rx.Observable<Immutable.List<ProviderWordMatch>> {
+    private fetchKwicInfo(state:KwicConnectState, items:Array<string>):Observable<Immutable.List<ProviderWordMatch>> {
         const args = new MultiDict();
         args.set('corpname', state.mainCorp);
         args.replace('align', state.corpora.filter(v => v !== state.mainCorp).toArray());
@@ -352,31 +360,33 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 this.pluginApi.createActionUrl('fetch_external_kwic_info'),
                 args
 
-            ).concatMap(
-                (responseData) => {
-                    return Rx.Observable.of(Immutable.List<ProviderWordMatch>(responseData.data.map(provider => {
-                        return {
-                            data: Immutable.List<ProviderOutput>(provider.data.map(item => {
-                                return {
-                                    contents: item.contents,
-                                    found: item.status,
-                                    kwic: item.kwic
-                                };
-                            })),
-                            heading: provider.heading,
-                            note: provider.note,
-                            renderer: this.rendererMap(provider.renderer)
-                        };
-                    })));
-                }
+            ).pipe(
+                concatMap(
+                    (responseData) => {
+                        return rxOf(Immutable.List<ProviderWordMatch>(responseData.data.map(provider => {
+                            return {
+                                data: Immutable.List<ProviderOutput>(provider.data.map(item => {
+                                    return {
+                                        contents: item.contents,
+                                        found: item.status,
+                                        kwic: item.kwic
+                                    };
+                                })),
+                                heading: provider.heading,
+                                note: provider.note,
+                                renderer: this.rendererMap(provider.renderer)
+                            };
+                        })));
+                    }
+                )
             );
 
         } else {
-            return Rx.Observable.of(Immutable.List<ProviderWordMatch>());
+            return rxOf(Immutable.List<ProviderWordMatch>());
         }
     }
 
-    private fetchUniqValues(fDistType:FreqDistType):Rx.Observable<Array<string>> {
+    private fetchUniqValues(fDistType:FreqDistType):Observable<Array<string>> {
         const args = this.pluginApi.getConcArgs();
         args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
@@ -388,10 +398,12 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             'GET',
             this.pluginApi.createActionUrl('freqs'),
             args
-        ).concatMap(
-            (data) => Rx.Observable.of(
-                data.Blocks[0].Items.map(
-                    item => item.Word.map(w => w.n.replace(/\s+/, ' ')).join(' ')))
+        ).pipe(
+            concatMap(
+                (data) => rxOf(
+                    data.Blocks[0].Items.map(
+                        item => item.Word.map(w => w.n.replace(/\s+/, ' ')).join(' ')))
+            )
         );
     }
 

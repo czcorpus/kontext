@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {FreqDataRowsModel, ResultHeader, ResultItem} from '../../models/freqs/dataRows';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 
 interface DataTableProps {
     head:Immutable.List<ResultHeader>;
@@ -37,7 +37,7 @@ interface ExportedComponents {
 }
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         freqDataRowsModel:FreqDataRowsModel):ExportedComponents {
 
@@ -126,8 +126,8 @@ export function init(
         const handleClick = () => {
             props.setLoadingFlag();
             dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_SORT_BY_COLUMN',
-                props: {
+                name: 'FREQ_RESULT_SORT_BY_COLUMN',
+                payload: {
                     value: props.data.s
                 }
             });

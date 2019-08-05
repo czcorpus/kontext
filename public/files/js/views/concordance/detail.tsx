@@ -20,13 +20,14 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str} from '../../util';
 import { ConcDetailModel, RefsDetailModel, RefsColumn, Speech } from '../../models/concordance/detail';
 import { ConcLineModel } from '../../models/concordance/lines';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface RefDetailProps {
@@ -57,7 +58,7 @@ export interface DetailViews {
 
 
 export interface DetailModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
@@ -123,6 +124,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     class RefDetail extends React.Component<RefDetailProps, RefDetailState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -141,11 +144,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         }
 
         componentDidMount() {
-            refsDetailModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = refsDetailModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            refsDetailModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderContents() {
@@ -290,8 +293,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
         const expandClickHandler = (position) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
-                props: {
+                name: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
+                payload: {
                     position: position
                 }
             });
@@ -299,8 +302,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
         const handleDisplayWholeDocumentClick = () => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
-                props: {}
+                name: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
+                payload: {}
             });
         };
 
@@ -352,6 +355,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         hasTokenConnectData:boolean;
     }> {
 
+
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -378,11 +384,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         }
 
         componentDidMount() {
-            concDetailModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = concDetailModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            concDetailModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _isWaitingExpand(side) {
@@ -421,8 +427,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
         const handleExpandClick = (position) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
-                props: {
+                name: 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
+                payload: {
                     position: position
                 }
             });
@@ -713,6 +719,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         expandingSide:string;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -735,8 +743,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
         _handlePlayClick(segments, rowIdx) {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_PLAY_SPEECH',
-                props: {
+                name: 'CONCORDANCE_PLAY_SPEECH',
+                payload: {
                     segments: segments,
                     rowIdx: rowIdx
                 }
@@ -745,8 +753,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
         _handleStopClick() {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_STOP_SPEECH',
-                props: {}
+                name: 'CONCORDANCE_STOP_SPEECH',
+                payload: {}
             });
         }
 
@@ -759,11 +767,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         }
 
         componentDidMount() {
-            concDetailModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = concDetailModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            concDetailModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _canStartPlayback(speechPart) {
@@ -864,8 +872,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
         const handleMenuClick = (mode) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_DETAIL_SWITCH_MODE',
-                props: {value: mode}
+                name: 'CONCORDANCE_DETAIL_SWITCH_MODE',
+                payload: {value: mode}
             });
         };
 
@@ -894,6 +902,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     class TokenConnect extends React.Component<TokenConnectProps, TokenConnectState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -912,11 +922,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         }
 
         componentDidMount() {
-            concDetailModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = concDetailModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            concDetailModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderContents() {

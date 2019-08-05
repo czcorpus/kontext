@@ -22,15 +22,15 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 
 export interface FreqResultsSaveModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
     freqArgsProviderFn:()=>MultiDict;
@@ -78,48 +78,48 @@ export class FreqResultsSaveModel extends StatefulModel {
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
                     this.toLine.value = '';
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',
-                        {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                        {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
                     ))) {
-                        this.saveformat = action.props['saveformat'];
+                        this.saveformat = action.payload['saveformat'];
                         this.toLine.value = `${this.quickSaveRowLimit}`;
                         this.submit();
                         this.toLine.value = '';
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
                 case 'FREQ_RESULT_CLOSE_SAVE_FORM':
                     this.formIsActive = false;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_SAVE_FORM_SET_FORMAT':
-                    this.saveformat = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.saveformat = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.fromLine.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_SAVE_FORM_SET_TO_LINE':
-                    this.toLine.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.toLine.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING':
-                    this.includeHeading = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.includeHeading = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
-                    this.includeColHeaders = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.includeColHeaders = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_SAVE_FORM_SUBMIT':
                     const err = this.validateForm();
@@ -130,7 +130,7 @@ export class FreqResultsSaveModel extends StatefulModel {
                         this.submit();
                         this.formIsActive = false;
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });
@@ -211,22 +211,22 @@ export class FreqCTResultsSaveModel extends StatefulModel {
     saveMode:string;
 
 
-    constructor(dispatcher:ActionDispatcher, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
+    constructor(dispatcher:IActionDispatcher, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
         super(dispatcher);
         this.ctTableModel = ctTableModel;
         this.ctFlatModel = ctFlatModel;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_CT_SET_SAVE_MODE':
-                    this.saveMode = action.props['value'];
+                    this.saveMode = action.payload['value'];
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     if (this.saveMode === 'table') {
-                        this.ctTableModel.submitDataConversion(action.props['saveformat']);
+                        this.ctTableModel.submitDataConversion(action.payload['saveformat']);
 
                     } else if (this.saveMode === 'list') {
-                        this.ctFlatModel.submitDataConversion(action.props['saveformat']);
+                        this.ctFlatModel.submitDataConversion(action.payload['saveformat']);
                     }
                 break;
             }

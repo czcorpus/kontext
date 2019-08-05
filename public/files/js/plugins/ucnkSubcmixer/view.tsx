@@ -18,12 +18,12 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, TextTypes} from '../../types/common';
 import {SubcMixerModel, SubcMixerExpression, CalculationResults} from './init';
 import {init as subcorpViewsInit} from '../../views/subcorp/forms';
 import {PluginInterfaces} from '../../types/plugins';
-import { SubcorpFormModel } from '../../models/subcorp/form';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface WidgetProps {
@@ -36,7 +36,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             subcMixerModel:SubcMixerModel, subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel):Views {
 
     const layoutViews = he.getLayoutViews();
@@ -82,8 +82,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleRatioValueChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_SET_RATIO',
-                props: {
+                name: 'UCNK_SUBCMIXER_SET_RATIO',
+                payload: {
                     attrName: props.attrName,
                     attrValue: props.attrValue,
                     ratio: evt.target.value
@@ -163,8 +163,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleUpdateParamsButton = () => {
             dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_CLEAR_RESULT',
-                props: {}
+                name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
+                payload: {}
             });
         };
 
@@ -191,15 +191,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleCreateSubcorpClick = () => {
             dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
-                props: {}
+                name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
+                payload: {}
             });
         };
 
         const handleSubcnameInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SET_SUBCNAME',
-                props: {
+                name: 'SUBCORP_FORM_SET_SUBCNAME',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -308,8 +308,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         const handleCalculateCategoriesClick = () => {
             props.setWaitingFn();
             dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_SUBMIT_TASK',
-                props: {}
+                name: 'UCNK_SUBCMIXER_SUBMIT_TASK',
+                payload: {}
             });
         };
 
@@ -372,6 +372,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         description:Kontext.FormValue<string>;
     }> {
 
+        private smmModelSubscription:Subscription;
+        private sfmModelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -400,13 +403,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            subcMixerModel.addChangeListener(this._handleModelChange);
-            subcFormModel.addChangeListener(this._handleModelChange);
+            this.smmModelSubscription = subcMixerModel.addListener(this._handleModelChange);
+            this.sfmModelSubscription = subcFormModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcMixerModel.removeChangeListener(this._handleModelChange);
-            subcFormModel.removeChangeListener(this._handleModelChange);
+            this.smmModelSubscription.unsubscribe();
+            this.sfmModelSubscription.unsubscribe();
         }
 
         _renderAlignedCorpInfo() {
@@ -464,6 +467,9 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         ratioLimitPercent:number;
     }> {
 
+        private smmModelSubscription:Subscription;
+        private sfmModelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleTrigger = this._handleTrigger.bind(this);
@@ -495,8 +501,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleCloseWidget() {
             dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_CLEAR_RESULT',
-                props: {}
+                name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
+                payload: {}
             });
             this.setState({
                 useWidget: false,
@@ -523,13 +529,13 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            subcMixerModel.addChangeListener(this._handleModelChange);
-            subcFormModel.addChangeListener(this._handleModelChange);
+            this.smmModelSubscription = subcMixerModel.addListener(this._handleModelChange);
+            this.sfmModelSubscription = subcFormModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcMixerModel.removeChangeListener(this._handleModelChange);
-            subcFormModel.removeChangeListener(this._handleModelChange);
+            this.smmModelSubscription.unsubscribe();
+            this.sfmModelSubscription.unsubscribe();
         }
 
         _renderButton() {

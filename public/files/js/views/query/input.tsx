@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {init as keyboardInit} from './keyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
@@ -30,10 +30,11 @@ import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction} from '../..
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
+import { Subscription } from 'rxjs';
 
 
 export interface InputModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     queryModel:QueryFormModel;
     queryHintModel:UsageTipsModel;
@@ -117,6 +118,8 @@ export function init({
         actionPrefix:string;
     }, UsageTipsState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
@@ -130,17 +133,17 @@ export function init({
 
         _clickHandler() {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'NEXT_QUERY_HINT',
-                props: {}
+                name: this.props.actionPrefix + 'NEXT_QUERY_HINT',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            queryHintModel.addChangeListener(this._changeListener);
+            this.modelSubscription = queryHintModel.addListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            queryHintModel.removeChangeListener(this._changeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -235,8 +238,8 @@ export function init({
     const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
         const handleSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
-                props: {
+                name: props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
+                payload: {
                     sourceId: props.sourceId,
                     queryType: evt.target.value
                 }
@@ -267,8 +270,8 @@ export function init({
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch({
-                actionType: props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
-                props: {
+                name: props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
+                payload: {
                     corpname: props.sourceId,
                     value: evt.target.value
                 }
@@ -294,8 +297,8 @@ export function init({
 
         const handleCheckbox = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_INCLUDE_EMPTY',
-                props: {
+                name: 'QUERY_INPUT_SET_INCLUDE_EMPTY',
+                payload: {
                     corpname: props.corpname,
                     value: !props.value
                 }
@@ -356,6 +359,8 @@ export function init({
         query:string;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -382,8 +387,8 @@ export function init({
 
         _handleInputChange(evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_WITHIN_VALUE',
-                props: {
+                name: 'QUERY_INPUT_SET_WITHIN_VALUE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -399,8 +404,8 @@ export function init({
 
         _handleAttrChange(evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_WITHIN_ATTR',
-                props: {
+                name: 'QUERY_INPUT_SET_WITHIN_ATTR',
+                payload: {
                     idx: evt.target.value
                 }
             });
@@ -408,8 +413,8 @@ export function init({
 
         _handleInsert() {
             dispatcher.dispatch<AppendQueryInputAction>({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+                payload: {
                     sourceId: this.props.sourceId,
                     query: this.state.exportedQuery,
                     prependSpace: true,
@@ -419,17 +424,17 @@ export function init({
         }
 
         componentDidMount() {
-            withinBuilderModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = withinBuilderModel.addListener(this._handleModelChange);
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
-                props: {
+                name: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
+                payload: {
                     sourceId: this.props.sourceId
                 }
             });
         }
 
         componentWillUnmount() {
-            withinBuilderModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -493,8 +498,8 @@ export function init({
 
         const keyHandler = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
-                props: {
+                name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
+                payload: {
                     keyCode: evt.keyCode
                 }
             });
@@ -528,6 +533,8 @@ export function init({
         widgetArgs:Kontext.GeneralProps;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleWidgetTrigger = this._handleWidgetTrigger.bind(this);
@@ -560,8 +567,8 @@ export function init({
 
         _handleWidgetTrigger(name) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                props: {
+                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+                payload: {
                     sourceId: this.props.sourceId,
                     value: name
                 }
@@ -578,8 +585,8 @@ export function init({
 
         _handleCloseWidget() {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                props: {
+                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+                payload: {
                     sourceId: this.props.sourceId,
                     value: null
                 }
@@ -614,11 +621,11 @@ export function init({
         }
 
         componentDidMount() {
-            queryModel.addChangeListener(this._handleQueryModelChange);
+            this.modelSubscription = queryModel.addListener(this._handleQueryModelChange);
         }
 
         componentWillUnmount() {
-            queryModel.removeChangeListener(this._handleQueryModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -647,8 +654,8 @@ export function init({
 
         const handleLposChange = (evt) => {
             dispatcher.dispatch({
-                actionType: props.actionPrefix + 'QUERY_INPUT_SET_LPOS',
-                props: {
+                name: props.actionPrefix + 'QUERY_INPUT_SET_LPOS',
+                payload: {
                     sourceId: props.sourceId,
                     lpos: evt.target.value
                 }
@@ -679,8 +686,8 @@ export function init({
 
         const handleCheckbox = (evt) => {
             dispatcher.dispatch({
-                actionType: props.actionPrefix + 'QUERY_INPUT_SET_MATCH_CASE',
-                props: {
+                name: props.actionPrefix + 'QUERY_INPUT_SET_MATCH_CASE',
+                payload: {
                     sourceId: props.sourceId,
                     value: !props.matchCaseValue
                 }
@@ -711,6 +718,8 @@ export function init({
         downArrowTriggersHistory:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.handleInputChange = this.handleInputChange.bind(this);
@@ -731,8 +740,8 @@ export function init({
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
             dispatcher.dispatch<SetQueryInputAction>({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                payload: {
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
                     rawAnchorIdx: this.props.refObject.current.selectionStart,
@@ -755,11 +764,11 @@ export function init({
         }
 
         componentDidMount() {
-            queryModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = queryModel.addListener(this.handleModelChange);
         }
 
         componentWillUnmount() {
-            queryModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -785,8 +794,8 @@ export function init({
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch({
-                actionType: props.actionPrefix + 'QUERY_INPUT_SET_DEFAULT_ATTR',
-                props: {
+                name: props.actionPrefix + 'QUERY_INPUT_SET_DEFAULT_ATTR',
+                payload: {
                     sourceId: props.sourceId,
                     value: evt.target.value
                 }
@@ -817,6 +826,8 @@ export function init({
 
         private _queryInputElement:React.RefObject<HTMLInputElement|HTMLTextAreaElement>;
 
+        private modelSubscriptions:Array<Subscription>;
+
         constructor(props) {
             super(props);
             this._queryInputElement = React.createRef();
@@ -828,13 +839,14 @@ export function init({
             this.state = {
                 historyVisible: false
             };
+            this.modelSubscriptions = [];
         }
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
             if (evt.target instanceof HTMLTextAreaElement || evt.target instanceof HTMLInputElement) {
                 dispatcher.dispatch<SetQueryInputAction>({
-                    actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
-                    props: {
+                    name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                    payload: {
                         sourceId: this.props.sourceId,
                         query: evt.target.value,
                         rawAnchorIdx: this._queryInputElement.current.selectionStart,
@@ -866,16 +878,17 @@ export function init({
             // but actually we listen also for queryModel (which is triggered
             // by the very same events) and, more importantly - we read values
             // from queryModel which makes a nice ANTIpattern.
-            cqlEditorModel.addChangeListener(this._handleModelChange);
-            queryModel.addChangeListener(this._handleModelChange);
+            this.modelSubscriptions = [
+                cqlEditorModel.addListener(this._handleModelChange),
+                queryModel.addListener(this._handleModelChange)
+            ];
             if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
 
         componentWillUnmount() {
-            cqlEditorModel.removeChangeListener(this._handleModelChange);
-            queryModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscriptions.forEach(s => s.unsubscribe());
         }
 
         componentDidUpdate(prevProps, prevState) {

@@ -33,8 +33,8 @@ export function init(conf:Kontext.Conf):void {
         () => {
             document.getElementById('try-login').addEventListener('click', () => {
                 layoutModel.dispatcher.dispatch({
-                    actionType: 'USER_SHOW_LOGIN_DIALOG',
-                    props: {
+                    name: 'USER_SHOW_LOGIN_DIALOG',
+                    payload: {
                         returnUrl: layoutModel.createActionUrl('first_form')
                     }
                 });

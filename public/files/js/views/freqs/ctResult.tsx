@@ -26,10 +26,11 @@ import {init as ctFlatResultFactory} from './ctFlatResult';
 import {init as ctViewOptsFactory} from './ctViewOpts';
 import {Freq2DFlatViewModel} from '../../models/freqs/flatCtable';
 import {Freq2DTableModel, Data2DTable, ColorMappings, TableInfo} from '../../models/freqs/ctable';
-import {Dimensions, FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
+import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
 import {FreqQuantities, CTFreqCell} from '../../models/freqs/generalCtable';
 import {DataPoint} from '../../charts/confIntervals';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 const enum TableViewMode {
@@ -56,7 +57,7 @@ interface Views {
 
 
 export function init(
-            dispatcher:ActionDispatcher,
+            dispatcher:IActionDispatcher,
             he:Kontext.ComponentHelpers,
             ctFreqDataRowsModel:Freq2DTableModel,
             ctFlatFreqDataRowsModel:Freq2DFlatViewModel) {
@@ -74,8 +75,8 @@ export function init(
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_DISPLAY_QUANTITY',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_SET_DISPLAY_QUANTITY',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -104,8 +105,8 @@ export function init(
 
         const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
-                props: {value: evt.target.checked}
+                name: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
+                payload: {value: evt.target.checked}
             });
         };
 
@@ -124,8 +125,8 @@ export function init(
     const TransposeTableCheckbox = (props) => {
         const handleClickTranspose = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_TRANSPOSE_TABLE',
-                props: {}
+                name: 'FREQ_CT_TRANSPOSE_TABLE',
+                payload: {}
             });
         };
 
@@ -176,8 +177,8 @@ export function init(
 
         _handleChange(evt) {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_COLOR_MAPPING',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_SET_COLOR_MAPPING',
+                payload: {value: evt.target.value}
             });
         }
 
@@ -225,8 +226,8 @@ export function init(
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
-                props: {
+                name: 'FREQ_CT_SORT_BY_DIMENSION',
+                payload: {
                     dim: 1,
                     attr: evt.target.value
                 }
@@ -256,8 +257,8 @@ export function init(
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
-                props: {
+                name: 'FREQ_CT_SORT_BY_DIMENSION',
+                payload: {
                     dim: 2,
                     attr: evt.target.value
                 }
@@ -287,22 +288,22 @@ export function init(
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
-                props: {
+                name: 'FREQ_CT_SORT_BY_DIMENSION',
+                payload: {
                     dim: 1,
                     attr: evt.target.value
                 }
             });
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
-                props: {
+                name: 'FREQ_CT_SORT_BY_DIMENSION',
+                payload: {
                     dim: 2,
                     attr: evt.target.value
                 }
             });
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_DISPLAY_QUANTITY',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_SET_DISPLAY_QUANTITY',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -714,8 +715,8 @@ export function init(
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_SHOW_FREQ_FORM',
-                props: {}
+                name: 'MAIN_MENU_SHOW_FREQ_FORM',
+                payload: {}
             });
         };
 
@@ -866,8 +867,8 @@ export function init(
         const handleClickHighlightedGroupFn = (val) => {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
-                    props: {
+                    name: 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
+                    payload: {
                         value: val
                     }
                 });
@@ -1050,6 +1051,8 @@ export function init(
      */
     class CT2dFreqResultView extends React.Component<CTFreqResultViewProps, CT2dFreqResultViewState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchState();
@@ -1097,19 +1100,19 @@ export function init(
 
         _handleHighlightedGroupClose() {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
-                props: {
+                name: 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
+                payload: {
                     value: [null, null]
                 }
             });
         }
 
         componentDidMount() {
-            ctFreqDataRowsModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = ctFreqDataRowsModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            ctFreqDataRowsModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _resetHighlight() {
@@ -1194,8 +1197,8 @@ export function init(
 
         _handleModeSwitch(evt) {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_SAVE_MODE',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_SET_SAVE_MODE',
+                payload: {value: evt.target.value}
             });
             this.setState({mode: evt.target.value});
         }
@@ -1213,8 +1216,8 @@ export function init(
 
         componentDidMount() {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_SAVE_MODE',
-                props: {value: this.state.mode}
+                name: 'FREQ_CT_SET_SAVE_MODE',
+                payload: {value: this.state.mode}
             });
         }
 

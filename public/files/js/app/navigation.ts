@@ -21,9 +21,11 @@
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
 import RSVP from 'rsvp';
-import * as Rx from '@reactivex/rxjs';
 import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'immutable';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
@@ -366,9 +368,9 @@ export class AppNavigation implements Kontext.IURLHandler {
      * This method behaves exactly the same as "normal" ajax() method above except that
      * it produces Observable.
      */
-    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Rx.Observable<T> {
+    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
         const callArgs = this.prepareAjax(method, url, args, options);
-        return Rx.Observable.ajax({
+        return ajax({
             url: callArgs.url,
             body: callArgs.requestBody,
             method: callArgs.method,
@@ -376,7 +378,7 @@ export class AppNavigation implements Kontext.IURLHandler {
             headers: {
                 'Content-Type': callArgs.contentType
             }
-        }).map<Rx.AjaxResponse, T>(v => v.response);
+        }).pipe(map<RxAjaxResponse, T>(v => v.response));
     }
 
 

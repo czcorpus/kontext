@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../types/common';
 import { MessageModel, MessageModelState } from '../models/common/layout';
+import { Subscription } from 'rxjs';
 
 
 export interface MessageViewProps {
@@ -36,7 +36,7 @@ export interface MessageViews {
     MessagePageHelp:React.ComponentClass<MessageViewProps>;
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, model:MessageModel):MessageViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:MessageModel):MessageViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -62,6 +62,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
 
     class MessagePageHelp extends React.Component<MessageViewProps, MessageModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = model.getState();
@@ -78,11 +80,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, m
         }
 
         componentDidMount() {
-            model.addChangeListener(this.handleStoreChange);
+            this.modelSubscription = model.addListener(this.handleStoreChange);
         }
 
         componentWillUnmount() {
-            model.removeChangeListener(this.handleStoreChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

@@ -17,10 +17,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
-import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 export interface ConcDashboardConf {
     showFreqInfo:boolean;
@@ -41,7 +39,7 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
 
     private static EXTENDED_INFO_MINIMIZED_LOCAL_KEY = 'dashboardExpanded';
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, conf:ConcDashboardConf) {
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, conf:ConcDashboardConf) {
         super(
             dispatcher,
             {
@@ -54,7 +52,7 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
 
     reduce(state:ConcDashboardState, action:Action) {
         let newState:ConcDashboardState;
-        switch (action.actionType) {
+        switch (action.name) {
             case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
                 newState = this.copyState(state);
                 newState.expanded = false;
@@ -74,7 +72,7 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
     }
 
     sideEffects(state:ConcDashboardState, action:Action, dispatch:SEDispatcher) {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
             case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
                 this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, state.expanded);

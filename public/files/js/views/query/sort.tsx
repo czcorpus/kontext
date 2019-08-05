@@ -20,12 +20,13 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {ConcSortModel, MultiLevelConcSortModel} from '../../models/query/sort';
+import { Subscription } from 'rxjs';
 
 export interface SortModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     sortModel:ConcSortModel;
     multiLevelConcSortModel:MultiLevelConcSortModel;
@@ -85,8 +86,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         const handleSelectFn = (value) => {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'SORT_FORM_SET_SKEY',
-                    props: {
+                    name: 'SORT_FORM_SET_SKEY',
+                    payload: {
                         sortId: props.sortId,
                         value: value
                     }
@@ -134,6 +135,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleAttrSelect = this._handleAttrSelect.bind(this);
@@ -146,8 +149,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleAttrSelect(value) {
             dispatcher.dispatch({
-                actionType: 'SORT_FORM_SET_SATTR',
-                props: {
+                name: 'SORT_FORM_SET_SATTR',
+                payload: {
                     sortId: this.props.sortId,
                     value: value
                 }
@@ -156,8 +159,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleSicaseCheck(evt) {
             dispatcher.dispatch({
-                actionType: 'SORT_FORM_SET_SICASE',
-                props: {
+                name: 'SORT_FORM_SET_SICASE',
+                payload: {
                     sortId: this.props.sortId,
                     value: evt.target.checked ? 'i' : ''
                 }
@@ -166,8 +169,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleSbwardCheck(evt) {
             dispatcher.dispatch({
-                actionType: 'SORT_FORM_SET_SBWARD',
-                props: {
+                name: 'SORT_FORM_SET_SBWARD',
+                payload: {
                     sortId: this.props.sortId,
                     value: evt.target.checked ? 'r' : ''
                 }
@@ -176,8 +179,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleSposChange(evt) {
             dispatcher.dispatch({
-                actionType: 'SORT_FORM_SET_SPOS',
-                props: {
+                name: 'SORT_FORM_SET_SPOS',
+                payload: {
                     sortId: this.props.sortId,
                     value: evt.target.value
                 }
@@ -200,11 +203,11 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
 
         componentDidMount() {
-            sortModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = sortModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            sortModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -278,8 +281,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         const setValFn = (idx) => {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'ML_SORT_FORM_SET_CTX',
-                    props: {
+                    name: 'ML_SORT_FORM_SET_CTX',
+                    payload: {
                         sortId: props.sortId,
                         levelIdx: props.level,
                         index: idx
@@ -347,8 +350,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleAttrSelect(value) {
             dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_SET_SATTR',
-                props: {
+                name: 'ML_SORT_FORM_SET_SATTR',
+                payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
                     value: value
@@ -358,8 +361,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleSicaseCheck(evt) {
             dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_SET_SICASE',
-                props: {
+                name: 'ML_SORT_FORM_SET_SICASE',
+                payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
                     value: evt.target.checked ? 'i' : ''
@@ -369,8 +372,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleSbwardCheck(evt) {
             dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_SET_SBWARD',
-                props: {
+                name: 'ML_SORT_FORM_SET_SBWARD',
+                payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
                     value: evt.target.checked ? 'r' : ''
@@ -380,7 +383,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleCtxAlignChange(evt) {
             dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_SET_CTX_ALIGN',
+                name: 'ML_SORT_FORM_SET_CTX_ALIGN',
                 props : {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
@@ -489,6 +492,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         ctxAlignValues:Immutable.List<string>;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -514,17 +519,17 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
 
         componentDidMount() {
-            multiLevelConcSortModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = multiLevelConcSortModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            multiLevelConcSortModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _addLevel() {
             dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_ADD_LEVEL',
-                props: {
+                name: 'ML_SORT_FORM_ADD_LEVEL',
+                payload: {
                     sortId: this.props.sortId
                 }
             });
@@ -533,8 +538,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         _removeLevelFn(levelIdx) {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'ML_SORT_FORM_REMOVE_LEVEL',
-                    props: {
+                    name: 'ML_SORT_FORM_REMOVE_LEVEL',
+                    payload: {
                         sortId: this.props.sortId,
                         levelIdx: levelIdx
                     }
@@ -621,8 +626,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleSortTypeChange(formType) {
             dispatcher.dispatch({
-                actionType: 'SORT_SET_ACTIVE_STORE',
-                props: {
+                name: 'SORT_SET_ACTIVE_STORE',
+                payload: {
                     sortId: this.props.sortId,
                     formAction: formType
                 }
@@ -635,14 +640,14 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         _handleFormSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
-                    actionType: 'BRANCH_QUERY',
-                    props: {operationIdx: this.props.operationIdx}
+                    name: 'BRANCH_QUERY',
+                    payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
                 dispatcher.dispatch({
-                    actionType: this.state.sortType === 'sortx' ? 'SORT_FORM_SUBMIT' : 'ML_SORT_FORM_SUBMIT',
-                    props: {
+                    name: this.state.sortType === 'sortx' ? 'SORT_FORM_SUBMIT' : 'ML_SORT_FORM_SUBMIT',
+                    payload: {
                         sortId: this.props.sortId
                     }
                 });

@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../../types/common';
-import {ActionDispatcher} from '../../../app/dispatcher';
 import {UserProfileModel, UserProfileState, Actions, UsernameAvailability} from './../profile';
 import { UserProfileViews } from './profile';
+import { IActionDispatcher } from 'kombo';
+import { Subject, Observable, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators'
 
 
 export interface UserSignUpViews {
@@ -31,7 +32,7 @@ export interface UserSignUpViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, userProfileModel:UserProfileModel,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, userProfileModel:UserProfileModel,
             profileViews:UserProfileViews):UserSignUpViews {
 
     const layoutViews = he.getLayoutViews();
@@ -74,22 +75,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
         usernameAvailBusy:boolean;
     }> {
 
-        private writingStream:Rx.Subject<string>;
+        private writingStream:Subject<string>;
 
-        private writingThrottle:Rx.Observable<string>;
+        private writingThrottle:Observable<string>;
 
         private static USERNAME_WRITING_THROTTLE_INTERVAL = 500;
 
         constructor(props) {
             super(props);
             this.handleUsernameChange = this.handleUsernameChange.bind(this);
-            this.writingStream = new Rx.Subject<string>();
-            this.writingThrottle = this.writingStream.debounceTime(TrUsernameInput.USERNAME_WRITING_THROTTLE_INTERVAL);
+            this.writingStream = new Subject<string>();
+            this.writingThrottle = this.writingStream.pipe(debounceTime(TrUsernameInput.USERNAME_WRITING_THROTTLE_INTERVAL));
             this.writingThrottle.subscribe({
                 next: (v:string) => {
                     dispatcher.dispatch({
-                        actionType: Actions.CHECK_USERNAME,
-                        props: {}
+                        name: Actions.CHECK_USERNAME,
+                        payload: {}
                     });
                 }
             });
@@ -97,8 +98,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
 
         private handleUsernameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.SET_USERNAME,
-                props: {
+                name: Actions.SET_USERNAME,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -126,6 +127,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
 
     class SignUpForm extends React.Component<{}, UserProfileState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = userProfileModel.getState();
@@ -144,8 +147,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
 
         private handleFirstNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.SET_FIRSTNAME,
-                props: {
+                name: Actions.SET_FIRSTNAME,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -153,8 +156,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
 
         private handleLastNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.SET_LASTNAME,
-                props: {
+                name: Actions.SET_LASTNAME,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -162,8 +165,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
 
         private handleEmailChange(evt:React.ChangeEvent<HTMLInputElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.SET_EMAIL,
-                props: {
+                name: Actions.SET_EMAIL,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -171,31 +174,31 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, u
 
         private handleSignUpButton(evt:React.MouseEvent<HTMLButtonElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.SUBMIT_SIGN_UP,
-                props: {}
+                name: Actions.SUBMIT_SIGN_UP,
+                payload: {}
             });
         }
 
         private handleNewRegistration(evt:React.MouseEvent<HTMLButtonElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.NEW_REGISTRATION,
-                props: {}
+                name: Actions.NEW_REGISTRATION,
+                payload: {}
             });
         }
 
         private handleGoToMainpage(evt:React.MouseEvent<HTMLButtonElement>):void {
             dispatcher.dispatch({
-                actionType: Actions.GO_TO_MAIN_PAGE,
-                props: {}
+                name: Actions.GO_TO_MAIN_PAGE,
+                payload: {}
             });
         }
 
         componentDidMount() {
-            userProfileModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = userProfileModel.addListener(this.handleModelChange);
         }
 
         componentWillUnmount() {
-            userProfileModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

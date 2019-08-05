@@ -18,11 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Rx from '@reactivex/rxjs';
+import { empty as rxEmpty } from 'rxjs';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {createGenerator, SourceData, DetailAttrOrders} from './ucnkTreeView';
 import {StatefulModel} from '../../models/base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import { IActionDispatcher } from 'kombo';
+import { concatMap } from 'rxjs/operators';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -51,7 +52,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
 
     private errorHandler:(e:Error)=>void;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.waitingStatus = false;
@@ -119,7 +120,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {
         this.target = target;
         this.waitingStatus = true;
-        this.notifyChangeListeners();
+        this.emitChange();
 
         this.pluginApi.ajax$(
             'GET',
@@ -130,18 +131,20 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
                 kwic_len: kwicLength
             }
 
-        ).concatMap(
-            (data:any) => {
-                this.data = data;
-                return Rx.Observable.empty();
-            }
+        ).pipe(
+            concatMap(
+                (data:any) => {
+                    this.data = data;
+                    return rxEmpty();
+                }
+            )
         ).subscribe(
             null,
             (error) => {
                 this.waitingStatus = false;
                 this.close();
                 this.pluginApi.showMessage('error', error);
-                this.notifyChangeListeners();
+                this.emitChange();
                 if (this.errorHandler) {
                     this.errorHandler(error);
                 }
@@ -150,7 +153,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
                 window.addEventListener('resize', this.onPageResize);
                 this.renderTree();
                 this.waitingStatus = false;
-                this.notifyChangeListeners();
+                this.emitChange();
             }
         );
     }

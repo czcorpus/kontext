@@ -23,10 +23,10 @@ import {SaveData} from '../../app/navigation';
 import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {CollFormModel} from '../../models/coll/collForm';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 export interface CollResultRow {
@@ -51,7 +51,7 @@ export interface AjaxResponse extends Kontext.AjaxResponse {
 
 
 export interface COllResultsSaveModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     mainModel:CollResultModel;
     quickSaveRowLimit:number;
@@ -104,48 +104,48 @@ export class CollResultsSaveModel extends StatefulModel {
         this.quickSaveRowLimit = quickSaveRowLimit;
         this.saveCollMaxLines = saveCollMaxLines;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
                     this.toLine.value = '';
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'MAIN_MENU_DIRECT_SAVE':
                     if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',
-                        {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                        {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
                     ))) {
-                        this.saveformat = action.props['saveformat'];
+                        this.saveformat = action.payload['saveformat'];
                         this.toLine.value = `${this.quickSaveRowLimit}`;
                         this.submit();
                         this.toLine.value = '';
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
                 case 'COLL_RESULT_CLOSE_SAVE_FORM':
                     this.formIsActive = false;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'COLL_SAVE_FORM_SET_FORMAT':
-                    this.saveformat = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.saveformat = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'COLL_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.fromLine.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'COLL_SAVE_FORM_SET_TO_LINE':
-                    this.toLine.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.toLine.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
-                    this.includeColHeaders = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.includeColHeaders = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'COLL_SAVE_FORM_SET_INCLUDE_HEADING':
-                    this.includeHeading = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.includeHeading = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'COLL_SAVE_FORM_SUBMIT':
                     const err = this.validateForm();
@@ -156,7 +156,7 @@ export class CollResultsSaveModel extends StatefulModel {
                         this.submit();
                         this.formIsActive = false;
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });
@@ -216,9 +216,9 @@ export class CollResultsSaveModel extends StatefulModel {
     }
 
     // we override here the behavior to expose only the main model
-    notifyChangeListeners():void {
-        this.mainModel.notifyChangeListeners();
-        super.notifyChangeListeners();
+    emitChange():void {
+        this.mainModel.emitChange();
+        super.emitChange();
     }
 
     getSaveformat():SaveData.Format {
@@ -326,7 +326,7 @@ class CalcWatchdog {
 
 
 export interface CollResulModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     formModel:CollFormModel;
     initialData:CollResultData;
@@ -412,35 +412,35 @@ export class CollResultModel extends StatefulModel {
                 this.layoutModel.showMessage('error', err);
                 this.calcWatchdog.stopWatching();
             }
-            this.notifyChangeListeners();
+            this.emitChange();
         });
         if (this.calcStatus < 100) {
             this.calcWatchdog.startWatching();
         }
 
         dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+            switch (action.name) {
                 case 'COLL_RESULT_SET_PAGE_INPUT_VAL':
-                    this.currPageInput = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.currPageInput = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'COLL_RESULT_GET_NEXT_PAGE':
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.currPage += 1;
                     this.currPageInput = String(this.currPage);
                     this.processDataReload();
                 break;
                 case 'COLL_RESULT_GET_PREV_PAGE':
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.currPage -= 1;
                     this.currPageInput = String(this.currPage);
                     this.processDataReload();
                 break;
                 case 'COLL_RESULT_CONFIRM_PAGE_VALUE':
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.currPage = parseInt(this.currPageInput, 10);
                     if (validateGzNumber(this.currPageInput)) {
                         this.processDataReload();
@@ -451,12 +451,12 @@ export class CollResultModel extends StatefulModel {
                 break;
                 case 'COLL_RESULT_SORT_BY_COLUMN':
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
-                    this.sortFn = action.props['sortFn'];
+                    this.emitChange();
+                    this.sortFn = action.payload['sortFn'];
                     this.processDataReload();
                 break;
                 case 'COLL_RESULT_APPLY_QUICK_FILTER':
-                    this.applyQuickFilter(action.props['args']);
+                    this.applyQuickFilter(action.payload['args']);
                     // a new page is loaded here
                 break;
             }
@@ -474,12 +474,12 @@ export class CollResultModel extends StatefulModel {
         this.loadData().then(
             (_) => {
                 this.isWaiting = false;
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             (err) => {
                 this.isWaiting = false;
                 this.layoutModel.showMessage('error', err);
-                this.notifyChangeListeners();
+                this.emitChange();
             }
         );
     }

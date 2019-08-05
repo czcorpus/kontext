@@ -20,10 +20,9 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 
 /**
  *
@@ -64,7 +63,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
 
     private pageModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CollFormProps) {
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:CollFormProps) {
         super(
             dispatcher,
             {
@@ -94,47 +93,47 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
     reduce(state, action):CollFormModelState {
         let newState:CollFormModelState;
 
-        switch (action.actionType) {
+        switch (action.name) {
             case 'COLL_FORM_SET_CATTR':
                 newState = this.copyState(state);
-                newState.cattr = action.props['value'];
+                newState.cattr = action.payload['value'];
                 return newState;
             case 'COLL_FORM_SET_CFROMW':
                 newState = this.copyState(state);
-                newState.cfromw.value = action.props['value'];
+                newState.cfromw.value = action.payload['value'];
                 return newState;
             case 'COLL_FORM_SET_CTOW':
                 newState = this.copyState(state);
-                newState.ctow.value = action.props['value'];
+                newState.ctow.value = action.payload['value'];
                 return newState;
             case 'COLL_FORM_SET_CMINFREQ':
                 newState = this.copyState(state);
-                newState.cminfreq.value = action.props['value'];
+                newState.cminfreq.value = action.payload['value'];
                 return newState;
             case 'COLL_FORM_SET_CMINBGR':
                 newState = this.copyState(state);
-                newState.cminbgr.value = action.props['value'];
+                newState.cminbgr.value = action.payload['value'];
                 return newState;
             case 'COLL_FORM_SET_CBGRFNS':
                 newState = this.copyState(state);
-                if (newState.cbgrfns.contains(action.props['value'])) {
-                    if (newState.csortfn === action.props['value']) {
+                if (newState.cbgrfns.contains(action.payload['value'])) {
+                    if (newState.csortfn === action.payload['value']) {
                         this.pageModel.showMessage(
                             'error',
                             this.pageModel.translate('coll__form_sort_col_must_be_displayed')
                         );
 
                     } else {
-                        newState.cbgrfns = newState.cbgrfns.remove(action.props['value']);
+                        newState.cbgrfns = newState.cbgrfns.remove(action.payload['value']);
                     }
 
                 } else {
-                    newState.cbgrfns = newState.cbgrfns.add(action.props['value']);
+                    newState.cbgrfns = newState.cbgrfns.add(action.payload['value']);
                 }
                 return newState;
             case 'COLL_FORM_SET_CSORTFN':
                 newState = this.copyState(state);
-                newState.csortfn = action.props['value'];
+                newState.csortfn = action.payload['value'];
                 if (!newState.cbgrfns.contains(newState.csortfn)) {
                     newState.cbgrfns = newState.cbgrfns.add(newState.csortfn);
                 }

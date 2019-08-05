@@ -21,7 +21,6 @@
 import {TextTypes} from '../../types/common';
 import {PageModel, DownloadType} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
@@ -29,6 +28,7 @@ import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
+import { IActionDispatcher, Action } from 'kombo';
 
 /**
  * A representation of 2D freq table.
@@ -191,7 +191,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         '#ffffff', '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:CTFormProperties,
                 adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.d1Labels = Immutable.List<[string, boolean]>();
@@ -210,62 +210,62 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         // TODO attrs from form model:
         // 1.
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
-                    this.alphaLevel = action.props['value'];
+                    this.alphaLevel = action.payload['value'];
                     this.recalculateConfIntervals();
                     this.updateLocalData();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
-                    this.minFreqType = action.props['value'];
+                    this.minFreqType = action.payload['value'];
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.waitAndReload(true);
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ':
-                    if (this.validateMinAbsFreqAttr(action.props['value'])) {
-                        this.minFreq = action.props['value'];
+                    if (this.validateMinAbsFreqAttr(action.payload['value'])) {
+                        this.minFreq = action.payload['value'];
                         this.isWaiting = true;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         this.waitAndReload(false);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
                 case 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY':
-                    this.filterZeroVectors = action.props['value'];
+                    this.filterZeroVectors = action.payload['value'];
                     this.updateLocalData();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_TRANSPOSE_TABLE':
                     this.transposeTable();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SORT_BY_DIMENSION':
                     this.sortByDimension(
-                        action.props['dim'],
-                        action.props['attr']
+                        action.payload['dim'],
+                        action.payload['attr']
                     );
                     this.updateLocalData();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SET_DISPLAY_QUANTITY':
-                    this.displayQuantity = action.props['value'];
+                    this.displayQuantity = action.payload['value'];
                     this.recalcHeatmap();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SET_COLOR_MAPPING':
-                    this.colorMapping = action.props['value'];
+                    this.colorMapping = action.payload['value'];
                     this.recalcHeatmap();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SET_HIGHLIGHTED_GROUP':
-                    this.highlightedGroup = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.highlightedGroup = action.payload['value'];
+                    this.emitChange();
                 break;
             }
         });
@@ -292,17 +292,17 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
                     this.serverMinFreq = null; // we must force data reload
                 }
                 this.isWaiting = true;
-                this.notifyChangeListeners();
+                this.emitChange();
                 this.updateData().then(
                     () => {
                         this.isWaiting = false;
                         this.pushStateToHistory();
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     },
                     (err) => {
                         this.isWaiting = false;
                         this.pageModel.showMessage('error', err);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 );
             }

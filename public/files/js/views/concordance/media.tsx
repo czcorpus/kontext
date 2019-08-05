@@ -19,10 +19,11 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import { ConcLineModel } from '../../models/concordance/lines';
 import { AudioPlayerStatus } from '../../models/concordance/media';
+import { Subscription } from 'rxjs';
 
 
 export interface AudioPlayerProps {
@@ -34,12 +35,14 @@ export interface MediaViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             lineModel:ConcLineModel):MediaViews {
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
     class AudioPlayer extends React.Component<AudioPlayerProps, {playerStatus:AudioPlayerStatus}> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -53,8 +56,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _handleControlClick(action) {
             this.setState({playerStatus: action});
             dispatcher.dispatch({
-                actionType: 'AUDIO_PLAYER_CLICK_CONTROL',
-                props: {
+                name: 'AUDIO_PLAYER_CLICK_CONTROL',
+                payload: {
                     action: action
                 }
             });
@@ -70,11 +73,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._handleLineModelChange);
+            this.modelSubscription = lineModel.addListener(this._handleLineModelChange);
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._handleLineModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _autoSetHtmlClass(buttonId) {

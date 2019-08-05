@@ -17,14 +17,11 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
-import {MultiDict} from '../../util';
 import * as VRD from './vallex';
 import * as PDTVRD from './pdt-vallex';
 import * as ENGVRD from './eng-vallex';
+import { IActionDispatcher } from 'kombo';
 
 
 export interface Views {
@@ -34,7 +31,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
 
 
         // ------------- <EngVallexJsonRenderer /> -------------------------------

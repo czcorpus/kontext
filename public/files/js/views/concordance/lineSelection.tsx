@@ -19,9 +19,10 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';
+import { Subscription } from 'rxjs';
 
 
 export interface LineBinarySelectionMenuProps {
@@ -51,7 +52,7 @@ export interface LineSelectionViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             lineSelectionModel:LineSelectionModel):LineSelectionViews {
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
@@ -101,6 +102,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         waiting:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._changeHandler = this._changeHandler.bind(this);
@@ -132,22 +135,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
             if (eventId) {
                 dispatcher.dispatch({
-                    actionType: eventId,
-                    props: {}
+                    name: eventId,
+                    payload: {}
                 });
             }
         }
 
         componentDidMount() {
-            lineSelectionModel.addChangeListener(this._changeHandler);
+            this.modelSubscription = lineSelectionModel.addListener(this._changeHandler);
             dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_STATUS_REQUEST',
-                props: {}
+                name: 'LINE_SELECTION_STATUS_REQUEST',
+                payload: {}
             });
         }
 
         componentWillUnmount() {
-            lineSelectionModel.removeChangeListener(this._changeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -238,8 +241,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             const newState = he.cloneState(this.state);
             this.setState(newState);
             dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_GROUP_RENAME',
-                props: {
+                name: 'LINE_SELECTION_GROUP_RENAME',
+                payload: {
                     srcGroupNum: Number(this.state.srcGroupNum),
                     dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
                 }
@@ -353,6 +356,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps, LockedLineGroupsMenuState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._changeHandler = this._changeHandler.bind(this);
@@ -388,26 +393,26 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                     newState1.waiting = true;
                     this.setState(newState1);
                     dispatcher.dispatch({
-                        actionType: 'LINE_SELECTION_REENABLE_EDIT',
-                        props: {}
+                        name: 'LINE_SELECTION_REENABLE_EDIT',
+                        payload: {}
                     });
                     break;
                 case 'sort-groups':
                     dispatcher.dispatch({
-                        actionType: 'LINE_SELECTION_SORT_LINES',
-                        props: {}
+                        name: 'LINE_SELECTION_SORT_LINES',
+                        payload: {}
                     });
                     break;
                 case 'clear-groups':
                     dispatcher.dispatch({
-                        actionType: 'LINE_SELECTION_RESET_ON_SERVER',
-                        props: {}
+                        name: 'LINE_SELECTION_RESET_ON_SERVER',
+                        payload: {}
                     });
                     break;
                 case 'remove-other-lines':
                     dispatcher.dispatch({
-                        actionType: 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
-                        props: {}
+                        name: 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
+                        payload: {}
                     });
                     break;
                 case 'rename-group-label':
@@ -421,14 +426,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _handleEmailDialogButton(evt:React.FormEvent<{value:string}>) {
             if (evt.currentTarget.value === 'cancel') {
                 dispatcher.dispatch({
-                    actionType: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
-                    props: {}
+                    name: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
+                    payload: {}
                 });
 
             } else if (evt.currentTarget.value === 'send') {
                 dispatcher.dispatch({
-                    actionType: 'LINE_SELECTION_SEND_URL_TO_EMAIL',
-                    props: {
+                    name: 'LINE_SELECTION_SEND_URL_TO_EMAIL',
+                    payload: {
                         email: this.state.email
                     }
                 })
@@ -443,16 +448,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleDialogShowClick(evt:React.MouseEvent<{}>) {
             dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
-                props: {}
+                name: 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            lineSelectionModel.addChangeListener(this._changeHandler);
+            this.modelSubscription = lineSelectionModel.addListener(this._changeHandler);
             dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_STATUS_REQUEST',
-                props: {
+                name: 'LINE_SELECTION_STATUS_REQUEST',
+                payload: {
                     email: this.state.email
                 }
             });
@@ -462,7 +467,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentWillUnmount() {
-            lineSelectionModel.removeChangeListener(this._changeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         componentDidUpdate(prevProps, prevState) {

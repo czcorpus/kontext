@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {init as lineSelViewsInit} from './lineSelection';
@@ -36,6 +36,7 @@ import { CollFormModel } from '../../models/coll/collForm';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
 import { UsageTipsModel } from '../../models/usageTips';
+import { Subscription } from 'rxjs';
 
 
 export class ViewPageModels {
@@ -53,7 +54,7 @@ export class ViewPageModels {
 
 
 export class MainModuleArgs extends ViewPageModels {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
 }
 
@@ -159,6 +160,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         menuVisible:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._selectChangeHandler = this._selectChangeHandler.bind(this);
@@ -172,8 +175,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         _selectChangeHandler(event) {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SET_LINE_SELECTION_MODE',
-                props: {
+                name: 'CONCORDANCE_SET_LINE_SELECTION_MODE',
+                payload: {
                     mode: event.currentTarget.value
                 }
             });
@@ -198,11 +201,11 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentDidMount() {
-            lineViewModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = lineViewModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineViewModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _getMsgStatus() {
@@ -368,8 +371,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
                 dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
-                    props: {}
+                    name: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
+                    payload: {}
                 });
             }
         };
@@ -422,6 +425,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         currViewAttrs:Array<string>;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -435,11 +440,11 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentDidMount() {
-            lineViewModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = lineViewModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineViewModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -465,6 +470,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         numItemsInLockedGroups:number;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -483,11 +490,11 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentDidMount() {
-            lineSelectionModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = lineSelectionModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            lineSelectionModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -516,8 +523,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         const handleLoginClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'USER_SHOW_LOGIN_DIALOG',
-                props: {
+                name: 'USER_SHOW_LOGIN_DIALOG',
+                payload: {
                     returnUrl: window.location.href
                 }
             });
@@ -555,6 +562,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         waiting:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = {
@@ -570,7 +579,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentDidMount() {
-            syntaxViewModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = syntaxViewModel.addListener(this._handleModelChange);
             this.props.onReady(
                 this.props.tokenNumber,
                 this.props.kwicLength
@@ -579,7 +588,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         componentWillUnmount() {
             this.props.onClose();
-            syntaxViewModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -628,6 +637,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         isWaiting:boolean;
     }> {
 
+        private modelSubscriptions:Array<Subscription>;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -638,6 +649,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             this._handleSyntaxBoxClick = this._handleSyntaxBoxClick.bind(this);
             this._handleSyntaxBoxClose = this._handleSyntaxBoxClose.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
+            this.modelSubscriptions = [];
         }
 
         _fetchModelState() {
@@ -672,12 +684,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         _handleDetailCloseClick() {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_STOP_SPEECH',
-                props: {}
+                name: 'CONCORDANCE_STOP_SPEECH',
+                payload: {}
             });
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_RESET_DETAIL',
-                props: {}
+                name: 'CONCORDANCE_RESET_DETAIL',
+                payload: {}
             });
         }
 
@@ -685,8 +697,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             if (concDetailModel.getViewMode() === 'default') {
                 if (kwicLength > 0) {
                     dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
-                        props: {
+                        name: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                        payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
                             kwicLength: kwicLength,
@@ -696,8 +708,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
                 } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
                     dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
-                        props: {
+                        name: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
+                        payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
                             lineIdx: lineIdx
@@ -707,8 +719,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
             } else if (concDetailModel.getViewMode() === 'speech') {
                 dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
-                    props: {
+                    name: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
+                    payload: {
                         corpusId: corpusId,
                         tokenNumber: tokenNumber,
                         kwicLength: kwicLength,
@@ -720,8 +732,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
-                props: {
+                name: 'CONCORDANCE_SHOW_REF_DETAIL',
+                payload: {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,
                     lineIdx: lineIdx
@@ -737,8 +749,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         _handleRefsDetailCloseClick() {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_REF_RESET_DETAIL',
-                props: {}
+                name: 'CONCORDANCE_REF_RESET_DETAIL',
+                payload: {}
             });
         }
 
@@ -755,10 +767,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentDidMount() {
-            lineViewModel.addChangeListener(this._handleModelChange);
-            lconcSaveModel.addChangeListener(this._handleModelChange);
-            concDetailModel.addChangeListener(this._handleModelChange);
-            refsDetailModel.addChangeListener(this._handleModelChange);
+            this.modelSubscriptions = [
+                lineViewModel.addListener(this._handleModelChange),
+                lconcSaveModel.addListener(this._handleModelChange),
+                concDetailModel.addListener(this._handleModelChange),
+                refsDetailModel.addListener(this._handleModelChange)
+            ];
             syntaxViewModel.registerOnError(() => {
                 const newState = he.cloneState(this.state);
                     newState.syntaxBoxData = null;
@@ -768,10 +782,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentWillUnmount() {
-            lineViewModel.removeChangeListener(this._handleModelChange);
-            lconcSaveModel.removeChangeListener(this._handleModelChange);
-            concDetailModel.removeChangeListener(this._handleModelChange);
-            refsDetailModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscriptions.forEach(s => s.unsubscribe());
         }
 
         _shouldDisplayConcDetailBox() {
@@ -844,6 +855,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcDashboardState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = dashboardModel.getState();
@@ -855,11 +868,11 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         componentDidMount() {
-            dashboardModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscription = dashboardModel.addListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            dashboardModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         private getModClass():string {

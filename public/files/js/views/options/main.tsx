@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
 import {init as generalViewsInit} from './general';
 import {init as structsAttrsViewsInit} from './structsAttrs';
+import { Subscription } from 'rxjs';
 
 export interface MainModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
     generalOptionsModel:ViewOptions.IGeneralViewOptionsModel;
     viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
@@ -59,6 +60,8 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
 
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -89,17 +92,17 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
 
         _handleCloseClick() {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                props: {}
+                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                payload: {}
             });
         }
 
         componentDidMount() {
-             mainMenuModel.addChangeListener(this._handleModelChange);
+             this.modelSubscription = mainMenuModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            mainMenuModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderForm() {

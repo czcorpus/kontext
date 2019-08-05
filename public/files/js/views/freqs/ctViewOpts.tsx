@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as React from 'react';
 import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 
 
 interface AlphaLevelSelectProps {
@@ -51,7 +51,7 @@ interface ExportedComponents {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):ExportedComponents {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):ExportedComponents {
 
     const layoutViews = he.getLayoutViews();
 
@@ -62,15 +62,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):E
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_FREQ',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_SET_MIN_FREQ',
+                payload: {value: evt.target.value}
             });
         };
 
         const handleTypeChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_FREQ_TYPE',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_SET_MIN_FREQ_TYPE',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -135,8 +135,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):E
 
         _onChange(evt) {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_ALPHA_LEVEL',
-                props: {
+                name: 'FREQ_CT_SET_ALPHA_LEVEL',
+                payload: {
                     value: evt.target.value
                 }
             });

@@ -19,10 +19,10 @@
 import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {init as viewInit} from './view';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
+import { IActionDispatcher, Action } from 'kombo';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -43,9 +43,9 @@ export interface SubcMixerExpression {
 }
 
 export interface CalculationResponse extends Kontext.AjaxResponse {
-    attrs:Array<[string,number]>;
+    attrs?:Array<[string,number]>;
     total:number;
-    ids:Array<string>;
+    ids?:Array<string>;
     structs:Array<string>;
 }
 
@@ -79,7 +79,7 @@ export class SubcMixerModel extends StatefulModel {
 
     textTypesModel:TextTypes.ITextTypesModel;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
             textTypesModel:TextTypes.ITextTypesModel,
             subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
             getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>, corpusIdAttr:string) {
@@ -90,13 +90,13 @@ export class SubcMixerModel extends StatefulModel {
         this.shares = Immutable.List<SubcMixerExpression>();
         this.getAlignedCorporaFn = getAlignedCorporaFn;
         this.corpusIdAttr = corpusIdAttr;
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'UCNK_SUBCMIXER_SET_RATIO':
                     try {
-                        this.updateRatio(action.props['attrName'], action.props['attrValue'],
-                            action.props['ratio']);
-                        this.notifyChangeListeners();
+                        this.updateRatio(action.payload['attrName'], action.payload['attrValue'],
+                            action.payload['ratio']);
+                        this.emitChange();
 
                     } catch (e) {
                         this.pluginApi.showMessage('error', e);
@@ -104,16 +104,16 @@ export class SubcMixerModel extends StatefulModel {
                 break;
                 case 'UCNK_SUBCMIXER_CLEAR_RESULT':
                     this.currentCalculationResult = null;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'UCNK_SUBCMIXER_SUBMIT_TASK':
                     this.submitTask().then(
-                        () => {
-                            this.notifyChangeListeners();
+                        (data) => {
+                            this.emitChange();
                         },
                         (err) => {
                             this.pluginApi.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
@@ -124,7 +124,7 @@ export class SubcMixerModel extends StatefulModel {
                         },
                         (err) => {
                             this.pluginApi.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     )
                 break;
@@ -211,7 +211,6 @@ export class SubcMixerModel extends StatefulModel {
             }
             sums[item.attrName] += parseFloat(item.ratio || '0');
         });
-        const errors = [];
         for (let k in sums) {
             if (sums[k] !== 100) {
                 return new RSVP.Promise<any>((resolve:(v)=>void, reject:(e:any)=>void) => {
@@ -238,12 +237,18 @@ export class SubcMixerModel extends StatefulModel {
 
         ).then(
             (data) => {
-                this.currentCalculationResult = {
-                    attrs: this.importResults(data.attrs),
-                    total: data.total,
-                    ids: Immutable.List<string>(data.ids),
-                    structs: Immutable.List<string>(data.structs)
-                };
+                if (!data.attrs || !data.ids) {
+                    const [msgType, msgText] = data.messages[0] || ['error', 'global__unknown_error'];
+                    this.pluginApi.showMessage(msgType, this.pluginApi.translate(msgText));
+
+                } else {
+                    this.currentCalculationResult = {
+                        attrs: this.importResults(data.attrs),
+                        total: data.total,
+                        ids: Immutable.List<string>(data.ids),
+                        structs: Immutable.List<string>(data.structs)
+                    };
+                }
             }
         );
     }

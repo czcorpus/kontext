@@ -145,12 +145,7 @@ export class SubcorpForm {
                 getDescription: () => this.subcorpFormModel.getDescription(),
                 getSubcName: () => this.subcorpFormModel.getSubcname(),
                 validateForm: () => this.subcorpFormModel.validateForm(false),
-                addChangeListener: (fn:Kontext.ModelListener) => {
-                    this.subcorpFormModel.addChangeListener(fn);
-                },
-                removeChangeListener: (fn:Kontext.ModelListener) => {
-                    this.subcorpFormModel.removeChangeListener(fn);
-                }
+                addListener: (fn:Kontext.ModelListener) => this.subcorpFormModel.addListener(fn)
             },
             () => liveAttrsPlugin.getAlignedCorpora(),
             this.layoutModel.getConf<string>('CorpusIdAttr')

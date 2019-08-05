@@ -27,7 +27,6 @@ import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, DownloadType} from '../app/main';
 import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
-import {Action} from '../app/dispatcher';
 import {MultiDict, updateProps, nTimes} from '../util';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
@@ -68,6 +67,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
+import { Action } from 'kombo';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -178,29 +178,29 @@ export class ViewPage {
         switch (actionName) {
             case 'filter':
                 return {
-                    actionType: 'MAIN_MENU_SHOW_FILTER',
-                    props: args.toDict()
+                    name: 'MAIN_MENU_SHOW_FILTER',
+                    payload: args.toDict()
                 };
             case 'sort':
             case 'sortx':
                 return {
-                    actionType: 'MAIN_MENU_SHOW_SORT',
-                    props: args.toDict()
+                    name: 'MAIN_MENU_SHOW_SORT',
+                    payload: args.toDict()
                 };
             case 'sample':
                 return {
-                    actionType: 'MAIN_MENU_SHOW_SAMPLE',
-                    props: args.toDict()
+                    name: 'MAIN_MENU_SHOW_SAMPLE',
+                    payload: args.toDict()
                 };
             case 'shuffle':
                 return {
-                    actionType: 'MAIN_MENU_APPLY_SHUFFLE',
-                    props: args.toDict()
+                    name: 'MAIN_MENU_APPLY_SHUFFLE',
+                    payload: args.toDict()
                 };
             case 'edit_op':
                 return {
-                    actionType: 'EDIT_QUERY_OPERATION',
-                    props: {operationIdx: Number(args['operationIdx'])}
+                    name: 'EDIT_QUERY_OPERATION',
+                    payload: {operationIdx: Number(args['operationIdx'])}
                 };
             default:
                 return null;
@@ -249,8 +249,8 @@ export class ViewPage {
 
                 } else if (event.state['pagination']) {
                     this.layoutModel.dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_REVISIT_PAGE',
-                        props: {
+                        name: 'CONCORDANCE_REVISIT_PAGE',
+                        payload: {
                             action: 'customPage',
                             pageNum: event.state['pageNum']
                         }
@@ -284,8 +284,8 @@ export class ViewPage {
         const linesPerPage = this.layoutModel.getConf<number>('numLines');
         const applyData = (data:AjaxResponse.ConcStatus) => {
             this.layoutModel.dispatcher.dispatch({
-                actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
-                props: {
+                name: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+                payload: {
                     finished: !!data.finished,
                     concsize: data.concsize,
                     relconcsize: data.relconcsize,
@@ -313,8 +313,8 @@ export class ViewPage {
             ws.onclose = (x) => {
                 if (x.code > 1000) {
                     this.layoutModel.dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
-                        props: {}
+                        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                        payload: {}
                     });
                     this.layoutModel.showMessage('error', x.reason);
                 }
@@ -339,8 +339,8 @@ export class ViewPage {
                     ).catch(
                         (err) => {
                             this.layoutModel.dispatcher.dispatch({
-                                actionType: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
-                                props: {}
+                                name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                                payload: {}
                             });
                             this.layoutModel.showMessage('error', err);
                         }
@@ -377,8 +377,8 @@ export class ViewPage {
                     this.layoutModel.getConcArgs(),
                     {
                         modalAction: {
-                            actionType: 'EDIT_QUERY_OPERATION',
-                            props: {
+                            name: 'EDIT_QUERY_OPERATION',
+                            payload: {
                                 operationIdx: this.queryModels.queryReplayModel.getNumOperations() - 1
                             }
                         }
@@ -558,7 +558,7 @@ export class ViewPage {
         });
 
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModels.filterModel.notifyChangeListeners();
+            this.queryModels.filterModel.emitChange();
             this.layoutModel.dispatchSideEffect(
                 model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
                 {}
@@ -951,8 +951,8 @@ export class ViewPage {
                 const action = actionMap.get(evt.keyCode, evt.shiftKey ? 'shift' : null);
                 if (action) {
                     this.layoutModel.dispatcher.dispatch({
-                        actionType: action.message,
-                        props: action.args
+                        name: action.message,
+                        payload: action.args
                     });
                 }
             }

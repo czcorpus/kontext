@@ -19,9 +19,9 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {MultiDict} from '../../util';
+import { IActionDispatcher } from 'kombo';
 
 
 export interface Views {
@@ -45,7 +45,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
 
     // ------------- <RawHtmlRenderer /> -------------------------------
 

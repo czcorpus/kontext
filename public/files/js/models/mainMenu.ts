@@ -21,10 +21,10 @@
 import {Kontext} from '../types/common';
 import {StatefulModel} from './base';
 import {PageModel} from '../app/main';
-import {ActionDispatcher, Action} from '../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import { MultiDict } from '../util';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 
@@ -141,7 +141,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;
@@ -150,27 +150,27 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         this.data = importMenuData(initialData);
         this._isBusy = false;
 
-        this.dispatcher.register((action:Action) => {
-            if (action.actionType === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
-                this.visibleSubmenu = action.props['value'];
-                this.notifyChangeListeners();
+        this.dispatcher.registerActionListener((action:Action) => {
+            if (action.name === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
+                this.visibleSubmenu = action.payload['value'];
+                this.emitChange();
 
-            } else if (action.actionType === 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU') {
+            } else if (action.name === 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU') {
                 this.visibleSubmenu = null;
-                this.notifyChangeListeners();
+                this.emitChange();
 
-            } else if (action.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
+            } else if (action.name === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
                 this.activeItem = null;
-                this.notifyChangeListeners();
+                this.emitChange();
 
-            } else if (action.actionType.indexOf('MAIN_MENU_') === 0) {
-                if (this.selectionListeners.has(action.actionType)) {
+            } else if (action.name.indexOf('MAIN_MENU_') === 0) {
+                if (this.selectionListeners.has(action.name)) {
                     this._isBusy = true;
-                    this.selectionListeners.get(action.actionType).reduce<RSVP.Promise<any>>(
+                    this.selectionListeners.get(action.name).reduce<RSVP.Promise<any>>(
                         (red, curr) => {
                             return red.then(
                                 () => {
-                                    return curr(action.props);
+                                    return curr(action.payload);
                                 }
                             );
                         },
@@ -179,26 +179,26 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                     ).then(
                         () => {
                             this.activeItem = {
-                                actionName: action.actionType,
-                                actionArgs: action.props
+                                actionName: action.name,
+                                actionArgs: action.payload
                             };
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     ).catch(
                         (err) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.pageModel.showMessage('error', err);
                         }
                     )
 
                 } else {
                     this.activeItem = {
-                        actionName: action.actionType,
-                        actionArgs: action.props
+                        actionName: action.name,
+                        actionArgs: action.payload
                     };
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 }
             }
         });
@@ -206,12 +206,12 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     disableMenuItem(itemId:string, subItemId?:string):void {
         this.setMenuItemDisabledValue(itemId, subItemId, true);
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     enableMenuItem(itemId:string, subItemId?:string):void {
         this.setMenuItemDisabledValue(itemId, subItemId, false);
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     private setMenuItemDisabledValue(itemId:string, subItemId:string, v:boolean):void {
@@ -282,7 +282,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     resetActiveItemAndNotify():void {
         this.activeItem = null;
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     /**
@@ -338,7 +338,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                         items: item[1].items.set(j, newSubitem)
                     };
                     this.data = this.data.set(i, [item[0], newItem]);
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     return;
                 }
             });

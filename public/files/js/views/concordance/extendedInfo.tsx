@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as ttOverviewInit} from './ttOverview';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashboard';
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import { PluginInterfaces } from '../../types/plugins';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface ConcExtendedInfoProps {
@@ -38,7 +39,7 @@ export interface ExtendedInfoViews {
 }
 
 export interface ExtendedInfoViewsInitArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
@@ -59,10 +60,10 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: props.minimized ?
+                name: props.minimized ?
                     'DASHBOARD_MAXIMIZE_EXTENDED_INFO' :
                     'DASHBOARD_MINIMIZE_EXTENDED_INFO',
-                props: {}
+                payload: {}
             });
         };
 
@@ -86,6 +87,8 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
     class UsageTips extends React.PureComponent<{}, UsageTipsState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = usageTipsModel.getState();
@@ -98,17 +101,17 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         componentDidMount() {
-            usageTipsModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = usageTipsModel.addListener(this.handleModelChange);
         }
 
         componentWillUnmount() {
-            usageTipsModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         handleNextClick(e:React.MouseEvent<HTMLAnchorElement>) {
             dispatcher.dispatch({
-                actionType: 'NEXT_CONC_HINT',
-                props: {}
+                name: 'NEXT_CONC_HINT',
+                payload: {}
             });
         }
 
@@ -128,6 +131,8 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
     class ConcExtendedInfo extends React.Component<ConcExtendedInfoProps, ConcDashboardState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = dashboardModel.getState();
@@ -143,17 +148,17 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         componentDidMount() {
-            dashboardModel.addChangeListener(this.handleStoreChange);
+            this.modelSubscription = dashboardModel.addListener(this.handleStoreChange);
             if (!this.state.expanded) { // we are doing a pre-load here
                 dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-                    props: {}
+                    name: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+                    payload: {}
                 });
             }
         }
 
         componentWillUnmount() {
-            dashboardModel.removeChangeListener(this.handleStoreChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

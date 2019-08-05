@@ -22,10 +22,9 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
 import {PageModel} from '../../app/main';
-import {Action, ActionDispatcher, SEDispatcher} from '../../app/dispatcher';
-import {StatelessModel} from '../base';
 import { MultiDict } from '../../util';
 import { Kontext } from '../../types/common';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 interface LoadDataResponse extends Kontext.AjaxResponse {
     data:Array<DataItem>;
@@ -76,7 +75,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     private pageModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, data:Array<DataItem>,
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, data:Array<DataItem>,
                 minCodePrefix:number, minAuthorPrefix:number) {
         super(
             dispatcher,
@@ -99,22 +98,22 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
     reduce(state:PublicSubcorpListState, action:Action):PublicSubcorpListState {
         let newState:PublicSubcorpListState;
 
-        switch (action.actionType) {
+        switch (action.name) {
             case Actions.SET_SEARCH_TYPE:
                 newState = this.copyState(state);
-                newState.searchType = action.props['value'];
-                newState.minQuerySize = this.queryTypeMinPrefixMapping.get(action.props['value']);
+                newState.searchType = action.payload['value'];
+                newState.minQuerySize = this.queryTypeMinPrefixMapping.get(action.payload['value']);
                 return newState;
             case Actions.SET_SEARCH_QUERY:
                 newState = this.copyState(state);
-                newState.searchQuery = action.props['value'];
+                newState.searchQuery = action.payload['value'];
                 if (newState.inputPrefixThrottleTimer) {
                     window.clearTimeout(newState.inputPrefixThrottleTimer);
                 }
                 return newState;
             case Actions.SET_INPUT_PREFIX_THROTTLE:
                 newState = this.copyState(state);
-                newState.inputPrefixThrottleTimer = action.props['timerId'];
+                newState.inputPrefixThrottleTimer = action.payload['timerId'];
                 return newState;
             case Actions.SET_CODE_PREFIX_DONE:
                 newState = this.copyState(state);
@@ -123,7 +122,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             case Actions.DATA_LOAD_DONE:
                 newState = this.copyState(state);
                 newState.isBusy = false;
-                newState.data = Immutable.List<DataItem>(action.props['data']['data']);
+                newState.data = Immutable.List<DataItem>(action.payload['data']['data']);
                 return newState;
             default:
                 return state;
@@ -132,15 +131,15 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     sideEffects(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
 
-        switch (action.actionType) {
+        switch (action.name) {
             case Actions.SET_SEARCH_TYPE:
             case Actions.SET_SEARCH_QUERY:
                 const timerId = window.setTimeout(
                     () => {
                         if (state.searchQuery.length >= state.minQuerySize) {
                             dispatch({
-                                actionType: Actions.SET_CODE_PREFIX_DONE,
-                                props: {}
+                                name: Actions.SET_CODE_PREFIX_DONE,
+                                payload: {}
                             });
                         }
                         window.clearTimeout(state.inputPrefixThrottleTimer);
@@ -148,8 +147,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                     250
                 );
                 dispatch({
-                    actionType: Actions.SET_INPUT_PREFIX_THROTTLE,
-                    props: {
+                    name: Actions.SET_INPUT_PREFIX_THROTTLE,
+                    payload: {
                         timerId: timerId
                     }
                 });
@@ -158,8 +157,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 this.loadData(state).then(
                     (data) => {
                         dispatch({
-                            actionType: Actions.DATA_LOAD_DONE,
-                            props: {
+                            name: Actions.DATA_LOAD_DONE,
+                            payload: {
                                 data: data
                             }
                         });
@@ -169,8 +168,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                     (err) => {
                         this.pageModel.showMessage('error', err);
                         dispatch({
-                            actionType: Actions.DATA_LOAD_DONE,
-                            props: {},
+                            name: Actions.DATA_LOAD_DONE,
+                            payload: {},
                             error: err
                         });
                     }
@@ -178,8 +177,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             break;
             case Actions.USE_IN_QUERY:
                 const args = new MultiDict();
-                args.set('corpname', action.props['corpname']);
-                args.set('usesubcorp', action.props['id']);
+                args.set('corpname', action.payload['corpname']);
+                args.set('usesubcorp', action.payload['id']);
                 window.location.href = this.pageModel.createActionUrl(
                     'first_form',
                     args

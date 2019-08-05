@@ -38,7 +38,7 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
-import { ActionDispatcher, Action } from '../app/dispatcher';
+import { IActionDispatcher, Action } from 'kombo';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -53,19 +53,19 @@ class ConfigWrapper extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+            switch (action.name) {
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.props['corpname']]));
+                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.payload['corpname']]));
                 }
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.props['corpname']));
+                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.payload['corpname']));
                 }
                 break;
             }

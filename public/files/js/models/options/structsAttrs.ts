@@ -22,9 +22,9 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import RSVP from 'rsvp';
 import { MultiDict } from '../../util';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.AttrViewMode => {
@@ -80,7 +80,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     private corpusUsesRTLText:boolean;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             userIsAnonymous:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -91,12 +91,12 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         this.isWaiting = false;
         this.corpusUsesRTLText = layoutModel.getConf<boolean>('TextDirectionRTL');
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'VIEW_OPTIONS_LOAD_DATA':
                     this.loadData().then(
                         (data) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
@@ -104,37 +104,37 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                     );
                 break;
                 case 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY':
-                    this.setAttrVisibilityMode(action.props['value']);
-                    this.notifyChangeListeners();
+                    this.setAttrVisibilityMode(action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE':
-                    this.toggleAttribute(action.props['idx']);
-                    this.notifyChangeListeners();
+                    this.toggleAttribute(action.payload['idx']);
+                    this.emitChange();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES':
                     this.toggleAllAttributes();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_STRUCTURE':
-                    this.toggleStructure(action.props['structIdent'],
-                        action.props['structAttrIdent']);
-                    this.notifyChangeListeners();
+                    this.toggleStructure(action.payload['structIdent'],
+                        action.payload['structAttrIdent']);
+                    this.emitChange();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_REFERENCE':
-                    this.toggleReference(action.props['idx']);
-                    this.notifyChangeListeners();
+                    this.toggleReference(action.payload['idx']);
+                    this.emitChange();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES':
                     this.toggleAllReferences();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'VIEW_OPTIONS_SAVE_SETTINGS':
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.saveSettings().then(
                         (data) => {
                             this.isWaiting = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.updateHandlers.forEach(fn => fn(data));
                             this.layoutModel.resetMenuActiveItemAndNotify();
                         },

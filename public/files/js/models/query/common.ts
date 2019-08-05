@@ -20,12 +20,12 @@
 
 import * as Immutable from 'immutable';
 import {Kontext, ViewOptions} from '../../types/common';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
+import { Action, IActionDispatcher } from 'kombo';
 
 
 export interface GeneralQueryFormProperties {
@@ -131,32 +131,32 @@ export abstract class QueryFormModel extends StatefulModel {
 
 
     constructor(
-            dispatcher:ActionDispatcher,
+            dispatcher:IActionDispatcher,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            props:GeneralQueryFormProperties) {
+            payload:GeneralQueryFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
         this.queryContextModel = queryContextModel;
-        this.forcedAttr = props.forcedAttr;
-        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
-        this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
-        this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
-        this.tagAttr = props.tagAttr;
+        this.forcedAttr = payload.forcedAttr;
+        this.attrList = Immutable.List<Kontext.AttrItem>(payload.attrList);
+        this.structAttrList = Immutable.List<Kontext.AttrItem>(payload.structAttrList);
+        this.lemmaWindowSizes = Immutable.List<number>(payload.lemmaWindowSizes);
+        this.posWindowSizes = Immutable.List<number>(payload.posWindowSizes);
+        this.wPoSList = Immutable.List<{v:string; n:string}>(payload.wPoSList);
+        this.tagAttr = payload.tagAttr;
         this.queryTracer = {trace:(_)=>undefined};
-        this.useCQLEditor = props.useCQLEditor;
+        this.useCQLEditor = payload.useCQLEditor;
         this.queries = Immutable.Map<string, string>();
 
-        this.dispatcher.register(payload => {
-            switch (payload.actionType) {
+        this.dispatcher.registerActionListener(action => {
+            switch (action.name) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
-                    this.setActiveWidget(payload.props['sourceId'], payload.props['value']);
-                    this.widgetArgs = payload.props['widgetArgs'] || {};
-                    this.notifyChangeListeners();
+                    this.setActiveWidget(action.payload['sourceId'], action.payload['value']);
+                    this.widgetArgs = action.payload['widgetArgs'] || {};
+                    this.emitChange();
                 break;
             }
         });
@@ -268,7 +268,7 @@ export abstract class QueryFormModel extends StatefulModel {
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
         this.useCQLEditor = optsModel.getUseCQLEditor();
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     getTagAttr():string {

@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 export class FirstHitsModel extends StatefulModel {
@@ -33,14 +33,14 @@ export class FirstHitsModel extends StatefulModel {
     private docStructValues:Immutable.Map<string, string>;
 
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.docStructValues = Immutable.Map<string, string>();
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FILTER_FIRST_HITS_SUBMIT':
-                    this.submitForm(action.props['opKey']);
+                    this.submitForm(action.payload['opKey']);
                     // app leaves here
                 break;
             }

@@ -19,14 +19,15 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import { CollResultsSaveModel } from '../../models/coll/result';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface SaveModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     utils:Kontext.ComponentHelpers;
     collSaveModel:CollResultsSaveModel;
 }
@@ -67,8 +68,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_FORMAT',
-                props: {
+                name: 'COLL_SAVE_FORM_SET_FORMAT',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -98,8 +99,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_INCLUDE_HEADING',
-                props: {
+                name: 'COLL_SAVE_FORM_SET_INCLUDE_HEADING',
+                payload: {
                     value: !props.value
                 }
             });
@@ -124,8 +125,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
-                props: {
+                name: 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
+                payload: {
                     value: !props.value
                 }
             });
@@ -154,8 +155,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_FROM_LINE',
-                props: {
+                name: 'COLL_SAVE_FORM_SET_FROM_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -163,8 +164,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         const handleToInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_TO_LINE',
-                props: {
+                name: 'COLL_SAVE_FORM_SET_TO_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -218,6 +219,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
             this._switchLineLimitHint = this._switchLineLimitHint.bind(this);
         }
 
+        private modelSubscription:Subscription;
+
         _fetchModelState() {
             return {
                 saveformat: collSaveModel.getSaveformat(),
@@ -232,8 +235,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SUBMIT',
-                props: {}
+                name: 'COLL_SAVE_FORM_SUBMIT',
+                payload: {}
             });
         }
 
@@ -242,11 +245,11 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
         }
 
         componentDidMount() {
-            collSaveModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = collSaveModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            collSaveModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderFormatDependentOptions() {

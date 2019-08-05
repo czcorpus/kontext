@@ -20,12 +20,12 @@
 
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {CoreViews} from '../../types/coreViews';
+import { IActionDispatcher } from 'kombo';
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):{IssueReportingWidget:React.SFC<{}>} {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):{IssueReportingWidget:React.SFC<{}>} {
 
     const layoutViews = he.getLayoutViews();
 

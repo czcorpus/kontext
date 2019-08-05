@@ -20,17 +20,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as util from '../../util';
-import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
-import {StatefulModel} from '../../models/base';
-import {Action} from '../../app/dispatcher';
 import {TreeWidgetModel} from './model';
 import {Views as CorplistViews, init as corplistViewInit} from './view';
-import {Views as WidgetViews, init as widgetViewInit} from './widget';
+import {init as widgetViewInit} from './widget';
 
 declare var require:any;
 require('./style.less'); //  webpack

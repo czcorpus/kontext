@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, TextTypes} from '../../types/common';
+import {TextTypes} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import { SelectedTextTypes } from '../../models/textTypes/main';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 interface ServerBibData {
@@ -133,7 +133,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
      * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
      * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
             textTypesModel:TextTypes.ITextTypesModel,
             isEnabled:boolean,
             selectedCorporaProvider:()=>Immutable.List<string>,
@@ -167,28 +167,28 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         // initial enabled/disabled state:
         this.setControlsEnabled(args.refineEnabled);
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.processRefine().then(
                         (v) => {
                             this.updateListeners.forEach(item => item());
                             this.textTypesModel.snapshotState();
-                            this.textTypesModel.notifyChangeListeners();
+                            this.textTypesModel.emitChange();
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.pluginApi.showMessage('error', err);
                         }
                     );
                 break;
                 case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED': {
-                    const item = this.alignedCorpora.get(action.props['idx']);
+                    const item = this.alignedCorpora.get(action.payload['idx']);
                     if (item) {
                         const idx = this.alignedCorpora.indexOf(item);
                         const newItem:TextTypes.AlignedLanguageItem = {
@@ -201,15 +201,15 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     }
                     this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
                     this.updateListeners.forEach(fn => fn());
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 }
                 break;
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
                     if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
                         this.reset();
-                        this.textTypesModel.notifyChangeListeners();
+                        this.textTypesModel.emitChange();
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'LIVE_ATTRIBUTES_UNDO_CLICKED':
                     /*
@@ -219,41 +219,41 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                      * on TextTypesModel, the UNDO function here gets broken.
                      */
                     this.textTypesModel.undoState();
-                    this.textTypesModel.notifyChangeListeners();
+                    this.textTypesModel.emitChange();
                     this.selectionSteps = this.selectionSteps.pop();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'TT_MINIMIZE_ALL':
                     this.isTTListMinimized = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'TT_MAXIMIZE_ALL':
                     this.isTTListMinimized = false;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST':
                     this.isTTListMinimized = !this.isTTListMinimized;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE':
                     this.reset();
-                    this.updateAlignedItem(action.props['corpname'], orig => ({
+                    this.updateAlignedItem(action.payload['corpname'], orig => ({
                         value: orig.value,
                         label: orig.label,
                         locked: true,
                         selected: true}));
-                    this.textTypesModel.notifyChangeListeners();
-                    this.notifyChangeListeners();
+                    this.textTypesModel.emitChange();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE':
                     this.reset();
-                    this.updateAlignedItem(action.props['corpname'], orig => ({
+                    this.updateAlignedItem(action.payload['corpname'], orig => ({
                         value: orig.value,
                         label: orig.label,
                         locked: false,
                         selected: false}));
-                    this.textTypesModel.notifyChangeListeners();
-                    this.notifyChangeListeners();
+                    this.textTypesModel.emitChange();
+                    this.emitChange();
                 break;
             }
         });
@@ -281,7 +281,7 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         }).toList();
         if (notifyListeners) {
             this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
-            this.notifyChangeListeners();
+            this.emitChange();
         }
     }
 
@@ -320,23 +320,21 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
 
     private processRefine():RSVP.Promise<any> {
         this.textTypesModel.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
-            this.textTypesModel.mapItems(attrName, (item:TextTypes.AttributeValue) => {
-                return {
-                    ident: item.ident,
-                    value: item.value,
-                    selected: item.selected,
-                    locked: true,
-                    availItems: item.availItems,
-                    numGrouped: item.numGrouped,
-                    extendedInfo: item.extendedInfo
-                }
-            });
+            this.textTypesModel.mapItems(attrName, (item:TextTypes.AttributeValue) => ({
+                ident: item.ident,
+                value: item.value,
+                selected: item.selected,
+                locked: true,
+                availItems: item.availItems,
+                numGrouped: item.numGrouped,
+                extendedInfo: item.extendedInfo
+            }));
         });
         const selections = this.textTypesModel.exportSelections(false);
         return this.loadFilteredData(selections).then(
             (data:ServerRefineResponse) => {
                 const filterData = this.importFilter(data.attr_values);
-                let k; // mut be defined here (ES5 cannot handle for(let k...) here)
+                let k; // must be defined here (ES5 cannot handle for(let k...) here)
                 for (k in filterData) {
                     this.textTypesModel.updateItems(k, filterData[k].map(v => v.ident));
                     this.textTypesModel.mapItems(k, (v, i) => {

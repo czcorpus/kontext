@@ -23,10 +23,10 @@ import {MultiDict} from '../../util';
 import {StatefulModel} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {ConcLineModel} from './lines';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
@@ -73,7 +73,7 @@ export class LineSelectionModel extends StatefulModel {
 
     private emailDialogCredentials:Kontext.UserCredentials;
 
-    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:IActionDispatcher,
             concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -96,13 +96,13 @@ export class LineSelectionModel extends StatefulModel {
         this._isBusy = false;
         this.emailDialogCredentials = null;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'LINE_SELECTION_SELECT_LINE':
-                    let val = action.props['value'];
+                    let val = action.payload['value'];
                     if (this.validateGroupId(val)) {
-                        this.selectLine(val, action.props['tokenNumber'], action.props['kwicLength']);
-                        this.notifyChangeListeners();
+                        this.selectLine(val, action.payload['tokenNumber'], action.payload['kwicLength']);
+                        this.emitChange();
 
                     } else {
                         this.layoutModel.showMessage('error',
@@ -112,51 +112,51 @@ export class LineSelectionModel extends StatefulModel {
                     }
                     break;
                 case 'LINE_SELECTION_STATUS_REQUEST':
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     break;
                 case 'LINE_SELECTION_RESET':
                     this.clearSelection();
-                    this.concLineModel.notifyChangeListeners();
-                    this.notifyChangeListeners();
+                    this.concLineModel.emitChange();
+                    this.emitChange();
                     break;
                 case 'LINE_SELECTION_RESET_ON_SERVER':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.resetServerLineGroups().then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.concLineModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
+                            this.concLineModel.emitChange();
+                            this.emitChange();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     )
                     break;
                 case 'LINE_SELECTION_REMOVE_LINES':
                     this.removeLines(LineSelectionModel.FILTER_NEGATIVE);
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     break;
                 case 'LINE_SELECTION_REMOVE_OTHER_LINES':
                     this.removeLines(LineSelectionModel.FILTER_POSITIVE);
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     break;
                 case 'LINE_SELECTION_MARK_LINES':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.markLines().then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
-                            this.concLineModel.notifyChangeListeners();
+                            this.emitChange();
+                            this.concLineModel.emitChange();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
@@ -166,49 +166,49 @@ export class LineSelectionModel extends StatefulModel {
                     break;
                 case 'LINE_SELECTION_REENABLE_EDIT':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.reenableEdit().then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.concLineModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
+                            this.concLineModel.emitChange();
+                            this.emitChange();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     )
                     break;
                 case 'LINE_SELECTION_GROUP_RENAME':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
-                    this.renameLineGroup(action.props['srcGroupNum'], action.props['dstGroupNum']).then(
+                    this.emitChange();
+                    this.renameLineGroup(action.payload['srcGroupNum'], action.payload['dstGroupNum']).then(
                         (args:MultiDict) => {
                             this._isBusy = false;
-                            this.concLineModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
+                            this.concLineModel.emitChange();
+                            this.emitChange();
                             this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
                             this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     )
                     break;
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
-                    this.sendSelectionUrlToEmail(action.props['email']).then(
+                    this.emitChange();
+                    this.sendSelectionUrlToEmail(action.payload['email']).then(
                         (data) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     )
@@ -217,25 +217,25 @@ export class LineSelectionModel extends StatefulModel {
                     this.sortLines(); // this redirects ...
                     break;
                 case 'CONCORDANCE_SET_LINE_SELECTION_MODE':
-                    if (this.setMode(action.props['mode'])) {
-                        this.notifyChangeListeners();
+                    if (this.setMode(action.payload['mode'])) {
+                        this.emitChange();
                     }
                     break;
                 case 'LINE_SELECTION_LOAD_USER_CREDENTIALS':
                     this.userInfoModel.loadUserInfo(false).then(
                         () => {
                             this.emailDialogCredentials = this.userInfoModel.getCredentials();
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'LINE_SELECTION_CLEAR_USER_CREDENTIALS':
                     this.emailDialogCredentials = null;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });

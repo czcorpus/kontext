@@ -21,9 +21,10 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
-import { ActionDispatcher } from '../../app/dispatcher';
 import {TreeWidgetModel, Node} from './model';
 import * as Immutable from 'immutable';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface Views {
@@ -31,7 +32,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         treeModel:TreeWidgetModel):Views {
 
 
@@ -54,8 +55,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _clickHandler() {
             dispatcher.dispatch({
-                actionType: 'TREE_CORPARCH_SET_NODE_STATUS',
-                props: {
+                name: 'TREE_CORPARCH_SET_NODE_STATUS',
+                payload: {
                     nodeId: this.props.ident
                 }
             });
@@ -92,8 +93,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const clickHandler = () => {
             dispatcher.dispatch({
-                actionType: 'TREE_CORPARCH_LEAF_NODE_CLICKED',
-                props: {
+                name: 'TREE_CORPARCH_LEAF_NODE_CLICKED',
+                payload: {
                     ident: props.ident
                 }
             });
@@ -152,6 +153,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         currentCorpus:Kontext.FullCorpusIdent;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = {
@@ -166,8 +169,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _buttonClickHandler() {
             if (!this.state.active && this.state.data.size === 0) {
                 dispatcher.dispatch({
-                    actionType: 'TREE_CORPARCH_GET_DATA',
-                    props: {}
+                    name: 'TREE_CORPARCH_GET_DATA',
+                    payload: {}
                 });
 
             } else {
@@ -184,11 +187,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            treeModel.addChangeListener(this._changeListener);
+            this.modelSubscription = treeModel.addListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            treeModel.removeChangeListener(this._changeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

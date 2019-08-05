@@ -25,9 +25,9 @@ import RSVP from 'rsvp';
 
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../base';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import { MultiDict } from '../../util';
 import { AsyncTaskStatus } from '../asyncTask';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 
@@ -82,7 +82,7 @@ export class SubcorpListModel extends StatefulModel {
 
     private actionBoxActionType:string;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,
@@ -104,119 +104,119 @@ export class SubcorpListModel extends StatefulModel {
                     this.layoutModel.translate('task__type_subcorpus_done'));
                 this.reloadItems().then(
                     (data) => {
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     },
                     (err) => {
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
                 )
             }
         });
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'SUBCORP_LIST_SORT_LINES':
-                    this.sortItems(action.props['colName'], action.props['reverse']).then(
+                    this.sortItems(action.payload['colName'], action.payload['reverse']).then(
                         (data) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     )
                 break;
                 case 'SUBCORP_LIST_DELETE_SUBCORPUS':
-                    this.deleteSubcorpus(action.props['rowIdx']).then(
+                    this.deleteSubcorpus(action.payload['rowIdx']).then(
                         (data) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage(
                                 'info',
                                 this.layoutModel.translate('subclist__subc_deleted')
                             );
                         },
                         (err) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_FILTER':
-                    this.filterItems(<SubcListFilter>action.props).then(
+                    this.filterItems(<SubcListFilter>action.payload).then(
                         (data) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     )
                 break;
                 case 'SUBCORP_LIST_SHOW_ACTION_WINDOW':
-                    this.actionBoxVisibleRow = action.props['value'];
-                    this.actionBoxActionType = action.props['action'];
-                    this.notifyChangeListeners();
+                    this.actionBoxVisibleRow = action.payload['value'];
+                    this.actionBoxActionType = action.payload['action'];
+                    this.emitChange();
                 break;
                 case 'SUBCORP_LIST_HIDE_ACTION_WINDOW':
                     this.actionBoxVisibleRow = -1;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'SUBCORP_LIST_SET_ACTION_BOX_TYPE':
-                    this.actionBoxActionType = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.actionBoxActionType = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'SUBCORP_LIST_WIPE_SUBCORPUS':
-                    this.wipeSubcorpus(action.props['idx']).then(
+                    this.wipeSubcorpus(action.payload['idx']).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
                                     this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_RESTORE_SUBCORPUS':
-                    this.createSubcorpus(action.props['idx'], true).then(
+                    this.createSubcorpus(action.payload['idx'], true).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_REUSE_QUERY':
-                    this.createSubcorpus(action.props['idx'], false, action.props['newName'], action.props['newCql']).then(
+                    this.createSubcorpus(action.payload['idx'], false, action.payload['newName'], action.payload['newCql']).then(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.actionBoxVisibleRow = -1;
                             this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_PUBLISH_SUBCORPUS':
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.publishSubcorpus(
-                                action.props['rowIdx'],
-                                action.props['description']).then(
+                                action.payload['rowIdx'],
+                                action.payload['description']).then(
                         (_) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage(
@@ -224,31 +224,31 @@ export class SubcorpListModel extends StatefulModel {
                                 this.layoutModel.translate('subclist__subc_published')
                             );
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage('error', err);
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION': {
                     try {
-                        this.updateSubcDesc(action.props['rowIdx'], action.props['description']);
+                        this.updateSubcDesc(action.payload['rowIdx'], action.payload['description']);
 
                     } catch (e) {
                         this.layoutModel.showMessage('error', e);
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 }
                 break;
                 case 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT':
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.updateSubcorpusDescSubmit(
-                            action.props['rowIdx']).then(
+                            action.payload['rowIdx']).then(
                         (_) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage(
@@ -256,13 +256,13 @@ export class SubcorpListModel extends StatefulModel {
                                 this.layoutModel.translate('subclist__subc_desc_updated')
                             );
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage('error', err);
                             this.actionBoxVisibleRow = -1;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
