@@ -216,7 +216,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
                             <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={utils.translate('global__loading')} />
                         </span>
-                        <input type="text" value="" />
+                        <input type="text" readOnly={true} />
                     </> :
                     <input type="text" value={props.currPageInput}
                         onChange={handleInputChange}

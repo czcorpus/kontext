@@ -89,7 +89,7 @@ export class CollResultsSaveModel extends StatefulModel {
 
     constructor({
             dispatcher, layoutModel, mainModel, quickSaveRowLimit,
-            saveCollMaxLines, collArgsProviderFn, saveLinkFn}) {
+            saveCollMaxLines, collArgsProviderFn, saveLinkFn}:COllResultsSaveModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.mainModel = mainModel;
@@ -377,7 +377,7 @@ export class CollResultModel extends StatefulModel {
     constructor({
             dispatcher, layoutModel, formModel, initialData, resultHeading,
             pageSize, saveLinkFn, saveLinesLimit, unfinished, quickSaveRowLimit,
-            saveCollMaxLines}) {
+            saveCollMaxLines}:CollResulModelArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formModel = formModel;
@@ -418,7 +418,7 @@ export class CollResultModel extends StatefulModel {
             this.calcWatchdog.startWatching();
         }
 
-        dispatcher.register((action:Action) => {
+        dispatcher.registerActionListener((action:Action) => {
             switch (action.name) {
                 case 'COLL_RESULT_SET_PAGE_INPUT_VAL':
                     this.currPageInput = action.payload['value'];
