@@ -19,9 +19,10 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import { IssueReportingModel } from './init';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface IssueReportingWidgetProps {
@@ -34,7 +35,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             reportingModel:IssueReportingModel):Views {
 
     const layoutViews = he.getLayoutViews();
@@ -48,8 +49,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmitClick = () => {
             dispatcher.dispatch({
-                actionType: 'ISSUE_REPORTING_SUBMIT_ISSUE',
-                props: {}
+                name: 'ISSUE_REPORTING_SUBMIT_ISSUE',
+                payload: {}
             });
         };
 
@@ -78,8 +79,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleTextareaChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'ISSUE_REPORTING_UPDATE_ISSUE_BODY',
-                props: {value: evt.target.value}
+                name: 'ISSUE_REPORTING_UPDATE_ISSUE_BODY',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -107,6 +108,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         waitingForModel:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -129,24 +132,24 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleLinkClick() {
             dispatcher.dispatch({
-                actionType: 'ISSUE_REPORTING_SET_VISIBILITY',
-                props: {value: true}
+                name: 'ISSUE_REPORTING_SET_VISIBILITY',
+                payload: {value: true}
             });
         }
 
         _closeClickHandler() {
             dispatcher.dispatch({
-                actionType: 'ISSUE_REPORTING_SET_VISIBILITY',
-                props: {value: false}
+                name: 'ISSUE_REPORTING_SET_VISIBILITY',
+                payload: {value: false}
             });
         }
 
         componentDidMount() {
-            reportingModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = reportingModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            reportingModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

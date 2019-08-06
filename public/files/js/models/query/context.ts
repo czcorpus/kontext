@@ -19,15 +19,15 @@
  */
 
 import {StatefulModel} from '..//base';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 export class QueryContextModel extends StatefulModel {
 
     private formData:Immutable.Map<string, any>;
 
-    constructor(dispatcher:ActionDispatcher) {
+    constructor(dispatcher:IActionDispatcher) {
         super(dispatcher);
         this.formData = Immutable.Map<string, any>({
             fc_lemword_window_type: 'both',
@@ -40,12 +40,12 @@ export class QueryContextModel extends StatefulModel {
             fc_pos_type: 'all'
         });
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM':
-                    this.formData = this.formData.set(action.props['name'], action.props['value']);
+                    this.formData = this.formData.set(action.payload['name'], action.payload['value']);
 
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });

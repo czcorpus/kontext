@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, KeyCodes} from '../../types/common';
 import {init as initSaveViews} from './save';
 import { CollResultModel, CollResultRow, CollResultHeadingCell } from '../../models/coll/result';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface CollResultViewProps {
@@ -52,7 +53,7 @@ export interface ResultViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers, collResultModel:CollResultModel):ResultViews {
+export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelpers, collResultModel:CollResultModel):ResultViews {
 
     const saveViews = initSaveViews({
         dispatcher:dispatcher,
@@ -71,8 +72,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         const handleClick = (args) => {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'COLL_RESULT_APPLY_QUICK_FILTER',
-                    props: {
+                    name: 'COLL_RESULT_APPLY_QUICK_FILTER',
+                    payload: {
                         args: args
                     }
                 });
@@ -123,8 +124,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
     }> = (props) => {
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'COLL_RESULT_SORT_BY_COLUMN',
-                props: {
+                name: 'COLL_RESULT_SORT_BY_COLUMN',
+                payload: {
                     sortFn: props.sortFn
                 }
             });
@@ -200,8 +201,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_RESULT_SET_PAGE_INPUT_VAL',
-                props: {
+                name: 'COLL_RESULT_SET_PAGE_INPUT_VAL',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -215,7 +216,7 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
                             <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={utils.translate('global__loading')} />
                         </span>
-                        <input type="text" value="" />
+                        <input type="text" readOnly={true} />
                     </> :
                     <input type="text" value={props.currPageInput}
                         onChange={handleInputChange}
@@ -231,8 +232,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
 
         const handleClick = (props) => {
             dispatcher.dispatch({
-                actionType: 'COLL_RESULT_GET_PREV_PAGE',
-                props: {}
+                name: 'COLL_RESULT_GET_PREV_PAGE',
+                payload: {}
             });
         };
 
@@ -252,8 +253,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
 
         const handleClick = (props) => {
             dispatcher.dispatch({
-                actionType: 'COLL_RESULT_GET_NEXT_PAGE',
-                props: {}
+                name: 'COLL_RESULT_GET_NEXT_PAGE',
+                payload: {}
             });
         };
 
@@ -280,8 +281,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
         const handleKeyPress = (evt) => {
             if (evt.keyCode === KeyCodes.ENTER) {
                 dispatcher.dispatch({
-                    actionType: 'COLL_RESULT_CONFIRM_PAGE_VALUE',
-                    props: {}
+                    name: 'COLL_RESULT_CONFIRM_PAGE_VALUE',
+                    payload: {}
                 });
                 evt.preventDefault();
                 evt.stopPropagation();
@@ -335,6 +336,8 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
             this._handleSaveFormClose = this._handleSaveFormClose.bind(this);
         }
 
+        private modelSubscription:Subscription;
+
         _fetchModelState() {
             return {
                 data: collResultModel.getData(),
@@ -358,17 +361,17 @@ export function init(dispatcher:ActionDispatcher, utils:Kontext.ComponentHelpers
 
         _handleSaveFormClose() {
             dispatcher.dispatch({
-                actionType: 'COLL_RESULT_CLOSE_SAVE_FORM',
-                props: {}
+                name: 'COLL_RESULT_CLOSE_SAVE_FORM',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            collResultModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = collResultModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            collResultModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

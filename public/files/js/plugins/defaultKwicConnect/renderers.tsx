@@ -19,9 +19,9 @@
  */
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import { ActionDispatcher } from '../../app/dispatcher';
 import { Kontext } from '../../types/common';
 import { MultiDict } from '../../util';
+import { IActionDispatcher } from 'kombo';
 
 
 export interface Views {
@@ -48,7 +48,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):Views {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):Views {
 
     const RawHtmlRenderer:Views['RawHtmlRenderer'] = (props) => {
         return (

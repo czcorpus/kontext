@@ -20,9 +20,10 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
+import { Subscription } from 'rxjs';
 
 
 export interface EmptyQueryOverviewBarProps {
@@ -51,7 +52,7 @@ export interface BasicOverviewViews {
  * @param {*} dispatcher
  * @param {*} he
  */
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         model:PluginInterfaces.Corparch.ICorpSelection):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
@@ -65,6 +66,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         foreignSubcorp:boolean;
 
     }> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -85,11 +88,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            model.addChangeListener(this.handleStoreChange);
+            this.modelSubscription = model.addListener(this.handleStoreChange);
         }
 
         componentWillUnmount() {
-            model.removeChangeListener(this.handleStoreChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -114,16 +117,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleCloseClick = () => {
             dispatcher.dispatch({
-                actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
-                props: {}
+                name: 'CLEAR_QUERY_OVERVIEW_DATA',
+                payload: {}
             });
         };
 
         const handleEditClickFn = (idx) => {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
-                    props: {}
+                    name: 'CLEAR_QUERY_OVERVIEW_DATA',
+                    payload: {}
                 }); // this is synchronous
                 props.onEditClick(idx);
             };

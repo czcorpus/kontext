@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Action} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
@@ -27,6 +26,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import {highlightSyntaxStatic} from '../../models/query/cqleditor/parser';
+import { Action } from 'kombo';
 
 
 export interface InputBoxHistoryItem {
@@ -88,18 +88,18 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
-                    this.queryType = action.props['value'];
+                    this.queryType = action.payload['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
-                    this.currentCorpusOnly = action.props['value'];
+                    this.currentCorpusOnly = action.payload['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_SET_ARCHIVED_ONLY':
-                    this.archivedOnly = action.props['value'];
+                    this.archivedOnly = action.payload['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_LOAD_MORE':
@@ -111,36 +111,36 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_OPEN_QUERY_FORM':
-                    this.openQueryForm(action.props['idx']);
+                    this.openQueryForm(action.payload['idx']);
                     // page leaves here
                 break;
                 case 'QUERY_STORAGE_SET_EDITING_QUERY_ID':
-                    this.editingQueryId = action.props['value'];
+                    this.editingQueryId = action.payload['value'];
                     const srch = this.data.find(v => v.query_id === this.editingQueryId);
                     if (srch) {
                         this.editingQueryName = srch.name ? srch.name : '';
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID':
                     this.editingQueryId = null;
                     this.editingQueryName = null;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_STORAGE_EDITOR_SET_NAME':
-                    this.editingQueryName = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.editingQueryName = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'QUERY_STORAGE_DO_NOT_ARCHIVE':
-                    this.saveItem(action.props['queryId'], null).then(
+                    this.saveItem(action.payload['queryId'], null).then(
                         (msg) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.pluginApi.showMessage('info', msg);
                         },
                         (err) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.pluginApi.showMessage('error', err);
                         }
                     );
@@ -149,11 +149,11 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                     if (!this.editingQueryName) {
                         this.pluginApi.showMessage('error',
                             this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
-                        this.notifyChangeListeners();
+                        this.emitChange();
 
                     } else {
                         this.isBusy = true;
-                        this.notifyChangeListeners();/*
+                        this.emitChange();/*
                         * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
                         *                    Institute of the Czech National Corpus
                         * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
@@ -175,12 +175,12 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                         this.saveItem(this.editingQueryId, this.editingQueryName).then(
                             (msg) => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.pluginApi.showMessage('info', msg);
                             },
                             (err) => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.pluginApi.showMessage('error', err);
                             }
                         );
@@ -218,16 +218,16 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
 
     private performLoadAction():void {
         this.isBusy = true;
-        this.notifyChangeListeners();
+        this.emitChange();
         this.loadData().then(
             () => {
                 this.isBusy = false;
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             (err) => {
                 this.isBusy = false;
                 this.pluginApi.showMessage('error', err);
-                this.notifyChangeListeners();
+                this.emitChange();
             }
         );
     }

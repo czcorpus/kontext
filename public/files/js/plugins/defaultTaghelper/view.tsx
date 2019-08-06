@@ -20,18 +20,18 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Action, ActionDispatcher} from '../../app/dispatcher';
 import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
-import * as Rx from '@reactivex/rxjs';
 import {Kontext, KeyCodes} from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { SetQueryInputAction, AppendQueryInputAction } from '../../models/query/common';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, tagHelperModel:TagHelperModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, tagHelperModel:TagHelperModel) {
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
@@ -120,22 +120,22 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
                 dispatcher.dispatch({
-                    actionType: 'TAGHELPER_RESET',
-                    props: {}
+                    name: 'TAGHELPER_RESET',
+                    payload: {}
                 });
 
             } else if (evt.target.value === 'undo') {
                 dispatcher.dispatch({
-                    actionType: 'TAGHELPER_UNDO',
-                    props: {}
+                    name: 'TAGHELPER_UNDO',
+                    payload: {}
                 });
 
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
                     const query = `"${props.displayPattern}"`;
                     dispatcher.dispatch<SetQueryInputAction>({
-                        actionType: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                        props: {
+                        name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                        payload: {
                             sourceId: props.sourceId,
                             query: query,
                             insertRange: [props.range[0], props.range[1]],
@@ -146,16 +146,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
                 } else {
                     dispatcher.dispatch<AppendQueryInputAction>({
-                        actionType: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
-                        props: {
+                        name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+                        payload: {
                             sourceId: props.sourceId,
                             query: `[tag="${props.displayPattern}"]`
                         }
                     });
                 }
                 dispatcher.dispatch({
-                    actionType: 'TAGHELPER_RESET',
-                    props: {}
+                    name: 'TAGHELPER_RESET',
+                    payload: {}
                 });
                 if (typeof props.onInsert === 'function') {
                     props.onInsert();
@@ -338,6 +338,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
     class TagBuilder extends React.Component<PluginInterfaces.TagHelper.ViewProps, TagHelperModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = tagHelperModel.getState();
@@ -350,21 +352,21 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         componentDidMount() {
-            tagHelperModel.addChangeListener(this._changeListener);
+            this.modelSubscription = tagHelperModel.addListener(this._changeListener);
             dispatcher.dispatch({
-                actionType: 'TAGHELPER_GET_INITIAL_DATA',
-                props: {}
+                name: 'TAGHELPER_GET_INITIAL_DATA',
+                payload: {}
             });
         }
 
         componentWillUnmount() {
-            tagHelperModel.removeChangeListener(this._changeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         private checkboxHandler(lineIdx:number, value:string, checked:boolean) {
             dispatcher.dispatch({
-                actionType: 'TAGHELPER_CHECKBOX_CHANGED',
-                props: {
+                name: 'TAGHELPER_CHECKBOX_CHANGED',
+                payload: {
                     position: lineIdx,
                     value: value,
                     checked: checked

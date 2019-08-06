@@ -21,14 +21,15 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
-import {ActionDispatcher} from '../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import { MultiDict } from '../util';
 import {isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
         DynamicSubmenuItem} from '../models/mainMenu';
+import { Subscription } from 'rxjs';
 
 
 export interface MenuModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     mainMenuModel:Kontext.IMainMenuModel;
     asyncTaskModel:Kontext.IAsyncTaskModel;
@@ -173,8 +174,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: props.data.message,
-                props: props.data.args
+                name: props.data.message,
+                payload: props.data.args
             });
             props.closeActiveSubmenu();
         };
@@ -365,8 +366,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         _handleOkButtonClick(evt) {
             if (this.state.removeFinishedOnSubmit) {
                 dispatcher.dispatch({
-                    actionType: 'INBOX_CLEAR_FINISHED_TASKS',
-                    props: {}
+                    name: 'INBOX_CLEAR_FINISHED_TASKS',
+                    payload: {}
                 });
             }
             this._handleCloseClick();
@@ -428,6 +429,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     class MainMenu extends React.Component<MainMenuProps, MainMenuState> {
 
+        private modelSubscriptions:Array<Subscription>;
+
         constructor(props) {
             super(props);
             this._handleHoverChange = this._handleHoverChange.bind(this);
@@ -440,19 +443,20 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                 menuItems: mainMenuModel.getData(),
                 concArgs: mainMenuModel.getConcArgs()
             };
+            this.modelSubscriptions = [];
         }
 
         _handleHoverChange(ident, enable) {
             if (!enable) {
                 dispatcher.dispatch({
-                    actionType: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
-                    props: {value: ident}
+                    name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
+                    payload: {value: ident}
                 });
 
             } else {
                 dispatcher.dispatch({
-                    actionType: 'MAIN_MENU_SET_VISIBLE_SUBMENU',
-                    props: {value: ident}
+                    name: 'MAIN_MENU_SET_VISIBLE_SUBMENU',
+                    payload: {value: ident}
                 });
             }
         }
@@ -468,19 +472,20 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         componentDidMount() {
-            asyncTaskModel.addChangeListener(this._modelChangeListener);
-            mainMenuModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscriptions = [
+                asyncTaskModel.addListener(this._modelChangeListener),
+                mainMenuModel.addListener(this._modelChangeListener)
+            ];
         }
 
         componentWillUnmount() {
-            asyncTaskModel.removeChangeListener(this._modelChangeListener);
-            mainMenuModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscriptions.forEach(s => s.unsubscribe());
         }
 
         _closeActiveSubmenu() {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
-                props: {}
+                name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
+                payload: {}
             });
         }
 

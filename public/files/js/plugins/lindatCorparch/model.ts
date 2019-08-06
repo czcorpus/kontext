@@ -24,8 +24,8 @@ import {Kontext} from '../../types/common';
 import { StatefulModel } from '../../models/base';
 import { IPluginApi } from '../../types/plugins';
 import * as Immutable from 'immutable';
-import { Action } from '../../app/dispatcher';
 import RSVP from 'rsvp';
+import { Action } from 'kombo';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -148,34 +148,34 @@ export class TreeWidgetModel extends StatefulModel {
         };
         this.sortedCorplist = Immutable.List<Node>();
 
-        this.dispatcher.register(
+        this.dispatcher.registerActionListener(
             (action:Action) => {
-                switch (action.actionType) {
+                switch (action.name) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        this.toggleNodeActiveStatus(action.props['nodeId']);
-                        this.notifyChangeListeners();
+                        this.toggleNodeActiveStatus(action.payload['nodeId']);
+                        this.emitChange();
                         break;
                     case 'TREE_CORPARCH_EXPAND_ALL':
                         this.toggleAllNodesActiveStatus(true);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         break;
                     case 'TREE_CORPARCH_COLLAPSE_ALL':
                         this.toggleAllNodesActiveStatus(false);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         break;
                     case 'TREE_CORPARCH_GET_DATA':
                         this.loadData().then(
-                            (d) => this.notifyChangeListeners()
+                            (d) => this.emitChange()
 
                         ).catch(
                             (err) => {
                                 this.pluginApi.showMessage('error', err);
-                                this.notifyChangeListeners();
+                                this.emitChange();
                             }
                         );
                         break;
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
-                        this.corpusClickHandler(action.props['ident']);
+                        this.corpusClickHandler(action.payload['ident']);
                         break;
                     case 'TREE_CORPARCH_SEARCH':
                         break;

@@ -22,11 +22,11 @@ import {TextTypes} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 /**
@@ -185,7 +185,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, data:InitialData, selectedItems?:SelectedTextTypes) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, data:InitialData, selectedItems?:SelectedTextTypes) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data, selectedItems || {}));
         this.bibLabelAttr = data.bib_attr;
@@ -205,59 +205,59 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         this._isBusy = false;
         this.minimizedBoxes = Immutable.Map<string, boolean>(this.attributes.map(v => [v.name, false]));
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
-                    this.changeValueSelection(action.props['attrName'], action.props['itemIdx']);
+                    this.changeValueSelection(action.payload['attrName'], action.payload['itemIdx']);
                     break;
                 case 'TT_SELECT_ALL_CHECKBOX_CLICKED':
-                    this.applySelectAll(action.props['attrName']);
+                    this.applySelectAll(action.payload['attrName']);
                     break;
                 case 'TT_RANGE_BUTTON_CLICKED':
-                    this.applyRange(action.props['attrName'], action.props['fromVal'],
-                            action.props['toVal'], action.props['strictInterval'],
-                            action.props['keepCurrent']);
+                    this.applyRange(action.payload['attrName'], action.payload['fromVal'],
+                            action.payload['toVal'], action.payload['strictInterval'],
+                            action.payload['keepCurrent']);
                     break;
                 case 'TT_TOGGLE_RANGE_MODE':
-                    this.setRangeMode(action.props['attrName'], !this.getRangeModes().get(action.props['attrName']));
-                    this.notifyChangeListeners();
+                    this.setRangeMode(action.payload['attrName'], !this.getRangeModes().get(action.payload['attrName']));
+                    this.emitChange();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
                     this._isBusy = true;
-                    this.notifyChangeListeners();
-                    this.fetchExtendedInfo(action.props['attrName'], action.props['ident']).then(
+                    this.emitChange();
+                    this.fetchExtendedInfo(action.payload['attrName'], action.payload['ident']).then(
                         (v) => {
                             this._isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this._isBusy = false;
                             this.pluginApi.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                     break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    this.clearExtendedInfo(action.props['attrName'], action.props['ident']);
-                    this.notifyChangeListeners();
+                    this.clearExtendedInfo(action.payload['attrName'], action.payload['ident']);
+                    this.emitChange();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
-                    this.setTextInputAttrValue(action.props['attrName'], action.props['ident'],
-                            action.props['label'], action.props['append']);
-                    this.notifyChangeListeners();
+                    this.setTextInputAttrValue(action.payload['attrName'], action.payload['ident'],
+                            action.payload['label'], action.payload['append']);
+                    this.emitChange();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
-                    this.handleAttrTextInputChange(action.props['attrName'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.handleAttrTextInputChange(action.payload['attrName'], action.payload['value']);
+                    this.emitChange();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET':
-                    this.resetAutoComplete(action.props['attrName']);
-                    this.notifyChangeListeners();
+                    this.resetAutoComplete(action.payload['attrName']);
+                    this.emitChange();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
-                    this.handleAttrTextInputAutoCompleteRequest(action.props['attrName'], action.props['value']).then(
+                    this.handleAttrTextInputAutoCompleteRequest(action.payload['attrName'], action.payload['value']).then(
                         (v) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.pluginApi.showMessage('error', err);
@@ -267,18 +267,18 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     break;
                 case 'TT_MINIMIZE_ALL':
                     this.minimizedBoxes = this.minimizedBoxes.map((v, k) => true).toMap();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'TT_MAXIMIZE_ALL':
                     this.minimizedBoxes = this.minimizedBoxes.map((v, k) => false).toMap();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'TT_TOGGLE_MINIMIZE_ITEM':
                     this.minimizedBoxes = this.minimizedBoxes.set(
-                        action.props['ident'],
-                        !this.minimizedBoxes.get(action.props['ident'])
+                        action.payload['ident'],
+                        !this.minimizedBoxes.get(action.payload['ident'])
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });
@@ -524,7 +524,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         } else {
             throw new Error('no such attribute value: ' + attrIdent);
         }
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     // TODO move notify... out of the method
@@ -534,7 +534,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         prom.then(
             (newSelection:TextTypes.AttributeSelection) => {
                 this.selectionChangeListeners.forEach(fn => fn(this));
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             (err) => {
                 this.pluginApi.showMessage('error', err);
@@ -559,7 +559,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                 };
             }));
             this.selectionChangeListeners.forEach(fn => fn(this));
-            this.notifyChangeListeners();
+            this.emitChange();
         }
     }
 
@@ -662,14 +662,18 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
     filter(attrName:string, fn:(v:TextTypes.AttributeValue)=>boolean):void {
         const attr = this.getAttribute(attrName);
         const idx = this.attributes.indexOf(attr);
-        this.attributes = this.attributes.set(idx, attr.filter(fn));
+        if (idx > -1) {
+            this.attributes = this.attributes.set(idx, attr.filter(fn));
+        }
     }
 
     mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
         const attr = this.getAttribute(attrName);
         const idx = this.attributes.indexOf(attr);
-        const newAttr = attr.mapValues(mapFn);
-        this.attributes = this.attributes.set(idx, newAttr);
+        if (idx > -1) {
+            const newAttr = attr.mapValues(mapFn);
+            this.attributes = this.attributes.set(idx, newAttr);
+        }
     }
 
     setValues(attrName:string, values:Array<string>):void {

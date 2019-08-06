@@ -20,9 +20,10 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, KeyCodes} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
+import { Subscription } from 'rxjs';
 
 
 export interface RecentQueriesPageListProps {
@@ -48,7 +49,7 @@ export interface HistoryViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             queryHistoryModel:PluginInterfaces.QueryStorage.IModel):HistoryViews {
 
     const queryTypes = {
@@ -69,8 +70,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_SET_QUERY_TYPE',
-                props: {
+                name: 'QUERY_STORAGE_SET_QUERY_TYPE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -112,8 +113,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
-                props: {
+                name: 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
+                payload: {
                     value: !props.value
                 }
             });
@@ -130,8 +131,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
-                props: {
+                name: 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
+                payload: {
                     value: !props.value
                 }
             });
@@ -273,8 +274,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleEditClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
-                props: {
+                name: 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
+                payload: {
                     value: props.queryId
                 }
             });
@@ -282,8 +283,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleDoNotSaveClick = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_DO_NOT_ARCHIVE',
-                props: {
+                name: 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+                payload: {
                     queryId: props.queryId
                 }
             });
@@ -324,8 +325,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_EDITOR_SET_NAME',
-                props: {
+                name: 'QUERY_STORAGE_EDITOR_SET_NAME',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -333,15 +334,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmitClick = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
-                props: {}
+                name: 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
+                payload: {}
             });
         };
 
         const handleCloseClick = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
-                props: {}
+                name: 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
+                payload: {}
             });
         };
 
@@ -390,8 +391,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleFormClick = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_OPEN_QUERY_FORM',
-                props: {
+                name: 'QUERY_STORAGE_OPEN_QUERY_FORM',
+                payload: {
                     idx: props.data.idx
                 }
             });
@@ -447,8 +448,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_LOAD_MORE',
-                props: {}
+                name: 'QUERY_STORAGE_LOAD_MORE',
+                payload: {}
             });
         };
 
@@ -528,6 +529,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class RecentQueriesPageList extends React.Component<RecentQueriesPageListProps, RecentQueriesPageListState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -553,11 +556,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            queryHistoryModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = queryHistoryModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            queryHistoryModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

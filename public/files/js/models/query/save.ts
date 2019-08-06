@@ -18,13 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {StatelessModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import { Kontext } from '../../types/common';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
@@ -53,7 +51,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, queryId:string, concTTLDays:number,
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, queryId:string, concTTLDays:number,
             concExplicitPersistenceUI:boolean) {
         super(
             dispatcher,
@@ -73,10 +71,10 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     reduce(state:QuerySaveAsFormModelState, action:Action):QuerySaveAsFormModelState {
         const newState = this.copyState(state);
 
-        switch (action.actionType) {
+        switch (action.name) {
             case 'QUERY_SAVE_AS_FORM_SET_NAME':
                 newState.isValidated = false;
-                newState.name = action.props['value'];
+                newState.name = action.payload['value'];
             break;
             case 'QUERY_SAVE_AS_FORM_SUBMIT':
                 if (newState.name) {
@@ -102,7 +100,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             break;
             case 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE':
                 newState.isBusy = false;
-                newState.concIsArchived = action.props['isArchived'];
+                newState.concIsArchived = action.payload['isArchived'];
             break;
             case 'QUERY_MAKE_CONCORDANCE_PERMANENT':
                 newState.isBusy = true;
@@ -113,8 +111,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     this.layoutModel.showMessage('error', action.error);
 
                 } else {
-                    newState.concIsArchived = !action.props['revoked'];
-                    if (action.props['revoked']) {
+                    newState.concIsArchived = !action.payload['revoked'];
+                    if (action.payload['revoked']) {
                         this.layoutModel.showMessage('info',
                                         this.layoutModel.translate('concview__make_conc_link_permanent_revoked'));
                     } else {
@@ -130,7 +128,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     }
 
     sideEffects(state:QuerySaveAsFormModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'QUERY_SAVE_AS_FORM_SUBMIT':
                 if (!state.isValidated) {
                     this.layoutModel.showMessage('error',
@@ -141,15 +139,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                         () => {
                             this.layoutModel.resetMenuActiveItemAndNotify();
                             dispatch({
-                                actionType: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
-                                props: {}
+                                name: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
+                                payload: {}
                             });
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
                             dispatch({
-                                actionType: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
-                                props: {}
+                                name: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
+                                payload: {}
                             });
                         }
                     );
@@ -162,7 +160,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                         'archive_concordance',
                         [
                             ['code', state.queryId],
-                            ['revoke', action.props['revoke'] ? '1' : '0']
+                            ['revoke', action.payload['revoke'] ? '1' : '0']
                         ]
                     ),
                     {}
@@ -170,15 +168,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 ).then(
                     (data) => {
                         dispatch({
-                            actionType: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-                            props: {revoked: data.revoked}
+                            name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
+                            payload: {revoked: data.revoked}
                         });
 
                     },
                     (err) => {
                         dispatch({
-                            actionType: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-                            props: {},
+                            name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
+                            payload: {},
                             error: err
                         });
                     }
@@ -193,15 +191,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 ).then(
                     (data) => {
                         dispatch({
-                            actionType: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
-                            props: {isArchived: data.is_archived}
+                            name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
+                            payload: {isArchived: data.is_archived}
                         });
 
                     },
                     (err) => {
                         dispatch({
-                            actionType: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
-                            props: {},
+                            name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
+                            payload: {},
                             error: err
                         });
                     }

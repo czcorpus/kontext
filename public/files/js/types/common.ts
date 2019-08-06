@@ -19,7 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
+import { IEventEmitter } from 'kombo';
 import RSVP from 'rsvp';
 import {CoreViews} from './coreViews';
 
@@ -134,26 +134,14 @@ export namespace Kontext {
     }
 
     /**
-     * A stateful model's interface to interact with React components.
-     */
-    export interface EventEmitter {
-
-        addChangeListener(fn:()=>void):void;
-
-        removeChangeListener(fn:()=>void):void;
-
-        notifyChangeListeners(eventType?:string, error?:Error):void;
-    }
-
-    /**
      * managing access to a user information
      */
-    export interface IUserInfoModel extends EventEmitter {
+    export interface IUserInfoModel extends IEventEmitter {
         getCredentials():UserCredentials;
         loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
     }
 
-    export interface ICorpusInfoModel extends EventEmitter {
+    export interface ICorpusInfoModel extends IEventEmitter {
         getCurrentInfoData():any; // TODO
         isLoading():boolean;
     }
@@ -162,7 +150,7 @@ export namespace Kontext {
      * handling state of server-asynchronous
      * tasks.
      */
-    export interface IAsyncTaskModel extends EventEmitter {
+    export interface IAsyncTaskModel extends IEventEmitter {
 
         registerTask(task:Kontext.AsyncTaskInfo):void;
 
@@ -235,7 +223,7 @@ export namespace Kontext {
      * menu item.
      *
      */
-    export interface IMainMenuModel extends EventEmitter {
+    export interface IMainMenuModel extends IEventEmitter {
 
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
@@ -384,7 +372,7 @@ export namespace Kontext {
     }
 
     export interface AjaxResponse {
-        messages:Array<string>;
+        messages:Array<[string, string]>;
     }
 
     export interface AjaxConcResponse extends AjaxResponse {
@@ -682,7 +670,7 @@ export namespace ViewOptions {
         widectx_globals:Array<[string, string]>;
     }
 
-    export interface ICorpViewOptionsModel extends Kontext.EventEmitter {
+    export interface ICorpViewOptionsModel extends IEventEmitter {
         getCorpusIdent():Kontext.FullCorpusIdent;
         initFromPageData(data:PageData):void;
         loadData():RSVP.Promise<PageData>;
@@ -704,7 +692,7 @@ export namespace ViewOptions {
         getCorpusUsesRTLText():boolean;
     }
 
-    export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
+    export interface IGeneralViewOptionsModel extends IEventEmitter {
         getPageSize():Kontext.FormValue<string>;
         getNewCtxSize():Kontext.FormValue<string>;
         getLineNumbers():boolean;
@@ -928,7 +916,7 @@ export namespace TextTypes {
     /**
      *
      */
-    export interface ITextTypesModel extends Kontext.EventEmitter, IAdHocSubcorpusDetector {
+    export interface ITextTypesModel extends IEventEmitter, IAdHocSubcorpusDetector {
 
         applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
 
@@ -1119,7 +1107,7 @@ export namespace TextTypes {
         hasSelectionSteps():boolean;
         setControlsEnabled(v:boolean):void;
         reset():void;
-        notifyChangeListeners():void;
+        emitChange():void;
     }
 
     export type ExportedSelection = {[attr:string]:Array<string>};
@@ -1152,3 +1140,5 @@ export namespace KeyCodes {
                 code === LEFT_ARROW || code === RIGHT_ARROW;
     }
 }
+
+export const typedProps = <T>(props) => <T>props;

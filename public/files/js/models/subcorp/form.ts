@@ -23,10 +23,10 @@ import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {TextTypesModel} from '../../models/textTypes/main';
 import {InputMode} from './common';
 import RSVP from 'rsvp';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 export class SubcorpFormModel extends StatefulModel {
@@ -49,7 +49,7 @@ export class SubcorpFormModel extends StatefulModel {
 
     private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, textTypesModel:TextTypesModel, corpname:string,
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, textTypesModel:TextTypesModel, corpname:string,
             inputMode:InputMode, alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
         super(dispatcher);
         this.pageModel = pageModel;
@@ -62,45 +62,45 @@ export class SubcorpFormModel extends StatefulModel {
         this.description = {value: '', isRequired: false, isInvalid: false};
         this.isBusy = false;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
-                    this.inputMode = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.inputMode = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SET_SUBCNAME':
-                    this.subcname = Kontext.updateFormValue(this.subcname, {value: action.props['value']});
-                    this.notifyChangeListeners();
+                    this.subcname = Kontext.updateFormValue(this.subcname, {value: action.payload['value']});
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC':
-                    this.isPublic = action.props['value'];
+                    this.isPublic = action.payload['value'];
                     this.description = Kontext.updateFormValue(this.description, {isRequired: this.isPublic});
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SET_DESCRIPTION':
-                    this.description = Kontext.updateFormValue(this.description, {value: action.props['value']});
-                    this.notifyChangeListeners();
+                    this.description = Kontext.updateFormValue(this.description, {value: action.payload['value']});
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SUBMIT':
                     if (this.inputMode === InputMode.GUI) {
                         this.isBusy = true;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         this.submit().then(
                             () => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
                             },
                             (err) => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.pageModel.showMessage('error', err);
                             }
                         );
 
                     } else if (this.inputMode === InputMode.RAW) {
                         this.validateForm(false);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
             }

@@ -23,12 +23,10 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import * as Rx from '@reactivex/rxjs';
 import RSVP from 'rsvp';
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
 import {CoreViews} from '../types/coreViews';
-import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
 import {init as commonViewsFactory, CommonViews} from '../views/common';
 import {init as menuViewsFactory} from '../views/menu';
@@ -50,6 +48,8 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
+import { IActionDispatcher, ActionDispatcher } from 'kombo';
+import { Observable } from 'rxjs';
 
 declare var require:any; // webpack's require
 require('styles/layout.less');
@@ -87,7 +87,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     /**
      * Action Dispatcher
      */
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
 
     /**
      * Local user settings
@@ -270,7 +270,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         return this.appNavig.ajax(method, url, args, options);
     }
 
-    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Rx.Observable<T> {
+    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
         return this.appNavig.ajax$(method, url, args, options);
     }
 
@@ -290,8 +290,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         };
 
         this.dispatcher.dispatch({
-            actionType: 'INBOX_ADD_ASYNC_TASK',
-            props: {
+            name: 'INBOX_ADD_ASYNC_TASK',
+            payload: {
                 ident: taskId,
                 label: filename,
                 category: type
@@ -300,8 +300,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         this.appNavig.bgDownload(filename, url, method(), args).then(
             () => {
                 this.dispatcher.dispatch({
-                    actionType: 'INBOX_UPDATE_ASYNC_TASK',
-                    props: {
+                    name: 'INBOX_UPDATE_ASYNC_TASK',
+                    payload: {
                         ident: taskId,
                         status: AsyncTaskStatus.SUCCESS
                     }
@@ -309,8 +309,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
             },
             (err) => {
                 this.dispatcher.dispatch({
-                    actionType: 'INBOX_UPDATE_ASYNC_TASK',
-                    props: {
+                    name: 'INBOX_UPDATE_ASYNC_TASK',
+                    payload: {
                         ident: taskId,
                         status: AsyncTaskStatus.FAILURE
                     }
@@ -319,10 +319,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         );
     }
 
-    dispatchSideEffect(actionType:string, props:Kontext.GeneralProps):void {
+    dispatchSideEffect(name:string, props:Kontext.GeneralProps):void {
         this.dispatcher.dispatch({
-            actionType: actionType,
-            props: props,
+            name: name,
+            payload: props,
             isSideEffect: true
         });
     }
@@ -359,8 +359,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
         (this.getConf<Array<[string, string]>>('notifications') || []).forEach((msg) => {
             this.dispatcher.dispatch({
-                actionType: 'MESSAGE_ADD',
-                props: {
+                name: 'MESSAGE_ADD',
+                payload: {
                     messageType: msg[0],
                     messageText: msg[1]
                 }
@@ -381,7 +381,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     showMessage(msgType:string, message:any):void {
 
-        const fetchJsonError = (message:XMLHttpRequest|Rx.AjaxError) => {
+        const fetchJsonError = (message:XMLHttpRequest) => {
             const respObj = message.response || {};
             if (respObj['error_code']) {
                 return this.translate(respObj['error_code'], respObj['error_args'] || {});
@@ -390,7 +390,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 return respObj['messages'].join(', ');
 
             } else {
-                return `${message.status}: ${message instanceof Rx.AjaxError ? message.message : message.statusText}`;
+                return `${message.status}: ${message.statusText}`;
             }
         };
 
@@ -415,14 +415,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                     break;
                 }
 
-            } else if (message instanceof Rx.AjaxError) {
-                if (message.responseType === 'json') {
-                    outMsg = fetchJsonError(message);
-
-                } else {
-                    outMsg = message.message;
-                }
-
             } else if (message instanceof Error) {
                 outMsg = message.message || this.translate('global__unknown_error');
 
@@ -434,8 +426,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
             outMsg = `${message}`;
         }
         this.dispatcher.dispatch({
-            actionType: 'MESSAGE_ADD',
-            props: {
+            name: 'MESSAGE_ADD',
+            payload: {
                 messageType: msgType,
                 messageText: outMsg
             }
@@ -722,8 +714,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     restoreModelsDataAfterSwitch():void {
         this.appNavig.forEachCorpSwitchSerializedItem((key, data) => {
             this.dispatcher.dispatch({
-                actionType: 'CORPUS_SWITCH_MODEL_RESTORE',
-                props: {
+                name: 'CORPUS_SWITCH_MODEL_RESTORE',
+                payload: {
                     key: key,
                     data: data,
                     prevCorpora: this.appNavig.getSwitchCorpPreviousCorpora(),
@@ -980,7 +972,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
     }
 
-    ajax$<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):Rx.Observable<T> {
+    ajax$<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):Observable<T> {
         return this.pageModel.ajax$.call(this.pageModel, method, url, args, options);
     }
 

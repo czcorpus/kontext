@@ -21,9 +21,10 @@
 import {Kontext} from '../../types/common';
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 
 import {Freq2DFormModel, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
+import { Subscription } from 'rxjs';
 
 
 interface CTFreqFormProps {
@@ -53,7 +54,7 @@ interface ExportedComponents {
 
 
 export function init(
-    dispatcher:ActionDispatcher,
+    dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     ctFreqFormModel:Freq2DFormModel):ExportedComponents {
 
@@ -70,8 +71,8 @@ export function init(
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_FORM_SET_MIN_FREQ',
-                props: {
+                name: 'FREQ_CT_FORM_SET_MIN_FREQ',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -79,8 +80,8 @@ export function init(
 
         const handleTypeChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE',
-                props: {value: evt.target.value}
+                name: 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -116,8 +117,8 @@ export function init(
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_FORM_SET_CTX',
-                props: {
+                name: 'FREQ_CT_FORM_SET_CTX',
+                payload: {
                     dim: props.dim,
                     value: parseInt(evt.target.value, 10)
                 }
@@ -142,8 +143,8 @@ export function init(
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_FORM_SET_ALIGN_TYPE',
-                props: {
+                name: 'FREQ_CT_FORM_SET_ALIGN_TYPE',
+                payload: {
                     dim: props.dim,
                     value: evt.target.value
                 }
@@ -161,6 +162,8 @@ export function init(
     // -------------------- <CTFreqForm /> --------------------------------------------
 
     class CTFreqForm extends React.Component<CTFreqFormProps, CTFreqFormState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -195,11 +198,11 @@ export function init(
         }
 
         componentDidMount() {
-            ctFreqFormModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = ctFreqFormModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            ctFreqFormModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _modelChangeHandler() {
@@ -208,8 +211,8 @@ export function init(
 
         _handleAttrSelChange(dimension, evt) {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
-                props: {
+                name: 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
+                payload: {
                     dimension: dimension,
                     value: evt.target.value
                 }

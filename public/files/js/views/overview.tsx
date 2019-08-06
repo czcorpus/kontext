@@ -19,9 +19,10 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../types/common';
 import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo } from '../models/common/layout';
+import { Subscription } from 'rxjs';
 
 
 export interface OverviewAreaProps {
@@ -47,7 +48,7 @@ export interface OverviewViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             corpusInfoModel:Kontext.ICorpusInfoModel):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
@@ -395,6 +396,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -415,17 +418,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleCloseClick() {
             dispatcher.dispatch({
-                actionType: 'OVERVIEW_CLOSE',
-                props: {}
+                name: 'OVERVIEW_CLOSE',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            corpusInfoModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = corpusInfoModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            corpusInfoModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderInfo() {

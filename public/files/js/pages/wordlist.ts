@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Rx from '@reactivex/rxjs';
+import { Observable, interval as rxInterval } from 'rxjs';
 import {Kontext} from '../types/common';
 import {PageModel, DownloadType} from '../app/main';
 import {MultiDict} from '../util';
@@ -29,6 +29,7 @@ import {StatefulModel} from '../models/base';
 import {WordlistResultModel, ResultItem} from '../models/wordlist/main';
 import {WordlistFormModel, WordlistModelInitialArgs} from '../models/wordlist/form';
 import {WordlistSaveModel} from '../models/wordlist/save';
+import { concatMap, scan, takeWhile, last } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -65,7 +66,7 @@ export class WordlistPage extends StatefulModel  {
         this.layoutModel = layoutModel;
     }
 
-    private startWatching():Rx.Observable<AsyncProcessStatus> {
+    private startWatching():Observable<AsyncProcessStatus> {
         const args = new MultiDict([
             ['corpname', this.layoutModel.getCorpusIdent().id],
             ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
@@ -75,15 +76,15 @@ export class WordlistPage extends StatefulModel  {
             args.add('worker_tasks', taskId);
         });
 
-        return Rx.Observable.interval(WordlistPage.STATUS_CHECK_INTERVAL)
-            .concatMap((v, i) => {
+        return rxInterval(WordlistPage.STATUS_CHECK_INTERVAL).pipe(
+            concatMap((v, i) => {
                 return this.layoutModel.ajax$<AsyncProcessResponse>(
                     'GET',
                     this.layoutModel.createActionUrl('wordlist/process'),
                     args
                 );
-            })
-            .scan(
+            }),
+            scan(
                 (acc:AsyncProcessStatus, v:AsyncProcessResponse, i:number) => {
                     if (v.status === acc.status) {
                         if (acc.numUnchanged + 1 >= WordlistPage.MAX_NUM_NO_CHANGE ||
@@ -103,9 +104,10 @@ export class WordlistPage extends StatefulModel  {
                     }
                 },
                 {status: 0, numUnchanged: 0}
-        )
-        .takeWhile(
-            (resp) => resp.status < 100 || resp.numUnchanged < 1
+            ),
+            takeWhile(
+                (resp) => resp.status < 100 || resp.numUnchanged < 1
+            )
         );
     }
 
@@ -143,12 +145,12 @@ export class WordlistPage extends StatefulModel  {
                     updateStream.subscribe(
                         (data) => {
                             this.layoutModel.dispatcher.dispatch({
-                                actionType: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                                props: data
+                                name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                                payload: data
                             });
                         }
                     );
-                    updateStream.last().subscribe(
+                    updateStream.pipe(last()).subscribe(
                         (data) => {
                             if (data.status === 100) {
                                 window.location.href = this.layoutModel.createActionUrl(
@@ -158,8 +160,8 @@ export class WordlistPage extends StatefulModel  {
 
                             } else {
                                 this.layoutModel.dispatcher.dispatch({
-                                    actionType: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                                    props: data,
+                                    name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                                    payload: data,
                                     error: new Error(this.layoutModel.translate('global__bg_calculation_failed'))
                                 });
                                 this.layoutModel.showMessage(
@@ -174,8 +176,8 @@ export class WordlistPage extends StatefulModel  {
                                 this.layoutModel.translate('global__bg_calculation_failed')
                             );
                             this.layoutModel.dispatcher.dispatch({
-                                actionType: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                                props: data,
+                                name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                                payload: data,
                                 error: err
                             });
                             console.error(err);

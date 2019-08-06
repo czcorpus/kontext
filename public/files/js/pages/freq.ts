@@ -399,7 +399,7 @@ class FreqPage {
                 // the 'view' action with additional information (encoded in
                 // the fragment part of the URL) which form should be opened
                 // once the 'view' page is loaded
-                mainMenuModel.addChangeListener(() => {
+                mainMenuModel.addListener(() => {
                     const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
                     switch (activeItem.actionName) {
                         case 'MAIN_MENU_SHOW_FILTER':

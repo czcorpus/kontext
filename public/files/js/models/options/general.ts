@@ -23,8 +23,8 @@ import {StatefulModel, validateGzNumber} from '../base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
+import { IActionDispatcher, Action } from 'kombo';
 
 
 interface ViewOptsResponse extends Kontext.AjaxResponse {
@@ -81,68 +81,68 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsModel)=>void>;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, userIsAnonymous:boolean) {
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, userIsAnonymous:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.userIsAnonymous = userIsAnonymous;
         this.submitResponseHandlers = Immutable.List<()=>void>();
         this.isBusy = false;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE':
-                    this.pageSize.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.pageSize.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE':
-                    this.newCtxSize.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.newCtxSize.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS':
-                    this.lineNumbers = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.lineNumbers = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE':
-                    this.shuffle = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.shuffle = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR':
-                    this.useCQLEditor = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.useCQLEditor = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE':
-                    this.wlpagesize.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.wlpagesize.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS':
-                    this.fmaxitems.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.fmaxitems.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE':
-                    this.citemsperpage.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.citemsperpage.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SUBMIT':
                     const err = this.validateForm();
                     if (!err) {
                         this.isBusy = true;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         this.submit().then(
                             () => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.submitResponseHandlers.forEach(fn => fn(this));
                             },
                             (err) => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.layoutModel.showMessage('error', err);
                             }
                         );
 
                     } else {
                         this.layoutModel.showMessage('error', err);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
 
                 break;

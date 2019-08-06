@@ -20,9 +20,10 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {CollFormModel, CollFormModelState} from '../../models/coll/collForm';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface CollFormProps {
@@ -35,7 +36,7 @@ export interface FormsViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, collFormModel:CollFormModel):FormsViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, collFormModel:CollFormModel):FormsViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -49,8 +50,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CATTR',
-                props: {
+                name: 'COLL_FORM_SET_CATTR',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -75,8 +76,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleFromValChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CFROMW',
-                props: {
+                name: 'COLL_FORM_SET_CFROMW',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -84,8 +85,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleToValChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CTOW',
-                props: {
+                name: 'COLL_FORM_SET_CTOW',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -115,8 +116,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CMINFREQ',
-                props: {
+                name: 'COLL_FORM_SET_CMINFREQ',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -139,8 +140,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CMINBGR',
-                props: {
+                name: 'COLL_FORM_SET_CMINBGR',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -186,8 +187,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleDisplayCheckboxClick = (value) => (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CBGRFNS',
-                props: {
+                name: 'COLL_FORM_SET_CBGRFNS',
+                payload: {
                     value: value
                 }
             });
@@ -196,8 +197,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleCheckboxClick = (value) => (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SET_CSORTFN',
-                props: {
+                name: 'COLL_FORM_SET_CSORTFN',
+                payload: {
                     value: value
                 }
             });
@@ -251,23 +252,25 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
             this.state = collFormModel.getState();
         }
 
+        private modelSubscription:Subscription;
+
         _modelChangeListener(state:CollFormModelState) {
             this.setState(state);
         }
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'COLL_FORM_SUBMIT',
-                props: {}
+                name: 'COLL_FORM_SUBMIT',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            collFormModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscription = collFormModel.addListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            collFormModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

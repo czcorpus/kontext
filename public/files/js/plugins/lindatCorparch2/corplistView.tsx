@@ -18,12 +18,13 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
 import { CorplistItem } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
 import { CorpusInfoType } from '../../models/common/layout';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface CorplistTableProps {
@@ -62,7 +63,7 @@ export interface CorplistViews {
 }
 
 export interface CorplistViewModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
     listModel:CorplistTableModel;
@@ -99,8 +100,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'LIST_STAR_CLICKED',
-                props: {
+                name: 'LIST_STAR_CLICKED',
+                payload: {
                     corpusId: props.corpusId,
                     favId: props.favId
                 }
@@ -212,8 +213,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const linkClickHandler = () => {
             dispatcher.dispatch({
-                actionType: 'EXPANSION_CLICKED',
-                props: {
+                name: 'EXPANSION_CLICKED',
+                payload: {
                     offset: props.offset
                 }
             });
@@ -231,6 +232,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -245,8 +248,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         _detailClickHandler(corpusId) {
             dispatcher.dispatch({
-                actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
-                props: {
+                name: 'CORPARCH_CORPUS_INFO_REQUIRED',
+                payload: {
                     corpusId: corpusId
                 }
             });
@@ -254,17 +257,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         _detailCloseHandler() {
             dispatcher.dispatch({
-                actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
-                props: {}
+                name: 'CORPARCH_CORPUS_INFO_CLOSED',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            listModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            listModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderDetailBox() {
@@ -283,7 +286,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 return null;
             }
         }
-        
+
         render() {
             let rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
@@ -321,8 +324,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const handleClick = (e) => {
             e.preventDefault();
             dispatcher.dispatch({
-                actionType: 'KEYWORD_CLICKED',
-                props: {
+                name: 'KEYWORD_CLICKED',
+                payload: {
                     keyword: props.keyword,
                     status: true,
                     ctrlKey: e.ctrlKey || e.metaKey
@@ -354,8 +357,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const handleClickFn = (active) => (e) => {
             e.preventDefault();
             dispatcher.dispatch({
-                actionType: 'KEYWORD_CLICKED',
-                props: {
+                name: 'KEYWORD_CLICKED',
+                payload: {
                     keyword: props.keyword.ident,
                     status: active,
                     ctrlKey: e.ctrlKey || e.metaKey
@@ -395,8 +398,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const handleClick = (e) => {
             e.preventDefault();
             dispatcher.dispatch({
-                actionType: 'KEYWORD_RESET_CLICKED',
-                props: {}
+                name: 'KEYWORD_RESET_CLICKED',
+                payload: {}
             });
         };
 
@@ -449,8 +452,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const changeHandler = (e) => {
             dispatcher.dispatch({
-                actionType: 'FILTER_CHANGED',
-                props: {minSize: e.target.value}
+                name: 'FILTER_CHANGED',
+                payload: {minSize: e.target.value}
             });
         };
 
@@ -471,8 +474,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const changeHandler = (e) => {
             dispatcher.dispatch({
-                actionType: 'FILTER_CHANGED',
-                props: {maxSize: e.target.value}
+                name: 'FILTER_CHANGED',
+                payload: {maxSize: e.target.value}
             });
         };
 
@@ -504,10 +507,10 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             const value = e.target.checked ? "size" : "name";
             this.setState({
               sortBySize: !this.state.sortBySize
-            }); 
+            });
             dispatcher.dispatch({
-                actionType: 'FILTER_CHANGED',
-                props: {sortBySize: value}
+                name: 'FILTER_CHANGED',
+                payload: {sortBySize: value}
             });
         };
 
@@ -540,8 +543,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             }
             this._timer = window.setTimeout(((value) => () => {
                 dispatcher.dispatch({
-                    actionType: 'FILTER_CHANGED',
-                    props: {corpusName: value}
+                    name: 'FILTER_CHANGED',
+                    payload: {corpusName: value}
                 });
                 window.clearTimeout(this._timer);
             })(e.target.value), 300);
@@ -623,6 +626,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     class FilterForm extends React.Component<FilterFormProps, CorplistTableModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -634,11 +639,11 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         componentDidMount() {
-            listModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            listModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderLoader() {

@@ -24,7 +24,8 @@ import {Kontext} from '../../types/common';
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {TextTypesDistModel, FreqItem, FreqBlock} from '../../models/concordance/ttDistModel';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface TextTypesProps {
@@ -45,7 +46,7 @@ export interface TtOverviewViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, ttDistModel:TextTypesDistModel):TtOverviewViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, ttDistModel:TextTypesDistModel):TtOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -88,15 +89,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         const handleLimitRemove = () => {
             dispatcher.dispatch({
-                actionType: 'REMOVE_CHART_ITEMS_LIMIT',
-                props: {}
+                name: 'REMOVE_CHART_ITEMS_LIMIT',
+                payload: {}
             });
         };
 
         const handleLimitRestore = () => {
             dispatcher.dispatch({
-                actionType: 'RESTORE_CHART_ITEMS_LIMIT',
-                props: {}
+                name: 'RESTORE_CHART_ITEMS_LIMIT',
+                payload: {}
             });
         };
 
@@ -133,6 +134,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
      */
     class TextTypesDist extends React.Component<TextTypesProps, TextTypesState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props:TextTypesProps) {
             super(props);
             this.state = this._fetchModelState();
@@ -156,16 +159,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         componentDidMount() {
-            ttDistModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = ttDistModel.addListener(this._handleModelChange);
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-                props: {}
+                name: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+                payload: {}
             });
 
         }
 
         componentWillUnmount() {
-            ttDistModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

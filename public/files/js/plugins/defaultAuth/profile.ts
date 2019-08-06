@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Rx from '@reactivex/rxjs';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {IPluginApi} from '../../types/plugins';
-import {StatelessModel} from '../../models/base';
 import {MultiDict} from '../../util';
+import { concatMap } from 'rxjs/operators';
 
 
 export enum Actions {
@@ -73,8 +73,7 @@ interface PasswordSetResponse extends Kontext.AjaxResponse {
         curr_passwd:boolean;
         new_passwd:boolean;
         new_passwd2:boolean;
-    },
-    messages:Array<string>;
+    }
 }
 
 interface UsernameAvailResponse extends Kontext.AjaxResponse {
@@ -109,7 +108,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
 
     private pluginApi:IPluginApi;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials,
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials,
             message:string) {
         super(
             dispatcher,
@@ -135,37 +134,37 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
 
     reduce(state:UserProfileState, action:Action):UserProfileState {
         let newState:UserProfileState;
-        switch (action.actionType) {
+        switch (action.name) {
             case Actions.SET_CURR_PASSWD:
                 newState = this.copyState(state);
-                newState.currPasswd = Kontext.updateFormValue(newState.currPasswd, {value: action.props['value']});
+                newState.currPasswd = Kontext.updateFormValue(newState.currPasswd, {value: action.payload['value']});
             break;
             case Actions.SET_NEW_PASSWD:
                 newState = this.copyState(state);
-                newState.newPasswd = Kontext.updateFormValue(newState.newPasswd, {value: action.props['value']});
+                newState.newPasswd = Kontext.updateFormValue(newState.newPasswd, {value: action.payload['value']});
             break;
             case Actions.SET_NEW_PASSWD2:
                 newState = this.copyState(state);
-                newState.newPasswd2 = Kontext.updateFormValue(newState.newPasswd2, {value: action.props['value']});
+                newState.newPasswd2 = Kontext.updateFormValue(newState.newPasswd2, {value: action.payload['value']});
             break;
             case Actions.SET_USERNAME:
                 newState = this.copyState(state);
-                newState.username = Kontext.updateFormValue(newState.username, {value: action.props['value']});
+                newState.username = Kontext.updateFormValue(newState.username, {value: action.payload['value']});
             break;
             case Actions.SET_FIRSTNAME:
                 newState = this.copyState(state);
-                newState.firstName = Kontext.updateFormValue(newState.firstName, {value: action.props['value']});
+                newState.firstName = Kontext.updateFormValue(newState.firstName, {value: action.payload['value']});
             break;
             case Actions.SET_LASTNAME:
                 newState = this.copyState(state);
-                newState.lastName = Kontext.updateFormValue(newState.lastName, {value: action.props['value']});
+                newState.lastName = Kontext.updateFormValue(newState.lastName, {value: action.payload['value']});
             break;
             case Actions.SET_EMAIL:
                 newState = this.copyState(state);
-                newState.email = Kontext.updateFormValue(newState.email, {value: action.props['value']});
+                newState.email = Kontext.updateFormValue(newState.email, {value: action.payload['value']});
             break;
             case Actions.SUBMIT_NEW_PASSWORD_DONE:
-                const validStatus = action.props['validationStatus'] as ValidationStatus;
+                const validStatus = action.payload['validationStatus'] as ValidationStatus;
                 newState = this.copyState(state);
                 if (action.error) {
                     if (!validStatus.currPasswd) {
@@ -199,8 +198,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             break;
             case Actions.CHECK_USERNAME_DONE:
                 newState = this.copyState(state);
-                newState.usernameAvail = action.props['available'];
-                newState.username.isInvalid = !action.props['valid'];
+                newState.usernameAvail = action.payload['available'];
+                newState.username.isInvalid = !action.payload['valid'];
                 newState.usernameAvailBusy = false;
             break;
             case Actions.SUBMIT_SIGN_UP:
@@ -212,7 +211,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 newState.isBusy = false;
                 if (action.error) {
                     newState.usernameAvail = UsernameAvailability.UNKNOWN;
-                    const data = action.props['errors'] as Immutable.Map<string, string>;
+                    const data = action.payload['errors'] as Immutable.Map<string, string>;
                     if (data.has('username')) {
                         newState.username.isInvalid = true;
                         newState.username.errorDesc = data.get('username');
@@ -284,14 +283,14 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
     }
 
     sideEffects(state:UserProfileState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.actionType) {
+        switch (action.name) {
             case Actions.SUBMIT_NEW_PASSWORD:
                 this.submitNewPassword(state).subscribe(
                     (validationStatus) => {
                         if (validationStatusHasErrors(validationStatus)) {
                             dispatch({
-                                actionType: Actions.SUBMIT_NEW_PASSWORD_DONE,
-                                props: {
+                                name: Actions.SUBMIT_NEW_PASSWORD_DONE,
+                                payload: {
                                     validationStatus: validationStatus
                                 },
                                 error: new Error()
@@ -300,8 +299,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
 
                         } else {
                             dispatch({
-                                actionType: Actions.SUBMIT_NEW_PASSWORD_DONE,
-                                props: {
+                                name: Actions.SUBMIT_NEW_PASSWORD_DONE,
+                                payload: {
                                     validationStatus: validationStatus
                                 }
                             });
@@ -313,8 +312,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         this.pluginApi.showMessage('error', err);
                         console.error(err);
                         dispatch({
-                            actionType: Actions.SUBMIT_NEW_PASSWORD_DONE,
-                            props: {},
+                            name: Actions.SUBMIT_NEW_PASSWORD_DONE,
+                            payload: {},
                             error: err
                         });
                     }
@@ -330,8 +329,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 ).subscribe(
                     (resp) => {
                         dispatch({
-                            actionType: Actions.CHECK_USERNAME_DONE,
-                            props: {
+                            name: Actions.CHECK_USERNAME_DONE,
+                            payload: {
                                 available: resp.available ? UsernameAvailability.AVAILABLE : UsernameAvailability.NOT_AVAILABLE,
                                 valid: resp.valid
                             }
@@ -339,8 +338,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     },
                     (err) => {
                         dispatch({
-                            actionType: Actions.CHECK_USERNAME_DONE,
-                            props: {
+                            name: Actions.CHECK_USERNAME_DONE,
+                            payload: {
                                 status: UsernameAvailability.UNKNOWN
                             },
                             error: err
@@ -363,14 +362,14 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 ).subscribe(
                     (resp) => {
                         dispatch({
-                            actionType: Actions.SUBMIT_SIGN_UP_DONE,
-                            props: {}
+                            name: Actions.SUBMIT_SIGN_UP_DONE,
+                            payload: {}
                         });
                     },
-                    (err:Rx.AjaxError) => {
+                    (err) => {
                         dispatch({
-                            actionType: Actions.SUBMIT_SIGN_UP_DONE,
-                            props: {
+                            name: Actions.SUBMIT_SIGN_UP_DONE,
+                            payload: {
                                 errors: Immutable.Map<string, string>(err.response['error_args'])
                             },
                             error: err
@@ -386,7 +385,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         }
     }
 
-    private submitNewPassword(state:UserProfileState):Rx.Observable<ValidationStatus> {
+    private submitNewPassword(state:UserProfileState):Observable<ValidationStatus> {
         const args = new MultiDict();
         args.set('curr_passwd', state.currPasswd.value);
         args.set('new_passwd', state.newPasswd.value);
@@ -397,15 +396,17 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             this.pluginApi.createActionUrl('user/set_user_password'),
             args
 
-        ).concatMap(
-            (resp) => {
-                const ans = newValidationStatus();
-                ans.currPasswd = resp.fields.curr_passwd;
-                ans.newPasswd = resp.fields.new_passwd;
-                ans.newPasswd2 = resp.fields.new_passwd2;
-                ans.messages = resp.messages.splice(0);
-                return Rx.Observable.of(ans);
-            }
+        ).pipe(
+            concatMap(
+                (resp) => {
+                    const ans = newValidationStatus();
+                    ans.currPasswd = resp.fields.curr_passwd;
+                    ans.newPasswd = resp.fields.new_passwd;
+                    ans.newPasswd2 = resp.fields.new_passwd2;
+                    ans.messages = resp.messages.splice(0);
+                    return rxOf(ans);
+                }
+            )
         );
     }
 }

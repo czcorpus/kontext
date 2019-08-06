@@ -20,12 +20,11 @@ import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatelessModel} from '../../models/base';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
 import { init } from '../../views/query/input';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -120,7 +119,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
      *
      * @param pluginApi
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData, preselectedKeywords:Array<string>) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData, preselectedKeywords:Array<string>) {
         super(
             dispatcher,
             {
@@ -141,14 +140,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
     reduce(state:CorplistTableModelState, action:Action):CorplistTableModelState {
         const newState = this.copyState(state);
-        switch (action.actionType) {
+        switch (action.name) {
             case 'LOAD_DATA_DONE':
                 newState.isBusy = false;
                 if (action.error) {
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    this.importData(newState, action.props['data']);
+                    this.importData(newState, action.payload['data']);
                 }
             break;
             case 'LOAD_EXPANSION_DATA_DONE':
@@ -157,12 +156,12 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    this.extendData(newState, action.props['data']);
+                    this.extendData(newState, action.payload['data']);
                 }
             break;
             case 'KEYWORD_CLICKED': {
                 newState.offset = 0;
-                if (!action.props['ctrlKey']) {
+                if (!action.payload['ctrlKey']) {
                     newState.keywords = newState.keywords.map(v => ({
                         ident: v.ident,
                         label: v.label,
@@ -171,7 +170,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                         selected: false
                     })).toList();
                 }
-                const idx = newState.keywords.findIndex(v => v.ident === action.props['keyword']);
+                const idx = newState.keywords.findIndex(v => v.ident === action.payload['keyword']);
                 const v = newState.keywords.get(idx);
                 newState.keywords = newState.keywords.set(idx, {
                     ident: v.ident,
@@ -195,18 +194,18 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 newState.isBusy = true;
             break;
             case 'EXPANSION_CLICKED':
-                if (action.props['offset']) {
-                    newState.offset = action.props['offset'];
+                if (action.payload['offset']) {
+                    newState.offset = action.payload['offset'];
                 }
                 newState.isBusy = true;
             break;
             case 'FILTER_CHANGED':
                 newState.offset = 0;
-                if (action.props.hasOwnProperty('corpusName')) {
-                    newState.searchedCorpName = action.props['corpusName'];
-                    delete action.props['corpusName']; // TODO no mutations
+                if (action.payload.hasOwnProperty('corpusName')) {
+                    newState.searchedCorpName = action.payload['corpusName'];
+                    delete action.payload['corpusName']; // TODO no mutations
                 }
-                this.updateFilter(newState, action.props as Filters);
+                this.updateFilter(newState, action.payload as Filters);
                 newState.isBusy = true;
             break;
             case 'LIST_STAR_CLICKED':
@@ -218,7 +217,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    this.pluginApi.showMessage('info', action.props['message']);
+                    this.pluginApi.showMessage('info', action.payload['message']);
                 }
             break;
             case 'CORPARCH_CORPUS_INFO_REQUIRED':
@@ -231,7 +230,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    newState.detailData = action.props as CorpusInfo;
+                    newState.detailData = action.payload as CorpusInfo;
                 }
             break;
             case 'CORPARCH_CORPUS_INFO_CLOSED':
@@ -244,7 +243,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     }
 
     sideEffects(state:CorplistTableModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'KEYWORD_CLICKED':
             case 'KEYWORD_RESET_CLICKED':
             case 'FILTER_CHANGED':
@@ -252,15 +251,15 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                         state.offset).then(
                     (data) => {
                         dispatch({
-                            actionType: 'LOAD_DATA_DONE',
-                            props: {data: data}
+                            name: 'LOAD_DATA_DONE',
+                            payload: {data: data}
                         });
                     },
                     (err) => {
                         dispatch({
-                            actionType: 'LOAD_DATA_DONE',
+                            name: 'LOAD_DATA_DONE',
                             error: err,
-                            props: {}
+                            payload: {}
                         });
                     }
                 );
@@ -270,48 +269,48 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                         state.offset).then(
                     (data) => {
                         dispatch({
-                            actionType: 'LOAD_EXPANSION_DATA_DONE',
-                            props: {data: data}
+                            name: 'LOAD_EXPANSION_DATA_DONE',
+                            payload: {data: data}
                         });
                     },
                     (err) => {
                         dispatch({
-                            actionType: 'LOAD_EXPANSION_DATA_DONE',
+                            name: 'LOAD_EXPANSION_DATA_DONE',
                             error: err,
-                            props: {}
+                            payload: {}
                         });
                     }
                 );
             break;
             case 'LIST_STAR_CLICKED':
-                this.changeFavStatus(state, action.props['corpusId'], action.props['favId']).then(
+                this.changeFavStatus(state, action.payload['corpusId'], action.payload['favId']).then(
                     (message) => {
                         dispatch({
-                            actionType: 'LIST_STAR_CLICKED_DONE',
-                            props: {message: message}
+                            name: 'LIST_STAR_CLICKED_DONE',
+                            payload: {message: message}
                         });
                     },
                     (err) => {
                         dispatch({
-                            actionType: 'LIST_STAR_CLICKED_DONE',
-                            props: {},
+                            name: 'LIST_STAR_CLICKED_DONE',
+                            payload: {},
                             error: err
                         });
                     }
                 );
             break;
             case 'CORPARCH_CORPUS_INFO_REQUIRED':
-                this.loadCorpusInfo(action.props['corpusId']).then(
+                this.loadCorpusInfo(action.payload['corpusId']).then(
                     (data) => {
                         dispatch({
-                            actionType: 'CORPARCH_CORPUS_INFO_LOADED',
-                            props: {...data, type: CorpusInfoType.CORPUS}
+                            name: 'CORPARCH_CORPUS_INFO_LOADED',
+                            payload: {...data, type: CorpusInfoType.CORPUS}
                         });
                     },
                     (err) => {
                         dispatch({
-                            actionType: 'CORPARCH_CORPUS_INFO_LOADED',
-                            props: {},
+                            name: 'CORPARCH_CORPUS_INFO_LOADED',
+                            payload: {},
                             error: err
                         });
                     }

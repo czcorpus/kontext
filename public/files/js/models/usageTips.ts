@@ -19,8 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import { StatelessModel } from './base';
-import { ActionDispatcher, Action } from '../app/dispatcher';
+import { StatelessModel, IActionDispatcher, Action } from 'kombo';
 
 
 
@@ -61,7 +60,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
 
     private translatorFn:(s:string)=>string;
 
-    constructor(dispatcher:ActionDispatcher, translatorFn:(s:string)=>string) {
+    constructor(dispatcher:IActionDispatcher, translatorFn:(s:string)=>string) {
         const pointers = Immutable.Map<UsageTipCategory, number>([
             UsageTipCategory.CONCORDANCE,
             UsageTipCategory.QUERY
@@ -95,7 +94,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
 
     reduce(state:UsageTipsState, action:Action):UsageTipsState {
         let newState:UsageTipsState;
-        switch (action.actionType) {
+        switch (action.name) {
             case 'NEXT_QUERY_HINT':
                 newState = this.copyState(state);
                 this.setNextHint(newState, UsageTipCategory.QUERY);

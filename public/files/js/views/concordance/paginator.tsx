@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, KeyCodes} from '../../types/common';
 import {ConcLineModel} from '../../models/concordance/lines';
+import { Subscription } from 'rxjs';
 
 
 export interface PaginatorProps {
@@ -47,7 +47,7 @@ export interface PaginatorViews {
 
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -66,8 +66,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
                 props.clickHandler();
             }
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_CHANGE_PAGE',
-                props: {
+                name: 'CONCORDANCE_CHANGE_PAGE',
+                payload: {
                     action: 'customPage',
                     pageNum: Number(event.currentTarget.value)
                 }
@@ -103,8 +103,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
                 props.clickHandler(evt);
             }
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_CHANGE_PAGE',
-                props: {
+                name: 'CONCORDANCE_CHANGE_PAGE',
+                payload: {
                     action: props.action
                 }
             });
@@ -221,6 +221,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
     class Paginator extends React.Component<PaginatorProps, PaginatorState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeListener = this._modelChangeListener.bind(this);
@@ -265,8 +267,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
             if (evt.keyCode === KeyCodes.ENTER) {
                this._navigActionHandler();
                 dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_CHANGE_PAGE',
-                    props: {
+                    name: 'CONCORDANCE_CHANGE_PAGE',
+                    payload: {
                         action: 'customPage',
                         pageNum: this.state.currentPageInput
                     }
@@ -277,11 +279,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscription = lineModel.addListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

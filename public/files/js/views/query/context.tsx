@@ -25,9 +25,10 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import { QueryContextModel } from '../../models/query/context';
+import { Subscription } from 'rxjs';
 
 
 export interface SpecifyContextFormProps {
@@ -43,7 +44,7 @@ export interface ContextViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             queryContextModel:QueryContextModel):ContextViews {
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
@@ -56,8 +57,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const changeHandler = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
-                props: {
+                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                payload: {
                     name: props.inputName,
                     value: evt.target.value
                 }
@@ -86,7 +87,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const changeHandler = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
                 props : {
                     name: evt.target.name,
                     value: evt.target.value
@@ -166,8 +167,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
-                props: {
+                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                payload: {
                     name: evt.target.name,
                     value: evt.target.value
                 }
@@ -215,8 +216,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
-                props: {
+                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                payload: {
                     name: evt.target.name,
                     value: evt.target.value
                 }
@@ -228,8 +229,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 .filter.call(evt.target.options, item => item.selected)
                 .map(item => item.value);
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
-                props: {
+                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                payload: {
                     name: evt.target.name,
                     value: values
                 }
@@ -276,6 +277,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class SpecifyContextForm extends React.Component<SpecifyContextFormProps, {data: Immutable.Map<string, any>}> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -289,11 +292,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            queryContextModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = queryContextModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            queryContextModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

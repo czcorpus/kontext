@@ -19,10 +19,11 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import { ConcSaveModel } from '../../models/concordance/save';
+import { Subscription } from 'rxjs';
 
 
 export interface ConcSaveFormProps {
@@ -44,7 +45,7 @@ export interface SaveViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, concSaveModel:ConcSaveModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, concSaveModel:ConcSaveModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -57,8 +58,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
-                props: {
+                name: 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -90,8 +91,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SAVE_FORM_SET_HEADING',
-                props: {value: !props.value}
+                name: 'CONCORDANCE_SAVE_FORM_SET_HEADING',
+                payload: {value: !props.value}
             });
         }
 
@@ -120,8 +121,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS',
-                props: {value: !props.value}
+                name: 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS',
+                payload: {value: !props.value}
             });
         };
 
@@ -150,8 +151,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
-                props: {value: !props.value}
+                name: 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
+                payload: {value: !props.value}
             });
         };
 
@@ -181,8 +182,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
-                props: {
+                name: 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -190,8 +191,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         const handleToInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SAVE_FORM_SET_TO_LINE',
-                props: {
+                name: 'CONCORDANCE_SAVE_FORM_SET_TO_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -225,6 +226,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
     class ConcSaveForm extends React.Component<ConcSaveFormProps, ConcSaveFormState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -251,17 +254,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         _handleCloseClick() {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
-                props: {}
+                name: 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            concSaveModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = concSaveModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            concSaveModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderFormatDependentOptions() {
@@ -282,8 +285,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, c
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SUBMIT',
-                props: {}
+                name: 'COLL_SAVE_FORM_SUBMIT',
+                payload: {}
             });
         }
 

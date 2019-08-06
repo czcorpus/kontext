@@ -17,14 +17,16 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
-import { CorplistItemUcnk } from './common';
+import { corplistItemIsUcnk } from './common';
 import { CorplistTableModel, CorplistTableModelState } from './corplist';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
+import { CorplistItem } from '../defaultCorparch/common';
 
 export interface ViewModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorpusInfoBox;
     listModel:CorplistTableModel;
@@ -74,8 +76,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
 
         _submitHandler() {
             dispatcher.dispatch({
-                actionType: 'CORPUS_ACCESS_REQ_SUBMITTED',
-                props: {
+                name: 'CORPUS_ACCESS_REQ_SUBMITTED',
+                payload: {
                     corpusId: this.props.corpusId,
                     corpusName: this.props.corpusName,
                     customMessage: this.state.customMessage
@@ -230,7 +232,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
      * A single dataset row
      */
     const CorplistRow:React.SFC<{
-        row:CorplistItemUcnk;
+        row:CorplistItem;
         enableUserActions:boolean;
         userIsAnonymous:boolean;
         detailClickHandler:(corpusId:string)=>void;
@@ -250,7 +252,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         let corpLink;
 
         if (props.enableUserActions) {
-            if (props.row.requestable) {
+            if (corplistItemIsUcnk(props.row) && props.row.requestable) {
                 corpLink = <span className="inaccessible">{props.row.name}</span>;
                 userAction = <LockIcon isUnlockable={props.row.requestable}
                                     corpusId={props.row.id}
@@ -295,6 +297,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
      */
     class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -309,8 +313,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
 
         _detailClickHandler(corpusId) {
             dispatcher.dispatch({
-                actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
-                props: {
+                name: 'CORPARCH_CORPUS_INFO_REQUIRED',
+                payload: {
                     corpusId: corpusId
                 }
             });
@@ -320,17 +324,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             const newState = he.cloneState(this.state);
             this.setState(newState);
             dispatcher.dispatch({
-                actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
-                props: {}
+                name: 'CORPARCH_CORPUS_INFO_CLOSED',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            listModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            listModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderDetailBox() {
@@ -394,8 +398,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
 
         const linkClickHandler = () => {
             dispatcher.dispatch({
-                actionType: 'EXPANSION_CLICKED',
-                props: {
+                name: 'EXPANSION_CLICKED',
+                payload: {
                     offset: props.offset
                 }
             });

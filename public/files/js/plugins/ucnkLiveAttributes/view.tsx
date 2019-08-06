@@ -20,15 +20,16 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, TextTypes} from '../../types/common';
 import {LiveAttrsModel, SelectionStep} from './models';
 import { PluginInterfaces } from '../../types/plugins';
 import {init as ttViewInit} from '../../views/textTypes';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface ViewModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     SubcmixerComponent:PluginInterfaces.SubcMixer.View;
     textTypesModel:TextTypes.ITextTypesModel;
@@ -221,6 +222,9 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         canUndoRefine:boolean;
     }> {
 
+        private ttModelSubscription:Subscription;
+        private vaModelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -239,8 +243,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                 newState.isLoading = true;
                 this.setState(newState);
                 dispatcher.dispatch({
-                    actionType: actionMap[action],
-                    props: {}
+                    name: actionMap[action],
+                    payload: {}
                 });
             }
         }
@@ -260,13 +264,13 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         }
 
         componentDidMount() {
-            textTypesModel.addChangeListener(this._changeHandler);
-            liveAttrsModel.addChangeListener(this._changeHandler);
+            this.ttModelSubscription = textTypesModel.addListener(this._changeHandler);
+            this.vaModelSubscription = liveAttrsModel.addListener(this._changeHandler);
         }
 
         componentWillUnmount() {
-            textTypesModel.removeChangeListener(this._changeHandler);
-            liveAttrsModel.removeChangeListener(this._changeHandler);
+            this.ttModelSubscription.unsubscribe();
+            this.vaModelSubscription.unsubscribe();
         }
 
         _widgetIsActive() {
@@ -309,8 +313,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
         const clickHandler = () => {
             dispatcher.dispatch({
-                actionType: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
-                props: {
+                name: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
+                payload: {
                     idx: props.itemIdx
                 }
             });
@@ -337,6 +341,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -359,11 +365,11 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         }
 
         componentDidMount() {
-            liveAttrsModel.addChangeListener(this._changeHandler);
+            this.modelSubscription = liveAttrsModel.addListener(this._changeHandler);
         }
 
         componentWillUnmount() {
-            liveAttrsModel.removeChangeListener(this._changeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderHint() {
@@ -377,8 +383,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
         _handleMinIconClick() {
             dispatcher.dispatch({
-                actionType: 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
-                props: {}
+                name: 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
+                payload: {}
             });
         }
 

@@ -23,10 +23,10 @@ import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {availConfLevels} from './confIntervalCalc';
 import {sortAttrVals, isStructAttr, Freq2DFormModel, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities, roundFloat} from './ctFreqForm';
+import { IActionDispatcher } from 'kombo';
 
 /**
  * This type represents a single data item containing
@@ -105,7 +105,7 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
 
     private adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
         this.pageModel = pageModel;

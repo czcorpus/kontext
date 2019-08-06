@@ -95,8 +95,8 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
         this.store.reset();
     }
 
-    notifyChangeListeners():void {
-        this.store.notifyChangeListeners();
+    emitChange():void {
+        this.store.emitChange();
     }
 }
 

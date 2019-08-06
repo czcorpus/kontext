@@ -22,7 +22,8 @@ import * as React from 'react';
 import {Kontext} from '../../../types/common';
 import {MultiDict} from '../../../util';
 import {UserStatusModel} from '../init';
-import {ActionDispatcher} from '../../../app/dispatcher';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface UserPaneViews {
@@ -37,7 +38,7 @@ export interface UserPaneState {
 /**
  *
  */
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             userModel:UserStatusModel):UserPaneViews {
 
     const layoutViews = he.getLayoutViews();
@@ -125,6 +126,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class UserPane extends React.Component<{isAnonymous:string; fullname:string}, UserPaneState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this.fetchModelState();
@@ -148,8 +151,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleLoginClick():void {
             dispatcher.dispatch({
-                actionType: 'USER_SHOW_LOGIN_DIALOG',
-                props: {
+                name: 'USER_SHOW_LOGIN_DIALOG',
+                payload: {
                     returnUrl: window.location.href
                 }
             });
@@ -157,15 +160,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleFormClose():void {
             dispatcher.dispatch({
-                actionType: 'USER_HIDE_LOGIN_DIALOG',
-                props: {}
+                name: 'USER_HIDE_LOGIN_DIALOG',
+                payload: {}
             });
         }
 
         private handleLogoutClick():void {
             dispatcher.dispatch({
-                actionType: 'USER_LOGOUTX',
-                props: {}
+                name: 'USER_LOGOUTX',
+                payload: {}
             });
         }
 
@@ -174,11 +177,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount():void {
-            userModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = userModel.addListener(this.handleModelChange);
         }
 
         componentWillUnmount():void {
-            userModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render():React.ReactElement<{}> {

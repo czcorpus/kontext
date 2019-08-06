@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpty } from 'rxjs';
+import { take, concatMap } from 'rxjs/operators';
 import {Kontext} from '../../types/common';
-import {StatelessModel, StatefulModel} from '../base';
+import {StatefulModel} from '../base';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import {IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import {puid} from '../../util';
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
 
 
 export interface MessageModelState {
@@ -46,9 +46,9 @@ export class MessageModel extends StatelessModel<MessageModelState> {
 
     private static TIME_FADEOUT = 300;
 
-    private timerSubsc:Rx.Subscription;
+    private timerSubsc:Subscription;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, autoRemoveMessages:boolean) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, autoRemoveMessages:boolean) {
         super(
             dispatcher,
             {messages: Immutable.List<Kontext.UserNotification>()}
@@ -59,13 +59,13 @@ export class MessageModel extends StatelessModel<MessageModelState> {
 
     reduce(state:MessageModelState, action:Action):MessageModelState {
         let newState;
-        switch (action.actionType) {
+        switch (action.name) {
             case 'MESSAGE_ADD':
                 newState = this.copyState(state);
                 this.addMessage(
                     newState,
-                    action.props['messageType'],
-                    action.props['messageText']
+                    action.payload['messageType'],
+                    action.payload['messageText']
                 )
             break;
             case 'MESSAGE_DECREASE_TTL':
@@ -82,7 +82,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
             break;
             case 'MESSAGE_CLOSED':
                 newState = this.copyState(state);
-                this.removeMessage(newState, action.props['messageId']);
+                this.removeMessage(newState, action.payload['messageId']);
             break;
             default:
                 newState = state;
@@ -91,19 +91,19 @@ export class MessageModel extends StatelessModel<MessageModelState> {
     }
 
     sideEffects(state:MessageModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'MESSAGE_ADD':
                 if (this.autoRemoveMessages) {
-                    const ticksWait = this.calcMessageTTL(action.props['messageType']) / MessageModel.TIME_TICK;
+                    const ticksWait = this.calcMessageTTL(action.payload['messageType']) / MessageModel.TIME_TICK;
                     const ticksFadeOut = MessageModel.TIME_FADEOUT / MessageModel.TIME_TICK;
                     if (this.timerSubsc) {
                         this.timerSubsc.unsubscribe();
                     }
-                    const src = Rx.Observable.timer(0, MessageModel.TIME_TICK).take(ticksWait + ticksFadeOut);
+                    const src = rxTimer(0, MessageModel.TIME_TICK).pipe(take(ticksWait + ticksFadeOut));
                     this.timerSubsc = src.subscribe((x) => {
                         dispatch({
-                            actionType: 'MESSAGE_DECREASE_TTL',
-                            props: {}
+                            name: 'MESSAGE_DECREASE_TTL',
+                            payload: {}
                         });
                     });
                 }
@@ -226,80 +226,80 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
     isWaiting:boolean = false;
 
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'OVERVIEW_CLOSE':
                     this.currentInfoType = null;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'OVERVIEW_CORPUS_INFO_REQUIRED':
                     this.isWaiting = true;
-                    this.notifyChangeListeners();
-                    this.loadCorpusInfo(action.props['corpusId']).subscribe(
+                    this.emitChange();
+                    this.loadCorpusInfo(action.payload['corpusId']).subscribe(
                         null,
                         (err) => {
                             this.isWaiting = false;
                             this.pluginApi.showMessage('error', err);
                         },
                         () => {
-                            this.currentCorpus = action.props['corpusId'];
+                            this.currentCorpus = action.payload['corpusId'];
                             this.currentInfoType = CorpusInfoType.CORPUS;
                             this.isWaiting = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                     )
                     break;
                     case 'OVERVIEW_SHOW_CITATION_INFO':
                         this.isWaiting = true;
-                        this.notifyChangeListeners();
-                        this.loadCorpusInfo(action.props['corpusId']).subscribe(
+                        this.emitChange();
+                        this.loadCorpusInfo(action.payload['corpusId']).subscribe(
                             null,
                             (err) => {
                                 this.isWaiting = false;
                                 this.pluginApi.showMessage('error', err);
                             },
                             () => {
-                                this.currentCorpus = action.props['corpusId'];
+                                this.currentCorpus = action.payload['corpusId'];
                                 this.currentInfoType = CorpusInfoType.CITATION;
                                 this.isWaiting = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                             },
                         );
                     break;
                     case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
                         this.isWaiting = true;
-                        this.notifyChangeListeners();
-                        this.loadSubcorpusInfo(action.props['corpusId'], action.props['subcorpusId']).subscribe(
+                        this.emitChange();
+                        this.loadSubcorpusInfo(action.payload['corpusId'], action.payload['subcorpusId']).subscribe(
                             null,
                             (err) => {
                                 this.isWaiting = false;
                                 this.pluginApi.showMessage('error', err);
                             },
                             () => {
-                                this.currentCorpus = action.props['corpusId'];
-                                this.currentSubcorpus = action.props['subcorpusId'];
+                                this.currentCorpus = action.payload['corpusId'];
+                                this.currentSubcorpus = action.payload['subcorpusId'];
                                 this.currentInfoType = CorpusInfoType.SUBCORPUS;
                                 this.isWaiting = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                             }
                         )
                     break;
                     case 'OVERVIEW_SHOW_KEY_SHORTCUTS':
                         this.currentInfoType = CorpusInfoType.KEY_SHORTCUTS;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     break;
             }
         });
     }
 
-    private loadCorpusInfo(corpusId:string):Rx.Observable<any> {
+    private loadCorpusInfo(corpusId:string):Observable<any> {
         if (this.corpusData && this.currentCorpus === corpusId) {
-            return Rx.Observable.of(this.corpusData);
+            return rxOf(this.corpusData);
 
         } else {
             return this.pluginApi.ajax$<CorpusInfoResponse>(
@@ -308,46 +308,52 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                 {
                     corpname: this.pluginApi.getCorpusIdent().id
                 }
-            ).concatMap(
-                (data) => {
-                    this.corpusData = data;
-                    this.currentCorpus = corpusId;
-                    return Rx.Observable.of(data);
-                }
+            ).pipe(
+                concatMap(
+                    (data) => {
+                        this.corpusData = data;
+                        this.currentCorpus = corpusId;
+                        return rxOf(data);
+                    }
+                )
             );
         }
     }
 
-    private loadSubcorpusInfo(corpusId:string, subcorpusId:string):Rx.Observable<any> {
+    private loadSubcorpusInfo(corpusId:string, subcorpusId:string):Observable<any> {
 
         const prom = corpusId !== this.currentCorpus ?
             this.loadCorpusInfo(corpusId) :
-            Rx.Observable.of(this.corpusData);
+            rxOf(this.corpusData);
 
         if (this.subcorpusData && this.currentSubcorpus === subcorpusId) {
-            return prom.concatMap((_) => Rx.Observable.of(this.subcorpusData));
+            return prom.pipe(concatMap((_) => rxOf(this.subcorpusData)));
 
         } else {
-            return prom.concatMap(
-                (data) => {
-                    return this.pluginApi.ajax$<SubcorpusInfoResponse>(
-                        'GET',
-                        this.pluginApi.createActionUrl('subcorpus/ajax_subcorp_info'),
-                        {
-                            'corpname': corpusId,
-                            'subcname': subcorpusId
-                        }
-                    ).concatMap(
-                        (data) => {
-                            if (!data.extended_info) {
-                                data.extended_info = {cql: '-'};
+            return prom.pipe(
+                concatMap(
+                    (data) => {
+                        return this.pluginApi.ajax$<SubcorpusInfoResponse>(
+                            'GET',
+                            this.pluginApi.createActionUrl('subcorpus/ajax_subcorp_info'),
+                            {
+                                'corpname': corpusId,
+                                'subcname': subcorpusId
                             }
-                            this.currentSubcorpus = subcorpusId;
-                            this.subcorpusData = data;
-                            return Rx.Observable.empty();
-                        }
-                    );
-                }
+                        ).pipe(
+                            concatMap(
+                                (data) => {
+                                    if (!data.extended_info) {
+                                        data.extended_info = {cql: '-'};
+                                    }
+                                    this.currentSubcorpus = subcorpusId;
+                                    this.subcorpusData = data;
+                                    return rxEmpty();
+                                }
+                            )
+                        );
+                    }
+                )
             );
         }
     }

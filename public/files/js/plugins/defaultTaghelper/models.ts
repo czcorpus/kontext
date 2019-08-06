@@ -17,10 +17,9 @@
  */
 
 import {IPluginApi} from '../../types/plugins';
-import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -93,7 +92,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     private pluginApi:IPluginApi;
 
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpname:string) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, corpname:string) {
         const positions = Immutable.List<PositionOptions>();
         super(
             dispatcher,
@@ -115,9 +114,9 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
 
     reduce(state:TagHelperModelState, action:Action):TagHelperModelState {
         const newState = this.copyState(state);
-        switch (action.actionType) {
+        switch (action.name) {
             case 'TAGHELPER_PRESET_PATTERN':
-                newState.presetPattern = action.props['pattern'];
+                newState.presetPattern = action.payload['pattern'];
                 if (newState.data.last().size > 0) {
                     this.applyPresetPattern(newState);
                 }
@@ -130,7 +129,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             case 'TAGHELPER_GET_INITIAL_DATA_DONE':
                 newState.isBusy = false;
                 if (!action.error) {
-                    this.importData(newState, action.props['labels'], action.props['tags']);
+                    this.importData(newState, action.payload['labels'], action.payload['tags']);
                     if (newState.presetPattern) {
                         this.applyPresetPattern(newState);
                     }
@@ -140,8 +139,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 }
             break;
             case 'TAGHELPER_CHECKBOX_CHANGED':
-                this.updateSelectedItem(newState, action.props['position'], action.props['value'],
-                        action.props['checked']);
+                this.updateSelectedItem(newState, action.payload['position'], action.payload['value'],
+                        action.payload['checked']);
                 newState.isBusy = true;
             break;
             case 'TAGHELPER_LOAD_FILTERED_DATA_DONE':
@@ -149,8 +148,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 if (!action.error) {
                     this.mergeData(
                         newState,
-                        action.props['tags'],
-                        action.props['triggerRow']
+                        action.payload['tags'],
+                        action.payload['triggerRow']
                     );
 
                 } else {
@@ -170,14 +169,14 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
     sideEffects(state:TagHelperModelState, action:Action, dispatch:SEDispatcher) {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
                 if (state.data.last().size === 0) {
                     this.loadInitialData(state).then(
                         (data) => {
                             dispatch({
-                                actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                props: {
+                                name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
+                                payload: {
                                     labels: data.labels,
                                     tags: data.tags
                                 }
@@ -186,8 +185,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                         },
                         (err) => {
                             dispatch({
-                                actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                props: {
+                                name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
+                                payload: {
                                     labels: [],
                                     tags: []
                                 },
@@ -198,20 +197,20 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 }
             break;
             case 'TAGHELPER_CHECKBOX_CHANGED':
-            this.updateData(state, action.props['position']).then(
+            this.updateData(state, action.payload['position']).then(
                 (data) => {
                     dispatch({
-                        actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
-                        props: {
+                        name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        payload: {
                             tags: data.tags,
-                            triggerRow: action.props['position']
+                            triggerRow: action.payload['position']
                         }
                     });
                 },
                 (err) => {
                     dispatch({
-                        actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
-                        props: {},
+                        name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        payload: {},
                         error: err
                     });
                 }

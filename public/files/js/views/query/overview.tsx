@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {init as saveViewInit} from './save';
 import {init as basicOverviewInit} from './basicOverview';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {IQueryReplayModel, QueryReplayModel, ExtendedQueryOperation} from '../../models/query/replay';
 import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
@@ -31,6 +31,7 @@ import {QueryFormLiteProps, QueryFormProps} from './first';
 import {FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
 import { PluginInterfaces } from '../../types/plugins';
 import {SortFormProps} from './sort';
+import { Subscription } from 'rxjs';
 
 /*
 Important note regarding variable naming conventions:
@@ -48,7 +49,7 @@ Operation key 'opKey' may or may not be available without additional AJAX reques
 
 
 export interface OverviewModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     viewDeps:{
         QueryFormView:React.ComponentClass<QueryFormLiteProps>;
@@ -181,8 +182,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const handleRadioInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_SET_STOP_AFTER_IDX',
-                props: {
+                name: 'QUERY_SET_STOP_AFTER_IDX',
+                payload: {
                     operationIdx: props.operationIdx,
                     value: evt.target.value === 'continue' ? null : props.operationIdx
                 }
@@ -410,6 +411,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         editIsLocked:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleEditClick = this._handleEditClick.bind(this);
@@ -429,8 +432,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         _handleEditClick(idx) {
             dispatcher.dispatch({
-                actionType: 'EDIT_QUERY_OPERATION',
-                props: {operationIdx: idx}
+                name: 'EDIT_QUERY_OPERATION',
+                payload: {operationIdx: idx}
             });
         }
 
@@ -461,11 +464,11 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         componentDidMount() {
-            queryReplayModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscription = queryReplayModel.addListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            queryReplayModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         _getEditorProps(opIdx, opId):AnyEditorProps {
@@ -483,8 +486,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     operationIdx: opIdx,
                     shuffleSubmitFn: () => {
                         dispatcher.dispatch({
-                            actionType: 'BRANCH_QUERY',
-                            props: {
+                            name: 'BRANCH_QUERY',
+                            payload: {
                                 operationIdx: opIdx
                             }
                         });
@@ -498,8 +501,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     opKey: null,
                     submitFn: () => {
                         dispatcher.dispatch({
-                            actionType: 'BRANCH_QUERY',
-                            props: {
+                            name: 'BRANCH_QUERY',
+                            payload: {
                                 operationIdx: opIdx
                             }
                         });
@@ -573,8 +576,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         const handleEditClickFn = (opIdx) => {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
-                    props: {
+                    name: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
+                    payload: {
                         operationIdx: opIdx
                     }
                 });
@@ -630,8 +633,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     }> = (props) => {
         const handleCloseClick = () => {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                props: {}
+                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                payload: {}
             });
         };
 
@@ -691,6 +694,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     class PersistentConcordanceForm extends React.Component<{}, QuerySaveAsFormModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = querySaveAsModel.getState();
@@ -701,22 +706,22 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         private handleCloseEvent() {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                props: {}
+                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                payload: {}
             });
         }
 
         private handleSubmit() {
             dispatcher.dispatch({
-                actionType: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-                props: {revoke: false}
+                name: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
+                payload: {revoke: false}
             });
         }
 
         private handleRevokeSubmit() {
             dispatcher.dispatch({
-                actionType: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-                props: {revoke: true}
+                name: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
+                payload: {revoke: true}
             });
         }
 
@@ -729,15 +734,15 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         componentDidMount() {
-            querySaveAsModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = querySaveAsModel.addListener(this.handleModelChange);
             dispatcher.dispatch({
-                actionType: 'QUERY_GET_CONC_ARCHIVED_STATUS',
-                props: {}
+                name: 'QUERY_GET_CONC_ARCHIVED_STATUS',
+                payload: {}
             });
         }
 
         componentWillUnmount() {
-            querySaveAsModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -789,6 +794,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     class QueryToolbar extends React.Component<QueryToolbarProps, QueryToolbarState>  {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._mainMenuModelChangeListener = this._mainMenuModelChangeListener.bind(this);
@@ -808,11 +815,11 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         componentDidMount() {
-            mainMenuModel.addChangeListener(this._mainMenuModelChangeListener);
+            this.modelSubscription = mainMenuModel.addListener(this._mainMenuModelChangeListener);
         }
 
         componentWillUnmount() {
-            mainMenuModel.removeChangeListener(this._mainMenuModelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderOperationForm() {
@@ -861,6 +868,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     class NonViewPageQueryToolbar extends React.Component<NonViewPageQueryToolbarProps, NonViewPageQueryToolbarState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -879,11 +888,11 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         componentDidMount() {
-            queryReplayModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = queryReplayModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            queryReplayModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

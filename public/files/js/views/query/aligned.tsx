@@ -18,18 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { of as rxOf } from 'rxjs';
 import * as React from 'react';
-import * as Rx from '@reactivex/rxjs';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {InputModuleViews} from './input';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {WidgetsMap} from '../../models/query/common';
 import {PluginInterfaces} from '../../types/plugins';
+import { IActionDispatcher } from 'kombo';
 
 
 export interface AlignedModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     inputViews:InputModuleViews;
 }
@@ -105,26 +105,26 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleCloseClick() {
-            dispatcher.insert(Rx.Observable.from([
+            dispatcher.dispatch(rxOf(
                 {
-                    actionType: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-                    props: {
+                    name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+                    payload: {
                         corpname: this.props.corpname
                     }
                 },
                 {   // additional action for dependent models
-                    actionType: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE',
-                    props: {
+                    name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE',
+                    payload: {
                         corpname: this.props.corpname
                     }
                 }
-            ]));
+            ));
         }
 
         handleMakeMainClick() {
             dispatcher.dispatch({
-                actionType: 'QUERY_MAKE_CORPUS_PRIMARY',
-                 props: {
+                name: 'QUERY_MAKE_CORPUS_PRIMARY',
+                 payload: {
                     corpname: this.props.corpname
                 }
             });
@@ -186,20 +186,20 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     const AlignedCorpora:React.SFC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
-            dispatcher.insert(Rx.Observable.from([
+            dispatcher.dispatch(rxOf(
                 {
-                    actionType: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-                    props: {
+                    name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+                    payload: {
                         corpname: evt.target.value
                     }
                 },
                 {   // action for dependent models
-                    actionType: 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE',
-                    props: {
+                    name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE',
+                    payload: {
                         corpname: evt.target.value
                     }
                 }
-            ]));
+            ));
         };
 
         const findCorpusLabel = (corpname) => {

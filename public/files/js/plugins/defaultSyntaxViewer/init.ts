@@ -20,14 +20,15 @@
 
 /// <reference path="./js-treex-view.d.ts" />
 
-import * as Rx from '@reactivex/rxjs';
+import { empty as rxEmpty } from 'rxjs';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
-import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
 const $ = require('jquery');
 import './js-treex-view';
+import { IActionDispatcher } from 'kombo';
+import { concatMap } from 'rxjs/operators';
 require('./style.less'); // webpack
 
 /**
@@ -47,7 +48,7 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
 
     private errorHandler:(e:Error)=>void;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
     }
@@ -76,7 +77,7 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {
         this.target = target;
         this.waitingStatus = true;
-        this.notifyChangeListeners();
+        this.emitChange();
 
         this.pluginApi.ajax$(
             'GET',
@@ -87,11 +88,13 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
                 kwic_len: kwicLength
             }
 
-        ).concatMap(
-            (data) => {
-                this.data = data;
-                return Rx.Observable.empty();
-            }
+        ).pipe(
+            concatMap(
+                (data) => {
+                    this.data = data;
+                    return rxEmpty();
+                }
+            )
         ).subscribe(
             null,
             (error) => {

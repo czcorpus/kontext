@@ -20,11 +20,12 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
+import { Subscription } from 'rxjs';
 
 export interface StructsAttrsModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
     viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
     mainMenuModel:Kontext.IMainMenuModel;
@@ -56,8 +57,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
-                props: {
+                name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
+                payload: {
                     idx: props.idx,
                     ident: props.n
                 }
@@ -122,8 +123,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
-                props: {
+                name: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
+                payload: {
                     value: event.target.value
                 }
             });
@@ -177,8 +178,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSelectAll = () => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
-                props: {}
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
+                payload: {}
             });
         };
 
@@ -249,8 +250,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleStructClick = (event) => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-                props: {
+                name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+                payload: {
                     structIdent: event.target.value,
                     structAttrIdent: null
                 }
@@ -260,8 +261,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         const handleStructAttrClickFn = (structIdent) => {
             return (attrIdent) => {
                 dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-                    props: {
+                    name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+                    payload: {
                         structIdent: structIdent,
                         structAttrIdent: attrIdent
                     }
@@ -333,8 +334,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         const handleCheckboxChangeFn = (idx) => {
             return (evt:React.ChangeEvent<{}>) => {
                 dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-                    props: {
+                    name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                    payload: {
                         idx: idx
                     }
                 });
@@ -343,8 +344,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSelectAll = (evt) => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
-                props: {}
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
+                payload: {}
             });
         };
 
@@ -376,8 +377,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSaveClick = () => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_SAVE_SETTINGS',
-                props: {}
+                name: 'VIEW_OPTIONS_SAVE_SETTINGS',
+                payload: {}
             });
         };
 
@@ -484,6 +485,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         corpusUsesRTLText:boolean;
     }> {
 
+        private modelSubscriptions:Array<Subscription>;
+
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
 
         constructor(props) {
@@ -491,6 +494,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleViewOptsModelChange = this._handleViewOptsModelChange.bind(this);
             this.state = this._fetchModelState();
+            this.modelSubscriptions = [];
         }
 
         _fetchModelState() {
@@ -536,13 +540,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
         }
 
         componentDidMount() {
-            mainMenuModel.addChangeListener(this._handleModelChange);
-            viewOptionsModel.addChangeListener(this._handleViewOptsModelChange);
+            this.modelSubscriptions = [
+                mainMenuModel.addListener(this._handleModelChange),
+                viewOptionsModel.addListener(this._handleViewOptsModelChange)
+            ];
         }
 
         componentWillUnmount() {
-            mainMenuModel.removeChangeListener(this._handleModelChange);
-            viewOptionsModel.removeChangeListener(this._handleViewOptsModelChange);
+            this.modelSubscriptions.forEach(s => s.unsubscribe);
         }
 
         render() {
