@@ -169,8 +169,8 @@ export class ViewPage {
     }
 
     private deserializeHashAction(v:string):Action {
-        const tmp = v.substr(1).split('/');
-        const args = tmp[1] ? new MultiDict(parseUrlArgs(tmp[1])) : undefined;
+        const tmp = (v || '').substr(1).split('/');
+        const args = new MultiDict(parseUrlArgs(tmp[1] || ''));
         return this.createFormAction(tmp[0], args);
     }
 
