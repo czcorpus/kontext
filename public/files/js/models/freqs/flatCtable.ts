@@ -26,7 +26,7 @@ import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  * En extended 2d freq. data item containing
@@ -76,7 +76,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
 
     private sortReversed:boolean;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.origData = Immutable.List<FreqDataItem>();

@@ -24,7 +24,7 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface SampleFormProperties {
@@ -50,7 +50,7 @@ export class ConcSampleModel extends StatefulModel {
 
     private rlinesValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:SampleFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SampleFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);

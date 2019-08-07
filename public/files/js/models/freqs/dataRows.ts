@@ -26,7 +26,7 @@ import RSVP from 'rsvp';
 import {FreqFormInputs} from './freqForms';
 import {FreqResultsSaveModel} from './save';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface ResultItem {
@@ -57,7 +57,7 @@ export interface ResultBlock {
 }
 
 export interface FreqDataRowsModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     pageModel:PageModel;
     freqCrit:Array<[string, string]>;
     formProps:FreqFormInputs;

@@ -22,7 +22,7 @@ import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpt
 import { take, concatMap } from 'rxjs/operators';
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl } from 'kombo';
 import {IPluginApi} from '../../types/plugins';
 import {puid} from '../../util';
 import * as Immutable from 'immutable';
@@ -226,7 +226,7 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
     isWaiting:boolean = false;
 
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;

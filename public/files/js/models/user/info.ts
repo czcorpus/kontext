@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import RSVP from 'rsvp';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  */
@@ -32,7 +32,7 @@ export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
 
     private userData:Kontext.UserCredentials;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.userData = null;

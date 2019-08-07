@@ -25,7 +25,7 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 import {ConcLineModel} from './lines';
-import { IActionDispatcher, Action } from 'kombo';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 export type TTCrit = Array<[string, string]>;
 
@@ -121,7 +121,7 @@ export class TextTypesDistModel extends StatefulModel {
 
     private maxBlockItems:number;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.concLineModel = concLineModel;

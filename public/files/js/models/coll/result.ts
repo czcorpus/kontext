@@ -26,7 +26,7 @@ import {PageModel} from '../../app/main';
 import {CollFormModel} from '../../models/coll/collForm';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface CollResultRow {
@@ -51,7 +51,7 @@ export interface AjaxResponse extends Kontext.AjaxResponse {
 
 
 export interface COllResultsSaveModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     mainModel:CollResultModel;
     quickSaveRowLimit:number;
@@ -326,7 +326,7 @@ class CalcWatchdog {
 
 
 export interface CollResulModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     formModel:CollFormModel;
     initialData:CollResultData;

@@ -31,7 +31,7 @@ import {ConcSampleModel} from './sample';
 import {SwitchMainCorpModel} from './switchmc';
 import {TextTypesModel} from '../textTypes/main';
 import {FirstHitsModel} from '../query/firstHits';
-import { IActionDispatcher, Action, IEventEmitter } from 'kombo';
+import { Action, IEventEmitter, IFullActionControl } from 'kombo';
 
 
 /*
@@ -172,7 +172,7 @@ export class QueryInfoModel extends UNSAFE_SynchronizedModel {
 
     protected pageModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
 
@@ -279,7 +279,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
 
     private _editIsLocked:boolean;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;
@@ -1105,7 +1105,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel implements IQueryRe
 
     private currQueryOverivew:Immutable.List<Kontext.QueryOperation>;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;

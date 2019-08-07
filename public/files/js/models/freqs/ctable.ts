@@ -28,7 +28,7 @@ import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  * A representation of 2D freq table.
@@ -191,7 +191,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         '#ffffff', '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties,
                 adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.d1Labels = Immutable.List<[string, boolean]>();

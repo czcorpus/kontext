@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export class FirstHitsModel extends StatefulModel {
@@ -33,7 +33,7 @@ export class FirstHitsModel extends StatefulModel {
     private docStructValues:Immutable.Map<string, string>;
 
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.docStructValues = Immutable.Map<string, string>();

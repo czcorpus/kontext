@@ -36,7 +36,7 @@ export interface TextTypesPanelProps {
 
 
 interface TextTypesPanelState {
-    attributes:Array<TextTypes.AttributeSelection>;
+    attributes:Immutable.List<TextTypes.AttributeSelection>;
     rangeModes:Immutable.Map<string, boolean>;
     minimized:Immutable.Map<string, boolean>;
     hasSomeMaximizedBoxes:boolean;
@@ -694,7 +694,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             this._helpCloseHandler = this._helpCloseHandler.bind(this);
             this.state = {
                 metaInfoHelpVisible: false,
-                hasExtendedInfo: textTypesModel.hasDefinedExtendedInfo(this.props.attrObj.name),
+                hasExtendedInfo: textTypesModel.getBibIdAttr() && textTypesModel.getBibLabelAttr() === this.props.attrObj.name,
                 metaInfo: textTypesModel.getAttrSummary().get(this.props.attrObj.name)
             };
         }

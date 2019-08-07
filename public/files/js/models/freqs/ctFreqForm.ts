@@ -23,7 +23,7 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
@@ -153,7 +153,7 @@ export class Freq2DFormModel extends StatefulModel {
 
     private ctxIndex2:number;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties,
             adhocSubcIdentifier:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
 

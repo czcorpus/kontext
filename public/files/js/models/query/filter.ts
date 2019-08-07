@@ -28,7 +28,7 @@ import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
 import {GeneralQueryFormProperties, QueryFormModel, appendQuery, WidgetsMap} from './common';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 /**
@@ -135,7 +135,7 @@ export class FilterFormModel extends QueryFormModel {
 
 
     constructor(
-            dispatcher:IActionDispatcher,
+            dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,

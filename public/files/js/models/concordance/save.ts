@@ -22,11 +22,11 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface ConcSaveModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     concSize:number;
     saveLinkFn:(filename:string, url:string)=>Promise<boolean>;

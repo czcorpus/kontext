@@ -25,7 +25,7 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 
 export interface SortFormProperties {
@@ -127,7 +127,7 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -303,7 +303,7 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);

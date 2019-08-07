@@ -30,7 +30,7 @@ import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
 import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
-import { IActionDispatcher } from 'kombo';
+import { IFullActionControl } from 'kombo';
 
 
 export interface QueryFormUserEntries {
@@ -180,7 +180,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     // ----------------------
 
     constructor(
-            dispatcher:IActionDispatcher,
+            dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,

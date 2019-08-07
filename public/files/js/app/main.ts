@@ -48,7 +48,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { IActionDispatcher, ActionDispatcher } from 'kombo';
+import { ActionDispatcher, ITranslator, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 
 declare var require:any; // webpack's require
@@ -71,7 +71,7 @@ export enum DownloadType {
  * on any KonText page before any of page's own functionalities are
  * inited/involved.
  */
-export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler, Kontext.IConfHandler {
+export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler, Kontext.IConfHandler, ITranslator {
 
     /**
      * KonText configuration (per-page dynamic object)
@@ -87,7 +87,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     /**
      * Action Dispatcher
      */
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
 
     /**
      * Local user settings

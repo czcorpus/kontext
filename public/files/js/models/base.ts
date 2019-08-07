@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../types/common';
-import { IEventEmitter, IActionDispatcher, Action } from 'kombo';
+import { IEventEmitter, Action, IFullActionControl } from 'kombo';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { share } from 'rxjs/operators';
 
@@ -32,7 +32,7 @@ import { share } from 'rxjs/operators';
  */
 export class StatefulModel implements IEventEmitter {
 
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
 
     private changeTicks:Subject<{}>;
 
@@ -40,7 +40,7 @@ export class StatefulModel implements IEventEmitter {
 
     public static CHANGE_EVENT:string = 'change';
 
-    constructor(dispatcher:IActionDispatcher) {
+    constructor(dispatcher:IFullActionControl) {
         this.dispatcher = dispatcher;
         this.changeTicks = new Subject();
         this.sharedTicks = this.changeTicks.pipe(share());
@@ -89,7 +89,7 @@ export class StatefulModel implements IEventEmitter {
  */
 export class UNSAFE_SynchronizedModel extends StatefulModel {
 
-    constructor(dispatcher:IActionDispatcher) {
+    constructor(dispatcher:IFullActionControl) {
         super(dispatcher);
     }
 

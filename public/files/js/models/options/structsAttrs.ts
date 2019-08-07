@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
 import RSVP from 'rsvp';
 import { MultiDict } from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.AttrViewMode => {
@@ -80,7 +80,7 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
 
     private corpusUsesRTLText:boolean;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             userIsAnonymous:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;

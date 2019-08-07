@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface SwitchMainCorpFormProperties {
@@ -49,7 +49,7 @@ export class SwitchMainCorpModel extends StatefulModel {
 
     private maincorpValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.maincorpValues = Immutable.Map<string, string>(data);

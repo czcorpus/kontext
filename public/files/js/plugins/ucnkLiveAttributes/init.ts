@@ -17,12 +17,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
-import {TextTypes} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TextTypesModel} from '../../models/textTypes/main';
 import liveAttrsModel = require('./models');
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {init as viewInit, Views} from './view';
 
@@ -32,13 +29,16 @@ require('./style.less'); // webpack
 
 export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
-    private store:liveAttrsModel.LiveAttrsModel;
+    private readonly model:liveAttrsModel.LiveAttrsModel;
 
-    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel) {
+    private readonly useAlignedCorpBox:boolean;
+
+    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel, useAlignedCorpBox:boolean) {
         this.pluginApi = pluginApi;
-        this.store = store;
+        this.model = store;
+        this.useAlignedCorpBox = useAlignedCorpBox;
     }
 
     getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
@@ -47,80 +47,72 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
             he: this.pluginApi.getComponentHelpers(),
             SubcmixerComponent: subcMixerView,
             textTypesModel: textTypesModel,
-            liveAttrsModel: this.store
+            liveAttrsModel: this.model
         });
-        if (!this.store.hasAvailableAlignedCorpora()) {
+        if (!this.useAlignedCorpBox) {
             views.LiveAttrsCustomTT = null;
         }
         return views;
     }
 
-    getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {
-        return this.store.getAutoCompleteTrigger();
-    }
-
     getTextInputPlaceholder():string {
-        return this.store.getTextInputPlaceholder();
+        return this.model.getTextInputPlaceholder();
     }
 
-    addUpdateListener(fn:()=>void):void {
-        this.store.addUpdateListener(fn);
-    }
-
-    removeUpdateListener(fn:()=>void):void {
-        this.store.removeUpdateListener(fn);
-    }
-
-    getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
-        return this.store.getAlignedCorpora();
-    }
-
-    selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean) {
-        this.store.selectLanguages(languages, notifyListeners);
-    }
-
-    hasSelectedLanguages():boolean {
-        return this.store.hasSelectedLanguages();
-    }
-
-    hasSelectionSteps():boolean {
-        return this.store.hasSelectionSteps();
-    }
-
-    setControlsEnabled(v:boolean):void {
-        this.store.setControlsEnabled(v);
-    }
-
-    reset():void {
-        this.store.reset();
-    }
-
-    emitChange():void {
-        this.store.emitChange();
-    }
 }
 
 
 /**
  * @param pluginApi KonText plugin-api provider
  * @param textTypesModel
- * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
- * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
 const create:PluginInterfaces.LiveAttributes.Factory = (
-        pluginApi, textTypesModel, isEnabled, selectedCorporaProvider, ttCheckStatusProvider, args) => {
+        pluginApi, textTypesModel, isEnabled, controlsAlignedCorpora, args) => {
+    const alignedCorpora = Immutable.List(args.availableAlignedCorpora
+        .map((item) => {
+            return {
+                value: item.n,
+                label: item.label,
+                selected: false,
+                locked: !controlsAlignedCorpora
+            };
+    }));
 
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),
         pluginApi,
-        textTypesModel,
-        isEnabled,
-        selectedCorporaProvider,
-        ttCheckStatusProvider,
-        args
+        {
+            selectionSteps: Immutable.List<liveAttrsModel.TTSelectionStep|liveAttrsModel.AlignedLangSelectionStep>([]),
+            lastRemovedStep: null,
+            alignedCorpora: alignedCorpora,
+            initialAlignedCorpora: alignedCorpora,
+            bibliographyAttribute: args.bibAttr,
+            bibliographyIds: Immutable.OrderedSet<string>(),
+            manualAlignCorporaMode: args.manualAlignCorporaMode,
+            controlsEnabled: args.refineEnabled,
+            isBusy: false,
+            isTTListMinimized: false,
+            isEnabled: isEnabled
+        },
+        controlsAlignedCorpora,
+        textTypesModel.exportSelections.bind(textTypesModel)
     );
-    return new LiveAttributesPlugin(pluginApi, store);
+
+    // we must capture (= decide whether they should really be passed to the action queue)
+    // as we have no control on how the action is triggered in a core KonText component
+    // (which we cannot modify as plug-in developers here).
+
+    pluginApi.dispatcher().captureAction(
+        'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+        _ => store.getState().selectionSteps.size === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
+    );
+    pluginApi.dispatcher().captureAction(
+        'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+        _ => store.getState().selectionSteps.size === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
+    );
+
+    return new LiveAttributesPlugin(pluginApi, store, alignedCorpora.size > 0);
 }
 
 export default create;

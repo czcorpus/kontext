@@ -21,11 +21,10 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext, TextTypes} from '../../types/common';
-import {LiveAttrsModel, SelectionStep} from './models';
+import {LiveAttrsModel, LiveAttrsModelState, TTSelectionStep, AlignedLangSelectionStep, isAlignedSelectionStep} from './models';
 import { PluginInterfaces } from '../../types/plugins';
 import {init as ttViewInit} from '../../views/textTypes';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, Bound } from 'kombo';
 
 
 export interface ViewModuleArgs {
@@ -36,15 +35,12 @@ export interface ViewModuleArgs {
     liveAttrsModel:LiveAttrsModel;
 }
 
-export interface LiveAttrsViewProps {
-}
-
 export interface LiveAttrsCustomTTProps {
 }
 
 export interface Views {
-    LiveAttrsView:React.ComponentClass<LiveAttrsViewProps>;
-    LiveAttrsCustomTT:React.ComponentClass<LiveAttrsCustomTTProps>;
+    LiveAttrsView:React.ComponentClass<{}, LiveAttrsModelState>;
+    LiveAttrsCustomTT:React.ComponentClass<{}, LiveAttrsModelState>;
 }
 
 
@@ -70,6 +66,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                         </tr>
                     </tbody>
                 </table>
+
             </div>
         );
     };
@@ -77,13 +74,13 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     // ----------------------------- <SelectionSteps /> --------------------------
 
     const SelectionSteps:React.SFC<{
-        items:Array<SelectionStep>;
+        items:Immutable.List<TTSelectionStep|AlignedLangSelectionStep>;
         isLoading:boolean;
 
     }> = (props) => {
 
-        const shortenValues = (values, joinChar) => {
-            let ans;
+        const shortenValues = (values:Array<any>, joinChar:string) => {
+            let ans:Array<string>;
             if (values.length > 5) {
                 ans = values.slice(0, 2);
                 ans.push('\u2026');
@@ -106,23 +103,18 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
             );
         };
 
-        const renderTextTypesSel = (item) => {
-            if (item.error) {
-                return <span>{item.error}</span>;
-
-            } else {
-                return item.attributes.map((attr, i) => {
-                    return (
-                        <span key={i}>
-                            {i > 0 ? ', ' : ''}
-                            <strong>{attr}</strong>
-                                {'\u00a0\u2208\u00a0'}
-                                {'{' + shortenValues(item.values.get(attr), ', ') + '}'}
-                                <br />
-                        </span>
-                    );
-                });
-            }
+        const renderTextTypesSel = (item:TTSelectionStep) => {
+            return item.attributes.map((attr, i) => {
+                return (
+                    <span key={i}>
+                        {i > 0 ? ', ' : ''}
+                        <strong>{attr}</strong>
+                            {'\u00a0\u2208\u00a0'}
+                            {'{' + shortenValues(item.values.get(attr), ', ') + '}'}
+                            <br />
+                    </span>
+                );
+            });
         };
 
         return (
@@ -136,9 +128,9 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                     <td className="num">{item.num}</td>
                                     <td className="data">
                                         {i > 0 ? '\u2026\u00a0&\u00a0' : ''}
-                                        {item.num === 1 && item['languages']
-                                            ? renderAlignedLangsSel(item)
-                                            : renderTextTypesSel(item)
+                                        {isAlignedSelectionStep(item) ?
+                                            renderAlignedLangsSel(item) :
+                                            renderTextTypesSel(item)
                                         }
                                         {he.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo})}
                                     </td>
@@ -148,7 +140,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                     </div>
                 );
             })}
-            {props.isLoading ? <StepLoader idx={props.items.length + 1} /> : null}
+            {props.isLoading ? <StepLoader idx={props.items.size + 1} /> : null}
             </div>
         );
     };
@@ -214,93 +206,48 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <LiveAttrsView /> --------------------------
 
-    class LiveAttrsView extends React.Component<LiveAttrsViewProps, {
-        selectionSteps:Array<SelectionStep>;
-        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
-        isLoading:boolean;
-        controlsEnabled:boolean;
-        canUndoRefine:boolean;
-    }> {
+    const LiveAttrsView:React.SFC<LiveAttrsModelState> = (props) => {
 
-        private ttModelSubscription:Subscription;
-        private vaModelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._changeHandler = this._changeHandler.bind(this);
-            this._mkClickHandler = this._mkClickHandler.bind(this);
-        }
-
-        _mkClickHandler(action) {
+        const mkClickHandler = (action) => {
             const actionMap = {
                 refine: 'LIVE_ATTRIBUTES_REFINE_CLICKED',
                 reset: 'LIVE_ATTRIBUTES_RESET_CLICKED',
                 undo: 'LIVE_ATTRIBUTES_UNDO_CLICKED'
             };
-            return (evt) => {
-                const newState = he.cloneState(this.state);
-                newState.isLoading = true;
-                this.setState(newState);
+            return () => {
                 dispatcher.dispatch({
                     name: actionMap[action],
                     payload: {}
                 });
             }
-        }
+        };
 
-        _fetchModelState() {
-            return {
-                selectionSteps: liveAttrsModel.getSelectionSteps(),
-                alignedCorpora: liveAttrsModel.getAlignedCorpora(),
-                isLoading: liveAttrsModel.getIsBusy(),
-                controlsEnabled: liveAttrsModel.getControlsEnabled(),
-                canUndoRefine: liveAttrsModel.canUndoRefine()
-            };
-        }
+        const widgetIsActive = () => {
+            return props.alignedCorpora.size > 0 && props.selectionSteps.size > 1
+                || props.alignedCorpora.size === 0 && props.selectionSteps.size > 0;
+        };
 
-        _changeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.ttModelSubscription = textTypesModel.addListener(this._changeHandler);
-            this.vaModelSubscription = liveAttrsModel.addListener(this._changeHandler);
-        }
-
-        componentWillUnmount() {
-            this.ttModelSubscription.unsubscribe();
-            this.vaModelSubscription.unsubscribe();
-        }
-
-        _widgetIsActive() {
-            return this.state.alignedCorpora.size > 0 && this.state.selectionSteps.length > 1
-                || this.state.alignedCorpora.size === 0 && this.state.selectionSteps.length > 0;
-        }
-
-        render() {
-            return (
-                <div className="live-attributes">
-                    <ul className="controls">
-                        <li>
-                            <RefineButton enabled={this.state.controlsEnabled} mkClickHandler={this._mkClickHandler} />
-                        </li>
-                        <li>
-                            <UndoButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} mkClickHandler={this._mkClickHandler} />
-                        </li>
-                        <li>
-                            <ResetButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} mkClickHandler={this._mkClickHandler} />
-                        </li>
-                        {SubcmixerComponent ?
-                            (<li>
-                                <SubcmixerComponent isActive={this._widgetIsActive()} />
-                            </li>)
-                        : null}
-                    </ul>
-                    <SelectionSteps items={this.state.selectionSteps} isLoading={this.state.isLoading} />
-                </div>
-            );
-        }
+        return (
+            <div className="live-attributes">
+                <ul className="controls">
+                    <li>
+                        <RefineButton enabled={props.controlsEnabled} mkClickHandler={mkClickHandler} />
+                    </li>
+                    <li>
+                        <UndoButton enabled={props.controlsEnabled && props.selectionSteps.size > 0} mkClickHandler={mkClickHandler} />
+                    </li>
+                    <li>
+                        <ResetButton enabled={props.controlsEnabled && props.selectionSteps.size > 0} mkClickHandler={mkClickHandler} />
+                    </li>
+                    {SubcmixerComponent ?
+                        (<li>
+                            <SubcmixerComponent isActive={widgetIsActive()} />
+                        </li>)
+                    : null}
+                </ul>
+                <SelectionSteps items={props.selectionSteps} isLoading={props.isBusy} />
+            </div>
+        );
     }
 
     // ----------------------------- <AlignedLangItem /> --------------------------
@@ -332,124 +279,84 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <LiveAttrsCustomTT /> --------------------------
 
-    class LiveAttrsCustomTT extends React.Component<LiveAttrsCustomTTProps, {
-        hasAvailableAlignedCorpora:boolean;
-        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
-        isLocked:boolean;
-        isTTListMinimized:boolean;
-        manualAlignCorporaMode:boolean;
+    const LiveAttrsCustomTT:React.SFC<LiveAttrsModelState> = (props) => {
 
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._changeHandler = this._changeHandler.bind(this);
-            this._handleMinIconClick = this._handleMinIconClick.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                hasAvailableAlignedCorpora: liveAttrsModel.hasAvailableAlignedCorpora(),
-                alignedCorpora: liveAttrsModel.getAlignedCorpora(),
-                isLocked: liveAttrsModel.hasLockedAlignedLanguages(),
-                isTTListMinimized: liveAttrsModel.getIsTTListMinimized(),
-                manualAlignCorporaMode: liveAttrsModel.isManualAlignCorporaMode()
-            };
-        }
-
-        _changeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = liveAttrsModel.addListener(this._changeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        _renderHint() {
-            if (this.state.manualAlignCorporaMode) {
+        const renderHint = () => {
+            if (props.manualAlignCorporaMode) {
                 return he.translate('ucnkLA__subcorp_consider_aligned_corpora_manual');
 
             } else {
                 return he.translate('ucnkLA__subcorp_consider_aligned_corpora_auto');
             }
-        }
+        };
 
-        _handleMinIconClick() {
+        const handleMinIconClick = () => {
             dispatcher.dispatch({
                 name: 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
                 payload: {}
             });
-        }
+        };
 
-        render() {
-            if (this.state.hasAvailableAlignedCorpora) {
-                const classes = ['TableTextTypeAttribute', 'aligned'];
-                if (this.state.isLocked) {
-                    classes.push('locked');
-                }
-                return (
-                    <div className={classes.join(' ')}>
-                        <div className="attrib-name">
-                            <h3>{he.translate('ucnkLA__aligned_corpora')}</h3>
-                            <ttViews.TextTypeAttributeMinIcon isMinimized={this.state.isTTListMinimized}
-                                    onClick={this._handleMinIconClick} />
-                        </div>
-                        {this.state.isTTListMinimized ?
-                            <div /> :
-                            <>
-                                <div className="note">
-                                    <p>
-                                        {this._renderHint()}
-                                    </p>
-                                    {
-                                        this.state.hasAvailableAlignedCorpora && this.state.alignedCorpora.size > 0 ?
-                                        null :
-                                        <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
-                                    }
-                                </div>
-                                <div className="data-rows">
-                                    <div className="scrollable">
-                                        <table>
-                                            <tbody>
-                                                {this.state.alignedCorpora.map((item, i) => {
-                                                    return (
-                                                        <tr key={item.value}>
-                                                            <td>
-                                                                <AlignedLangItem item={item} itemIdx={i} />
-                                                            </td>
-                                                            <td />
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div className="hidden-values" />
-                                <div className="last-line">
-                                    {'\u00a0'}
-                                </div>
-                            </>
-                        }
-                    </div>
-                );
-
-            } else {
-                return null;
+        if (props.alignedCorpora.size > 0) {
+            const classes = ['TableTextTypeAttribute', 'aligned'];
+            if (props.selectionSteps.size > 0 && isAlignedSelectionStep(props.selectionSteps.first())) {
+                classes.push('locked');
             }
+            return (
+                <div className={classes.join(' ')}>
+                    <div className="attrib-name">
+                        <h3>{he.translate('ucnkLA__aligned_corpora')}</h3>
+                        <ttViews.TextTypeAttributeMinIcon isMinimized={props.isTTListMinimized}
+                                onClick={handleMinIconClick} />
+                    </div>
+                    {props.isTTListMinimized ?
+                        <div /> :
+                        <>
+                            <div className="note">
+                                <p>
+                                    {renderHint()}
+                                </p>
+                                {
+                                    props.alignedCorpora.size > 0 ?
+                                    null :
+                                    <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
+                                }
+                            </div>
+                            <div className="data-rows">
+                                <div className="scrollable">
+                                    <table>
+                                        <tbody>
+                                            {props.alignedCorpora.map((item, i) => {
+                                                return (
+                                                    <tr key={item.value}>
+                                                        <td>
+                                                            <AlignedLangItem item={item} itemIdx={i} />
+                                                        </td>
+                                                        <td />
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div className="hidden-values" />
+                            <div className="last-line">
+                                {'\u00a0'}
+                            </div>
+                        </>
+                    }
+                </div>
+            );
+
+        } else {
+            return null;
         }
     }
 
     return {
-        LiveAttrsView: LiveAttrsView,
-        LiveAttrsCustomTT: LiveAttrsCustomTT
+        LiveAttrsView: Bound<LiveAttrsModelState>(LiveAttrsView, liveAttrsModel),
+        LiveAttrsCustomTT: Bound<LiveAttrsModelState>(LiveAttrsCustomTT, liveAttrsModel)
     };
 
 }

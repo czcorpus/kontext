@@ -26,7 +26,7 @@ import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {WordlistFormModel} from './form';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 
 
@@ -103,7 +103,7 @@ export class WordlistResultModel extends StatefulModel {
 
     private reloadArgs:Kontext.ListOfPairs;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, formModel:WordlistFormModel,
             data:ResultData, headings:Array<HeadingItem>, reloadArgs:Kontext.ListOfPairs, isUnfinished:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;

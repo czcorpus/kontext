@@ -24,11 +24,12 @@
 import * as Immutable from 'immutable';
 import * as translations from 'translations';
 import IntlMessageFormat = require('vendor/intl-messageformat');
+import { ITranslator } from 'kombo';
 
 /**
  * L10n provides a set of essential localization functions.
  */
-export class L10n {
+export class L10n implements ITranslator {
 
     private uiLang:string;
 
@@ -51,7 +52,7 @@ export class L10n {
      * an empty string. Non-translated keys are passed
      * as they are.
      */
-    translate(msg:string, values?:any):string {
+    translate(msg:string, values?:{[key:string]:string|number|boolean}):string {
         if (msg) {
             const tmp = this.translations[msg];
             if (tmp) {

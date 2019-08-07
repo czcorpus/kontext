@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 interface ViewOptsResponse extends Kontext.AjaxResponse {
@@ -81,7 +81,7 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
 
     private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsModel)=>void>;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, userIsAnonymous:boolean) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, userIsAnonymous:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.userIsAnonymous = userIsAnonymous;

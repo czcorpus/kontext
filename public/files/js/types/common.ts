@@ -925,6 +925,10 @@ export namespace TextTypes {
          */
         getAttribute(ident:string):TextTypes.AttributeSelection;
 
+        getBibIdAttr():string;
+
+        getBibLabelAttr():string;
+
         /**
          *
          */
@@ -933,31 +937,18 @@ export namespace TextTypes {
         /**
          * Return a list of all the defined attributes
          */
-        getAttributes():Array<AttributeSelection>;
+        getAttributes():Immutable.List<TextTypes.AttributeSelection>;
 
         /**
          * Get all available values of a specific attribute before
          * any filters were applied.
          */
-        getInitialAvailableValues(attrName:string):Immutable.List<TextTypes.AttributeValue>;
+        getInitialAvailableValues():Immutable.List<TextTypes.AttributeSelection>;
 
         /**
          * Export checkbox selections (e.g. for ajax requests)
          */
         exportSelections(lockedOnesOnly:boolean):TextTypes.ServerCheckedValues;
-
-        /**
-         * Reset model state
-         */
-        reset():void;
-
-        /**
-         * Filter existing values of an attribute based on provided values.
-         * E.g. if the attribute "x1" contains values {value: "foo",...}, {value: "bar",...},
-         *  {value:"baz",....} and the "values"" argument contains ["bar", "baz"] then
-         * the model is expected to keep {value: "bar",...}, {value: "baz", ....} for "x1".
-         */
-        updateItems(attrName:string, values:Array<string>):void;
 
         /**
          *
@@ -994,49 +985,9 @@ export namespace TextTypes {
         getAttributesWithSelectedItems(includeLocked:boolean):Array<string>;
 
         /**
-         * Sets a (typically) numeric summary for a specific attribute.
-         */
-        setAttrSummary(attrName:string, value:AttrSummary):void;
-
-        /**
          * Returns a (typically) numeric summary for a specific attribute.
          */
         getAttrSummary():Immutable.Map<string, AttrSummary>;
-
-        /**
-         * Return the total number of tokens in
-         * texts matching all the attribute values
-         * belonging to the provided attrName.
-         *
-         * Please note that individual sizes
-         * (and thus the total size) may change
-         * during the existence of the object
-         * (e.g. by interactive text type selection).
-         */
-        getAttrSize(attrName:string):number;
-
-        /**
-         * Activate a support for attaching an extended information
-         * for a specific attribute. The 'fn' callback is expected
-         * to update model(s) in such a way that the information becomes
-         * available.
-         */
-        setExtendedInfoSupport<T>(attrName:string, fn:(ident:string)=>RSVP.Promise<T>):void;
-
-        /**
-         * Returns true if a specific attribute has activated support
-         * for displaying extended information.
-         */
-        hasDefinedExtendedInfo(attrName:string):boolean;
-
-        /**
-         * Attaches an extended information item to a specific attribute value.
-         * This is typically used by setExtendedInfoSupport's callback function.
-         */
-        setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, any>):void;
-
-
-        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>RSVP.Promise<any>):void;
 
         getTextInputPlaceholder():string;
 
@@ -1045,24 +996,6 @@ export namespace TextTypes {
         setRangeMode(attrName:string, rangeIsOn:boolean);
 
         getRangeModes():Immutable.Map<string, boolean>;
-
-        /**
-         * Other models may listen for selection changes and update
-         * themselves accordingly.
-         */
-        addSelectionChangeListener(fn:(target:TextTypes.ITextTypesModel)=>void):void;
-
-        /**
-         * Save the currect selection to object's local history.
-         * This is mainly for UNDO function.
-         */
-        snapshotState():void;
-
-        /**
-         * Return selection state back to the previous
-         * one stored via snapshotState().
-         */
-        undoState():void;
 
         canUndoState():boolean;
 
@@ -1088,26 +1021,6 @@ export namespace TextTypes {
         label:string;
         selected:boolean;
         locked:boolean;
-    }
-
-    /**
-     * Represents an object which is able to provide
-     * a callback function initiated by textTypesModel
-     * every time user enters a text into one of raw text inputs
-     * (used whenever the number of items to display is too high).
-     */
-    export interface AttrValueTextInputListener {
-        getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
-        getTextInputPlaceholder():string; // a text displayed in a respective text field
-        addUpdateListener(fn:()=>void):void;
-        removeUpdateListener(fn:()=>void):void;
-        getAlignedCorpora():Immutable.List<AlignedLanguageItem>;
-        selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean);
-        hasSelectedLanguages():boolean;
-        hasSelectionSteps():boolean;
-        setControlsEnabled(v:boolean):void;
-        reset():void;
-        emitChange():void;
     }
 
     export type ExportedSelection = {[attr:string]:Array<string>};

@@ -377,14 +377,14 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     this.getFullCorpusSelection()
                 );
                 return newState;
-            case 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE':
+            case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
                 newState = this.copyState(state);
                 newState.currFavitemId = findCurrFavitemId(
                     newState.dataFav,
                     this.getFullCorpusSelection()
                 );
                 return newState;
-            case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE':
+            case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
                 newState = this.copyState(state);
                 newState.currFavitemId = findCurrFavitemId(
                     newState.dataFav,

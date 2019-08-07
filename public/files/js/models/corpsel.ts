@@ -23,7 +23,7 @@ import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
 import { StatefulModel } from './base';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  * Fixed corpus, selectable subcorpus. This is used as an alternative to query model
@@ -46,7 +46,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
 
     constructor({layoutModel, dispatcher, usesubcorp, origSubcorpName, foreignSubcorp, corpora, availSubcorpora=[]}:{
             layoutModel:PageModel;
-            dispatcher:IActionDispatcher;
+            dispatcher:IFullActionControl;
             usesubcorp:string;
             origSubcorpName:string;
             foreignSubcorp:boolean;
