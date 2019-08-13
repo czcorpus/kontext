@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action } from 'kombo';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 /**
  *
@@ -38,7 +38,7 @@ export class WithinBuilderModel extends StatefulModel {
 
     private currAttrIdx:number;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<[string, string]>();

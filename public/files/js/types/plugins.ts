@@ -24,25 +24,22 @@ import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
-import { IActionDispatcher, IEventEmitter } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
 
 /**
  * An interface used by KonText plug-ins to access
  * core functionality (for core components, this is
  * typically provided by PageModel).
  */
-export interface IPluginApi {
+export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
     createStaticUrl(path:string):string;
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
     ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T>;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
-    translate(text:string, values?:any):string;
-    formatNumber(v:number):string;
-    formatDate(d:Date, timeFormat?:number):string;
     userIsAnonymous():boolean;
-    dispatcher():IActionDispatcher;
+    dispatcher():IFullActionControl;
     getComponentHelpers():Kontext.ComponentHelpers;
     renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
                             target:HTMLElement, props?:T):void;
@@ -114,7 +111,6 @@ export namespace PluginInterfaces {
     export namespace SubcMixer {
 
         export interface IPlugin {
-            refreshData():void;
             getWidgetView():React.ComponentClass;
         }
 
@@ -133,7 +129,6 @@ export namespace PluginInterfaces {
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
                 subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
-                getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
                 corpusIdAttr:string
             ):IPlugin;
         }
@@ -276,19 +271,8 @@ export namespace PluginInterfaces {
 
     export namespace LiveAttributes {
 
-        export interface IPlugin extends TextTypes.AttrValueTextInputListener {
-            getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
-            setControlsEnabled(v:boolean):void;
-            selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
-            hasSelectionSteps():boolean;
-            reset():void;
-            hasSelectedLanguages():boolean;
-            removeUpdateListener(fn:()=>void):void;
-            addUpdateListener(fn:()=>void):void;
-            getTextInputPlaceholder():string;
+        export interface IPlugin {
             getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
-            getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
-            emitChange():void;
         }
 
         /**
@@ -334,8 +318,7 @@ export namespace PluginInterfaces {
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
                 isEnabled:boolean,
-                selectedCorporaProvider:()=>Immutable.List<string>,
-                ttCheckStatusProvider:()=>boolean,
+                controlsAlignedCorpora:boolean,
                 args:PluginInterfaces.LiveAttributes.InitArgs
             ):IPlugin;
         }

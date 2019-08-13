@@ -21,7 +21,7 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import * as corplistDefault from '../defaultCorparch/corplist';
 import { Kontext } from '../../types/common';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { CorplistItem } from '../defaultCorparch/common';
 
@@ -40,7 +40,7 @@ export class CorplistTableModel extends corplistDefault.CorplistTableModel {
     /**
      *
      */
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData, preselectedKeywords:Array<string>) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData, preselectedKeywords:Array<string>) {
         super(dispatcher, pluginApi, initialData, preselectedKeywords);
     }
 }
@@ -51,7 +51,7 @@ export class CorpusAccessRequestModel extends StatefulModel {
 
     static DispatchToken:string;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
     }

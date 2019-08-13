@@ -22,7 +22,7 @@ import { empty as rxEmpty } from 'rxjs';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {createGenerator, SourceData, DetailAttrOrders} from './ucnkTreeView';
 import {StatefulModel} from '../../models/base';
-import { IActionDispatcher } from 'kombo';
+import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 
 declare var require:any;
@@ -52,7 +52,7 @@ class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxV
 
     private errorHandler:(e:Error)=>void;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.waitingStatus = false;

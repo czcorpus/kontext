@@ -25,7 +25,7 @@ import {PageModel} from '../../app/main';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
-import { Action, IActionDispatcher } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface GeneralQueryFormProperties {
@@ -131,7 +131,7 @@ export abstract class QueryFormModel extends StatefulModel {
 
 
     constructor(
-            dispatcher:IActionDispatcher,
+            dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,

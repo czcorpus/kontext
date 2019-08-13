@@ -23,11 +23,11 @@ import {SaveData} from '../../app/navigation';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface WordlistSaveModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;

@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {Kontext} from '../types/common';
 import {IPluginApi} from '../types/plugins';
 import {StatefulModel} from './base';
-import {IActionDispatcher, Action} from 'kombo';
+import {Action, IFullActionControl} from 'kombo';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
@@ -58,7 +58,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
     static CHECK_INTERVAL = 10000;
 
 
-    constructor(dispatcher:IActionDispatcher, pageModel:IPluginApi, conf:any) {
+    constructor(dispatcher:IFullActionControl, pageModel:IPluginApi, conf:any) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(conf.map(item => {

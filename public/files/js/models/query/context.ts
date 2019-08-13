@@ -20,14 +20,14 @@
 
 import {StatefulModel} from '..//base';
 import * as Immutable from 'immutable';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export class QueryContextModel extends StatefulModel {
 
     private formData:Immutable.Map<string, any>;
 
-    constructor(dispatcher:IActionDispatcher) {
+    constructor(dispatcher:IFullActionControl) {
         super(dispatcher);
         this.formData = Immutable.Map<string, any>({
             fc_lemword_window_type: 'both',

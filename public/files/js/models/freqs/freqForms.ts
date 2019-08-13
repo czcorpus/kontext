@@ -23,7 +23,7 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface FreqFormInputs {
@@ -83,7 +83,7 @@ export class MLFreqFormModel extends StatefulModel {
 
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -280,7 +280,7 @@ export class TTFreqFormModel extends StatefulModel {
 
     private freqSort:string;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, props:FreqFormProps) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);

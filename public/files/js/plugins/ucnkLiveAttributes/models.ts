@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
-import {StatefulModel} from '../../models/base';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {TextTypes, Kontext} from '../../types/common';
+import {IPluginApi} from '../../types/plugins';
 import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
-import { SelectedTextTypes } from '../../models/textTypes/main';
-import { IActionDispatcher, Action } from 'kombo';
+import { SelectedTextTypes, SelectionFilterMap } from '../../models/textTypes/main';
+import { IActionDispatcher, Action, StatelessModel, SEDispatcher } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 
 interface ServerBibData {
@@ -32,47 +33,45 @@ interface ServerBibData {
     bib_data:Array<Array<string>>;
 }
 
-interface ServerRefineResponse {
+interface ServerRefineResponse extends Kontext.AjaxResponse {
     error?:string;
     aligned:Array<string>;
     poscount:number;
-    attr_values:TextTypes.ServerCheckedValues;
+    attr_values:{
+        [key:string]:{poscount:number}|Array<[string, string, string, number, number]>
+    };
 }
 
-export interface SelectionStep {
+export interface TTSelectionStep {
     num:number;
     attributes:Immutable.List<string>;
     numPosInfo:number;
-}
-
-export interface TTSelectionStep extends SelectionStep {
     values:Immutable.Map<string, Array<string>>;
 }
 
-export interface AlignedLangSelectionStep extends SelectionStep {
+export interface AlignedLangSelectionStep {
+    num:number;
+    attributes:Immutable.List<string>;
+    numPosInfo:number;
     languages:Array<string>;
 }
 
-
-interface FilterResponseValue {
-
-    ident:string;
-
-    v:string;
-
-    lock:boolean;
-
-    /*
-     * Specifies how many items in returned list is actually behind the item.
-     * This typically happens in case there are multiple items with the same name.
-     */
-    numGrouped:number;
-
-    availItems?:number;
+export function isAlignedSelectionStep(v:TTSelectionStep|AlignedLangSelectionStep):v is AlignedLangSelectionStep {
+    return Array.isArray(v['languages']);
 }
 
-function isArr(v) {
-    return Object.prototype.toString.call(v) === '[object Array]';
+export interface LiveAttrsModelState {
+    selectionSteps:Immutable.List<TTSelectionStep|AlignedLangSelectionStep>;
+    lastRemovedStep:TTSelectionStep|AlignedLangSelectionStep|null;
+    alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+    initialAlignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
+    bibliographyAttribute:string;
+    bibliographyIds:Immutable.OrderedSet<string>;
+    manualAlignCorporaMode:boolean;
+    controlsEnabled:boolean;
+    isBusy:boolean;
+    isTTListMinimized:boolean;
+    isEnabled:boolean;
 }
 
 /**
@@ -89,273 +88,40 @@ function isArr(v) {
  * attr2: v2#3 [OK]
  * attr3: v3#1 v3#2 [WRONG]
  */
-export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValueTextInputListener {
+export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
-    private textTypesModel:TextTypes.ITextTypesModel;
+    private readonly controlsAlignedCorpora:boolean;
 
-    private selectionSteps:Immutable.List<SelectionStep>;
-
-    private alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
-
-    private initialAlignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
-
-    private bibliographyAttribute:string;
-
-    private bibliographyIds:Immutable.OrderedSet<string>;
-
-    private updateListeners:Immutable.List<()=>void>;
-
-    private manualAlignCorporaMode:boolean;
-
-    private controlsEnabled:boolean;
-
-    private isBusy:boolean;
-
-    private isTTListMinimized:boolean;
-
-    private readonly isEnabled:boolean;
-
-    private selectedCorporaProvider:()=>Immutable.List<string>;
+    private readonly getTtSelection:(lockedOnesOnly:boolean)=>TextTypes.ServerCheckedValues;
 
     /**
-     * Provides an indication of at least one checked item selected
-     * wihin Text types form.
      */
-    private ttCheckStatusProvider:()=>boolean;
-
-    /**
-     * @param dispatcher an action dispatcher instance
-     * @param pluginApi KonText plugin-api provider
-     * @param textTypesModel
-     * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
-     * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
-     * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
-     */
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
-            textTypesModel:TextTypes.ITextTypesModel,
-            isEnabled:boolean,
-            selectedCorporaProvider:()=>Immutable.List<string>,
-            ttCheckStatusProvider:()=>boolean,
-            args:PluginInterfaces.LiveAttributes.InitArgs) {
-        super(dispatcher);
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:LiveAttrsModelState,
+            controlsAlignedCorpora:boolean,
+            getTtSelection:(lockedOnesOnly:boolean)=>{[attr:string]:Array<string>}) {
+        super(dispatcher,initialState);
         this.pluginApi = pluginApi;
-        this.bibliographyAttribute = args.bibAttr;
-        this.manualAlignCorporaMode = args.manualAlignCorporaMode;
-        this.controlsEnabled = false; // it is enabled when user selects one or more items
-        this.textTypesModel = textTypesModel;
-        this.isEnabled = isEnabled;
-        this.isBusy = false;
-        this.isTTListMinimized = false;
-        this.selectionSteps = Immutable.List<SelectionStep>([]);
-        this.alignedCorpora = Immutable.List(args.availableAlignedCorpora
-                        .map((item) => {
-                            return {
-                                value: item.n,
-                                label: item.label,
-                                selected: false,
-                                locked: selectedCorporaProvider ? true : false // TODO ??? item.locked
-                            };
-                        }));
-        this.bibliographyIds = Immutable.OrderedSet<string>();
-        this.initialAlignedCorpora = this.alignedCorpora;
-        this.updateListeners = Immutable.List<()=>void>();
-        this.selectedCorporaProvider = selectedCorporaProvider;
-        this.ttCheckStatusProvider = ttCheckStatusProvider;
-        textTypesModel.setTextInputPlaceholder(this.getTextInputPlaceholder());
-        // initial enabled/disabled state:
-        this.setControlsEnabled(args.refineEnabled);
+        this.controlsAlignedCorpora = controlsAlignedCorpora;
+        this.getTtSelection = getTtSelection;
+        this.DEBUG_onActionMatch((s, a) => {
+            console.log('action >>> ', a.name, ', payload: ', a.payload);
+        })
+        this.actionMatch = {
+            'LIVE_ATTRIBUTES_REFINE_CLICKED': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isBusy = true;
+                return newState;
+            },
+            'LIVE_ATTRIBUTES_REFINE_DONE': (state, action) => {
+                const poscount:number = action.payload['poscount'];
+                const filterData:SelectionFilterMap = action.payload['filterData'];
+                const selectedTypes:TextTypes.ServerCheckedValues = action.payload['selectedTypes'];
 
-        this.dispatcher.registerActionListener((action:Action) => {
-            switch (action.name) {
-                case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
-                    this.isBusy = true;
-                    this.emitChange();
-                    this.processRefine().then(
-                        (v) => {
-                            this.updateListeners.forEach(item => item());
-                            this.textTypesModel.snapshotState();
-                            this.textTypesModel.emitChange();
-                            this.isBusy = false;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.emitChange();
-                            this.pluginApi.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED': {
-                    const item = this.alignedCorpora.get(action.payload['idx']);
-                    if (item) {
-                        const idx = this.alignedCorpora.indexOf(item);
-                        const newItem:TextTypes.AlignedLanguageItem = {
-                            value: item.value,
-                            label: item.label,
-                            locked: item.locked,
-                            selected: !item.selected
-                        };
-                        this.alignedCorpora = this.alignedCorpora.set(idx, newItem);
-                    }
-                    this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
-                    this.updateListeners.forEach(fn => fn());
-                    this.emitChange();
-                }
-                break;
-                case 'LIVE_ATTRIBUTES_RESET_CLICKED':
-                    if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
-                        this.reset();
-                        this.textTypesModel.emitChange();
-                    }
-                    this.emitChange();
-                break;
-                case 'LIVE_ATTRIBUTES_UNDO_CLICKED':
-                    /*
-                     * Please note that textTypesModel and selection steps are
-                     * coupled only loosely (the two lists must match for all
-                     * items). Once some other function starts to call snapshotState()
-                     * on TextTypesModel, the UNDO function here gets broken.
-                     */
-                    this.textTypesModel.undoState();
-                    this.textTypesModel.emitChange();
-                    this.selectionSteps = this.selectionSteps.pop();
-                    this.emitChange();
-                break;
-                case 'TT_MINIMIZE_ALL':
-                    this.isTTListMinimized = true;
-                    this.emitChange();
-                break;
-                case 'TT_MAXIMIZE_ALL':
-                    this.isTTListMinimized = false;
-                    this.emitChange();
-                break;
-                case 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST':
-                    this.isTTListMinimized = !this.isTTListMinimized;
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE':
-                    this.reset();
-                    this.updateAlignedItem(action.payload['corpname'], orig => ({
-                        value: orig.value,
-                        label: orig.label,
-                        locked: true,
-                        selected: true}));
-                    this.textTypesModel.emitChange();
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE':
-                    this.reset();
-                    this.updateAlignedItem(action.payload['corpname'], orig => ({
-                        value: orig.value,
-                        label: orig.label,
-                        locked: false,
-                        selected: false}));
-                    this.textTypesModel.emitChange();
-                    this.emitChange();
-                break;
-            }
-        });
-    }
-
-    private updateAlignedItem(corpname:string,
-                upd:(orig:TextTypes.AlignedLanguageItem)=>TextTypes.AlignedLanguageItem):boolean {
-        const srchIdx = this.alignedCorpora.findIndex(v => v.value === corpname);
-        if (srchIdx > -1) {
-            const item = this.alignedCorpora.get(srchIdx);
-            this.alignedCorpora = this.alignedCorpora.set(srchIdx, upd(item));
-            return true;
-        }
-        return false;
-    }
-
-    selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean) {
-        this.alignedCorpora = this.alignedCorpora.map(item => {
-            return {
-                value: item.value,
-                label: item.label,
-                selected: languages.indexOf(item.value) > -1,
-                locked: true
-            };
-        }).toList();
-        if (notifyListeners) {
-            this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
-            this.emitChange();
-        }
-    }
-
-    private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
-        const attrObj = this.textTypesModel.getAttribute(this.bibliographyAttribute);
-        const newBibData = filterData[this.bibliographyAttribute];
-
-        // set the data iff server data are full-fledget (i.e. including unique 'ident')
-        if (newBibData.length > 0 && !!newBibData[0].ident) {
-            this.bibliographyIds = this.bibliographyIds.union(Immutable.OrderedSet<string>(newBibData.map(v => v.ident)));
-        }
-        this.textTypesModel.setExtendedInfoSupport(
-            this.bibliographyAttribute,
-            (ident:string) => {
-                if (this.bibliographyIds.contains(ident)) {
-                    return this.loadBibInfo(ident).then(
-                        (serverData:ServerBibData) => {
-                            this.textTypesModel.setExtendedInfo(this.bibliographyAttribute,
-                                    ident, Immutable.OrderedMap<string, any>(serverData.bib_data));
-
-                        }
-                    ).catch(
-                        (err:any) => {
-                            this.pluginApi.showMessage('error', err);
-                        }
-                    );
-
-                } else {
-                    return new RSVP.Promise<any>((resolve:()=>void, reject:(err)=>void) => {
-                        reject(new Error('Item not found'));
-                    })
-                }
-            }
-        );
-    }
-
-    private processRefine():RSVP.Promise<any> {
-        this.textTypesModel.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
-            this.textTypesModel.mapItems(attrName, (item:TextTypes.AttributeValue) => ({
-                ident: item.ident,
-                value: item.value,
-                selected: item.selected,
-                locked: true,
-                availItems: item.availItems,
-                numGrouped: item.numGrouped,
-                extendedInfo: item.extendedInfo
-            }));
-        });
-        const selections = this.textTypesModel.exportSelections(false);
-        return this.loadFilteredData(selections).then(
-            (data:ServerRefineResponse) => {
-                const filterData = this.importFilter(data.attr_values);
-                let k; // must be defined here (ES5 cannot handle for(let k...) here)
-                for (k in filterData) {
-                    this.textTypesModel.updateItems(k, filterData[k].map(v => v.ident));
-                    this.textTypesModel.mapItems(k, (v, i) => {
-                        if (filterData[k][i]) {
-                            return {
-                                ident: filterData[k][i].ident,
-                                value: filterData[k][i].v,
-                                selected: v.selected,
-                                locked: v.locked,
-                                numGrouped: filterData[k][i].numGrouped,
-                                availItems: filterData[k][i].availItems,
-                                extendedInfo: v.extendedInfo
-                            };
-
-                        } else {
-                            return null;
-                        }
-                    });
-                    this.textTypesModel.filter(k, (item) => item !== null);
-                }
-                this.alignedCorpora = this.alignedCorpora.map((value) => {
+                const newState = this.copyState(state);
+                newState.isBusy = false;
+                newState.alignedCorpora = newState.alignedCorpora.map((value) => {
                     let newVal:TextTypes.AlignedLanguageItem = {
                         label: value.label,
                         value: value.value,
@@ -364,94 +130,258 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                     }
                     return newVal;
                 }).filter(item=>item.locked).toList();
-                this.updateSelectionSteps(selections, data);
-                if (isArr(filterData[this.bibliographyAttribute])) {
-                    this.attachBibData(filterData);
+                this.updateSelectionSteps(newState, selectedTypes, poscount);
+                if (action.payload['bibAttrValsAreListed']) {
+                    this.attachBibData(newState, filterData);
                 }
+                return newState;
             },
-            (err) => {
-                this.pluginApi.showMessage('error', err);
+            'LIVE_ATTRIBUTES_RESET_CLICKED': (state, action) => {
+                if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
+                    const newState = this.copyState(state);
+                    this.reset(newState);
+                    return newState;
+                }
+                return state;
+            },
+            'LIVE_ATTRIBUTES_UNDO_CLICKED': (state, action) => {
+                const newState = this.copyState(state);
+                newState.lastRemovedStep = newState.selectionSteps.last();
+                newState.selectionSteps = newState.selectionSteps.pop();
+                console.log('after undo, num sel steps: ', newState.selectionSteps.size);
+                return newState;
+            },
+            'TT_MINIMIZE_ALL': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isTTListMinimized = true;
+                return newState;
+            },
+            'TT_MAXIMIZE_ALL': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isTTListMinimized = false;
+                return newState;
+            },
+            'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isTTListMinimized = !newState.isTTListMinimized;
+                return newState;
+            },
+            'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED': (state, action) => {
+                const newState = this.copyState(state);
+                const item = newState.alignedCorpora.get(action.payload['idx']);
+                if (item) {
+                    const idx = newState.alignedCorpora.indexOf(item);
+                    const newItem:TextTypes.AlignedLanguageItem = {
+                        value: item.value,
+                        label: item.label,
+                        locked: item.locked,
+                        selected: !item.selected
+                    };
+                    newState.alignedCorpora = newState.alignedCorpora.set(idx, newItem);
+                }
+                newState.controlsEnabled = newState.controlsEnabled || this.hasSelectedLanguages(newState);
+                return newState;
+            },
+            'QUERY_INPUT_ADD_ALIGNED_CORPUS': (state, action) => {
+                const newState = this.copyState(state);
+                this.reset(newState);
+                this.updateAlignedItem(
+                    newState,
+                    action.payload['corpname'],
+                    orig => ({
+                        value: orig.value,
+                        label: orig.label,
+                        locked: true,
+                        selected: true
+                    })
+                );
+                newState.controlsEnabled = newState.controlsEnabled || this.hasSelectedLanguages(newState);
+                return newState;
+            },
+            'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': (state, action) => {
+                const newState = this.copyState(state);
+                this.reset(newState);
+                this.updateAlignedItem(
+                    newState,
+                    action.payload['corpname'],
+                    orig => ({
+                        value: orig.value,
+                        label: orig.label,
+                        locked: false,
+                        selected: false
+                    })
+                );
+                return newState;
+            },
+            'TT_SELECTION_CHANGED': (state, action) => {
+                const newState = this.copyState(state);
+                newState.controlsEnabled = action.payload['hasSelectedItems'] || state.alignedCorpora.find(v => v.selected);
+                return newState;
             }
-        );
+        };
     }
 
-    reset():void {
-        this.textTypesModel.reset();
-        this.selectionSteps = this.selectionSteps.clear();
-        this.alignedCorpora = this.initialAlignedCorpora;
-        this.bibliographyIds = this.bibliographyIds.clear();
-        if (this.selectedCorporaProvider) {
-            this.selectLanguages(this.selectedCorporaProvider().rest().toList(), false);
+    sideEffects(state:LiveAttrsModelState, action:Action, dispatch:SEDispatcher) {
+        switch (action.name) {
+            case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
+                dispatch({
+                    name: 'TT_LOCK_SELECTED'
+                });
+                const selections = this.getTtSelection(false);
+                this.loadFilteredData(state, selections).subscribe(
+                    (data) => {
+                        const filterData = this.importFilter(data.attr_values, dispatch);
+                        dispatch({
+                            name: 'TT_SNAPSHOT_STATE'
+                        });
+                        dispatch({
+                            name: 'TT_FILTER_WHOLE_SELECTION',
+                            payload: {
+                                data: filterData
+                            }
+                        });
+                        dispatch({
+                            name: 'LIVE_ATTRIBUTES_REFINE_DONE',
+                            payload: {
+                                poscount: data.poscount,
+                                filterData: filterData,
+                                selectedTypes: selections,
+                                bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
+                            }
+                        });
+                    },
+                    (err) => {
+                        this.pluginApi.showMessage('error', err);
+                        dispatch({
+                            name: 'LIVE_ATTRIBUTES_REFINE_DONE',
+                            error: err
+                        });
+                    }
+                );
+            break;
+            case 'LIVE_ATTRIBUTES_UNDO_CLICKED':
+                if (!isAlignedSelectionStep(state.lastRemovedStep)) {
+                    dispatch({
+                        name: 'TT_UNDO_STATE'
+                    });
+                }
+            break;
+            case 'LIVE_ATTRIBUTES_RESET_CLICKED':
+                dispatch({
+                    name: 'TT_RESET_STATE'
+                });
+            break;
+            case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
+                this.loadAutoComplete(state, action.payload['attrName'], action.payload['value'], dispatch);
+            break;
+            case 'TT_EXTENDED_INFORMATION_REQUEST':
+                const ident:string = action.payload['ident'];
+                if (state.bibliographyIds.contains(ident)) {
+                    this.loadBibInfo(ident).then(
+                        (serverData:ServerBibData) => {
+                            dispatch({
+                                name: 'TT_EXTENDED_INFORMATION_REQUEST_DONE',
+                                payload: {
+                                    attrName: state.bibliographyAttribute,
+                                    ident: ident,
+                                    data: serverData.bib_data
+                                }
+                            });
+
+                        }
+                    ).catch(
+                        (err:any) => {
+                            this.pluginApi.showMessage('error', err);
+                            dispatch({
+                                name: 'TT_EXTENDED_INFORMATION_REQUEST_DONE',
+                                error: err
+                            });
+
+                        }
+                    );
+
+                } else {
+                    return new RSVP.Promise<any>((resolve:()=>void, reject:(err)=>void) => {
+                        reject(new Error('Item not found'));
+                    })
+                }
+            break;
         }
-        this.updateListeners.forEach(item => item());
     }
 
-    hasSelectionSteps():boolean {
-        return this.selectionSteps.size > 0;
+    private updateAlignedItem(
+        state:LiveAttrsModelState,
+        corpname:string,
+        upd:(orig:TextTypes.AlignedLanguageItem)=>TextTypes.AlignedLanguageItem
+    ):boolean {
+        const srchIdx = state.alignedCorpora.findIndex(v => v.value === corpname);
+        console.log('srchIdx: ', srchIdx);
+        if (srchIdx > -1) {
+            const item = state.alignedCorpora.get(srchIdx);
+            state.alignedCorpora = state.alignedCorpora.set(srchIdx, upd(item));
+            return true;
+        }
+        return false;
     }
 
-    private updateSelectionSteps(selections:TextTypes.ServerCheckedValues, data:ServerRefineResponse):void {
-        const newAttrs = this.getUnusedAttributes(selections);
-        const selectedAligned = this.alignedCorpora.filter(item=>item.selected);
+    private attachBibData(state:LiveAttrsModelState, filterData:SelectionFilterMap) {
+        const newBibData = filterData[state.bibliographyAttribute];
+        // set the data iff server data are full-fledget (i.e. including unique 'ident')
+        if (newBibData.length > 0 && !!newBibData[0].ident) {
+            state.bibliographyIds = state.bibliographyIds.union(Immutable.OrderedSet<string>(newBibData.map(v => v.ident)));
+        }
+    }
 
-        if (this.selectionSteps.size === 0 && selectedAligned.size > 0) {
+    reset(state:LiveAttrsModelState):void {
+        state.selectionSteps = state.selectionSteps.clear();
+        if (this.controlsAlignedCorpora) {
+            state.alignedCorpora = state.initialAlignedCorpora;
+        }
+        state.bibliographyIds = state.bibliographyIds.clear();
+    }
+
+    private updateSelectionSteps(state:LiveAttrsModelState, selections:TextTypes.ServerCheckedValues, poscount:number):void {
+        const newAttrs = this.getUnusedAttributes(state, selections);
+        const selectedAligned = state.alignedCorpora.filter(item=>item.selected);
+
+        if (state.selectionSteps.size === 0 && selectedAligned.size > 0) {
             const mainLang = this.pluginApi.getCorpusIdent().id;
             const newStep:AlignedLangSelectionStep = {
                 num: 1,
-                numPosInfo: newAttrs.length > 0 ? 0 : data.poscount,
+                numPosInfo: newAttrs.length > 0 ? 0 : poscount,
                 attributes : Immutable.List([]),
-                languages : this.alignedCorpora
-                                    .splice(0, 0, {
-                                        value: mainLang,
-                                        label: mainLang,
-                                        selected: true,
-                                        locked: true
-                                    })
-                                    .filter((item)=>item.selected)
-                                    .map((item)=>item.value).toArray()
+                languages : state.alignedCorpora
+                    .splice(0, 0, {
+                        value: mainLang,
+                        label: mainLang,
+                        selected: true,
+                        locked: true
+                    })
+                    .filter((item)=>item.selected)
+                    .map((item)=>item.value).toArray()
             };
-            this.selectionSteps = this.selectionSteps.push(newStep);
+            state.selectionSteps = state.selectionSteps.push(newStep);
         }
-        if (this.selectionSteps.size > 0 && newAttrs.length > 0 || selectedAligned.size == 0) {
+        if (state.selectionSteps.size > 0 && newAttrs.length > 0 || selectedAligned.size == 0) {
             const newStep:TTSelectionStep = {
-                num: this.selectionSteps.size + 1,
-                numPosInfo: data.poscount,
+                num: state.selectionSteps.size + 1,
+                numPosInfo: poscount,
                 attributes: Immutable.List(newAttrs),
                 values: Immutable.Map<string, Array<string>>(newAttrs.map((item) => {
                     return [item, selections[item]];
                 }))
             };
-            this.selectionSteps = this.selectionSteps.push(newStep);
+            state.selectionSteps = state.selectionSteps.push(newStep);
         }
     }
 
-    /**
-     * Note: be careful when wiring-up this model with TextTypes model
-     * as they listen to each other for different actions which is
-     * a possible source of a infinite callback loop.
-     */
-    addUpdateListener(fn:()=>void):void { // TODO implement this via StatelessModel and side-effects
-        this.updateListeners = this.updateListeners.push(fn);
-    }
-
-    removeUpdateListener(fn:()=>void):void { // TODO (see above)
-        const idx = this.updateListeners.indexOf(fn);
-        if (idx > -1) {
-            this.updateListeners = this.updateListeners.remove(idx);
-        }
-    }
-
-    getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
-        if (this.manualAlignCorporaMode) {
-            return this.alignedCorpora;
+    getAlignedCorpora(state:LiveAttrsModelState):Immutable.List<TextTypes.AlignedLanguageItem> {
+        if (state.manualAlignCorporaMode) {
+            return state.alignedCorpora;
 
         } else {
-            return this.alignedCorpora.filter(v => v.selected).toList();
+            return state.alignedCorpora.filter(v => v.selected).toList();
         }
-    }
-
-    hasAvailableAlignedCorpora():boolean {
-        return this.alignedCorpora.size > 0;
     }
 
     /**
@@ -459,51 +389,56 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
      * yet present here in selectionSteps. These are
      * expected to compose the latest selection step.
      */
-    getUnusedAttributes(selections:TextTypes.ServerCheckedValues):Array<string> {
-        const used = this.getUsedAttributes();
+    private getUnusedAttributes(state:LiveAttrsModelState, selections:TextTypes.ServerCheckedValues):Array<string> {
+        const used = state.selectionSteps.flatMap(val => val.attributes).toList();
         return Object.keys(selections).filter(v => used.indexOf(v) === -1);
     }
 
-    getUsedAttributes():Array<string> {
-        return this.selectionSteps.reduce((red:Immutable.List<any>, val:SelectionStep) => {
-            return red.concat(val.attributes);
-        }, Immutable.List([])).toArray();
+    hasSelectedLanguages(state:LiveAttrsModelState):boolean {
+        return state.alignedCorpora.find((item)=>item.selected) !== undefined;
     }
 
-    getSelectionSteps():Array<SelectionStep> {
-        return this.selectionSteps.toArray();
+    hasLockedAlignedLanguages(state:LiveAttrsModelState):boolean {
+        return this.hasSelectedLanguages(state) && state.selectionSteps.size > 0;
     }
 
-    hasSelectedLanguages():boolean {
-        return this.alignedCorpora.find((item)=>item.selected) !== undefined;
+    private setAttrSummary(attrName:string, value:TextTypes.AttrSummary, dispatch:SEDispatcher):void {
+        dispatch({
+            name: 'TT_SET_ATTR_SUMMARY',
+            payload: {
+                attrName: attrName,
+                value: value
+            }
+        });
     }
 
-    hasLockedAlignedLanguages():boolean {
-        return this.hasSelectedLanguages() && this.selectionSteps.size > 0;
-    }
-
-    private importFilter(data:{[ident:string]:Array<any>}):{[k:string]:Array<FilterResponseValue>} {
-        let ans:{[k:string]:Array<FilterResponseValue>} = {};
+    private importFilter(data:ServerRefineResponse['attr_values'], dispatch:SEDispatcher):SelectionFilterMap {
+        let ans:SelectionFilterMap = {};
         for (let k in data) {
             if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
-                if (isArr(data[k])) {
-                    ans[k] = data[k].map((v) => {
+                const item = data[k];
+                if (Array.isArray(item)) {
+                    ans[k] = item.map((v) => {
                         return {
                             ident: v[1],
                             v: v[2], // [0] contains shortened version - cannot use here
                             lock: false,
                             availItems: v[4],
-                            numGrouped: parseInt(v[3])
+                            numGrouped: v[3]
                         };
                     });
-                    this.textTypesModel.setAttrSummary(k, null);
+                    this.setAttrSummary(k, null, dispatch);
 
-                } else if (typeof data[k] === 'object' && 'length' in data[k]) {
-                    this.textTypesModel.setAttrSummary(k, {
-                        text: this.pluginApi.translate('query__tt_{num}_items',
-                                {num: data[k]['length']}),
-                        help: this.pluginApi.translate('ucnkLA__bib_list_warning')
-                    });
+                } else if (item.poscount) {
+                    this.setAttrSummary(
+                        k,
+                        {
+                            text: this.pluginApi.translate('query__tt_{num}_items',
+                                {num: item.poscount}),
+                            help: this.pluginApi.translate('ucnkLA__bib_list_warning')
+                        },
+                        dispatch
+                    );
                 }
             }
         }
@@ -521,9 +456,9 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         );
     }
 
-    private loadFilteredData(selections:TextTypes.ServerCheckedValues):RSVP.Promise<any> {
-        let aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
-        return this.pluginApi.ajax(
+    private loadFilteredData(state:LiveAttrsModelState, selections:TextTypes.ServerCheckedValues):Observable<ServerRefineResponse> {
+        const aligned = state.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
+        return this.pluginApi.ajax$<ServerRefineResponse>(
             'POST',
             this.pluginApi.createActionUrl('filter_attributes'),
             {
@@ -531,12 +466,30 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
                 attrs: JSON.stringify(selections),
                 aligned: JSON.stringify(aligned)
             }
-        );
+        ).pipe(
+            map(
+                (resp) => {
+                    const fixedAttrVals = {};
+                    Object.keys(resp.attr_values).forEach(k => {
+                        if (Array.isArray(resp.attr_values[k])) {
+                            fixedAttrVals[k] = resp.attr_values[k];
+                        }
+                    });
+                    return {
+                        error: resp.error,
+                        messages: resp.messages,
+                        aligned: resp.aligned,
+                        poscount: resp.poscount,
+                        attr_values: fixedAttrVals
+                    };
+                }
+            )
+        )
     }
 
-    private loadAutocompleteHint(pattern:string, patternAttr:string, selections:SelectedTextTypes):RSVP.Promise<any> {
-        const aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
-        return this.pluginApi.ajax(
+    private loadAutocompleteHint(state:LiveAttrsModelState, pattern:string, patternAttr:string, selections:SelectedTextTypes):Observable<ServerRefineResponse> {
+        const aligned = state.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
+        return this.pluginApi.ajax$(
             'POST',
             this.pluginApi.createActionUrl('attr_val_autocomplete'),
             {
@@ -549,66 +502,49 @@ export class LiveAttrsModel extends StatefulModel implements TextTypes.AttrValue
         );
     }
 
-    getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {
-        return (attrName:string, value:string) => {
-            if (value.length > 2) {
-                let prom = this.loadAutocompleteHint(
-                    value, attrName, this.textTypesModel.exportSelections(true));
-                return prom.then(
-                    (v:ServerRefineResponse) => {
-                        let filterData = this.importFilter(v.attr_values);
-                        if (isArr(filterData[this.bibliographyAttribute])) {
-                            this.attachBibData(filterData);
-                        }
-                        this.textTypesModel.setAutoComplete(
-                            attrName,
-                            v.attr_values[attrName].map((v) => {
-                                    return {ident: v[1], label: v[2]};
-                            })
-                        );
-                    },
-                    (err) => {
-                        console.error(err);
-                        this.pluginApi.showMessage('error', err);
+    loadAutoComplete(state:LiveAttrsModelState, attrName:string, value:string, dispatch:SEDispatcher):void {
+        if (value.length > 2) {
+            this.loadAutocompleteHint(state, value, attrName, this.getTtSelection(true)).subscribe(
+                (resp) => {
+                    const filterData = this.importFilter(resp.attr_values, dispatch);
+                    if (Array.isArray(filterData[state.bibliographyAttribute])) {
+                        this.attachBibData(state, filterData);
                     }
-                );
+                    const values = resp.attr_values[attrName];
+                    if (Array.isArray(values)) {
+                        dispatch({
+                            name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE',
+                            payload: {
+                                attrName: attrName,
+                                data: values.map((v) => ({ident: v[1], label: v[2]}))
+                            }
+                        });
 
-            } else {
-                return new RSVP.Promise<any>((resolve:(v: any)=>void, reject:(e:any)=>void) => {
-                    resolve(null);
-                });
-            }
+                    } else {
+                        dispatch({
+                            name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE',
+                            error: new Error('Did not recieve list of items but a summary instead')
+                        });
+                    }
+                },
+                (err) => {
+                    console.error(err);
+                    this.pluginApi.showMessage('error', err);
+                }
+            );
+
+        } else {
+            rxOf(null);
         }
     }
 
     getTextInputPlaceholder():string {
+        /*
         if (this.isEnabled) {
             return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
         }
         return this.pluginApi.translate('ucnkLA__too_many_values_placeholder');
-    }
-
-    getControlsEnabled():boolean {
-        return this.controlsEnabled;
-    }
-
-    setControlsEnabled(v:boolean):void {
-        this.controlsEnabled = v;
-    }
-
-    isManualAlignCorporaMode():boolean {
-        return this.manualAlignCorporaMode;
-    }
-
-    canUndoRefine():boolean {
-        return this.textTypesModel.canUndoState();
-    }
-
-    getIsBusy():boolean {
-        return this.isBusy;
-    }
-
-    getIsTTListMinimized():boolean {
-        return this.isTTListMinimized;
+        */
+       throw new Error('getTextInputPlaceholder() called')
     }
 }

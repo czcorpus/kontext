@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action } from 'kombo';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 declare var require:(ident:string)=>any; // Webpack
 const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');
@@ -48,7 +48,7 @@ export class VirtualKeyboardModel extends StatefulModel {
         [32]
     ];
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = 0;

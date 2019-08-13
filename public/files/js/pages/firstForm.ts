@@ -38,7 +38,7 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -53,7 +53,7 @@ class ConfigWrapper extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.dispatcherRegister((action:Action) => {
@@ -93,8 +93,6 @@ export class FirstFormPage {
     private virtualKeyboardModel:VirtualKeyboardModel;
 
     private queryContextModel:QueryContextModel;
-
-    private onQueryModelReady:(qs:FirstQueryFormModel)=>void;
 
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
@@ -157,7 +155,8 @@ export class FirstFormPage {
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
-                textTypesData
+                textTypesData,
+
         );
         this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
@@ -168,8 +167,7 @@ export class FirstFormPage {
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
-            () => this.queryModel.getCorpora(),
-            () => this.textTypesModel.hasSelectedItems(),
+            false,
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
@@ -185,18 +183,10 @@ export class FirstFormPage {
             // cause that LiveAttrs model needs QueryModel data but it is not available
             // here yet. That's the reason we have to define a callback here to configure
             // required values later.
-            this.onQueryModelReady = (qs => {
-                liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
-            });
-            this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-            this.textTypesModel.addSelectionChangeListener(target => {
-                liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
-                        liveAttrsPlugin.hasSelectedLanguages());
-            });
+            this.textTypesModel.enableAutoCompleteSupport();
             liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
 
         } else {
-            this.onQueryModelReady = () => undefined;
             liveAttrsViews = {};
         }
         return {
@@ -251,8 +241,6 @@ export class FirstFormPage {
                 tagAttr: this.layoutModel.getConf<string>('tagAttr')
             }
         );
-
-        this.onQueryModelReady(this.queryModel);
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
             this.queryModel.onSettingsChange(model);
             this.layoutModel.dispatchSideEffect(

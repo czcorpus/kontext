@@ -31,7 +31,7 @@ import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 import {transformVmode} from '../options/structsAttrs';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 export interface ServerTextChunk {
     class:string;
@@ -340,7 +340,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     private isBusy:boolean;
 
 
-    constructor(layoutModel:PageModel, dispatcher:IActionDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
             ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {

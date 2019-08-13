@@ -26,7 +26,7 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, SEDispatcher, IFullActionControl } from 'kombo';
 
 
 /**
@@ -69,6 +69,27 @@ export interface BlockLine {
 export interface Block {
     Line:Array<BlockLine>;
 }
+
+
+export interface SelectionFilterValue {
+
+    ident:string;
+
+    v:string;
+
+    lock:boolean;
+
+    /*
+     * Specifies how many items in returned list is actually behind the item.
+     * This typically happens in case there are multiple items with the same name.
+     */
+    numGrouped:number;
+
+    availItems?:number;
+}
+
+
+export type SelectionFilterMap = {[k:string]:Array<SelectionFilterValue>};
 
 
 /**
@@ -159,33 +180,16 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
      */
     private metaInfo:Immutable.Map<string, TextTypes.AttrSummary>;
 
-    /**
-     * Contains externally registered callbacks invoked in case
-     * user clicks to the [i] icon. The model must be set to provide
-     * such a functionality.
-     */
-    private extendedInfoCallbacks:Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>; // TODO type
-
-    /**
-     * Contains externally registered callbacks invoked in case
-     * user writes something to text-input based value selection boxes.
-     * This can be used e.g. to provide auto-complete features.
-     */
-    private textInputChangeCallback:(attrName:string, inputValue:string)=>RSVP.Promise<any>;
-
-    private selectionChangeListeners:Immutable.List<(target:TextTypes.ITextTypesModel)=>void>;
-
     private minimizedBoxes:Immutable.Map<string, boolean>;
 
-    /**
-     *
-     */
     private textInputPlaceholder:string;
 
     private _isBusy:boolean;
 
+    private autoCompleteSupport:boolean;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, data:InitialData, selectedItems?:SelectedTextTypes) {
+
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:InitialData, selectedItems?:SelectedTextTypes) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data, selectedItems || {}));
         this.bibLabelAttr = data.bib_attr;
@@ -199,24 +203,25 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         this.pluginApi = pluginApi;
         this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
         this.metaInfo = Immutable.Map<string, TextTypes.AttrSummary>();
-        this.extendedInfoCallbacks = Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>();
-        this.selectionChangeListeners = Immutable.List<(target:TextTypes.ITextTypesModel)=>void>();
         this.textInputPlaceholder = null;
         this._isBusy = false;
         this.minimizedBoxes = Immutable.Map<string, boolean>(this.attributes.map(v => [v.name, false]));
+        this.autoCompleteSupport = false;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcher.registerActionListener((action:Action, dispatch:SEDispatcher) => {
             switch (action.name) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
                     this.changeValueSelection(action.payload['attrName'], action.payload['itemIdx']);
+                    this.notifySelectionChange(dispatch);
                     break;
                 case 'TT_SELECT_ALL_CHECKBOX_CLICKED':
                     this.applySelectAll(action.payload['attrName']);
-                    break;
+                    this.notifySelectionChange(dispatch);
                 case 'TT_RANGE_BUTTON_CLICKED':
                     this.applyRange(action.payload['attrName'], action.payload['fromVal'],
                             action.payload['toVal'], action.payload['strictInterval'],
                             action.payload['keepCurrent']);
+                    this.notifySelectionChange(dispatch);
                     break;
                 case 'TT_TOGGLE_RANGE_MODE':
                     this.setRangeMode(action.payload['attrName'], !this.getRangeModes().get(action.payload['attrName']));
@@ -224,19 +229,43 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
                     this._isBusy = true;
-                    this.emitChange();
-                    this.fetchExtendedInfo(action.payload['attrName'], action.payload['ident']).then(
-                        (v) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.pluginApi.showMessage('error', err);
-                            this.emitChange();
-                        }
-                    );
+                    const attr = this.getAttribute(action.payload['attrName']);
+                    const ident = action.payload['ident'];
+                    const attrIdx = this.attributes.indexOf(attr);
+                    const srchIdx = attr.getValues().findIndex(v => v.ident === ident);
+                    if (srchIdx > - 1 && attr.getValues().get(srchIdx).numGrouped < 2) {
+                        this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
+                            return {
+                                availItems: item.availItems,
+                                extendedInfo: undefined,
+                                ident: item.ident,
+                                locked: item.locked,
+                                numGrouped: item.numGrouped,
+                                selected: item.selected,
+                                value: item.value
+                            };
+                        }));
+                        this.emitChange();
+
+                    } else if (srchIdx > -1) {
+                        const message = this.pluginApi.translate(
+                            'query__tt_multiple_items_same_name_{num_items}',
+                            {num_items: attr.getValues().get(srchIdx).numGrouped}
+                        );
+                        this.setExtendedInfo(attr.name, ident, Immutable.Map({__message__: message}));
+                        this.emitChange();
+                    }
                     break;
+                break;
+                case 'TT_EXTENDED_INFORMATION_REQUEST_DONE':
+                    this._isBusy = false;
+                    this.setExtendedInfo(
+                        action.payload['attrName'],
+                        action.payload['ident'],
+                        Immutable.OrderedMap<string, string|number>(action.payload['data'])
+                    );
+                    this.emitChange();
+                break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
                     this.clearExtendedInfo(action.payload['attrName'], action.payload['ident']);
                     this.emitChange();
@@ -245,6 +274,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     this.setTextInputAttrValue(action.payload['attrName'], action.payload['ident'],
                             action.payload['label'], action.payload['append']);
                     this.emitChange();
+                    this.notifySelectionChange(dispatch);
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
                     this.handleAttrTextInputChange(action.payload['attrName'], action.payload['value']);
@@ -255,16 +285,17 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     this.emitChange();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
-                    this.handleAttrTextInputAutoCompleteRequest(action.payload['attrName'], action.payload['value']).then(
-                        (v) => {
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.pluginApi.showMessage('error', err);
-                            console.error(err);
-                        }
-                    );
+                    this._isBusy = true;
+                    this.emitChange();
                     break;
+                case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE':
+                    this._isBusy = false;
+                    this.setAutoComplete(
+                        action.payload['attrName'],
+                        action.payload['data']
+                    );
+                    this.emitChange();
+                break;
                 case 'TT_MINIMIZE_ALL':
                     this.minimizedBoxes = this.minimizedBoxes.map((v, k) => true).toMap();
                     this.emitChange();
@@ -280,8 +311,59 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     );
                     this.emitChange();
                 break;
+                case 'TT_SNAPSHOT_STATE':
+                    this.selectionHistory = this.selectionHistory.push(this.attributes);
+                    this.emitChange();
+                break;
+                case 'TT_UNDO_STATE':
+                    this.selectionHistory = this.selectionHistory.pop();
+                    this.attributes = this.selectionHistory.last();
+                    this.emitChange();
+                    this.notifySelectionChange(dispatch);
+                break;
+                case 'TT_RESET_STATE':
+                    this.reset();
+                    this.emitChange();
+                    this.notifySelectionChange(dispatch);
+                break;
+                case 'TT_LOCK_SELECTED':
+                    this.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
+                        this.mapItems(attrName, (item:TextTypes.AttributeValue) => ({
+                            ident: item.ident,
+                            value: item.value,
+                            selected: item.selected,
+                            locked: true,
+                            availItems: item.availItems,
+                            numGrouped: item.numGrouped,
+                            extendedInfo: item.extendedInfo
+                        }));
+                    });
+                    this.emitChange();
+                break;
+                case 'TT_FILTER_WHOLE_SELECTION':
+                    this.filterWholeSelection(action.payload['data']);
+                    this.emitChange();
+                break;
+                case 'TT_SET_ATTR_SUMMARY':
+                    this.metaInfo = this.metaInfo.set(action.payload['attrName'], action.payload['value']);
+                    this.emitChange();
+                break;
             }
         });
+    }
+
+    notifySelectionChange(dispatch:SEDispatcher):void {
+        dispatch({
+            name: 'TT_SELECTION_CHANGED',
+            payload: {
+                attributes: this.getAttributes(),
+                hasSelectedItems: this.hasSelectedItems()
+            }
+        });
+    }
+
+    enableAutoCompleteSupport():void {
+        this.autoCompleteSupport = true;
     }
 
     applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void {
@@ -364,49 +446,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         }
     }
 
-    private fetchExtendedInfo(attrName:string, ident:string):RSVP.Promise<any> {
-        const attr = this.getAttribute(attrName);
-        const attrIdx = this.attributes.indexOf(attr);
-        const srchIdx = attr.getValues().findIndex(v => v.ident === ident);
-        if (srchIdx > - 1 && attr.getValues().get(srchIdx).numGrouped < 2) {
-            this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
-                return {
-                    availItems: item.availItems,
-                    extendedInfo: undefined,
-                    ident: item.ident,
-                    locked: item.locked,
-                    numGrouped: item.numGrouped,
-                    selected: item.selected,
-                    value: item.value
-                };
-            }));
-            const fn = this.extendedInfoCallbacks.get(attrName);
-            if (fn) {
-                return fn(ident);
-
-            } else {
-                return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                    resolve(null);
-                });
-            }
-
-        } else if (srchIdx > -1) {
-            const message = this.pluginApi.translate(
-                    'query__tt_multiple_items_same_name_{num_items}',
-                    {num_items: attr.getValues().get(srchIdx).numGrouped}
-            );
-            this.setExtendedInfo(attrName, ident, Immutable.Map({__message__: message}));
-            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                resolve(null);
-            });
-
-        } else {
-            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                reject(null);
-            });
-        }
-    }
-
     private resetAutoComplete(attrName:string):void {
         const attr = this.getTextInputAttribute(attrName);
         if (attr) {
@@ -423,19 +462,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         }
     }
 
-    private hasAutoCompleteSupport():boolean {
-        return typeof this.textInputChangeCallback === 'function';
-    }
-
-    private handleAttrTextInputAutoCompleteRequest(attrName:string, value:string):RSVP.Promise<any> {
-        if (this.hasAutoCompleteSupport()) {
-            return this.textInputChangeCallback(attrName, value);
-
-        } else {
-            return RSVP.Promise.resolve(null);
-        }
-    }
-
     private setTextInputAttrValue(attrName:string, ident:string, label:string, append:boolean):void {
         const attr:TextTypes.AttributeSelection = this.getTextInputAttribute(attrName);
         const idx = this.attributes.indexOf(attr);
@@ -448,7 +474,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         };
         const updatedAttr = append ? attr.addValue(newVal) : attr.clearValues().addValue(newVal);
         this.attributes = this.attributes.set(idx, updatedAttr);
-        this.selectionChangeListeners.forEach(fn => fn(this));
     }
 
     private importInitialData(data:InitialData, selectedItems:SelectedTextTypes):Array<TextTypes.AttributeSelection> {
@@ -519,7 +544,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         const idx = this.attributes.indexOf(attr);
         if (attr) {
             this.attributes = this.attributes.set(idx, attr.toggleValueSelection(itemIdx));
-            this.selectionChangeListeners.forEach(fn => fn(this));
 
         } else {
             throw new Error('no such attribute value: ' + attrIdent);
@@ -533,7 +557,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         const prom = this.rangeSelector.applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
         prom.then(
             (newSelection:TextTypes.AttributeSelection) => {
-                this.selectionChangeListeners.forEach(fn => fn(this));
                 this.emitChange();
             },
             (err) => {
@@ -558,46 +581,23 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     availItems: item.availItems
                 };
             }));
-            this.selectionChangeListeners.forEach(fn => fn(this));
             this.emitChange();
         }
-    }
-
-    snapshotState():void {
-        this.selectionHistory = this.selectionHistory.push(this.attributes);
-    }
-
-    undoState():void {
-        this.selectionHistory = this.selectionHistory.pop();
-        this.attributes = this.selectionHistory.last();
     }
 
     canUndoState():boolean {
         return this.selectionHistory.size > 1;
     }
 
-    addSelectionChangeListener(fn:(target:TextTypes.ITextTypesModel)=>void):void {
-        this.selectionChangeListeners = this.selectionChangeListeners.push(fn);
-    }
-
-    reset():void {
-        this.attributes = this.selectionHistory.get(0);
+    private reset():void {
+        this.attributes = this.selectionHistory.first();
         this.selectionHistory = this.selectionHistory.slice(0, 1).toList();
         this.selectAll = this.selectAll.map((item)=>false).toMap();
         this.metaInfo = this.metaInfo.clear();
-        this.selectionChangeListeners.forEach(fn => fn(this));
     }
 
     getAttribute(ident:string):TextTypes.AttributeSelection {
         return this.attributes.find((val) => val.name === ident);
-    }
-
-    getAttrSize(attrName:string):number {
-        const item = this.attributes.find(item => item.name === attrName);
-        if (item) {
-            return item.getValues().reduce((prev, curr) => prev + curr.availItems, 0);
-        }
-        return -1;
     }
 
     getTextInputAttribute(ident:string):TextTypes.ITextInputAttributeSelection {
@@ -619,23 +619,19 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         }
     }
 
-    getAttributes():Array<TextTypes.AttributeSelection> {
-        return this.attributes.toArray();
+    getAttributes():Immutable.List<TextTypes.AttributeSelection> {
+        return this.attributes;
     }
 
-    getInitialAvailableValues(attrName:string):Immutable.List<TextTypes.AttributeValue> {
-        const idx = this.selectionHistory.get(0).findIndex(item => item.name === attrName);
-        if (idx > -1) {
-            return this.selectionHistory.get(0).get(idx).getValues().map(item => item).toList();
-        }
-        return Immutable.List<TextTypes.AttributeValue>();
+    getInitialAvailableValues():Immutable.List<TextTypes.AttributeSelection> {
+        return this.selectionHistory.get(0);
     }
 
     exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>} {
         const ans = {};
         this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {
             if (attrSel.hasUserChanges()) {
-                if (this.hasAutoCompleteSupport()) {
+                if (this.autoCompleteSupport) {
                     ans[attrSel.name !== this.bibLabelAttr ? attrSel.name : this.bibIdAttr] = attrSel.exportSelections(lockedOnesOnly);
 
                 } else {
@@ -651,7 +647,31 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         return ans;
     }
 
-    updateItems(attrName:string, items:Array<string>):void {
+    private filterWholeSelection(filterData:SelectionFilterMap) {
+        let k; // must be defined here (ES5 cannot handle for(let k...) here)
+        for (k in filterData) {
+            this.updateItems(k, filterData[k].map(v => v.ident));
+            this.mapItems(k, (v, i) => {
+                if (filterData[k][i]) {
+                    return {
+                        ident: filterData[k][i].ident,
+                        value: filterData[k][i].v,
+                        selected: v.selected,
+                        locked: v.locked,
+                        numGrouped: filterData[k][i].numGrouped,
+                        availItems: filterData[k][i].availItems,
+                        extendedInfo: v.extendedInfo
+                    };
+
+                } else {
+                    return null;
+                }
+            });
+            this.filter(k, (item) => item !== null);
+        }
+    }
+
+    private updateItems(attrName:string, items:Array<string>):void {
         const attr = this.getAttribute(attrName);
         const idx = this.attributes.indexOf(attr);
         if (idx > -1) {
@@ -733,23 +753,11 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         }).map((item:TextTypes.AttributeSelection)=>item.name).toArray();
     }
 
-    setAttrSummary(attrName:string, value:TextTypes.AttrSummary):void {
-        this.metaInfo = this.metaInfo.set(attrName, value);
-    }
-
     getAttrSummary():Immutable.Map<string, TextTypes.AttrSummary> {
         return this.metaInfo;
     }
 
-    setExtendedInfoSupport<T>(attrName:string, fn:(ident:string)=>RSVP.Promise<T>):void {
-        this.extendedInfoCallbacks = this.extendedInfoCallbacks.set(attrName, fn);
-    }
-
-    hasDefinedExtendedInfo(attrName:string):boolean {
-        return this.extendedInfoCallbacks.has(attrName);
-    }
-
-    setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, any>):void {
+    setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, string|number>):void {
         let attr = this.getAttribute(attrName);
         if (attrName) {
             let attrIdx = this.attributes.indexOf(attr);
@@ -759,11 +767,6 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
             throw new Error('Failed to find attribute ' + attrName);
         }
     }
-
-    setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>RSVP.Promise<any>):void {
-        this.textInputChangeCallback = fn;
-    }
-
 
     setTextInputPlaceholder(s:string):void {
         this.textInputPlaceholder = s;
@@ -793,4 +796,11 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         return this.minimizedBoxes.find(v => v === false) !== undefined;
     }
 
+    getBibIdAttr():string {
+        return this.bibIdAttr;
+    }
+
+    getBibLabelAttr():string {
+        return this.bibLabelAttr;
+    }
 }

@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,26 +20,18 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext, TextTypes} from '../../types/common';
-import {SubcMixerModel, SubcMixerExpression, CalculationResults} from './init';
-import {init as subcorpViewsInit} from '../../views/subcorp/forms';
-import {PluginInterfaces} from '../../types/plugins';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { Kontext } from '../../types/common';
+import { SubcMixerModel, SubcMixerExpression, CalculationResults, SubcMixerModelState } from './model';
+import { init as subcorpViewsInit } from '../../views/subcorp/forms';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 
 export interface WidgetProps {
     isActive:boolean;
 }
 
-
-export interface Views {
-    Widget:React.ComponentClass<WidgetProps>;
-}
-
-
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            subcMixerModel:SubcMixerModel, subcFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel):Views {
+            subcMixerModel:SubcMixerModel):React.ComponentClass<WidgetProps, SubcMixerModelState> {
 
     const layoutViews = he.getLayoutViews();
     const subcFormViews = subcorpViewsInit({
@@ -60,7 +54,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             {props.success ?
                 null :
                 <img className="warning" src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')}
-                            title={he.translate('ucnk_subc__condition_failed_{limit}', {limit: props.limit})}/>
+                            title={he.translate('ucnk_subc__condition_failed_{limit}', {limit: props.limit * 100})}/>
             }
             <strong>{he.formatNumber(props.ratio, 1) + '%'}</strong>
         </>;
@@ -76,7 +70,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         baseRatio:string;
         ratio:string;
         result:[string, number, boolean];
-        ratioLimitPercent:number;
+        ratioLimit:number;
 
     }> = (props) => {
 
@@ -111,7 +105,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </span>
                 </td>
                 <td className="num">
-                    {props.result ? <CalculatedRatio success={props.result[2]} limit={props.ratioLimitPercent}
+                    {props.result ? <CalculatedRatio success={props.result[2]} limit={props.ratioLimit}
                                                 ratio={props.result[1]} /> : <span>-</span>}
                 </td>
             </tr>
@@ -121,10 +115,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------ <ValuesTable /> -------------------------------------
 
     const ValuesTable:React.SFC<{
-        currentResults:CalculationResults;
+        currentResult:CalculationResults;
         hasResults:boolean;
         items:Immutable.List<SubcMixerExpression>;
-        ratioLimitPercent:number;
+        ratioLimit:number;
 
     }> = (props) => {
 
@@ -146,8 +140,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 attrValue={item.attrValue}
                                 baseRatio={item.baseRatio}
                                 ratio={item.ratio}
-                                result={props.currentResults ? props.currentResults['attrs'].get(i) : null}
-                                ratioLimitPercent={props.ratioLimitPercent} />
+                                result={props.currentResult ? props.currentResult['attrs'].get(i) : null}
+                                ratioLimit={props.ratioLimit} />
                     ))}
                 </tbody>
             </table>
@@ -166,6 +160,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
                 payload: {}
             });
+            dispatcher.dispatch({
+                name: 'XXXX ________',
+                payload: {}
+            });
         };
 
         return (
@@ -180,7 +178,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------ <ResultsControls /> -------------------------------------
 
     const ResultsControls:React.SFC<{
-        numErrors:number;
+        numOfErrors:number;
         totalSize:number;
         numConditions:number;
         currentSubcname:Kontext.FormValue<string>;
@@ -206,7 +204,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const renderDesc = () => {
-            if (props.numErrors === 0) {
+            if (props.numOfErrors === 0) {
                 return (
                     <span>
                         <img className="icon"
@@ -217,7 +215,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </span>
                 );
 
-            } else if (props.numErrors === props.numConditions) {
+            } else if (props.numOfErrors === props.numConditions) {
                 return (
                     <span>
                         <img className="icon"
@@ -234,7 +232,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const renderControls = () => {
-            if (props.numErrors < props.numConditions) {
+            if (props.numOfErrors < props.numConditions) {
                 return (
                     <div>
                         <p>
@@ -291,22 +289,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------ <Controls /> -------------------------------------
 
     const Controls:React.SFC<{
-        isWaiting:boolean;
+        isBusy:boolean;
         hasResults:boolean;
         totalSize:number;
-        numErrors:number;
+        numOfErrors:number;
         numConditions:number;
         currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
         isPublic:boolean;
         description:Kontext.FormValue<string>;
 
-        setWaitingFn:()=>void;
-
     }> = (props) => {
 
         const handleCalculateCategoriesClick = () => {
-            props.setWaitingFn();
             dispatcher.dispatch({
                 name: 'UCNK_SUBCMIXER_SUBMIT_TASK',
                 payload: {}
@@ -314,14 +309,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const renderButtons = () => {
-            if (props.isWaiting) {
+            if (props.isBusy) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                             alt={he.translate('global__calculating')} />;
 
             } else if (props.hasResults) {
                 return <ResultsControls
                             totalSize={props.totalSize}
-                            numErrors={props.numErrors}
+                            numOfErrors={props.numOfErrors}
                             numConditions={props.numConditions}
                             currentSubcname={props.currentSubcname}
                             isPublic={props.isPublic}
@@ -356,194 +351,82 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <SubcMixer /> -------------------------------------
 
-    class SubcMixer extends React.Component<{
+    const SubcMixer:React.SFC<{
         selectedValues:Immutable.List<SubcMixerExpression>;
-        currentResults:CalculationResults;
-        numErrors:number;
+        currentResult:CalculationResults;
+        numOfErrors:number;
         currentSubcname:Kontext.FormValue<string>;
         usedAttributes:Immutable.Set<string>;
-        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
-        ratioLimitPercent:number;
+        alignedCorpora:Immutable.List<string>;
+        ratioLimit:number;
         closeClickHandler:()=>void;
-    },
-    {
-        isWaiting:boolean;
+        isBusy:boolean;
         isPublic:boolean;
         description:Kontext.FormValue<string>;
-    }> {
+    }> = (props) => {
 
-        private smmModelSubscription:Subscription;
-        private sfmModelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this._setWaiting = this._setWaiting.bind(this);
-            this.state = {
-                isWaiting: false,
-                isPublic: subcFormModel.getIsPublic(),
-                description: subcFormModel.getDescription()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState({
-                isWaiting: false,
-                isPublic: subcFormModel.getIsPublic(),
-                description: subcFormModel.getDescription()
-            });
-        }
-
-        _setWaiting() {
-            this.setState({
-                isWaiting: true,
-                isPublic: subcFormModel.getIsPublic(),
-                description: subcFormModel.getDescription()
-            });
-        }
-
-        componentDidMount() {
-            this.smmModelSubscription = subcMixerModel.addListener(this._handleModelChange);
-            this.sfmModelSubscription = subcFormModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.smmModelSubscription.unsubscribe();
-            this.sfmModelSubscription.unsubscribe();
-        }
-
-        _renderAlignedCorpInfo() {
+        const renderAlignedCorpInfo = () => {
             return (
                 <p>
                     <img src={he.createStaticUrl('img/info-icon.svg')}
                             style={{width: '1em', marginRight: '0.3em', verticalAlign: 'middle'}}
                             alt={he.translate('global__info_icon')} />
                     {he.translate('ucnk_subcm__there_are_aligned_corpora_msg')}:{'\u00a0'}
-                    <strong>{this.props.alignedCorpora.map(v => v.label).join(', ')}</strong>
+                    <strong>{props.alignedCorpora.join(', ')}</strong>
                 </p>
             );
-        }
+        };
 
-        render() {
-            const hasResults = !!this.props.currentResults;
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.CloseableFrame onCloseClick={this.props.closeClickHandler}
-                            customClass="subcmixer-widget"
-                            label={he.translate('ucnk_subcm__widget_header')}>
-                        <div>
-                            {this.props.alignedCorpora.size > 0 ? this._renderAlignedCorpInfo() : null}
-                            <ValuesTable items={this.props.selectedValues}
-                                    currentResults={this.props.currentResults}
-                                    hasResults={hasResults}
-                                    ratioLimitPercent={this.props.ratioLimitPercent} />
-                            <Controls isWaiting={this.state.isWaiting}
-                                    setWaitingFn={this._setWaiting}
-                                    hasResults={!!this.props.currentResults}
-                                    totalSize={this.props.currentResults ? this.props.currentResults['total'] : null}
-                                    numErrors={this.props.numErrors}
-                                    numConditions={this.props.selectedValues.size}
-                                    currentSubcname={this.props.currentSubcname}
-                                    usedAttributes={this.props.usedAttributes}
-                                    isPublic={this.state.isPublic}
-                                    description={this.state.description} />
-                        </div>
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        }
+        const hasResults = !!props.currentResult;
+        return (
+            <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
+                <layoutViews.CloseableFrame onCloseClick={props.closeClickHandler}
+                        customClass="subcmixer-widget"
+                        label={he.translate('ucnk_subcm__widget_header')}>
+                    <div>
+                        {props.alignedCorpora.size > 0 ? renderAlignedCorpInfo() : null}
+                        <ValuesTable items={props.selectedValues}
+                                currentResult={props.currentResult}
+                                hasResults={hasResults}
+                                ratioLimit={props.ratioLimit} />
+                        <Controls isBusy={props.isBusy}
+                                hasResults={!!props.currentResult}
+                                totalSize={props.currentResult ? props.currentResult['total'] : null}
+                                numOfErrors={props.numOfErrors}
+                                numConditions={props.selectedValues.size}
+                                currentSubcname={props.currentSubcname}
+                                usedAttributes={props.usedAttributes}
+                                isPublic={props.isPublic}
+                                description={props.description} />
+                    </div>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        );
     }
 
     // ------------ <Widget /> -------------------------------------
 
-    class Widget extends React.Component<WidgetProps, {
-        useWidget:boolean;
-        selectedValues:Immutable.List<SubcMixerExpression>;
-        currentResults:CalculationResults;
-        numErrors:number;
-        currentSubcname:Kontext.FormValue<string>;
-        usedAttributes:Immutable.Set<string>;
-        alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
-        ratioLimitPercent:number;
-    }> {
+    const Widget:React.SFC<WidgetProps & SubcMixerModelState> = (props) => {
 
-        private smmModelSubscription:Subscription;
-        private sfmModelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._handleTrigger = this._handleTrigger.bind(this);
-            this._handleCloseWidget = this._handleCloseWidget.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this.state = {
-                useWidget: false,
-                selectedValues: subcMixerModel.getShares(),
-                currentResults: subcMixerModel.getCurrentCalculationResults(),
-                numErrors: subcMixerModel.getNumOfErrors(),
-                currentSubcname: subcFormModel.getSubcName(),
-                usedAttributes: subcMixerModel.getUsedAttributes(),
-                alignedCorpora: subcMixerModel.getAlignedCorpora(),
-                ratioLimitPercent: subcMixerModel.getRatioLimitPercent()
-            };
-        }
-
-        _handleTrigger() {
-            this.setState({
-                useWidget: true,
-                selectedValues: subcMixerModel.getShares(),
-                currentResults: subcMixerModel.getCurrentCalculationResults(),
-                currentSubcname: subcFormModel.getSubcName(),
-                usedAttributes: subcMixerModel.getUsedAttributes(),
-                alignedCorpora: subcMixerModel.getAlignedCorpora(),
-                ratioLimitPercent: subcMixerModel.getRatioLimitPercent()
-            });
-        }
-
-        _handleCloseWidget() {
+        const handleCloseWidget = () => {
             dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
+                name: 'UCNK_SUBCMIXER_HIDE_WIDGET',
                 payload: {}
             });
-            this.setState({
-                useWidget: false,
-                selectedValues: null,
-                currentResults: null,
-                numErrors: 0,
-                currentSubcname: null,
-                usedAttributes: null,
-                alignedCorpora: subcMixerModel.getAlignedCorpora()
+        };
+
+        const handleActivationButton = () => {
+            dispatcher.dispatch({
+                name: 'UCNK_SUBCMIXER_SHOW_WIDGET'
             });
         }
 
-        _handleModelChange() {
-            this.setState({
-                useWidget: this.state.useWidget,
-                selectedValues: subcMixerModel.getShares(),
-                currentResults: subcMixerModel.getCurrentCalculationResults(),
-                numErrors: subcMixerModel.getNumOfErrors(),
-                currentSubcname: subcFormModel.getSubcName(),
-                usedAttributes: subcMixerModel.getUsedAttributes(),
-                alignedCorpora: subcMixerModel.getAlignedCorpora(),
-                ratioLimitPercent: subcMixerModel.getRatioLimitPercent()
-            });
-        }
-
-        componentDidMount() {
-            this.smmModelSubscription = subcMixerModel.addListener(this._handleModelChange);
-            this.sfmModelSubscription = subcFormModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.smmModelSubscription.unsubscribe();
-            this.sfmModelSubscription.unsubscribe();
-        }
-
-        _renderButton() {
-            if (this.props.isActive) {
+        const renderButton = () => {
+            if (props.isActive) {
                 return (
                     <a className="trigger util-button"
                             title={he.translate('ucnk_subcm__set_shares')}
-                            onClick={this._handleTrigger}>
+                            onClick={handleActivationButton}>
                         {he.translate('ucnk_subcm__define_proportions')}
                     </a>
                 );
@@ -556,29 +439,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </span>
                 );
             }
-        }
-
-        render() {
-            return (
-                <div className="mixer-trigger">
-                    {this._renderButton()}
-                    {this.state.useWidget ?
-                        <SubcMixer closeClickHandler={this._handleCloseWidget}
-                                selectedValues={this.state.selectedValues}
-                                currentResults={this.state.currentResults}
-                                numErrors={this.state.numErrors}
-                                currentSubcname={this.state.currentSubcname}
-                                usedAttributes={this.state.usedAttributes}
-                                alignedCorpora={this.state.alignedCorpora}
-                                ratioLimitPercent={this.state.ratioLimitPercent} />
-                        : null}
-                </div>
-            );
-        }
+        };
+        return (
+            <div className="mixer-trigger">
+                {renderButton()}
+                {props.isVisible ?
+                    <SubcMixer closeClickHandler={handleCloseWidget}
+                            selectedValues={props.shares}
+                            currentResult={props.currentResult}
+                            numOfErrors={props.numOfErrors}
+                            currentSubcname={props.currentSubcname}
+                            usedAttributes={props.liveattrsSelections.keySeq().toSet()}
+                            alignedCorpora={props.alignedCorpora}
+                            ratioLimit={props.ratioLimit}
+                            isBusy={props.isBusy}
+                            isPublic={props.subcIsPublic}
+                            description={props.subcDescription} />
+                    : null}
+            </div>
+        );
     }
 
-    return {
-        Widget: Widget
-    };
+    return BoundWithProps<WidgetProps, SubcMixerModelState>(Widget, subcMixerModel);
 
 }

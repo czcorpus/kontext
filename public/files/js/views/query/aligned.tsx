@@ -105,20 +105,12 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleCloseClick() {
-            dispatcher.dispatch(rxOf(
-                {
-                    name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-                    payload: {
-                        corpname: this.props.corpname
-                    }
-                },
-                {   // additional action for dependent models
-                    name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS_DONE',
-                    payload: {
-                        corpname: this.props.corpname
-                    }
+            dispatcher.dispatch({
+                name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+                payload: {
+                    corpname: this.props.corpname
                 }
-            ));
+            });
         }
 
         handleMakeMainClick() {
@@ -186,20 +178,12 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     const AlignedCorpora:React.SFC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
-            dispatcher.dispatch(rxOf(
-                {
-                    name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-                    payload: {
-                        corpname: evt.target.value
-                    }
-                },
-                {   // action for dependent models
-                    name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS_DONE',
-                    payload: {
-                        corpname: evt.target.value
-                    }
+            dispatcher.dispatch({
+                name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+                payload: {
+                    corpname: evt.target.value
                 }
-            ));
+            });
         };
 
         const findCorpusLabel = (corpname) => {

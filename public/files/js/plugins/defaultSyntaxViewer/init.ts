@@ -27,7 +27,7 @@ import {StatefulModel} from '../../models/base';
 declare var require:any;
 const $ = require('jquery');
 import './js-treex-view';
-import { IActionDispatcher } from 'kombo';
+import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 require('./style.less'); // webpack
 
@@ -48,7 +48,7 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
 
     private errorHandler:(e:Error)=>void;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
     }

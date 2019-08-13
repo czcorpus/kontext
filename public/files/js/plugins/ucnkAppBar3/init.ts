@@ -24,13 +24,13 @@ import {PluginInterfaces} from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 export class AppBarModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher) {
+    constructor(dispatcher:IFullActionControl) {
         super(dispatcher);
 
         this.dispatcher.registerActionListener((action:Action) => {

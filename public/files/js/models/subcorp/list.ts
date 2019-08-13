@@ -27,7 +27,7 @@ import {PageModel} from '../../app/main';
 import {StatefulModel} from '../base';
 import { MultiDict } from '../../util';
 import { AsyncTaskStatus } from '../asyncTask';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 
@@ -82,7 +82,7 @@ export class SubcorpListModel extends StatefulModel {
 
     private actionBoxActionType:string;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,

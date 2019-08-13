@@ -26,7 +26,7 @@ import {PageModel} from '../../app/main';
 import {ConcLineModel} from './lines';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import { IActionDispatcher, Action } from 'kombo';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
@@ -73,7 +73,7 @@ export class LineSelectionModel extends StatefulModel {
 
     private emailDialogCredentials:Kontext.UserCredentials;
 
-    constructor(layoutModel:PageModel, dispatcher:IActionDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;

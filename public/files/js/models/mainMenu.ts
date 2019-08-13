@@ -24,7 +24,7 @@ import {PageModel} from '../app/main';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import { MultiDict } from '../util';
-import { IActionDispatcher, Action } from 'kombo';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 
 
@@ -141,7 +141,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;

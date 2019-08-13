@@ -28,7 +28,7 @@ import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  *
@@ -148,7 +148,7 @@ export class ConcDetailModel extends StatefulModel {
     private tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:IActionDispatcher, linesModel:ConcLineModel, structCtx:string,
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>,
             tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
         super(dispatcher);
@@ -810,7 +810,7 @@ export class RefsDetailModel extends StatefulModel {
 
     private isBusy:boolean;
 
-    constructor(layoutModel:PageModel, dispatcher:IActionDispatcher, linesModel:ConcLineModel) {
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.linesModel = linesModel;

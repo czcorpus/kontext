@@ -25,12 +25,12 @@ import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 
 export interface FreqResultsSaveModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
     freqArgsProviderFn:()=>MultiDict;
@@ -211,7 +211,7 @@ export class FreqCTResultsSaveModel extends StatefulModel {
     saveMode:string;
 
 
-    constructor(dispatcher:IActionDispatcher, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
+    constructor(dispatcher:IFullActionControl, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
         super(dispatcher);
         this.ctTableModel = ctTableModel;
         this.ctFlatModel = ctFlatModel;

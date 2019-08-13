@@ -39,11 +39,19 @@ declare var require:any;
 require('styles/subcorpForm.less');
 
 
+interface TTProps {
+    alignedCorpora:Array<string>;
+    attributes:Immutable.List<TextTypes.AttributeSelection>;
+    liveAttrsCustomTT:React.ComponentClass<{}>|null;
+    liveAttrsView:React.ComponentClass<{}>;
+    manualAlignCorporaMode:boolean;
+}
+
+
 export interface TTInitData {
     component:React.ComponentClass<TextTypesPanelProps>;
-    props:{[p:string]:any};
+    props:TTProps;
     ttModel:TextTypesModel;
-    attachedAlignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 }
 
 
@@ -91,7 +99,7 @@ export class SubcorpForm {
         return Immutable.List<{n:string; v:string; pub:string}>();
     }
 
-    initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:{[p:string]:any}):void {
+    initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:TTProps):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
@@ -120,8 +128,7 @@ export class SubcorpForm {
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
-            null, // no corplist provider => manual aligned corp. selection mode
-            () => this.textTypesModel.hasSelectedItems(),
+            false, // manual aligned corp. selection mode
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
@@ -129,13 +136,6 @@ export class SubcorpForm {
                 manualAlignCorporaMode: true
             }
         );
-        if (this.layoutModel.pluginIsActive('live_attributes')) {
-            this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-            this.textTypesModel.addSelectionChangeListener(target => {
-                liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
-                        liveAttrsPlugin.hasSelectedLanguages());
-            });
-        }
 
         const subcmixerPlg = subcMixer(
             this.layoutModel.pluginApi(),
@@ -147,14 +147,12 @@ export class SubcorpForm {
                 validateForm: () => this.subcorpFormModel.validateForm(false),
                 addListener: (fn:Kontext.ModelListener) => this.subcorpFormModel.addListener(fn)
             },
-            () => liveAttrsPlugin.getAlignedCorpora(),
             this.layoutModel.getConf<string>('CorpusIdAttr')
         );
 
         let subcMixerComponent:React.ComponentClass;
         if (this.layoutModel.pluginIsActive('subcmixer')) {
             if (liveAttrsPlugin) {
-                liveAttrsPlugin.addUpdateListener(subcmixerPlg.refreshData.bind(subcmixerPlg));
                 subcMixerComponent = subcmixerPlg.getWidgetView();
 
             } else {
@@ -164,12 +162,7 @@ export class SubcorpForm {
         } else {
             subcMixerComponent = null;
         }
-        const liveAttrsViews = liveAttrsPlugin ? liveAttrsPlugin.getViews(subcMixerComponent,this.textTypesModel) : {};
-
-        const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
-            () => liveAttrsPlugin.getAlignedCorpora().filter(v => v.selected).toList() :
-            () => Immutable.List<TextTypes.AlignedLanguageItem>();
-
+        const liveAttrsViews = liveAttrsPlugin ? liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel) : {};
         return {
             component: ttViewComponents.TextTypesPanel,
             props: {
@@ -179,8 +172,7 @@ export class SubcorpForm {
                 alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                 manualAlignCorporaMode: true
             },
-            ttModel: this.textTypesModel,
-            attachedAlignedCorporaProvider: attachedAlignedCorporaProvider
+            ttModel: this.textTypesModel
         };
     }
 
@@ -221,8 +213,7 @@ export class SubcorpForm {
                     this.layoutModel,
                     ttComponent.ttModel,
                     this.layoutModel.getCorpusIdent().id,
-                    InputMode.GUI,
-                    ttComponent.attachedAlignedCorporaProvider
+                    InputMode.GUI
                 );
 
                 this.subcorpWithinFormModel = new SubcorpWithinFormModel(

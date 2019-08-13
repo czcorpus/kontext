@@ -26,7 +26,7 @@ import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
 import {init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
 import {UserProfileModel} from './profile';
-import { IActionDispatcher, Action } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 /**
@@ -40,7 +40,7 @@ export class UserStatusModel extends StatefulModel {
 
     private returnUrl:string;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.loginFormVisible = false;
