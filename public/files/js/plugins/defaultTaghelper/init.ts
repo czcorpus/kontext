@@ -21,8 +21,10 @@
 import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperModel} from './ppos/models';
+import {UDTagBuilderModel} from './ud/models';
 import {init as viewInit} from './views';
 import {init as ppTagsetViewInit} from './ppos/views';
+import {init as udTagsetViewInit} from './ud/views';
 import { Kontext } from '../../types/common';
 
 declare var require:any;
@@ -55,8 +57,19 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     )
                 ).TagBuilder;
             case 'ud':
-                // TODO
-                return null;
+                return viewInit(
+                    this.pluginApi.dispatcher(),
+                    this.pluginApi.getComponentHelpers(),
+                    new UDTagBuilderModel(
+                        this.pluginApi.dispatcher(),
+                        this.pluginApi,
+                        corpname
+                    ),
+                    udTagsetViewInit(
+                        this.pluginApi.dispatcher(),
+                        this.pluginApi.getComponentHelpers()
+                    )
+                ).TagBuilder;
             default:
                 throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
         }
