@@ -65,7 +65,7 @@ export function init(
         const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
                 name: 'FREQ_TT_SET_FTTATTR',
-                props : {
+                payload: {
                     value: evt.target.value
                 }
             });
