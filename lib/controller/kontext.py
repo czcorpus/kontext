@@ -1017,7 +1017,10 @@ class Kontext(Controller):
             ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
         result['ttcrit'] = [('fcrit', '%s 0' % a)
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
-        result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
+        result['corp_uses_tag'] = 'tag' in corpus_get_conf(
+            maincorp, 'ATTRLIST').split(',')  # legacy value
+        result['corp_tagset_info'] = dict(type=self.get_corpus_info(self.args.corpname).tagset,
+                                          attrs=('tag',))
         result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
                                               ('lemma', self.args.lemma),
                                               ('lpos', self.args.lpos),

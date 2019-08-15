@@ -324,7 +324,12 @@ export class FirstFormPage {
                 const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
                 const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
                 const ttAns = this.createTTViews();
-                ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagHelperPlg.getWidgetView() : null;
+                ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
+                        tagHelperPlg.getWidgetView(
+                            this.layoutModel.getCorpusIdent().id,
+                            this.layoutModel.getConf<Kontext.TagsetInfo>('tagsetInfo')
+                        ) :
+                        null;
                 ttAns.queryStorageView = qsPlugin.getWidgetView();
                 ttAns.allowCorpusSelection = true;
                 ttAns.actionPrefix = '';

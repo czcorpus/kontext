@@ -170,7 +170,7 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<ViewProps>;
 
         export interface IPlugin {
-            getWidgetView():TagHelper.View;
+            getWidgetView(corpname:string, tagsetInfo:Kontext.TagsetInfo):TagHelper.View;
         }
 
         export interface Factory {

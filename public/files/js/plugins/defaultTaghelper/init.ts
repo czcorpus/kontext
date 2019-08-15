@@ -18,43 +18,53 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperModel} from './models';
-import {init as viewInit} from './view';
+import {TagHelperModel} from './ppos/models';
+import {init as viewInit} from './views';
+import {init as ppTagsetViewInit} from './ppos/views';
+import { Kontext } from '../../types/common';
 
 declare var require:any;
 require('./style.less'); // webpack
+
 
 
 export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
     private pluginApi:IPluginApi;
 
-    private model:TagHelperModel;
-
-    constructor(pluginApi:IPluginApi, model:TagHelperModel) {
+    constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
-        this.model = model;
     }
 
-    getWidgetView():PluginInterfaces.TagHelper.View {
-        return viewInit(
-            this.pluginApi.dispatcher(),
-            this.pluginApi.getComponentHelpers(),
-            this.model
-        ).TagBuilder;
+    getWidgetView(corpname:string, tagsetInfo:Kontext.TagsetInfo):PluginInterfaces.TagHelper.View {
+        switch (tagsetInfo.type) {
+            case 'pp_tagset':
+                return viewInit(
+                    this.pluginApi.dispatcher(),
+                    this.pluginApi.getComponentHelpers(),
+                    new TagHelperModel(
+                        this.pluginApi.dispatcher(),
+                        this.pluginApi,
+                        corpname
+                    ),
+                    ppTagsetViewInit(
+                        this.pluginApi.dispatcher(),
+                        this.pluginApi.getComponentHelpers()
+                    )
+                ).TagBuilder;
+            case 'ud':
+                // TODO
+                return null;
+            default:
+                throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
+        }
     }
 }
 
 const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
-    return new TagHelperPlugin(
-        pluginApi,
-        new TagHelperModel(
-            pluginApi.dispatcher(),
-            pluginApi,
-            pluginApi.getCorpusIdent().id
-        )
-    );
+    return new TagHelperPlugin(pluginApi);
 };
 
 export default create;

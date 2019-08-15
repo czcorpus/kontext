@@ -16,10 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../types/plugins';
+import {IPluginApi} from '../../../types/plugins';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { TagBuilderBaseState } from '../common';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -57,7 +58,7 @@ export interface PositionOptions {
 }
 
 
-export interface TagHelperModelState {
+export interface TagHelperModelState extends TagBuilderBaseState {
 
     corpname:string;
 
@@ -74,10 +75,6 @@ export interface TagHelperModelState {
     displayPattern:string;
 
     srchPattern:string;
-
-    isBusy:boolean;
-
-    canUndo:boolean;
 
     stateId:string;
 }
