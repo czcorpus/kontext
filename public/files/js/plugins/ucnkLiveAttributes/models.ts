@@ -105,9 +105,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
         this.getTtSelection = getTtSelection;
-        this.DEBUG_onActionMatch((s, a) => {
-            console.log('action >>> ', a.name, ', payload: ', a.payload);
-        })
         this.actionMatch = {
             'LIVE_ATTRIBUTES_REFINE_CLICKED': (state, action) => {
                 const newState = this.copyState(state);

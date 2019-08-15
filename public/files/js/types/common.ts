@@ -615,6 +615,11 @@ export namespace Kontext {
         SUBHITS = 'subhits',
         FIRSTHITS = 'firsthits'
     }
+
+    export interface TagsetInfo {
+        type:string;
+        attrs:Array<string>;
+    }
 }
 
 
