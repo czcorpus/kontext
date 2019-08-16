@@ -39,17 +39,13 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
     }> = (props) => {
         const categories = props.allFeatures.keySeq().sort().map(category => {
             const availableValuesCount = (props.availableFeatures.has(category) ? props.availableFeatures.get(category).size : 0);
-            return <button
-                    type="button"
+            return <option
                     key={category}
-                    name={category}
-                    onClick={props.onSelectCategoryHandler}
-                    className="util-button"
-                    style={props.selectedCategory===category ? {backgroundColor: 'yellow'} : {backgroundColor: null}}>
+                    value={category}>
                 {category + " (" + availableValuesCount + ")"}
-                </button>
+                </option>
         })
-        return <div>{categories}</div>;
+        return <select onChange={props.onSelectCategoryHandler}>{categories}</select>;
     }
 
     const QueryLine:React.FunctionComponent<{
@@ -92,7 +88,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         handleCategorySelect(event) {
             dispatcher.dispatch({
                 name: 'TAGHELPER_SELECT_CATEGORY',
-                payload: {name: event.target.name}
+                payload: {value: event.target.value}
             });
         }
 
@@ -110,42 +106,25 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                 return <div>Loading...</div>;
             } else {
                 return(
-                    <div>
+                    <div style={{position: "relative", width: "100%"}}>
                         <QueryLine
                             filterFeatures={this.props.filterFeaturesHistory.last()}
                             handleRemoveFilter={this.handleRemoveFilter} />
-                        <div style={{display: "flex", alignItems: "flex-start"}}>
-                            <div style={{whiteSpace: "nowrap", padding: "1em", margin: "0 2em", borderStyle: "solid"}}>
-                                <p>POS tag:</p>
-                                <CategoryDetail
-                                    onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                                    filterFeatures={this.props.filterFeaturesHistory.last()}
-                                    categoryName="POS"
-                                    allValues={this.props.allFeatures.get("POS")}
-                                    availableValues={
-                                        this.props.availableFeatures.has("POS") ?
-                                        this.props.availableFeatures.get("POS") :
-                                        Immutable.List([])
-                                    } />
-                            </div>
-                            <div>
-                                <CategorySelect
-                                    allFeatures={this.props.allFeatures.delete("POS")}
-                                    availableFeatures={this.props.availableFeatures}
-                                    onSelectCategoryHandler={this.handleCategorySelect}
-                                    selectedCategory={this.props.showCategory} />
-                                <CategoryDetail
-                                    onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                                    filterFeatures={this.props.filterFeaturesHistory.last()}
-                                    categoryName={this.props.showCategory}
-                                    allValues={this.props.allFeatures.get(this.props.showCategory)}
-                                    availableValues={
-                                        this.props.availableFeatures.has(this.props.showCategory) ?
-                                        this.props.availableFeatures.get(this.props.showCategory) :
-                                        Immutable.List([])
-                                    } />
-                            </div>
-                        </div>
+                        <CategorySelect
+                            allFeatures={this.props.allFeatures}
+                            availableFeatures={this.props.availableFeatures}
+                            onSelectCategoryHandler={this.handleCategorySelect}
+                            selectedCategory={this.props.showCategory} />
+                        <CategoryDetail
+                            onChangeHandler={(event) => this.handleCheckboxChange(event)}
+                            filterFeatures={this.props.filterFeaturesHistory.last()}
+                            categoryName={this.props.showCategory}
+                            allValues={this.props.allFeatures.get(this.props.showCategory)}
+                            availableValues={
+                                this.props.availableFeatures.has(this.props.showCategory) ?
+                                this.props.availableFeatures.get(this.props.showCategory) :
+                                Immutable.List([])
+                            } />
                     </div>
                 );
             }

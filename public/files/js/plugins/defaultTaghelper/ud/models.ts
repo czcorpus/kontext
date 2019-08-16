@@ -103,7 +103,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
         this.actionMatch = {
             'TAGHELPER_SELECT_CATEGORY': (state, action) => {
                 const newState = this.copyState(state);
-                newState.showCategory = action.payload['name'];
+                newState.showCategory = action.payload['value'];
                 return newState;
             },
             'TAGHELPER_GET_INITIAL_FEATURES_DONE': (state, action) => {
