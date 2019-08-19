@@ -16,6 +16,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from plugins.abstract.taghelper import AbstractTagsetInfoLoader
+
 
 class TagVariantLoaderException(Exception):
     pass
+
+
+class NullTagVariantLoader(AbstractTagsetInfoLoader):
+
+    def get_variant(self, user_selection, lang):
+        return {}
+
+    def get_initial_values(self, lang):
+        return {}
+
+    def is_enabled(self):
+        return False
