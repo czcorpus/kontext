@@ -20,11 +20,13 @@
 
 from plugins.abstract.taghelper import ValueSelectionFetcher
 
+EXCEPT_KEYS = {'corpname', }
+
 
 class KeyvalSelectionFetcher(ValueSelectionFetcher):
 
     def fetch(self, request):
-        return [(k, v) for k, v in request.args.items()]
+        return [(k, v) for k, v in request.args.items() if k not in EXCEPT_KEYS]
 
     def is_empty(self, val):
         return len(val) == 0
