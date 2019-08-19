@@ -510,6 +510,19 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
+     * Return page configuration item hidden in
+     * any key->object... depth in safe way
+     * (i.e. no TypeError when accessing undefined
+     * sub-object).
+     */
+    getNestedConf<T>(...keys:Array<string>):T {
+        return keys.slice(0, keys.length - 1).reduce(
+            (acc, k) => acc[k] !== undefined ? acc[k] : {},
+            this.conf
+        )[keys[keys.length - 1]];
+    }
+
+    /**
      * Set page configuration item. Setting an item
      * triggers a configuration change event.
      */
@@ -958,6 +971,10 @@ export class PluginApi implements IPluginApi {
 
     getConf<T>(key:string):T {
         return this.pageModel.getConf<T>(key);
+    }
+
+    getNestedConf<T>(...keys:Array<string>):T {
+        return this.pageModel.getNestedConf<T>(...keys);
     }
 
     createStaticUrl(path) {

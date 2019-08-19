@@ -617,7 +617,8 @@ export namespace Kontext {
     }
 
     export interface TagsetInfo {
-        type:string;
+        ident:string;
+        type:'positional'|'keyval'|'other';
         attrs:Array<string>;
     }
 }
