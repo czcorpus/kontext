@@ -148,6 +148,7 @@ class CorpusInfo(DictLike):
         self.web = None
         self.sentence_struct = None
         self.tagset = None
+        self.tagset_type = None  # positional/keyval/other
         self.speech_segment = None
         self.speaker_id_attr = None
         self.speech_overlap_attr = None
