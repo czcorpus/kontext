@@ -93,7 +93,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 availableFeatures: Immutable.Map({}),
                 filterFeaturesHistory: Immutable.List([Immutable.List([])]),
                 showCategory: null,
-                requestUrl: "http://localhost:8080/",
+                requestUrl: "http://10.0.3.254:8080/",
                 posField: "pos",
                 featureField: "ufeat",
             }
@@ -175,42 +175,37 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_FEATURES':
-                getFilteredFeatures(state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE');
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE');
             break;
 
             case 'TAGHELPER_ADD_FILTER':
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
-                getFilteredFeatures(state, dispatch, 'TAGHELPER_LOAD_FILTERED_DATA_DONE');
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_LOAD_FILTERED_DATA_DONE');
             break;
         }
     }
 
 }
 
-function getFilteredFeatures(state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone: string) {
+function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone: string) {
     const query = state.filterFeaturesHistory.last().map(x => x.composeString()).join('&');
-    // this.pluginApi.ajax$(
-    //     'GET',
-    //     query ? state.requestUrl + '?' + query : state.requestUrl,
-    //     {}
-    // ).subscribe(
-    //     (result) => {
-    //         dispatch({
-    //             name: actionDone,
-    //             payload: {result: result}
-    //         });
-    //     },
-    //     (error) => {
-    //         dispatch({
-    //             name: actionDone,
-    //             error: error
-    //         });
-    //     }
-    // )
-
-    dispatch({
-        name: actionDone,
-        payload: {result: JSON.parse('{"Case": ["Loc", "Dat", "Acc", "Voc", "Ins", "Nom", "Gen"], "Degree": ["Cmp", "Pos", "Sup"], "Gender": ["Fem,Neut", "Masc,Neut", "Fem", "Masc", "Neut", "Fem,Masc"], "Number": ["Plur", "Sing", "Plur,Sing", "Dual"], "POS": ["CCONJ", "NOUN", "X", "SYM", "NUM", "ADP", "PUNCT", "PRON", "AUX", "PART", "ADV", "SCONJ", "INTJ", "VERB", "PROPN", "DET", "ADJ"], "Polarity": ["Pos", "Neg"], "Person": ["3", "1", "2"], "PronType": ["Neg", "Int,Rel", "Tot", "Prs", "Emp", "Rel", "Dem", "Ind"], "Style": ["Rare", "Slng", "Expr", "Vulg", "Vrnc", "Coll", "Arch"], "Animacy": ["Anim", "Inan"], "Aspect": ["Perf", "Imp"], "Tense": ["Fut", "Past", "Pres"], "VerbForm": ["Fin", "Part", "Inf", "Conv"], "Voice": ["Act", "Pass"], "NameType": ["Nat,Sur", "Com,Nat", "Giv,Pro,Sur", "Sur", "Geo", "Giv,Oth", "Geo,Oth", "Geo,Giv,Sur", "Com,Pro", "Com", "Com,Geo", "Oth,Sur", "Giv,Sur", "Com,Oth", "Pro", "Com,Giv", "Geo,Pro", "Com,Sur", "Giv,Nat", "Geo,Sur", "Com,Giv,Sur", "Giv", "Giv,Pro", "Nat", "Pro,Sur", "Geo,Giv", "Oth", "Com,Pro,Sur"], "Abbr": ["Yes"], "Foreign": ["Yes"], "Gender[psor]": ["Masc,Neut", "Fem", "Masc"], "Poss": ["Yes"], "Variant": ["Short"], "Mood": ["Cnd", "Ind", "Imp"], "Number[psor]": ["Plur", "Sing"], "NumType": ["Ord", "Mult", "Card", "Frac", "Sets", "Mult,Sets"], "AdpType": ["Prep", "Comprep", "Voc"], "PrepCase": ["Npr", "Pre"], "Reflex": ["Yes"], "NumForm": ["Roman", "Word", "Digit"], "NumValue": ["1,2,3", "1"], "Hyph": ["Yes"], "ConjType": ["Oper"]}')}
-    });
+    pluginApi.ajax$(
+        'GET',
+        query ? state.requestUrl + '?' + query : state.requestUrl,
+        {}
+    ).subscribe(
+        (result) => {
+            dispatch({
+                name: actionDone,
+                payload: {result: result}
+            });
+        },
+        (error) => {
+            dispatch({
+                name: actionDone,
+                error: error
+            });
+        }
+    )
 }
