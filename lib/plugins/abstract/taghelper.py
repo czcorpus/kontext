@@ -17,8 +17,49 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-class AbstractTaghelper(object):
+class AbstractTagsetInfoLoader(object):
+    """
+    AbstractTagsetInfoLoader wraps all the implementation
+    details and concrete data format properties of
+    a tag set into a general interface Tag Helper plug-in
+    can work with.
 
+    Note: Having two methods may seem superfluous as the initial
+    values can be seen as getting a variant for an empty query.
+    But there is another important difference between the two
+    methods. A plug-in developer may want get_initial_values
+    to return all the possible values as defined in tagset
+    specification no matter how tag-rich a respective corpus is
+    (i.e. the corpus may not contain values for some property
+    at all but we want it in the selection anyway).
+    The 'get_variant' method on the other hand is expected to
+    be purely data-driven - i.e. it returns data based on
+    actual corpus contents.
+    """
+
+    def get_initial_values(self, lang):
+        """
+        Return all the possible properties of a respective tagset
+        (i.e. all the positions/keys/whatever and their respective
+        labels/descriptions/etc.).
+        """
+        raise NotImplementedError()
+
+    def get_variant(self, user_selection, lang):
+        """
+        Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
+        return a filtered values matching the selected ones.
+
+        E.g. let's say we have the following variants in a corpus: AAB, ACD, BAB, CAA
+        and user selects A.. Then we want to return [A, C] for the second position and
+        [B, D] for the third position as possible values.
+        For key-value tagsets it works in the same way - just imagine K1=A, K2=A,
+        K3=B instead of AAB, K1=A, K2=C, K3=D instead of ACD etc.
+        """
+        raise NotImplementedError()
+
+
+class AbstractTaghelper(object):
     """
     Please note that taghelper is not an instance of CorpusDependentPlugin
     even if it would sound reasonable. The reason is that e.g. in case of

@@ -88,7 +88,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         const changeHandler = (evt) => {
             dispatcher.dispatch({
                 name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
-                props : {
+                payload: {
                     name: evt.target.name,
                     value: evt.target.value
                 }

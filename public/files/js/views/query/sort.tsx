@@ -384,7 +384,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         _handleCtxAlignChange(evt) {
             dispatcher.dispatch({
                 name: 'ML_SORT_FORM_SET_CTX_ALIGN',
-                props : {
+                payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
                     value: evt.target.value

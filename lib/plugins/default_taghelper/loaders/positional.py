@@ -22,13 +22,10 @@ import json
 from collections import defaultdict
 import re
 from lxml import etree
+from plugins.abstract.taghelper import AbstractTagsetInfoLoader
 
 
-class TagVariantLoaderException(Exception):
-    pass
-
-
-class TagVariantLoader(object):
+class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
     """
     A backend for tag writing auto-complete, interactive tag writing widgets etc.
     Please note that values in config.xml/corpora/tags_cache_dir are cached without
@@ -57,10 +54,10 @@ class TagVariantLoader(object):
         self.taglist_path = taglist_path
         self.initial_values = {}
 
-    def get_variant(self, selected_tags, lang):
+    def get_variant(self, user_selection, lang):
         """
         """
-        return self.calculate_variant(selected_tags, lang)
+        return self.calculate_variant(user_selection, lang)
 
     def get_initial_values(self, lang):
         if lang not in self.initial_values:

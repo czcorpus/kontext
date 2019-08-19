@@ -246,6 +246,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.web = row['web']
             ans.sentence_struct = row['sentence_struct']
             ans.tagset = row['tagset']
+            ans.tagset_type = row['tagset_type']
             ans.collator_locale = row['collator_locale']
             ans.speech_segment = row['speech_segment']
             ans.speaker_id_attr = row['speaker_id_attr']
@@ -390,7 +391,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
 
                     return ans
                 return BrokenCorpusInfo(name=corp_name)
-            except Exception as ex:
+            except TypeError as ex:
                 logging.getLogger(__name__).warning(
                     'Failed to fetch corpus info for {0}: {1}'.format(corp_name, ex))
                 return BrokenCorpusInfo(name=corp_name)

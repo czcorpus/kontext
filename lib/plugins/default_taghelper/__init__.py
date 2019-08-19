@@ -46,7 +46,7 @@ from controller import exposed
 from controller.errors import UserActionException
 import plugins
 from plugins.abstract.taghelper import AbstractTaghelper
-from plugins.default_taghelper.loader import TagVariantLoader
+from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
 from actions import corpora
 
 
@@ -85,7 +85,7 @@ class Taghelper(AbstractTaghelper):
     def loader(self, corpus_name):
         tagset_name = self._corparch.get_corpus_info('en_US', corpus_name)['tagset']
         if corpus_name not in self._loaders:
-            self._loaders[corpus_name] = TagVariantLoader(
+            self._loaders[corpus_name] = PositionalTagVariantLoader(
                 corpus_name=corpus_name, tagset_name=tagset_name,
                 cache_dir=self._conf['default:tags_cache_dir'],
                 variants_file_path=self.create_tag_variants_file_path(corpus_name),
@@ -126,6 +126,11 @@ class Taghelper(AbstractTaghelper):
 
     def export_actions(self):
         return {corpora.Corpora: [ajax_get_tag_variants]}
+
+    def export(self, plugin_api):
+        info = self._corparch.get_corpus_info(
+            plugin_api.user_lang, plugin_api.current_corpus.corpname)
+        return dict(corp_tagset_info=dict(ident=info.tagset, type=info.tagset_type, attrs=('tag',)))
 
 
 @plugins.inject(plugins.runtime.CORPARCH)

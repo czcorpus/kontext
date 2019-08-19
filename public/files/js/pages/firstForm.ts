@@ -324,10 +324,11 @@ export class FirstFormPage {
                 const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
                 const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
                 const ttAns = this.createTTViews();
+                console.log(this.layoutModel.getNestedConf<Kontext.TagsetInfo>('pluginData', 'taghelper', 'corp_tagset_info'))
                 ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
                         tagHelperPlg.getWidgetView(
                             this.layoutModel.getCorpusIdent().id,
-                            this.layoutModel.getConf<Kontext.TagsetInfo>('tagsetInfo')
+                            this.layoutModel.getNestedConf<Kontext.TagsetInfo>('pluginData', 'taghelper', 'corp_tagset_info')
                         ) :
                         null;
                 ttAns.queryStorageView = qsPlugin.getWidgetView();

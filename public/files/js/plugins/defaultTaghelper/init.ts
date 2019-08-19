@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperModel} from './ppos/models';
 import {UDTagBuilderModel} from './ud/models';
@@ -42,7 +41,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
     getWidgetView(corpname:string, tagsetInfo:Kontext.TagsetInfo):PluginInterfaces.TagHelper.View {
         switch (tagsetInfo.type) {
-            case 'pp_tagset':
+            case 'positional':
                 return viewInit(
                     this.pluginApi.dispatcher(),
                     this.pluginApi.getComponentHelpers(),
@@ -56,7 +55,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                         this.pluginApi.getComponentHelpers()
                     )
                 ).TagBuilder;
-            case 'ud':
+            case 'keyval':
                 return viewInit(
                     this.pluginApi.dispatcher(),
                     this.pluginApi.getComponentHelpers(),
