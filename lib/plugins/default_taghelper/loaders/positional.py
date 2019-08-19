@@ -42,13 +42,13 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         ('!', r'\!')
     )
 
-    def __init__(self, corpus_name, tagset_name, cache_dir, variants_file_path, cache_clear_interval,
+    def __init__(self, corpus_name, tagset_name, cache_dir, tags_src_dir, cache_clear_interval,
                  taglist_path):
         """
         """
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
-        self.variants_file_path = variants_file_path
+        self.variants_file_path = os.path.join(tags_src_dir, corpus_name)
         self.cache_dir = os.path.join(cache_dir, self.corpus_name)
         self.cache_clear_interval = cache_clear_interval
         self.taglist_path = taglist_path
@@ -65,7 +65,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         return self.initial_values[lang]
 
     def is_enabled(self):
-        return len(self.get_initial_values('en_US')) > 0
+        return len(self.get_initial_values('en_US')) > 0 and os.path.exists(self.variants_file_path)
 
     def _get_initial_values(self, lang):
         """

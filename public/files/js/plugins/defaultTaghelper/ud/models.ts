@@ -76,7 +76,7 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 }
 
 export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
-    
+
     private pluginApi:IPluginApi;
 
     constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, corpname:string) {

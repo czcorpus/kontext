@@ -17,12 +17,25 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+class ValueSelectionFetcher(object):
+
+    def fetch(self, request):
+        raise NotImplementedError()
+
+    def is_empty(self, val):
+        raise NotImplementedError()
+
+
 class AbstractTagsetInfoLoader(object):
     """
     AbstractTagsetInfoLoader wraps all the implementation
     details and concrete data format properties of
     a tag set into a general interface Tag Helper plug-in
     can work with.
+
+    The instance is expected to be bound with a concrete corpus.
+    I.e. in case multiple corpora support the same tagset, multiple
+    loaders will be instantiated.
 
     Note: Having two methods may seem superfluous as the initial
     values can be seen as getting a variant for an empty query.
@@ -36,6 +49,13 @@ class AbstractTagsetInfoLoader(object):
     be purely data-driven - i.e. it returns data based on
     actual corpus contents.
     """
+
+    def is_enabled(self):
+        """
+        Return true if the loader is able to provide answers
+        (e.g. source data files exist etc.)
+        """
+        raise NotImplementedError()
 
     def get_initial_values(self, lang):
         """

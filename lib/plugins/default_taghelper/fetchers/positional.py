@@ -17,18 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugins.abstract.taghelper import AbstractTagsetInfoLoader
+from plugins.abstract.taghelper import ValueSelectionFetcher
 
 
-class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
+class PositionalSelectionFetcher(ValueSelectionFetcher):
 
-    def get_variant(self, user_selection, lang):
-        """
-        """
-        return None  # TODO
+    def fetch(self, request):
+        return request.args.get('pattern', '')
 
-    def get_initial_values(self, lang):
-        return None  # TODO
-
-    def is_enabled(self):
-        return True  # TODO
+    def is_empty(self, val):
+        return len(val) == 0
