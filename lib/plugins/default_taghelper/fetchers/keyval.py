@@ -18,10 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from plugins.abstract.taghelper import ValueSelectionFetcher
+from plugins.abstract.taghelper import AbstractValueSelectionFetcher
 
 
-class KeyvalSelectionFetcher(ValueSelectionFetcher):
+class KeyvalSelectionFetcher(AbstractValueSelectionFetcher):
 
     def fetch(self, request):
         return [(k, v) for k, v in request.args.items()]

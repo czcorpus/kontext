@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-class ValueSelectionFetcher(object):
+class AbstractValueSelectionFetcher(object):
 
     def fetch(self, request):
         raise NotImplementedError()
@@ -98,4 +98,10 @@ class AbstractTaghelper(object):
         arguments:
         corpus_id -- a corpus identifier
         """
+        raise NotImplementedError()
+
+    def loader(self, corpus_name):
+        raise NotImplementedError()
+
+    def fetcher(self, corpus_name):
         raise NotImplementedError()
