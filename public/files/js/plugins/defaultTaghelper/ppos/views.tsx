@@ -20,8 +20,8 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from '../ppos/models';
-import {Kontext, KeyCodes} from '../../../types/common';
+import {PositionValue, PositionOptions, TagHelperModelState} from '../ppos/models';
+import {Kontext} from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
 
 
