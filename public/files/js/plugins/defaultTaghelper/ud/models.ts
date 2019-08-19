@@ -69,7 +69,6 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
     availableFeatures: Immutable.Map<string, Immutable.List<string>>,
     filterFeaturesHistory: Immutable.List<Immutable.List<FilterRecord>>;
     showCategory: string;
-    requestUrl: string;
 
     posField: string;
     featureField: string;
@@ -83,6 +82,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
         super(
             dispatcher,
             {
+                corpname:corpname,
                 isBusy: undefined,
                 insertRange: [0, 0],
                 canUndo: false,
@@ -93,7 +93,6 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 availableFeatures: Immutable.Map({}),
                 filterFeaturesHistory: Immutable.List([Immutable.List([])]),
                 showCategory: null,
-                requestUrl: "http://10.0.3.254:8080/",
                 posField: "pos",
                 featureField: "ufeat",
             }
@@ -190,15 +189,16 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
 function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone: string) {
     const query = state.filterFeaturesHistory.last().map(x => x.composeString()).join('&');
+    const requestUrl = pluginApi.createActionUrl('corpora/ajax_get_tag_variants');
     pluginApi.ajax$(
         'GET',
-        query ? state.requestUrl + '?' + query : state.requestUrl,
-        {}
+        query ? requestUrl + '?' + query : requestUrl,
+        { corpname: state.corpname }
     ).subscribe(
         (result) => {
             dispatch({
                 name: actionDone,
-                payload: {result: result}
+                payload: {result: result['keyval_tags']}
             });
         },
         (error) => {

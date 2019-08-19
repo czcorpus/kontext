@@ -19,6 +19,7 @@
  */
 
 export interface TagBuilderBaseState {
+    corpname:string;
     isBusy:boolean;
     canUndo:boolean;
     displayPattern:string;
