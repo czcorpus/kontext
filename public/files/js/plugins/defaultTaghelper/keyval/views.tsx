@@ -45,7 +45,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                 {category + " (" + availableValuesCount + ")"}
                 </option>
         })
-        return <select onChange={props.onSelectCategoryHandler}>{categories}</select>;
+        return <select multiple={true} size={20} onChange={props.onSelectCategoryHandler}>{categories}</select>;
     }
 
     const QueryLine:React.FunctionComponent<{
@@ -63,7 +63,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             {filter.composeString()}
             </button>
         })
-        return <div><p>Remove filter: {selected}</p></div>;
+        return <div>{selected}</div>;
     }
 
     class FeatureSelect extends React.Component<FeatureSelectProps> {
@@ -104,29 +104,44 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                 return <div>Error: {this.props.error.message}</div>;
             } else {
                 return(
-                    <div style={{position: "relative", width: "100%"}}>
-                        <QueryLine
-                            filterFeatures={this.props.filterFeaturesHistory.last()}
-                            handleRemoveFilter={this.handleRemoveFilter} />
-                        <CategorySelect
-                            allFeatures={this.props.allFeatures}
-                            availableFeatures={this.props.availableFeatures}
-                            onSelectCategoryHandler={this.handleCategorySelect}
-                            selectedCategory={this.props.showCategory} />
-                        <CategoryDetail
-                            onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                            filterFeatures={this.props.filterFeaturesHistory.last()}
-                            categoryName={this.props.showCategory}
-                            allValues={
-                                this.props.allFeatures.has(this.props.showCategory) ?
-                                this.props.allFeatures.get(this.props.showCategory) :
-                                Immutable.List([])
-                            }
-                            availableValues={
-                                this.props.availableFeatures.has(this.props.showCategory) ?
-                                this.props.availableFeatures.get(this.props.showCategory) :
-                                Immutable.List([])
-                            } />
+                    <div>
+                        <div style={{maxWidth: '39em', minHeight: '5em'}}>
+                            <h4>Selected features (click to remove):</h4>
+                            <QueryLine
+                                filterFeatures={this.props.filterFeaturesHistory.last()}
+                                handleRemoveFilter={this.handleRemoveFilter} />
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'stretch'}}>
+                            <div style={{marginRight: '5em'}}>
+                                <h4>Part of speech:</h4>
+                                <CategoryDetail
+                                    onChangeHandler={(event) => this.handleCheckboxChange(event)}
+                                    filterFeatures={this.props.filterFeaturesHistory.last()}
+                                    categoryName="POS"
+                                    allValues={this.props.allFeatures.get("POS", Immutable.List([]))}
+                                    availableValues={this.props.availableFeatures.get("POS", Immutable.List([]))} />
+                            </div>
+                            <div>
+                                <h4>Features:</h4>
+                                <div style={{display: 'flex', alignItems: 'flex-start'}}>
+                                    <div>
+                                        <CategorySelect
+                                            allFeatures={this.props.allFeatures.remove("POS")}
+                                            availableFeatures={this.props.availableFeatures.remove("POS")}
+                                            onSelectCategoryHandler={this.handleCategorySelect}
+                                            selectedCategory={this.props.showCategory} />
+                                    </div>
+                                    <div>
+                                        <CategoryDetail
+                                            onChangeHandler={(event) => this.handleCheckboxChange(event)}
+                                            filterFeatures={this.props.filterFeaturesHistory.last()}
+                                            categoryName={this.props.showCategory}
+                                            allValues={this.props.allFeatures.get(this.props.showCategory, Immutable.List([]))}
+                                            availableValues={this.props.availableFeatures.get(this.props.showCategory, Immutable.List([]))} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 );
             }
