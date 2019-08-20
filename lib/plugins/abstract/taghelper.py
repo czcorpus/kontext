@@ -16,13 +16,41 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+This module contains a specification for the server-side of the
+'taghelper' widget which provides an interactive way how to write
+a PoS tag within a CQL query.
+
+Please note that the specification is more strict than necessary -
+there is a concept of 'loaders' and 'fetchers' which is completely
+avoidable but we suggest implementers to adopt this approach and
+reuse existing 'default_taghelper' plug-in with custom loaders and
+fetchers as it should be much easier to accomplish than writing
+a new version of 'taghelper'.
+"""
+
 
 class AbstractValueSelectionFetcher(object):
+    """
+    AbstractValueSelectionFetcher provides way how to
+    obtain user tag value search query data from the
+    werkzeug.wrappers.Request (see a respective pyi file)
+    and encode them in a way suitable for a respective
+    loader.
+    """
 
     def fetch(self, request):
+        """
+        fetch data from an HTTP request and encode
+        using a custom data type
+        """
         raise NotImplementedError()
 
     def is_empty(self, val):
+        """
+        Test whether the 'val' (= fetched data)
+        contains an empty query.
+        """
         raise NotImplementedError()
 
 
@@ -101,7 +129,13 @@ class AbstractTaghelper(object):
         raise NotImplementedError()
 
     def loader(self, corpus_name):
+        """
+        Return a loader for the corpus_name
+        """
         raise NotImplementedError()
 
     def fetcher(self, corpus_name):
+        """
+        Return a fetcher for the corpus_name
+        """
         raise NotImplementedError()
