@@ -91,7 +91,10 @@ class Taghelper(AbstractTaghelper):
                     taglist_path=self._conf['default:taglist_path'])
                 self._fetchers[corpus_name] = PositionalSelectionFetcher()
             elif tagset_type == 'keyval':
-                self._loaders[corpus_name] = KeyvalTagVariantLoader()
+                self._loaders[corpus_name] = KeyvalTagVariantLoader(
+                    corpus_name=corpus_name, tagset_name=tagset_name,
+                    tags_src_dir=self._conf['default:tags_src_dir'],
+                )
                 self._fetchers[corpus_name] = KeyvalSelectionFetcher()
             else:
                 self._loaders[corpus_name] = NullTagVariantLoader()
