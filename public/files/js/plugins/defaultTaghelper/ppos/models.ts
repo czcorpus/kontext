@@ -60,8 +60,6 @@ export interface PositionOptions {
 
 export interface TagHelperModelState extends TagBuilderBaseState {
 
-    corpname:string;
-
     /**
      * Contains all the values (inner lists) along with selection
      * status through whole user interaction (outer list).

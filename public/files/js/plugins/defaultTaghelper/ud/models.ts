@@ -24,7 +24,6 @@ import { TagBuilderBaseState } from '../common';
 
 export interface FeatureSelectProps {
     error:Error|null;
-    isLoaded:boolean;
     allFeatures:Immutable.Map<string, Immutable.List<string>>;
     availableFeatures:Immutable.Map<string, Immutable.List<string>>;
     filterFeaturesHistory:Immutable.List<Immutable.List<FilterRecord>>;
@@ -64,12 +63,10 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
     // ...
     error: Error|null;
-    isLoaded: boolean;
     allFeatures: Immutable.Map<string, Immutable.List<string>>,
     availableFeatures: Immutable.Map<string, Immutable.List<string>>,
     filterFeaturesHistory: Immutable.List<Immutable.List<FilterRecord>>;
     showCategory: string;
-    requestUrl: string;
 
     posField: string;
     featureField: string;
@@ -83,17 +80,16 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
         super(
             dispatcher,
             {
-                isBusy: undefined,
+                corpname:corpname,
+                isBusy: false,
                 insertRange: [0, 0],
                 canUndo: false,
                 displayPattern: '',
                 error: null,
-                isLoaded: false,
                 allFeatures: Immutable.Map({}),
                 availableFeatures: Immutable.Map({}),
                 filterFeaturesHistory: Immutable.List([Immutable.List([])]),
                 showCategory: null,
-                requestUrl: "http://10.0.3.254:8080/",
                 posField: "pos",
                 featureField: "ufeat",
             }
@@ -106,9 +102,13 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 newState.showCategory = action.payload['value'];
                 return newState;
             },
+            'TAGHELPER_GET_INITIAL_FEATURES': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isBusy = true;
+                return newState;
+            },
             'TAGHELPER_GET_INITIAL_FEATURES_DONE': (state, action) => {
                 const newState = this.copyState(state);
-                newState.isLoaded = true;
                 if (!action.error) {
                     newState.allFeatures = Immutable.fromJS(action.payload['result']);
                     newState.availableFeatures = newState.allFeatures;
@@ -116,22 +116,24 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 } else {
                     newState.error = action.error;
                 }
+                newState.isBusy = false;
                 return newState;
             },
             'TAGHELPER_LOAD_FILTERED_DATA_DONE': (state, action) => {
                 const newState = this.copyState(state);
-                newState.isLoaded = true;
                 if (!action.error) {
                     newState.availableFeatures = Immutable.fromJS(action.payload['result']);
                 } else {
                     newState.error = action.error;
                 }
+                newState.isBusy = false;
                 return newState;
             },
             'TAGHELPER_ADD_FILTER': (state, action) => {
                 const newState = this.copyState(state);
                 const filter = new FilterRecord(action.payload);
                 const filterFeatures = newState.filterFeaturesHistory.last();
+                newState.isBusy = true;
                 if (filterFeatures.every(x => !x.equals(filter))) {
                     const newFilterFeatures = filterFeatures.push(filter);
                     newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(newFilterFeatures);
@@ -148,6 +150,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 const newFilterFeatures = filterFeatures.filterNot((value) => value.equals(filter));
                 newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(Immutable.List(newFilterFeatures))
                 newState.canUndo = true;
+                newState.isBusy = true;
                 newState.displayPattern = composePattern(newState);
 
                 return newState;
@@ -158,6 +161,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 if (newState.filterFeaturesHistory.size===1) {
                     newState.canUndo = false;
                 }
+                newState.isBusy = true;
                 newState.displayPattern = composePattern(newState);
                 return newState;
             },
@@ -190,15 +194,16 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
 function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone: string) {
     const query = state.filterFeaturesHistory.last().map(x => x.composeString()).join('&');
+    const requestUrl = pluginApi.createActionUrl('corpora/ajax_get_tag_variants');
     pluginApi.ajax$(
         'GET',
-        query ? state.requestUrl + '?' + query : state.requestUrl,
-        {}
+        query ? requestUrl + '?' + query : requestUrl,
+        { corpname: state.corpname }
     ).subscribe(
         (result) => {
             dispatch({
                 name: actionDone,
-                payload: {result: result}
+                payload: {result: result['keyval_tags']}
             });
         },
         (error) => {

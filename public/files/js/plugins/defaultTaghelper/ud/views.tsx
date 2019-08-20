@@ -102,8 +102,6 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         render() {
             if (this.props.error) {
                 return <div>Error: {this.props.error.message}</div>;
-            } else if (!this.props.isLoaded) {
-                return <div>Loading...</div>;
             } else {
                 return(
                     <div style={{position: "relative", width: "100%"}}>
@@ -119,7 +117,11 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                             onChangeHandler={(event) => this.handleCheckboxChange(event)}
                             filterFeatures={this.props.filterFeaturesHistory.last()}
                             categoryName={this.props.showCategory}
-                            allValues={this.props.allFeatures.get(this.props.showCategory)}
+                            allValues={
+                                this.props.allFeatures.has(this.props.showCategory) ?
+                                this.props.allFeatures.get(this.props.showCategory) :
+                                Immutable.List([])
+                            }
                             availableValues={
                                 this.props.availableFeatures.has(this.props.showCategory) ?
                                 this.props.availableFeatures.get(this.props.showCategory) :
