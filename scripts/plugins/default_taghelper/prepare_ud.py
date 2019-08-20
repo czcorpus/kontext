@@ -44,5 +44,5 @@ if __name__ == '__main__':
     print 'Loading resource from {}...'.format(src_path)
     variations = load_variations(src_path)
     with open(dest_path, 'w') as f:
-        pickle.dump(variations, f)
+        pickle.dump(variations, f, protocol=2)
     print '...saved to {} ({} items)'.format(dest_path, len(variations))
