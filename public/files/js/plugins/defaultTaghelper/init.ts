@@ -19,11 +19,11 @@
  */
 
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperModel} from './ppos/models';
-import {UDTagBuilderModel} from './ud/models';
+import {TagHelperModel} from './positional/models';
+import {UDTagBuilderModel} from './keyval/models';
 import {init as viewInit} from './views';
-import {init as ppTagsetViewInit} from './ppos/views';
-import {init as udTagsetViewInit} from './ud/views';
+import {init as ppTagsetViewInit} from './positional/views';
+import {init as udTagsetViewInit} from './keyval/views';
 import { Kontext } from '../../types/common';
 
 declare var require:any;
