@@ -1793,6 +1793,7 @@ class Actions(Querying):
             TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False,
             structsAndAttrs=self._get_structs_and_attrs()
         )
+        self._attach_plugin_exports(ans, direct=True)
         self._configure_auth_urls(ans)
         return ans
 

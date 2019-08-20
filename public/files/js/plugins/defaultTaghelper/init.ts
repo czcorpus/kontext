@@ -69,14 +69,14 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                         this.pluginApi.getComponentHelpers()
                     )
                 ).TagBuilder;
+            case 'other':
+                return null;
             default:
                 throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
         }
     }
 }
 
-const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
-    return new TagHelperPlugin(pluginApi);
-};
+const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => new TagHelperPlugin(pluginApi);
 
 export default create;
