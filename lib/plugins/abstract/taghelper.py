@@ -81,7 +81,7 @@ class AbstractTagsetInfoLoader(object):
 
 class AbstractTaghelper(object):
     """
-    Please note that taghelper is not an instance of CorpusDependentPlugin
+    !!! Please note that taghelper is not an instance of CorpusDependentPlugin
     even if it would sound reasonable. The reason is that e.g. in case of
     parallel corpora, tags may not be enabled for primary corpus but they
     can be enabled for one or more aligned corpora. So it is easier to

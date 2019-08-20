@@ -19,11 +19,11 @@
  */
 
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperModel} from './ppos/models';
-import {UDTagBuilderModel} from './ud/models';
+import {TagHelperModel} from './positional/models';
+import {UDTagBuilderModel} from './keyval/models';
 import {init as viewInit} from './views';
-import {init as ppTagsetViewInit} from './ppos/views';
-import {init as udTagsetViewInit} from './ud/views';
+import {init as ppTagsetViewInit} from './positional/views';
+import {init as udTagsetViewInit} from './keyval/views';
 import { Kontext } from '../../types/common';
 
 declare var require:any;
@@ -69,14 +69,14 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                         this.pluginApi.getComponentHelpers()
                     )
                 ).TagBuilder;
+            case 'other':
+                return null;
             default:
                 throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
         }
     }
 }
 
-const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
-    return new TagHelperPlugin(pluginApi);
-};
+const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => new TagHelperPlugin(pluginApi);
 
 export default create;
