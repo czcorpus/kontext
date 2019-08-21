@@ -18,8 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-import collections
 import pickle
+from collections import defaultdict
 
 from plugins.abstract.taghelper import AbstractTagsetInfoLoader
 
@@ -36,39 +36,62 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         with open(self.variants_file_path, 'r') as f:
             self.initial_values = pickle.load(f)
 
-    def get_variant(self, user_selection, lang):
+    def get_variant(self, filter_values, lang):
         if self.initial_values is None:
             self._initialize_tags()
-        return self.get_possible_values(user_selection)
+
+        # possible values with all filters applied
+        possible_values = self.get_possible_values(filter_values)
+        # resolving possible values for applied filter features
+        for filter_key in filter_values:
+            possible_values[filter_key] = self.get_possible_values({k: v for k, v in filter_values.items() if k != filter_key})[filter_key]
+
+        return {'keyval_tags': possible_values}
 
     def get_initial_values(self, lang):
         if self.initial_values is None:
             self._initialize_tags()
-        return self.get_possible_values()
+        return {'keyval_tags': self.get_possible_values()}
 
     def is_enabled(self):
         return os.path.exists(self.variants_file_path)
 
-    def get_possible_values(self, user_values=None):
+    def get_possible_values(self, filter_values=None):
         ''' Filter possible feature values from initial_values according to user selection'''
 
-        variations = self.initial_values
-        if user_values is not None:
-            filters = collections.defaultdict(list)
-            # sort filter values by category
-            for key, value in user_values:
-                filters[key].append(value)
+        if filter_values is not None:
             # filter OR logic for values of the same category, AND logic across categories
-            variations = list(
-                filter(
-                    # all filter keys present for any of its value
-                    lambda x: all(any((key, value) in x for value in values) for key, values in filters.items()),
-                    variations
-                )
-            )
+            variations = list(filter(
+                # all filter keys present for any of its value
+                lambda x: all(
+                    any(
+                        (key, value) in x
+                        for value in values
+                    )
+                    for key, values in filter_values.items()
+                ),
+                self.initial_values
+            ))
 
-        possible_values = collections.defaultdict(set)
-        for variation in variations:
-            for key, value in variation:
-                possible_values[key].add(value)
-        return {'keyval_tags': {k: list(v) for k, v in possible_values.items()}}
+            # we can allow only keyval features, that are supported by all possible filter combinations
+            # for this we use set intersection
+            possible_keyval_indexed = defaultdict(set)
+            for variation in variations:
+                index = tuple(sorted(filter(lambda x: x[0] in filter_values, variation)))
+                values = set(filter(lambda x: x[0] not in filter_values, variation))
+                possible_keyval_indexed[index].update(values)
+            possible_keyval = set.intersection(*possible_keyval_indexed.values())
+
+            # transformation to dict of lists
+            possible_values = defaultdict(list)
+            for key, value in possible_keyval:
+                possible_values[key].append(value)
+            possible_values.update(filter_values)
+        else:
+            # transformation of initial values to dict of lists of unique values
+            possible_values = defaultdict(set)
+            for variation in self.initial_values:
+                for key, value in variation:
+                    possible_values[key].add(value)
+
+        return {k: list(v) for k, v in possible_values.items()}
