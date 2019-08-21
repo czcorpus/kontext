@@ -22,5 +22,24 @@ export interface TagBuilderBaseState {
     corpname:string;
     isBusy:boolean;
     canUndo:boolean;
-    displayPattern:string;
+
+    /**
+     * An encoded representation of a tag selection. From CQL
+     * point of view, this is just a string. Typically,
+     * this can be used directly as a part of 'generatedQuery'.
+     *
+     * The value is used when user directly modifies an
+     * existing tag within a CQL query. In such case, we
+     * inject just the raw value.
+     */
+    rawPattern:string;
+
+    /**
+     * A valid CQL fragment directly applicable
+     * within square brackets
+     * "[EXPR_1 ... EXPR_K-1 RAW_PATTERN EXPR_K+1 ... EXPR_N]"
+     *
+     * This value is used when user inserts whole new tag expression.
+     */
+    generatedQuery:string;
 }

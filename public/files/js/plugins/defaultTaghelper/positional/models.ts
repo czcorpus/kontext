@@ -70,11 +70,15 @@ export interface TagHelperModelState extends TagBuilderBaseState {
 
     presetPattern:string;
 
-    displayPattern:string;
+    rawPattern:string;
+
+    generatedQuery:string;
 
     srchPattern:string;
 
     stateId:string;
+
+    tagAttr:string;
 }
 
 /**
@@ -87,7 +91,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     private pluginApi:IPluginApi;
 
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, corpname:string) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, corpname:string, tagAttr:string) {
         const positions = Immutable.List<PositionOptions>();
         super(
             dispatcher,
@@ -95,33 +99,36 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 corpname: corpname,
                 data: Immutable.List<Immutable.List<PositionOptions>>().push(positions),
                 positions: positions,
+                tagAttr: tagAttr,
                 presetPattern: '',
                 srchPattern: '.*',
-                displayPattern: '.*',
+                rawPattern: '.*',
+                generatedQuery: `${tagAttr}=".*"`,
                 isBusy: false,
                 canUndo: false,
                 stateId: ''
             }
         );
         this.pluginApi = pluginApi;
-    }
-
-
-    reduce(state:TagHelperModelState, action:Action):TagHelperModelState {
-        const newState = this.copyState(state);
-        switch (action.name) {
-            case 'TAGHELPER_PRESET_PATTERN':
+        this.actionMatch = {
+            'TAGHELPER_PRESET_PATTERN': (state, action) => {
+                const newState = this.copyState(state);
                 newState.presetPattern = action.payload['pattern'];
                 if (newState.data.last().size > 0) {
                     this.applyPresetPattern(newState);
                 }
-            break;
-            case 'TAGHELPER_GET_INITIAL_DATA':
-                if (newState.data.last().size === 0) {
+                return newState;
+            },
+            'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
+                if (state.data.last().size === 0) {
+                    const newState = this.copyState(state);
                     newState.isBusy = true;
+                    return newState;
                 }
-            break;
-            case 'TAGHELPER_GET_INITIAL_DATA_DONE':
+                return state;
+            },
+            'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
+                const newState = this.copyState(state);
                 newState.isBusy = false;
                 if (!action.error) {
                     this.importData(newState, action.payload['labels'], action.payload['tags']);
@@ -130,15 +137,20 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     }
 
                 } else {
+                    // TODO fix side effect here
                     this.pluginApi.showMessage('error', action.error);
                 }
-            break;
-            case 'TAGHELPER_CHECKBOX_CHANGED':
+                return newState;
+            },
+            'TAGHELPER_CHECKBOX_CHANGED': (state, action) => {
+                const newState = this.copyState(state);
                 this.updateSelectedItem(newState, action.payload['position'], action.payload['value'],
                         action.payload['checked']);
                 newState.isBusy = true;
-            break;
-            case 'TAGHELPER_LOAD_FILTERED_DATA_DONE':
+                return newState;
+            },
+            'TAGHELPER_LOAD_FILTERED_DATA_DONE': (state, action) => {
+                const newState = this.copyState(state);
                 newState.isBusy = false;
                 if (!action.error) {
                     this.mergeData(
@@ -148,19 +160,22 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     );
 
                 } else {
+                    // TODO fix side effect
                     this.pluginApi.showMessage('error', action.error);
                 }
-            break;
-            case 'TAGHELPER_UNDO':
+                return newState;
+            },
+            'TAGHELPER_UNDO': (state, action) => {
+                const newState = this.copyState(state);
                 this.undo(newState);
-            break;
-            case 'TAGHELPER_RESET':
+                return newState;
+            },
+            'TAGHELPER_RESET': (state, action) => {
+                const newState = this.copyState(state);
                 this.resetSelections(newState);
-            break;
-            default:
-                return state;
+                return newState;
+            }
         }
-        return newState;
     }
 
     sideEffects(state:TagHelperModelState, action:Action, dispatch:SEDispatcher) {
@@ -243,7 +258,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         state.positions = state.data.last();
         state.canUndo = this.canUndo(state);
         state.srchPattern = this.getCurrentPattern(state);
-        state.displayPattern = this.exportCurrentPattern(state);
+        [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     private undo(state:TagHelperModelState):void {
@@ -253,7 +268,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         }
         state.canUndo = this.canUndo(state);
         state.srchPattern = this.getCurrentPattern(state);
-        state.displayPattern = this.exportCurrentPattern(state);
+        [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     /**
@@ -290,7 +305,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         state.positions = state.data.last();
         state.canUndo = false;
         state.srchPattern = this.getCurrentPattern(state);
-        state.displayPattern = this.exportCurrentPattern(state);
+        [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
         state.presetPattern = null;
     }
 
@@ -393,7 +408,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         };
         state.data = state.data.push(state.data.last().set(position, newPos));
         state.srchPattern = this.getCurrentPattern(state);
-        state.displayPattern = this.exportCurrentPattern(state);
+        [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     private canUndo(state:TagHelperModelState):boolean {
@@ -425,8 +440,9 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         }
     }
 
-    private exportCurrentPattern(state:TagHelperModelState):string {
-        return this.getCurrentPattern(state).replace(/\.\.+$/,  '.*');
+    private exportCurrentPattern(state:TagHelperModelState):[string, string] {
+        const ans = this.getCurrentPattern(state).replace(/\.\.+$/,  '.*');
+        return [ans, `${state.tagAttr}="${ans}"`];
     }
 
     /**

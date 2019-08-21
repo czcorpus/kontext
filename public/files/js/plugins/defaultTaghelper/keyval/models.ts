@@ -40,7 +40,7 @@ export class FilterRecord extends Immutable.Record({name: undefined, value: unde
     }
 }
 
-function composePattern(state:UDTagBuilderModelState):string {
+function composeQuery(state:UDTagBuilderModelState):string {
     return state.filterFeaturesHistory.last().groupBy(x => x.get('name')).map(
         (value, key) =>
             key==='POS' ?
@@ -52,13 +52,13 @@ function composePattern(state:UDTagBuilderModelState):string {
 export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
     // where in the current CQL query the resulting
-    // expression will by inserteds
+    // expression will by inserted
     insertRange:[number, number];
 
     canUndo:boolean;
 
     // a string-exported variant of the current UD props selection
-    displayPattern:string;
+    generatedQuery:string;
 
 
     // ...
@@ -84,7 +84,8 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 isBusy: false,
                 insertRange: [0, 0],
                 canUndo: false,
-                displayPattern: '',
+                generatedQuery: '',
+                rawPattern: '', // not applicable for the current UI
                 error: null,
                 allFeatures: Immutable.Map({}),
                 availableFeatures: Immutable.Map({}),
@@ -138,7 +139,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                     const newFilterFeatures = filterFeatures.push(filter);
                     newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(newFilterFeatures);
                     newState.canUndo = true;
-                    newState.displayPattern = composePattern(newState);
+                    newState.generatedQuery = composeQuery(newState);
                 }
                 return newState;
             },
@@ -151,7 +152,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(Immutable.List(newFilterFeatures))
                 newState.canUndo = true;
                 newState.isBusy = true;
-                newState.displayPattern = composePattern(newState);
+                newState.generatedQuery = composeQuery(newState);
 
                 return newState;
             },
@@ -162,7 +163,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                     newState.canUndo = false;
                 }
                 newState.isBusy = true;
-                newState.displayPattern = composePattern(newState);
+                newState.generatedQuery = composeQuery(newState);
                 return newState;
             },
             'TAGHELPER_RESET': (state, action) => {
@@ -170,7 +171,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 newState.filterFeaturesHistory = Immutable.List([Immutable.List([])]);
                 newState.availableFeatures = newState.allFeatures;
                 newState.canUndo = false;
-                newState.displayPattern = composePattern(newState);
+                newState.generatedQuery = composeQuery(newState);
                 return newState;
             }
         };
