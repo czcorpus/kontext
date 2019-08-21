@@ -80,12 +80,13 @@ class KeyvalSelectionFetcher(AbstractValueSelectionFetcher):
         # using startswith, because some features can be layered using [], like `Gender[psor]`
 
         filters = defaultdict(list)
-        # sort filter values by category
+        # sort filter values by category into lists
         for key, value in request.args.items(multi=True):
             if any(key.startswith(ud_key) for ud_key in UD_KEYS):
                 filters[key].append(value)
 
-        return dict(filters)  # we don't want it to be defaultdict anymore so it can raise KeyError
+        # we don't want it to be defaultdict anymore so it can raise KeyError
+        return dict(filters)
 
     def is_empty(self, val):
         return len(val) == 0

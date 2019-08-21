@@ -30,8 +30,6 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
         self.variants_file_path = os.path.join(tags_src_dir, corpus_name)
-
-        # TODO perhaps list of dicts would be better
         self.initial_values = None if self.is_enabled() else []
 
     def _initialize_tags(self):
@@ -41,12 +39,19 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
     def get_variant(self, filter_values, lang):
         if self.initial_values is None:
             self._initialize_tags()
-        return self.get_possible_values(filter_values)
+
+        # possible values with all filters applied
+        possible_values = self.get_possible_values(filter_values)
+        # resolving possible values for applied filter features
+        for filter_key in filter_values:
+            possible_values[filter_key] = self.get_possible_values({k: v for k, v in filter_values.items() if k != filter_key})[filter_key]
+
+        return {'keyval_tags': possible_values}
 
     def get_initial_values(self, lang):
         if self.initial_values is None:
             self._initialize_tags()
-        return self.get_possible_values()
+        return {'keyval_tags': self.get_possible_values()}
 
     def is_enabled(self):
         return os.path.exists(self.variants_file_path)
@@ -68,6 +73,8 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
                 self.initial_values
             ))
 
+            # we can allow only keyval features, that are supported by all possible filter combinations
+            # for this we use set intersection
             possible_keyval_indexed = defaultdict(set)
             for variation in variations:
                 index = tuple(sorted(filter(lambda x: x[0] in filter_values, variation)))
@@ -75,14 +82,16 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
                 possible_keyval_indexed[index].update(values)
             possible_keyval = set.intersection(*possible_keyval_indexed.values())
 
+            # transformation to dict of lists
             possible_values = defaultdict(list)
             for key, value in possible_keyval:
                 possible_values[key].append(value)
             possible_values.update(filter_values)
         else:
+            # transformation of initial values to dict of lists of unique values
             possible_values = defaultdict(set)
             for variation in self.initial_values:
                 for key, value in variation:
                     possible_values[key].add(value)
 
-        return {'keyval_tags': {k: list(v) for k, v in possible_values.items()}}
+        return {k: list(v) for k, v in possible_values.items()}
