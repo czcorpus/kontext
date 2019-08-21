@@ -38,10 +38,10 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         with open(self.variants_file_path, 'r') as f:
             self.initial_values = pickle.load(f)
 
-    def get_variant(self, user_selection, lang):
+    def get_variant(self, filter_values, lang):
         if self.initial_values is None:
             self._initialize_tags()
-        return self.get_possible_values(user_selection)
+        return self.get_possible_values(filter_values)
 
     def get_initial_values(self, lang):
         if self.initial_values is None:
@@ -51,10 +51,10 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
     def is_enabled(self):
         return os.path.exists(self.variants_file_path)
 
-    def get_possible_values(self, user_values=None):
+    def get_possible_values(self, filter_values=None):
         ''' Filter possible feature values from initial_values according to user selection'''
 
-        if user_values is not None:
+        if filter_values is not None:
             # filter OR logic for values of the same category, AND logic across categories
             variations = list(filter(
                 # all filter keys present for any of its value
@@ -63,16 +63,26 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
                         (key, value) in x
                         for value in values
                     )
-                    for key, values in user_values.items()
+                    for key, values in filter_values.items()
                 ),
                 self.initial_values
             ))
-        else:
-            variations = self.initial_values
 
-        possible_values = defaultdict(set)
-        for variation in variations:
-            for key, value in variation:
-                possible_values[key].add(value)
+            possible_keyval_indexed = defaultdict(set)
+            for variation in variations:
+                index = tuple(sorted(filter(lambda x: x[0] in filter_values, variation)))
+                values = set(filter(lambda x: x[0] not in filter_values, variation))
+                possible_keyval_indexed[index].update(values)
+            possible_keyval = set.intersection(*possible_keyval_indexed.values())
+
+            possible_values = defaultdict(list)
+            for key, value in possible_keyval:
+                possible_values[key].append(value)
+            possible_values.update(filter_values)
+        else:
+            possible_values = defaultdict(set)
+            for variation in self.initial_values:
+                for key, value in variation:
+                    possible_values[key].add(value)
 
         return {'keyval_tags': {k: list(v) for k, v in possible_values.items()}}
