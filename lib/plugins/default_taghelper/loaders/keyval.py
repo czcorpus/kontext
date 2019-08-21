@@ -59,8 +59,13 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
             for key, value in user_values:
                 filters[key].append(value)
             # filter OR logic for values of the same category, AND logic across categories
-            for key, values in filters.items():
-                variations = list(filter(lambda x: any((key, value) in x for value in values), variations))
+            variations = list(
+                filter(
+                    # all filter keys present for any of its value
+                    lambda x: all(any((key, value) in x for value in values) for key, values in filters.items()),
+                    variations
+                )
+            )
 
         possible_values = collections.defaultdict(set)
         for variation in variations:
