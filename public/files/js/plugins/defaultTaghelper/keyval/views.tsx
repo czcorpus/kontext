@@ -17,18 +17,18 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         const checkboxes = props.allValues.sort().map(value => {
             const filterRecord = categoryFilterRecord.set('value', value);
             return <li key={value}>
-                <label style={props.availableValues.includes(value) ? {fontWeight: 'bold'} : {fontWeight: 'normal'}}>
-                    <input
-                        onChange={props.onChangeHandler}
-                        type="checkbox"
-                        name={props.categoryName}
-                        value={value}
-                        checked={props.filterFeatures.some(x => x.equals(filterRecord) ? true : false)} />
-                    {value}
-                </label>
+                <input
+                    onChange={props.onChangeHandler}
+                    type="checkbox"
+                    id={props.categoryName + '-' + value}
+                    name={props.categoryName}
+                    value={value}
+                    checked={props.filterFeatures.some(x => x.equals(filterRecord) ? true : false)}
+                    disabled={props.availableValues.includes(value) ? false : true} />
+                <label htmlFor={props.categoryName + '-' + value}>{value}</label>
             </li>
         });
-        return <ul>{checkboxes}</ul>;
+        return <ul className="defaultTaghelper_PositionList">{checkboxes}</ul>;
     }
 
     const CategorySelect:React.FunctionComponent<{
@@ -41,26 +41,26 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             const availableValuesCount = (props.availableFeatures.has(category) ? props.availableFeatures.get(category).size : 0);
             return <option
                     key={category}
-                    value={category}>
+                    value={category}
+                    selected={props.selectedCategory === category ? true : false} >
                 {category + " (" + availableValuesCount + ")"}
                 </option>
         })
-        return <select multiple={true} size={20} onChange={props.onSelectCategoryHandler}>{categories}</select>;
+        return <select multiple size={20} onChange={props.onSelectCategoryHandler}>{categories}</select>;
     }
 
     const QueryLine:React.FunctionComponent<{
         filterFeatures:Immutable.List<FilterRecord>;
         handleRemoveFilter:(event) => void;
     }> = (props) => {
-        const selected = props.filterFeatures.sort((a, b) => a.compare(b)).map(filter => {
+        const selected = props.filterFeatures.map(filter => {
             return <button
                 type="button"
                 key={filter.composeString()}
                 name={filter.get('name')}
                 value={filter.get('value')}
-                className="util-button"
                 onClick={props.handleRemoveFilter}>
-            {filter.composeString()}
+                <span>{filter.composeString()}</span><span className="query-close">X</span>
             </button>
         })
         return <div>{selected}</div>;
@@ -104,15 +104,15 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                 return <div>Error: {this.props.error.message}</div>;
             } else {
                 return(
-                    <div>
-                        <div style={{maxWidth: '39em', minHeight: '5em'}}>
-                            <h4>Selected features (click to remove):</h4>
+                    <div className='FeatureSelect'>
+                        <h4>Selected features:</h4>
+                        <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
                             <QueryLine
                                 filterFeatures={this.props.filterFeaturesHistory.last()}
                                 handleRemoveFilter={this.handleRemoveFilter} />
                         </div>
                         <div style={{display: 'flex', alignItems: 'stretch'}}>
-                            <div style={{marginRight: '5em'}}>
+                            <div className='CategoryDetail' style={{marginRight: '5em'}}>
                                 <h4>Part of speech:</h4>
                                 <CategoryDetail
                                     onChangeHandler={(event) => this.handleCheckboxChange(event)}
@@ -124,14 +124,14 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                             <div>
                                 <h4>Features:</h4>
                                 <div style={{display: 'flex', alignItems: 'flex-start'}}>
-                                    <div>
+                                    <div className='CategorySelect' style={{marginRight: '2em'}}>
                                         <CategorySelect
                                             allFeatures={this.props.allFeatures.remove("POS")}
                                             availableFeatures={this.props.availableFeatures.remove("POS")}
                                             onSelectCategoryHandler={this.handleCategorySelect}
                                             selectedCategory={this.props.showCategory} />
                                     </div>
-                                    <div>
+                                    <div className='CategoryDetail'>
                                         <CategoryDetail
                                             onChangeHandler={(event) => this.handleCheckboxChange(event)}
                                             filterFeatures={this.props.filterFeaturesHistory.last()}
