@@ -42,9 +42,10 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
 
         # possible values with all filters applied
         possible_values = self.get_possible_values(filter_values)
-        # resolving possible values for applied filter features
+        # resolving possible filter values for applied filter features
         for filter_key in filter_values:
-            possible_values[filter_key] = self.get_possible_values({k: v for k, v in filter_values.items() if k != filter_key})[filter_key]
+            derived_filter = {k: v for k, v in filter_values.items() if k != filter_key}
+            possible_values[filter_key] = self.get_possible_values(derived_filter)[filter_key]
 
         return {'keyval_tags': possible_values}
 
@@ -86,7 +87,6 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
             possible_values = defaultdict(list)
             for key, value in possible_keyval:
                 possible_values[key].append(value)
-            possible_values.update(filter_values)
         else:
             # transformation of initial values to dict of lists of unique values
             possible_values = defaultdict(set)
