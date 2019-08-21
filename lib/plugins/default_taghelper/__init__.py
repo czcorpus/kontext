@@ -133,7 +133,9 @@ class Taghelper(AbstractTaghelper):
     def export(self, plugin_api):
         info = self._corparch.get_corpus_info(
             plugin_api.user_lang, plugin_api.current_corpus.corpname)
-        return dict(corp_tagset_info=dict(ident=info.tagset, type=info.tagset_type, attrs=('tag',)))
+        return dict(corp_tagset_info=dict(ident=info.tagset, type=info.tagset_type,
+                                          posAttr=info.tagset_pos_attr,
+                                          featAttr=info.tagset_feat_attr))
 
 
 @plugins.inject(plugins.runtime.CORPARCH)

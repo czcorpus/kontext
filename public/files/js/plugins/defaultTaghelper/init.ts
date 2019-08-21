@@ -17,10 +17,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperModel} from './positional/models';
-import {UDTagBuilderModel} from './keyval/models';
+import {UDTagBuilderModel, FilterRecord} from './keyval/models';
 import {init as viewInit} from './views';
 import {init as ppTagsetViewInit} from './positional/views';
 import {init as udTagsetViewInit} from './keyval/views';
@@ -49,7 +49,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                         this.pluginApi.dispatcher(),
                         this.pluginApi,
                         corpname,
-                        tagsetInfo.attrs[0]
+                        tagsetInfo.featAttr
                     ),
                     ppTagsetViewInit(
                         this.pluginApi.dispatcher(),
@@ -63,7 +63,21 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     new UDTagBuilderModel(
                         this.pluginApi.dispatcher(),
                         this.pluginApi,
-                        corpname
+                        {
+                            corpname:corpname,
+                            isBusy: false,
+                            insertRange: [0, 0],
+                            canUndo: false,
+                            generatedQuery: '',
+                            rawPattern: '', // not applicable for the current UI
+                            error: null,
+                            allFeatures: Immutable.Map(),
+                            availableFeatures: Immutable.Map({}),
+                            filterFeaturesHistory: Immutable.List<Immutable.List<FilterRecord>>().push(Immutable.List()),
+                            showCategory: null,
+                            posField: tagsetInfo.posAttr,
+                            featureField: tagsetInfo.featAttr
+                        }
                     ),
                     udTagsetViewInit(
                         this.pluginApi.dispatcher(),

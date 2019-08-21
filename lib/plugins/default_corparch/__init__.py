@@ -537,6 +537,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.sentence_struct = sentence_struct
         ans.tagset = node.attrib.get('tagset', None)
         ans.tagset_type = node.attrib.get('tagset_type', None)
+        ans.tagset_pos_attr = node.attrib.get('tagset_pos_attr', None)
+        ans.tagset_feat_attr = node.attrib.get('tagset_feat_attr', None)
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)

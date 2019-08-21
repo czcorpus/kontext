@@ -56,7 +56,8 @@ class Backend(DatabaseBackend):
     def load_corpus(self, corp_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT c.id as id, c.web, cs.name AS sentence_struct, c.tagset, c.tagset_type, c.collator_locale, '
+            'SELECT c.id as id, c.web, cs.name AS sentence_struct, c.tagset, c.tagset_type, c.tagset_pos_attr, '
+            'c.tagset_feat_attr, c.collator_locale, '
             '(CASE WHEN c.speaker_id_struct IS NOT NULL '
             '    THEN c.speaker_id_struct || \'.\' || c.speaker_id_attr ELSE NULL END) AS speaker_id_attr,  '
             '(CASE WHEN c.speech_overlap_struct IS NOT NULL '
@@ -112,8 +113,9 @@ class Backend(DatabaseBackend):
         values_cond.append(offset)
 
         c = self._db.cursor()
-        sql = ('SELECT c.id, c.web, c.tagset, c.tagset_type, c.collator_locale, NULL as speech_segment, c.requestable, '
-               'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
+        sql = ('SELECT c.id, c.web, c.tagset, c.tagset_type, c.tagset_pos_attr, c.tagset_feat_attr, c.collator_locale, '
+               'NULL as speech_segment, c.requestable, c.speaker_id_attr,  c.speech_overlap_attr,  '
+               'c.speech_overlap_val, c.use_safe_font, '
                'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                'NULL AS reference_other, NULL AS ttdesc_id, '
                'COUNT(kc.keyword_id) AS num_match_keys, '

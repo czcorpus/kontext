@@ -76,25 +76,8 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
     private pluginApi:IPluginApi;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, corpname:string) {
-        super(
-            dispatcher,
-            {
-                corpname:corpname,
-                isBusy: false,
-                insertRange: [0, 0],
-                canUndo: false,
-                generatedQuery: '',
-                rawPattern: '', // not applicable for the current UI
-                error: null,
-                allFeatures: Immutable.Map({}),
-                availableFeatures: Immutable.Map({}),
-                filterFeaturesHistory: Immutable.List([Immutable.List([])]),
-                showCategory: null,
-                posField: "pos",
-                featureField: "ufeat",
-            }
-        );
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState) {
+        super(dispatcher, initialState);
         this.pluginApi = pluginApi;
 
         this.actionMatch = {
