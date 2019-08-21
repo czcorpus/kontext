@@ -247,6 +247,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.sentence_struct = row['sentence_struct']
             ans.tagset = row['tagset']
             ans.tagset_type = row['tagset_type']
+            ans.tagset_pos_attr = row['tagset_pos_attr']
+            ans.tagset_feat_attr = row['tagset_feat_attr']
             ans.collator_locale = row['collator_locale']
             ans.speech_segment = row['speech_segment']
             ans.speaker_id_attr = row['speaker_id_attr']

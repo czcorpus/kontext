@@ -81,6 +81,8 @@ class CorptreeParser(object):
         ans.sentence_struct = elm.attrib['sentence_struct'] if 'sentence_struct' in elm.attrib else None
         ans.tagset = elm.attrib.get('tagset', None)
         ans.tagset_type = elm.attrib.get('tagset_type', None)
+        ans.tagset_pos_attr = elm.attrib.get('tagset_pos_attr', None)
+        ans.tagset_feat_attr = elm.attrib.get('tagset_feat_attr', None)
         ans.speech_segment = elm.attrib.get('speech_segment', None)
         ans.speaker_id_attr = elm.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = elm.attrib.get('speech_overlap_attr', None)
