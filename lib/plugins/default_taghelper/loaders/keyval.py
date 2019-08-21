@@ -18,8 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-import collections
 import pickle
+from collections import defaultdict
 
 from plugins.abstract.taghelper import AbstractTagsetInfoLoader
 
@@ -30,6 +30,8 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
         self.variants_file_path = os.path.join(tags_src_dir, corpus_name)
+
+        # TODO perhaps list of dicts would be better
         self.initial_values = None if self.is_enabled() else []
 
     def _initialize_tags(self):
@@ -52,23 +54,25 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
     def get_possible_values(self, user_values=None):
         ''' Filter possible feature values from initial_values according to user selection'''
 
-        variations = self.initial_values
         if user_values is not None:
-            filters = collections.defaultdict(list)
-            # sort filter values by category
-            for key, value in user_values:
-                filters[key].append(value)
             # filter OR logic for values of the same category, AND logic across categories
-            variations = list(
-                filter(
-                    # all filter keys present for any of its value
-                    lambda x: all(any((key, value) in x for value in values) for key, values in filters.items()),
-                    variations
-                )
-            )
+            variations = list(filter(
+                # all filter keys present for any of its value
+                lambda x: all(
+                    any(
+                        (key, value) in x
+                        for value in values
+                    )
+                    for key, values in user_values.items()
+                ),
+                self.initial_values
+            ))
+        else:
+            variations = self.initial_values
 
-        possible_values = collections.defaultdict(set)
+        possible_values = defaultdict(set)
         for variation in variations:
             for key, value in variation:
                 possible_values[key].add(value)
+
         return {'keyval_tags': {k: list(v) for k, v in possible_values.items()}}

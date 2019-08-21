@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
+from collections import defaultdict
 from plugins.abstract.taghelper import AbstractValueSelectionFetcher
 
 UD_KEYS = {  # taken from `universaldependencies.org` specification
@@ -78,7 +78,14 @@ class KeyvalSelectionFetcher(AbstractValueSelectionFetcher):
 
     def fetch(self, request):
         # using startswith, because some features can be layered using [], like `Gender[psor]`
-        return [(k, v) for k, v in request.args.items(multi = True) if any(k.startswith(ud_key) for ud_key in UD_KEYS)]
+
+        filters = defaultdict(list)
+        # sort filter values by category
+        for key, value in request.args.items(multi=True):
+            if any(key.startswith(ud_key) for ud_key in UD_KEYS):
+                filters[key].append(value)
+
+        return dict(filters)  # we don't want it to be defaultdict anymore so it can raise KeyError
 
     def is_empty(self, val):
         return len(val) == 0
