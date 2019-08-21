@@ -86,7 +86,8 @@ const TagButtons:React.SFC<{
             sourceId:string;
             onInsert?:()=>void;
             canUndo:boolean;
-            displayPattern:string;
+            rawPattern:string;
+            generatedQuery:string;
             actionPrefix:string;
         }> = (props) => {
 
@@ -105,7 +106,7 @@ const TagButtons:React.SFC<{
 
         } else if (evt.target.value === 'insert') {
             if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                const query = `"${props.displayPattern}"`;
+                const query = `"${props.rawPattern}"`;
                 dispatcher.dispatch<SetQueryInputAction>({
                     name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
                     payload: {
@@ -122,7 +123,7 @@ const TagButtons:React.SFC<{
                     name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                     payload: {
                         sourceId: props.sourceId,
-                        query: `[tag="${props.displayPattern}"]`
+                        query: `[${props.generatedQuery}]`
                     }
                 });
             }
@@ -150,7 +151,7 @@ const TagButtons:React.SFC<{
 
     const TagDisplay:React.SFC<{
         onEscKey:()=>void;
-        displayPattern:string;
+        generatedQuery:string;
     }> = (props) => {
 
 
@@ -162,7 +163,7 @@ const TagButtons:React.SFC<{
         }
     };
 
-    return <input type="text" className="tag-display-box" value={props.displayPattern}
+    return <input type="text" className="tag-display-box" value={props.generatedQuery}
                 onKeyDown={keyEventHandler} readOnly
                 ref={item => item ? item.focus() : null} />;
     }
@@ -194,13 +195,14 @@ const TagButtons:React.SFC<{
                     null
                 }
                 <div className="tag-header">
-                    <TagDisplay displayPattern={this.props.displayPattern} onEscKey={this.props.onEscKey} />
+                    <TagDisplay generatedQuery={this.props.generatedQuery} onEscKey={this.props.onEscKey} />
                     <TagButtons sourceId={this.props.sourceId}
                                 onInsert={this.props.onInsert}
                                 canUndo={this.props.canUndo}
                                 range={this.props.range}
                                 actionPrefix={this.props.actionPrefix}
-                                displayPattern={this.props.displayPattern} />
+                                rawPattern={this.props.rawPattern}
+                                generatedQuery={this.props.generatedQuery} />
                 </div>
                 <TagsetWidget {...this.props} />
             </div>;

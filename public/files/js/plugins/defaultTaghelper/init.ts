@@ -48,7 +48,8 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     new TagHelperModel(
                         this.pluginApi.dispatcher(),
                         this.pluginApi,
-                        corpname
+                        corpname,
+                        tagsetInfo.attrs[0]
                     ),
                     ppTagsetViewInit(
                         this.pluginApi.dispatcher(),
@@ -69,7 +70,8 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                         this.pluginApi.getComponentHelpers()
                     )
                 ).TagBuilder;
-            case 'other':
+            case 'other': // 'other' means defined but unsupported
+            case null:  // null means no tagset defined for the corpus
                 return null;
             default:
                 throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
