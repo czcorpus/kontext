@@ -31,8 +31,13 @@ export interface FeatureSelectProps {
 }
 
 export class FilterRecord extends Immutable.Record({name: undefined, value: undefined}) {
+
     composeString():string {
         return this.valueSeq().join('=');
+    }
+
+    getKeyval():[string, string] {
+        return [this.get('name'), this.get('value')];
     }
 
     compare(that:FilterRecord):number {
@@ -177,12 +182,16 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 }
 
 function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone: string) {
-    const query = state.filterFeaturesHistory.last().map(x => x.composeString()).join('&');
-    const requestUrl = pluginApi.createActionUrl('corpora/ajax_get_tag_variants');
+    const baseArgs:Array<[string, string]> = [['corpname', state.corpname], ['tagset', state.tagsetName]];
+    const queryArgs:Array<[string, string]> = state.filterFeaturesHistory.last().map(x => x.getKeyval()).toArray();
     pluginApi.ajax$(
         'GET',
-        query ? requestUrl + '?' + query : requestUrl,
-        { corpname: state.corpname }
+        pluginApi.createActionUrl(
+            'corpora/ajax_get_tag_variants',
+            baseArgs.concat(queryArgs)
+        ),
+        {}
+
     ).subscribe(
         (result) => {
             dispatch({

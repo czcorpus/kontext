@@ -50,6 +50,9 @@ class DictLike(object):
     def __contains__(self, item):
         return hasattr(self, item)
 
+    def __repr__(self):
+        return 'DictLike {0}'.format(self.__dict__)
+
     def get(self, key, default=None):
         return getattr(self, key, default)
 
@@ -58,6 +61,10 @@ class DictLike(object):
 
     def to_dict(self):
         return CorpInfoEncoder().default(self)
+
+    def from_dict(self, data):
+        self.__dict__.update(data)
+        return self
 
 
 class CorpusMetadata(DictLike):
@@ -133,6 +140,20 @@ class KwicConnect(DictLike):
         self.providers = []
 
 
+class TagsetInfo(DictLike):
+
+    def __init__(self):
+        self.corpus_name = None
+        self.pos_attr = None
+        self.feat_attr = None
+        self.tagset_type = None
+        self.tagset_name = None
+
+    def to_dict(self):
+        # Note: the returned type must match client-side's PluginInterfaces.TagHelper.TagsetInfo
+        return dict(ident=self.tagset_name, type=self.tagset_type, posAttr=self.pos_attr, featAttr=self.feat_attr)
+
+
 class CorpusInfo(DictLike):
     """
     Genereal corpus information and metadata.
@@ -147,10 +168,7 @@ class CorpusInfo(DictLike):
         self.path = None
         self.web = None
         self.sentence_struct = None
-        self.tagset = None
-        self.tagset_type = None  # positional/keyval/other
-        self.tagset_pos_attr = None  # a positional attr reserved for PoS
-        self.tagset_feat_attr = None  # a positional attr reserved for all (other) features
+        self.tagsets = []
         self.speech_segment = None
         self.speaker_id_attr = None
         self.speech_overlap_attr = None

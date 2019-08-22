@@ -19,12 +19,11 @@
  */
 import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperModel} from './positional/models';
+import {TagHelperModel, PositionOptions} from './positional/models';
 import {UDTagBuilderModel, FilterRecord} from './keyval/models';
 import {init as viewInit} from './views';
 import {init as ppTagsetViewInit} from './positional/views';
 import {init as udTagsetViewInit} from './keyval/views';
-import { Kontext } from '../../types/common';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -39,17 +38,32 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         this.pluginApi = pluginApi;
     }
 
-    getWidgetView(corpname:string, tagsetInfo:Kontext.TagsetInfo):PluginInterfaces.TagHelper.View {
+    getWidgetView(corpname:string, tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View {
+        /// TODO !!!! currently we take only the first tagset ////
+        const tagsetInfo = tagsets[0];
         switch (tagsetInfo.type) {
             case 'positional':
+                const positions = Immutable.List<PositionOptions>();
                 return viewInit(
                     this.pluginApi.dispatcher(),
                     this.pluginApi.getComponentHelpers(),
                     new TagHelperModel(
                         this.pluginApi.dispatcher(),
                         this.pluginApi,
-                        corpname,
-                        tagsetInfo.featAttr
+                        {
+                            corpname: corpname,
+                            tagsetName: tagsetInfo.ident,
+                            data: Immutable.List<Immutable.List<PositionOptions>>().push(positions),
+                            positions: positions,
+                            tagAttr: tagsetInfo.featAttr,
+                            presetPattern: '',
+                            srchPattern: '.*',
+                            rawPattern: '.*',
+                            generatedQuery: `${tagsetInfo.featAttr}=".*"`,
+                            isBusy: false,
+                            canUndo: false,
+                            stateId: ''
+                        }
                     ),
                     ppTagsetViewInit(
                         this.pluginApi.dispatcher(),
@@ -65,6 +79,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                         this.pluginApi,
                         {
                             corpname:corpname,
+                            tagsetName: tagsetInfo.ident,
                             isBusy: false,
                             insertRange: [0, 0],
                             canUndo: false,

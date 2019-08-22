@@ -39,6 +39,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
 import { Action, IFullActionControl } from 'kombo';
+import { PluginInterfaces } from '../types/plugins';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -327,7 +328,7 @@ export class FirstFormPage {
                 ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
                         tagHelperPlg.getWidgetView(
                             this.layoutModel.getCorpusIdent().id,
-                            this.layoutModel.getNestedConf<Kontext.TagsetInfo>('pluginData', 'taghelper', 'corp_tagset_info')
+                            this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
                         ) :
                         null;
                 ttAns.queryStorageView = qsPlugin.getWidgetView();

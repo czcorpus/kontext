@@ -780,7 +780,7 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getConf<Kontext.TagsetInfo>('tagsetInfo')
+                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
@@ -792,7 +792,7 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getConf<Kontext.TagsetInfo>('tagsetInfo')
+                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),

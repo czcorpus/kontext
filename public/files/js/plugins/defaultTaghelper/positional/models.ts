@@ -91,24 +91,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     private pluginApi:IPluginApi;
 
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, corpname:string, tagAttr:string) {
-        const positions = Immutable.List<PositionOptions>();
-        super(
-            dispatcher,
-            {
-                corpname: corpname,
-                data: Immutable.List<Immutable.List<PositionOptions>>().push(positions),
-                positions: positions,
-                tagAttr: tagAttr,
-                presetPattern: '',
-                srchPattern: '.*',
-                rawPattern: '.*',
-                generatedQuery: `${tagAttr}=".*"`,
-                isBusy: false,
-                canUndo: false,
-                stateId: ''
-            }
-        );
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:TagHelperModelState) {
+        super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.actionMatch = {
             'TAGHELPER_PRESET_PATTERN': (state, action) => {
@@ -232,19 +216,29 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     private loadInitialData(state:TagHelperModelState):RSVP.Promise<TagDataResponse> {
         return this.pluginApi.ajax<TagDataResponse>(
             'GET',
-            this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
-            { corpname: state.corpname }
+            this.pluginApi.createActionUrl(
+                'corpora/ajax_get_tag_variants',
+                [
+                    ['corpname', state.corpname],
+                    ['tagset', state.tagsetName]
+                ]
+            ),
+            {}
         );
     }
 
     private updateData(state:TagHelperModelState, triggerRow:number):RSVP.Promise<TagDataResponse> {
         let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
             'GET',
-            this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
-            {
-                corpname: state.corpname,
-                pattern: state.srchPattern
-            }
+            this.pluginApi.createActionUrl(
+                'corpora/ajax_get_tag_variants',
+                [
+                    ['corpname', state.corpname],
+                    ['tagset', state.tagsetName],
+                    ['pattern', state.srchPattern]
+                ]
+            ),
+            {}
         );
         return prom.then(
             (data) => {

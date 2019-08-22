@@ -535,10 +535,24 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
+        # TODO BEGIN
+
+        # possible taghelper stuff configuration suggestion:
+        #
+        # <corpus sentence_struct="s" ident="EDU_CS" tagset="pp_tagset">
+        #    <tagsets>
+        #        <tagset name="ud" pos_attr="pos" feat_attr="ufeat" type="keyval" />
+        #    </tagsets>
+        #</corpus>
+
+        # TODO remove ans.tagset = ...
         ans.tagset = node.attrib.get('tagset', None)
-        ans.tagset_type = node.attrib.get('tagset_type', None)
-        ans.tagset_pos_attr = node.attrib.get('tagset_pos_attr', None)
-        ans.tagset_feat_attr = node.attrib.get('tagset_feat_attr', None)
+        # REMOVE ans.tagset_type = node.attrib.get('tagset_type', None)
+        # REMOVE ans.tagset_pos_attr = node.attrib.get('tagset_pos_attr', None)
+        # REMOVE ans.tagset_feat_attr = node.attrib.get('tagset_feat_attr', None)
+        # ---> new approach:
+        # ans.tagsets = [TagsetInfo(x) for x in .... parsed tagset within tagsets]
+        # TODO END
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)

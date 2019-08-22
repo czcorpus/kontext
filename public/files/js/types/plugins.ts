@@ -160,6 +160,44 @@ export namespace PluginInterfaces {
 
     export namespace TagHelper {
 
+
+        /**
+         * TagsetInfo specifies a complete information
+         * about tagset - name, type and used positional
+         * attributes.
+         */
+        export interface TagsetInfo {
+
+            /**
+             * Concrete tagset identifier. The values
+             * are KonText-fabricated (pp_tagset, ud,...).
+             * On the other hand, the values are not
+             * hardcoded into the code as they are used
+             * to fetch proper tagset configuration
+             * (which is admin-defined).
+             */
+            ident:string;
+
+            /**
+             * 'other' declares that there is a defined
+             * tagset for the corpus but not a supported one.
+             */
+            type:'positional'|'keyval'|'other';
+
+            /**
+             * A positional attribute reserved for part of speech info.
+             * If null then we assume all the info is stored within featAttr
+             * (see below).
+             */
+            posAttr:string|null;
+
+            /**
+             * A positional attribute all the (other) tag information
+             * is stored within.
+             */
+            featAttr:string;
+        }
+
         export interface ViewProps {
             sourceId:string;
             actionPrefix:string;
@@ -171,7 +209,7 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<ViewProps>;
 
         export interface IPlugin {
-            getWidgetView(corpname:string, tagsetInfo:Kontext.TagsetInfo):TagHelper.View;
+            getWidgetView(corpname:string, tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
         }
 
         export interface Factory {

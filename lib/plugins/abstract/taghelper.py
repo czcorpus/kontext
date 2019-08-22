@@ -128,13 +128,13 @@ class AbstractTaghelper(object):
         """
         raise NotImplementedError()
 
-    def loader(self, corpus_name):
+    def loader(self, corpus_name, tagset_name):
         """
         Return a loader for the corpus_name
         """
         raise NotImplementedError()
 
-    def fetcher(self, corpus_name):
+    def fetcher(self, corpus_name, tagset_name):
         """
         Return a fetcher for the corpus_name
         """
