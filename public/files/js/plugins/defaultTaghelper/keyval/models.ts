@@ -168,27 +168,27 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_FEATURES':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE');
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE', false);
             break;
 
             case 'TAGHELPER_ADD_FILTER':
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_LOAD_FILTERED_DATA_DONE');
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_LOAD_FILTERED_DATA_DONE', true);
             break;
         }
     }
 
 }
 
-function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone: string) {
+function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone:string, useFilter:boolean) {
     const baseArgs:Array<[string, string]> = [['corpname', state.corpname], ['tagset', state.tagsetName]];
     const queryArgs:Array<[string, string]> = state.filterFeaturesHistory.last().map(x => x.getKeyval()).toArray();
     pluginApi.ajax$(
         'GET',
         pluginApi.createActionUrl(
             'corpora/ajax_get_tag_variants',
-            baseArgs.concat(queryArgs)
+            useFilter ? baseArgs.concat(queryArgs) : baseArgs
         ),
         {}
 
