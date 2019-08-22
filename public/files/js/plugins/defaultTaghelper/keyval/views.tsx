@@ -64,7 +64,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                     <span>{filter.get('value')}</span><span className="query-close">X</span>
                 </button>
             }).toArray();
-        return <span className = "query-button-group">{[props.categoryName + "=", ...buttonGroup]}</span>;
+        return <span className = "query-button-group">{[<b>{props.categoryName + " = "}</b>, ...buttonGroup]}</span>;
     }
 
     const QueryLine:React.FunctionComponent<{
@@ -74,6 +74,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get("name"))
         const selected = groupedFilterFeatures.reduce(
             (R, V, K) => R.concat([
+                R.length ? <span className = "query-button-group">{"&"}</span>: "",
                 <QueryLineCategory
                     key={K}
                     categoryName={K}
