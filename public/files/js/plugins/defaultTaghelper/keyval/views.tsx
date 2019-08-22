@@ -49,20 +49,39 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         return <select multiple size={20} onChange={props.onSelectCategoryHandler}>{categories}</select>;
     }
 
+    const QueryLineCategory:React.FunctionComponent<{
+        categoryName:string;
+        filterFeaturesCategory:Immutable.List<FilterRecord>;
+        handleRemoveFilter:(event) => void;
+    }> = (props) => {
+        const buttonGroup = props.filterFeaturesCategory.sort().map(filter => {
+                return <button
+                    type="button"
+                    key={filter.composeString()}
+                    name={filter.get('name')}
+                    value={filter.get('value')}
+                    onClick={props.handleRemoveFilter}>
+                    <span>{filter.get('value')}</span><span className="query-close">X</span>
+                </button>
+            }).toArray();
+        return <span className = "query-button-group">{[props.categoryName + "=", ...buttonGroup]}</span>;
+    }
+
     const QueryLine:React.FunctionComponent<{
         filterFeatures:Immutable.List<FilterRecord>;
         handleRemoveFilter:(event) => void;
     }> = (props) => {
-        const selected = props.filterFeatures.map(filter => {
-            return <button
-                type="button"
-                key={filter.composeString()}
-                name={filter.get('name')}
-                value={filter.get('value')}
-                onClick={props.handleRemoveFilter}>
-                <span>{filter.composeString()}</span><span className="query-close">X</span>
-            </button>
-        })
+        const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get("name"))
+        const selected = groupedFilterFeatures.reduce(
+            (R, V, K) => R.concat([
+                <QueryLineCategory
+                    key={K}
+                    categoryName={K}
+                    filterFeaturesCategory={V.toList()}
+                    handleRemoveFilter={props.handleRemoveFilter} />
+            ]),
+            []
+        );
         return <div>{selected}</div>;
     }
 
