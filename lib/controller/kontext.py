@@ -1017,7 +1017,8 @@ class Kontext(Controller):
             ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
         result['ttcrit'] = [('fcrit', '%s 0' % a)
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
-        result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
+        result['corp_uses_tag'] = 'tag' in corpus_get_conf(
+            maincorp, 'ATTRLIST').split(',')  # legacy value
         result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
                                               ('lemma', self.args.lemma),
                                               ('lpos', self.args.lpos),
@@ -1123,6 +1124,18 @@ class Kontext(Controller):
                 out['login_url'] = None
                 out['logout_url'] = None
 
+    def _attach_plugin_exports(self, result, direct):
+        """
+        Method exports plug-ins' specific data for their respective client parts.
+        KonText core does not care about particular formats - it just passes JSON-encoded
+        data to the client.
+        """
+        key = 'pluginData' if direct else 'plugin_data'
+        result[key] = {}
+        for plg in plugins.runtime:
+            if hasattr(plg.instance, 'export'):
+                result[key][plg.name] = plg.instance.export(self._plugin_api)
+
     def add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -1220,12 +1233,8 @@ class Kontext(Controller):
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
             result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
                 self.args.corpname)
-        # we export plug-ins data KonText core does not care about (it is used
-        # by a respective plug-in client-side code)
-        result['plugin_data'] = {}
-        for plg in plugins.runtime:
-            if hasattr(plg.instance, 'export'):
-                result['plugin_data'][plg.name] = plg.instance.export(self._plugin_api)
+
+        self._attach_plugin_exports(result, direct=False)
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)

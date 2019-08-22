@@ -778,7 +778,11 @@ export class ViewPage {
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
-                            taghelperPlugin.getWidgetView() : null,
+                            taghelperPlugin.getWidgetView(
+                                this.layoutModel.getCorpusIdent().id,
+                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                            ) :
+                            null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
                     actionPrefix: '',
                     corpname: this.layoutModel.getCorpusIdent().id
@@ -786,7 +790,11 @@ export class ViewPage {
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
-                            taghelperPlugin.getWidgetView() : null,
+                            taghelperPlugin.getWidgetView(
+                                this.layoutModel.getCorpusIdent().id,
+                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                            ) :
+                            null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
                     actionPrefix: 'FILTER_',
                     filterId: '__new__'

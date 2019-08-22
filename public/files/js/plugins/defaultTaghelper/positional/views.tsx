@@ -20,157 +20,16 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {TagHelperModel, PositionValue, PositionOptions, TagHelperModelState} from './models';
-import {Kontext, KeyCodes} from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
-import { SetQueryInputAction, AppendQueryInputAction } from '../../models/query/common';
+import {PositionValue, PositionOptions, TagHelperModelState} from './models';
+import {Kontext} from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, tagHelperModel:TagHelperModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
 
-    // ------------------------------ <TagDisplay /> ----------------------------
-
-    const TagDisplay:React.SFC<{
-                onEscKey:()=>void;
-                displayPattern:string;
-            }> = (props) => {
-
-
-        const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
-            evt.preventDefault();
-            evt.stopPropagation();
-            if (typeof props.onEscKey === 'function' && evt.keyCode === KeyCodes.ESC) {
-                props.onEscKey();
-            }
-        };
-
-        return <input type="text" className="tag-display-box" value={props.displayPattern}
-                    onKeyDown={keyEventHandler} readOnly
-                    ref={item => item ? item.focus() : null} />;
-    }
-
-    // ------------------------------ <InsertButton /> ----------------------------
-
-    const InsertButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
-        return (
-            <button className="util-button" type="button"
-                    value="insert" onClick={props.onClick}>
-                {he.translate('taghelper__insert_btn')}
-            </button>
-        );
-    }
-
-    // ------------------------------ <UndoButton /> ----------------------------
-
-    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
-        if (props.enabled) {
-            return (
-                <button type="button" className="util-button" value="undo"
-                        onClick={props.onClick}>
-                    {he.translate('taghelper__undo')}
-                </button>
-            );
-
-        } else {
-            return (
-                <span className="util-button disabled">
-                    {he.translate('taghelper__undo')}
-                </span>
-            );
-        }
-    };
-
-    // ------------------------------ <ResetButton /> ----------------------------
-
-    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
-        if (props.enabled) {
-            return (
-                <button type="button" className="util-button cancel"
-                        value="reset" onClick={props.onClick}>
-                    {he.translate('taghelper__reset')}
-                </button>
-            );
-
-        } else {
-            return (
-                <span className="util-button disabled">
-                    {he.translate('taghelper__reset')}
-                </span>
-            );
-        }
-    };
-
-
-    // ------------------------------ <TagButtons /> ----------------------------
-
-    const TagButtons:React.SFC<{
-                range:[number, number];
-                sourceId:string;
-                onInsert?:()=>void;
-                canUndo:boolean;
-                displayPattern:string;
-                actionPrefix:string;
-            }> = (props) => {
-
-        const buttonClick = (evt) => {
-            if (evt.target.value === 'reset') {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_RESET',
-                    payload: {}
-                });
-
-            } else if (evt.target.value === 'undo') {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_UNDO',
-                    payload: {}
-                });
-
-            } else if (evt.target.value === 'insert') {
-                if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                    const query = `"${props.displayPattern}"`;
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                        payload: {
-                            sourceId: props.sourceId,
-                            query: query,
-                            insertRange: [props.range[0], props.range[1]],
-                            rawAnchorIdx: null,
-                            rawFocusIdx: null
-                        }
-                    });
-
-                } else {
-                    dispatcher.dispatch<AppendQueryInputAction>({
-                        name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
-                        payload: {
-                            sourceId: props.sourceId,
-                            query: `[tag="${props.displayPattern}"]`
-                        }
-                    });
-                }
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_RESET',
-                    payload: {}
-                });
-                if (typeof props.onInsert === 'function') {
-                    props.onInsert();
-                }
-            }
-        };
-
-        return (
-            <div className="buttons">
-                <InsertButton onClick={buttonClick} />
-                <UndoButton onClick={buttonClick} enabled={props.canUndo} />
-                <ResetButton onClick={buttonClick} enabled={props.canUndo} />
-            </div>
-        );
-    };
 
     // ------------------------------ <ValueLine /> ----------------------------
 
@@ -336,31 +195,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<PluginInterfaces.TagHelper.ViewProps, TagHelperModelState> {
-
-        private modelSubscription:Subscription;
+    class TagBuilder extends React.Component<TagHelperModelState> {
 
         constructor(props) {
             super(props);
-            this.state = tagHelperModel.getState();
-            this._changeListener = this._changeListener.bind(this);
             this.checkboxHandler = this.checkboxHandler.bind(this);
-        }
-
-        _changeListener(state:TagHelperModelState) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = tagHelperModel.addListener(this._changeListener);
-            dispatcher.dispatch({
-                name: 'TAGHELPER_GET_INITIAL_DATA',
-                payload: {}
-            });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         private checkboxHandler(lineIdx:number, value:string, checked:boolean) {
@@ -375,32 +214,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         render() {
-            return <div>
-                <h3>{he.translate('taghelper__create_tag_heading')}</h3>
-                {
-                    this.state.isBusy ?
-                    <img className="loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                            title={he.translate('global__loading')}
-                            alt={he.translate('global__loading')} /> :
-                    null
-                }
-                <div className="tag-header">
-                    <TagDisplay displayPattern={this.state.displayPattern} onEscKey={this.props.onEscKey} />
-                    <TagButtons sourceId={this.props.sourceId}
-                                onInsert={this.props.onInsert}
-                                canUndo={this.state.canUndo}
-                                range={this.props.range}
-                                actionPrefix={this.props.actionPrefix}
-                                displayPattern={this.state.displayPattern} />
-                </div>
-                <PositionList positions={this.state.positions}
-                                stateId={this.state.stateId}
-                                checkboxHandler={this.checkboxHandler} />
-            </div>;
+            return <PositionList
+                        positions={this.props.positions}
+                        stateId={this.props.stateId}
+                        checkboxHandler={this.checkboxHandler} />;
         }
     }
 
-    return {
-        TagBuilder: TagBuilder
-    };
+    return TagBuilder;
 }

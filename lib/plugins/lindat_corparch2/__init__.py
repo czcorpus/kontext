@@ -225,7 +225,6 @@ class DefaultCorplistProvider(CorplistProvider):
         self.SESSION_KEYWORDS_KEY = session_keywords_key
         self.default_label = default_label
 
-
     @staticmethod
     def cut_result(res, offset, limit):
         right_lim = offset + int(limit)
@@ -563,6 +562,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.web = web_url
         ans.sentence_struct = sentence_struct
         ans.tagset = node.attrib.get('tagset', None)
+        ans.tagset_type = node.attrib.get('tagset', None)
+        ans.tagset_pos_attr = node.attrib.get('tagset_pos_attr', None)
+        ans.tagset_feat_attr = node.attrib.get('tagset_feat_attr', None)
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)
@@ -576,7 +578,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.access = access
 
         #ref_elm = node.find('reference')
-        #if ref_elm is not None:
+        # if ref_elm is not None:
         #    ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
         #                                                             'text', None))
         #    articles = [translate_markup(getattr(x, 'text', None))
@@ -644,9 +646,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
         #desc = ans.metadata.desc
-        #if lang_code in desc:
+        # if lang_code in desc:
         #    ans.metadata.desc = desc[lang_code]
-        #else:
+        # else:
         #    ans.metadata.desc = ''
 
         translated_k = OrderedDict()
@@ -740,8 +742,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
-            initial_keywords = plugin_api.session.get(
-            self.SESSION_KEYWORDS_KEY, [self.default_label]),
+            initial_keywords=plugin_api.session.get(
+                self.SESSION_KEYWORDS_KEY, [self.default_label]),
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )

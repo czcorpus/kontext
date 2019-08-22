@@ -22,13 +22,10 @@ import json
 from collections import defaultdict
 import re
 from lxml import etree
+from plugins.abstract.taghelper import AbstractTagsetInfoLoader
 
 
-class TagVariantLoaderException(Exception):
-    pass
-
-
-class TagVariantLoader(object):
+class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
     """
     A backend for tag writing auto-complete, interactive tag writing widgets etc.
     Please note that values in config.xml/corpora/tags_cache_dir are cached without
@@ -45,22 +42,22 @@ class TagVariantLoader(object):
         ('!', r'\!')
     )
 
-    def __init__(self, corpus_name, tagset_name, cache_dir, variants_file_path, cache_clear_interval,
+    def __init__(self, corpus_name, tagset_name, cache_dir, tags_src_dir, cache_clear_interval,
                  taglist_path):
         """
         """
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
-        self.variants_file_path = variants_file_path
+        self.variants_file_path = os.path.join(tags_src_dir, corpus_name)
         self.cache_dir = os.path.join(cache_dir, self.corpus_name)
         self.cache_clear_interval = cache_clear_interval
         self.taglist_path = taglist_path
         self.initial_values = {}
 
-    def get_variant(self, selected_tags, lang):
+    def get_variant(self, user_selection, lang):
         """
         """
-        return self.calculate_variant(selected_tags, lang)
+        return self.calculate_variant(user_selection, lang)
 
     def get_initial_values(self, lang):
         if lang not in self.initial_values:
@@ -68,7 +65,7 @@ class TagVariantLoader(object):
         return self.initial_values[lang]
 
     def is_enabled(self):
-        return len(self.get_initial_values('en_US')) > 0
+        return len(self.get_initial_values('en_US')) > 0 and os.path.exists(self.variants_file_path)
 
     def _get_initial_values(self, lang):
         """

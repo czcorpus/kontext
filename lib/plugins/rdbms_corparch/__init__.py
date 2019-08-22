@@ -26,7 +26,7 @@ from controller import exposed
 import actions.user
 import plugins
 from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
-                                      TokenConnect, KwicConnect, DictLike)
+                                      TokenConnect, KwicConnect, DictLike, TagsetInfo)
 import l10n
 from plugins.rdbms_corparch.backend import ManateeCorpora
 from plugins.rdbms_corparch.backend.sqlite import Backend
@@ -245,7 +245,6 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.id = row['id']
             ans.web = row['web']
             ans.sentence_struct = row['sentence_struct']
-            ans.tagset = row['tagset']
             ans.collator_locale = row['collator_locale']
             ans.speech_segment = row['speech_segment']
             ans.speaker_id_attr = row['speaker_id_attr']
@@ -356,6 +355,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         if corpus_id not in self._corpus_info_cache:
             row = self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row)
+            corp.tagsets = [TagsetInfo().from_dict(row2)
+                            for row2 in self._backend.load_corpus_tagsets(corpus_id)]
             self._corpus_info_cache[corpus_id] = corp
             for art in self._backend.load_corpus_articles(corpus_id):
                 if art['role'] == 'default':
@@ -390,7 +391,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
 
                     return ans
                 return BrokenCorpusInfo(name=corp_name)
-            except Exception as ex:
+            except TypeError as ex:
                 logging.getLogger(__name__).warning(
                     'Failed to fetch corpus info for {0}: {1}'.format(corp_name, ex))
                 return BrokenCorpusInfo(name=corp_name)

@@ -117,7 +117,7 @@ from lxml import etree
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
-from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo, DictLike
+from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo, DictLike, TagsetInfo
 from plugins import inject
 import l10n
 import manatee
@@ -535,7 +535,18 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
-        ans.tagset = node.attrib.get('tagset', None)
+
+        ans.tagsets = [
+            TagsetInfo().from_dict({
+                'corpus_name': ans.name,
+                'tagset_name': tagset.attrib.get('name', None),
+                'tagset_type': tagset.attrib.get('type', None),
+                'pos_attr': tagset.attrib.get('pos_attr', None),
+                'feat_attr': tagset.attrib.get('feat_attr', None),
+            })
+            for tagset in node.find('tagsets').getchildren()
+        ]
+
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)

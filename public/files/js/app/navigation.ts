@@ -486,6 +486,7 @@ export class AppNavigation implements Kontext.IURLHandler {
                 this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
                 this.conf.setConf<string>('TextTypesNotes', data.TextTypesNotes);
                 this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
+                this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
             }
         );
     }

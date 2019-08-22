@@ -90,6 +90,8 @@ class DatabaseBackend(object):
 
     def load_tckc_providers(self, corpus_id:str) -> List[Dict[str, Any]]: ...
 
+    def load_corpus_tagsets(self, corpus_id:str) -> List[Dict[str, Any]]: ...
+
 
 class DatabaseWritableBackend(DatabaseBackend):
 
