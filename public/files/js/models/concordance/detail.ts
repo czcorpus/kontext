@@ -358,6 +358,7 @@ export class ConcDetailModel extends StatefulModel {
                             this.expandLeftArgs = Immutable.List<ExpandArgs>();
                             this.expandRightArgs = Immutable.List<ExpandArgs>();
                             this.expaningSide = null;
+                            this.concDetail = null;
                             this.isBusy = true;
                             this.notifyChangeListeners();
                             return this.reloadConcDetail();
@@ -368,6 +369,7 @@ export class ConcDetailModel extends StatefulModel {
                             this.expandRightArgs = Immutable.List<ExpandArgs>();
                             this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
                             this.expaningSide = null;
+                            this.concDetail = null;
                             this.isBusy = true;
                             this.notifyChangeListeners();
                             return this.reloadSpeechDetail();
@@ -686,7 +688,7 @@ export class ConcDetailModel extends StatefulModel {
         }
 
         if (structs) {
-            args.add('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));
+            args.set('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));
         }
 
         if (expand === 'left') {
