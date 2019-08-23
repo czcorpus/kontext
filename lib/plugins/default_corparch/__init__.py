@@ -535,7 +535,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
-
         ans.tagsets = [
             TagsetInfo().from_dict({
                 'corpus_name': ans.name,
@@ -544,9 +543,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 'pos_attr': tagset.attrib.get('pos_attr', None),
                 'feat_attr': tagset.attrib.get('feat_attr', None),
             })
-            for tagset in node.find('tagsets').getchildren()
+            for tagset in node.findall('tagsets/tagset')
         ]
-
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)
