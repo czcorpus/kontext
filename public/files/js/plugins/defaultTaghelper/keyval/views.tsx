@@ -72,9 +72,9 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         handleRemoveFilter:(event) => void;
     }> = (props) => {
         const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get("name"))
-        const selected = groupedFilterFeatures.reduce(
+        const selected = groupedFilterFeatures.sort().reduce(
             (R, V, K) => R.concat([
-                R.length ? <span className = "query-button-group">{"&"}</span>: "",
+                R.length ? <span className = "query-button-group">{"&"}</span> : null,
                 <QueryLineCategory
                     key={K}
                     categoryName={K}

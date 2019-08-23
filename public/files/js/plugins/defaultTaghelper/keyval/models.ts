@@ -68,8 +68,8 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
     // ...
     error: Error|null;
-    allFeatures: Immutable.Map<string, Immutable.List<string>>,
-    availableFeatures: Immutable.Map<string, Immutable.List<string>>,
+    allFeatures: Immutable.Map<string, Immutable.List<string>>;
+    availableFeatures: Immutable.Map<string, Immutable.List<string>>;
     filterFeaturesHistory: Immutable.List<Immutable.List<FilterRecord>>;
     showCategory: string;
 
@@ -168,7 +168,9 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_FEATURES':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE', false);
+                if (state.allFeatures.isEmpty) {
+                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE', false);
+                }
             break;
 
             case 'TAGHELPER_ADD_FILTER':
