@@ -48,8 +48,8 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         """
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
-        self.variants_file_path = os.path.join(tags_src_dir, corpus_name)
-        self.cache_dir = os.path.join(cache_dir, self.corpus_name)
+        self.variants_file_path = os.path.join(tags_src_dir, tagset_name, corpus_name)
+        self.cache_dir = os.path.join(cache_dir, tagset_name, corpus_name)
         self.cache_clear_interval = cache_clear_interval
         self.taglist_path = taglist_path
         self.initial_values = {}
