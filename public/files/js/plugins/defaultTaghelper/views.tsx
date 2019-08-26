@@ -23,9 +23,10 @@ import { Kontext, KeyCodes } from '../../types/common';
 import { AppendQueryInputAction, SetQueryInputAction } from '../../models/query/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
+import * as Immutable from 'immutable';
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:StatelessModel<TagBuilderBaseState>,
-        TagsetWidget:React.ComponentClass|React.SFC) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
+    views: Immutable.Map<string, any>) {
 
 // ------------------------------ <InsertButton /> ----------------------------
 
@@ -171,7 +172,9 @@ const TagButtons:React.SFC<{
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<PluginInterfaces.TagHelper.ViewProps & TagBuilderBaseState> {
+    type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps & {activeView:React.ComponentClass|React.SFC};
+
+    class TagBuilder extends React.Component<ActiveTagBuilderProps & TagBuilderBaseState> {
 
         constructor(props) {
             super(props);
@@ -185,6 +188,7 @@ const TagButtons:React.SFC<{
         }
 
         render() {
+            
             return <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 {
@@ -204,13 +208,30 @@ const TagButtons:React.SFC<{
                                 rawPattern={this.props.rawPattern}
                                 generatedQuery={this.props.generatedQuery} />
                 </div>
-                <TagsetWidget {...this.props} />
+                <this.props.activeView {...this.props} />
             </div>;
         }
     }
+   
+    const TagBuilderBounds = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
 
-    return {
-        TagBuilder: BoundWithProps<PluginInterfaces.TagHelper.ViewProps, TagBuilderBaseState>(TagBuilder, model)
-    };
+    const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
+        const [activeView, setActiveView] = React.useState(views.keySeq().get(0));
+        const TagBuilderBound = TagBuilderBounds.get(activeView);
 
+        const buttons = views.keySeq().map(value => <button onClick={() => setActiveView(value)}>{value}</button>)
+
+        return <div>
+            {buttons}
+            <TagBuilderBound
+                activeView={views.get(activeView)}
+                sourceId={props.sourceId}
+                actionPrefix={props.actionPrefix}
+                range={props.range}
+                onInsert={props.onInsert}
+                onEscKey={props.onEscKey} />
+        </div>
+    }
+
+    return ActiveTagBuilder;
 }
