@@ -19,11 +19,14 @@
  */
 import * as Immutable from 'immutable';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperModel, PositionOptions} from './positional/models';
-import {UDTagBuilderModel, FilterRecord} from './keyval/models';
+import {TagHelperModel, PositionOptions, TagHelperModelState} from './positional/models';
+import {UDTagBuilderModel, FilterRecord, FeatureSelectProps} from './keyval/models';
 import {init as viewInit} from './views';
 import {init as ppTagsetViewInit} from './positional/views';
 import {init as udTagsetViewInit} from './keyval/views';
+
+import { StatelessModel } from 'kombo';
+import { TagBuilderBaseState } from './common';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -43,14 +46,15 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         if (tagsets.length === 0) {
             return null;
         }
-        const tagsetInfo = tagsets[0];
-        switch (tagsetInfo.type) {
-            case 'positional':
-                const positions = Immutable.List<PositionOptions>();
-                return viewInit(
-                    this.pluginApi.dispatcher(),
-                    this.pluginApi.getComponentHelpers(),
-                    new TagHelperModel(
+
+        let views:Immutable.Map<string, any> = Immutable.Map();
+        let models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>> = Immutable.Map();
+        
+        for (const tagsetInfo of tagsets) {
+            switch (tagsetInfo.type) {
+                case 'positional':
+                    const positions = Immutable.List<PositionOptions>();
+                    models = models.set('positional', new TagHelperModel(
                         this.pluginApi.dispatcher(),
                         this.pluginApi,
                         {
@@ -67,17 +71,14 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                             canUndo: false,
                             stateId: ''
                         }
-                    ),
-                    ppTagsetViewInit(
+                    ));
+                    views = views.set('positional', ppTagsetViewInit(
                         this.pluginApi.dispatcher(),
                         this.pluginApi.getComponentHelpers()
-                    )
-                ).TagBuilder;
-            case 'keyval':
-                return viewInit(
-                    this.pluginApi.dispatcher(),
-                    this.pluginApi.getComponentHelpers(),
-                    new UDTagBuilderModel(
+                    ));
+                    break;
+                case 'keyval':
+                    models = models.set('keyval', new UDTagBuilderModel(
                         this.pluginApi.dispatcher(),
                         this.pluginApi,
                         {
@@ -96,17 +97,25 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                             posField: tagsetInfo.posAttr,
                             featureField: tagsetInfo.featAttr
                         }
-                    ),
-                    udTagsetViewInit(
+                    ));
+                    views = views.set('keyval', udTagsetViewInit(
                         this.pluginApi.dispatcher(),
                         this.pluginApi.getComponentHelpers()
-                    )
-                ).TagBuilder;
-            case 'other': // 'other' means defined but unsupported
-                return null;
-            default:
-                throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
+                ));
+                break;
+                case 'other': // 'other' means defined but unsupported
+                    return null;
+                default:
+                    throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
+            }
         }
+
+        return viewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.getComponentHelpers(),
+            models,
+            views,
+        );
     }
 }
 

@@ -206,7 +206,7 @@ export namespace PluginInterfaces {
             onEscKey:()=>void;
         }
 
-        export type View = React.ComponentClass<ViewProps>;
+        export type View = React.ComponentClass<ViewProps>|React.SFC<ViewProps>;
 
         export interface IPlugin {
             getWidgetView(corpname:string, tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;

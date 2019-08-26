@@ -112,13 +112,6 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             });
         }
 
-        componentDidMount() {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_GET_INITIAL_FEATURES',
-                payload: {}
-            });
-        }
-
         render() {
             if (this.props.error) {
                 return <div>Error: {this.props.error.message}</div>;

@@ -91,12 +91,12 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 newState.showCategory = action.payload['value'];
                 return newState;
             },
-            'TAGHELPER_GET_INITIAL_FEATURES': (state, action) => {
+            'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
                 const newState = this.copyState(state);
                 newState.isBusy = true;
                 return newState;
             },
-            'TAGHELPER_GET_INITIAL_FEATURES_DONE': (state, action) => {
+            'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
                 const newState = this.copyState(state);
                 if (!action.error) {
                     newState.allFeatures = Immutable.fromJS(action.payload['result']);
@@ -108,7 +108,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 newState.isBusy = false;
                 return newState;
             },
-            'TAGHELPER_LOAD_FILTERED_DATA_DONE': (state, action) => {
+            'TAGHELPER_GET_FILTERED_DATA_DONE': (state, action) => {
                 const newState = this.copyState(state);
                 if (!action.error) {
                     newState.availableFeatures = Immutable.fromJS(action.payload['result']);
@@ -167,16 +167,16 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
-            case 'TAGHELPER_GET_INITIAL_FEATURES':
+            case 'TAGHELPER_GET_INITIAL_DATA':
                 if (state.allFeatures.isEmpty) {
-                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE', false);
+                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
                 }
             break;
 
             case 'TAGHELPER_ADD_FILTER':
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_LOAD_FILTERED_DATA_DONE', true);
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
             break;
         }
     }
