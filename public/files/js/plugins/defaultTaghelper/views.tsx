@@ -216,14 +216,14 @@ const TagButtons:React.SFC<{
     const TagBuilderBounds = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
 
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
-        const [activeView, setActiveView] = React.useState(views.keySeq().get(0));
+        const [activeView, setActiveView] = React.useState(views.keySeq().first());
         const TagBuilderBound = TagBuilderBounds.get(activeView);
 
         models.forEach((model, key) => model.suspend(() => key === activeView ? true : false));
-        const buttons = views.keySeq().map(value => <button onClick={() => setActiveView(value)}>{value}</button>)
+        const buttons = views.keySeq().map(value => <button type='button' onClick={() => {setActiveView(value)}}>{value}</button>)
 
         return <div>
-            {buttons}
+            {buttons.size > 1 ? buttons : null}
             <TagBuilderBound
                 activeView={views.get(activeView)}
                 sourceId={props.sourceId}
