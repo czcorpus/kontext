@@ -219,6 +219,7 @@ const TagButtons:React.SFC<{
         const [activeView, setActiveView] = React.useState(views.keySeq().get(0));
         const TagBuilderBound = TagBuilderBounds.get(activeView);
 
+        models.forEach((model, key) => model.suspend(() => key === activeView ? true : false));
         const buttons = views.keySeq().map(value => <button onClick={() => setActiveView(value)}>{value}</button>)
 
         return <div>

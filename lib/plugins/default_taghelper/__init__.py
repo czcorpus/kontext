@@ -85,22 +85,22 @@ class Taghelper(AbstractTaghelper):
         if (corpus_name, tagset_name) not in self._loaders:
             for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
                 if tagset.tagset_type == 'positional':
-                    self._loaders[(corpus_name, tagset_name)] = PositionalTagVariantLoader(
-                        corpus_name=corpus_name, tagset_name=tagset_name,
+                    self._loaders[(corpus_name, tagset.tagset_name)] = PositionalTagVariantLoader(
+                        corpus_name=corpus_name, tagset_name=tagset.tagset_name,
                         cache_dir=self._conf['default:tags_cache_dir'],
                         tags_src_dir=self._conf['default:tags_src_dir'],
                         cache_clear_interval=self._conf['default:clear_interval'],
                         taglist_path=self._conf['default:taglist_path'])
-                    self._fetchers[(corpus_name, tagset_name)] = PositionalSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
                 elif tagset.tagset_type == 'keyval':
-                    self._loaders[(corpus_name, tagset_name)] = KeyvalTagVariantLoader(
-                        corpus_name=corpus_name, tagset_name=tagset_name,
+                    self._loaders[(corpus_name, tagset.tagset_name)] = KeyvalTagVariantLoader(
+                        corpus_name=corpus_name, tagset_name=tagset.tagset_name,
                         tags_src_dir=self._conf['default:tags_src_dir'],
                     )
-                    self._fetchers[(corpus_name, tagset_name)] = KeyvalSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
                 else:
-                    self._loaders[(corpus_name, tagset_name)] = NullTagVariantLoader()
-                    self._fetchers[(corpus_name, tagset_name)] = NullSelectionFetcher()
+                    self._loaders[(corpus_name, tagset.tagset_name)] = NullTagVariantLoader()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
 
         return self._loaders[(corpus_name, tagset_name)]
 
@@ -108,18 +108,18 @@ class Taghelper(AbstractTaghelper):
         if (corpus_name, tagset_name) not in self._fetchers:
             for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
                 if tagset.tagset_type == 'positional':
-                    self._fetchers[(corpus_name, tagset_name)] = PositionalSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
                 elif tagset.tagset_type == 'keyval':
-                    self._fetchers[(corpus_name, tagset_name)] = KeyvalSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
                 else:
-                    self._fetchers[(corpus_name, tagset_name)] = NullSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
         return self._fetchers[(corpus_name, tagset_name)]
 
     def tags_enabled_for(self, corpus_name):
         import logging
         for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
             loader = self.loader(corpus_name, tagset.tagset_name)
-            logging.getLogger(__name__).debug('>>>>> {} -> {}'.format(corpus_name, loader))
+            logging.getLogger(__name__).debug('>>>>> {} -> {}'.format(corpus_name, tagset, loader))
             if loader.is_enabled():
                 return True
         return False

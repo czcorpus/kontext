@@ -42,7 +42,6 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 
     getWidgetView(corpname:string, tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View {
-        /// TODO !!!! currently we take only the first tagset ////
         let views:Immutable.Map<string, any> = Immutable.Map();
         let models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>> = Immutable.Map();
         
