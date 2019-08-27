@@ -168,8 +168,9 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
-                if (state.allFeatures.isEmpty) {
-                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
+                if (state.filterFeaturesHistory.size > 0) {
+                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
                 }
             break;
 
