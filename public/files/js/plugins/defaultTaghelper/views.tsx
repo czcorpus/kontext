@@ -213,17 +213,26 @@ const TagButtons:React.SFC<{
         }
     }
    
-    const TagBuilderBounds = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
+    const AvailableTagBuilderBound = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
 
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
         const [activeView, setActiveView] = React.useState(views.keySeq().first());
-        const TagBuilderBound = TagBuilderBounds.get(activeView);
+        const TagBuilderBound = AvailableTagBuilderBound.get(activeView);
 
+        // disable models not related to the active view
         models.forEach((model, key) => model.suspend(() => key === activeView ? true : false));
-        const buttons = views.keySeq().map(value => <button type='button' onClick={() => {setActiveView(value)}}>{value}</button>)
+
+        // prepare view switch
+        const tagsetSwitch = views.keySeq().sort()
+            .map(value => {
+                return value === activeView ?
+                <span>{value}</span> :
+                <a onClick={() => {setActiveView(value)}}>{value}</a>
+            })
+            .reduce((acc, curr) => {return acc === null ? [curr] : [...acc, ' | ', curr]}, null)
 
         return <div>
-            {buttons.size > 1 ? buttons : null}
+            {tagsetSwitch.length > 1 ? <h5 style={{marginTop: '0em'}}>Available tagsets: {tagsetSwitch}</h5> : null}
             <TagBuilderBound
                 activeView={views.get(activeView)}
                 sourceId={props.sourceId}
