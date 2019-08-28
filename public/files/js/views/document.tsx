@@ -748,6 +748,22 @@ export function init(
             </span>;
     };
 
+    const TabMenu:CoreViews.TabMenu.Component = (props) => {
+        const [selectedPage, selectedPageChange] = React.useState(props.tabs.keySeq().first());
+        const tabs = props.tabs.entrySeq().map(([tab, callback]) =>
+            <li key={tab}>
+                <TabButton
+                    label={tab}
+                    isActive={tab === selectedPage}
+                    onClick={() => {
+                        selectedPageChange(tab);
+                        callback();
+                    }}/>
+            </li>
+        );
+        return <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>;
+    };
+
     // ------------------------------------------------------------------------------------
 
     const PlusButton:CoreViews.PlusButton.Component = (props) => {
@@ -780,6 +796,7 @@ export function init(
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
         TabButton: TabButton,
+        TabMenu: TabMenu,
         PlusButton: PlusButton
     };
 }

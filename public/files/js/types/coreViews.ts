@@ -20,6 +20,7 @@
 
 import * as React from 'react';
 import {ViewOptions} from './common';
+import * as Immutable from 'immutable';
 
 
 export namespace CoreViews {
@@ -333,6 +334,16 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace TabMenu {
+
+        export interface Props {
+            tabs:Immutable.Map<string, ()=>void>;
+            className?:string;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     export namespace PlusButton {
 
         export interface Props {
@@ -365,6 +376,7 @@ export namespace CoreViews {
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
         TabButton:TabButton.Component;
+        TabMenu:TabMenu.Component;
         PlusButton:PlusButton.Component;
     }
 }

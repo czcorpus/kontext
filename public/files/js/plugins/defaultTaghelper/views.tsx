@@ -232,17 +232,9 @@ export function init(
             setActiveView(value);
         };
 
-        // prepare view switch
-        const tagsetSwitch = views.keySeq().map(value =>
-                <li key={value}>
-                    <layoutViews.TabButton onClick={handleTabSelection(value)}
-                        label={value}
-                        isActive={value === activeView} />
-                </li>
-            )
-
+        const tagsetTabs = views.map((value,key) => handleTabSelection(key)).toMap();
         return <div>
-            {tagsetSwitch.size > 1 ? <ul className="TagsetFormSelector tabs">{tagsetSwitch}</ul> : null}
+            {tagsetTabs.size > 1 ? <layoutViews.TabMenu className="TagsetFormSelector" tabs={tagsetTabs} /> : null}
             <hr />
             <TagBuilderBound
                 activeView={views.get(activeView)}
