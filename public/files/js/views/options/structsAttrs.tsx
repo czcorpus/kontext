@@ -20,14 +20,14 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
-import { Subscription } from 'rxjs';
+import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../models/options/structsAttrs';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
-    viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
+    viewOptionsModel:CorpusViewOptionsModel;
     mainMenuModel:Kontext.IMainMenuModel;
 }
 
@@ -466,115 +466,31 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
-    class StructAttrsViewOptions extends React.Component<StructAttrsViewOptionsProps, {
-        corpusIdent:Kontext.FullCorpusIdent;
-        fixedAttr:string;
-        attrList:Immutable.List<ViewOptions.AttrDesc>;
-        availStructs:Immutable.List<ViewOptions.StructDesc>;
-        structAttrs:ViewOptions.AvailStructAttrs;
-        availRefs:Immutable.List<ViewOptions.RefsDesc>;
-        hasSelectAllAttrs:boolean;
-        TehasSelectAllRefs:boolean;
-        hasLoadedData:boolean;
-        attrsVmode:ViewOptions.AttrViewMode;
-        showConcToolbar:boolean;
-        isWaiting:boolean;
-        isVisible:boolean;
-        userIsAnonymous:boolean;
-        lockedPosAttrNotSelected:boolean;
-        corpusUsesRTLText:boolean;
-    }> {
+    const StructAttrsViewOptions:React.SFC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => {
 
-        private modelSubscriptions:Array<Subscription>;
-
-        // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
-
-        constructor(props) {
-            super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this._handleViewOptsModelChange = this._handleViewOptsModelChange.bind(this);
-            this.state = this._fetchModelState();
-            this.modelSubscriptions = [];
-        }
-
-        _fetchModelState() {
-            return {
-                corpusIdent: viewOptionsModel.getCorpusIdent(),
-                fixedAttr: viewOptionsModel.getFixedAttr(),
-                attrList: viewOptionsModel.getAttributes(),
-                availStructs: viewOptionsModel.getStructures(),
-                structAttrs: viewOptionsModel.getStructAttrs(),
-                availRefs: viewOptionsModel.getReferences(),
-                hasSelectAllAttrs: viewOptionsModel.getSelectAllAttributes(),
-                TehasSelectAllRefs: viewOptionsModel.getSelectAllReferences(),
-                hasLoadedData: viewOptionsModel.isLoaded(),
-                attrsVmode: viewOptionsModel.getAttrsVmode(),
-                showConcToolbar: viewOptionsModel.getShowConcToolbar(),
-                isWaiting: viewOptionsModel.getIsWaiting(),
-                isVisible: false,
-                userIsAnonymous: viewOptionsModel.getUserIsAnonymous(),
-                lockedPosAttrNotSelected: viewOptionsModel.lockedPosAttrNotSelected(),
-                corpusUsesRTLText: viewOptionsModel.getCorpusUsesRTLText()
-            };
-        }
-
-        _handleModelChange() {
-            const activeItem = mainMenuModel.getActiveItem();
-            if (activeItem &&
-                    activeItem.actionName === 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS') {
-                const state = this._fetchModelState();
-                state.isVisible = true;
-                this.setState(state);
-            }
-        }
-
-        _handleViewOptsModelChange() {
-            const state = this._fetchModelState();
-            if (this.state.isWaiting && !state.isWaiting) {
-                state.isVisible = false;
-
-            } else {
-                state.isVisible = this.state.isVisible;
-            }
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscriptions = [
-                mainMenuModel.addListener(this._handleModelChange),
-                viewOptionsModel.addListener(this._handleViewOptsModelChange)
-            ];
-        }
-
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe);
-        }
-
-        render() {
-            return (
-                <div className="StructAttrsViewOptions">
-                    <StructsAndAttrsForm
-                            fixedAttr={this.state.fixedAttr}
-                            attrList={this.state.attrList}
-                            availStructs={this.state.availStructs}
-                            structAttrs={this.state.structAttrs}
-                            availRefs={this.state.availRefs}
-                            hasSelectAllAttrs={this.state.hasSelectAllAttrs}
-                            TehasSelectAllRefs={this.state.TehasSelectAllRefs}
-                            hasLoadedData={this.state.hasLoadedData}
-                            attrsVmode={this.state.attrsVmode}
-                            showConcToolbar={this.state.showConcToolbar}
-                            isWaiting={this.state.isWaiting}
-                            userIsAnonymous={this.state.userIsAnonymous}
-                            lockedPosAttrNotSelected={this.state.lockedPosAttrNotSelected}
-                            corpusUsesRTLText={this.state.corpusUsesRTLText} />
-                </div>
-            );
-        }
+        return (
+            <div className="StructAttrsViewOptions">
+                <StructsAndAttrsForm
+                        fixedAttr={props.fixedAttr}
+                        attrList={props.attrList}
+                        availStructs={props.structList}
+                        structAttrs={props.structAttrs}
+                        availRefs={props.referenceList}
+                        hasSelectAllAttrs={props.selectAllAttrs}
+                        TehasSelectAllRefs={props.selectAllReferences}
+                        hasLoadedData={props.hasLoadedData}
+                        attrsVmode={props.extendedVmode}
+                        showConcToolbar={props.showConcToolbar}
+                        isWaiting={props.isBusy}
+                        userIsAnonymous={props.userIsAnonymous}
+                        lockedPosAttrNotSelected={props.attrList.find(v => v.locked).selected}
+                        corpusUsesRTLText={props.corpusUsesRTLText} />
+            </div>
+        );
     }
 
     return {
-        StructAttrsViewOptions: StructAttrsViewOptions
+        StructAttrsViewOptions: BoundWithProps(StructAttrsViewOptions, viewOptionsModel)
     };
 
 }

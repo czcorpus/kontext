@@ -35,7 +35,7 @@ import {init as viewOptionsFactory} from '../views/options/main';
 import {MultiDict} from '../util';
 import * as docModels from '../models/common/layout';
 import {UserInfo} from '../models/user/info';
-import {CorpusViewOptionsModel} from '../models/options/structsAttrs';
+import {CorpusViewOptionsModel, ActionName as CorpusViewOptionsActionName} from '../models/options/structsAttrs';
 import {GeneralViewOptionsModel} from '../models/options/general';
 import {L10n} from './l10n';
 import * as Immutable from 'immutable';
@@ -48,7 +48,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { ActionDispatcher, ITranslator, IFullActionControl } from 'kombo';
+import { ActionDispatcher, ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 
 declare var require:any; // webpack's require
@@ -107,7 +107,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     private userInfoModel:UserInfo;
 
-    private corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel;
+    private corpViewOptionsModel:CorpusViewOptionsModel;
 
     private generalViewOptionsModel:GeneralViewOptionsModel;
 
@@ -642,7 +642,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     private initViewOptions(mainMenuModel:Kontext.IMainMenuModel,
                 generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel,
-                corpViewOptionsModel:ViewOptions.ICorpViewOptionsModel):void {
+                corpViewOptionsModel:CorpusViewOptionsModel):void {
         const viewOptionsViews = viewOptionsFactory({
             dispatcher: this.dispatcher,
             helpers: this.getComponentHelpers(),
@@ -654,10 +654,21 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         this.mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
             (args:Kontext.GeneralProps) => {
-                return this.corpViewOptionsModel.loadData();
+                const ans = new Observable((observer) => {
+                    this.dispatcher.registerActionListener((action, dispatch) => {
+                        if (action.name === CorpusViewOptionsActionName.LoadDataDone) {
+                            observer.next();
+                            observer.complete();
+                        }
+                    });
+                });
+                this.dispatcher.dispatch({
+                    name: CorpusViewOptionsActionName.LoadData
+                });
+                return ans;
             }
         );
-        this.mainMenuModel.addItemActionPrerequisite(
+        this.mainMenuModel.addItemActionPrerequisitePromise(
             'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
             (args:Kontext.GeneralProps) => {
                 return this.generalViewOptionsModel.loadData();
@@ -667,7 +678,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         this.renderReactComponent(
             viewOptionsViews.OptionsContainer,
             window.document.getElementById('view-options-mount'),
-            {}
+            {
+                corpusIdent: this.getCorpusIdent()
+            }
         );
     }
 

@@ -24,17 +24,18 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {init as generalViewsInit} from './general';
 import {init as structsAttrsViewsInit} from './structsAttrs';
 import { Subscription } from 'rxjs';
+import { CorpusViewOptionsModel } from '../../models/options/structsAttrs';
 
 export interface MainModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
     generalOptionsModel:ViewOptions.IGeneralViewOptionsModel;
-    viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
+    viewOptionsModel:CorpusViewOptionsModel;
     mainMenuModel:Kontext.IMainMenuModel;
 }
 
 export interface OptionsContainerProps {
-
+    corpusIdent: Kontext.FullCorpusIdent;
 }
 
 export interface MainViews {
@@ -55,7 +56,6 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
 
     class OptionsContainer extends React.Component<OptionsContainerProps, {
         activeItem:Kontext.MainMenuActiveItem;
-        corpusIdent: Kontext.FullCorpusIdent;
         menuBusy:boolean;
 
     }> {
@@ -72,7 +72,6 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
         _fetchModelState() {
             return {
                 activeItem: mainMenuModel.getActiveItem(),
-                corpusIdent: viewOptionsModel.getCorpusIdent(),
                 menuBusy: mainMenuModel.isBusy()
             };
         }
@@ -119,7 +118,7 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
 
         _renderTitle() {
             if (this._isActiveItem('MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS')) {
-                return helpers.translate('options__settings_apply_only_for_{corpname}', {corpname: this.state.corpusIdent.name})
+                return helpers.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.corpusIdent.name})
 
             } else if (this._isActiveItem('MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS')) {
                 return helpers.translate('options__general_options_heading');

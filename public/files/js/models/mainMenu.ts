@@ -25,6 +25,8 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import { MultiDict } from '../util';
 import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf, forkJoin } from 'rxjs';
+import { ObserveOnOperator } from 'rxjs/internal/operators/observeOn';
 
 
 
@@ -123,6 +125,11 @@ class MenuShortcutMapper implements Kontext.IMainMenuShortcutMapper {
 }
 
 
+export type PromisePrerequisite = (args:Kontext.GeneralProps)=>RSVP.Promise<any>;
+
+export type ObservablePrerequisite = (args:Kontext.GeneralProps)=>Observable<any>;
+
+
 /**
  *
  */
@@ -134,7 +141,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
 
     private visibleSubmenu:string;
 
-    private selectionListeners:Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>;
+    private selectionListeners:Immutable.Map<string, Immutable.List<ObservablePrerequisite>>;
 
     private data:Immutable.List<Kontext.MenuEntry>;
 
@@ -146,7 +153,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         this.pageModel = pageModel;
         this.activeItem = null;
         this.visibleSubmenu = null;
-        this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
+        this.selectionListeners = Immutable.Map<string, Immutable.List<ObservablePrerequisite>>();
         this.data = importMenuData(initialData);
         this._isBusy = false;
 
@@ -164,34 +171,24 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
                 this.emitChange();
 
             } else if (action.name.indexOf('MAIN_MENU_') === 0) {
-                if (this.selectionListeners.has(action.name)) {
+                const listeners = this.selectionListeners.get(action.name);
+                if (listeners) {
                     this._isBusy = true;
-                    this.selectionListeners.get(action.name).reduce<RSVP.Promise<any>>(
-                        (red, curr) => {
-                            return red.then(
-                                () => {
-                                    return curr(action.payload);
-                                }
-                            );
-                        },
-                        RSVP.Promise.resolve(null)
-
-                    ).then(
-                        () => {
+                    forkJoin(...listeners.map(v => v(action.payload)).toArray()).subscribe(
+                        (_) => {
                             this.activeItem = {
                                 actionName: action.name,
                                 actionArgs: action.payload
                             };
                             this._isBusy = false;
                             this.emitChange();
-                        }
-                    ).catch(
+                        },
                         (err) => {
                             this._isBusy = false;
                             this.emitChange();
                             this.pageModel.showMessage('error', err);
                         }
-                    )
+                    );
 
                 } else {
                     this.activeItem = {
@@ -286,6 +283,26 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
     }
 
     /**
+     * @deprecated
+     */
+    addItemActionPrerequisitePromise(actionName:string, fn:PromisePrerequisite):ObservablePrerequisite {
+        const fnWrap:ObservablePrerequisite = (args:Kontext.GeneralProps) => new Observable((observer) => {
+            fn(args).then(
+                (data) => {
+                    observer.next(data);
+                    observer.complete();
+                }
+            ).catch(
+                (err) => {
+                    observer.error(err);
+                }
+            );
+        });
+        this.addItemActionPrerequisite(actionName, fnWrap);
+        return fnWrap;
+    }
+
+    /**
      * Typically, it is expected that UI components reacting to main menu changes
      * will listen to MainMenuModel updates and update themselves accordingly.
      * But sometimes it is necessary to perform an action before the actual change
@@ -295,15 +312,14 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
      * @param actionName
      * @param fn
      */
-    addItemActionPrerequisite(actionName:string, fn:(args:Kontext.GeneralProps)=>RSVP.Promise<any>) {
+    addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite) {
         const fnList = this.selectionListeners.has(actionName) ?
                 this.selectionListeners.get(actionName)
-                : Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>();
-        this.selectionListeners = this.selectionListeners.set(actionName,
-                fnList.push(fn));
+                : Immutable.List<ObservablePrerequisite>();
+        this.selectionListeners = this.selectionListeners.set(actionName, fnList.push(fn));
     }
 
-    removeItemActionPrerequisite(actionName:string, fn:(args:Kontext.GeneralProps)=>RSVP.Promise<any>) {
+    removeItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite) {
         if (!this.selectionListeners.has(actionName)) {
             throw new Error('No listeners for action ' + actionName);
         }

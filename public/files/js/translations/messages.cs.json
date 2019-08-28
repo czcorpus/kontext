@@ -479,6 +479,7 @@
         "options__submit": "Použít volby zobrazení",
         "options__max_items_per_page_exceeded_{num}": "Byl překročen maximální počet {num, plural, one{# položka} few{# položky} other {# položek}} na stránku",
         "options__max_context_exceeded_{num}": "Byla překročena maximální šířka kontextu {num}",
+        "options__options_saved": "Nastavení bylo uloženo",
         "subcform__create_subcorpus": "Vytvořit subkorpus",
         "subcform__mode_attr_list": "Seznam atributů",
         "subcform__mode_raw_within": "Vlastní 'within' podmínka",
