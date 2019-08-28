@@ -25,127 +25,132 @@ import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
 import * as Immutable from 'immutable';
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
     views: Immutable.Map<string, any>) {
+    
+    const layoutViews = he.getLayoutViews();
 
-// ------------------------------ <InsertButton /> ----------------------------
+    // ------------------------------ <InsertButton /> ----------------------------
 
-const InsertButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
-    return (
-        <button className="util-button" type="button"
-                value="insert" onClick={props.onClick}>
-            {he.translate('taghelper__insert_btn')}
-        </button>
-    );
-}
-
-// ------------------------------ <UndoButton /> ----------------------------
-
-const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
-    if (props.enabled) {
+    const InsertButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
         return (
-            <button type="button" className="util-button" value="undo"
-                    onClick={props.onClick}>
-                {he.translate('taghelper__undo')}
+            <button className="util-button" type="button"
+                    value="insert" onClick={props.onClick}>
+                {he.translate('taghelper__insert_btn')}
             </button>
         );
-
-    } else {
-        return (
-            <span className="util-button disabled">
-                {he.translate('taghelper__undo')}
-            </span>
-        );
     }
-};
 
-// ------------------------------ <ResetButton /> ----------------------------
+    // ------------------------------ <UndoButton /> ----------------------------
 
-const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
-    if (props.enabled) {
-        return (
-            <button type="button" className="util-button cancel"
-                    value="reset" onClick={props.onClick}>
-                {he.translate('taghelper__reset')}
-            </button>
-        );
+    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
+        if (props.enabled) {
+            return (
+                <button type="button" className="util-button" value="undo"
+                        onClick={props.onClick}>
+                    {he.translate('taghelper__undo')}
+                </button>
+            );
 
-    } else {
-        return (
-            <span className="util-button disabled">
-                {he.translate('taghelper__reset')}
-            </span>
-        );
-    }
-};
-
-
-// ------------------------------ <TagButtons /> ----------------------------
-
-const TagButtons:React.SFC<{
-            range:[number, number];
-            sourceId:string;
-            onInsert?:()=>void;
-            canUndo:boolean;
-            rawPattern:string;
-            generatedQuery:string;
-            actionPrefix:string;
-        }> = (props) => {
-
-    const buttonClick = (evt) => {
-        if (evt.target.value === 'reset') {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_RESET',
-                payload: {}
-            });
-
-        } else if (evt.target.value === 'undo') {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_UNDO',
-                payload: {}
-            });
-
-        } else if (evt.target.value === 'insert') {
-            if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                const query = `"${props.rawPattern}"`;
-                dispatcher.dispatch<SetQueryInputAction>({
-                    name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                    payload: {
-                        sourceId: props.sourceId,
-                        query: query,
-                        insertRange: [props.range[0], props.range[1]],
-                        rawAnchorIdx: null,
-                        rawFocusIdx: null
-                    }
-                });
-
-            } else {
-                dispatcher.dispatch<AppendQueryInputAction>({
-                    name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
-                    payload: {
-                        sourceId: props.sourceId,
-                        query: `[${props.generatedQuery}]`
-                    }
-                });
-            }
-            dispatcher.dispatch({
-                name: 'TAGHELPER_RESET',
-                payload: {}
-            });
-            if (typeof props.onInsert === 'function') {
-                props.onInsert();
-            }
+        } else {
+            return (
+                <span className="util-button disabled">
+                    {he.translate('taghelper__undo')}
+                </span>
+            );
         }
     };
 
-    return (
-        <div className="buttons">
-            <InsertButton onClick={buttonClick} />
-            <UndoButton onClick={buttonClick} enabled={props.canUndo} />
-            <ResetButton onClick={buttonClick} enabled={props.canUndo} />
-        </div>
-    );
-};
+    // ------------------------------ <ResetButton /> ----------------------------
+
+    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
+        if (props.enabled) {
+            return (
+                <button type="button" className="util-button cancel"
+                        value="reset" onClick={props.onClick}>
+                    {he.translate('taghelper__reset')}
+                </button>
+            );
+
+        } else {
+            return (
+                <span className="util-button disabled">
+                    {he.translate('taghelper__reset')}
+                </span>
+            );
+        }
+    };
+
+
+    // ------------------------------ <TagButtons /> ----------------------------
+
+    const TagButtons:React.SFC<{
+                range:[number, number];
+                sourceId:string;
+                onInsert?:()=>void;
+                canUndo:boolean;
+                rawPattern:string;
+                generatedQuery:string;
+                actionPrefix:string;
+            }> = (props) => {
+
+        const buttonClick = (evt) => {
+            if (evt.target.value === 'reset') {
+                dispatcher.dispatch({
+                    name: 'TAGHELPER_RESET',
+                    payload: {}
+                });
+
+            } else if (evt.target.value === 'undo') {
+                dispatcher.dispatch({
+                    name: 'TAGHELPER_UNDO',
+                    payload: {}
+                });
+
+            } else if (evt.target.value === 'insert') {
+                if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
+                    const query = `"${props.rawPattern}"`;
+                    dispatcher.dispatch<SetQueryInputAction>({
+                        name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                        payload: {
+                            sourceId: props.sourceId,
+                            query: query,
+                            insertRange: [props.range[0], props.range[1]],
+                            rawAnchorIdx: null,
+                            rawFocusIdx: null
+                        }
+                    });
+
+                } else {
+                    dispatcher.dispatch<AppendQueryInputAction>({
+                        name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+                        payload: {
+                            sourceId: props.sourceId,
+                            query: `[${props.generatedQuery}]`
+                        }
+                    });
+                }
+                dispatcher.dispatch({
+                    name: 'TAGHELPER_RESET',
+                    payload: {}
+                });
+                if (typeof props.onInsert === 'function') {
+                    props.onInsert();
+                }
+            }
+        };
+
+        return (
+            <div className="buttons">
+                <InsertButton onClick={buttonClick} />
+                <UndoButton onClick={buttonClick} enabled={props.canUndo} />
+                <ResetButton onClick={buttonClick} enabled={props.canUndo} />
+            </div>
+        );
+    };
 
 
     // ------------------------------ <TagDisplay /> ----------------------------
@@ -223,16 +228,17 @@ const TagButtons:React.SFC<{
         models.forEach((model, key) => model.suspend(() => key === activeView ? true : false));
 
         // prepare view switch
-        const tagsetSwitch = views.keySeq().sort()
-            .map(value => {
-                return value === activeView ?
-                <span>{value}</span> :
-                <a onClick={() => {setActiveView(value)}}>{value}</a>
-            })
-            .reduce((acc, curr) => {return acc === null ? [curr] : [...acc, ' | ', curr]}, null)
+        const tagsetSwitch = views.keySeq().sort().map(value =>
+                <li>
+                    <layoutViews.TabButton onClick={() => setActiveView(value)}
+                        label={value}
+                        isActive={value === activeView} />
+                </li>
+            )
 
         return <div>
-            {tagsetSwitch.length > 1 ? <h5 style={{marginTop: '0em'}}>Available tagsets: {tagsetSwitch}</h5> : null}
+            {tagsetSwitch.size > 1 ? <ul className="TagsetFormSelector tabs">{tagsetSwitch}</ul> : null}
+            <hr />
             <TagBuilderBound
                 activeView={views.get(activeView)}
                 sourceId={props.sourceId}
