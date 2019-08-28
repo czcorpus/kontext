@@ -749,15 +749,15 @@ export function init(
     };
 
     const TabMenu:CoreViews.TabMenu.Component = (props) => {
-        const [selectedPage, selectedPageChange] = React.useState(props.tabs.keySeq().first());
-        const tabs = props.tabs.entrySeq().map(([tab, callback]) =>
-            <li key={tab}>
+        const [activeTabId, setActiveTab] = React.useState(props.items.first().id);
+        const tabs = props.items.map(item =>
+            <li key={item.id}>
                 <TabButton
-                    label={tab}
-                    isActive={tab === selectedPage}
+                    label={item.name}
+                    isActive={item.id === activeTabId}
                     onClick={() => {
-                        selectedPageChange(tab);
-                        callback();
+                        setActiveTab(item.id);
+                        props.callback(item.id);
                     }}/>
             </li>
         );
