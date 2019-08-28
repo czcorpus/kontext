@@ -79,12 +79,14 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
 export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState) {
+    private ident:string;
+
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-
+        this.ident = ident;
         this.actionMatch = {
             'TAGHELPER_SELECT_CATEGORY': (state, action) => {
                 const newState = this.copyState(state);
@@ -178,6 +180,11 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
                 getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+            break;
+            case 'TAGHELPER_SET_ACTIVE_TAG':
+                if (this.ident !== action.payload['value']) {
+                    this.suspend((nextAction) => this.ident === nextAction.payload['value']);
+                }
             break;
         }
     }

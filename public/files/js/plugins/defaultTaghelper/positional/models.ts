@@ -90,10 +90,13 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
 
     private pluginApi:IPluginApi;
 
+    private ident:string;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:TagHelperModelState) {
+
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:TagHelperModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
+        this.ident = ident;
         this.actionMatch = {
             'TAGHELPER_PRESET_PATTERN': (state, action) => {
                 const newState = this.copyState(state);
@@ -209,6 +212,11 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     });
                 }
             );
+            break;
+            case 'TAGHELPER_SET_ACTIVE_TAG':
+                if (this.ident !== action.payload['value']) {
+                    this.suspend((action) => this.ident === action.payload['value']);
+                }
             break;
         }
     }
