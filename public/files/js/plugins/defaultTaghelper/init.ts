@@ -38,8 +38,11 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         this.pluginApi = pluginApi;
     }
 
-    getWidgetView(corpname:string, tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View {
+    getWidgetView(corpname:string, tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View|null {
         /// TODO !!!! currently we take only the first tagset ////
+        if (tagsets.length === 0) {
+            return null;
+        }
         const tagsetInfo = tagsets[0];
         switch (tagsetInfo.type) {
             case 'positional':
@@ -100,7 +103,6 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     )
                 ).TagBuilder;
             case 'other': // 'other' means defined but unsupported
-            case null:  // null means no tagset defined for the corpus
                 return null;
             default:
                 throw new Error(`Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);

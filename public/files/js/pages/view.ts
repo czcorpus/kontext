@@ -68,6 +68,7 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { Action } from 'kombo';
+import { Observable } from 'rxjs';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -565,7 +566,7 @@ export class ViewPage {
             );
         });
 
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
             'MAIN_MENU_SHOW_FILTER',
             (args:Kontext.GeneralProps) => {
                 if (args['within'] === 1) {
@@ -623,7 +624,7 @@ export class ViewPage {
             this.layoutModel,
             sortModelProps
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
             'MAIN_MENU_SHOW_SORT',
             (args:Kontext.GeneralProps) => {
                 return this.queryModels.sortModel.syncFrom(() => {
@@ -663,7 +664,7 @@ export class ViewPage {
             this.layoutModel,
             sampleModelProps
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
             'MAIN_MENU_SHOW_SAMPLE',
             (args:Kontext.GeneralProps) => {
                 return this.queryModels.sampleModel.syncFrom(() => {
@@ -695,7 +696,7 @@ export class ViewPage {
             switchMainCorpProps
         );
 
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
             'MAIN_MENU_SHOW_SWITCHMC',
             (args:Kontext.GeneralProps) => {
                 return this.queryModels.switchMcModel.syncFrom(() => {
@@ -712,7 +713,7 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
             'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
             (args:Kontext.GeneralProps) => {
                 return this.queryModels.firstHitsModel.syncFrom(() => {
@@ -970,12 +971,12 @@ export class ViewPage {
     private initUndoFunction():void {
         this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_UNDO_LAST_QUERY_OP',
-            (args:Kontext.GeneralProps) => {
-                return new RSVP.Promise((resolve:(v)=>void, reject:(e)=>void) => {
+            (args:Kontext.GeneralProps) => new Observable((observer) => {
                     window.history.back();
-                });
-            }
-        )
+                    observer.next();
+                    observer.complete();
+            })
+        );
     }
 
     private initTextTypesModel():TextTypes.ITextTypesModel {

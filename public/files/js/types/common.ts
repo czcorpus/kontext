@@ -22,6 +22,7 @@ import * as Immutable from 'immutable';
 import { IEventEmitter } from 'kombo';
 import RSVP from 'rsvp';
 import {CoreViews} from './coreViews';
+import { ObservablePrerequisite, PromisePrerequisite } from '../models/mainMenu';
 
 /**
  *
@@ -236,13 +237,20 @@ export namespace Kontext {
          * to prepare themselves before their views are
          * shown.
          */
-        addItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+        addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
 
         /**
-         * Unregister an action which is run before listeners
-         * are notified.
+         *
+         * Please note that the function returns ObservablePrerequisite which is
+         * a wrapper around provided PromisePrerequisite. To be able to remove
+         * the prerequisite, the returned ObservablePrerequisite must be used
+         * as an argument for removeItemActionPrerequisite.
+         *
+         * @deprecated Please use Observable-based removeItemActionPrerequisite instead
          */
-        removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+        addItemActionPrerequisitePromise(actionName:string, fn:PromisePrerequisite):ObservablePrerequisite;
+
+        removeItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
 
         exportKeyShortcutActions():IMainMenuShortcutMapper;
 
@@ -666,30 +674,25 @@ export namespace ViewOptions {
         ShowConcToolbar:boolean;
     }
 
+    export interface LoadOptionsResponse extends Kontext.AjaxResponse {
+        AttrList: Array<AttrDesc>;
+        Availstructs: Array<{sel:string; label:string; n:string}>;
+        Availrefs:Array<{n:string; sel:string; label:string}>;
+        curr_structattrs:Array<string>;
+        fixed_attr:string;
+        attr_allpos:string;
+        attr_vmode:string;
+        use_conc_toolbar:boolean;
+        structattrs:{[attr:string]:Array<string>};
+        CurrentAttrs:Array<string>;
+    }
+
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
         widectx_globals:Array<[string, string]>;
     }
 
-    export interface ICorpViewOptionsModel extends IEventEmitter {
-        getCorpusIdent():Kontext.FullCorpusIdent;
-        initFromPageData(data:PageData):void;
-        loadData():RSVP.Promise<PageData>;
-        isLoaded():boolean;
-        addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
-        getAttributes():Immutable.List<AttrDesc>;
-        getSelectAllAttributes():boolean;
-        getStructures():Immutable.List<StructDesc>;
-        getStructAttrs():AvailStructAttrs;
-        getReferences():Immutable.List<RefsDesc>;
-        getSelectAllReferences():boolean;
-        getFixedAttr():string;
-        getAttrsVmode():AttrViewMode;
-        getAttrsAllpos():string;
-        getShowConcToolbar():boolean;
-        getIsWaiting():boolean;
-        getUserIsAnonymous():boolean;
-        lockedPosAttrNotSelected():boolean;
-        getCorpusUsesRTLText():boolean;
+    export interface ICorpViewOptionsModel {
+       addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
     }
 
     export interface IGeneralViewOptionsModel extends IEventEmitter {
