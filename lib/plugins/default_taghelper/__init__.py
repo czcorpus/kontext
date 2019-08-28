@@ -65,7 +65,6 @@ def ajax_get_tag_variants(ctrl, request):
     except IOError:
         raise UserActionException(
             _('Corpus %s is not supported by this widget.') % corpname)
-
     if plugins.runtime.TAGHELPER.instance.fetcher(corpname, tagset_name).is_empty(values_selection):
         ans = tag_loader.get_initial_values(ctrl.ui_lang)
     else:
@@ -101,7 +100,6 @@ class Taghelper(AbstractTaghelper):
                 else:
                     self._loaders[(corpus_name, tagset.tagset_name)] = NullTagVariantLoader()
                     self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
-
         return self._loaders[(corpus_name, tagset_name)]
 
     def fetcher(self, corpus_name, tagset_name):
@@ -116,10 +114,8 @@ class Taghelper(AbstractTaghelper):
         return self._fetchers[(corpus_name, tagset_name)]
 
     def tags_enabled_for(self, corpus_name):
-        import logging
         for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
             loader = self.loader(corpus_name, tagset.tagset_name)
-            logging.getLogger(__name__).debug('>>>>> {} -> {}'.format(corpus_name, tagset, loader))
             if loader.is_enabled():
                 return True
         return False

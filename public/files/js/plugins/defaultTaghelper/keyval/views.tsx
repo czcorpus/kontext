@@ -5,7 +5,7 @@ import * as Immutable from 'immutable';
 import { Kontext } from '../../../types/common';
 
 export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.ComponentClass<FeatureSelectProps> {
-  
+
     const CategoryDetail:React.FunctionComponent<{
         allValues:Immutable.List<string>;
         availableValues:Immutable.List<string>;
@@ -36,17 +36,16 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         allFeatures:Immutable.Map<string, Immutable.List<string>>;
         availableFeatures:Immutable.Map<string, Immutable.List<string>>;
         onSelectCategoryHandler:(event) => void;
+
     }> = (props) => {
         const categories = props.allFeatures.keySeq().sort().map(category => {
             const availableValuesCount = (props.availableFeatures.has(category) ? props.availableFeatures.get(category).size : 0);
-            return <option
-                    key={category}
-                    value={category}
-                    selected={props.selectedCategory === category ? true : false} >
-                {category + " (" + availableValuesCount + ")"}
-                </option>
-        })
-        return <select multiple size={20} onChange={props.onSelectCategoryHandler}>{categories}</select>;
+            return <option key={category} value={category}>
+                    {category + " (" + availableValuesCount + ")"}
+                </option>;
+        });
+        return <select multiple size={20} onChange={props.onSelectCategoryHandler}
+                        value={[props.selectedCategory]}>{categories}</select>;
     }
 
     const QueryLineCategory:React.FunctionComponent<{
@@ -54,8 +53,10 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         filterFeaturesCategory:Immutable.List<FilterRecord>;
         handleRemoveFilter:(event) => void;
     }> = (props) => {
-        const buttonGroup = props.filterFeaturesCategory.sort().map(filter => {
-                return <button
+        const buttonGroup = props.filterFeaturesCategory
+            .sort()
+            .map(filter => (
+                <button
                     type="button"
                     key={filter.composeString()}
                     name={filter.get('name')}
@@ -63,8 +64,8 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                     onClick={props.handleRemoveFilter}>
                     <span>{filter.get('value')}</span><span className="query-close">X</span>
                 </button>
-            }).toArray();
-        return <span className = "query-button-group">{[<b>{props.categoryName + " = "}</b>, ...buttonGroup]}</span>;
+            )).toArray();
+        return <span className = "query-button-group">{[<b key="cat-name">{props.categoryName + " = "}</b>, ...buttonGroup]}</span>;
     }
 
     const QueryLine:React.FunctionComponent<{
@@ -73,12 +74,12 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
     }> = (props) => {
         const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get("name"))
         const selected = groupedFilterFeatures.sort().reduce(
-            (R, V, K) => R.concat([
-                R.length ? <span className = "query-button-group">{"&"}</span> : null,
+            (acc, val, key) => acc.concat([
+                acc.length ? <span className = "query-button-group">{"&"}</span> : null,
                 <QueryLineCategory
-                    key={K}
-                    categoryName={K}
-                    filterFeaturesCategory={V.toList()}
+                    key={key}
+                    categoryName={key}
+                    filterFeaturesCategory={val.toList()}
                     handleRemoveFilter={props.handleRemoveFilter} />
             ]),
             []

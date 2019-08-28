@@ -29,8 +29,8 @@ export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
-    views: Immutable.Map<string, any>) {
-    
+    views:Immutable.Map<string, any>) {
+
     const layoutViews = he.getLayoutViews();
 
     // ------------------------------ <InsertButton /> ----------------------------
@@ -193,7 +193,7 @@ export function init(
         }
 
         render() {
-            
+
             return <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 {
@@ -224,13 +224,18 @@ export function init(
         const [activeView, setActiveView] = React.useState(views.keySeq().first());
         const TagBuilderBound = AvailableTagBuilderBound.get(activeView);
 
-        // disable models not related to the active view
-        models.forEach((model, key) => model.suspend(() => key === activeView ? true : false));
+        const handleTabSelection = (value:string) => () => {
+            dispatcher.dispatch({
+                name: 'TAGHELPER_SET_ACTIVE_TAG',
+                payload: {value: value}
+            });
+            setActiveView(value);
+        };
 
         // prepare view switch
-        const tagsetSwitch = views.keySeq().sort().map(value =>
-                <li>
-                    <layoutViews.TabButton onClick={() => setActiveView(value)}
+        const tagsetSwitch = views.keySeq().map(value =>
+                <li key={value}>
+                    <layoutViews.TabButton onClick={handleTabSelection(value)}
                         label={value}
                         isActive={value === activeView} />
                 </li>
