@@ -224,7 +224,7 @@ export function init(
         const [activeView, setActiveView] = React.useState(views.keySeq().first());
         const TagBuilderBound = AvailableTagBuilderBound.get(activeView);
 
-        const handleTabSelection = (value:string) => () => {
+        const handleTabSelection = (value:string) => {
             dispatcher.dispatch({
                 name: 'TAGHELPER_SET_ACTIVE_TAG',
                 payload: {value: value}
@@ -232,9 +232,9 @@ export function init(
             setActiveView(value);
         };
 
-        const tagsetTabs = views.map((value,key) => handleTabSelection(key)).toMap();
+        const tagsetTabs = views.keySeq().map((tagset) => {return {id: tagset, label: tagset}}).toList();
         return <div>
-            {tagsetTabs.size > 1 ? <layoutViews.TabMenu className="TagsetFormSelector" tabs={tagsetTabs} /> : null}
+            {tagsetTabs.size > 1 ? <layoutViews.TabMenu className="TagsetFormSelector" callback={handleTabSelection} items={tagsetTabs} /> : null}
             <hr />
             <TagBuilderBound
                 activeView={views.get(activeView)}

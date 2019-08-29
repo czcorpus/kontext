@@ -19,7 +19,6 @@
  */
 
 import * as React from 'react';
-import {ViewOptions} from './common';
 import * as Immutable from 'immutable';
 
 
@@ -338,7 +337,7 @@ export namespace CoreViews {
 
         export interface Props {
             callback:(activeId:string)=>void;
-            items:Immutable.List<{id:string, name:string}>;
+            items:Immutable.List<{id:string, label:string}>;
             className?:string;
         }
 
@@ -376,7 +375,6 @@ export namespace CoreViews {
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
-        TabButton:TabButton.Component;
         TabMenu:TabMenu.Component;
         PlusButton:PlusButton.Component;
     }

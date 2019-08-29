@@ -749,14 +749,14 @@ export function init(
     };
 
     const TabMenu:CoreViews.TabMenu.Component = (props) => {
-        const [activeTabId, setActiveTab] = React.useState(props.items.first().id);
+        const [activeTab, setActiveTab] = React.useState(props.items.first());
         const tabs = props.items.map(item =>
             <li key={item.id}>
                 <TabButton
-                    label={item.name}
-                    isActive={item.id === activeTabId}
+                    label={item.label}
+                    isActive={item.id === activeTab.id}
                     onClick={() => {
-                        setActiveTab(item.id);
+                        setActiveTab(item);
                         props.callback(item.id);
                     }}/>
             </li>
@@ -795,7 +795,6 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        TabButton: TabButton,
         TabMenu: TabMenu,
         PlusButton: PlusButton
     };
