@@ -244,7 +244,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         availStructs:Immutable.List<ViewOptions.AttrDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
         corpusUsesRTLText:boolean;
-
+        hasSelectAll:boolean;
     }> = (props) => {
 
         const handleStructClick = (event) => {
@@ -267,6 +267,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     }
                 });
             };
+        };
+
+        const handleSelectAll = (evt) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
+                payload: {}
+            });
         };
 
         return (
@@ -295,6 +302,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         );
                     })}
                 </ul>
+                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
             </fieldset>
         );
     };
@@ -415,6 +423,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         showConcToolbar:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
+        hasSelectAllStruct:boolean;
         availRefs:Immutable.List<ViewOptions.RefsDesc>;
         TehasSelectAllRefs:boolean;
         isWaiting:boolean;
@@ -442,21 +451,25 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
                         <span style={state!=='attributes' ? {display: 'none'} : null}>
                             <FieldsetAttributes
-                                    attrList={props.attrList}
-                                    hasSelectAll={props.hasSelectAllAttrs}
-                                    attrsVmode={props.attrsVmode}
-                                    showConcToolbar={props.showConcToolbar}
-                                    lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
+                                attrList={props.attrList}
+                                hasSelectAll={props.hasSelectAllAttrs}
+                                attrsVmode={props.attrsVmode}
+                                showConcToolbar={props.showConcToolbar}
+                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
                         </span>
 
                         <span style={state!=='structures' ? {display: 'none'} : null}>
-                            <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
-                                        corpusUsesRTLText={props.corpusUsesRTLText} />
+                            <FieldsetStructures
+                                availStructs={props.availStructs}
+                                structAttrs={props.structAttrs}
+                                hasSelectAll={props.hasSelectAllStruct}
+                                corpusUsesRTLText={props.corpusUsesRTLText} />
                         </span>
 
                         <span style={state!=='metainformation' ? {display: 'none'} : null}>
-                            <FieldsetMetainformation availRefs={props.availRefs}
-                                    hasSelectAll={props.TehasSelectAllRefs} />
+                            <FieldsetMetainformation
+                                availRefs={props.availRefs}
+                                hasSelectAll={props.TehasSelectAllRefs} />
                         </span>
 
                         {props.userIsAnonymous ?
@@ -493,6 +506,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         attrList={props.attrList}
                         availStructs={props.structList}
                         structAttrs={props.structAttrs}
+                        hasSelectAllStruct={props.selectAllStruct}
                         availRefs={props.referenceList}
                         hasSelectAllAttrs={props.selectAllAttrs}
                         TehasSelectAllRefs={props.selectAllReferences}
