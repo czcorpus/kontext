@@ -185,7 +185,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <fieldset className="FieldsetAttributes">
-                <legend>{helpers.translate('options__attributes_hd')}</legend>
                 <ul>
                 {props.attrList.map((item, i) => {
                     return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
@@ -272,7 +271,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <fieldset className="FieldsetStructures">
-                <legend>{helpers.translate('options__structures_hd')}</legend>
                 {props.corpusUsesRTLText ?
                     <p className="warning">
                         <img className="icon"
@@ -351,7 +349,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <fieldset className="FieldsetMetainformation">
-                <legend>{helpers.translate('options__references_hd')}</legend>
                 <ul>
                     {props.availRefs.map((item, i) => {
                         return <LiReferenceItem
@@ -426,21 +423,42 @@ export function init({dispatcher, helpers, viewOptionsModel,
         corpusUsesRTLText:boolean;
 
     }> = (props) => {
+        const [state, setState] = React.useState('attributes');
+
+        const items = Immutable.List([
+            {id: 'attributes', label: helpers.translate('options__attributes_hd')},
+            {id: 'structures', label: helpers.translate('options__structures_hd')},
+            {id: 'metainformation', label: helpers.translate('options__references_hd')},
+        ])
 
         if (props.hasLoadedData) {
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <FieldsetAttributes
-                                attrList={props.attrList}
-                                hasSelectAll={props.hasSelectAllAttrs}
-                                attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar}
-                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
-                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
-                                    corpusUsesRTLText={props.corpusUsesRTLText} />
-                        <FieldsetMetainformation availRefs={props.availRefs}
-                                hasSelectAll={props.TehasSelectAllRefs} />
+                        <layoutViews.TabMenu
+                            className="FieldsetsTabs"
+                            callback={setState}
+                            items={items} />
+
+                        <span style={state!=='attributes' ? {display: 'none'} : null}>
+                            <FieldsetAttributes
+                                    attrList={props.attrList}
+                                    hasSelectAll={props.hasSelectAllAttrs}
+                                    attrsVmode={props.attrsVmode}
+                                    showConcToolbar={props.showConcToolbar}
+                                    lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
+                        </span>
+
+                        <span style={state!=='structures' ? {display: 'none'} : null}>
+                            <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
+                                        corpusUsesRTLText={props.corpusUsesRTLText} />
+                        </span>
+
+                        <span style={state!=='metainformation' ? {display: 'none'} : null}>
+                            <FieldsetMetainformation availRefs={props.availRefs}
+                                    hasSelectAll={props.TehasSelectAllRefs} />
+                        </span>
+
                         {props.userIsAnonymous ?
                             <p className="warn">
                                 <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
