@@ -348,7 +348,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 selected: struct.selectAllAttrs,
             }
         }).toList());
-        
+
         state.selectAllStruct = this.hasSelectedAllStructs(state);
     }
 
@@ -370,7 +370,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             n: currItem.n,
             selected: !currItem.selected
         });
-        state.selectAllReferences = false;
+        state.selectAllReferences = state.referenceList.every(ref => ref.selected);
     }
 
     private toggleAttribute(state:CorpusViewOptionsModelState, idx:number):void {
@@ -393,7 +393,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 });
             }
         }
-        state.selectAllAttrs = false;
+        state.selectAllAttrs = state.attrList.every(attr => attr.selected);
     }
 
     private hasSelectedStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
@@ -503,15 +503,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 locked: item.n === data.FixedAttr ? true : false,
             };
         }));
-        state.structList = Immutable.List(data.AvailStructs.map(item => {
-            return {
-                label: item.label,
-                n: item.n,
-                selected: item.sel === 'selected' ? true : false,
-                locked: false,
-                selectAllAttrs: false,
-            };
-        }));
         state.structAttrs = Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(
             Object.keys(data.StructAttrs).map(key => {
                     return [
@@ -525,6 +516,15 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     ];
             })
         );
+        state.structList = Immutable.List(data.AvailStructs.map(item => {
+            return {
+                label: item.label,
+                n: item.n,
+                selected: item.sel === 'selected' ? true : false,
+                locked: false,
+                selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
+            };
+        }));
 
         state.referenceList = Immutable.List<ViewOptions.RefsDesc>(data.AvailRefs.map(item => {
             return {
