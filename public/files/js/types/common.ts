@@ -640,6 +640,7 @@ export namespace ViewOptions {
         n: string;
         selected: boolean;
         locked: boolean;
+        selectAllAttrs: boolean;
     }
 
     export interface StructAttrDesc {

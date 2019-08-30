@@ -213,6 +213,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
     const StructAttrList:React.SFC<{
         struct:string;
         items:Immutable.List<ViewOptions.StructAttrDesc>;
+        hasSelectAll:boolean;
         handleClick:(v:string)=>void;
 
     }> = (props) => {
@@ -221,27 +222,37 @@ export function init({dispatcher, helpers, viewOptionsModel,
             return () => props.handleClick(value);
         };
 
+        const handleSelectAll = (structIdent) => () => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
+                payload: {structIdent: structIdent}
+            });
+        };
+
         return (
-            <ul>
-                {props.items.map((item, i) => {
-                    return (
-                        <li key={i}>
-                            <label>
-                                <input type="checkbox" name="structattrs" value={`${props.struct}.${item.n}`}
-                                    checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
-                                {item.n}
-                            </label>
-                        </li>
-                    );
-                })}
-            </ul>
+            <div>
+                <ul>
+                    {props.items.map((item, i) => {
+                        return (
+                            <li key={i}>
+                                <label>
+                                    <input type="checkbox" name="structattrs" value={`${props.struct}.${item.n}`}
+                                        checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
+                                    {item.n}
+                                </label>
+                            </li>
+                        );
+                    })}
+                </ul>
+                <SelectAll onChange={handleSelectAll(props.struct)} isSelected={props.hasSelectAll} />
+            </div>    
         );
     };
 
     // ---------------------------- <FieldsetStructures /> ----------------------
 
     const FieldsetStructures:React.SFC<{
-        availStructs:Immutable.List<ViewOptions.AttrDesc>;
+        availStructs:Immutable.List<ViewOptions.StructDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
         corpusUsesRTLText:boolean;
         hasSelectAll:boolean;
@@ -297,7 +308,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 </label>
                                 <StructAttrList struct={item.n}
                                         items={props.structAttrs.get(item.n) || Immutable.List()}
-                                        handleClick={handleStructAttrClickFn(item.n)} />
+                                        handleClick={handleStructAttrClickFn(item.n)}
+                                        hasSelectAll={item.selectAllAttrs} />
                             </li>
                         );
                     })}
