@@ -461,28 +461,26 @@ export function init({dispatcher, helpers, viewOptionsModel,
                             callback={setState}
                             items={items} />
 
-                        <span style={state!=='attributes' ? {display: 'none'} : null}>
-                            <FieldsetAttributes
-                                attrList={props.attrList}
-                                hasSelectAll={props.hasSelectAllAttrs}
-                                attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar}
-                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
-                        </span>
-
-                        <span style={state!=='structures' ? {display: 'none'} : null}>
-                            <FieldsetStructures
-                                availStructs={props.availStructs}
-                                structAttrs={props.structAttrs}
-                                hasSelectAll={props.hasSelectAllStruct}
-                                corpusUsesRTLText={props.corpusUsesRTLText} />
-                        </span>
-
-                        <span style={state!=='metainformation' ? {display: 'none'} : null}>
-                            <FieldsetMetainformation
-                                availRefs={props.availRefs}
-                                hasSelectAll={props.TehasSelectAllRefs} />
-                        </span>
+                        {
+                            state==='attributes' ?
+                                <FieldsetAttributes
+                                    attrList={props.attrList}
+                                    hasSelectAll={props.hasSelectAllAttrs}
+                                    attrsVmode={props.attrsVmode}
+                                    showConcToolbar={props.showConcToolbar}
+                                    lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} /> :
+                            state==='structures' ?
+                                <FieldsetStructures
+                                    availStructs={props.availStructs}
+                                    structAttrs={props.structAttrs}
+                                    hasSelectAll={props.hasSelectAllStruct}
+                                    corpusUsesRTLText={props.corpusUsesRTLText} /> :
+                            state==='metainformation' ?
+                                <FieldsetMetainformation
+                                    availRefs={props.availRefs}
+                                    hasSelectAll={props.TehasSelectAllRefs} /> :
+                                null
+                        }
 
                         {props.userIsAnonymous ?
                             <p className="warn">
