@@ -271,6 +271,10 @@ class DeafultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
+        if filter_dict.get('favOnly'):
+            favourite_only = bool(int(filter_dict.get('favOnly')))
+        else:
+            favourite_only = False
 
         if offset is None:
             offset = 0
@@ -296,6 +300,9 @@ class DeafultCorplistProvider(CorplistProvider):
         for corp in self._corparch.get_list(plugin_api, permitted_corpora):
             full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
+                if favourite_only and fav_id(corp['id']) is None:
+                    continue
+
                 keywords = [k for k in full_data['metadata']['keywords'].keys()]
                 tests = []
                 found_in = []

@@ -389,6 +389,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     const KeywordsField:React.SFC<{
         label:string;
         keywords:Immutable.List<KeywordInfo>;
+        favouritesOnly:boolean;
 
     }> = (props) => {
 
@@ -399,10 +400,18 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         return (
             <fieldset className="keywords">
                 <legend>{props.label}</legend>
+                <KeywordLink
+                    key={'favorites'}
+                    keyword={{
+                        ident: 'favourites',
+                        label: he.translate('defaultCorparch__favourites_filter_label'),
+                        color: '#009ee0',
+                        visible: true,
+                        selected: props.favouritesOnly}} />
                 {props.keywords.filter(v => v.visible).map((keyword, i) =>
                         <KeywordLink key={i} keyword={keyword} />
                 )}
-                {hasSelectedKeywords() ? <ResetLink  /> : null}
+                {hasSelectedKeywords() || props.favouritesOnly ? <ResetLink  /> : null}
                 <div className="inline-label hint">
                     ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
                 </div>
@@ -593,7 +602,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     </div>
                     <KeywordsField
                         keywords={this.state.keywords}
-                        label={he.translate('defaultCorparch__keywords_field_label')} />
+                        label={he.translate('defaultCorparch__keywords_field_label')}
+                        favouritesOnly={this.state.favouritesOnly} />
                     <FilterInputFieldset
                         filters={this.state.filters} />
                 </section>
