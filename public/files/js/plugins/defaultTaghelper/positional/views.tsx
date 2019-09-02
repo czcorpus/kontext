@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {PositionValue, PositionOptions, TagHelperModelState} from './models';
-import {Kontext} from '../../../types/common';
+import {Kontext, KeyCodes} from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
 
 
@@ -193,16 +193,33 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         }
     }
 
+    // ------------------------------ <TagDisplay /> ----------------------------
+
+    const TagDisplay:React.SFC<{
+        onEscKey:()=>void;
+        generatedQuery:string;
+    }> = (props) => {
+
+
+        const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+            if (typeof props.onEscKey === 'function' && evt.keyCode === KeyCodes.ESC) {
+                props.onEscKey();
+            }
+        };
+
+        return <input type="text" className="postag-display-box" value={props.generatedQuery}
+                    onKeyDown={keyEventHandler} readOnly
+                    ref={item => item ? item.focus() : null} />;
+    };
+
+
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<TagHelperModelState> {
+    const TagBuilder:React.SFC<TagHelperModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.checkboxHandler = this.checkboxHandler.bind(this);
-        }
-
-        private checkboxHandler(lineIdx:number, value:string, checked:boolean) {
+        const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
             dispatcher.dispatch({
                 name: 'TAGHELPER_CHECKBOX_CHANGED',
                 payload: {
@@ -211,14 +228,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                     checked: checked
                 }
             });
-        }
+        };
 
-        render() {
-            return <PositionList
-                        positions={this.props.positions}
-                        stateId={this.props.stateId}
-                        checkboxHandler={this.checkboxHandler} />;
-        }
+        const escKeyHandler = () => {
+
+        };
+
+        return (
+            <div>
+                <TagDisplay generatedQuery={props.generatedQuery} onEscKey={escKeyHandler} />
+                <PositionList
+                    positions={props.positions}
+                    stateId={props.stateId}
+                    checkboxHandler={checkboxHandler} />
+            </div>
+        );
     }
 
     return TagBuilder;
