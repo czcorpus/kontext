@@ -124,7 +124,9 @@ export class WordlistPage extends StatefulModel  {
             {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
-                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: undefined,
+                foreignSubcorp: undefined
             }
         );
     }

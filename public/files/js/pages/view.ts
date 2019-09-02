@@ -805,13 +805,16 @@ export class ViewPage {
                     submitFn:() => {
                         const args = this.layoutModel.getConcArgs();
                         window.location.href = this.layoutModel.createActionUrl('filter_subhits', args.items());
-                    }
+                    },
+                    opKey: undefined
                 },
                 filterFirstDocHitsFormProps: {
-                    formType: Kontext.ConcFormTypes.FIRSTHITS
+                    formType: Kontext.ConcFormTypes.FIRSTHITS,
+                    opKey: undefined,
                 },
                 sortFormProps: {
-                    formType: Kontext.ConcFormTypes.SORT
+                    formType: Kontext.ConcFormTypes.SORT,
+                    sortId: undefined
                 },
                 shuffleFormProps: {
                     formType: Kontext.ConcFormTypes.SHUFFLE,
@@ -823,7 +826,8 @@ export class ViewPage {
                     }
                 },
                 switchMcFormProps: {
-                    formType: Kontext.ConcFormTypes.SWITCHMC
+                    formType: Kontext.ConcFormTypes.SWITCHMC,
+                    opKey: undefined
                 }
             }
         );

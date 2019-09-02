@@ -63,7 +63,9 @@ class WordlistFormPage {
             {
                 corpname: this.corpusIdent.id,
                 humanCorpname: this.corpusIdent.name,
-                usesubcorp: this.corpusIdent.usesubcorp
+                usesubcorp: this.corpusIdent.usesubcorp,
+                origSubcorpName: undefined,
+                foreignSubcorp: undefined
             }
         );
     }
