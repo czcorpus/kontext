@@ -501,44 +501,30 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         hasCQLBackup:boolean;
         isDeletedCorp:boolean;
         activeTab:string;
-        onSelect:(action:string)=>()=>void;
+        onSelect:(action:string)=>void;
 
     }> = (props) => {
 
         const mkClass = (action) => `util-button${action === props.activeTab ? ' active' : ''}`;
+        
+        let items = Immutable.List([]);
+        if (!props.isDeletedCorp) {
+            items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')})
+        }
+        if (props.hasCQLBackup) {
+            items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
+        }
+        if (props.hasCQLBackup && props.isDeletedCorp) {
+            items = items.push(
+                {id: 'restore', label: he.translate('subclist__action_restore')},
+                {id: 'wipe', label: he.translate('subclist__action_wipe')}
+            )
+        }
 
-        return (
-            <ul className="ActionMenu tabs">
-                {!props.isDeletedCorp ?
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('pub')}
-                            isActive={props.activeTab === 'pub'}
-                            label={he.translate('subclist__public_access_btn')} />
-                    </li> : null
-                }
-                {props.hasCQLBackup ?
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('reuse')}
-                            isActive={props.activeTab === 'reuse'}
-                            label={he.translate('subclist__action_reuse')} />
-                    </li> : null
-                }
-                {props.hasCQLBackup && props.isDeletedCorp ?
-                <>
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('restore')}
-                                isActive={props.activeTab === 'restore'}
-                                label={he.translate('subclist__action_restore')} />
-                    </li>
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('wipe')}
-                                isActive={props.activeTab === 'wipe'}
-                                label={he.translate('subclist__action_wipe')} />
-                    </li>
-                </> : null}
-            </ul>
-        );
-
+        return <layoutViews.TabMenu
+            className="ActionMenu"
+            callback={props.onSelect}
+            items={items} />;
     };
 
     // ------------------------ <PublishSubmitButton /> --------------------------
@@ -645,12 +631,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleActionSelect(action) {
-            return () => {
-                dispatcher.dispatch({
-                    name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
-                    payload: {value: action}
-                });
-            };
+            dispatcher.dispatch({
+                name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
+                payload: {value: action}
+            });
         }
 
         _renderTab() {

@@ -165,9 +165,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
         );
     };
 
-    // ---------------------------- <FieldsetAttributes /> ----------------------
+    // ---------------------------- <AttributesCheckboxes /> ----------------------
 
-    const FieldsetAttributes:React.SFC<{
+    const AttributesCheckboxes:React.SFC<{
         attrList:Immutable.List<ViewOptions.AttrDesc>;
         hasSelectAll:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
@@ -184,8 +184,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
         return (
-            <fieldset className="FieldsetAttributes">
-                <legend>{helpers.translate('options__attributes_hd')}</legend>
+            <div className="AttributesCheckboxes checkbox-area">
                 <ul>
                 {props.attrList.map((item, i) => {
                     return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
@@ -205,7 +204,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <hr />
                 <AttributesTweaks attrsVmode={props.attrsVmode}
                         showConcToolbar={props.showConcToolbar} />
-            </fieldset>
+            </div>
         );
     };
 
@@ -214,6 +213,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
     const StructAttrList:React.SFC<{
         struct:string;
         items:Immutable.List<ViewOptions.StructAttrDesc>;
+        hasSelectAll:boolean;
         handleClick:(v:string)=>void;
 
     }> = (props) => {
@@ -222,30 +222,40 @@ export function init({dispatcher, helpers, viewOptionsModel,
             return () => props.handleClick(value);
         };
 
+        const handleSelectAll = (structIdent) => () => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
+                payload: {structIdent: structIdent}
+            });
+        };
+
         return (
-            <ul>
-                {props.items.map((item, i) => {
-                    return (
-                        <li key={i}>
-                            <label>
-                                <input type="checkbox" name="structattrs" value={`${props.struct}.${item.n}`}
-                                    checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
-                                {item.n}
-                            </label>
-                        </li>
-                    );
-                })}
-            </ul>
+            <div>
+                <ul>
+                    {props.items.map((item, i) => {
+                        return (
+                            <li key={i}>
+                                <label>
+                                    <input type="checkbox" name="structattrs" value={`${props.struct}.${item.n}`}
+                                        checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
+                                    {item.n}
+                                </label>
+                            </li>
+                        );
+                    })}
+                </ul>
+                <SelectAll onChange={handleSelectAll(props.struct)} isSelected={props.hasSelectAll} />
+            </div>
         );
     };
 
-    // ---------------------------- <FieldsetStructures /> ----------------------
+    // ---------------------------- <StructsAndAttrsCheckboxes /> ----------------------
 
-    const FieldsetStructures:React.SFC<{
-        availStructs:Immutable.List<ViewOptions.AttrDesc>;
+    const StructsAndAttrsCheckboxes:React.SFC<{
+        availStructs:Immutable.List<ViewOptions.StructDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
         corpusUsesRTLText:boolean;
-
+        hasSelectAll:boolean;
     }> = (props) => {
 
         const handleStructClick = (event) => {
@@ -270,9 +280,15 @@ export function init({dispatcher, helpers, viewOptionsModel,
             };
         };
 
+        const handleSelectAll = (evt) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
+                payload: {}
+            });
+        };
+
         return (
-            <fieldset className="FieldsetStructures">
-                <legend>{helpers.translate('options__structures_hd')}</legend>
+            <section className="StructsAndAttrsCheckboxes">
                 {props.corpusUsesRTLText ?
                     <p className="warning">
                         <img className="icon"
@@ -281,23 +297,25 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         {helpers.translate('options__rtl_text_warning')}
                     </p> :
                     null}
-                <ul>
-                    {props.availStructs.map((item) => {
-                        return (
-                            <li key={item.n}>
-                                <label className="struct">
-                                    <input type="checkbox" name="setstructs" value={item.n}
-                                            checked={item.selected} onChange={handleStructClick} />
-                                    {'<' + item.n + '>'}
-                                </label>
-                                <StructAttrList struct={item.n}
-                                        items={props.structAttrs.get(item.n) || Immutable.List()}
-                                        handleClick={handleStructAttrClickFn(item.n)} />
-                            </li>
-                        );
-                    })}
-                </ul>
-            </fieldset>
+                <div className="struct-groups checkbox-area">
+                    {props.availStructs.map((item) => (
+                        <div key={item.n} className="group">
+                            <label className="struct">
+                                <input type="checkbox" name="setstructs" value={item.n}
+                                        checked={item.selected} onChange={handleStructClick} />
+                                {'<' + item.n + '>'}
+                            </label>
+                            <StructAttrList struct={item.n}
+                                    items={props.structAttrs.get(item.n) || Immutable.List()}
+                                    handleClick={handleStructAttrClickFn(item.n)}
+                                    hasSelectAll={item.selectAllAttrs} />
+                        </div>
+                    ))}
+                </div>
+                <div className="select-all-structs-and-groups">
+                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                </div>
+            </section>
         );
     };
 
@@ -323,9 +341,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
     };
 
 
-    // ---------------------------- <FieldsetMetainformation /> ----------------------
+    // ---------------------------- <ConcLineRefCheckboxes /> ----------------------
 
-    const FieldsetMetainformation:React.SFC<{
+    const ConcLineRefCheckboxes:React.SFC<{
         availRefs:Immutable.List<ViewOptions.RefsDesc>;
         hasSelectAll:boolean;
 
@@ -350,8 +368,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
         return (
-            <fieldset className="FieldsetMetainformation">
-                <legend>{helpers.translate('options__references_hd')}</legend>
+            <div className="ConcLineRefCheckboxes checkbox-area">
                 <ul>
                     {props.availRefs.map((item, i) => {
                         return <LiReferenceItem
@@ -363,7 +380,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     })}
                 </ul>
                 <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
-            </fieldset>
+            </div>
         );
     };
 
@@ -418,6 +435,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         showConcToolbar:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
+        hasSelectAllStruct:boolean;
         availRefs:Immutable.List<ViewOptions.RefsDesc>;
         TehasSelectAllRefs:boolean;
         isWaiting:boolean;
@@ -426,21 +444,44 @@ export function init({dispatcher, helpers, viewOptionsModel,
         corpusUsesRTLText:boolean;
 
     }> = (props) => {
+        const [state, setState] = React.useState('attributes');
+
+        const items = Immutable.List([
+            {id: 'attributes', label: helpers.translate('options__attributes_hd')},
+            {id: 'structures', label: helpers.translate('options__structures_hd')},
+            {id: 'metainformation', label: helpers.translate('options__references_hd')},
+        ])
 
         if (props.hasLoadedData) {
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <FieldsetAttributes
-                                attrList={props.attrList}
-                                hasSelectAll={props.hasSelectAllAttrs}
-                                attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar}
-                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
-                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
-                                    corpusUsesRTLText={props.corpusUsesRTLText} />
-                        <FieldsetMetainformation availRefs={props.availRefs}
-                                hasSelectAll={props.TehasSelectAllRefs} />
+                        <layoutViews.TabMenu
+                            className="FieldsetsTabs"
+                            callback={setState}
+                            items={items} />
+
+                        {
+                            state === 'attributes' ?
+                                <AttributesCheckboxes
+                                    attrList={props.attrList}
+                                    hasSelectAll={props.hasSelectAllAttrs}
+                                    attrsVmode={props.attrsVmode}
+                                    showConcToolbar={props.showConcToolbar}
+                                    lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} /> :
+                            state === 'structures' ?
+                                <StructsAndAttrsCheckboxes
+                                    availStructs={props.availStructs}
+                                    structAttrs={props.structAttrs}
+                                    hasSelectAll={props.hasSelectAllStruct}
+                                    corpusUsesRTLText={props.corpusUsesRTLText} /> :
+                            state === 'metainformation' ?
+                                <ConcLineRefCheckboxes
+                                    availRefs={props.availRefs}
+                                    hasSelectAll={props.TehasSelectAllRefs} /> :
+                                null
+                        }
+
                         {props.userIsAnonymous ?
                             <p className="warn">
                                 <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
@@ -475,6 +516,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         attrList={props.attrList}
                         availStructs={props.structList}
                         structAttrs={props.structAttrs}
+                        hasSelectAllStruct={props.selectAllStruct}
                         availRefs={props.referenceList}
                         hasSelectAllAttrs={props.selectAllAttrs}
                         TehasSelectAllRefs={props.selectAllReferences}

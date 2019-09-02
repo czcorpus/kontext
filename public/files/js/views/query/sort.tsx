@@ -587,28 +587,14 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
     }> = (props) => {
 
-        const onItemClick = (ident) => {
-            return () => {
-                props.onChange(ident);
-            }
-        };
-
-        return (
-            <ul className="SortFormSelector tabs">
-                <li>
-                    <layoutViews.TabButton
-                        isActive={props.formType === "sortx"}
-                        label={he.translate('query__sort_type_simple_hd')}
-                        onClick={onItemClick('sortx')} />
-                </li>
-                <li>
-                <layoutViews.TabButton
-                        isActive={props.formType === "mlsortx"}
-                        label={he.translate('query__sort_type_multilevel_hd')}
-                        onClick={onItemClick('mlsortx')} />
-                </li>
-            </ul>
-        );
+        const items = Immutable.List([
+            {id: 'sortx', label: he.translate('query__sort_type_simple_hd')},
+            {id: 'mlsortx', label: he.translate('query__sort_type_multilevel_hd')},
+        ])
+        return <layoutViews.TabMenu
+            className="SortFormSelector"
+            callback={props.onChange}
+            items={items} />;
     };
 
     // -------------------------- <SortForm /> ---------------------------------

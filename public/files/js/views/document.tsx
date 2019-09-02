@@ -748,6 +748,22 @@ export function init(
             </span>;
     };
 
+    const TabMenu:CoreViews.TabMenu.Component = (props) => {
+        const [activeTab, setActiveTab] = React.useState(props.items.first());
+        const tabs = props.items.map(item =>
+            <li key={item.id}>
+                <TabButton
+                    label={item.label}
+                    isActive={item.id === activeTab.id}
+                    onClick={() => {
+                        setActiveTab(item);
+                        props.callback(item.id);
+                    }}/>
+            </li>
+        );
+        return <div><ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul><hr /></div>;
+    };
+
     // ------------------------------------------------------------------------------------
 
     const PlusButton:CoreViews.PlusButton.Component = (props) => {
@@ -779,7 +795,7 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        TabButton: TabButton,
+        TabMenu: TabMenu,
         PlusButton: PlusButton
     };
 }
