@@ -50,6 +50,7 @@ export interface CorpusViewOptionsModelState {
     selectAllAttrs:boolean;
     structList:Immutable.List<ViewOptions.StructDesc>;
     structAttrs:ViewOptions.AvailStructAttrs;
+    selectAllStruct:boolean,
     fixedAttr:string|null;
     showConcToolbar:boolean;
     referenceList:Immutable.List<ViewOptions.RefsDesc>;
@@ -72,6 +73,8 @@ export enum ActionName {
     ToggleAttribute = 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
     ToggleAllAttributes = 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
     ToggleStructure = 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+    ToggleAllStructures = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
+    ToggleAllStructureAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
     ToggleReference = 'VIEW_OPTIONS_TOGGLE_REFERENCE',
     ToggleAllReferences = 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
     SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
@@ -94,6 +97,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 selectAllAttrs: false,
                 structList: Immutable.List<ViewOptions.StructDesc>(),
                 structAttrs: Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(),
+                selectAllStruct: false,
                 fixedAttr: null,
                 showConcToolbar: false,
                 referenceList: Immutable.List<ViewOptions.RefsDesc>(),
@@ -142,6 +146,16 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 const newState = this.copyState(state);
                 this.toggleStructure(newState, action.payload['structIdent'],
                     action.payload['structAttrIdent']);
+                return newState;
+            },
+            [ActionName.ToggleAllStructures]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllStructures(newState);
+                return newState;
+            },
+            [ActionName.ToggleAllStructureAttrs]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllStructureAttrs(newState, action.payload['structIdent']);
                 return newState;
             },
             [ActionName.ToggleReference]: (state, action) => {
@@ -300,6 +314,44 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             .toList();
     }
 
+    private toggleAllStructures(state:CorpusViewOptionsModelState):void {
+        state.selectAllStruct = !state.selectAllStruct;
+        state.structList = state.structList.map(item => {
+            return {
+                n: item.n,
+                label: item.label,
+                locked: item.locked,
+                selected: item.locked ? true : state.selectAllStruct,
+                selectAllAttrs: state.selectAllStruct,
+            }
+        }).toList();
+        state.structAttrs = state.structAttrs.map(structAttrs => structAttrs.map(attr => {
+            return {
+                n: attr.n,
+                selected: state.selectAllStruct,
+            }
+        }).toList()).toMap();
+    }
+
+    private toggleAllStructureAttrs(state:CorpusViewOptionsModelState, structIdent:string):void {
+        const struct = state.structList.find(item => item.n == structIdent);
+        const structIdx = state.structList.indexOf(struct);
+
+        struct.selectAllAttrs = !struct.selectAllAttrs;
+        struct.selected = struct.selectAllAttrs;
+        state.structList = state.structList.set(structIdx, struct);
+
+        const structAttrs = state.structAttrs.get(structIdent);
+        state.structAttrs = state.structAttrs.set(structIdent, structAttrs.map(attr => {
+            return {
+                n: attr.n,
+                selected: struct.selectAllAttrs,
+            }
+        }).toList());
+
+        state.selectAllStruct = this.hasSelectedAllStructs(state);
+    }
+
     private toggleAllReferences(state:CorpusViewOptionsModelState):void {
         state.selectAllReferences = !state.selectAllReferences;
         state.referenceList = state.referenceList.map(item => {
@@ -318,7 +370,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             n: currItem.n,
             selected: !currItem.selected
         });
-        state.selectAllReferences = false;
+        state.selectAllReferences = state.referenceList.every(ref => ref.selected);
     }
 
     private toggleAttribute(state:CorpusViewOptionsModelState, idx:number):void {
@@ -341,11 +393,19 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 });
             }
         }
-        state.selectAllAttrs = false;
+        state.selectAllAttrs = state.attrList.every(attr => attr.selected);
     }
 
     private hasSelectedStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
         return state.structAttrs.get(structIdent).find(item => item.selected) !== undefined;
+    }
+
+    private hasSelectedAllStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
+        return state.structAttrs.get(structIdent).every(item => item.selected);
+    }
+
+    private hasSelectedAllStructs(state:CorpusViewOptionsModelState):boolean {
+        return state.structAttrs.map(value => value.every(attr => attr.selected)).every(value => value);
     }
 
     private clearStructAttrSelection(state:CorpusViewOptionsModelState, structIdent:string):void {
@@ -413,7 +473,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     label: struct.label,
                     n: struct.n,
                     locked: struct.locked,
-                    selected: sel
+                    selected: sel,
+                    selectAllAttrs: this.hasSelectedAllStructAttrs(state, structIdent),
                 });
             }
 
@@ -425,9 +486,11 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 label: struct.label,
                 n: struct.n,
                 locked: struct.locked,
-                selected: !struct.selected
+                selected: !struct.selected,
+                selectAllAttrs: false,
             });
         }
+        state.selectAllStruct = this.hasSelectedAllStructs(state);
     }
 
 
@@ -437,15 +500,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 label: item.label,
                 n: item.n,
                 selected: data.CurrentAttrs.indexOf(item.n) > -1 ? true : false,
-                locked: item.n === data.FixedAttr ? true : false
-            };
-        }));
-        state.structList = Immutable.List(data.AvailStructs.map(item => {
-            return {
-                label: item.label,
-                n: item.n,
-                selected: item.sel === 'selected' ? true : false,
-                locked: false
+                locked: item.n === data.FixedAttr ? true : false,
             };
         }));
         state.structAttrs = Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(
@@ -460,6 +515,17 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                         }))
                     ];
             })
+        );
+        state.structList = Immutable.List(
+            data.AvailStructs
+                .filter(item => state.structAttrs.has(item.n))
+                .map(item => ({
+                    label: item.label,
+                    n: item.n,
+                    selected: item.sel === 'selected' ? true : false,
+                    locked: false,
+                    selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
+                }))
         );
 
         state.referenceList = Immutable.List<ViewOptions.RefsDesc>(data.AvailRefs.map(item => {

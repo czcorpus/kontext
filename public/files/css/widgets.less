@@ -472,15 +472,7 @@ fieldset.FieldsetOutputOptions {
 
     .StructsAndAttrsForm {
 
-        fieldset {
-
-            display: inline-block;
-            vertical-align: top;
-            margin-right: 1em;
-
-            legend {
-                font-weight: bold;
-            }
+        div.checkbox-area {
 
             ul {
                 margin: 0;
@@ -489,19 +481,25 @@ fieldset.FieldsetOutputOptions {
 
                 li {
                     margin: 0 0 0 1em;
-                    padding: 0;
+                    padding: 0.1em 0;
+
+                    input[type=checkbox] {
+                        margin-right: 0.4em;
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
                 }
             }
 
             h3.label {
                 text-align: left;
-                font-size: 1.0em;
+                font-size: 1.2em;
                 margin-top: 1.2em;
-                margin-bottom: 0.2em;
+                margin-bottom: 0.4em;
             }
 
             p.warning {
-                max-width: 20em;
+                max-width: 80%;
                 white-space: normal;
 
                 img.icon {
@@ -511,6 +509,40 @@ fieldset.FieldsetOutputOptions {
                     width: 1em;
                     margin-bottom: 0.1em;
                 }
+            }
+        }
+
+        .StructsAndAttrsCheckboxes {
+
+            .struct-groups {
+
+                display: flex;
+                align-items: flex-start;
+
+                div.group {
+                    padding-left: 0.7em;
+                }
+
+                div.group:not(:last-child) {
+                    border-color: @color-superlight-text;
+                    border-width: 0 1px 0 0;
+                    border-style: solid;
+                    padding-right: 0.7em;
+                }
+
+                label.struct {
+                    color: @color-logo-pink;
+                    font-size: 120%;
+
+                    input[type=checkbox] {
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+                }
+            }
+
+            .select-all-structs-and-groups {
+                text-align: center;
             }
         }
 
@@ -1090,7 +1122,7 @@ table.CollMetricsSelection {
     }
 
     tr:nth-child(1) th,
-    tr:nth-child(1) td, {
+    tr:nth-child(1) td {
         border: none;
     }
 

@@ -603,31 +603,16 @@ export function init(
 
     const FreqFormSelector:React.SFC<FreqFormSelectorProps> = (props) => {
 
-        const onItemClick = (ident) => {
-            return () => {
-                props.onChange(ident);
-            }
-        };
+        const items = Immutable.List([
+            {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
+            {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
+            {id: 'ct', label: he.translate('freq__sel_form_type_ct')},
+        ])
 
-        return (
-            <ul className="FreqFormSelector tabs">
-                <li>
-                    <layoutViews.TabButton onClick={onItemClick('ml')}
-                        label={he.translate('freq__sel_form_type_ml')}
-                        isActive={props.formType === "ml"} />
-                </li>
-                <li>
-                    <layoutViews.TabButton onClick={onItemClick('tt')}
-                        label={he.translate('freq__sel_form_type_tt')}
-                        isActive={props.formType === "tt"} />
-                </li>
-                <li>
-                    <layoutViews.TabButton onClick={onItemClick('ct')}
-                        label={he.translate('freq__sel_form_type_ct')}
-                        isActive={props.formType === "ct"} />
-                </li>
-            </ul>
-        );
+        return <layoutViews.TabMenu
+            className="FreqFormSelector"
+            callback={props.onChange}
+            items={items} />
     };
 
 

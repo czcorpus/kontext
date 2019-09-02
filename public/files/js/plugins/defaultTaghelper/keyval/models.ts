@@ -68,8 +68,8 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
     // ...
     error: Error|null;
-    allFeatures: Immutable.Map<string, Immutable.List<string>>,
-    availableFeatures: Immutable.Map<string, Immutable.List<string>>,
+    allFeatures: Immutable.Map<string, Immutable.List<string>>;
+    availableFeatures: Immutable.Map<string, Immutable.List<string>>;
     filterFeaturesHistory: Immutable.List<Immutable.List<FilterRecord>>;
     showCategory: string;
 
@@ -79,24 +79,26 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
 export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState) {
+    private ident:string;
+
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-
+        this.ident = ident;
         this.actionMatch = {
             'TAGHELPER_SELECT_CATEGORY': (state, action) => {
                 const newState = this.copyState(state);
                 newState.showCategory = action.payload['value'];
                 return newState;
             },
-            'TAGHELPER_GET_INITIAL_FEATURES': (state, action) => {
+            'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
                 const newState = this.copyState(state);
                 newState.isBusy = true;
                 return newState;
             },
-            'TAGHELPER_GET_INITIAL_FEATURES_DONE': (state, action) => {
+            'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
                 const newState = this.copyState(state);
                 if (!action.error) {
                     newState.allFeatures = Immutable.fromJS(action.payload['result']);
@@ -108,7 +110,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 newState.isBusy = false;
                 return newState;
             },
-            'TAGHELPER_LOAD_FILTERED_DATA_DONE': (state, action) => {
+            'TAGHELPER_GET_FILTERED_DATA_DONE': (state, action) => {
                 const newState = this.copyState(state);
                 if (!action.error) {
                     newState.availableFeatures = Immutable.fromJS(action.payload['result']);
@@ -167,14 +169,22 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
-            case 'TAGHELPER_GET_INITIAL_FEATURES':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_FEATURES_DONE', false);
+            case 'TAGHELPER_GET_INITIAL_DATA':
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
+                if (state.filterFeaturesHistory.size > 0) {
+                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+                }
             break;
 
             case 'TAGHELPER_ADD_FILTER':
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_LOAD_FILTERED_DATA_DONE', true);
+                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+            break;
+            case 'TAGHELPER_SET_ACTIVE_TAG':
+                if (this.ident !== action.payload['value']) {
+                    this.suspend((nextAction) => this.ident === nextAction.payload['value']);
+                }
             break;
         }
     }

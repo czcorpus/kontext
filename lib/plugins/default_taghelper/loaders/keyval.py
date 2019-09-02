@@ -29,7 +29,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
     def __init__(self, corpus_name, tagset_name, tags_src_dir):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
-        self.variants_file_path = os.path.join(tags_src_dir, corpus_name)
+        self.variants_file_path = os.path.join(tags_src_dir, tagset_name, corpus_name)
         self.initial_values = None if self.is_enabled() else []
 
     def _initialize_tags(self):
