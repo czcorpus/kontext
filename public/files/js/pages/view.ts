@@ -801,7 +801,7 @@ export class ViewPage {
                     filterId: '__new__'
                 },
                 filterSubHitsFormProps: {
-                    formType: Kontext.ConcFormTypes.FILTER,
+                    formType: Kontext.ConcFormTypes.SUBHITS,
                     submitFn:() => {
                         const args = this.layoutModel.getConcArgs();
                         window.location.href = this.layoutModel.createActionUrl('filter_subhits', args.items());

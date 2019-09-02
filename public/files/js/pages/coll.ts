@@ -28,7 +28,7 @@ import {QuerySaveAsFormModel} from '../models/query/save';
 import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
 import {init as analysisFrameInit} from '../views/analysis';
 import {init as collFormInit} from '../views/coll/forms';
-import {init as collResultViewInit} from '../views/coll/result';
+import {init as collResultViewInit, CollResultViewProps} from '../views/coll/result';
 import {init as freqFormInit} from '../views/freqs/forms';
 import {init as queryOverviewInit} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/main';
@@ -187,10 +187,12 @@ export class CollPage {
             this.collResultModel
         );
 
-        this.layoutModel.renderReactComponent(
+        this.layoutModel.renderReactComponent<CollResultViewProps>(
             collResultViews.CollResultView,
             document.getElementById('coll-view-mount'),
-            {}
+            {
+                onClose: () => undefined
+            }
         );
     }
 

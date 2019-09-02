@@ -175,7 +175,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     renderReactComponent<T>(reactClass:React.ComponentClass<T>|React.SFC<T>,
             target:HTMLElement, props?:T):void {
-        ReactDOM.render(React.createElement(reactClass, props), target);
+        ReactDOM.render(React.createElement<T>(reactClass, props), target);
     }
 
     /**
