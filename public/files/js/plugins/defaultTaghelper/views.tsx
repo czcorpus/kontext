@@ -171,23 +171,23 @@ export function init(
 
         render() {
 
-            return <div>
-                {
-                    this.props.isBusy ?
-                    <img className="loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                            title={he.translate('global__loading')}
-                            alt={he.translate('global__loading')} /> :
-                    null
-                }
-                <this.props.activeView {...this.props} />
-                <TagButtons sourceId={this.props.sourceId}
-                            onInsert={this.props.onInsert}
-                            canUndo={this.props.canUndo}
-                            range={this.props.range}
-                            actionPrefix={this.props.actionPrefix}
-                            rawPattern={this.props.rawPattern}
-                            generatedQuery={this.props.generatedQuery} />
-            </div>;
+            return (
+                <div>
+                    <this.props.activeView {...this.props} />
+                    <div className="flex">
+                        <TagButtons sourceId={this.props.sourceId}
+                                    onInsert={this.props.onInsert}
+                                    canUndo={this.props.canUndo}
+                                    range={this.props.range}
+                                    actionPrefix={this.props.actionPrefix}
+                                    rawPattern={this.props.rawPattern}
+                                    generatedQuery={this.props.generatedQuery} />
+                        <div>
+                            { this.props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null }
+                        </div>
+                    </div>
+                </div>
+            );
         }
     }
 
