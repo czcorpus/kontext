@@ -74,7 +74,7 @@ export enum ActionName {
     ToggleAllAttributes = 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
     ToggleStructure = 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
     ToggleAllStructures = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
-    ToggleAllStructureAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',    
+    ToggleAllStructureAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
     ToggleReference = 'VIEW_OPTIONS_TOGGLE_REFERENCE',
     ToggleAllReferences = 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
     SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
@@ -516,15 +516,17 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     ];
             })
         );
-        state.structList = Immutable.List(data.AvailStructs.map(item => {
-            return {
-                label: item.label,
-                n: item.n,
-                selected: item.sel === 'selected' ? true : false,
-                locked: false,
-                selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
-            };
-        }));
+        state.structList = Immutable.List(
+            data.AvailStructs
+                .filter(item => state.structAttrs.has(item.n))
+                .map(item => ({
+                    label: item.label,
+                    n: item.n,
+                    selected: item.sel === 'selected' ? true : false,
+                    locked: false,
+                    selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
+                }))
+        );
 
         state.referenceList = Immutable.List<ViewOptions.RefsDesc>(data.AvailRefs.map(item => {
             return {

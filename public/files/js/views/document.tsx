@@ -761,7 +761,7 @@ export function init(
                     }}/>
             </li>
         );
-        return <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>;
+        return <div><ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul><hr /></div>;
     };
 
     // ------------------------------------------------------------------------------------
