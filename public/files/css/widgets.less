@@ -512,38 +512,35 @@ fieldset.FieldsetOutputOptions {
             }
         }
 
-        .StructsAndAttrsCheckboxes {
+        .struct-groups {
 
-            .struct-groups {
+            display: flex;
+            align-items: flex-start;
 
-                display: flex;
-                align-items: flex-start;
-
-                div.group {
-                    padding-left: 0.7em;
-                }
-
-                div.group:not(:last-child) {
-                    border-color: @color-superlight-text;
-                    border-width: 0 1px 0 0;
-                    border-style: solid;
-                    padding-right: 0.7em;
-                }
-
-                label.struct {
-                    color: @color-logo-pink;
-                    font-size: 120%;
-
-                    input[type=checkbox] {
-                        display: inline-block;
-                        vertical-align: middle;
-                    }
-                }
+            div.group {
+                padding-left: 0.7em;
             }
 
-            .select-all-structs-and-groups {
-                text-align: center;
+            div.group:not(:last-child) {
+                border-color: @color-superlight-text;
+                border-width: 0 1px 0 0;
+                border-style: solid;
+                padding-right: 0.7em;
             }
+
+            label.struct {
+                color: @color-logo-pink;
+                font-size: 120%;
+
+                input[type=checkbox] {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+        }
+
+        .select-all-structs-and-groups {
+            text-align: center;
         }
 
         .button-replace {
