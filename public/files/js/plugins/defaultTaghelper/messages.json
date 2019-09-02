@@ -5,7 +5,10 @@
       "taghelper__unfulfilled": "Unfulfilled",
       "taghelper__reset": "Reset",
       "taghelper__undo": "Undo",
-      "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported."
+      "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported.",
+      "taghelper__selected_features_label": "Selected features",
+      "taghelper__part_of_speech_label": "Part of speech",
+      "taghelper__features_label": "Features"
   },
   "cs-CZ": {
       "taghelper__create_tag_heading": "Vytvořit/upravit tag",
@@ -13,7 +16,10 @@
       "taghelper__unfulfilled": "Nevyplněno",
       "taghelper__reset": "Obnovit",
       "taghelper__undo": "Krok zpět",
-      "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány."
+      "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány.",
+      "taghelper__selected_features_label": "Zvolené vlastnosti",
+      "taghelper__part_of_speech_label": "Slovní druh",
+      "taghelper__features_label": "Vlastnosti"
   },
   "szl": {
       "taghelper__create_tag_heading": "Create/edit a tag",
@@ -21,6 +27,9 @@
       "taghelper__unfulfilled": "Niywypołniōne",
       "taghelper__reset": "Ôdnōw",
       "taghelper__undo": "Cŏfnij",
-      "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane."
+      "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane.",
+      "taghelper__selected_features_label": "Selected features",
+      "taghelper__part_of_speech_label": "Part of speech",
+      "taghelper__features_label": "Features"
   }
 }

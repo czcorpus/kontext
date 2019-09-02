@@ -152,29 +152,6 @@ export function init(
         );
     };
 
-
-    // ------------------------------ <TagDisplay /> ----------------------------
-
-    const TagDisplay:React.SFC<{
-        onEscKey:()=>void;
-        generatedQuery:string;
-    }> = (props) => {
-
-
-    const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
-        evt.preventDefault();
-        evt.stopPropagation();
-        if (typeof props.onEscKey === 'function' && evt.keyCode === KeyCodes.ESC) {
-            props.onEscKey();
-        }
-    };
-
-    return <input type="text" className="tag-display-box" value={props.generatedQuery}
-                onKeyDown={keyEventHandler} readOnly
-                ref={item => item ? item.focus() : null} />;
-    }
-
-
     // ------------------------------ <TagBuilder /> ----------------------------
 
     type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps & {activeView:React.ComponentClass|React.SFC};
@@ -195,7 +172,6 @@ export function init(
         render() {
 
             return <div>
-                <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 {
                     this.props.isBusy ?
                     <img className="loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
@@ -203,22 +179,21 @@ export function init(
                             alt={he.translate('global__loading')} /> :
                     null
                 }
-                <div className="tag-header">
-                    <TagDisplay generatedQuery={this.props.generatedQuery} onEscKey={this.props.onEscKey} />
-                    <TagButtons sourceId={this.props.sourceId}
-                                onInsert={this.props.onInsert}
-                                canUndo={this.props.canUndo}
-                                range={this.props.range}
-                                actionPrefix={this.props.actionPrefix}
-                                rawPattern={this.props.rawPattern}
-                                generatedQuery={this.props.generatedQuery} />
-                </div>
                 <this.props.activeView {...this.props} />
+                <TagButtons sourceId={this.props.sourceId}
+                            onInsert={this.props.onInsert}
+                            canUndo={this.props.canUndo}
+                            range={this.props.range}
+                            actionPrefix={this.props.actionPrefix}
+                            rawPattern={this.props.rawPattern}
+                            generatedQuery={this.props.generatedQuery} />
             </div>;
         }
     }
-   
+
     const AvailableTagBuilderBound = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
+
+    // ---------------- <ActiveTagBuilder /> -----------------------------------
 
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
         const [activeView, setActiveView] = React.useState(views.keySeq().first());
@@ -232,18 +207,23 @@ export function init(
             setActiveView(value);
         };
 
-        const tagsetTabs = views.keySeq().map((tagset) => {return {id: tagset, label: tagset}}).toList();
-        return <div>
-            {tagsetTabs.size > 1 ? <layoutViews.TabMenu className="TagsetFormSelector" callback={handleTabSelection} items={tagsetTabs} /> : null}
-            <hr />
-            <TagBuilderBound
-                activeView={views.get(activeView)}
-                sourceId={props.sourceId}
-                actionPrefix={props.actionPrefix}
-                range={props.range}
-                onInsert={props.onInsert}
-                onEscKey={props.onEscKey} />
-        </div>
+        const tagsetTabs = views.keySeq().map((tagset) => ({id: tagset, label: tagset})).toList();
+        return (
+            <div>
+                <h3>{he.translate('taghelper__create_tag_heading')}</h3>
+                {tagsetTabs.size > 1 ?
+                    <layoutViews.TabMenu className="TagsetFormSelector" callback={handleTabSelection} items={tagsetTabs} /> :
+                    null
+                }
+                <TagBuilderBound
+                    activeView={views.get(activeView)}
+                    sourceId={props.sourceId}
+                    actionPrefix={props.actionPrefix}
+                    range={props.range}
+                    onInsert={props.onInsert}
+                    onEscKey={props.onEscKey} />
+            </div>
+        );
     }
 
     return ActiveTagBuilder;

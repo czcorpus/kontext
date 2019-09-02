@@ -48,6 +48,8 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                         value={[props.selectedCategory]}>{categories}</select>;
     }
 
+    // --------------------- <QueryLineCategory /> ----------------------------------------
+
     const QueryLineCategory:React.FunctionComponent<{
         categoryName:string;
         filterFeaturesCategory:Immutable.List<FilterRecord>;
@@ -56,26 +58,32 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         const buttonGroup = props.filterFeaturesCategory
             .sort()
             .map(filter => (
-                <button
-                    type="button"
-                    key={filter.composeString()}
-                    name={filter.get('name')}
-                    value={filter.get('value')}
-                    onClick={props.handleRemoveFilter}>
-                    <span>{filter.get('value')}</span><span className="query-close">X</span>
-                </button>
+                <li key={filter.composeString()} className="item">
+                    <span>{filter.get('value')}</span>
+                    <button name={filter.get('name')} type="button" value={filter.get('value')}
+                            onClick={props.handleRemoveFilter} className="query-close">{'\u00D7'}</button>
+                </li>
             )).toArray();
-        return <span className = "query-button-group">{[<b key="cat-name">{props.categoryName + " = "}</b>, ...buttonGroup]}</span>;
+        return (
+            <li className = "query-button-group">
+                {props.categoryName + ' = '}
+                <ul key="cat-name">
+                    {buttonGroup}
+                </ul>
+            </li>
+        );
     }
 
-    const QueryLine:React.FunctionComponent<{
+    // ------------------------ <QueryExpression /> --------------------------------------------
+
+    const QueryExpression:React.FunctionComponent<{
         filterFeatures:Immutable.List<FilterRecord>;
         handleRemoveFilter:(event) => void;
     }> = (props) => {
-        const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get("name"))
+        const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get('name'))
         const selected = groupedFilterFeatures.sort().reduce(
             (acc, val, key) => acc.concat([
-                acc.length ? <span className = "query-button-group">{"&"}</span> : null,
+                acc.length ? <li key={`amp:${key}`} className = "query-button-group amp">{'&'}</li> : null,
                 <QueryLineCategory
                     key={key}
                     categoryName={key}
@@ -84,10 +92,17 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             ]),
             []
         );
-        return <div>{selected}</div>;
+        return (
+            <div className="QueryExpression">
+                {selected.length > 0 ? <ul className="query-line">{selected}</ul> : null}
+            </div>
+        );
     }
 
+    // ---------------------------- <FeatureSelect /> ---------------------------------
+
     class FeatureSelect extends React.Component<FeatureSelectProps> {
+
         handleCheckboxChange(event) {
             if (event.target.checked) {
                 dispatcher.dispatch({
@@ -116,18 +131,19 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         render() {
             if (this.props.error) {
                 return <div>Error: {this.props.error.message}</div>;
+
             } else {
                 return(
                     <div className='FeatureSelect'>
-                        <h4>Selected features:</h4>
+                        <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
                         <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
-                            <QueryLine
+                            <QueryExpression
                                 filterFeatures={this.props.filterFeaturesHistory.last()}
                                 handleRemoveFilter={this.handleRemoveFilter} />
                         </div>
                         <div style={{display: 'flex', alignItems: 'stretch'}}>
                             <div className='CategoryDetail' style={{marginRight: '5em'}}>
-                                <h4>Part of speech:</h4>
+                                <h4>{ut.translate('taghelper__part_of_speech_label')}:</h4>
                                 <CategoryDetail
                                     onChangeHandler={(event) => this.handleCheckboxChange(event)}
                                     filterFeatures={this.props.filterFeaturesHistory.last()}
@@ -136,7 +152,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                                     availableValues={this.props.availableFeatures.get("POS", Immutable.List([]))} />
                             </div>
                             <div>
-                                <h4>Features:</h4>
+                                <h4>{ut.translate('taghelper__features_label')}:</h4>
                                 <div style={{display: 'flex', alignItems: 'flex-start'}}>
                                     <div className='CategorySelect' style={{marginRight: '2em'}}>
                                         <CategorySelect
