@@ -170,9 +170,8 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
-                if (state.filterFeaturesHistory.size > 0) {
-                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+                if (state.filterFeaturesHistory.size === 1) {
+                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
                 }
             break;
 
@@ -194,6 +193,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone:string, useFilter:boolean) {
     const baseArgs:Array<[string, string]> = [['corpname', state.corpname], ['tagset', state.tagsetName]];
     const queryArgs:Array<[string, string]> = state.filterFeaturesHistory.last().map(x => x.getKeyval()).toArray();
+
     pluginApi.ajax$(
         'GET',
         pluginApi.createActionUrl(

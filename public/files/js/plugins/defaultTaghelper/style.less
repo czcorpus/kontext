@@ -88,6 +88,9 @@ ul.defaultTaghelper_PositionList {
     }
 } // ul.defaultTaghelper_PositionList
 
+.tag-builder-widget {
+    min-width: 25em;
+}
 
 .tag-builder-widget h3 {
     display: inline-block;
@@ -100,8 +103,14 @@ ul.defaultTaghelper_PositionList {
     padding-left: 1em;
 }
 
-.tag-builder-widget .buttons {
+.tag-builder-widget .flex {
     padding-top: 1em;
+    display: flex;
+    align-items: center;
+
+    *:last-child {
+        margin-left: auto;
+    }
 }
 
 #tag-builder-modal > button {
