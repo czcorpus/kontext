@@ -147,8 +147,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             },
             [ActionName.ToggleStructure]: (state, action) => {
                 const newState = this.copyState(state);
-                this.toggleStructure(newState, action.payload['structIdent'],
-                    action.payload['structAttrIdent']);
+                this.toggleStructure(newState, action.payload['structIdent'], action.payload['structAttrIdent']);
                 return newState;
             },
             [ActionName.ToggleAllStructures]: (state, action) => {
@@ -163,7 +162,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             },
             [ActionName.ToggleReference]: (state, action) => {
                 const newState = this.copyState(state);
-                this.toggleReference(newState, action.payload['refAttrIdent']);
+                this.toggleReference(newState, action.payload['refIdent'], action.payload['refAttrIdent']);
                 return newState;
             },
             [ActionName.ToogleAllReferenceAttrs]: (state, action) => {
@@ -361,16 +360,17 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private toggleAllReferenceAttrs(state:CorpusViewOptionsModelState, categoryIdent:string):void {
-        let categoryRef = state.refList.find(item => item.n===categoryIdent);
-        const index = state.refList.indexOf(categoryRef);
-        categoryRef.selectAllAttrs = !categoryRef.selectAllAttrs;
-        state.refList = state.refList.set(index, categoryRef);
+        let reference = state.refList.find(item => item.n===categoryIdent);
+        const index = state.refList.indexOf(reference);
+        reference.selectAllAttrs = !reference.selectAllAttrs;
+        reference.selected = reference.selectAllAttrs;
+        state.refList = state.refList.set(index, reference);
 
         state.refAttrs = state.refAttrs.set(categoryIdent, state.refAttrs.get(categoryIdent).map(value => {
             return {
                 n: value.n,
                 label: value.label,
-                selected: categoryRef.selectAllAttrs,
+                selected: reference.selectAllAttrs,
             }
         }).toList());
         state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
@@ -383,7 +383,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 label: item.label,
                 n: item.n,
                 selectAllAttrs: state.selectAllRef,
-                selected: false,
+                selected: state.selectAllRef,
                 locked: false,
             }
         }).toList();
@@ -396,27 +396,36 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         }).toList()).toMap();
     }
 
-    private toggleReference(state:CorpusViewOptionsModelState,refIdent: string):void {
-        const categoryIdent = refIdent.split('.')[0];
-        const categoryItems = state.refAttrs.get(categoryIdent);
-        state.refAttrs = state.refAttrs.set(categoryIdent, categoryItems.map(item =>
-            item.n === refIdent ?
-                {
-                    label: item.label,
-                    n: item.n,
-                    selected: !item.selected
-                } :
-                item
-        ).toList());
-        state.refList = state.refList.map(item => {
-            return {
-                label: item.label,
-                n: item.n,
-                selectAllAttrs: state.refAttrs.get(item.n).every(value => value.selected),
-                selected: false,
-                locked: false,
+    private toggleReference(state:CorpusViewOptionsModelState, refIdent:string, refAttrIdent:string):void {
+        const refAttrs = state.refAttrs.get(refIdent);
+        const reference = state.refList.find(value => value.n===refIdent);
+        const index = state.refList.indexOf(reference);
+        if (refAttrIdent===null) {
+            reference.selected = !reference.selected;
+            if (!reference.selected) {
+                reference.selectAllAttrs = false;
+                state.refAttrs = state.refAttrs.set(refIdent, refAttrs.map(item => {
+                    return {
+                        n: item.n,
+                        selected: false,
+                        label: item.label,
+                    }
+                }).toList());
             }
-        }).toList();
+        } else {
+            state.refAttrs = state.refAttrs.set(refIdent, refAttrs.map(item =>
+                item.n === refAttrIdent ?
+                    {
+                        label: item.label,
+                        n: item.n,
+                        selected: !item.selected
+                    } :
+                    item
+            ).toList());
+            reference.selected = state.refAttrs.get(refIdent).some(value => value.selected);
+            reference.selectAllAttrs = state.refAttrs.get(refIdent).every(value => value.selected);
+        }
+        state.refList.set(index, reference);
         state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
     }
 
@@ -575,7 +584,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 }))
         );
 
-        state.refAttrs = Immutable.List(data.AvailRefs).groupBy(value => value.n.split('.')[0]).map(item => item.map(value => {
+        state.refAttrs = Immutable.List(data.AvailRefs).groupBy(value => value.n.split('.')[0].replace('=', '')).map(item => item.map(value => {
             return {
                 n: value.n,
                 label: value.label,
@@ -588,7 +597,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 label: value,
                 n: value,
                 selectAllAttrs: state.refAttrs.get(value).every(value => value.selected),
-                selected: false,
+                selected: state.refAttrs.get(value).some(value => value.selected),
                 locked: false,
             }
         }).toList();

@@ -247,16 +247,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAll:boolean;
     }> = (props) => {
 
-        const handleSelectCategory = (event) => {
-            dispatcher.dispatch({
-                name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-                payload: {
-                    structIdent: event.target.value,
-                    structAttrIdent: null
-                }
-            });
-        };
-
         const handleSelect = (structIdent) => {
             return (structAttrIdent) => {
                 dispatcher.dispatch({
@@ -269,10 +259,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
             };
         };
 
-        const handleSelectAll = (evt) => {
+        const handleSelectCategory = (event) => {
             dispatcher.dispatch({
-                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
-                payload: {}
+                name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+                payload: {
+                    structIdent: event.target.value,
+                    structAttrIdent: null
+                }
             });
         };
 
@@ -280,6 +273,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
                 payload: {structIdent: structIdent}
+            });
+        };
+
+        const handleSelectAll = (evt) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
+                payload: {}
             });
         };
 
@@ -325,17 +325,23 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAll:boolean;
     }> = (props) => {
 
-        const handleSelectAll = (evt) => {
+        const handleSelect = (refIdent) => (refAttrIdent:string) => {
             dispatcher.dispatch({
-                name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
-                payload: {}
+                name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                payload: {
+                    refIdent: refIdent,
+                    refAttrIdent: refAttrIdent
+                }
             });
         };
 
-        const handleSelect = (refAttrIdent:string) => {
+        const handleSelectCategory = (event) => {
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-                payload: {refAttrIdent: refAttrIdent}
+                payload: {
+                    refIdent: event.target.value,
+                    refAttrIdent: null
+                }
             });
         };
 
@@ -346,16 +352,28 @@ export function init({dispatcher, helpers, viewOptionsModel,
             });
         };
 
+        const handleSelectAll = (evt) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
+                payload: {}
+            });
+        };
+
         return (
             <section>
                 <div className="struct-groups checkbox-area">                
                     {props.availRefs.map(item => 
                         <div key={item.n} className="group">
+                            <label className="struct">
+                                <input type="checkbox" name="setrefs" value={item.n}
+                                        checked={item.selected} onChange={handleSelectCategory} />
+                                {'<' + item.n + '>'}
+                            </label>
                             <AttrList
                                 ident={item.n}
                                 items={props.refAttrs.get(item.n)}
                                 hasSelectAll={item.selectAllAttrs}
-                                handleClick={handleSelect}
+                                handleClick={handleSelect(item.n)}
                                 handleAllClick={handleSelectCategoryAll} />
                         </div>
                     )}
