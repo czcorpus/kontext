@@ -648,7 +648,7 @@ export namespace ViewOptions {
         selected: boolean;
     }
 
-    export interface RefsCategory {
+    export interface RefDesc {
         label: string;
         n: string;
         selected: boolean;
@@ -656,7 +656,7 @@ export namespace ViewOptions {
         selectAllAttrs: boolean;
     }
 
-    export interface RefsDesc {
+    export interface RefAttrDesc {
         n: string;
         label: string;
         selected: boolean;

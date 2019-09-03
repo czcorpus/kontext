@@ -212,7 +212,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
      const AttrList:React.SFC<{
         ident:string;
-        items:Immutable.List<ViewOptions.StructAttrDesc|ViewOptions.RefsDesc>;
+        items:Immutable.List<ViewOptions.StructAttrDesc|ViewOptions.RefAttrDesc>;
         hasSelectAll:boolean;
         handleClick:(v:string)=>void;
         handleAllClick:(v:string)=>void;
@@ -247,7 +247,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAll:boolean;
     }> = (props) => {
 
-        const handleStructClick = (event) => {
+        const handleSelectCategory = (event) => {
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
                 payload: {
@@ -257,13 +257,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
             });
         };
 
-        const handleStructAttrClickFn = (structIdent) => {
-            return (attrIdent) => {
+        const handleSelect = (structIdent) => {
+            return (structAttrIdent) => {
                 dispatcher.dispatch({
                     name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
                     payload: {
                         structIdent: structIdent,
-                        structAttrIdent: attrIdent
+                        structAttrIdent: structAttrIdent
                     }
                 });
             };
@@ -276,7 +276,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
             });
         };
 
-        const handleSelectCategory = (structIdent) => {
+        const handleSelectCategoryAll = (structIdent) => {
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
                 payload: {structIdent: structIdent}
@@ -298,14 +298,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         <div key={item.n} className="group">
                             <label className="struct">
                                 <input type="checkbox" name="setstructs" value={item.n}
-                                        checked={item.selected} onChange={handleStructClick} />
+                                        checked={item.selected} onChange={handleSelectCategory} />
                                 {'<' + item.n + '>'}
                             </label>
                             <AttrList
                                 ident={item.n}
                                 items={props.structAttrs.get(item.n) || Immutable.List()}
-                                handleClick={handleStructAttrClickFn(item.n)}
-                                handleAllClick={handleSelectCategory}
+                                handleClick={handleSelect(item.n)}
+                                handleAllClick={handleSelectCategoryAll}
                                 hasSelectAll={item.selectAllAttrs} />
                         </div>
                     ))}
@@ -320,43 +320,43 @@ export function init({dispatcher, helpers, viewOptionsModel,
     // ---------------------------- <ConcLineRefCheckboxes /> ----------------------
 
     const ConcLineRefCheckboxes:React.SFC<{
-        refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefsDesc>>;
-        refList:Immutable.List<ViewOptions.RefsCategory>;
+        availRefs:Immutable.List<ViewOptions.RefDesc>;
+        refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
         hasSelectAll:boolean;
     }> = (props) => {
 
-        const handleSelectAll = () => {
+        const handleSelectAll = (evt) => {
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
                 payload: {}
             });
         };
 
-        const handleSelect = (refIdent:string) => {
+        const handleSelect = (refAttrIdent:string) => {
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-                payload: {refIdent: refIdent}
+                payload: {refAttrIdent: refAttrIdent}
             });
         };
 
-        const handleSelectCategory = (categoryIdent:string) => {
+        const handleSelectCategoryAll = (refIdent:string) => {
             dispatcher.dispatch({
                 name: 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
-                payload: {categoryIdent: categoryIdent}
+                payload: {refIdent: refIdent}
             });
         };
 
         return (
             <section>
                 <div className="struct-groups checkbox-area">                
-                    {props.refList.map(item => 
+                    {props.availRefs.map(item => 
                         <div key={item.n} className="group">
                             <AttrList
                                 ident={item.n}
                                 items={props.refAttrs.get(item.n)}
                                 hasSelectAll={item.selectAllAttrs}
                                 handleClick={handleSelect}
-                                handleAllClick={handleSelectCategory} />
+                                handleAllClick={handleSelectCategoryAll} />
                         </div>
                     )}
                 </div>
@@ -419,9 +419,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
         attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
         hasSelectAllStruct:boolean;
-        availRefs:Immutable.Map<string, Immutable.List<ViewOptions.RefsDesc>>;
-        refList:Immutable.List<ViewOptions.RefsCategory>;
-        TehasSelectAllRefs:boolean;
+        availRefs:Immutable.List<ViewOptions.RefDesc>;
+        refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
+        hasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
         lockedPosAttrNotSelected:boolean;
@@ -461,9 +461,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     corpusUsesRTLText={props.corpusUsesRTLText} /> :
                             state === 'metainformation' ?
                                 <ConcLineRefCheckboxes
-                                    refAttrs={props.availRefs}
-                                    refList={props.refList}
-                                    hasSelectAll={props.TehasSelectAllRefs} /> :
+                                    availRefs={props.availRefs}
+                                    refAttrs={props.refAttrs}
+                                    hasSelectAll={props.hasSelectAllRefs} /> :
                                 null
                         }
 
@@ -499,13 +499,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <StructsAndAttrsForm
                         fixedAttr={props.fixedAttr}
                         attrList={props.attrList}
+                        hasSelectAllAttrs={props.selectAllAttrs}
                         availStructs={props.structList}
                         structAttrs={props.structAttrs}
                         hasSelectAllStruct={props.selectAllStruct}
-                        availRefs={props.referenceAttrs}
-                        refList={props.referenceCategories}
-                        hasSelectAllAttrs={props.selectAllAttrs}
-                        TehasSelectAllRefs={props.selectAllReferences}
+                        availRefs={props.refList}
+                        refAttrs={props.refAttrs}
+                        hasSelectAllRefs={props.selectAllRef}
                         hasLoadedData={props.hasLoadedData}
                         attrsVmode={props.extendedVmode}
                         showConcToolbar={props.showConcToolbar}
