@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, ViewOptions} from '../../types/common';
+import { Kontext, ViewOptions } from '../../types/common';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../app/main';
+import { PageModel } from '../../app/main';
 import { MultiDict } from '../../util';
 import { Action, IFullActionControl, StatelessModel, SEDispatcher } from 'kombo';
 import { tap } from 'rxjs/operators';
@@ -46,23 +46,24 @@ export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.Attr
 
 export interface CorpusViewOptionsModelState {
 
-    attrList:Immutable.List<ViewOptions.AttrDesc>;
-    selectAllAttrs:boolean;
-    structList:Immutable.List<ViewOptions.StructDesc>;
-    structAttrs:ViewOptions.AvailStructAttrs;
-    selectAllStruct:boolean,
-    fixedAttr:string|null;
-    showConcToolbar:boolean;
-    referenceList:Immutable.List<ViewOptions.RefsDesc>;
-    selectAllReferences:boolean;
-    hasLoadedData:boolean;
-    attrVmode:string;
-    extendedVmode:ViewOptions.AttrViewMode;
-    attrAllpos:string; // kw/all
-    isBusy:boolean;
-    userIsAnonymous:boolean;
-    corpusIdent:Kontext.FullCorpusIdent;
-    corpusUsesRTLText:boolean;
+    attrList: Immutable.List<ViewOptions.AttrDesc>;
+    selectAllAttrs: boolean;
+    structList: Immutable.List<ViewOptions.StructDesc>;
+    structAttrs: ViewOptions.AvailStructAttrs;
+    selectAllStruct: boolean,
+    fixedAttr: string | null;
+    showConcToolbar: boolean;
+    referenceCategories: Immutable.List<ViewOptions.RefsCategory>;
+    referenceAttrs: Immutable.Map<string, Immutable.List<ViewOptions.RefsDesc>>;
+    selectAllReferences: boolean;
+    hasLoadedData: boolean;
+    attrVmode: string;
+    extendedVmode: ViewOptions.AttrViewMode;
+    attrAllpos: string; // kw/all
+    isBusy: boolean;
+    userIsAnonymous: boolean;
+    corpusIdent: Kontext.FullCorpusIdent;
+    corpusUsesRTLText: boolean;
 }
 
 
@@ -76,6 +77,7 @@ export enum ActionName {
     ToggleAllStructures = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
     ToggleAllStructureAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
     ToggleReference = 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+    ToogleAllReferenceAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
     ToggleAllReferences = 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
     SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
     SaveSettingsDone = 'VIEW_OPTIONS_SAVE_SETTINGS_DONE'
@@ -100,7 +102,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 selectAllStruct: false,
                 fixedAttr: null,
                 showConcToolbar: false,
-                referenceList: Immutable.List<ViewOptions.RefsDesc>(),
+                referenceCategories: Immutable.List<ViewOptions.StructDesc>(),
+                referenceAttrs: Immutable.Map<string, Immutable.List<ViewOptions.RefsDesc>>(),
                 selectAllReferences: false,
                 hasLoadedData: false,
                 attrVmode: 'mixed',
@@ -160,7 +163,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             },
             [ActionName.ToggleReference]: (state, action) => {
                 const newState = this.copyState(state);
-                this.toggleReference(newState, action.payload['idx']);
+                this.toggleReference(newState, action.payload['refIdent']);
+                return newState;
+            },
+            [ActionName.ToogleAllReferenceAttrs]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllReferenceAttrs(newState, action.payload['categoryIdent']);
                 return newState;
             },
             [ActionName.ToggleAllReferences]: (state, action) => {
@@ -245,7 +253,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                             .valueSeq()
                             .flatMap(x => x)
                             .toArray(),
-            setrefs: state.referenceList.filter(item => item.selected).map(item => item.n).toArray(),
+                            setrefs: state.referenceAttrs.valueSeq().reduce((acc, val) => acc = [...acc, ...val.filter(item => item.selected).toArray()], []).map(item => item.n),
             setattr_allpos: state.attrAllpos,
             setattr_vmode: state.attrVmode
         };
@@ -352,25 +360,64 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.selectAllStruct = this.hasSelectedAllStructs(state);
     }
 
-    private toggleAllReferences(state:CorpusViewOptionsModelState):void {
-        state.selectAllReferences = !state.selectAllReferences;
-        state.referenceList = state.referenceList.map(item => {
+    private toggleAllReferenceAttrs(state:CorpusViewOptionsModelState, categoryIdent:string):void {
+        let categoryRef = state.referenceCategories.find(item => item.n===categoryIdent);
+        const index = state.referenceCategories.indexOf(categoryRef);
+        categoryRef.selectAllAttrs = !categoryRef.selectAllAttrs;
+        state.referenceCategories = state.referenceCategories.set(index, categoryRef);
+
+        state.referenceAttrs = state.referenceAttrs.set(categoryIdent, state.referenceAttrs.get(categoryIdent).map(value => {
             return {
-                n: item.n,
-                label: item.label,
-                selected: state.selectAllReferences
+                n: value.n,
+                label: value.label,
+                selected: categoryRef.selectAllAttrs,
             }
-        }).toList();
+        }).toList());
+        state.selectAllReferences = state.referenceCategories.every(item => item.selectAllAttrs);
     }
 
-    private toggleReference(state:CorpusViewOptionsModelState, idx:number):void {
-        const currItem = state.referenceList.get(idx);
-        state.referenceList = state.referenceList.set(idx, {
-            label: currItem.label,
-            n: currItem.n,
-            selected: !currItem.selected
-        });
-        state.selectAllReferences = state.referenceList.every(ref => ref.selected);
+    private toggleAllReferences(state:CorpusViewOptionsModelState):void {
+        state.selectAllReferences = !state.selectAllReferences;
+        state.referenceCategories = state.referenceCategories.map(item => {
+            return {
+                label: item.label,
+                n: item.n,
+                selectAllAttrs: state.selectAllReferences,
+                selected: false,
+                locked: false,
+            }
+        }).toList();
+        state.referenceAttrs = state.referenceAttrs.map(item => item.map(value => {
+            return {
+                n: value.n,
+                label: value.label,
+                selected: state.selectAllReferences
+            }
+        }).toList()).toMap();
+    }
+
+    private toggleReference(state:CorpusViewOptionsModelState,refIdent: string):void {
+        const categoryIdent = refIdent.split('.')[0];
+        const categoryItems = state.referenceAttrs.get(categoryIdent);
+        state.referenceAttrs = state.referenceAttrs.set(categoryIdent, categoryItems.map(item =>
+            item.n === refIdent ?
+                {
+                    label: item.label,
+                    n: item.n,
+                    selected: !item.selected
+                } :
+                item
+        ).toList());
+        state.referenceCategories = state.referenceCategories.map(item => {
+            return {
+                label: item.label,
+                n: item.n,
+                selectAllAttrs: state.referenceAttrs.get(item.n).every(value => value.selected),
+                selected: false,
+                locked: false,
+            }
+        }).toList();
+        state.selectAllReferences = state.referenceCategories.every(item => item.selectAllAttrs);
     }
 
     private toggleAttribute(state:CorpusViewOptionsModelState, idx:number):void {
@@ -411,13 +458,13 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     private clearStructAttrSelection(state:CorpusViewOptionsModelState, structIdent:string):void {
         if (state.structAttrs.has(structIdent)) {
             state.structAttrs = state.structAttrs.set(
-                    structIdent,
-                    state.structAttrs.get(structIdent).map(item => {
-                        return {
-                            n: item.n,
-                            selected: false
-                        };
-                    }).toList()
+                structIdent,
+                state.structAttrs.get(structIdent).map(item => {
+                    return {
+                        n: item.n,
+                        selected: false
+                    };
+                }).toList()
             );
         }
     }
@@ -505,15 +552,15 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         }));
         state.structAttrs = Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(
             Object.keys(data.StructAttrs).map(key => {
-                    return [
-                        key,
-                        Immutable.List(data.StructAttrs[key].map(structAttr => {
-                            return {
-                                n: structAttr,
-                                selected: data.CurrStructAttrs.indexOf(key + '.' + structAttr) > -1 ? true : false
-                            };
-                        }))
-                    ];
+                return [
+                    key,
+                    Immutable.List(data.StructAttrs[key].map(structAttr => {
+                        return {
+                            n: structAttr,
+                            selected: data.CurrStructAttrs.indexOf(key + '.' + structAttr) > -1 ? true : false
+                        };
+                    }))
+                ];
             })
         );
         state.structList = Immutable.List(
@@ -528,13 +575,26 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 }))
         );
 
-        state.referenceList = Immutable.List<ViewOptions.RefsDesc>(data.AvailRefs.map(item => {
+        state.referenceAttrs = Immutable.List(data.AvailRefs).groupBy(value => value.n.split('.')[0]).map(item => item.map(value => {
             return {
-                n: item.n,
-                label: item.label,
-                selected: item.sel === 'selected' ? true : false
+                n: value.n,
+                label: value.label,
+                selected: value.sel === 'selected' ? true : false
             };
-        }));
+        }).toList()).toMap();
+
+        state.referenceCategories = state.referenceAttrs.keySeq().map(value => {
+            return {
+                label: value,
+                n: value,
+                selectAllAttrs: state.referenceAttrs.get(value).every(value => value.selected),
+                selected: false,
+                locked: false,
+            }
+        }).toList();
+ 
+        state.selectAllReferences = state.referenceCategories.every(item => item.selectAllAttrs);
+
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
         state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);

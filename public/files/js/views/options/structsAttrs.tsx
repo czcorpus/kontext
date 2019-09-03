@@ -319,46 +319,54 @@ export function init({dispatcher, helpers, viewOptionsModel,
         );
     };
 
+    // ---------------------------- <RefAttrList /> ----------------------
 
-    // ---------------------------- <LiReferenceItem /> ----------------------
-
-    const LiReferenceItem:React.SFC<{
-        n:string;
-        label:string;
-        isSelected:boolean;
-        onChange:(evt:React.ChangeEvent<{}>)=>void;
-
+    const RefAttrList:React.SFC<{
+        category:string;
+        items:Immutable.List<ViewOptions.RefsDesc>;
+        hasSelectAll:boolean;
     }> = (props) => {
+
+        const checkboxHandlerFn = (refIdent:string) => () => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                payload: {refIdent: refIdent}
+            });
+        };
+
+        const handleSelectAll = (categoryIdent) => () => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
+                payload: {categoryIdent: categoryIdent}
+            });
+        };
+
         return (
-            <li>
-                <label>
-                    <input type="checkbox" name="setrefs" value={props.n}
-                            checked={props.isSelected} onChange={props.onChange} />
-                    {props.label}
-                </label>
-            </li>
+            <div>
+                <ul>
+                    {props.items.map((item, i) => {
+                        return (
+                            <li key={i}>
+                                <label>
+                                    <input type="checkbox" name="setrefs" checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
+                                    {item.label}
+                                </label>
+                            </li>
+                        );
+                    })}
+                </ul>
+                <SelectAll onChange={handleSelectAll(props.category)} isSelected={props.hasSelectAll} />
+            </div>
         );
     };
-
 
     // ---------------------------- <ConcLineRefCheckboxes /> ----------------------
 
     const ConcLineRefCheckboxes:React.SFC<{
-        availRefs:Immutable.List<ViewOptions.RefsDesc>;
+        refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefsDesc>>;
+        refList:Immutable.List<ViewOptions.RefsCategory>;
         hasSelectAll:boolean;
-
     }> = (props) => {
-
-        const handleCheckboxChangeFn = (idx) => {
-            return (evt:React.ChangeEvent<{}>) => {
-                dispatcher.dispatch({
-                    name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-                    payload: {
-                        idx: idx
-                    }
-                });
-            };
-        };
 
         const handleSelectAll = (evt) => {
             dispatcher.dispatch({
@@ -368,19 +376,20 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
         return (
-            <div className="ConcLineRefCheckboxes checkbox-area">
-                <ul>
-                    {props.availRefs.map((item, i) => {
-                        return <LiReferenceItem
-                                    key={item.n}
-                                    n={item.n}
-                                    label={item.label}
-                                    isSelected={item.selected}
-                                    onChange={handleCheckboxChangeFn(i)} />;
-                    })}
-                </ul>
-                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
-            </div>
+            <section>
+                <div className="struct-groups checkbox-area">                
+                    {props.refList.map(item => 
+                        <div key={item.n} className="group">
+                            <RefAttrList category={item.n}
+                                    items={props.refAttrs.get(item.n)}
+                                    hasSelectAll={item.selectAllAttrs} />
+                        </div>
+                    )}
+                </div>
+                <div className="select-all-structs-and-groups">
+                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                </div>
+            </section>
         );
     };
 
@@ -430,13 +439,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasLoadedData:boolean;
         fixedAttr:string;
         attrList:Immutable.List<ViewOptions.AttrDesc>;
-        availStructs: Immutable.List<ViewOptions.StructDesc>;
+        availStructs:Immutable.List<ViewOptions.StructDesc>;
         hasSelectAllAttrs:boolean;
         showConcToolbar:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
         hasSelectAllStruct:boolean;
-        availRefs:Immutable.List<ViewOptions.RefsDesc>;
+        availRefs:Immutable.Map<string, Immutable.List<ViewOptions.RefsDesc>>;
+        refList:Immutable.List<ViewOptions.RefsCategory>;
         TehasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
@@ -477,7 +487,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     corpusUsesRTLText={props.corpusUsesRTLText} /> :
                             state === 'metainformation' ?
                                 <ConcLineRefCheckboxes
-                                    availRefs={props.availRefs}
+                                    refAttrs={props.availRefs}
+                                    refList={props.refList}
                                     hasSelectAll={props.TehasSelectAllRefs} /> :
                                 null
                         }
@@ -517,7 +528,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         availStructs={props.structList}
                         structAttrs={props.structAttrs}
                         hasSelectAllStruct={props.selectAllStruct}
-                        availRefs={props.referenceList}
+                        availRefs={props.referenceAttrs}
+                        refList={props.referenceCategories}
                         hasSelectAllAttrs={props.selectAllAttrs}
                         TehasSelectAllRefs={props.selectAllReferences}
                         hasLoadedData={props.hasLoadedData}
