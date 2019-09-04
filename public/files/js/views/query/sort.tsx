@@ -579,24 +579,6 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
     }
 
-    // -------------------------- <SortFormSelector /> -------------------------
-
-    const SortFormSelector:React.SFC<{
-        formType:string;
-        onChange:(val:string)=>void;
-
-    }> = (props) => {
-
-        const items = Immutable.List([
-            {id: 'sortx', label: he.translate('query__sort_type_simple_hd')},
-            {id: 'mlsortx', label: he.translate('query__sort_type_multilevel_hd')},
-        ])
-        return <layoutViews.TabMenu
-            className="SortFormSelector"
-            callback={props.onChange}
-            items={items} />;
-    };
-
     // -------------------------- <SortForm /> ---------------------------------
 
     class SortForm extends React.Component<SortFormProps, SortFormState> {
@@ -652,24 +634,20 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
             }
         }
 
-        _renderFields() {
-            switch (this.state.sortType) {
-                case 'sortx':
-                    return <SimpleSortForm sortId={this.props.sortId} />;
-                case 'mlsortx':
-                    return <MultiLevelSortForm sortId={this.props.sortId} />;
-                default:
-                    throw new Error('Unknown sort form type: ' + this.state.sortType);
-            }
-        }
-
         render() {
+            const items = Immutable.List([
+                {id: 'sortx', label: he.translate('query__sort_type_simple_hd'), view: <SimpleSortForm sortId={this.props.sortId} />},
+                {id: 'mlsortx', label: he.translate('query__sort_type_multilevel_hd'), view: <MultiLevelSortForm sortId={this.props.sortId} />},
+            ])
+
             return (
                 <div>
                     <form>
-                        <SortFormSelector formType={this.state.sortType} onChange={this._handleSortTypeChange} />
-                        <hr />
-                        {this._renderFields()}
+                        <layoutViews.TabMenu
+                            className="SortFormSelector"
+                            defaultId={this.state.sortType}
+                            callback={this._handleSortTypeChange}
+                            items={items} />;
                         <p>
                             <button type="button" className="default-button"
                                     onClick={this._handleFormSubmit}>

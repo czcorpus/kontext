@@ -196,32 +196,31 @@ export function init(
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
-        const [activeView, setActiveView] = React.useState(views.keySeq().first());
-        const TagBuilderBound = AvailableTagBuilderBound.get(activeView);
-
         const handleTabSelection = (value:string) => {
             dispatcher.dispatch({
                 name: 'TAGHELPER_SET_ACTIVE_TAG',
                 payload: {value: value}
             });
-            setActiveView(value);
         };
 
-        const tagsetTabs = views.keySeq().map((tagset) => ({id: tagset, label: tagset})).toList();
-        return (
-            <div>
-                <h3>{he.translate('taghelper__create_tag_heading')}</h3>
-                {tagsetTabs.size > 1 ?
-                    <layoutViews.TabMenu className="TagsetFormSelector" callback={handleTabSelection} items={tagsetTabs} /> :
-                    null
-                }
-                <TagBuilderBound
-                    activeView={views.get(activeView)}
+        const tagsetTabs = views.entrySeq().map(tagset => {
+            const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
+            return {
+                id: tagset[0],
+                label: tagset[0],
+                view: <TagBuilderBound
+                    activeView={tagset[1]}
                     sourceId={props.sourceId}
                     actionPrefix={props.actionPrefix}
                     range={props.range}
                     onInsert={props.onInsert}
-                    onEscKey={props.onEscKey} />
+                    onEscKey={props.onEscKey} />}
+        }).toList();
+
+        return (
+            <div>
+                <h3>{he.translate('taghelper__create_tag_heading')}</h3>
+                <layoutViews.TabMenu className="TagsetFormSelector" callback={handleTabSelection} items={tagsetTabs} />
             </div>
         );
     }

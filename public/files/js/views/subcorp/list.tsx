@@ -495,38 +495,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------------------ <ActionMenu /> --------------------------
-
-    const ActionMenu:React.SFC<{
-        hasCQLBackup:boolean;
-        isDeletedCorp:boolean;
-        activeTab:string;
-        onSelect:(action:string)=>void;
-
-    }> = (props) => {
-
-        const mkClass = (action) => `util-button${action === props.activeTab ? ' active' : ''}`;
-        
-        let items = Immutable.List([]);
-        if (!props.isDeletedCorp) {
-            items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')})
-        }
-        if (props.hasCQLBackup) {
-            items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
-        }
-        if (props.hasCQLBackup && props.isDeletedCorp) {
-            items = items.push(
-                {id: 'restore', label: he.translate('subclist__action_restore')},
-                {id: 'wipe', label: he.translate('subclist__action_wipe')}
-            )
-        }
-
-        return <layoutViews.TabMenu
-            className="ActionMenu"
-            callback={props.onSelect}
-            items={items} />;
-    };
-
     // ------------------------ <PublishSubmitButton /> --------------------------
 
     const PublishSubmitButton:React.SFC<{
@@ -637,22 +605,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        _renderTab() {
-            switch (this.props.action) {
-                case 'restore':
-                    return <FormActionRestore idx={this.props.idx}  />;
-                case 'reuse':
-                    return <FormActionReuse idx={this.props.idx} data={this.props.data} />;
-                case 'wipe':
-                    return <FormActionWipe idx={this.props.idx} />;
-                case 'pub':
-                    return <PublishingTab published={this.props.data.published}
-                                    description={this.props.data.description}
-                                    rowIdx={this.props.idx} />;
-            }
-        }
-
         render() {
+            let items = Immutable.List([]);
+            if (!this.props.data.deleted) {
+                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn'), view: <PublishingTab published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />})
+            }
+            if (!!this.props.data.cql) {
+                items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse'), view: <FormActionReuse idx={this.props.idx} data={this.props.data} />})
+            }
+            if (!!this.props.data.cql && this.props.data.deleted) {
+                items = items.push(
+                    {id: 'restore', label: he.translate('subclist__action_restore'), view: <FormActionRestore idx={this.props.idx}  />},
+                    {id: 'wipe', label: he.translate('subclist__action_wipe'), view: <FormActionWipe idx={this.props.idx} />}
+                )
+            }
+
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
                     <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
@@ -660,14 +627,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             autoWidth={CoreViews.AutoWidth.WIDE}
                             label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
                         <div>
-                            <ActionMenu hasCQLBackup={!!this.props.data.cql}
-                                    isDeletedCorp={this.props.data.deleted}
-                                    activeTab={this.props.action}
-                                    onSelect={this.handleActionSelect} />
+                            <layoutViews.TabMenu
+                                className="ActionMenu"
+                                callback={this.handleActionSelect}
+                                items={items} />
                             <div className="loader-wrapper">
                                 {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
                             </div>
-                            {this._renderTab()}
                         </div>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>

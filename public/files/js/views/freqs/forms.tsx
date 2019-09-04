@@ -593,29 +593,6 @@ export function init(
         }
     }
 
-
-    // ---------------------- <FreqFormSelector /> ---------------------
-
-    interface FreqFormSelectorProps {
-        onChange:(ident:string)=>void;
-        formType:string;
-    }
-
-    const FreqFormSelector:React.SFC<FreqFormSelectorProps> = (props) => {
-
-        const items = Immutable.List([
-            {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
-            {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
-            {id: 'ct', label: he.translate('freq__sel_form_type_ct')},
-        ])
-
-        return <layoutViews.TabMenu
-            className="FreqFormSelector"
-            callback={props.onChange}
-            items={items} />
-    };
-
-
     // ---------------------- <FrequencyForm /> ---------------------
 
     class FrequencyForm extends React.Component<FrequencyFormProps, FrequencyFormState> {
@@ -645,26 +622,21 @@ export function init(
             });
         }
 
-        _renderContents() {
-            switch (this.state.formType) {
-                case 'ml':
-                    return <MLFreqForm />;
-                case 'tt':
-                    return <TTFreqForm />;
-                case 'ct':
-                    return <ctFreqForm.CTFreqForm />;
-                default:
-                     return null;
-            }
-        }
-
         render() {
+            const items = Immutable.List([
+                {id: 'ml', label: he.translate('freq__sel_form_type_ml'), view: <MLFreqForm />},
+                {id: 'tt', label: he.translate('freq__sel_form_type_tt'), view: <TTFreqForm />},
+                {id: 'ct', label: he.translate('freq__sel_form_type_ct'), view: <ctFreqForm.CTFreqForm />},
+            ])
+
             return (
                 <div className="FrequencyForm">
-                    <FreqFormSelector formType={this.state.formType} onChange={this._handleFormSwitch} />
-                    <hr />
                     <form className="freq-form">
-                        {this._renderContents()}
+                        <layoutViews.TabMenu
+                            className="FreqFormSelector"
+                            defaultId={this.state.formType}
+                            callback={this._handleFormSwitch}
+                            items={items} />
                         <div className="buttons">
                             <button className="default-button" type="button" onClick={this._handleSubmitClick}>
                                 {he.translate('freq__make_freq_list_btn')}

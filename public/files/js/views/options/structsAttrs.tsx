@@ -446,44 +446,40 @@ export function init({dispatcher, helpers, viewOptionsModel,
         corpusUsesRTLText:boolean;
 
     }> = (props) => {
-        const [state, setState] = React.useState('attributes');
-
-        const items = Immutable.List([
-            {id: 'attributes', label: helpers.translate('options__attributes_hd')},
-            {id: 'structures', label: helpers.translate('options__structures_hd')},
-            {id: 'metainformation', label: helpers.translate('options__references_hd')},
-        ])
-
         if (props.hasLoadedData) {
+            const items = Immutable.List([
+                {
+                    id: 'attributes',
+                    label: helpers.translate('options__attributes_hd'),
+                    view: <AttributesCheckboxes
+                        attrList={props.attrList}
+                        hasSelectAll={props.hasSelectAllAttrs}
+                        attrsVmode={props.attrsVmode}
+                        showConcToolbar={props.showConcToolbar}
+                        lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} /> },
+                {
+                    id: 'structures',
+                    label: helpers.translate('options__structures_hd'),
+                    view: <StructsAndAttrsCheckboxes
+                        availStructs={props.availStructs}
+                        structAttrs={props.structAttrs}
+                        hasSelectAll={props.hasSelectAllStruct}
+                        corpusUsesRTLText={props.corpusUsesRTLText} /> },
+                {
+                    id: 'references',
+                    label: helpers.translate('options__references_hd'),
+                    view: <ConcLineRefCheckboxes
+                        availRefs={props.availRefs}
+                        refAttrs={props.refAttrs}
+                        hasSelectAll={props.hasSelectAllRefs} /> }
+            ])
+
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
                         <layoutViews.TabMenu
                             className="FieldsetsTabs"
-                            callback={setState}
-                            items={items} />
-
-                        {
-                            state === 'attributes' ?
-                                <AttributesCheckboxes
-                                    attrList={props.attrList}
-                                    hasSelectAll={props.hasSelectAllAttrs}
-                                    attrsVmode={props.attrsVmode}
-                                    showConcToolbar={props.showConcToolbar}
-                                    lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} /> :
-                            state === 'structures' ?
-                                <StructsAndAttrsCheckboxes
-                                    availStructs={props.availStructs}
-                                    structAttrs={props.structAttrs}
-                                    hasSelectAll={props.hasSelectAllStruct}
-                                    corpusUsesRTLText={props.corpusUsesRTLText} /> :
-                            state === 'metainformation' ?
-                                <ConcLineRefCheckboxes
-                                    availRefs={props.availRefs}
-                                    refAttrs={props.refAttrs}
-                                    hasSelectAll={props.hasSelectAllRefs} /> :
-                                null
-                        }
+                            items={items}/>
 
                         {props.userIsAnonymous ?
                             <p className="warn">

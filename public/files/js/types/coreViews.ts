@@ -336,9 +336,10 @@ export namespace CoreViews {
     export namespace TabMenu {
 
         export interface Props {
-            callback:(activeId:string)=>void;
-            items:Immutable.List<{id:string, label:string}>;
+            items:Immutable.List<{id:string, label:string, view:any}>;
+            defaultId?:string;
             className?:string;
+            callback?:(id:string) => void;
         }
 
         export type Component = React.SFC<Props>;

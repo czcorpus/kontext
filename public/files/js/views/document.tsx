@@ -749,19 +749,29 @@ export function init(
     };
 
     const TabMenu:CoreViews.TabMenu.Component = (props) => {
-        const [activeTab, setActiveTab] = React.useState(props.items.first());
-        const tabs = props.items.map(item =>
-            <li key={item.id}>
-                <TabButton
-                    label={item.label}
-                    isActive={item.id === activeTab.id}
-                    onClick={() => {
-                        setActiveTab(item);
-                        props.callback(item.id);
-                    }}/>
-            </li>
-        );
-        return <div><ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul><hr /></div>;
+        if (props.items.size===1) {
+            return <div>{props.items.last().view}</div>
+        } else {
+            const [activeTab, setActiveTab] = React.useState(props.defaultId ? props.items.find(value => value.id===props.defaultId) : props.items.first());
+            const tabs = props.items.map(value =>
+                <li key={value.id}>
+                    <TabButton
+                        label={value.label}
+                        isActive={value.id === activeTab.id}
+                        onClick={() => {
+                            if (props.callback) {
+                                props.callback(value.id);
+                            }
+                            setActiveTab(value);
+                        }}/>
+                </li>
+            );
+            return <div>
+                <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
+                <hr />
+                {activeTab.view}
+            </div>;
+        }
     };
 
     // ------------------------------------------------------------------------------------
