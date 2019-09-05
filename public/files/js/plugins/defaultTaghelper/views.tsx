@@ -203,24 +203,34 @@ export function init(
             });
         };
 
-        const tagsetTabs = views.entrySeq().map(tagset => {
-            const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
+        const tagsetTabs = views.keySeq().map(tagset => {
             return {
-                id: tagset[0],
-                label: tagset[0],
-                view: <TagBuilderBound
-                    activeView={tagset[1]}
-                    sourceId={props.sourceId}
-                    actionPrefix={props.actionPrefix}
-                    range={props.range}
-                    onInsert={props.onInsert}
-                    onEscKey={props.onEscKey} />}
+                id: tagset,
+                label: tagset,}
         }).toList();
+
+        const children = views.entrySeq().map(tagset => {
+            const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
+            return <TagBuilderBound
+                key={tagset[0]}
+                activeView={tagset[1]}
+                sourceId={props.sourceId}
+                actionPrefix={props.actionPrefix}
+                range={props.range}
+                onInsert={props.onInsert}
+                onEscKey={props.onEscKey} />
+        });
 
         return (
             <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
-                <layoutViews.TabMenu className="TagsetFormSelector" callback={handleTabSelection} items={tagsetTabs} />
+                <layoutViews.TabMenu
+                    className="TagsetFormSelector"
+                    callback={handleTabSelection}
+                    items={tagsetTabs} >
+
+                    {children.toArray()}
+                </layoutViews.TabMenu>
             </div>
         );
     }

@@ -636,8 +636,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         render() {
             const items = Immutable.List([
-                {id: 'sortx', label: he.translate('query__sort_type_simple_hd'), view: <SimpleSortForm sortId={this.props.sortId} />},
-                {id: 'mlsortx', label: he.translate('query__sort_type_multilevel_hd'), view: <MultiLevelSortForm sortId={this.props.sortId} />},
+                {id: 'sortx', label: he.translate('query__sort_type_simple_hd')},
+                {id: 'mlsortx', label: he.translate('query__sort_type_multilevel_hd')},
             ])
 
             return (
@@ -647,7 +647,11 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                             className="SortFormSelector"
                             defaultId={this.state.sortType}
                             callback={this._handleSortTypeChange}
-                            items={items} />;
+                            items={items} >
+
+                            <SimpleSortForm sortId={this.props.sortId} />
+                            <MultiLevelSortForm sortId={this.props.sortId} />
+                        </layoutViews.TabMenu>
                         <p>
                             <button type="button" className="default-button"
                                     onClick={this._handleFormSubmit}>

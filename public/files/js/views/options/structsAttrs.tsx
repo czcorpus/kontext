@@ -450,28 +450,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
             const items = Immutable.List([
                 {
                     id: 'attributes',
-                    label: helpers.translate('options__attributes_hd'),
-                    view: <AttributesCheckboxes
-                        attrList={props.attrList}
-                        hasSelectAll={props.hasSelectAllAttrs}
-                        attrsVmode={props.attrsVmode}
-                        showConcToolbar={props.showConcToolbar}
-                        lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} /> },
+                    label: helpers.translate('options__attributes_hd'), },
                 {
                     id: 'structures',
-                    label: helpers.translate('options__structures_hd'),
-                    view: <StructsAndAttrsCheckboxes
-                        availStructs={props.availStructs}
-                        structAttrs={props.structAttrs}
-                        hasSelectAll={props.hasSelectAllStruct}
-                        corpusUsesRTLText={props.corpusUsesRTLText} /> },
+                    label: helpers.translate('options__structures_hd'), },
                 {
                     id: 'references',
-                    label: helpers.translate('options__references_hd'),
-                    view: <ConcLineRefCheckboxes
-                        availRefs={props.availRefs}
-                        refAttrs={props.refAttrs}
-                        hasSelectAll={props.hasSelectAllRefs} /> }
+                    label: helpers.translate('options__references_hd'), },
             ])
 
             return (
@@ -479,7 +464,26 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     <div>
                         <layoutViews.TabMenu
                             className="FieldsetsTabs"
-                            items={items}/>
+                            items={items}>
+                            
+                            <AttributesCheckboxes
+                                attrList={props.attrList}
+                                hasSelectAll={props.hasSelectAllAttrs}
+                                attrsVmode={props.attrsVmode}
+                                showConcToolbar={props.showConcToolbar}
+                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
+
+                            <StructsAndAttrsCheckboxes
+                                availStructs={props.availStructs}
+                                structAttrs={props.structAttrs}
+                                hasSelectAll={props.hasSelectAllStruct}
+                                corpusUsesRTLText={props.corpusUsesRTLText} />
+
+                            <ConcLineRefCheckboxes
+                                availRefs={props.availRefs}
+                                refAttrs={props.refAttrs}
+                                hasSelectAll={props.hasSelectAllRefs} />
+                        </layoutViews.TabMenu>
 
                         {props.userIsAnonymous ?
                             <p className="warn">

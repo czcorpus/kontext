@@ -336,7 +336,7 @@ export namespace CoreViews {
     export namespace TabMenu {
 
         export interface Props {
-            items:Immutable.List<{id:string, label:string, view:any}>;
+            items:Immutable.List<{id:string, label:string}>;
             defaultId?:string;
             className?:string;
             callback?:(id:string) => void;

@@ -750,9 +750,10 @@ export function init(
 
     const TabMenu:CoreViews.TabMenu.Component = (props) => {
         if (props.items.size===1) {
-            return <div>{props.items.last().view}</div>
+            return <div>{props.children[0]}</div>
         } else {
             const [activeTab, setActiveTab] = React.useState(props.defaultId ? props.items.find(value => value.id===props.defaultId) : props.items.first());
+            const activeIndex = props.items.findIndex(value => value.id === activeTab.id);
             const tabs = props.items.map(value =>
                 <li key={value.id}>
                     <TabButton
@@ -769,7 +770,7 @@ export function init(
             return <div>
                 <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
                 <hr />
-                {activeTab.view}
+                {props.children[activeIndex]}
             </div>;
         }
     };

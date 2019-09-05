@@ -607,17 +607,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             let items = Immutable.List([]);
+            let children = Immutable.List([]);
             if (!this.props.data.deleted) {
-                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn'), view: <PublishingTab published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />})
+                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')})
+                children.push(<PublishingTab published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
             }
             if (!!this.props.data.cql) {
-                items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse'), view: <FormActionReuse idx={this.props.idx} data={this.props.data} />})
+                items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
+                children.push(<FormActionReuse idx={this.props.idx} data={this.props.data} />);
             }
             if (!!this.props.data.cql && this.props.data.deleted) {
                 items = items.push(
-                    {id: 'restore', label: he.translate('subclist__action_restore'), view: <FormActionRestore idx={this.props.idx}  />},
-                    {id: 'wipe', label: he.translate('subclist__action_wipe'), view: <FormActionWipe idx={this.props.idx} />}
+                    {id: 'restore', label: he.translate('subclist__action_restore')},
+                    {id: 'wipe', label: he.translate('subclist__action_wipe')}
                 )
+                children.push(<FormActionRestore idx={this.props.idx}  />, <FormActionWipe idx={this.props.idx} />);
             }
 
             return (
@@ -630,7 +634,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <layoutViews.TabMenu
                                 className="ActionMenu"
                                 callback={this.handleActionSelect}
-                                items={items} />
+                                items={items} >
+
+                                {children.toArray()}
+                            </layoutViews.TabMenu>
                             <div className="loader-wrapper">
                                 {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
                             </div>

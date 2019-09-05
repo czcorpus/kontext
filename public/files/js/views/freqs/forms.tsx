@@ -624,9 +624,9 @@ export function init(
 
         render() {
             const items = Immutable.List([
-                {id: 'ml', label: he.translate('freq__sel_form_type_ml'), view: <MLFreqForm />},
-                {id: 'tt', label: he.translate('freq__sel_form_type_tt'), view: <TTFreqForm />},
-                {id: 'ct', label: he.translate('freq__sel_form_type_ct'), view: <ctFreqForm.CTFreqForm />},
+                {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
+                {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
+                {id: 'ct', label: he.translate('freq__sel_form_type_ct')},
             ])
 
             return (
@@ -636,7 +636,13 @@ export function init(
                             className="FreqFormSelector"
                             defaultId={this.state.formType}
                             callback={this._handleFormSwitch}
-                            items={items} />
+                            items={items} >
+
+                            <MLFreqForm />
+                            <TTFreqForm />
+                            <ctFreqForm.CTFreqForm />
+                        </layoutViews.TabMenu>
+
                         <div className="buttons">
                             <button className="default-button" type="button" onClick={this._handleSubmitClick}>
                                 {he.translate('freq__make_freq_list_btn')}
