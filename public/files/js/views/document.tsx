@@ -752,18 +752,17 @@ export function init(
         if (props.items.size===1) {
             return <div>{props.children[0]}</div>
         } else {
-            const [activeTab, setActiveTab] = React.useState(props.defaultId ? props.items.find(value => value.id===props.defaultId) : props.items.first());
-            const activeIndex = props.items.findIndex(value => value.id === activeTab.id);
-            const tabs = props.items.map(value =>
+            const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
+            const tabs = props.items.map((value, index) =>
                 <li key={value.id}>
                     <TabButton
                         label={value.label}
-                        isActive={value.id === activeTab.id}
+                        isActive={index === activeIndex}
                         onClick={() => {
                             if (props.callback) {
                                 props.callback(value.id);
                             }
-                            setActiveTab(value);
+                            setActiveIndex(index);
                         }}/>
                 </li>
             );
