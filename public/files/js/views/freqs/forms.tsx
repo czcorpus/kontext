@@ -632,7 +632,7 @@ export function init(
             return (
                 <div className="FrequencyForm">
                     <form className="freq-form">
-                        <layoutViews.TabMenu
+                        <layoutViews.TabView
                             className="FreqFormSelector"
                             defaultId={this.state.formType}
                             callback={this._handleFormSwitch}
@@ -641,7 +641,7 @@ export function init(
                             <MLFreqForm />
                             <TTFreqForm />
                             <ctFreqForm.CTFreqForm />
-                        </layoutViews.TabMenu>
+                        </layoutViews.TabView>
 
                         <div className="buttons">
                             <button className="default-button" type="button" onClick={this._handleSubmitClick}>

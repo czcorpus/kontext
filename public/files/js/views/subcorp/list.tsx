@@ -631,13 +631,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             autoWidth={CoreViews.AutoWidth.WIDE}
                             label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
                         <div>
-                            <layoutViews.TabMenu
+                            <layoutViews.TabView
                                 className="ActionMenu"
                                 callback={this.handleActionSelect}
                                 items={items} >
 
                                 {children.toArray()}
-                            </layoutViews.TabMenu>
+                            </layoutViews.TabView>
                             <div className="loader-wrapper">
                                 {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
                             </div>

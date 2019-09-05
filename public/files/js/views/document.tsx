@@ -748,7 +748,7 @@ export function init(
             </span>;
     };
 
-    const TabMenu:CoreViews.TabMenu.Component = (props) => {
+    const TabView:CoreViews.TabView.Component = (props) => {
         if (props.items.size===1) {
             return <div>{props.children[0]}</div>
         } else {
@@ -805,7 +805,7 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        TabMenu: TabMenu,
+        TabView: TabView,
         PlusButton: PlusButton
     };
 }

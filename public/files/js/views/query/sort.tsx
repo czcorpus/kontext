@@ -643,7 +643,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
             return (
                 <div>
                     <form>
-                        <layoutViews.TabMenu
+                        <layoutViews.TabView
                             className="SortFormSelector"
                             defaultId={this.state.sortType}
                             callback={this._handleSortTypeChange}
@@ -651,7 +651,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
                             <SimpleSortForm sortId={this.props.sortId} />
                             <MultiLevelSortForm sortId={this.props.sortId} />
-                        </layoutViews.TabMenu>
+                        </layoutViews.TabView>
                         <p>
                             <button type="button" className="default-button"
                                     onClick={this._handleFormSubmit}>

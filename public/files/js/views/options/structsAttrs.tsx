@@ -462,7 +462,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <layoutViews.TabMenu
+                        <layoutViews.TabView
                             className="FieldsetsTabs"
                             items={items}>
                             
@@ -483,7 +483,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 availRefs={props.availRefs}
                                 refAttrs={props.refAttrs}
                                 hasSelectAll={props.hasSelectAllRefs} />
-                        </layoutViews.TabMenu>
+                        </layoutViews.TabView>
 
                         {props.userIsAnonymous ?
                             <p className="warn">

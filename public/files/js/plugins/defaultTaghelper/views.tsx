@@ -224,13 +224,13 @@ export function init(
         return (
             <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
-                <layoutViews.TabMenu
+                <layoutViews.TabView
                     className="TagsetFormSelector"
                     callback={handleTabSelection}
                     items={tagsetTabs} >
 
                     {children.toArray()}
-                </layoutViews.TabMenu>
+                </layoutViews.TabView>
             </div>
         );
     }
