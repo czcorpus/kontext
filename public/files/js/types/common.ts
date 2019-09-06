@@ -648,7 +648,15 @@ export namespace ViewOptions {
         selected: boolean;
     }
 
-    export interface RefsDesc {
+    export interface RefDesc {
+        label: string;
+        n: string;
+        selected: boolean;
+        locked: boolean;
+        selectAllAttrs: boolean;
+    }
+
+    export interface RefAttrDesc {
         n: string;
         label: string;
         selected: boolean;

@@ -748,20 +748,30 @@ export function init(
             </span>;
     };
 
-    const TabMenu:CoreViews.TabMenu.Component = (props) => {
-        const [activeTab, setActiveTab] = React.useState(props.items.first());
-        const tabs = props.items.map(item =>
-            <li key={item.id}>
-                <TabButton
-                    label={item.label}
-                    isActive={item.id === activeTab.id}
-                    onClick={() => {
-                        setActiveTab(item);
-                        props.callback(item.id);
-                    }}/>
-            </li>
-        );
-        return <div><ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul><hr /></div>;
+    const TabView:CoreViews.TabView.Component = (props) => {
+        if (props.items.size===1) {
+            return <div>{props.children[0]}</div>
+        } else {
+            const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
+            const tabs = props.items.map((value, index) =>
+                <li key={value.id}>
+                    <TabButton
+                        label={value.label}
+                        isActive={index === activeIndex}
+                        onClick={() => {
+                            if (props.callback) {
+                                props.callback(value.id);
+                            }
+                            setActiveIndex(index);
+                        }}/>
+                </li>
+            );
+            return <div>
+                <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
+                <hr />
+                {props.children[activeIndex]}
+            </div>;
+        }
     };
 
     // ------------------------------------------------------------------------------------
@@ -795,7 +805,7 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        TabMenu: TabMenu,
+        TabView: TabView,
         PlusButton: PlusButton
     };
 }

@@ -333,12 +333,13 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
-    export namespace TabMenu {
+    export namespace TabView {
 
         export interface Props {
-            callback:(activeId:string)=>void;
             items:Immutable.List<{id:string, label:string}>;
+            defaultId?:string;
             className?:string;
+            callback?:(id:string) => void;
         }
 
         export type Component = React.SFC<Props>;
@@ -375,7 +376,7 @@ export namespace CoreViews {
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
-        TabMenu:TabMenu.Component;
+        TabView:TabView.Component;
         PlusButton:PlusButton.Component;
     }
 }
