@@ -250,7 +250,6 @@ class Backend(DatabaseBackend):
             where_cond2.append('(c.size <= %s)')
             values_cond2.append(max_size)
         if favourites:
-            logging.debug(favourites)
             where_cond1.append('(c.name in (%s))' % ('%s,' * len(favourites))[:-1])
             values_cond1.extend(favourites)
             where_cond2.append('(c.name in (%s))' % ('%s,' * len(favourites))[:-1])
