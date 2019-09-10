@@ -88,6 +88,8 @@ export interface CorplistTableModelState {
 
     filters:Filters;
 
+    favouritesOnly:boolean;
+
     keywords:Immutable.List<KeywordInfo>;
 
     detailData:CorpusInfo;
@@ -124,6 +126,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             dispatcher,
             {
                 filters: { maxSize: '', minSize: '', name: '' },
+                favouritesOnly: false,
                 keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo(preselectedKeywords))),
                 detailData: null,
                 isBusy: false,
@@ -162,6 +165,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             case 'KEYWORD_CLICKED': {
                 newState.offset = 0;
                 if (!action.payload['ctrlKey']) {
+                    newState.favouritesOnly = false;
                     newState.keywords = newState.keywords.map(v => ({
                         ident: v.ident,
                         label: v.label,
@@ -170,20 +174,25 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                         selected: false
                     })).toList();
                 }
-                const idx = newState.keywords.findIndex(v => v.ident === action.payload['keyword']);
-                const v = newState.keywords.get(idx);
-                newState.keywords = newState.keywords.set(idx, {
-                    ident: v.ident,
-                    label: v.label,
-                    color: v.color,
-                    visible: v.visible,
-                    selected: !v.selected
-                });
+                if (action.payload['keyword'] === 'favourites') {
+                    newState.favouritesOnly = !newState.favouritesOnly;
+                } else {
+                    const idx = newState.keywords.findIndex(v => v.ident === action.payload['keyword']);
+                    const v = newState.keywords.get(idx);
+                    newState.keywords = newState.keywords.set(idx, {
+                        ident: v.ident,
+                        label: v.label,
+                        color: v.color,
+                        visible: v.visible,
+                        selected: !v.selected
+                    });
+                }
                 newState.isBusy = true;
             }
             break;
             case 'KEYWORD_RESET_CLICKED':
                 newState.offset = 0;
+                newState.favouritesOnly = false;
                 newState.keywords = newState.keywords.map(v => ({
                     ident: v.ident,
                     label: v.label,
@@ -248,7 +257,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             case 'KEYWORD_RESET_CLICKED':
             case 'FILTER_CHANGED':
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset).then(
+                        state.offset, undefined, state.favouritesOnly).then(
                     (data) => {
                         dispatch({
                             name: 'LOAD_DATA_DONE',
@@ -266,7 +275,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             break;
             case 'EXPANSION_CLICKED':
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset).then(
+                        state.offset, undefined, state.favouritesOnly).then(
                     (data) => {
                         dispatch({
                             name: 'LOAD_EXPANSION_DATA_DONE',
@@ -389,7 +398,11 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
             ).then(
                 (data) => {
-                    this.updateDataItem(state, corpusId, {fav_id: null});
+                    if (state.favouritesOnly) {
+                        state.rows = state.rows.filterNot(value => value.corpus_id == corpusId).toList();
+                    } else {
+                        this.updateDataItem(state, corpusId, {fav_id: null});
+                    }
                     return this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
                 }
             )
@@ -406,7 +419,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    private loadData(query:string, filters:Filters, offset:number, limit?:number):RSVP.Promise<CorplistDataResponse> {
+    private loadData(query:string, filters:Filters, offset:number, limit?:number, favouriteOnly?:boolean):RSVP.Promise<CorplistDataResponse> {
         const args = new MultiDict();
         args.set('query', query);
         args.set('offset', offset);
@@ -417,6 +430,9 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             for (let p in filters) {
                 args.set(p, filters[p]);
             }
+        }
+        if (favouriteOnly !== undefined) {
+            args.set('favOnly', +favouriteOnly);
         }
         args.set('requestable', '1');
         return this.pluginApi.ajax<CorplistDataResponse>(

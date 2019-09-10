@@ -116,6 +116,10 @@ class DeafultCorplistProvider(CorplistProvider):
             requestable = bool(int(filter_dict.get('requestable')))
         else:
             requestable = False
+        if filter_dict.get('favOnly'):
+            favourites_only = bool(int(filter_dict.get('favOnly')))
+        else:
+            favourites_only = False
 
         if offset is None:
             offset = 0
@@ -128,12 +132,7 @@ class DeafultCorplistProvider(CorplistProvider):
             limit = int(limit)
 
         user_items = self._corparch.user_items.get_user_items(plugin_api)
-
-        def fav_id(corpus_id):
-            for item in user_items:
-                if item.is_single_corpus and item.main_corpus_id == corpus_id:
-                    return item.ident
-            return None
+        favourite_corpora = {item.main_corpus_id: item.ident for item in user_items if item.is_single_corpus}
 
         def get_found_in(corp, phrases):
             ans = []
@@ -149,12 +148,13 @@ class DeafultCorplistProvider(CorplistProvider):
         used_keywords = set()
         rows = self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
                                            min_size=min_size, max_size=max_size, requestable=requestable,
-                                           offset=offset, limit=limit + 1, keywords=query_keywords).values()
+                                           offset=offset, limit=limit + 1, keywords=query_keywords,
+                                           favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values()
         ans = []
         for i, corp in enumerate(rows):
             used_keywords.update(corp.keywords)
             corp.keywords = self._corparch.get_l10n_keywords(corp.keywords, plugin_api.user_lang)
-            corp.fav_id = fav_id(corp.id)
+            corp.fav_id = favourite_corpora.get(corp.id, None)
             corp.found_in = get_found_in(corp, normalized_query_substrs)
             ans.append(corp.to_dict())
             if i == limit - 1:
@@ -287,12 +287,12 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                               keywords=keywords)
 
     def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                     offset=0, limit=-1):
+                     offset=0, limit=-1, favourites=()):
         user_id = plugin_api.user_dict['id']
         ans = OrderedDict()
         for row in self._backend.load_all_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
                                                   max_size=max_size, requestable=requestable, offset=offset,
-                                                  limit=limit):
+                                                  limit=limit, favourites=favourites):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_api, row)
         return ans
 
@@ -464,7 +464,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
 
 @plugins.inject(plugins.runtime.USER_ITEMS)
 def create_instance(conf, user_items):
-    return RDBMSCorparch(backend=Backend(db_path=conf.get('plugins', 'corparch')['file']),
+    return RDBMSCorparch(backend=Backend(db_path=conf.get('plugins', 'corparch')['default:file']),
                          user_items=user_items,
                          tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
