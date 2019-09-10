@@ -117,10 +117,11 @@ class UcnkCorpArch2(RDBMSCorparch):
         return obj
 
     def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                     offset=0, limit=-1):
+                     offset=0, limit=-1, favourites=()):
         return super(UcnkCorpArch2, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
                                                        min_size=min_size, max_size=max_size, requestable=requestable,
-                                                       offset=offset, limit=limit if limit > -1 else 1000000000)
+                                                       offset=offset, limit=limit if limit > -1 else 1000000000,
+                                                       favourites=favourites)
 
     def export_favorite(self, plugin_api):
         ans = []

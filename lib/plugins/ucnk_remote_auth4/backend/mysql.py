@@ -216,7 +216,7 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=10000000000):
+                         offset=0, limit=10000000000, favourites=()):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
@@ -249,6 +249,12 @@ class Backend(DatabaseBackend):
             values_cond1.append(max_size)
             where_cond2.append('(c.size <= %s)')
             values_cond2.append(max_size)
+        if favourites:
+            logging.debug(favourites)
+            where_cond1.append('(c.name in (%s))' % ('%s,' * len(favourites))[:-1])
+            values_cond1.extend(favourites)
+            where_cond2.append('(c.name in (%s))' % ('%s,' * len(favourites))[:-1])
+            values_cond2.extend(favourites)
         values_cond1.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
         values_cond2.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
 
