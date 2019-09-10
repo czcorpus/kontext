@@ -322,6 +322,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const KeywordLink:React.SFC<{
         keyword:KeywordInfo;
+        iconFile?:string;
 
     }> = (props) => {
 
@@ -341,17 +342,23 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         if (!props.keyword.selected) {
             const link = he.createActionLink('corplist', [['keyword', props.keyword.ident]]);
             return (
-                <a className="keyword" href={link}
+                <a className={`keyword${props.iconFile ? ' iconized' : ''}`} href={link}
                         onClick={handleClickFn(true)}>
-                    <span className="overlay" style={style} >{props.keyword.label}</span>
+                    <span className="overlay" style={style}>
+                        {props.iconFile ? <img className="icon" src={props.iconFile} /> : null}
+                        {props.keyword.label}
+                    </span>
                 </a>
             );
 
         } else {
             return (
-                <span className="keyword current"
+                <span className={`keyword current${props.iconFile ? ' iconized' : ''}`}
                             onClick={handleClickFn(false)}>
-                    <span className="overlay" style={style}>{props.keyword.label}</span>
+                    <span className="overlay" style={style}>
+                        {props.iconFile ? <img className="icon" src={props.iconFile} /> : null}
+                        {props.keyword.label}
+                    </span>
                 </span>
             );
         }
@@ -400,20 +407,23 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         return (
             <fieldset className="keywords">
                 <legend>{props.label}</legend>
-                <KeywordLink
-                    key={'favorites'}
-                    keyword={{
-                        ident: 'favourites',
-                        label: he.translate('defaultCorparch__favourites_filter_label'),
-                        color: '#009ee0',
-                        visible: true,
-                        selected: props.favouritesOnly}} />
-                {props.keywords.filter(v => v.visible).map((keyword, i) =>
-                        <KeywordLink key={i} keyword={keyword} />
-                )}
-                {hasSelectedKeywords() || props.favouritesOnly ? <ResetLink  /> : null}
-                <div className="inline-label hint">
-                    ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
+                <div className="buttons">
+                    <KeywordLink
+                        key={'favorites'}
+                        keyword={{
+                            ident: 'favourites',
+                            label: he.translate('defaultCorparch__favourites_filter_label'),
+                            color: 'transparent',
+                            visible: true,
+                            selected: props.favouritesOnly}}
+                        iconFile={he.createStaticUrl('img/starred.svg')} />
+                    {props.keywords.filter(v => v.visible).map((keyword, i) =>
+                            <KeywordLink key={i} keyword={keyword} />
+                    )}
+                    {hasSelectedKeywords() || props.favouritesOnly ? <ResetLink  /> : null}
+                    <div className="inline-label hint">
+                        ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
+                    </div>
                 </div>
             </fieldset>
         );

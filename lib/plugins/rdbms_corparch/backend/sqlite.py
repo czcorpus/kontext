@@ -98,7 +98,7 @@ class Backend(DatabaseBackend):
                 values_cond.append(u'%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
             where_cond.append(u'({0})'.format(' OR '.join(
-                'ukc.keyword_id = ?' for _ in range(len(keywords)))))
+                'kc.keyword_id = ?' for _ in range(len(keywords)))))
             for keyword in keywords:
                 values_cond.append(keyword)
         if min_size > 0:
