@@ -105,6 +105,8 @@ export interface CorplistTableModelState {
     limit:number;
 
     rows:Immutable.List<common.CorplistItem>;
+
+    anonymousUser: boolean;
 }
 
 
@@ -134,7 +136,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 limit: pluginApi.getConf('pluginData')['corparch']['max_page_size'],
                 searchedCorpName: '',
                 nextOffset: initialData.nextOffset,
-                rows: Immutable.List<common.CorplistItem>(initialData.rows)
+                rows: Immutable.List<common.CorplistItem>(initialData.rows),
+                anonymousUser: pluginApi.getConf<boolean>('anonymousUser'),
             }
         );
         this.pluginApi = pluginApi;

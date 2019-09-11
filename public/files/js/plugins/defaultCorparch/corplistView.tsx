@@ -397,7 +397,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         label:string;
         keywords:Immutable.List<KeywordInfo>;
         favouritesOnly:boolean;
-
+        anonymousUser:boolean;
     }> = (props) => {
 
         const hasSelectedKeywords = () => {
@@ -408,15 +408,18 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             <fieldset className="keywords">
                 <legend>{props.label}</legend>
                 <div className="buttons">
-                    <KeywordLink
-                        key={'favorites'}
-                        keyword={{
-                            ident: 'favourites',
-                            label: he.translate('defaultCorparch__favourites_filter_label'),
-                            color: 'transparent',
-                            visible: true,
-                            selected: props.favouritesOnly}}
-                        iconFile={he.createStaticUrl('img/starred.svg')} />
+                    {!props.anonymousUser ?
+                        <KeywordLink
+                            key={'favorites'}
+                            keyword={{
+                                ident: 'favourites',
+                                label: he.translate('defaultCorparch__favourites_filter_label'),
+                                color: 'transparent',
+                                visible: true,
+                                selected: props.favouritesOnly}}
+                            iconFile={he.createStaticUrl('img/starred.svg')} /> :
+                        null
+                    }
                     {props.keywords.filter(v => v.visible).map((keyword, i) =>
                             <KeywordLink key={i} keyword={keyword} />
                     )}
@@ -613,7 +616,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     <KeywordsField
                         keywords={this.state.keywords}
                         label={he.translate('defaultCorparch__keywords_field_label')}
-                        favouritesOnly={this.state.favouritesOnly} />
+                        favouritesOnly={this.state.favouritesOnly}
+                        anonymousUser={this.state.anonymousUser}/>
                     <FilterInputFieldset
                         filters={this.state.filters} />
                 </section>
