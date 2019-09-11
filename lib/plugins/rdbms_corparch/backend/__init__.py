@@ -167,7 +167,7 @@ class DatabaseBackend(object):
         raise NotImplementedError()
 
     def load_all_corpora(self, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=-1):
+                         offset=0, limit=-1, favourites=()):
         """
         """
         raise NotImplementedError()

@@ -109,7 +109,7 @@ class Backend(DatabaseBackend):
             values_cond.append(max_size)
         if favourites:
             where_cond.append('(c.id in (%s))' % ('?,' * len(favourites))[:-1])
-            values_cond.extend(item for item in favourites)
+            values_cond.extend(favourites)
         values_cond.append(len(keywords) if keywords else 0)
         values_cond.append(limit)
         values_cond.append(offset)
