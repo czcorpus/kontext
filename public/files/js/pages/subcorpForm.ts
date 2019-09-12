@@ -128,7 +128,7 @@ export class SubcorpForm {
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
-            false, // manual aligned corp. selection mode
+            true, // manual aligned corp. selection mode
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
