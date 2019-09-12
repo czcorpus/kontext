@@ -303,6 +303,14 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                     })
                 }
             break;
+            case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED':
+                dispatch({
+                    name: 'SUBCORP_FORM_SET_ALIGNED_CORPORA',
+                    payload: {
+                        alignedCorpora: state.alignedCorpora.filter(v => v.selected)
+                    }
+                });
+            break;
         }
     }
 

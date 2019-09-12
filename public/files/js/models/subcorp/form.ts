@@ -85,7 +85,8 @@ export class SubcorpFormModel extends StatefulModel {
         this.isPublic = false;
         this.description = {value: '', isRequired: false, isInvalid: false};
         this.isBusy = false;
-
+        this.alignedCorpora = Immutable.List<TextTypes.AlignedLanguageItem>();
+        this.dispatcher.registerActionListener(a => console.log(a.name, a.payload));
         this.dispatcher.registerActionListener((action:Action) => {
             switch (action.name) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
@@ -126,6 +127,10 @@ export class SubcorpFormModel extends StatefulModel {
                         this.validateForm(false);
                         this.emitChange();
                     }
+                break;
+                case 'SUBCORP_FORM_SET_ALIGNED_CORPORA':
+                    this.alignedCorpora = action.payload['alignedCorpora'];
+                    this.emitChange();
                 break;
             }
         });
