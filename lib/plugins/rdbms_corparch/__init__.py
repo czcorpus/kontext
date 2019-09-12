@@ -132,7 +132,8 @@ class DeafultCorplistProvider(CorplistProvider):
             limit = int(limit)
 
         user_items = self._corparch.user_items.get_user_items(plugin_api)
-        favourite_corpora = {item.main_corpus_id: item.ident for item in user_items if item.is_single_corpus}
+        favourite_corpora = {
+            item.main_corpus_id: item.ident for item in user_items if item.is_single_corpus}
 
         def get_found_in(corp, phrases):
             ans = []
@@ -355,20 +356,21 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         if corpus_id not in self._corpus_info_cache:
             row = self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row)
-            corp.tagsets = [TagsetInfo().from_dict(row2)
-                            for row2 in self._backend.load_corpus_tagsets(corpus_id)]
-            self._corpus_info_cache[corpus_id] = corp
-            for art in self._backend.load_corpus_articles(corpus_id):
-                if art['role'] == 'default':
-                    corp.citation_info.default_ref = markdown(art['entry'])
-                elif art['role'] == 'standard':
-                    corp.citation_info.article_ref.append(markdown(art['entry']))
-                elif art['role'] == 'other':
-                    corp.citation_info.other_bibliography = markdown(art['entry'])
-            if row['ttdesc_id'] not in self._descriptions:
-                for drow in self._backend.load_ttdesc(row['ttdesc_id']):
-                    self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
-                    self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
+            if corp:
+                corp.tagsets = [TagsetInfo().from_dict(row2)
+                                for row2 in self._backend.load_corpus_tagsets(corpus_id)]
+                self._corpus_info_cache[corpus_id] = corp
+                for art in self._backend.load_corpus_articles(corpus_id):
+                    if art['role'] == 'default':
+                        corp.citation_info.default_ref = markdown(art['entry'])
+                    elif art['role'] == 'standard':
+                        corp.citation_info.article_ref.append(markdown(art['entry']))
+                    elif art['role'] == 'other':
+                        corp.citation_info.other_bibliography = markdown(art['entry'])
+                if row['ttdesc_id'] not in self._descriptions:
+                    for drow in self._backend.load_ttdesc(row['ttdesc_id']):
+                        self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
+                        self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
         return self._corpus_info_cache.get(corpus_id, None)
 
     def get_corpus_info(self, user_lang, corp_name):
