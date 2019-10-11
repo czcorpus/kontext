@@ -115,32 +115,31 @@ class DefaultTokenConnect(AbstractTokenConnect):
         self._providers = providers
         self._cache_path = None
 
-    def map_providers(self, provider_ids):
-        return [self._providers[ident] for ident in provider_ids]
+    def map_providers(self, providers):
+        return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
     def set_cache_path(self, path):
         self._cache_path = path
-        for backend, frontend in self.map_providers(self._providers):
+        for backend, frontend in self._providers.values():
             backend.set_cache_path(path)
 
     @property
     def cache_path(self):
         return self._cache_path
 
-    def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
+    def fetch_data(self, providers, maincorp_obj, corpora, token_id, num_tokens, lang):
         ans = []
-
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
         all_attrs = set()
-        for backend, _ in self.map_providers(provider_ids):
+        for backend, _, _ in self.map_providers(providers):
             all_attrs.update(backend.get_required_attrs())
 
         @add_structattr_support(maincorp_obj, all_attrs, token_id)
         def fetch_any_attr(corp, att, t_id, num_t):
             return fetch_posattr(corp, att, t_id, num_t)
 
-        for backend, frontend in self.map_providers(provider_ids):
+        for backend, frontend, is_kwic_view in self.map_providers(providers):
             try:
                 args = {}
                 for attr in backend.get_required_attrs():
@@ -153,12 +152,12 @@ class DefaultTokenConnect(AbstractTokenConnect):
                     else:
                         args[attr] = v
                 data, status = backend.fetch(corpora, token_id, num_tokens, args, lang)
-                ans.append(frontend.export_data(data, status, lang).to_dict())
+                ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
                 err_frontend = ErrorFrontend(dict(heading=frontend.headings))
                 ans.append(err_frontend.export_data(
-                    dict(error=u'{0}'.format(ex)), False, lang).to_dict())
+                    dict(error=u'{0}'.format(ex)), False, lang, is_kwic_view).to_dict())
 
         word = fetch_posattr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans

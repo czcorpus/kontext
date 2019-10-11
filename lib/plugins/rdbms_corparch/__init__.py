@@ -346,7 +346,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             data = self._backend.load_tckc_providers(corpus_id)
             for row in data:
                 if row['type'] == 'tc':
-                    self._tc_providers[corpus_id].providers.append(row['provider'])
+                    self._tc_providers[corpus_id].providers.append((row['provider'], row['is_kwic_view']))
                 elif row['type'] == 'kc':
                     self._kc_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id]

@@ -26,7 +26,7 @@ import {PluginInterfaces} from '../../types/plugins';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
-import {init as concDetailViewsInit} from './detail';
+import {init as concDetailViewsInit} from './detail/index';
 import {init as concSaveViewsInit} from './save';
 import {init as extendedInfoViewsInit} from './extendedInfo';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';

@@ -121,6 +121,7 @@ CREATE TABLE kontext_tckc_corpus (
 	provider TEXT NOT NULL,
 	type TEXT,
 	display_order INT NOT NULL DEFAULT 0,
+	is_kwic_view INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_id, provider, type),
 	CONSTRAINT kontext_tckc_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id)
 );

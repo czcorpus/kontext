@@ -33,7 +33,10 @@ export enum KnownRenderers {
     RAW_HTML = 'raw-html',
     DATAMUSE = 'datamuse-json',
     TREQ = 'treq-json',
-    MESSAGE = 'custom-message'
+    SIMPLE_TABULAR = 'simple-tabular',
+    SIMPLE_DESCRIPTION_LIST = 'simple-description-list',
+    MESSAGE = 'custom-message',
+    ERROR = 'error'
 }
 
 
