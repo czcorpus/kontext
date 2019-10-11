@@ -20,9 +20,11 @@
 
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as initView, Views as DefaultTokenConnectRenderers} from './view';
-import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import * as Immutable from 'immutable';
+import { KnownRenderers } from '../defaultKwicConnect/model';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 declare var require:any;
 require('./style.less');
@@ -44,43 +46,46 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
     }
 
-    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):RSVP.Promise<PluginInterfaces.TokenConnect.TCData> {
+    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
         const args = new MultiDict();
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
         args.set('num_tokens', numTokens);
         args.replace('align', this.alignedCorpora.toArray());
-        return this.pluginApi.ajax<PluginInterfaces.TokenConnect.Response>(
+        return this.pluginApi.ajax$<PluginInterfaces.TokenConnect.Response>(
             'GET',
             this.pluginApi.createActionUrl('fetch_token_detail'),
             args
 
-        ).then((data:PluginInterfaces.TokenConnect.Response) => {
-            return {
-                token: data.token,
-                renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(
-                    data.items.map(x => ({
-                        renderer: this.selectRenderer(x.renderer),
-                        contents: x.contents,
-                        found: x.found,
-                        heading: x.heading
-                    }))
-                )
-            };
-        });
+        ).pipe(
+            map(
+                (data:PluginInterfaces.TokenConnect.Response) => ({
+                    token: data.token,
+                    renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(
+                        data.items.map(x => ({
+                            renderer: this.selectRenderer(x.renderer),
+                            isKwicView: x.is_kwic_view,
+                            contents: x.contents,
+                            found: x.found,
+                            heading: x.heading
+                        }))
+                    )
+                })
+            )
+        );
     }
 
     selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
         switch (typeId) {
-            case 'raw-html':
+            case KnownRenderers.RAW_HTML:
                 return this.views.RawHtmlRenderer;
-            case 'simple-tabular':
+            case KnownRenderers.SIMPLE_TABULAR:
                 return this.views.SimpleTabularRenderer;
-            case 'simple-description-list':
+            case KnownRenderers.SIMPLE_DESCRIPTION_LIST:
                 return this.views.DescriptionListRenderer;
-            case 'datamuse-json':
+            case KnownRenderers.DATAMUSE:
                 return this.views.DataMuseSimilarWords;
-            case 'error':
+            case KnownRenderers.ERROR:
                 return this.views.ErrorRenderer;
             default:
                 return this.views.UnsupportedRenderer;

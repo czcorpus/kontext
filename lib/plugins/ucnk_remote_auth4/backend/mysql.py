@@ -398,7 +398,7 @@ class Backend(DatabaseBackend):
     def load_tckc_providers(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
+            'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
             (corpus_id,))
         return cursor.fetchall()
 

@@ -410,6 +410,7 @@ export namespace PluginInterfaces {
             token:string;
             items:Array<{
                 renderer:string;
+                is_kwic_view:boolean;
                 contents:Array<[string, string]>;
                 found:boolean;
                 heading:string;
@@ -425,6 +426,7 @@ export namespace PluginInterfaces {
         export interface DataAndRenderer {
             renderer:Renderer;
             contents:Kontext.GeneralProps;
+            isKwicView:boolean;
             found:boolean;
             heading:string;
         }
@@ -436,7 +438,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
 
-            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):RSVP.Promise<TCData>;
+            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<TCData>;
 
             selectRenderer(typeId:string):Renderer;
         }

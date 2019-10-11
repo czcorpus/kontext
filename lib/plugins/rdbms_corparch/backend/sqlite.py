@@ -222,7 +222,7 @@ class Backend(DatabaseBackend):
     def load_tckc_providers(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
+            'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
         return cursor.fetchall()
 
     def get_permitted_corpora(self, user_id):

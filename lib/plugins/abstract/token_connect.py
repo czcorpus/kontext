@@ -58,7 +58,7 @@ class Response(object):
     frontend receives data from backend).
     """
 
-    def __init__(self, contents, renderer, status, heading, note):
+    def __init__(self, contents, renderer, status, heading, note, is_kwic_view):
         """
 
         Arguments:
@@ -73,6 +73,7 @@ class Response(object):
         self.status = status
         self.heading = heading
         self.note = note
+        self.is_kwic_view = is_kwic_view
 
     def to_dict(self):
         return self.__dict__
@@ -156,8 +157,9 @@ class AbstractFrontend(object):
     def get_heading(self, lang):
         return self._fetch_localized_prop('_headings', lang)
 
-    def export_data(self, data, status, lang):
+    def export_data(self, data, status, lang, is_kwic_view):
         return Response(contents='', renderer='', status=status,
+                        is_kwic_view=bool(is_kwic_view),
                         heading=self._fetch_localized_prop('_headings', lang),
                         note=self._fetch_localized_prop('_notes', lang))
 
