@@ -12,6 +12,7 @@
 
 import corplib
 import conclib
+import os
 
 
 class EmptySubcorpusException(Exception):
@@ -35,6 +36,9 @@ class CreateSubcorpusTask(object):
         """
         conc = conclib.get_conc(self._corp, self._user_id, q=cql, async=0)
         ans = corplib.subcorpus_from_conc(path, conc)
+        # we must set write perms for group as this is created by Celery and we won't be
+        # able to create hardlinks otherwise
+        os.chmod(path, 0664)
         if ans is False:
             raise EmptySubcorpusException('Empty subcorpus')
         if publish_path:
