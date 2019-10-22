@@ -13,6 +13,8 @@
 import corplib
 import conclib
 import os
+import time
+import logging
 
 
 class EmptySubcorpusException(Exception):
@@ -35,12 +37,18 @@ class CreateSubcorpusTask(object):
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
         conc = conclib.get_conc(self._corp, self._user_id, q=cql, async=0)
+        if conc.size() == 0:
+            raise EmptySubcorpusException('Empty subcorpus')
         ans = corplib.subcorpus_from_conc(path, conc)
+        if ans is False:
+            raise EmptySubcorpusException('Failed to create the subcorpus from a concordance')
+        if not os.path.isfile(path):  # this should not happen but it looks like it did
+            logging.getLogger(__name__).warning(
+                u'Sync. called conc. file not created (path: {})'.format(path))
+            time.sleep(5)
         # we must set write perms for group as this is created by Celery and we won't be
         # able to create hardlinks otherwise
         os.chmod(path, 0664)
-        if ans is False:
-            raise EmptySubcorpusException('Empty subcorpus')
         if publish_path:
             corplib.mk_publish_links(path, publish_path, self._author, self._description)
         return ans
