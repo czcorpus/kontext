@@ -284,16 +284,16 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                             </tr>
                             {props.items.map(item => (
                                 <tr key={item.ident}>
-                                    <td>{he.translate(`task__type_${item.category}`)}</td>
-                                    <td>{item.label}</td>
-                                    <td>{he.formatDate(new Date(item.created * 1000), 2)}</td>
+                                    <td className="task-type">{he.translate(`task__type_${item.category}`)}</td>
+                                    <td className="label">{item.label}</td>
+                                    <td className="datetime">{he.formatDate(new Date(item.created * 1000), 2)}</td>
                                     <td className="status">
                                         {he.translate(`task__status_${item.status}`)}
                                         {item.status === 'FAILURE' ?
                                             <img src={he.createStaticUrl('img/error-icon.svg')} alt={item.status} />
                                             : null }
                                     </td>
-                                    <td>{item.error}</td>
+                                    <td className="msg">{item.error}</td>
                                 </tr>
                             ))}
                         </tbody>

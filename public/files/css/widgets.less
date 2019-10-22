@@ -189,8 +189,7 @@ section.closeable-frame {
 
 
 #modal-overlay .tooltip-box.async-task-list {
-    min-width: 40%;
-    max-width: 45em;
+    width: 90%;
     font-size: 0.8em;
 
     table {
@@ -204,11 +203,36 @@ section.closeable-frame {
             border-style: solid;
         }
 
+        td {
+            min-width: 10em;
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         td.status {
+            width: 5%;
             img {
                 width: 1em;
                 margin-left: 0.4em;
             }
+        }
+
+        td.task-type {
+            width: 15%;
+        }
+
+        td.label {
+            width: 20%;
+        }
+
+        td.datetime {
+            width: 15%;
+        }
+
+        td.msg {
+            width: 45%;
         }
 
         th {

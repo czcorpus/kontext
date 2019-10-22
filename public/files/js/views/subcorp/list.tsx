@@ -606,22 +606,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
-            let items = Immutable.List([]);
-            let children = Immutable.List([]);
+            let items = Immutable.List<{id:string, label:string}>();
+            let children = Immutable.List();
             if (!this.props.data.deleted) {
-                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')})
-                children.push(<PublishingTab published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
+                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')});
+                children = children.push(<PublishingTab key="publish" published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
             }
             if (!!this.props.data.cql) {
                 items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
-                children.push(<FormActionReuse idx={this.props.idx} data={this.props.data} />);
+                children = children.push(<FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />);
             }
             if (!!this.props.data.cql && this.props.data.deleted) {
                 items = items.push(
                     {id: 'restore', label: he.translate('subclist__action_restore')},
                     {id: 'wipe', label: he.translate('subclist__action_wipe')}
                 )
-                children.push(<FormActionRestore idx={this.props.idx}  />, <FormActionWipe idx={this.props.idx} />);
+                children = children.push(<FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />);
             }
 
             return (
@@ -632,10 +632,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
                         <div>
                             <layoutViews.TabView
-                                className="ActionMenu"
-                                callback={this.handleActionSelect}
-                                items={items} >
-
+                                    className="ActionMenu"
+                                    callback={this.handleActionSelect}
+                                    items={items} >
                                 {children.toArray()}
                             </layoutViews.TabView>
                             <div className="loader-wrapper">
