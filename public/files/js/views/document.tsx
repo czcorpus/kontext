@@ -166,7 +166,7 @@ export function init(
      */
     class PopupBox extends React.Component<CoreViews.PopupBox.Props, CoreViews.PopupBox.State> {
 
-        private customCss:{[key:string]:string};
+        private customCss:React.CSSProperties;
 
         private rootElm:HTMLElement;
 
@@ -182,8 +182,6 @@ export function init(
             this._handleAreaClick = this._handleAreaClick.bind(this);
             this.closeBtnRef = React.createRef();
 
-            this.customCss = {};
-            this._createStyle();
             if (this.props.autoWidth) {
                 this.resize = (ref) => {
                     if (ref) {
@@ -223,14 +221,6 @@ export function init(
             }
         }
 
-        _createStyle() {
-            for (let p in this.props.customStyle) {
-                if (this.props.customStyle.hasOwnProperty(p)) {
-                    this.customCss[p] = this.props.customStyle[p];
-                }
-            }
-        }
-
         _handleKeyPress(evt) {
             if (evt.keyCode === KeyCodes.ESC) {
                  this._closeClickHandler();
@@ -258,7 +248,7 @@ export function init(
             }
 
             return (
-                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}
+                <div className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
                         onClick={this._handleAreaClick}
                         onKeyDown={this._handleKeyPress}>
                     <div className="header">

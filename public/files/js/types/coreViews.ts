@@ -76,7 +76,7 @@ export namespace CoreViews {
             /**
              * an optional inline CSS
              */
-            customStyle?:{[prop:string]:string};
+            customStyle?:React.CSSProperties;
 
             /**
              * if true then the "close" button will take the focus

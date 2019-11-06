@@ -421,7 +421,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             return ans;
         };
 
-        const css = {
+        const css:React.CSSProperties = {
             position: 'absolute',
             maxWidth: '20em',
             fontWeight: 'normal',

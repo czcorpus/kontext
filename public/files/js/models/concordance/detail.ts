@@ -28,7 +28,7 @@ import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'immutable';
 import { Action, IFullActionControl } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
+import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
 /**
@@ -225,16 +225,24 @@ export class ConcDetailModel extends StatefulModel {
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
                     this.isBusy = true;
                     this.tokenConnectIsBusy = true;
-                    this.mode = 'default';
                     this.expandLeftArgs = Immutable.List<ExpandArgs>();
                     this.expandRightArgs = Immutable.List<ExpandArgs>();
-                    this.loadConcDetail(
+                    forkJoin(
+                        this.loadConcDetail(
                             action.payload['corpusId'],
                             action.payload['tokenNumber'],
                             action.payload['kwicLength'],
                             action.payload['lineIdx'],
                             [],
                             this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null
+                        ),
+                        this.loadTokenConnect(
+                            action.payload['corpusId'],
+                            action.payload['tokenNumber'],
+                            action.payload['kwicLength'],
+                            action.payload['lineIdx']
+                        )
+
                     ).subscribe(
                         () => {
                             this.isBusy = false;
@@ -248,27 +256,10 @@ export class ConcDetailModel extends StatefulModel {
                             this.layoutModel.showMessage('error', err);
                         }
                     );
-
-                    this.loadTokenConnect(
-                        action.payload['corpusId'],
-                        action.payload['tokenNumber'],
-                        action.payload['kwicLength'],
-                        action.payload['lineIdx']
-
-                    ).subscribe(
-                        () => {
-                            this.tokenConnectIsBusy = false;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.tokenConnectIsBusy = false;
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
                 break;
                 case 'CONCORDANCE_SHOW_TOKEN_DETAIL':
                     this.resetKwicDetail();
+                    this.resetTokenConnect();
                     this.tokenConnectIsBusy = true;
                     this.emitChange();
                     this.loadTokenConnect(
@@ -279,11 +270,9 @@ export class ConcDetailModel extends StatefulModel {
 
                     ).subscribe(
                         () => {
-                            this.tokenConnectIsBusy = false;
                             this.emitChange();
                         },
                         (err) => {
-                            this.tokenConnectIsBusy = false;
                             this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
@@ -666,6 +655,7 @@ export class ConcDetailModel extends StatefulModel {
                             renders: data.renders
                         };
                         this.lineIdx = lineIdx;
+                        this.tokenConnectIsBusy = false;
                     }
                 }
             ),

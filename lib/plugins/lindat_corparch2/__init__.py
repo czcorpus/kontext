@@ -125,6 +125,7 @@ from controller import exposed
 import actions.user
 from fallback_corpus import EmptyCorpus
 from translation import ugettext as _
+from settings import import_bool
 
 DEFAULT_LANG = 'en'
 
@@ -609,7 +610,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         token_connect_elm = node.find('token_connect')
         if token_connect_elm is not None:
-            ans.token_connect.providers = [p.text for p in token_connect_elm.findall('provider')]
+            ans.token_connect.providers = [(p.text, import_bool(p.attrib.get('is_kwic_view', '0')))
+                                           for p in token_connect_elm.findall('provider')]
 
         kwic_connect_elm = node.find('kwic_connect')
         if kwic_connect_elm is not None:
