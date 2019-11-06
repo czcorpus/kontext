@@ -288,7 +288,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     const TokenExternalKWICView:React.SFC<{
         tokenConnectIsBusy:boolean;
-        tokenConnectData:PluginInterfaces.TokenConnect.DataAndRenderer;
+        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        viewMode:string;
 
     }> = (props) => {
         if (props.tokenConnectIsBusy) {
@@ -299,13 +300,20 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
             );
 
         } else {
-            return (
-                <div className="token-detail">
-                    <layoutViews.ErrorBoundary>
-                        <props.tokenConnectData.renderer data={props.tokenConnectData.contents} />
-                    </layoutViews.ErrorBoundary>
-                </div>
-            );
+            const data = props.tokenConnectData.find(x => x.heading === props.viewMode);
+            if (data) {
+                return (
+                    <div className="token-detail">
+                        <layoutViews.ErrorBoundary>
+                            <data.renderer data={data.contents} />
+                        </layoutViews.ErrorBoundary>
+                    </div>
+                );
+            } else {
+                return (
+                    <div className="token-detail">not ready yet</div>
+                )
+            }
         }
     };
 
@@ -385,8 +393,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         tokenConnectIsBusy:boolean;
         tokenConnectData:PluginInterfaces.TokenConnect.TCData;
         hasTokenConnectData:boolean;
-    }> = (props) => {
 
+    }> = (props) => {
         const hasNonKwicRenders = props.tokenConnectData.renders.filter(r => !r.isKwicView).size > 0;
         return (
             <div className="concordance_DefaultView">
@@ -529,21 +537,18 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                 case 'speech':
                     return <SpeechView />;
                 default:
-                    const data = this.state.tokenConnectData.renders.find(x => x.heading === this.state.mode);
-                    if (data) {
-                        return <TokenExternalKWICView tokenConnectIsBusy={this.state.modelIsBusy}
-                                    tokenConnectData={data} />;
-                    }
-                    return null;
+                    return <TokenExternalKWICView tokenConnectIsBusy={this.state.modelIsBusy}
+                                tokenConnectData={this.state.tokenConnectData.renders} viewMode={this.state.mode}  />;
             }
         }
 
         render() {
             const kwicViewRenders = this.state.tokenConnectData.renders.filter(r => r.isKwicView).toList();
+            const customCSS:React.CSSProperties = {overflowY: 'auto'};
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler}
-                        customClass="conc-detail"
-                        customStyle={{overflowY: 'auto'}}
+                        customClass={`conc-detail${kwicViewRenders.size > 0 ? ' custom' : ''}`}
+                        customStyle={customCSS}
                         takeFocus={true}>
                     <div>
                         <ConcDetailMenu supportsSpeechView={this.state.supportsSpeechView} mode={this.state.mode}
