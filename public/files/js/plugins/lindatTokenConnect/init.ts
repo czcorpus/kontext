@@ -30,14 +30,19 @@ require('../defaultTokenConnect/style.less');
 require('./style.less');
 
 
+export type ServerExportedConf = {
+    providers:Array<{is_kwic_view:boolean, ident:string}>;
+}
+
+
 export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
 
 
     private lindatViews:LindatTokenConnectRenderers;
 
     constructor(pluginApi:IPluginApi, defaultViews:DefaultTokenConnectRenderers,
-                lindatView:LindatTokenConnectRenderers, alignedCorpora:Array<string>) {
-        super(pluginApi, defaultViews, alignedCorpora);
+                lindatView:LindatTokenConnectRenderers, alignedCorpora:Array<string>, conf:ServerExportedConf) {
+        super(pluginApi, defaultViews, alignedCorpora, conf);
         this.lindatViews = lindatView;
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
     }
@@ -70,7 +75,8 @@ const create:PluginInterfaces.TokenConnect.Factory = (pluginApi, alignedCorpora)
         pluginApi,
         initDefaultView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
         initLindatView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
-        alignedCorpora
+        alignedCorpora,
+        pluginApi.getNestedConf<ServerExportedConf>('pluginData', 'token_connect')
     );
 };
 

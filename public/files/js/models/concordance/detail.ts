@@ -786,7 +786,7 @@ export class ConcDetailModel extends StatefulModel {
     }
 
     supportsTokenConnect():boolean {
-        return !!this.tokenConnectPlg;
+        return this.tokenConnectPlg.providesAnyTokenInfo();
     }
 
     supportsSpeechView():boolean {
