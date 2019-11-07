@@ -57,6 +57,7 @@ interface TokenConnectState {
     tokenConnectIsBusy:boolean;
     tokenConnectData:PluginInterfaces.TokenConnect.TCData;
     hasTokenConnectData:boolean;
+    supportsTokenConnect:boolean;
 }
 
 
@@ -310,9 +311,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                     </div>
                 );
             } else {
-                return (
-                    <div className="token-detail">not ready yet</div>
-                )
+                return <div className="token-detail"></div>
             }
         }
     };
@@ -392,10 +391,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         modelIsBusy:boolean;
         tokenConnectIsBusy:boolean;
         tokenConnectData:PluginInterfaces.TokenConnect.TCData;
-        hasTokenConnectData:boolean;
 
     }> = (props) => {
-        const hasNonKwicRenders = props.tokenConnectData.renders.filter(r => !r.isKwicView).size > 0;
         return (
             <div className="concordance_DefaultView">
                 {props.hasConcDetailData ?
@@ -407,11 +404,6 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                                     canDisplayWholeDocument={props.canDisplayWholeDocument} /> :
                     null
                 }
-                {props.hasConcDetailData && (props.hasTokenConnectData || props.tokenConnectIsBusy) ?
-                    <hr /> : null}
-                {props.hasTokenConnectData && hasNonKwicRenders || props.tokenConnectIsBusy ?
-                    <TokenExternalInfo tokenConnectData={props.tokenConnectData}
-                            tokenConnectIsBusy={props.tokenConnectIsBusy} /> : null}
             </div>
         );
     }
@@ -514,7 +506,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                 modelIsBusy: concDetailModel.getIsBusy(),
                 tokenConnectIsBusy: concDetailModel.getTokenConnectIsBusy(),
                 tokenConnectData: concDetailModel.getTokenConnectData(),
-                hasTokenConnectData: concDetailModel.hasTokenConnectData()
+                hasTokenConnectData: concDetailModel.hasTokenConnectData(),
+                supportsTokenConnect: concDetailModel.supportsTokenConnect()
             };
         }
 
@@ -554,6 +547,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                         <ConcDetailMenu supportsSpeechView={this.state.supportsSpeechView} mode={this.state.mode}
                                 tcData={kwicViewRenders} />
                         {this._renderContents()}
+                        {this.state.hasConcDetailData && (this.state.hasTokenConnectData || this.state.tokenConnectIsBusy) ?
+                        <hr /> : null}
+                        {this.state.supportsTokenConnect || this.state.tokenConnectIsBusy ?
+                            <TokenExternalInfo tokenConnectData={this.state.tokenConnectData}
+                                tokenConnectIsBusy={this.state.tokenConnectIsBusy} /> : null}
                     </div>
                 </layoutViews.PopupBox>
             );

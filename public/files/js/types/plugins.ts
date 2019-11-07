@@ -441,6 +441,8 @@ export namespace PluginInterfaces {
             fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<TCData>;
 
             selectRenderer(typeId:string):Renderer;
+
+            providesAnyTokenInfo():boolean;
         }
 
         export interface Factory {

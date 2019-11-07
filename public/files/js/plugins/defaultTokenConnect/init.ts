@@ -26,8 +26,14 @@ import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+
 declare var require:any;
 require('./style.less');
+
+
+export type ServerExportedConf = {
+    providers:Array<{is_kwic_view:boolean, ident:string}>;
+}
 
 /**
  *
@@ -40,10 +46,13 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
 
     protected alignedCorpora:Immutable.List<string>;
 
-    constructor(pluginApi:IPluginApi, views:DefaultTokenConnectRenderers, alignedCorpora:Array<string>) {
+    protected providers:Immutable.List<{ident:string, isKwicView:boolean}>;
+
+    constructor(pluginApi:IPluginApi, views:DefaultTokenConnectRenderers, alignedCorpora:Array<string>, conf:ServerExportedConf) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
+        this.providers = Immutable.List<{ident:string; isKwicView:boolean}>(conf.providers.map(v => ({ident: v.ident, isKwicView: v.is_kwic_view})));
     }
 
     fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
@@ -91,6 +100,10 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                 return this.views.UnsupportedRenderer;
         }
     }
+
+    providesAnyTokenInfo():boolean {
+        return this.providers.some(p => !p.isKwicView);
+    }
 }
 
 
@@ -98,7 +111,8 @@ const create:PluginInterfaces.TokenConnect.Factory = (pluginApi, alignedCorpora)
     return new DefaultTokenConnectBackend(
         pluginApi,
         initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
-        alignedCorpora
+        alignedCorpora,
+        pluginApi.getNestedConf<ServerExportedConf>('pluginData', 'token_connect')
     );
 };
 
