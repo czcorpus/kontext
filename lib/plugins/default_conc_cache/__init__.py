@@ -179,9 +179,9 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         from cleanup import run as run_cleanup
         from monitor import run as run_monitor
 
-        def conc_cache_cleanup(ttl, subdir, dry_run):
+        def conc_cache_cleanup(ttl, subdir, dry_run, corpus_id=None):
             return run_cleanup(root_dir=self._cache_dir,
-                               corpus_id=None, ttl=ttl, subdir=subdir, dry_run=dry_run,
+                               corpus_id=corpus_id, ttl=ttl, subdir=subdir, dry_run=dry_run,
                                db_plugin=self._db, entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE % c)
 
         def conc_cache_monitor(min_file_age, free_capacity_goal, free_capacity_trigger, elastic_conf):
