@@ -562,9 +562,11 @@ class Kontext(Controller):
             self._save_query_to_history(q_id, curr_data)
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
-                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
+                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx],
+                            user_id=self.session_get('user', 'id'))
                 curr = dict(lines_groups=lines_groups,
-                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
+                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict(),
+                            user_id=self.session_get('user', 'id'))
                 q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
             return q_id
 
