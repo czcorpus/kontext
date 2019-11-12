@@ -19,12 +19,6 @@
                     </attribute>
                     <text />
                 </element>
-                <element name="archive_queue_key">
-                    <attribute name="extension-by">
-                        <value>ucnk</value>
-                    </attribute>
-                    <text />
-                </element>
             </optional>
         </element>
     </start>
