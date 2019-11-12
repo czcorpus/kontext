@@ -62,7 +62,7 @@ class StableConcPersistence(AbstractConcPersistence):
         plugin_conf = settings.get('plugins', 'conc_persistence')
         self._ttl_days = int(plugin_conf.get('default:ttl_days', DEFAULT_TTL_DAYS))
         self._archive_db_path = plugin_conf.get('default:archive_db_path')
-        self._archives = self._open_archives()
+        self._archives = self._open_archives() if self._archive_db_path else []
         self._settings = settings
 
     @property
