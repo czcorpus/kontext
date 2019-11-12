@@ -70,7 +70,9 @@ class StableConcPersistence(AbstractConcPersistence):
         return self._ttl_days * 24 * 3600
 
     def is_valid_id(self, data_id):
-        return bool(re.match(r'~[0-9a-f]+', data_id))
+        # we intentionally accept non-hex chars here so we can accept also conc keys
+        # generated from default_conc_persistence and derived plug-ins.
+        return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
 
     def get_conc_ttl_days(self, user_id):
         return self._ttl_days
