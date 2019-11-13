@@ -12,50 +12,43 @@
 
 import unittest
 
-from templating.filters import Shortener
+from strings import shorten
 
 
 class FiltersTest(unittest.TestCase):
 
     def test_shortener_non_nice(self):
-        sh = Shortener()
         s = 'loremipsumdolorsitamet'
         length = 12
-        self.assertEqual(sh.filter('loremipsumdolorsitamet', length=length), '%s...' % s[:12])
+        self.assertEqual(shorten('loremipsumdolorsitamet', length=length), '%s...' % s[:12])
 
     def test_shortener_non_nice_custom_suffix(self):
-        sh = Shortener()
         s = 'loremipsumdolorsitamet'
         length = 12
         suffix = 'the_suffix'
-        self.assertEqual(sh.filter('loremipsumdolorsitamet', length=length, suffix=suffix), '%s%s' % (s[:12], suffix))
+        self.assertEqual(shorten('loremipsumdolorsitamet', length=length, suffix=suffix), '%s%s' % (s[:12], suffix))
 
     def test_shortener_nice(self):
-        sh = Shortener()
         s = 'lorem ipsum dolor sit amet'
         length = 14
-        self.assertEqual(sh.filter(s, length=length, nice=True), 'lorem ipsum...')
+        self.assertEqual(shorten(s, length=length, nice=True), 'lorem ipsum...')
 
     def test_shortener_nice_zero_length(self):
-        sh = Shortener()
         s = 'lorem ipsum dolor sit amet'
         length = 0
-        self.assertEqual(sh.filter(s, length=length, nice=True), '...')
+        self.assertEqual(shorten(s, length=length, nice=True), '...')
 
     def test_shortener_nice_unsplittable_string(self):
-        sh = Shortener()
         s = 'loremipsumdolorsitamet'
         length = 12
-        self.assertEqual(sh.filter(s, length=length, nice=True), '%s...' % s[:length])
+        self.assertEqual(shorten(s, length=length, nice=True), '%s...' % s[:length])
 
     def test_shortener_nice_no_shortening_expected(self):
-        sh = Shortener()
         s = 'lorem ipsum dolor sit amet'
         length = 100
-        self.assertEqual(sh.filter(s, length=length, nice=True), s)
+        self.assertEqual(shorten(s, length=length, nice=True), s)
 
     def test_shortener_non_nice_no_shortening_expected(self):
-        sh = Shortener()
         s = 'lorem ipsum dolor sit amet'
         length = 100
-        self.assertEqual(sh.filter(s, length=length, nice=False), s)
+        self.assertEqual(shorten(s, length=length, nice=False), s)
