@@ -40,7 +40,7 @@ import l10n
 from plugins import inject
 import plugins
 from plugins.abstract.live_attributes import AbstractLiveAttributes
-from templating.filters import Shortener
+import strings
 from controller import exposed
 from actions import concordance
 import query
@@ -111,7 +111,7 @@ class LiveAttributes(AbstractLiveAttributes):
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
-        self.shorten_value = partial(Shortener().filter, nice=True)
+        self.shorten_value = partial(strings.shorten, nice=True)
         self._max_attr_visible_chars = max_attr_visible_chars
 
     def export_actions(self):

@@ -19,15 +19,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 #encoding UTF-8
-#from templating.filters import *
 #from translation import ugettext as _
 ##
 <!DOCTYPE html>
 <html>
 #filter WebSafe
 <head>
-<title>$title</title>
 <meta charset="utf-8" />
+<title>$shorten($title, length=200, nice=True)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 #if $theme.favicon
 <link rel="icon" type="${theme.favicon_type}" href="${theme.favicon}" />

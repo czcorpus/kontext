@@ -14,27 +14,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""
-Custom Cheetah filters for the KonText interface
-"""
-from Cheetah.Filters import Filter
 import re
 
 
-class HtmlEscape(Filter):
-    """
-    """
-
-    def filter(self, val, **kw):
-        val = val.replace('&', '&amp;')
-        val = val.replace('<', '&lt;')
-        val = val.replace('>', '&gt;')
-        val = val.replace('"', '&quot;')
-        val = val.replace("'", '&apos;')
-        return val
-
-
-class Shortener(Filter):
+def shorten(val, length=8, suffix='...', nice=False):
     """
     arguments:
     length -- the length of a resulting string (excluding suffix)
@@ -42,20 +25,12 @@ class Shortener(Filter):
     nice -- if True then words are respected (and the length is not guaranteed to be exact)
     escape -- escape HTML-special characters
     """
-    def filter(self, val, **kw):
-        length = kw['length'] if 'length' in kw else 8
-        if len(val) > length:
-            suff = kw['suffix'] if 'suffix' in kw else '...'
-        else:
-            suff = ''
-
-        if kw.get('nice', False) and length < len(val):
-            try:
-                s = re.split(r'\s+', val[length::-1], maxsplit=1)[1][::-1]
-            except IndexError:   # the string cannot be split into two strings
-                s = val[:length]
-        else:
+    suff = suffix if len(val) > length else ''
+    if nice and length < len(val):
+        try:
+            s = re.split(r'\s+', val[length::-1], maxsplit=1)[1][::-1]
+        except IndexError:   # the string cannot be split into two strings
             s = val[:length]
-        if kw.get('escape', False):
-            s = HtmlEscape().filter(s)
-        return '%s%s' % (s, suff)
+    else:
+        s = val[:length]
+    return u'%s%s' % (s, suff)

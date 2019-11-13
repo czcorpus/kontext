@@ -29,6 +29,7 @@ import conclib
 from controller import Controller, convert_types, exposed
 from controller.errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException,
                                NotFoundException)
+import strings
 import plugins
 import plugins.abstract
 from plugins.abstract.corpora import BrokenCorpusInfo
@@ -1217,6 +1218,7 @@ class Kontext(Controller):
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
         result['to_json'] = val_to_js
+        result['shorten'] = strings.shorten
         result['camelize'] = l10n.camelize
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
         with plugins.runtime.ISSUE_REPORTING as irp:
