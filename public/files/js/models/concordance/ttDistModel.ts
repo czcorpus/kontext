@@ -23,9 +23,9 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ConcLineModel} from './lines';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 export type TTCrit = Array<[string, string]>;
 
@@ -121,7 +121,7 @@ export class TextTypesDistModel extends StatefulModel {
 
     private maxBlockItems:number;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.concLineModel = concLineModel;
@@ -132,10 +132,10 @@ export class TextTypesDistModel extends StatefulModel {
         this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
         this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
         this.isBusy = this.concLineModel.isUnfinishedCalculation();
-        this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.blockedByAsyncConc = action.props['isUnfinished'];
+                    this.blockedByAsyncConc = action.payload['isUnfinished'];
                     this.performDataLoad();
                 break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
@@ -145,11 +145,11 @@ export class TextTypesDistModel extends StatefulModel {
                 break;
                 case 'REMOVE_CHART_ITEMS_LIMIT':
                     this.maxBlockItems = -1;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'RESTORE_CHART_ITEMS_LIMIT':
                     this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });
@@ -160,16 +160,16 @@ export class TextTypesDistModel extends StatefulModel {
             const args = this.layoutModel.getConcArgs();
             if (this.lastArgs !== args.getFirst('q')) {
                 this.isBusy = true;
-                this.notifyChangeListeners();
+                this.emitChange();
                 this.loadData(args).then(
                     (ans) => {
                         this.isBusy = false;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     },
                     (err) => {
                         this.isBusy = false;
                         this.layoutModel.showMessage('error', err);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 );
             }

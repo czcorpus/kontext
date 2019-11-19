@@ -38,7 +38,8 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
-import { ActionDispatcher, Action } from '../app/dispatcher';
+import { Action, IFullActionControl } from 'kombo';
+import { PluginInterfaces } from '../types/plugins';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -53,19 +54,19 @@ class ConfigWrapper extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+            switch (action.name) {
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.props['corpname']]));
+                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.payload['corpname']]));
                 }
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.props['corpname']));
+                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.payload['corpname']));
                 }
                 break;
             }
@@ -93,8 +94,6 @@ export class FirstFormPage {
     private virtualKeyboardModel:VirtualKeyboardModel;
 
     private queryContextModel:QueryContextModel;
-
-    private onQueryModelReady:(qs:FirstQueryFormModel)=>void;
 
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
@@ -157,7 +156,8 @@ export class FirstFormPage {
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
-                textTypesData
+                textTypesData,
+
         );
         this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
@@ -167,8 +167,8 @@ export class FirstFormPage {
         const liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            () => this.queryModel.getCorpora(),
-            () => this.textTypesModel.hasSelectedItems(),
+            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
+            false,
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
@@ -184,18 +184,10 @@ export class FirstFormPage {
             // cause that LiveAttrs model needs QueryModel data but it is not available
             // here yet. That's the reason we have to define a callback here to configure
             // required values later.
-            this.onQueryModelReady = (qs => {
-                liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
-            });
-            this.textTypesModel.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
-            this.textTypesModel.addSelectionChangeListener(target => {
-                liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
-                        liveAttrsPlugin.hasSelectedLanguages());
-            });
+            this.textTypesModel.enableAutoCompleteSupport();
             liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
 
         } else {
-            this.onQueryModelReady = () => undefined;
             liveAttrsViews = {};
         }
         return {
@@ -250,8 +242,6 @@ export class FirstFormPage {
                 tagAttr: this.layoutModel.getConf<string>('tagAttr')
             }
         );
-
-        this.onQueryModelReady(this.queryModel);
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
             this.queryModel.onSettingsChange(model);
             this.layoutModel.dispatchSideEffect(
@@ -265,6 +255,7 @@ export class FirstFormPage {
             pageModel: this.layoutModel,
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryModel.getTagAttr() : null,
             actionPrefix: '',
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
@@ -334,7 +325,12 @@ export class FirstFormPage {
                 const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
                 const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
                 const ttAns = this.createTTViews();
-                ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagHelperPlg.getWidgetView() : null;
+                ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
+                        tagHelperPlg.getWidgetView(
+                            this.layoutModel.getCorpusIdent().id,
+                            this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                        ) :
+                        null;
                 ttAns.queryStorageView = qsPlugin.getWidgetView();
                 ttAns.allowCorpusSelection = true;
                 ttAns.actionPrefix = '';

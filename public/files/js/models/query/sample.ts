@@ -23,8 +23,8 @@ import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface SampleFormProperties {
@@ -50,26 +50,26 @@ export class ConcSampleModel extends StatefulModel {
 
     private rlinesValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SampleFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SampleFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'SAMPLE_FORM_SET_RLINES':
-                    const v = action.props['value'];
+                    const v = action.payload['value'];
                     if (/^([1-9]\d*)?$/.exec(v)) {
-                        this.rlinesValues = this.rlinesValues.set(action.props['sampleId'], v);
+                        this.rlinesValues = this.rlinesValues.set(action.payload['sampleId'], v);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('query__sample_value_must_be_gt_zero'));
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'SAMPLE_FORM_SUBMIT':
-                    this.submitQuery(action.props['sampleId']);
-                    this.notifyChangeListeners(); // actually - currently there is no need for this (window.location changed here...)
+                    this.submitQuery(action.payload['sampleId']);
+                    this.emitChange(); // actually - currently there is no need for this (window.location changed here...)
                 break;
             }
         });

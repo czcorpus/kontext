@@ -56,7 +56,7 @@ class Backend(DatabaseBackend):
     def load_corpus(self, corp_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT c.id as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
+            'SELECT c.id as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
             '(CASE WHEN c.speaker_id_struct IS NOT NULL '
             '    THEN c.speaker_id_struct || \'.\' || c.speaker_id_attr ELSE NULL END) AS speaker_id_attr,  '
             '(CASE WHEN c.speech_overlap_struct IS NOT NULL '
@@ -83,7 +83,7 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=-1):
+                         offset=0, limit=-1, favourites=()):
         if requestable:
             where_cond = ['c.active = ?', '(kcu.user_id = ? OR c.requestable = ?)']
             values_cond = [1, user_id, 1]
@@ -98,7 +98,7 @@ class Backend(DatabaseBackend):
                 values_cond.append(u'%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
             where_cond.append(u'({0})'.format(' OR '.join(
-                'ukc.keyword_id = ?' for _ in range(len(keywords)))))
+                'kc.keyword_id = ?' for _ in range(len(keywords)))))
             for keyword in keywords:
                 values_cond.append(keyword)
         if min_size > 0:
@@ -107,13 +107,16 @@ class Backend(DatabaseBackend):
         if max_size is not None:
             where_cond.append('(c.size <= ?)')
             values_cond.append(max_size)
+        if favourites:
+            where_cond.append('(c.id in (%s))' % ('?,' * len(favourites))[:-1])
+            values_cond.extend(favourites)
         values_cond.append(len(keywords) if keywords else 0)
         values_cond.append(limit)
         values_cond.append(offset)
 
         c = self._db.cursor()
-        sql = ('SELECT c.id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
-               'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
+        sql = ('SELECT c.id, c.web, c.collator_locale, NULL as speech_segment, c.requestable, c.speaker_id_attr,  '
+               'c.speech_overlap_attr, c.speech_overlap_val, c.use_safe_font, '
                'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                'NULL AS reference_other, NULL AS ttdesc_id, '
                'COUNT(kc.keyword_id) AS num_match_keys, '
@@ -219,7 +222,7 @@ class Backend(DatabaseBackend):
     def load_tckc_providers(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
+            'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_id = ?', (corpus_id,))
         return cursor.fetchall()
 
     def get_permitted_corpora(self, user_id):
@@ -228,3 +231,9 @@ class Backend(DatabaseBackend):
                        'FROM kontext_corpus_user AS kcu '
                        'WHERE kcu.user_id = ?', (user_id,))
         return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
+
+    def load_corpus_tagsets(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT pos_attr, feat_attr, tagset_type, tagset_name FROM kontext_corpus_taghelper '
+                       'WHERE corpus_name = ?', (corpus_id,))
+        return cursor.fetchall()

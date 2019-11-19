@@ -25,7 +25,8 @@ import {Kontext} from '../../types/common';
 import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
 import {Freq2DFormModel, AlignTypes} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 // -------------------------- exported component ----------
 
@@ -43,7 +44,7 @@ export interface FormsViews {
 
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         mlFreqFormModel:MLFreqFormModel,
         ttFreqFormModel:TTFreqFormModel,
@@ -63,8 +64,8 @@ export function init(
 
         const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_TT_SET_FTTATTR',
-                props : {
+                name: 'FREQ_TT_SET_FTTATTR',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -123,8 +124,8 @@ export function init(
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: `${props.actionPrefix}_SET_FLIMIT`,
-                props: {
+                name: `${props.actionPrefix}_SET_FLIMIT`,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -149,8 +150,8 @@ export function init(
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
-                actionType: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
-                props: {}
+                name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
+                payload: {}
             });
         };
 
@@ -170,6 +171,8 @@ export function init(
         fttIncludeEmpty:boolean;
 
     }> {
+
+        private modelSubscription:Subscription;
 
         constructor(props:TTFreqFormProps) {
             super(props);
@@ -191,11 +194,11 @@ export function init(
         }
 
         componentDidMount() {
-            ttFreqFormModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = ttFreqFormModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            ttFreqFormModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render():React.ReactElement<{}> {
@@ -252,8 +255,8 @@ export function init(
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_SET_MLXATTR',
-                props: {
+                name: 'FREQ_ML_SET_MLXATTR',
+                payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
                 }
@@ -281,8 +284,8 @@ export function init(
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_SET_MLXICASE',
-                props: {
+                name: 'FREQ_ML_SET_MLXICASE',
+                payload: {
                     levelIdx: props.levelIdx
                 }
             });
@@ -304,8 +307,8 @@ export function init(
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_SET_MLXCTX_INDEX',
-                props: {
+                name: 'FREQ_ML_SET_MLXCTX_INDEX',
+                payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
                 }
@@ -333,8 +336,8 @@ export function init(
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_SET_ALIGN_TYPE',
-                props: {
+                name: 'FREQ_ML_SET_ALIGN_TYPE',
+                payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
                 }
@@ -361,8 +364,8 @@ export function init(
 
         const handleClick = (direction) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_CHANGE_LEVEL',
-                props: {
+                name: 'FREQ_ML_CHANGE_LEVEL',
+                payload: {
                     levelIdx: props.levelIdx,
                     direction: direction
                 }
@@ -412,8 +415,8 @@ export function init(
 
         const handleRemoveLevelClick = () => {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_REMOVE_LEVEL',
-                props: {
+                name: 'FREQ_ML_REMOVE_LEVEL',
+                payload: {
                     levelIdx: props.levelIdx
                 }
             });
@@ -480,6 +483,8 @@ export function init(
 
     class MLFreqForm extends React.Component<MLFreqFormProps, MLFreqFormState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._getModelState();
@@ -507,17 +512,17 @@ export function init(
 
         _handleAddLevelClick() {
             dispatcher.dispatch({
-                actionType: 'FREQ_ML_ADD_LEVEL',
-                props: {}
+                name: 'FREQ_ML_ADD_LEVEL',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            mlFreqFormModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = mlFreqFormModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            mlFreqFormModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -588,44 +593,6 @@ export function init(
         }
     }
 
-
-    // ---------------------- <FreqFormSelector /> ---------------------
-
-    interface FreqFormSelectorProps {
-        onChange:(ident:string)=>void;
-        formType:string;
-    }
-
-    const FreqFormSelector:React.SFC<FreqFormSelectorProps> = (props) => {
-
-        const onItemClick = (ident) => {
-            return () => {
-                props.onChange(ident);
-            }
-        };
-
-        return (
-            <ul className="FreqFormSelector tabs">
-                <li>
-                    <layoutViews.TabButton onClick={onItemClick('ml')}
-                        label={he.translate('freq__sel_form_type_ml')}
-                        isActive={props.formType === "ml"} />
-                </li>
-                <li>
-                    <layoutViews.TabButton onClick={onItemClick('tt')}
-                        label={he.translate('freq__sel_form_type_tt')}
-                        isActive={props.formType === "tt"} />
-                </li>
-                <li>
-                    <layoutViews.TabButton onClick={onItemClick('ct')}
-                        label={he.translate('freq__sel_form_type_ct')}
-                        isActive={props.formType === "ct"} />
-                </li>
-            </ul>
-        );
-    };
-
-
     // ---------------------- <FrequencyForm /> ---------------------
 
     class FrequencyForm extends React.Component<FrequencyFormProps, FrequencyFormState> {
@@ -650,31 +617,32 @@ export function init(
                 ct: 'FREQ_CT_SUBMIT'
             };
             dispatcher.dispatch({
-                actionType: actions[this.state.formType],
-                props: {}
+                name: actions[this.state.formType],
+                payload: {}
             });
         }
 
-        _renderContents() {
-            switch (this.state.formType) {
-                case 'ml':
-                    return <MLFreqForm />;
-                case 'tt':
-                    return <TTFreqForm />;
-                case 'ct':
-                    return <ctFreqForm.CTFreqForm />;
-                default:
-                     return null;
-            }
-        }
-
         render() {
+            const items = Immutable.List([
+                {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
+                {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
+                {id: 'ct', label: he.translate('freq__sel_form_type_ct')},
+            ])
+
             return (
                 <div className="FrequencyForm">
-                    <FreqFormSelector formType={this.state.formType} onChange={this._handleFormSwitch} />
-                    <hr />
                     <form className="freq-form">
-                        {this._renderContents()}
+                        <layoutViews.TabView
+                            className="FreqFormSelector"
+                            defaultId={this.state.formType}
+                            callback={this._handleFormSwitch}
+                            items={items} >
+
+                            <MLFreqForm />
+                            <TTFreqForm />
+                            <ctFreqForm.CTFreqForm />
+                        </layoutViews.TabView>
+
                         <div className="buttons">
                             <button className="default-button" type="button" onClick={this._handleSubmitClick}>
                                 {he.translate('freq__make_freq_list_btn')}

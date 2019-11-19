@@ -18,14 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
+import { Observable, of as rxOf } from 'rxjs';
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
+
+import {Kontext} from '../../types/common';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {WordlistFormModel} from './form';
 import {MultiDict} from '../../util';
+import { Action, IFullActionControl } from 'kombo';
+import { concatMap } from 'rxjs/operators';
 
 
 export type ResultData = {
@@ -101,7 +103,7 @@ export class WordlistResultModel extends StatefulModel {
 
     private reloadArgs:Kontext.ListOfPairs;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, formModel:WordlistFormModel,
             data:ResultData, headings:Array<HeadingItem>, reloadArgs:Kontext.ListOfPairs, isUnfinished:boolean) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -126,90 +128,90 @@ export class WordlistResultModel extends StatefulModel {
                 this.processPageLoad(true);
             }
         });
-
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
-                case 'WORDLIST_RESULT_VIEW_CONC':
-                    const args = new MultiDict();
-                    args.set('corpname', this.formModel.getState().corpusId);
-                    args.set('usesubcorp', this.formModel.getState().currentSubcorpus);
-                    args.set('default_attr', this.formModel.getState().wlattr);
-                    args.set('qmcase', '1');
-                    args.set('queryselector', 'cqlrow');
-                    args.set('cql', this.createPQuery(action.props['word']));
-                    window.location.href = this.layoutModel.createActionUrl('first', args.items());
-                break;
-                case 'WORDLIST_RESULT_RELOAD':
-                    this.processPageLoad();
-                break;
-                case 'WORDLIST_RESULT_NEXT_PAGE':
-                    if (!this.isLastPage) {
-                        this.currPage += 1;
-                        this.currPageInput = String(this.currPage);
-                        this.processPageLoad();
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('wordlist__page_not_found_err'));
-                    }
-                break;
-                case 'WORDLIST_RESULT_PREV_PAGE':
-                    if (this.currPage > 1) {
-                        this.currPage -= 1;
-                        this.currPageInput = String(this.currPage);
-                        this.processPageLoad();
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('wordlist__page_not_found_err'));
-                    }
-                break;
-                case 'WORDLIST_RESULT_SET_PAGE':
-                    if (validateGzNumber(action.props['page'])) {
-                        this.currPageInput = action.props['page'];
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('wordlist__invalid_page_num'));
-                    }
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_RESULT_CONFIRM_PAGE':
-                    this.currPage = parseInt(this.currPageInput, 10);
-                    this.processPageLoad();
-                break;
-                case 'WORDLIST_GO_TO_LAST_PAGE':
-                    this.isBusy = true;
-                    this.notifyChangeListeners();
-                    this.fetchLastPage().subscribe(
-                        null,
-                        (err) => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.layoutModel.showMessage('error', err);
-                        },
-                        () => {
-                            this.processPageLoad();
-                        }
-                    );
-                break;
-                case 'WORDLIST_GO_TO_FIRST_PAGE':
-                    this.currPageInput = '1';
-                    this.currPage = 1;
-                    this.processPageLoad();
-                break;
-                case 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED':
-                    this.bgCalcStatus = action.props['status'];
-                    if (action.error) {
-                        this.isError = true;
-                    }
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
     }
 
-    private fetchLastPage():Rx.Observable<boolean> {
+    onAction(action:Action):void {
+        switch (action.name) {
+            case 'WORDLIST_RESULT_VIEW_CONC':
+                const args = new MultiDict();
+                args.set('corpname', this.formModel.getState().corpusId);
+                args.set('usesubcorp', this.formModel.getState().currentSubcorpus);
+                args.set('default_attr', this.formModel.getState().wlattr);
+                args.set('qmcase', '1');
+                args.set('queryselector', 'cqlrow');
+                args.set('cql', this.createPQuery(action.payload['word']));
+                window.location.href = this.layoutModel.createActionUrl('first', args.items());
+            break;
+            case 'WORDLIST_RESULT_RELOAD':
+                this.processPageLoad();
+            break;
+            case 'WORDLIST_RESULT_NEXT_PAGE':
+                if (!this.isLastPage) {
+                    this.currPage += 1;
+                    this.currPageInput = String(this.currPage);
+                    this.processPageLoad();
+
+                } else {
+                    this.layoutModel.showMessage('error',
+                            this.layoutModel.translate('wordlist__page_not_found_err'));
+                }
+            break;
+            case 'WORDLIST_RESULT_PREV_PAGE':
+                if (this.currPage > 1) {
+                    this.currPage -= 1;
+                    this.currPageInput = String(this.currPage);
+                    this.processPageLoad();
+
+                } else {
+                    this.layoutModel.showMessage('error',
+                            this.layoutModel.translate('wordlist__page_not_found_err'));
+                }
+            break;
+            case 'WORDLIST_RESULT_SET_PAGE':
+                if (validateGzNumber(action.payload['page'])) {
+                    this.currPageInput = action.payload['page'];
+
+                } else {
+                    this.layoutModel.showMessage('error',
+                            this.layoutModel.translate('wordlist__invalid_page_num'));
+                }
+                this.emitChange();
+            break;
+            case 'WORDLIST_RESULT_CONFIRM_PAGE':
+                this.currPage = parseInt(this.currPageInput, 10);
+                this.processPageLoad();
+            break;
+            case 'WORDLIST_GO_TO_LAST_PAGE':
+                this.isBusy = true;
+                this.emitChange();
+                this.fetchLastPage().subscribe(
+                    null,
+                    (err) => {
+                        this.isBusy = false;
+                        this.emitChange();
+                        this.layoutModel.showMessage('error', err);
+                    },
+                    () => {
+                        this.processPageLoad();
+                    }
+                );
+            break;
+            case 'WORDLIST_GO_TO_FIRST_PAGE':
+                this.currPageInput = '1';
+                this.currPage = 1;
+                this.processPageLoad();
+            break;
+            case 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED':
+                this.bgCalcStatus = action.payload['status'];
+                if (action.error) {
+                    this.isError = true;
+                }
+                this.emitChange();
+            break;
+        }
+    }
+
+    private fetchLastPage():Observable<boolean> {
         const args = this.formModel.createSubmitArgs(this.formModel.getState());
         return (() => {
             if (this.numItems === null) {
@@ -221,18 +223,20 @@ export class WordlistResultModel extends StatefulModel {
                 );
 
             } else {
-                return Rx.Observable.of({
+                return rxOf({
                         messages: [],
                         size: this.numItems
                 });
             }
-        })().concatMap(
-            (data) => {
-                this.numItems = data.size;
-                this.currPage = ~~Math.ceil(this.numItems / this.pageSize);
-                this.currPageInput = String(this.currPage);
-                return Rx.Observable.of(true);
-            }
+        })().pipe(
+            concatMap(
+                (data) => {
+                    this.numItems = data.size;
+                    this.currPage = ~~Math.ceil(this.numItems / this.pageSize);
+                    this.currPageInput = String(this.currPage);
+                    return rxOf(true);
+                }
+            )
         );
     }
 
@@ -242,17 +246,17 @@ export class WordlistResultModel extends StatefulModel {
 
     private processPageLoad(skipHistory=false):void {
         this.isBusy = true;
-        this.notifyChangeListeners();
+        this.emitChange();
         this.loadData().subscribe(
             null,
             (err) => {
                 this.isBusy = false;
                 this.layoutModel.showMessage('error', err);
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             () => {
                 this.isBusy = false;
-                this.notifyChangeListeners();
+                this.emitChange();
                 if (!skipHistory) {
                     this.layoutModel.getHistory().pushState(
                         'wordlist/result',
@@ -277,7 +281,7 @@ export class WordlistResultModel extends StatefulModel {
         }));
     }
 
-    private loadData():Rx.Observable<DataAjaxResponse> {
+    private loadData():Observable<DataAjaxResponse> {
         const args = this.formModel.createSubmitArgs(this.formModel.getState());
         args.set('wlpage', this.currPage);
 
@@ -286,16 +290,17 @@ export class WordlistResultModel extends StatefulModel {
             this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
             args
 
-        ).concatMap(
-            (data) => {
-                console.log('data: ', data);
-                if (data.lastpage && data.Items.length === 0) {
-                    throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
+        ).pipe(
+            concatMap(
+                (data) => {
+                    if (data.lastpage && data.Items.length === 0) {
+                        throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
+                    }
+                    this.data = this.importData(data.Items);
+                    this.isLastPage = !!data.lastpage;
+                    return rxOf(data);
                 }
-                this.data = this.importData(data.Items);
-                this.isLastPage = !!data.lastpage;
-                return Rx.Observable.of(data);
-            }
+            )
         );
     }
 

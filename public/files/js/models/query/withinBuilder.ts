@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 /**
  *
@@ -38,7 +38,7 @@ export class WithinBuilderModel extends StatefulModel {
 
     private currAttrIdx:number;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<[string, string]>();
@@ -46,12 +46,12 @@ export class WithinBuilderModel extends StatefulModel {
         this.currAttrIdx = 0;
         const self = this;
 
-        this.dispatcher.register(function (action:Action) {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener(function (action:Action) {
+            switch (action.name) {
                 case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
                     self.loadAttrs().then(
                         () => {
-                            self.notifyChangeListeners();
+                            self.emitChange();
                         },
                         (err) => {
                             console.error(err);
@@ -60,12 +60,12 @@ export class WithinBuilderModel extends StatefulModel {
                     );
                 break;
                 case 'QUERY_INPUT_SET_WITHIN_VALUE':
-                    self.query = action.props['value'];
-                    self.notifyChangeListeners();
+                    self.query = action.payload['value'];
+                    self.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_WITHIN_ATTR':
-                    self.currAttrIdx = action.props['idx'];
-                    self.notifyChangeListeners();
+                    self.currAttrIdx = action.payload['idx'];
+                    self.emitChange();
                 break;
             }
         });

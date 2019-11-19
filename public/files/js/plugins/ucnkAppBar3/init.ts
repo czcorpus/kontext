@@ -24,17 +24,17 @@ import {PluginInterfaces} from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
 import {StatefulModel} from '../../models/base';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
+import { Action, IFullActionControl } from 'kombo';
 
 export class AppBarModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher) {
+    constructor(dispatcher:IFullActionControl) {
         super(dispatcher);
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     try {
                         toolbar.openLoginDialog();

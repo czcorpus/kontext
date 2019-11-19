@@ -24,11 +24,12 @@ import {PluginInterfaces} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
+import { Action, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf, forkJoin } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 /**
  *
@@ -148,7 +149,7 @@ export class ConcDetailModel extends StatefulModel {
     private tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesModel:ConcLineModel, structCtx:string,
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>,
             tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
         super(dispatcher);
@@ -177,16 +178,16 @@ export class ConcDetailModel extends StatefulModel {
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             () => {
                 this.playingRowIdx = -1;
-                this.notifyChangeListeners();
+                this.emitChange();
             },
             () => {
                 this.playingRowIdx = -1;
                 this.audioPlayer.stop();
-                this.notifyChangeListeners();
+                this.emitChange();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
@@ -194,29 +195,29 @@ export class ConcDetailModel extends StatefulModel {
         this.isBusy = false;
         this.tokenConnectIsBusy = false;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'CONCORDANCE_EXPAND_KWIC_DETAIL':
-                    this.expaningSide = action.props['position'];
+                    this.expaningSide = action.payload['position'];
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.loadConcDetail(
                             this.corpusId,
                             this.kwicTokenNum,
                             this.kwicLength,
                             this.lineIdx,
                             [],
-                            action.props['position']
-                    ).then(
+                            action.payload['position']
+                    ).subscribe(
                         () => {
                             this.isBusy = false;
                             this.linesModel.setLineFocus(this.lineIdx, true);
-                            this.linesModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
+                            this.linesModel.emitChange();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
@@ -224,79 +225,64 @@ export class ConcDetailModel extends StatefulModel {
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
                     this.isBusy = true;
                     this.tokenConnectIsBusy = true;
-                    this.mode = 'default';
                     this.expandLeftArgs = Immutable.List<ExpandArgs>();
                     this.expandRightArgs = Immutable.List<ExpandArgs>();
-                    this.loadConcDetail(
-                            action.props['corpusId'],
-                            action.props['tokenNumber'],
-                            action.props['kwicLength'],
-                            action.props['lineIdx'],
+                    forkJoin(
+                        this.loadConcDetail(
+                            action.payload['corpusId'],
+                            action.payload['tokenNumber'],
+                            action.payload['kwicLength'],
+                            action.payload['lineIdx'],
                             [],
                             this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null
-                    ).then(
+                        ),
+                        this.loadTokenConnect(
+                            action.payload['corpusId'],
+                            action.payload['tokenNumber'],
+                            action.payload['kwicLength'],
+                            action.payload['lineIdx']
+                        )
+
+                    ).subscribe(
                         () => {
                             this.isBusy = false;
-                            this.linesModel.setLineFocus(action.props['lineIdx'], true);
-                            this.linesModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
-                        }
-                    ).catch(
+                            this.linesModel.setLineFocus(action.payload['lineIdx'], true);
+                            this.linesModel.emitChange();
+                            this.emitChange();
+                        },
                         (err) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-
-                    this.loadTokenConnect(
-                        action.props['corpusId'],
-                        action.props['tokenNumber'],
-                        action.props['kwicLength'],
-                        action.props['lineIdx']
-
-                    ).then(
-                        () => {
-                            this.tokenConnectIsBusy = false;
-                            this.notifyChangeListeners();
-                        }
-                    ).catch(
-                        (err) => {
-                            this.tokenConnectIsBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_SHOW_TOKEN_DETAIL':
                     this.resetKwicDetail();
+                    this.resetTokenConnect();
                     this.tokenConnectIsBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.loadTokenConnect(
-                        action.props['corpusId'],
-                        action.props['tokenNumber'],
+                        action.payload['corpusId'],
+                        action.payload['tokenNumber'],
                         1,
-                        action.props['lineIdx']
+                        action.payload['lineIdx']
 
-                    ).then(
+                    ).subscribe(
                         () => {
-                            this.tokenConnectIsBusy = false;
-                            this.notifyChangeListeners();
-                        }
-
-                    ).catch(
+                            this.emitChange();
+                        },
                         (err) => {
-                            this.tokenConnectIsBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
 
                 break;
                 case 'CONCORDANCE_SHOW_WHOLE_DOCUMENT':
-                    this.loadWholeDocument().then(
+                    this.loadWholeDocument().subscribe(
                         () => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
@@ -309,41 +295,41 @@ export class ConcDetailModel extends StatefulModel {
                     this.expandRightArgs = Immutable.List<ExpandArgs>();
                     this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.loadSpeechDetail(
-                            action.props['corpusId'],
-                            action.props['tokenNumber'],
-                            action.props['kwicLength'],
-                            action.props['lineIdx'],
-                            this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null).then(
+                            action.payload['corpusId'],
+                            action.payload['tokenNumber'],
+                            action.payload['kwicLength'],
+                            action.payload['lineIdx'],
+                            this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null).subscribe(
                         () => {
                             this.isBusy = false;
-                            this.linesModel.setLineFocus(action.props['lineIdx'], true);
-                            this.linesModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
+                            this.linesModel.setLineFocus(action.payload['lineIdx'], true);
+                            this.linesModel.emitChange();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_EXPAND_SPEECH_DETAIL':
-                    this.expaningSide = action.props['position'];
+                    this.expaningSide = action.payload['position'];
                     this.isBusy = true;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                     this.loadSpeechDetail(
                             this.corpusId,
                             this.kwicTokenNum,
                             this.kwicLength,
                             this.lineIdx,
-                            action.props['position']).then(
+                            action.payload['position']).subscribe(
                         () => {
                             this.isBusy = false;
                             this.linesModel.setLineFocus(this.lineIdx, true);
-                            this.linesModel.notifyChangeListeners();
-                            this.notifyChangeListeners();
+                            this.linesModel.emitChange();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
@@ -353,34 +339,46 @@ export class ConcDetailModel extends StatefulModel {
                 break;
                 case 'CONCORDANCE_DETAIL_SWITCH_MODE':
                     (() => {
-                        if (action.props['value'] === 'default') {
+                        if (action.payload['value'] === 'default') {
                             this.mode = 'default';
                             this.expandLeftArgs = Immutable.List<ExpandArgs>();
                             this.expandRightArgs = Immutable.List<ExpandArgs>();
                             this.expaningSide = null;
+                            this.concDetail = null;
                             this.isBusy = true;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             return this.reloadConcDetail();
 
-                        } else if (action.props['value'] === 'speech') {
+                        } else if (action.payload['value'] === 'speech') {
                             this.mode = 'speech';
                             this.expandLeftArgs = Immutable.List<ExpandArgs>();
                             this.expandRightArgs = Immutable.List<ExpandArgs>();
                             this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
                             this.expaningSide = null;
+                            this.concDetail = null;
                             this.isBusy = true;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             return this.reloadSpeechDetail();
+
+                        } else {
+                            this.mode = action.payload['value'];
+                            this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                            this.expandRightArgs = Immutable.List<ExpandArgs>();
+                            this.expaningSide = null;
+                            this.concDetail = null;
+                            this.isBusy = true;
+                            this.emitChange();
+                            return rxOf(null);
                         }
-                    })().then(
+                    })().subscribe(
                         () => {
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
@@ -388,17 +386,17 @@ export class ConcDetailModel extends StatefulModel {
                 case 'CONCORDANCE_SHOW_REF_DETAIL':
                     this.resetKwicDetail();
                     this.resetTokenConnect();
-                    this.notifyChangeListeners();
-                    this.linesModel.notifyChangeListeners();
+                    this.emitChange();
+                    this.linesModel.emitChange();
                 break;
                 case 'CONCORDANCE_PLAY_SPEECH':
                     if (this.playingRowIdx > -1) {
                         this.playingRowIdx = null;
                         this.audioPlayer.stop();
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
-                    this.playingRowIdx = action.props['rowIdx'];
-                    const itemsToPlay = (<Immutable.List<string>>action.props['segments']).map(item => {
+                    this.playingRowIdx = action.payload['rowIdx'];
+                    const itemsToPlay = (<Immutable.List<string>>action.payload['segments']).map(item => {
                             return this.layoutModel.createActionUrl(`audio?corpname=${this.corpusId}&chunk=${item}`);
                         }).toArray();
                     if (itemsToPlay.length > 0) {
@@ -407,14 +405,14 @@ export class ConcDetailModel extends StatefulModel {
                     } else {
                         this.playingRowIdx = -1;
                         this.layoutModel.showMessage('error', this.layoutModel.translate('concview__nothing_to_play'));
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
                 case 'CONCORDANCE_STOP_SPEECH':
                     if (this.playingRowIdx > -1) {
                         this.playingRowIdx = null;
                         this.audioPlayer.stop();
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
             }
@@ -590,9 +588,9 @@ export class ConcDetailModel extends StatefulModel {
     /**
      *
      */
-    private loadWholeDocument():RSVP.Promise<any> {
+    private loadWholeDocument():Observable<any> {
 
-        return this.layoutModel.ajax<AjaxResponse.WideCtx>(
+        return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
             'GET',
             this.layoutModel.createActionUrl('structctx'),
             {
@@ -602,20 +600,22 @@ export class ConcDetailModel extends StatefulModel {
             },
             {}
 
-        ).then(
-            (data) => {
-                this.concDetail = data.content;
-                this.wholeDocumentLoaded = true;
-                this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                this.expandRightArgs = Immutable.List<ExpandArgs>();
-            }
+        ).pipe(
+            tap(
+                (data) => {
+                    this.concDetail = data.content;
+                    this.wholeDocumentLoaded = true;
+                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    this.expandRightArgs = Immutable.List<ExpandArgs>();
+                }
+            )
         );
     }
 
     /**
      *
      */
-    private loadSpeechDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
+    private loadSpeechDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number, expand?:string):Observable<boolean> {
         const structs = this.layoutModel.getConcArgs().getList('structs');
         const args = this.speechAttrs
                 .map(x => `${this.speechOpts.speakerIdAttr[0]}.${x}`)
@@ -634,32 +634,34 @@ export class ConcDetailModel extends StatefulModel {
         return this.loadConcDetail(corpusId, tokenNum, kwicLength, lineIdx, args, expand);
     }
 
-    private reloadSpeechDetail():RSVP.Promise<any> {
+    private reloadSpeechDetail():Observable<boolean> {
         return this.loadSpeechDetail(this.corpusId, this.kwicTokenNum, this.kwicLength, this.lineIdx);
     }
 
-    private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number, lineIdx:number):RSVP.Promise<boolean> {
+    private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number, lineIdx:number):Observable<boolean> {
         return (() => {
             if (this.tokenConnectPlg) {
                 return this.tokenConnectPlg.fetchTokenConnect(corpusId, tokenNum, numTokens);
 
             } else {
-                return RSVP.resolve<PluginInterfaces.TokenConnect.TCData>(null);
+                return rxOf<PluginInterfaces.TokenConnect.TCData>(null);
             }
-        })().then(
-            (data) => {
-                if (data) {
-                    this.tokenConnectData = {
-                        token: data.token,
-                        renders: data.renders
-                    };
-                    this.lineIdx = lineIdx;
-                    return true;
-
-                } else {
-                    return false;
+        })().pipe(
+            tap(
+                (data) => {
+                    if (data) {
+                        this.tokenConnectData = {
+                            token: data.token,
+                            renders: data.renders
+                        };
+                        this.lineIdx = lineIdx;
+                        this.tokenConnectIsBusy = false;
+                    }
                 }
-            }
+            ),
+            map(
+                (data) => data ? true : false
+            )
         );
     }
 
@@ -667,7 +669,7 @@ export class ConcDetailModel extends StatefulModel {
      *
      */
     private loadConcDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number, structs:Array<string>,
-                expand?:string):RSVP.Promise<any> {
+                expand?:string):Observable<boolean> {
         this.corpusId = corpusId;
         this.kwicTokenNum = tokenNum;
         this.kwicLength = kwicLength;
@@ -686,7 +688,7 @@ export class ConcDetailModel extends StatefulModel {
         }
 
         if (structs) {
-            args.add('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));
+            args.set('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));
         }
 
         if (expand === 'left') {
@@ -709,38 +711,41 @@ export class ConcDetailModel extends StatefulModel {
         }
 
         this.isBusy = true;
-        this.notifyChangeListeners();
+        this.emitChange();
 
-        return this.layoutModel.ajax<AjaxResponse.WideCtx>(
+        return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
             'GET',
             this.layoutModel.createActionUrl('widectx'),
             args,
             {}
 
-        ).then(
-            (data) => {
-                this.concDetail = data.content;
-                if (data.expand_left_args) {
-                    this.expandLeftArgs = this.expandLeftArgs.push([
-                        data.expand_left_args.detail_left_ctx, data.expand_left_args.detail_right_ctx
-                    ]);
+        ).pipe(
+            tap(
+                (data) => {
+                    this.concDetail = data.content;
+                    if (data.expand_left_args) {
+                        this.expandLeftArgs = this.expandLeftArgs.push([
+                            data.expand_left_args.detail_left_ctx, data.expand_left_args.detail_right_ctx
+                        ]);
 
-                } else {
-                    this.expandLeftArgs = this.expandLeftArgs.push(null);
-                }
-                if (data.expand_right_args) {
-                    this.expandRightArgs = this.expandRightArgs.push([
-                        data.expand_right_args.detail_left_ctx, data.expand_right_args.detail_right_ctx
-                    ]);
+                    } else {
+                        this.expandLeftArgs = this.expandLeftArgs.push(null);
+                    }
+                    if (data.expand_right_args) {
+                        this.expandRightArgs = this.expandRightArgs.push([
+                            data.expand_right_args.detail_left_ctx, data.expand_right_args.detail_right_ctx
+                        ]);
 
-                } else {
-                    this.expandRightArgs = this.expandRightArgs.push(null);
+                    } else {
+                        this.expandRightArgs = this.expandRightArgs.push(null);
+                    }
                 }
-            }
+            ),
+            map(d =>  !!d)
         );
     }
 
-    private reloadConcDetail():RSVP.Promise<any> {
+    private reloadConcDetail():Observable<boolean> {
         return this.loadConcDetail(this.corpusId, this.kwicTokenNum, this.kwicLength, this.lineIdx, [], 'reload');
     }
 
@@ -781,7 +786,7 @@ export class ConcDetailModel extends StatefulModel {
     }
 
     supportsTokenConnect():boolean {
-        return !!this.tokenConnectPlg;
+        return this.tokenConnectPlg  ? this.tokenConnectPlg.providesAnyTokenInfo() : false;
     }
 
     supportsSpeechView():boolean {
@@ -810,7 +815,7 @@ export class RefsDetailModel extends StatefulModel {
 
     private isBusy:boolean;
 
-    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesModel:ConcLineModel) {
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.linesModel = linesModel;
@@ -818,22 +823,22 @@ export class RefsDetailModel extends StatefulModel {
         this.data = Immutable.List<RefsColumn>();
         this.isBusy = false;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'CONCORDANCE_SHOW_REF_DETAIL':
                     this.isBusy = true;
-                    this.notifyChangeListeners();
-                    this.loadRefs(action.props['corpusId'], action.props['tokenNumber'], action.props['lineIdx']).then(
+                    this.emitChange();
+                    this.loadRefs(action.payload['corpusId'], action.payload['tokenNumber'], action.payload['lineIdx']).subscribe(
                         () => {
-                            this.linesModel.setLineFocus(action.props['lineIdx'], true);
-                            this.linesModel.notifyChangeListeners();
+                            this.linesModel.setLineFocus(action.payload['lineIdx'], true);
+                            this.linesModel.emitChange();
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
                             this.isBusy = false;
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
@@ -844,8 +849,8 @@ export class RefsDetailModel extends StatefulModel {
                     if (this.lineIdx !== null) {
                         this.linesModel.setLineFocus(this.lineIdx, false);
                         this.lineIdx = null;
-                        this.notifyChangeListeners();
-                        this.linesModel.notifyChangeListeners();
+                        this.emitChange();
+                        this.linesModel.emitChange();
                     }
                 break;
             }
@@ -868,17 +873,20 @@ export class RefsDetailModel extends StatefulModel {
         }
     }
 
-    private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<any> {
-        return this.layoutModel.ajax<AjaxResponse.FullRef>(
+    private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):Observable<boolean> {
+        return this.layoutModel.ajax$<AjaxResponse.FullRef>(
             'GET',
             this.layoutModel.createActionUrl('fullref'),
             {corpname: corpusId, pos: tokenNum}
 
-        ).then(
-            (data) => {
-                this.lineIdx = lineIdx;
-                this.data = Immutable.List<RefsColumn>(data.Refs);
-            }
+        ).pipe(
+            tap(
+                (data) => {
+                    this.lineIdx = lineIdx;
+                    this.data = Immutable.List<RefsColumn>(data.Refs);
+                }
+            ),
+            map(data => !!data)
         );
     }
 

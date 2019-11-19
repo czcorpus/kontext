@@ -21,9 +21,8 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import RSVP from 'rsvp';
-import * as Immutable from 'immutable';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  */
@@ -33,21 +32,21 @@ export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
 
     private userData:Kontext.UserCredentials;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.userData = null;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'USER_INFO_REQUESTED':
                     this.loadUserInfo().then(
                         (_) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;

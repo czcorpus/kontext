@@ -21,12 +21,12 @@
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {FreqFormInputs} from './freqForms';
 import {FreqResultsSaveModel} from './save';
 import {MultiDict} from '../../util';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface ResultItem {
@@ -57,7 +57,7 @@ export interface ResultBlock {
 }
 
 export interface FreqDataRowsModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IFullActionControl;
     pageModel:PageModel;
     freqCrit:Array<[string, string]>;
     formProps:FreqFormInputs;
@@ -102,59 +102,59 @@ export class FreqDataRowsModel extends StatefulModel {
             quickSaveRowLimit: quickSaveRowLimit
         });
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_RESULT_SET_MIN_FREQ_VAL':
-                    if (this.validateNumber(action.props['value'], 0)) {
-                        this.flimit = action.props['value'];
+                    if (this.validateNumber(action.payload['value'], 0)) {
+                        this.flimit = action.payload['value'];
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__limit_invalid_val'));
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_RESULT_APPLY_MIN_FREQ':
                     this.loadPage().then(
                         (data) => {
                             this.currentPage = '1';
                             this.pushStateToHistory();
-                            this.notifyChangeListeners();
+                            this.emitChange();
 
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
                 case 'FREQ_RESULT_SORT_BY_COLUMN':
-                    this.sortColumn = action.props['value'];
+                    this.sortColumn = action.payload['value'];
                     this.loadPage().then(
                         (data) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     );
                 break;
                 case 'FREQ_RESULT_SET_CURRENT_PAGE':
-                    if (this.validateNumber(action.props['value'], 1)) {
-                        this.currentPage = action.props['value'];
+                    if (this.validateNumber(action.payload['value'], 1)) {
+                        this.currentPage = action.payload['value'];
                         this.loadPage().then(
                             (data) => {
-                                this.notifyChangeListeners();
+                                this.emitChange();
                             },
                             (err) => {
                                 this.pageModel.showMessage('error', err);
-                                this.notifyChangeListeners();
+                                this.emitChange();
                             }
                         );
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__page_invalid_val'));
-                        this.notifyChangeListeners();
+                        this.emitChange();
                      }
                 break;
             }

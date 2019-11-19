@@ -30,5 +30,9 @@ export interface CorplistItemUcnk extends CorplistItem {
     requestable: boolean;
 }
 
+export function corplistItemIsUcnk(item:CorplistItem):item is CorplistItemUcnk {
+    return item['requestable'] !== undefined;
+}
+
 
 

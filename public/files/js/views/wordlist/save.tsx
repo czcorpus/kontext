@@ -21,9 +21,10 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import { WordlistSaveModel } from '../../models/wordlist/save';
 import {CommonViews} from '../common';
+import { Subscription } from 'rxjs';
 
 
 export interface WordlistSaveViews {
@@ -32,7 +33,7 @@ export interface WordlistSaveViews {
 
 
 export interface WordlistSaveFormViewsArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     utils:Kontext.ComponentHelpers;
     commonViews:CommonViews;
     saveModel:WordlistSaveModel;
@@ -63,8 +64,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
-                props: {
+                name: 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
+                payload: {
                     value: !props.value
                 }
             });
@@ -95,8 +96,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_SAVE_SET_INCLUDE_HEADING',
-                props: {
+                name: 'WORDLIST_SAVE_SET_INCLUDE_HEADING',
+                payload: {
                     value: !props.value
                 }
             });
@@ -142,8 +143,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_SAVE_FORM_SET_TO_LINE',
-                props: {
+                name: 'WORDLIST_SAVE_FORM_SET_TO_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -171,8 +172,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
         const handleSaveFormatSelect = (evt:React.ChangeEvent<{}>) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_SAVE_FORM_SET_FORMAT',
-                props: {
+                name: 'WORDLIST_SAVE_FORM_SET_FORMAT',
+                payload: {
                     value: evt.target['value'] // TODO
                 }
             });
@@ -194,6 +195,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     // --------------------------- <SaveWlForm /> -------------------------------
 
     class WordlistSaveForm extends React.Component<WordlistSaveFormProps, WordlistSaveFormState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -218,24 +221,24 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
         _handleCloseClick() {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_SAVE_FORM_HIDE',
-                props: {}
+                name: 'WORDLIST_SAVE_FORM_HIDE',
+                payload: {}
             });
         }
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_SAVE_FORM_SUBMIT',
-                props: {}
+                name: 'WORDLIST_SAVE_FORM_SUBMIT',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            saveModel.addChangeListener(this.__handleModelChange);
+            this.modelSubscription = saveModel.addListener(this.__handleModelChange);
         }
 
         componentWillUnmount() {
-            saveModel.removeChangeListener(this.__handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

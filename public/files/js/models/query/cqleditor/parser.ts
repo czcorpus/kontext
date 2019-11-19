@@ -251,9 +251,6 @@ class RuleCharMap {
                     if (this.attrHelper.structExists(structName)) {
                         inserts[structRange[0]].push(`<span title="${this.he.translate('query__structure')}">`);
                         inserts[structRange[1]+1].push('</span>');
-
-                    } else {
-                        errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
                     }
                     attrNamesInStruct.reverse();
                     attrNamesInStruct.slice(1).forEach((sa, i, arr) => {
@@ -273,6 +270,16 @@ class RuleCharMap {
                         const range = this.convertRange(v.from, v.to, chunks);
                         inserts[range[0]].push('<br />');
                     }
+                break;
+                case 'OpenStructTag':
+                case 'CloseStructTag': {
+                    const attrNamesInStruct = this.findSubRuleIn('AttName', v.from, v.to);
+                    const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
+                    const structName = this.query.substring(structTmp.from, structTmp.to);
+                    if (!this.attrHelper.structExists(structName)) {
+                        errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
+                    }
+                }
                 break;
             }
         });

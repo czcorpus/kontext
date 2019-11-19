@@ -23,7 +23,8 @@ import * as Immutable from 'immutable';
 import {Kontext, KeyCodes} from '../../types/common';
 import {ConcSampleModel} from '../../models/query/sample';
 import {SwitchMainCorpModel} from '../../models/query/switchmc';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface SampleFormViews {
@@ -73,12 +74,14 @@ export interface SwitchMainCorpFormState {
 
 // --------
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         sampleModel:ConcSampleModel, switchMcModel:SwitchMainCorpModel):SampleFormViews {
 
     // ------------------------ <SampleForm /> --------------------------------
 
     class SampleForm extends React.Component<SampleFormProps, SampleFormState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -98,8 +101,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleInputChange(evt) {
             dispatcher.dispatch({
-                actionType: 'SAMPLE_FORM_SET_RLINES',
-                props: {
+                name: 'SAMPLE_FORM_SET_RLINES',
+                payload: {
                     sampleId: this.props.sampleId,
                     value: evt.target.value
                 }
@@ -110,14 +113,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
-                        actionType: 'BRANCH_QUERY',
-                        props: {operationIdx: this.props.operationIdx}
+                        name: 'BRANCH_QUERY',
+                        payload: {operationIdx: this.props.operationIdx}
                     });
 
                 } else {
                     dispatcher.dispatch({
-                        actionType: 'SAMPLE_FORM_SUBMIT',
-                        props: {sampleId: this.props.sampleId}
+                        name: 'SAMPLE_FORM_SUBMIT',
+                        payload: {sampleId: this.props.sampleId}
                     });
                 }
                 evt.preventDefault();
@@ -126,11 +129,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            sampleModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = sampleModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            sampleModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -234,6 +237,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
      */
     class SwitchMainCorpForm extends React.Component<SwitchMainCorpFormProps, SwitchMainCorpFormState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = {maincorpValues: switchMcModel.getMainCorpValues()};
@@ -246,25 +251,25 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            switchMcModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = switchMcModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            switchMcModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _handleSubmitEvent(evt) {
             if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
-                        actionType: 'BRANCH_QUERY',
-                        props: {operationIdx: this.props.operationIdx}
+                        name: 'BRANCH_QUERY',
+                        payload: {operationIdx: this.props.operationIdx}
                     });
 
                 } else {
                     dispatcher.dispatch({
-                        actionType: 'SWITCH_MC_FORM_SUBMIT',
-                        props: {opKey: this.props.opKey}
+                        name: 'SWITCH_MC_FORM_SUBMIT',
+                        payload: {opKey: this.props.opKey}
                     });
                 }
                 evt.preventDefault();

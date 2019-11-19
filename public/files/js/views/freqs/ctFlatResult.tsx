@@ -24,7 +24,8 @@ import * as Immutable from 'immutable';
 import {Freq2DFlatViewModel, FreqDataItem} from '../../models/freqs/flatCtable';
 import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
 import {init as ctViewOptsFactory} from './ctViewOpts';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 // ----------------------- exported types ------------------------------------
 
@@ -51,7 +52,7 @@ interface Views {
 // ------------------------- factory -----------------------------------------
 
 export function init(
-            dispatcher:ActionDispatcher,
+            dispatcher:IActionDispatcher,
             he:Kontext.ComponentHelpers,
             ctFlatFreqDataRowsModel:Freq2DFlatViewModel):Views {
 
@@ -116,8 +117,8 @@ export function init(
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SORT_FLAT_LIST',
-                props: {
+                name: 'FREQ_CT_SORT_FLAT_LIST',
+                payload: {
                     value: props.value,
                     reversed: props.isActive ? !props.isReversed : false
                 }
@@ -151,6 +152,8 @@ export function init(
      */
     class CTFlatFreqResultView extends React.Component<CTFlatFreqResultViewProps, CTFlatFreqResultViewState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -178,11 +181,11 @@ export function init(
         }
 
         componentDidMount() {
-            ctFlatFreqDataRowsModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = ctFlatFreqDataRowsModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            ctFlatFreqDataRowsModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

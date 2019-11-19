@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import { ConcLineModel } from '../../models/concordance/lines';
 import {TextChunk} from '../../types/concordance';
@@ -61,7 +61,7 @@ export interface LineExtrasViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineModel);
     const layoutViews = he.getLayoutViews();
@@ -77,8 +77,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
-                props: {
+                name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
+                payload: {
                     chunksIds: props.chunks.map(v => v.id),
                 }
             });
@@ -129,8 +129,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
         const checkboxChangeHandler = (event) => {
             dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_SELECT_LINE',
-                props: {
+                name: 'LINE_SELECTION_SELECT_LINE',
+                payload: {
                     value: event.currentTarget.checked ? 1 : null,
                     lineNumber: props.lineNumber,
                     tokenNumber: props.tokenNumber,
@@ -155,8 +155,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, l
 
         const textChangeHandler = (event) => {
             dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_SELECT_LINE',
-                props: {
+                name: 'LINE_SELECTION_SELECT_LINE',
+                payload: {
                     value: event.currentTarget.value ? Number(event.currentTarget.value) : -1,
                     lineNumber: props.lineNumber,
                     tokenNumber: props.tokenNumber,

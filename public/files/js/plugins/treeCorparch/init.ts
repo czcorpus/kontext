@@ -16,14 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { of as rxOf } from 'rxjs';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {Action} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {init as viewInit, Views as TreeCorparchViews} from './view';
 import {FirstQueryFormModel} from '../../models/query/first';
+import { Action } from 'kombo';
+import { Subscription } from 'rxjs';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -65,16 +67,16 @@ export class TreeWidgetModel extends StatefulModel {
         this.queryModel = queryModel;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
-        this.dispatcher.register((action:Action) => {
-                switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+                switch (action.name) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        let item = this.idMap.get(action.props['nodeId']);
+                        let item = this.idMap.get(action.payload['nodeId']);
                         item.active = !item.active;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     break;
                     case 'TREE_CORPARCH_GET_DATA':
                         this.loadData().then(
-                            (d) => this.notifyChangeListeners(),
+                            (d) => this.emitChange(),
                             (err) => {
                                 this.pluginApi.showMessage('error', err);
                             }
@@ -82,7 +84,7 @@ export class TreeWidgetModel extends StatefulModel {
                     break;
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
                         this.corpusClickHandler(
-                            [action.props['ident']],
+                            [action.payload['ident']],
                             this.queryModel.getCurrentSubcorpus()
                         );
                     break;
@@ -212,11 +214,11 @@ class DummyQueryModel implements PluginInterfaces.Corparch.ICorpSelection {
         return false;
     }
 
-    addChangeListener(fn:()=>void):void {}
+    addListener(fn:()=>void):Subscription {
+        return rxOf({}).subscribe(fn);
+    }
 
-    removeChangeListener(fn:()=>void):void {}
-
-    notifyChangeListeners(eventType?:string, error?:Error):void {}
+    emitChange(eventType?:string, error?:Error):void {}
 }
 
 

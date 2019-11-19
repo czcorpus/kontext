@@ -21,9 +21,9 @@
 import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
@@ -153,7 +153,7 @@ export class Freq2DFormModel extends StatefulModel {
 
     private ctxIndex2:number;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties,
             adhocSubcIdentifier:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
 
@@ -169,45 +169,45 @@ export class Freq2DFormModel extends StatefulModel {
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
         this.adhocSubcDetector = adhocSubcIdentifier;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
-                    this.setDimensionAttr(action.props['dimension'], action.props['value']);
+                    this.setDimensionAttr(action.payload['dimension'], action.payload['value']);
                     const err1 = this.validateAttrs();
                     if (err1) {
                         this.pageModel.showMessage('error', err1);
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE':
-                    this.minFreqType = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.minFreqType = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ':
-                    this.minFreq = action.props['value'];
+                    this.minFreq = action.payload['value'];
                     const err2 = this.validateMinFreq();
                     if (err2) {
                         this.pageModel.showMessage('error', err2);
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_FORM_SET_CTX':
-                    if (action.props['dim'] === 1) {
-                        this.ctxIndex1 = action.props['value'];
+                    if (action.payload['dim'] === 1) {
+                        this.ctxIndex1 = action.payload['value'];
 
-                    } else if (action.props['dim'] === 2) {
-                        this.ctxIndex2 = action.props['value'];
+                    } else if (action.payload['dim'] === 2) {
+                        this.ctxIndex2 = action.payload['value'];
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_FORM_SET_ALIGN_TYPE':
-                    if (action.props['dim'] === 1) {
-                        this.alignType1 = action.props['value'];
+                    if (action.payload['dim'] === 1) {
+                        this.alignType1 = action.payload['value'];
 
-                    } else if (action.props['dim'] === 2) {
-                        this.alignType2 = action.props['value'];
+                    } else if (action.payload['dim'] === 2) {
+                        this.alignType2 = action.payload['value'];
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SUBMIT':
                     const err3 = this.validateMinFreq();
@@ -223,7 +223,7 @@ export class Freq2DFormModel extends StatefulModel {
                         if (err4) {
                             this.pageModel.showMessage('error', err4);
                         }
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
             break;
             }

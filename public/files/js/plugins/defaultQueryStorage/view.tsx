@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, KeyCodes} from '../../types/common';
 import { QueryStorageModel, InputBoxHistoryItem } from './models';
 import { SetQueryInputAction } from '../../models/query/common';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface QueryStorageProps {
@@ -45,11 +46,13 @@ export interface Views {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, queryStorageModel:QueryStorageModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, queryStorageModel:QueryStorageModel) {
 
     const layoutViews = he.getLayoutViews();
 
     class QueryStorage extends React.Component<QueryStorageProps, QueryStorageState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -81,15 +84,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
             } else if (evt.keyCode === KeyCodes.ENTER) {
                 const historyItem = this.state.data.get(this.state.currentItem);
                 dispatcher.dispatch({
-                    actionType: 'QUERY_INPUT_SELECT_TYPE',
-                    props: {
+                    name: 'QUERY_INPUT_SELECT_TYPE',
+                    payload: {
                         sourceId: this.props.sourceId, // either corpname or filterId
                         queryType: historyItem.query_type
                     }
                 });
                 dispatcher.dispatch<SetQueryInputAction>({
-                    actionType: 'QUERY_INPUT_SET_QUERY',
-                    props: {
+                    name: 'QUERY_INPUT_SET_QUERY',
+                    payload: {
                         sourceId: this.props.sourceId,
                         query: historyItem.query,
                         rawAnchorIdx: null,
@@ -109,15 +112,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
         _handleClickSelection(itemNum) {
             const historyItem = this.state.data.get(itemNum);
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
+                payload: {
                     sourceId: this.props.sourceId,
                     queryType: historyItem.query_type
                 }
             });
             dispatcher.dispatch<SetQueryInputAction>({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                payload: {
                     sourceId: this.props.sourceId,
                     query: historyItem.query,
                     rawAnchorIdx: null,
@@ -129,15 +132,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, q
         }
 
         componentDidMount() {
-            queryStorageModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = queryStorageModel.addListener(this._handleModelChange);
             dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_LOAD_HISTORY',
-                props: {}
+                name: 'QUERY_STORAGE_LOAD_HISTORY',
+                payload: {}
             });
         }
 
         componentWillUnmount() {
-            queryStorageModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _handleModelChange() {

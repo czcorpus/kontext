@@ -23,7 +23,7 @@ import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {PageModel} from '../app/main';
 import { StatefulModel } from './base';
-import { ActionDispatcher, Action } from '../app/dispatcher';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  * Fixed corpus, selectable subcorpus. This is used as an alternative to query model
@@ -46,7 +46,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
 
     constructor({layoutModel, dispatcher, usesubcorp, origSubcorpName, foreignSubcorp, corpora, availSubcorpora=[]}:{
             layoutModel:PageModel;
-            dispatcher:ActionDispatcher;
+            dispatcher:IFullActionControl;
             usesubcorp:string;
             origSubcorpName:string;
             foreignSubcorp:boolean;
@@ -60,17 +60,17 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
         this.availSubcorpora = Immutable.List<Kontext.SubcorpListItem>(availSubcorpora);
         this.corpora = Immutable.List<string>(corpora);
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (action.props['pubName']) {
-                        this.currentSubcorp = action.props['pubName'];
-                        this.origSubcorpName = action.props['subcorp'];
-                        this.isForeignSubcorp = action.props['foreign'];
+                    if (action.payload['pubName']) {
+                        this.currentSubcorp = action.payload['pubName'];
+                        this.origSubcorpName = action.payload['subcorp'];
+                        this.isForeignSubcorp = action.payload['foreign'];
 
                     } else {
-                        this.currentSubcorp = action.props['subcorp'];
-                        this.origSubcorpName = action.props['subcorp'];
+                        this.currentSubcorp = action.payload['subcorp'];
+                        this.origSubcorpName = action.payload['subcorp'];
                         this.isForeignSubcorp = false;
                     }
                     const corpIdent = this.layoutModel.getCorpusIdent();
@@ -85,7 +85,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
                             foreignSubcorp: this.isForeignSubcorp
                         }
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });

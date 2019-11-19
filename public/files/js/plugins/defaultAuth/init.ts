@@ -21,12 +21,12 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
 import {init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
 import {UserProfileModel} from './profile';
+import { Action, IFullActionControl } from 'kombo';
 
 
 /**
@@ -40,22 +40,22 @@ export class UserStatusModel extends StatefulModel {
 
     private returnUrl:string;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.loginFormVisible = false;
         this.returnUrl = null;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     this.loginFormVisible = true;
-                    this.returnUrl = action.props['returnUrl'];
-                    this.notifyChangeListeners();
+                    this.returnUrl = action.payload['returnUrl'];
+                    this.emitChange();
                 break;
                 case 'USER_HIDE_LOGIN_DIALOG':
                     this.loginFormVisible = false;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'USER_LOGOUTX':
                     this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), []);

@@ -22,13 +22,14 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext, KeyCodes} from '../../types/common';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import { WordlistSaveModel } from '../../models/wordlist/save';
 import {WordlistResultModel, IndexedResultItem, HeadingItem} from '../../models/wordlist/main';
 import {WordlistSaveViews} from './save';
+import { Subscription } from 'rxjs';
 
 export interface WordlistResultViewsArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     utils:Kontext.ComponentHelpers;
     wordlistSaveViews:WordlistSaveViews;
     wordlistResultModel:WordlistResultModel;
@@ -78,14 +79,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_RESULT_SET_SORT_COLUMN',
-                props: {
+                name: 'WORDLIST_RESULT_SET_SORT_COLUMN',
+                payload: {
                     sortKey: props.sortKey
                 }
             });
             dispatcher.dispatch({
-                actionType: 'WORDLIST_RESULT_RELOAD',
-                props: {}
+                name: 'WORDLIST_RESULT_RELOAD',
+                payload: {}
             });
         };
 
@@ -121,8 +122,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
         const handleViewConcClick = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_RESULT_VIEW_CONC',
-                props: {
+                name: 'WORDLIST_RESULT_VIEW_CONC',
+                payload: {
                     word: props.word
                 }
             });
@@ -178,8 +179,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_RESULT_SET_PAGE',
-                props: {
+                name: 'WORDLIST_RESULT_SET_PAGE',
+                payload: {
                     page: evt.target.value
                 }
             });
@@ -203,15 +204,15 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
         const handlePrevPageClick = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_RESULT_PREV_PAGE',
-                props: {}
+                name: 'WORDLIST_RESULT_PREV_PAGE',
+                payload: {}
             });
         };
 
         const handleFirstPageClick = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_GO_TO_FIRST_PAGE',
-                props: {}
+                name: 'WORDLIST_GO_TO_FIRST_PAGE',
+                payload: {}
             });
         };
 
@@ -233,15 +234,15 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
         const handleNextPageClick = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_RESULT_NEXT_PAGE',
-                props: {}
+                name: 'WORDLIST_RESULT_NEXT_PAGE',
+                payload: {}
             });
         };
 
         const handleLastPageClick = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_GO_TO_LAST_PAGE',
-                props: {}
+                name: 'WORDLIST_GO_TO_LAST_PAGE',
+                payload: {}
             });
         };
 
@@ -273,8 +274,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
                 evt.preventDefault();
                 evt.stopPropagation();
                 dispatcher.dispatch({
-                    actionType: 'WORDLIST_RESULT_CONFIRM_PAGE',
-                    props: {}
+                    name: 'WORDLIST_RESULT_CONFIRM_PAGE',
+                    payload: {}
                 });
             }
         };
@@ -334,10 +335,13 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     class WordlistResult extends React.Component<WordlistResultProps, WordlistResultState> {
 
+        private modelSubscriptions:Array<Subscription>;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
             this._handleModelChange = this._handleModelChange.bind(this);
+            this.modelSubscriptions = [];
         }
 
         _fetchModelState() {
@@ -363,13 +367,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
 
         componentDidMount() {
-            wordlistResultModel.addChangeListener(this._handleModelChange);
-            wordlistSaveModel.addChangeListener(this._handleModelChange);
+            this.modelSubscriptions = [
+                wordlistResultModel.addListener(this._handleModelChange),
+                wordlistSaveModel.addListener(this._handleModelChange)
+            ];
         }
 
         componentWillUnmount() {
-            wordlistResultModel.removeChangeListener(this._handleModelChange);
-            wordlistSaveModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscriptions.forEach(s => s.unsubscribe);
         }
 
         render() {

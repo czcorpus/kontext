@@ -23,7 +23,7 @@ import RSVP from 'rsvp';
 import {Kontext} from '../types/common';
 import {IPluginApi} from '../types/plugins';
 import {StatefulModel} from './base';
-import {ActionDispatcher, Action} from '../app/dispatcher';
+import {Action, IFullActionControl} from 'kombo';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
@@ -58,9 +58,8 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
     static CHECK_INTERVAL = 10000;
 
 
-    constructor(dispatcher:ActionDispatcher, pageModel:IPluginApi, conf:any) {
+    constructor(dispatcher:IFullActionControl, pageModel:IPluginApi, conf:any) {
         super(dispatcher);
-        const self = this;
         this.pageModel = pageModel;
         this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(conf.map(item => {
             return {
@@ -76,16 +75,16 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         this.asyncTaskCheckerInterval = null;
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
                     this.deleteFinishedTaskInfo().then(
                         (data) => {
                             this.updateMessageList(data.data);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                             this.pageModel.showMessage('error', err);
                         }
                     );
@@ -93,29 +92,29 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
                 case 'INBOX_ADD_ASYNC_TASK':
                     this.asyncTasks = this.asyncTasks.push({
                         status: AsyncTaskStatus.PENDING,
-                        ident: action.props['ident'],
+                        ident: action.payload['ident'],
                         created: new Date().getTime() / 1000,
-                        label: action.props['label'],
-                        category: action.props['category'],
+                        label: action.payload['label'],
+                        category: action.payload['category'],
                         error: null,
                         args: {}
                     });
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'INBOX_UPDATE_ASYNC_TASK':
-                    const srchIdx = this.asyncTasks.findIndex(v => v.ident === action.props['ident']);
+                    const srchIdx = this.asyncTasks.findIndex(v => v.ident === action.payload['ident']);
                     if (srchIdx > -1) {
                         const old = this.asyncTasks.get(srchIdx);
                         this.asyncTasks = this.asyncTasks.set(srchIdx, {
-                            status: action.props['status'],
-                            ident: action.props['ident'],
+                            status: action.payload['status'],
+                            ident: action.payload['ident'],
                             created: old.created,
                             label: old.label,
                             category: old.category,
                             error: old.error,
                             args: old.args
                         });
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
 
                 break;
@@ -189,7 +188,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
 
     init():void {
         if (this.asyncTasks.size > 0) {
-            this.notifyChangeListeners();
+            this.emitChange();
             if (!this.asyncTaskCheckerInterval) {
                 this.asyncTaskCheckerInterval = window.setInterval(() => {
                     this.checkForStatus().then(
@@ -206,7 +205,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
                                 });
                             }
                             this.updateMessageList(data.data);
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         }
                     ).catch(
                         (err) => {

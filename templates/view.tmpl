@@ -18,7 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 #from translation import ugettext as _
-#from templating.filters import *
 #from cmpltmpl.document import document
 #extends document
 
@@ -90,6 +89,7 @@ __conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
 __conf.DefaultAttr = $to_json($default_attr);
 __conf.AttrList = $to_json($getVar('AttrList', []));
 __conf.StructAttrList = $to_json($getVar('StructAttrList', []));
+__conf.StructList = $to_json($getVar('StructList', []));
 __conf.InputLanguages = $to_json($input_languages);
 __conf.FreqFormProps = $to_json($freq_form_args);
 __conf.CTFreqFormProps = $to_json($ctfreq_form_args);

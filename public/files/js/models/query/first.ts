@@ -25,12 +25,12 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
 import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
+import { IFullActionControl } from 'kombo';
 
 
 export interface QueryFormUserEntries {
@@ -180,7 +180,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     // ----------------------
 
     constructor(
-            dispatcher:ActionDispatcher,
+            dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
@@ -211,33 +211,33 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         this.currentAction = 'first_form';
         this.supportedWidgets = this.determineSupportedWidgets();
 
-        this.dispatcher.register(payload => {
-            switch (payload.actionType) {
+        this.dispatcher.registerActionListener(action => {
+            switch (action.name) {
                 case 'CQL_EDITOR_DISABLE':
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SELECT_TYPE':
-                    let qType = payload.props['queryType'];
-                    if (!this.hasLemma.get(payload.props['sourceId']) &&  qType === 'lemma') {
+                    let qType = action.payload['queryType'];
+                    if (!this.hasLemma.get(action.payload['sourceId']) &&  qType === 'lemma') {
                         qType = 'phrase';
                         this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
                     }
-                    this.queryTypes = this.queryTypes.set(payload.props['sourceId'], qType);
+                    this.queryTypes = this.queryTypes.set(action.payload['sourceId'], qType);
                     this.supportedWidgets = this.determineSupportedWidgets();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'CORPARCH_FAV_ITEM_CLICK':
 
                 break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (payload.props['pubName']) {
-                        this.currentSubcorp = payload.props['pubName'];
-                        this.origSubcorpName = payload.props['subcorp'];
-                        this.isForeignSubcorpus = !!payload.props['foreign'];
+                    if (action.payload['pubName']) {
+                        this.currentSubcorp = action.payload['pubName'];
+                        this.origSubcorpName = action.payload['subcorp'];
+                        this.isForeignSubcorpus = !!action.payload['foreign'];
 
                     } else {
-                        this.currentSubcorp = payload.props['subcorp'];
-                        this.origSubcorpName = payload.props['subcorp'];
+                        this.currentSubcorp = action.payload['subcorp'];
+                        this.origSubcorpName = action.payload['subcorp'];
                         this.isForeignSubcorpus = false;
                     }
                     const corpIdent = this.pageModel.getCorpusIdent();
@@ -252,87 +252,87 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                             foreignSubcorp: this.isForeignSubcorpus
                         }
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_MOVE_CURSOR':
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        payload.props['sourceId'],
+                        action.payload['sourceId'],
                         this.shouldDownArrowTriggerHistory(
-                            this.queries.get(payload.props['sourceId']),
-                            payload.props['rawAnchorIdx'],
-                            payload.props['rawFocusIdx']
+                            this.queries.get(action.payload['sourceId']),
+                            action.payload['rawAnchorIdx'],
+                            action.payload['rawFocusIdx']
                         )
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
-                    if (payload.props['insertRange']) {
-                        this.addQueryInfix(payload.props['sourceId'], payload.props['query'], payload.props['insertRange']);
+                    if (action.payload['insertRange']) {
+                        this.addQueryInfix(action.payload['sourceId'], action.payload['query'], action.payload['insertRange']);
 
                     } else {
-                        this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
+                        this.queries = this.queries.set(action.payload['sourceId'], action.payload['query']);
                     }
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        payload.props['sourceId'],
+                        action.payload['sourceId'],
                         this.shouldDownArrowTriggerHistory(
-                            payload.props['query'],
-                            payload.props['rawAnchorIdx'],
-                            payload.props['rawFocusIdx']
+                            action.payload['query'],
+                            action.payload['rawAnchorIdx'],
+                            action.payload['rawFocusIdx']
                         )
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
                     this.queries = this.queries.set(
-                        payload.props['sourceId'],
+                        action.payload['sourceId'],
                         appendQuery(
-                            this.queries.get(payload.props['sourceId']),
-                            payload.props['query'],
-                            !!payload.props['prependSpace']
+                            this.queries.get(action.payload['sourceId']),
+                            action.payload['query'],
+                            !!action.payload['prependSpace']
                         )
                     );
-                    if (payload.props['closeWhenDone']) {
-                        this.activeWidgets = this.activeWidgets.set(payload.props['sourceId'], null);
+                    if (action.payload['closeWhenDone']) {
+                        this.activeWidgets = this.activeWidgets.set(action.payload['sourceId'], null);
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_REMOVE_LAST_CHAR':
-                    const currQuery2 = this.queries.get(payload.props['sourceId']);
+                    const currQuery2 = this.queries.get(action.payload['sourceId']);
                     if (currQuery2.length > 0) {
-                        this.queries = this.queries.set(payload.props['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
+                        this.queries = this.queries.set(action.payload['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_LPOS':
-                    this.lposValues = this.lposValues.set(payload.props['sourceId'], payload.props['lpos']);
-                    this.notifyChangeListeners();
+                    this.lposValues = this.lposValues.set(action.payload['sourceId'], action.payload['lpos']);
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_MATCH_CASE':
-                    this.matchCaseValues = this.matchCaseValues.set(payload.props['sourceId'], payload.props['value']);
-                    this.notifyChangeListeners();
+                    this.matchCaseValues = this.matchCaseValues.set(action.payload['sourceId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_DEFAULT_ATTR':
-                    this.defaultAttrValues = this.defaultAttrValues.set(payload.props['sourceId'], payload.props['value']);
-                    this.notifyChangeListeners();
+                    this.defaultAttrValues = this.defaultAttrValues.set(action.payload['sourceId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
-                    this.addAlignedCorpus(payload.props['corpname']);
-                    this.notifyChangeListeners();
+                    this.addAlignedCorpus(action.payload['corpname']);
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                    this.removeAlignedCorpus(payload.props['corpname']);
-                    this.notifyChangeListeners();
+                    this.removeAlignedCorpus(action.payload['corpname']);
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
-                    this.pcqPosNegValues = this.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
-                    this.notifyChangeListeners();
+                    this.pcqPosNegValues = this.pcqPosNegValues.set(action.payload['corpname'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_SET_INCLUDE_EMPTY':
-                    this.includeEmptyValues = this.includeEmptyValues.set(payload.props['corpname'], payload.props['value']);
-                    this.notifyChangeListeners();
+                    this.includeEmptyValues = this.includeEmptyValues.set(action.payload['corpname'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'QUERY_MAKE_CORPUS_PRIMARY':
-                    this.makeCorpusPrimary(payload.props['corpname']);
+                    this.makeCorpusPrimary(action.payload['corpname']);
                     break;
                 case 'QUERY_INPUT_SUBMIT':
                     if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
@@ -340,7 +340,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                     }
                 break;
                 case 'CORPUS_SWITCH_MODEL_RESTORE':
-                    this.restoreFromCorpSwitch(payload.props as Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>);
+                    this.restoreFromCorpSwitch(action.payload as Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>);
                 break;
             }
         });
@@ -361,7 +361,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
             this.tagBuilderSupport = Immutable.Map<string, boolean>(concArgs['__new__'] ? concArgs['__new__'].tag_builder_support : {});
             this.supportedWidgets = this.determineSupportedWidgets();
 
-            this.notifyChangeListeners();
+            this.emitChange();
         }
     }
 

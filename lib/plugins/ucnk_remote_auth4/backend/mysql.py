@@ -190,7 +190,7 @@ class Backend(DatabaseBackend):
     def load_corpus(self, corp_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.tagset, c.collator_locale, '
+            'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
             'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
             '  AS speaker_id_attr, '
             'IF (c.speech_overlap_struct IS NOT NULL AND c.speech_overlap_attr IS NOT NULL, '
@@ -216,7 +216,7 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=10000000000):
+                         offset=0, limit=10000000000, favourites=()):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
@@ -249,13 +249,18 @@ class Backend(DatabaseBackend):
             values_cond1.append(max_size)
             where_cond2.append('(c.size <= %s)')
             values_cond2.append(max_size)
+        if favourites:
+            where_cond1.append('(c.name in (%s))' % ('%s,' * len(favourites))[:-1])
+            values_cond1.extend(favourites)
+            where_cond2.append('(c.name in (%s))' % ('%s,' * len(favourites))[:-1])
+            values_cond2.extend(favourites)
         values_cond1.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
         values_cond2.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
 
         c = self._db.cursor()
         # performance note: using UNION instead of 'WHERE user_id = x OR c.requestable = 1' increased
         # mysql performance significantly (more than 10x faster).
-        sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, tagset, collator_locale, '
+        sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, collator_locale, '
                'speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val, use_safe_font, featured, '
                '`database`, label_attr, id_attr, reference_default, reference_other, ttdesc_id, num_match_keys, size, '
                'info, name, encoding, language, g_name, version, keywords FROM (')
@@ -263,7 +268,7 @@ class Backend(DatabaseBackend):
         if requestable:
             where.extend(values_cond1)
             sql += (
-                '(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, c.requestable, '
+                '(SELECT c.name as id, c.web, c.collator_locale, NULL as speech_segment, c.requestable, '
                 'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                 'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                 'NULL AS reference_other, NULL AS ttdesc_id, '
@@ -281,7 +286,7 @@ class Backend(DatabaseBackend):
                 'UNION ').format(where1=' AND '.join('(' + wc + ')' for wc in where_cond1))
         where.extend(values_cond2)
         sql += (
-            '(SELECT c.name as id, c.web, c.tagset, c.collator_locale, NULL as speech_segment, 0 as requestable, '
+            '(SELECT c.name as id, c.web, c.collator_locale, NULL as speech_segment, 0 as requestable, '
             'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
             'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
             'NULL AS reference_other, NULL AS ttdesc_id, '
@@ -298,7 +303,7 @@ class Backend(DatabaseBackend):
             'JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
             'WHERE {where2} '
             'GROUP BY c.name '
-            'HAVING num_match_keys >= %s ) '            
+            'HAVING num_match_keys >= %s ) '
             ') AS ans '
             'GROUP BY id '
             'ORDER BY g_name, version DESC, id '
@@ -393,7 +398,7 @@ class Backend(DatabaseBackend):
     def load_tckc_providers(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT provider, type FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
+            'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
             (corpus_id,))
         return cursor.fetchall()
 
@@ -411,3 +416,10 @@ class Backend(DatabaseBackend):
                        'FROM kontext_interval_attr '
                        'WHERE corpus_name = %s', (corpus_id,))
         return ['{0}.{1}'.format(r['interval_struct'], r['interval_attr']) for r in cursor.fetchall()]
+
+    def load_corpus_tagsets(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name '
+                       'FROM kontext_corpus_taghelper '
+                       'WHERE corpus_name = %s', (corpus_id,))
+        return cursor.fetchall()

@@ -22,7 +22,8 @@ import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {FreqResultsSaveModel} from '../../models/freqs/save';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 interface SaveFreqFormProps {
@@ -45,7 +46,7 @@ interface ExportedViews {
 // ------------------------------------ factory -------------------------------------------
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         utils:Kontext.ComponentHelpers,
         freqSaveModel:FreqResultsSaveModel):ExportedViews {
 
@@ -65,8 +66,8 @@ export function init(
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_SAVE_FORM_SET_FORMAT',
-                props: {
+                name: 'FREQ_SAVE_FORM_SET_FORMAT',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -101,8 +102,8 @@ export function init(
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
-                props: {
+                name: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
+                payload: {
                     value: !props.value
                 }
             });
@@ -136,8 +137,8 @@ export function init(
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
-                props: {
+                name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
+                payload: {
                     value: !props.value
                 }
             });
@@ -165,8 +166,8 @@ export function init(
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_SAVE_FORM_SET_FROM_LINE',
-                props: {
+                name: 'FREQ_SAVE_FORM_SET_FROM_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -174,8 +175,8 @@ export function init(
 
         const handleToInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_SAVE_FORM_SET_TO_LINE',
-                props: {
+                name: 'FREQ_SAVE_FORM_SET_TO_LINE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -215,6 +216,8 @@ export function init(
      */
     class SaveFreqForm extends React.Component<SaveFreqFormProps, SaveFreqFormState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -234,8 +237,8 @@ export function init(
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'FREQ_SAVE_FORM_SUBMIT',
-                props: {}
+                name: 'FREQ_SAVE_FORM_SUBMIT',
+                payload: {}
             });
         }
 
@@ -246,11 +249,11 @@ export function init(
         }
 
         componentDidMount() {
-            freqSaveModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = freqSaveModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            freqSaveModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderFormatDependentOptions() {

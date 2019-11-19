@@ -19,8 +19,9 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
+import { Subscription } from 'rxjs';
 
 
 export interface GeneralOptionsProps {
@@ -32,7 +33,7 @@ export interface GeneralViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         generalOptionsModel:ViewOptions.IGeneralViewOptionsModel):GeneralViews {
 
     const layoutViews = he.getLayoutViews();
@@ -46,8 +47,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -77,8 +78,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -108,8 +109,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = () => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS',
+                payload: {
                     value: !props.value
                 }
             });
@@ -139,8 +140,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = () => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE',
+                payload: {
                     value: !props.value
                 }
             });
@@ -175,8 +176,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleCheckbox = () => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR',
+                payload: {
                     value: !props.value
                 }
             });
@@ -233,8 +234,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -284,8 +285,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -335,8 +336,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
-                props: {
+                name: 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -386,8 +387,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmitClick = () => {
             dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SUBMIT',
-                props: {}
+                name: 'GENERAL_VIEW_OPTIONS_SUBMIT',
+                payload: {}
             });
         };
 
@@ -422,6 +423,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         userIsAnonymous:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -448,11 +451,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            generalOptionsModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = generalOptionsModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            generalOptionsModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

@@ -91,7 +91,7 @@ class CacheTest(unittest.TestCase):
         self.cache_man.close()
 
     def raise_exc(self):
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], 'corpora',
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], 'corpora',
                                 dict(lemma=u"exception"), 1, 1, 'lang')
 
     def test_get_path(self):
@@ -105,8 +105,8 @@ class CacheTest(unittest.TestCase):
         fetch two items from http backend, check whether they get stored in cache by checking number of rows
         """
         mc = MockCorpus({1: u'lemma1', 2: u'lemma2'})
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 2, 1, 'lang')
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 2, 1, 'lang')
         self.assertEqual(self.cache_man.get_numrows(), 2)
 
     def test_retrieve_cached_item(self):
@@ -116,11 +116,11 @@ class CacheTest(unittest.TestCase):
         and that the cache contains only two items
         """
         mc = MockCorpus({1: u'lemma1', 2: u'lemma2'})
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
-        orig2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 2, 1, 'lang')
+        orig1 = self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
+        orig2 = self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 2, 1, 'lang')
 
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
-        cached2 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 2, 1, 'lang')
+        cached1 = self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
+        cached2 = self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 2, 1, 'lang')
         self.assertEqual(self.cache_man.get_numrows(), 2)
         self.assertEqual(orig1, cached1)
         self.assertEqual(orig2, cached2)
@@ -133,14 +133,14 @@ class CacheTest(unittest.TestCase):
         mc = MockCorpus({237: u'lemma1', 238: u'lemma2'})
         key1 = mk_token_connect_cache_key('wiktionary_for_ic_9_en', ['corpora'], 237, 1, dict(lemma=u'lemma1'), 'lang')
         key2 = mk_token_connect_cache_key("wiktionary_for_ic_9_en", ['corpora'], 238, 1, dict(lemma=u'lemma2'), 'lang')
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 237, 1, 'lang')
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 238, 1, 'lang')
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 237, 1, 'lang')
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 238, 1, 'lang')
         la1bef = self.get_last_access(key1)
         la2bef = self.get_last_access(key2)
         time.sleep(1)
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 237, 1, 'lang')
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 237, 1, 'lang')
         time.sleep(1)
-        self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 238, 1, 'lang')
+        self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 238, 1, 'lang')
         la1aft = self.get_last_access(key1)
         la2aft = self.get_last_access(key2)
         self.assertNotEqual(la1bef, la1aft)
@@ -162,9 +162,9 @@ class CacheTest(unittest.TestCase):
         the unicode-encoded result is returned from the mocked backend when searching for lemma "unicode"
         """
         mc = MockCorpus({1: u'unicode'})
-        orig1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
+        orig1 = self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
 
-        cached1 = self.tok_det.fetch_data(['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
+        cached1 = self.tok_det.fetch_data([('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
         self.assertEqual(orig1, cached1)
 
     def test_status_true_false(self):
@@ -174,13 +174,13 @@ class CacheTest(unittest.TestCase):
         """
         mc = MockCorpus()
         _, orig1 = self.tok_det.fetch_data(
-            ['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
+            [('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
         _, cached1 = self.tok_det.fetch_data(
-            ['wiktionary_for_ic_9_en'], mc, ['corpora'], 1, 1, 'lang')
+            [('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 1, 1, 'lang')
         _, orig2 = self.tok_det.fetch_data(
-            ['wiktionary_for_ic_9_en'], mc, ['corpora'], 2, 1, 'lang')
+            [('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 2, 1, 'lang')
         _, cached2 = self.tok_det.fetch_data(
-            ['wiktionary_for_ic_9_en'], mc, ['corpora'], 2, 1, 'lang')
+            [('wiktionary_for_ic_9_en', False)], mc, ['corpora'], 2, 1, 'lang')
         self.assertEqual(orig1[0].get('contents')[0][1][1],
                          cached1[0].get('contents')[0][1][1], False)
         self.assertEqual(orig2[0].get('contents')[0][1][1],

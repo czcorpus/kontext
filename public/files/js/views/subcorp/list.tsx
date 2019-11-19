@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem} from '../../models/subcorp/list';
 import { CoreViews } from '../../types/coreViews';
+import { Subscription } from 'rxjs';
 
 
 export interface SubcorpListProps {
@@ -34,7 +35,7 @@ export interface ListViews {
     SubcorpList:React.ComponentClass<SubcorpListProps>;
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             subcorpLinesModel:SubcorpListModel) {
 
     const layoutViews = he.getLayoutViews();
@@ -86,8 +87,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         const handleSubmit = () => {
             if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
                 dispatcher.dispatch({
-                    actionType: 'SUBCORP_LIST_DELETE_SUBCORPUS',
-                    props: {
+                    name: 'SUBCORP_LIST_DELETE_SUBCORPUS',
+                    payload: {
                         rowIdx: props.rowIdx
                     }
                 });
@@ -187,8 +188,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSortClick = () => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_SORT_LINES',
-                props: {
+                name: 'SUBCORP_LIST_SORT_LINES',
+                payload: {
                     colName: props.ident,
                     reverse: props.sortKey ? !props.sortKey.reverse : false
                 }
@@ -223,6 +224,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         unfinished:Immutable.List<UnfinishedSubcorp>;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleModelChange = this._handleModelChange.bind(this);
@@ -243,11 +246,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            subcorpLinesModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = subcorpLinesModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcorpLinesModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _exportSortKey(name) {
@@ -260,8 +263,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         _handlePublishCheckbox(corpname:string, subcname:string):void {
             if (window.confirm(he.translate('subclist__publish_warning'))) {
                 dispatcher.dispatch({
-                    actionType: 'SUBCORP_LIST_PUBLISH_ITEM',
-                    props: {
+                    name: 'SUBCORP_LIST_PUBLISH_ITEM',
+                    payload: {
                         corpname: corpname,
                         subcname: subcname
                     }
@@ -304,8 +307,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleShowDeleted = () => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_UPDATE_FILTER',
-                props: {
+                name: 'SUBCORP_LIST_UPDATE_FILTER',
+                payload: {
                     corpname: props.filter['corpname'],
                     show_deleted: !props.filter['show_deleted']
                 }
@@ -314,8 +317,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleCorpusSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_UPDATE_FILTER',
-                props: {
+                name: 'SUBCORP_LIST_UPDATE_FILTER',
+                payload: {
                     corpname: evt.target.value,
                     show_deleted: props.filter['show_deleted']
                 }
@@ -386,8 +389,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleSubmit() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_REUSE_QUERY',
-                props: {
+                name: 'SUBCORP_LIST_REUSE_QUERY',
+                payload: {
                     idx: this.props.idx,
                     newName: this.state.newName,
                     newCql: this.state.newCql
@@ -446,8 +449,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmit = () => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_WIPE_SUBCORPUS',
-                props: {
+                name: 'SUBCORP_LIST_WIPE_SUBCORPUS',
+                payload: {
                     idx: props.idx
                 }
             });
@@ -474,8 +477,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmit = () => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_RESTORE_SUBCORPUS',
-                props: {
+                name: 'SUBCORP_LIST_RESTORE_SUBCORPUS',
+                payload: {
                     idx: props.idx
                 }
             });
@@ -490,52 +493,6 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 </button>
             </FormActionTemplate>
         );
-    };
-
-    // ------------------------ <ActionMenu /> --------------------------
-
-    const ActionMenu:React.SFC<{
-        hasCQLBackup:boolean;
-        isDeletedCorp:boolean;
-        activeTab:string;
-        onSelect:(action:string)=>()=>void;
-
-    }> = (props) => {
-
-        const mkClass = (action) => `util-button${action === props.activeTab ? ' active' : ''}`;
-
-        return (
-            <ul className="ActionMenu tabs">
-                {!props.isDeletedCorp ?
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('pub')}
-                            isActive={props.activeTab === 'pub'}
-                            label={he.translate('subclist__public_access_btn')} />
-                    </li> : null
-                }
-                {props.hasCQLBackup ?
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('reuse')}
-                            isActive={props.activeTab === 'reuse'}
-                            label={he.translate('subclist__action_reuse')} />
-                    </li> : null
-                }
-                {props.hasCQLBackup && props.isDeletedCorp ?
-                <>
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('restore')}
-                                isActive={props.activeTab === 'restore'}
-                                label={he.translate('subclist__action_restore')} />
-                    </li>
-                    <li>
-                        <layoutViews.TabButton onClick={props.onSelect('wipe')}
-                                isActive={props.activeTab === 'wipe'}
-                                label={he.translate('subclist__action_wipe')} />
-                    </li>
-                </> : null}
-            </ul>
-        );
-
     };
 
     // ------------------------ <PublishSubmitButton /> --------------------------
@@ -573,8 +530,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleSubmitPublish() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_PUBLISH_SUBCORPUS',
-                props: {
+                name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS',
+                payload: {
                     rowIdx: this.props.rowIdx,
                     description: this.props.description
                 }
@@ -583,8 +540,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleSubmitUpdateDesc() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
-                props: {
+                name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
+                payload: {
                     rowIdx: this.props.rowIdx
                 }
             });
@@ -592,8 +549,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
-                props: {
+                name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
+                payload: {
                     rowIdx: this.props.rowIdx,
                     description: evt.target.value
                 }
@@ -642,30 +599,31 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleActionSelect(action) {
-            return () => {
-                dispatcher.dispatch({
-                    actionType: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
-                    props: {value: action}
-                });
-            };
-        }
-
-        _renderTab() {
-            switch (this.props.action) {
-                case 'restore':
-                    return <FormActionRestore idx={this.props.idx}  />;
-                case 'reuse':
-                    return <FormActionReuse idx={this.props.idx} data={this.props.data} />;
-                case 'wipe':
-                    return <FormActionWipe idx={this.props.idx} />;
-                case 'pub':
-                    return <PublishingTab published={this.props.data.published}
-                                    description={this.props.data.description}
-                                    rowIdx={this.props.idx} />;
-            }
+            dispatcher.dispatch({
+                name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
+                payload: {value: action}
+            });
         }
 
         render() {
+            let items = Immutable.List<{id:string, label:string}>();
+            let children = Immutable.List();
+            if (!this.props.data.deleted) {
+                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')});
+                children = children.push(<PublishingTab key="publish" published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
+            }
+            if (!!this.props.data.cql) {
+                items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
+                children = children.push(<FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />);
+            }
+            if (!!this.props.data.cql && this.props.data.deleted) {
+                items = items.push(
+                    {id: 'restore', label: he.translate('subclist__action_restore')},
+                    {id: 'wipe', label: he.translate('subclist__action_wipe')}
+                )
+                children = children.push(<FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />);
+            }
+
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
                     <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
@@ -673,14 +631,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             autoWidth={CoreViews.AutoWidth.WIDE}
                             label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
                         <div>
-                            <ActionMenu hasCQLBackup={!!this.props.data.cql}
-                                    isDeletedCorp={this.props.data.deleted}
-                                    activeTab={this.props.action}
-                                    onSelect={this.handleActionSelect} />
+                            <layoutViews.TabView
+                                    className="ActionMenu"
+                                    callback={this.handleActionSelect}
+                                    items={items} >
+                                {children.toArray()}
+                            </layoutViews.TabView>
                             <div className="loader-wrapper">
                                 {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
                             </div>
-                            {this._renderTab()}
                         </div>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
@@ -696,11 +655,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         relatedCorpora:Immutable.List<string>;
         actionBoxVisible:number;
         actionBoxData:SubcorpListItem;
-        actionBoxActionType:string;
+        actionBoxname:string;
         modelIsBusy:boolean;
         usesSubcRestore:boolean;
+        actionBoxActionType:string;
 
     }> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -717,9 +679,10 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 relatedCorpora: subcorpLinesModel.getRelatedCorpora(),
                 actionBoxVisible: visibleRow,
                 actionBoxData: visibleRow > -1 ? subcorpLinesModel.getRow(visibleRow) : null,
-                actionBoxActionType: subcorpLinesModel.getActionBoxActionType(),
+                actionBoxname: subcorpLinesModel.getActionBoxActionType(),
                 modelIsBusy: subcorpLinesModel.getIsBusy(),
-                usesSubcRestore: subcorpLinesModel.getUsesSubcRestore()
+                usesSubcRestore: subcorpLinesModel.getUsesSubcRestore(),
+                actionBoxActionType: subcorpLinesModel.getActionBoxActionType()
             };
         }
 
@@ -728,17 +691,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            subcorpLinesModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscription = subcorpLinesModel.addListener(this._modelChangeListener);
         }
 
         componentWillUnmount() {
-            subcorpLinesModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         _handleActionButton(action:string, idx:number) {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_SHOW_ACTION_WINDOW',
-                props: {
+                name: 'SUBCORP_LIST_SHOW_ACTION_WINDOW',
+                payload: {
                     value: idx,
                     action: action
                 }
@@ -747,8 +710,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleActionsClose() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_LIST_HIDE_ACTION_WINDOW',
-                props: {}
+                name: 'SUBCORP_LIST_HIDE_ACTION_WINDOW',
+                payload: {}
             });
         }
 

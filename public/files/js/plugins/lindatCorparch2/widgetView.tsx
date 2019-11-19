@@ -18,16 +18,17 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {Kontext, KeyCodes} from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { PluginInterfaces } from '../../types/plugins';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface WidgetViewModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
     corpusSelection:PluginInterfaces.Corparch.ICorpSelection;
@@ -56,10 +57,10 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleRemoveClick = () => {
             dispatcher.dispatch({
-                actionType: props.trashTTL === null ?
+                name: props.trashTTL === null ?
                         'DEFAULT_CORPARCH_FAV_ITEM_REMOVE' :
                         'DEFAULT_CORPARCH_FAV_ITEM_ADD',
-                props: {
+                payload: {
                     itemId: props.ident
                 }
             });
@@ -89,8 +90,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleItemClick = () => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK',
-                props: {
+                name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK',
+                payload: {
                     itemId: props.data.id
                 }
             });
@@ -166,8 +167,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleItemClick = () => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK',
-                props: {
+                name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK',
+                payload: {
                     itemId: props.data.id
                 }
             });
@@ -237,8 +238,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleStarClick = () => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_STAR_ICON_CLICK',
-                props: {
+                name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK',
+                payload: {
                     status: props.currFavitemId ? false : true,
                     itemId: props.currFavitemId
                 }
@@ -307,8 +308,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 case KeyCodes.LEFT_ARROW:
                 case KeyCodes.RIGHT_ARROW:
                     dispatcher.dispatch({
-                        actionType: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
-                        props: {
+                        name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
+                        payload: {
                             change: argMap[evt.keyCode]
                         }
                     });
@@ -317,8 +318,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 break;
                 case KeyCodes.ENTER:
                     dispatcher.dispatch({
-                        actionType: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
-                        props: {}
+                        name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
+                        payload: {}
                     });
                     evt.preventDefault();
                     evt.stopPropagation();
@@ -351,8 +352,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'LINDAT_CORPARCH_KEYWORD_CLICKED',
-                props: {
+                name: 'LINDAT_CORPARCH_KEYWORD_CLICKED',
+                payload: {
                     keywordId: props.id,
                     status: !props.selected,
                     exclusive: !evt.ctrlKey
@@ -384,8 +385,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED',
-                props: {}
+                name: 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED',
+                payload: {}
             });
         };
 
@@ -408,8 +409,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED',
-                props: {
+                name: 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -421,8 +422,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 case KeyCodes.DOWN_ARROW:
                 case KeyCodes.UP_ARROW:
                     dispatcher.dispatch({
-                        actionType: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
-                        props: {
+                        name: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
+                        payload: {
                             inc: evt.keyCode === KeyCodes.DOWN_ARROW ? 1 : -1
                         }
                     });
@@ -431,8 +432,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
                 break;
                 case KeyCodes.ENTER:
                     dispatcher.dispatch({
-                        actionType: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
-                        props: {}
+                        name: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
+                        payload: {}
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
@@ -462,8 +463,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED',
-                props: {
+                name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED',
+                payload: {
                     itemId: props.data.id
                 }
             });
@@ -584,8 +585,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         const handleSubcorpChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_SUBCORP',
-                props: {
+                name: 'QUERY_INPUT_SELECT_SUBCORP',
+                payload: {
                     subcorp: props.availSubcorpora.get(evt.target.value).v,
                     pubName: props.availSubcorpora.get(evt.target.value).pub,
                     foreign: props.availSubcorpora.get(evt.target.value).foreign
@@ -614,6 +615,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
     // ------------------------- <CorplistWidget /> -------------------------------
 
     class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -646,15 +649,15 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         _handleOnShow() {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_WIDGET_SHOW',
-                props: {}
+                name: 'DEFAULT_CORPARCH_WIDGET_SHOW',
+                payload: {}
             });
         }
 
         _handleCloseClick() {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_WIDGET_HIDE',
-                props: {}
+                name: 'DEFAULT_CORPARCH_WIDGET_HIDE',
+                payload: {}
             });
         }
 
@@ -669,8 +672,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         _handleTabSwitch(v) {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
-                props: {
+                name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+                payload: {
                     value: v
                 }
             });
@@ -678,8 +681,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         _handleAreaClick() {
             dispatcher.dispatch({
-                actionType: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
-                props: {
+                name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+                payload: {
                     value: this.state.activeTab
                 }
             });
@@ -690,11 +693,11 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         }
 
         componentDidMount() {
-            widgetModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = widgetModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            widgetModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderWidget() {

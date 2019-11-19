@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, ViewOptions} from '../../types/common';
-import {StatefulModel} from '../base';
+import { Kontext, ViewOptions } from '../../types/common';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
-import RSVP from 'rsvp';
+import { PageModel } from '../../app/main';
 import { MultiDict } from '../../util';
+import { Action, IFullActionControl, StatelessModel, SEDispatcher } from 'kombo';
+import { tap } from 'rxjs/operators';
 
 
 export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.AttrViewMode => {
@@ -39,145 +38,192 @@ export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.Attr
         return ViewOptions.AttrViewMode.MOUSEOVER;
 
     } else {
-        throw new Error(`Unknown internal attribute viewing mode configuration: [${vmode}, ${attrAllPos}]`);
+        console.warn(`Fixing incorrect internal attribute viewing mode configuration: [${vmode}, ${attrAllPos}].`);
+        return ViewOptions.AttrViewMode.VISIBLE_KWIC;
     }
 }
 
 
-export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions.ICorpViewOptionsModel {
+export interface CorpusViewOptionsModelState {
 
-    private layoutModel:PageModel;
+    attrList: Immutable.List<ViewOptions.AttrDesc>;
+    selectAllAttrs: boolean;
+    structList: Immutable.List<ViewOptions.StructDesc>;
+    structAttrs: ViewOptions.AvailStructAttrs;
+    selectAllStruct: boolean,
+    fixedAttr: string | null;
+    showConcToolbar: boolean;
+    refList: Immutable.List<ViewOptions.RefDesc>;
+    refAttrs: Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
+    selectAllRef: boolean;
+    hasLoadedData: boolean;
+    attrVmode: string;
+    extendedVmode: ViewOptions.AttrViewMode;
+    attrAllpos: string; // kw/all
+    isBusy: boolean;
+    userIsAnonymous: boolean;
+    corpusIdent: Kontext.FullCorpusIdent;
+    corpusUsesRTLText: boolean;
+}
 
-    private attrList:Immutable.List<ViewOptions.AttrDesc>;
 
-    private selectAllAttrs:boolean = false;
+export enum ActionName {
+    LoadData = 'VIEW_OPTIONS_LOAD_DATA',
+    LoadDataDone = 'VIEW_OPTIONS_LOAD_DATA_DONE',
+    UpdateAttrVisibility = 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
+    ToggleAttribute = 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
+    ToggleAllAttributes = 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
+    ToggleStructure = 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+    ToggleAllStructures = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
+    ToggleAllStructureAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
+    ToggleReference = 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+    ToogleAllReferenceAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
+    ToggleAllReferences = 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
+    SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
+    SaveSettingsDone = 'VIEW_OPTIONS_SAVE_SETTINGS_DONE'
+}
 
-    private structList:Immutable.List<ViewOptions.StructDesc>;
 
-    private structAttrs:ViewOptions.AvailStructAttrs;
+export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsModelState> implements ViewOptions.ICorpViewOptionsModel {
 
-    private fixedAttr:string;
-
-    private showConcToolbar:boolean;
-
-    private referenceList:Immutable.List<ViewOptions.RefsDesc>;
-
-    private selectAllReferences:boolean = false;
-
-    private hasLoadedData:boolean = false;
-
-    private attrVmode:string;
-
-    private attrAllpos:string; // kw/all
+    private readonly layoutModel:PageModel;
 
     private updateHandlers:Immutable.List<(data:ViewOptions.SaveViewAttrsOptionsResponse)=>void>;
 
-    private isWaiting:boolean;
-
-    private userIsAnonymous:boolean;
-
-    private corpusIdent:Kontext.FullCorpusIdent;
-
-    private corpusUsesRTLText:boolean;
-
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             userIsAnonymous:boolean) {
-        super(dispatcher);
-        this.layoutModel = layoutModel;
-        this.corpusIdent = corpusIdent;
-        this.userIsAnonymous = userIsAnonymous;
-        this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
-        this.updateHandlers = Immutable.List<()=>void>();
-        this.isWaiting = false;
-        this.corpusUsesRTLText = layoutModel.getConf<boolean>('TextDirectionRTL');
-
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
-                case 'VIEW_OPTIONS_LOAD_DATA':
-                    this.loadData().then(
-                        (data) => {
-                            this.notifyChangeListeners();
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY':
-                    this.setAttrVisibilityMode(action.props['value']);
-                    this.notifyChangeListeners();
-                break;
-                case 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE':
-                    this.toggleAttribute(action.props['idx']);
-                    this.notifyChangeListeners();
-                break;
-                case 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES':
-                    this.toggleAllAttributes();
-                    this.notifyChangeListeners();
-                break;
-                case 'VIEW_OPTIONS_TOGGLE_STRUCTURE':
-                    this.toggleStructure(action.props['structIdent'],
-                        action.props['structAttrIdent']);
-                    this.notifyChangeListeners();
-                break;
-                case 'VIEW_OPTIONS_TOGGLE_REFERENCE':
-                    this.toggleReference(action.props['idx']);
-                    this.notifyChangeListeners();
-                break;
-                case 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES':
-                    this.toggleAllReferences();
-                    this.notifyChangeListeners();
-                break;
-                case 'VIEW_OPTIONS_SAVE_SETTINGS':
-                    this.isWaiting = true;
-                    this.notifyChangeListeners();
-                    this.saveSettings().then(
-                        (data) => {
-                            this.isWaiting = false;
-                            this.notifyChangeListeners();
-                            this.updateHandlers.forEach(fn => fn(data));
-                            this.layoutModel.resetMenuActiveItemAndNotify();
-                        },
-                        (err) => {
-                            this.isWaiting = false;
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                break;
+        super(
+            dispatcher,
+            {
+                attrList: Immutable.List<ViewOptions.AttrDesc>(),
+                selectAllAttrs: false,
+                structList: Immutable.List<ViewOptions.StructDesc>(),
+                structAttrs: Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(),
+                selectAllStruct: false,
+                fixedAttr: null,
+                showConcToolbar: false,
+                refList: Immutable.List<ViewOptions.StructDesc>(),
+                refAttrs: Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>(),
+                selectAllRef: false,
+                hasLoadedData: false,
+                attrVmode: 'mixed',
+                attrAllpos: 'all',
+                extendedVmode: transformVmode('mixed', 'all'),
+                isBusy: false,
+                userIsAnonymous: userIsAnonymous,
+                corpusIdent: corpusIdent,
+                corpusUsesRTLText: layoutModel.getConf<boolean>('TextDirectionRTL')
             }
-        });
+        );
+        this.layoutModel = layoutModel;
+        this.updateHandlers = Immutable.List<()=>void>();
+
+        this.actionMatch = {
+            [ActionName.LoadData]: (state, action) => {
+                const newState = this.copyState(state);
+                newState.isBusy = true;
+                return newState;
+            },
+            [ActionName.LoadDataDone]: (state, action) => {
+                const newState = this.copyState(state);
+                this.initFromPageData(newState, action.payload['data']);
+                newState.isBusy = false;
+                return newState;
+            },
+            [ActionName.UpdateAttrVisibility]: (state, action) => {
+                const newState = this.copyState(state);
+                this.setAttrVisibilityMode(newState, action.payload['value']);
+                return newState;
+            },
+            [ActionName.ToggleAttribute]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAttribute(newState, action.payload['idx']);
+                return newState;
+            },
+            [ActionName.ToggleAllAttributes]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllAttributes(newState);
+                return newState;
+            },
+            [ActionName.ToggleStructure]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleStructure(newState, action.payload['structIdent'], action.payload['structAttrIdent']);
+                return newState;
+            },
+            [ActionName.ToggleAllStructures]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllStructures(newState);
+                return newState;
+            },
+            [ActionName.ToggleAllStructureAttrs]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllStructureAttrs(newState, action.payload['structIdent']);
+                return newState;
+            },
+            [ActionName.ToggleReference]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleReference(newState, action.payload['refIdent'], action.payload['refAttrIdent']);
+                return newState;
+            },
+            [ActionName.ToogleAllReferenceAttrs]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllReferenceAttrs(newState, action.payload['refIdent']);
+                return newState;
+            },
+            [ActionName.ToggleAllReferences]: (state, action) => {
+                const newState = this.copyState(state);
+                this.toggleAllReferences(newState);
+                return newState;
+            },
+            [ActionName.SaveSettings]: (state, action) => {
+                const newState = this.copyState(state);
+                newState.isBusy = true;
+                return newState;
+            },
+            [ActionName.SaveSettings]: (state, action) => {
+                const newState = this.copyState(state);
+                newState.isBusy = false;
+                return newState;
+            }
+        };
     }
 
-    getCorpusIdent():Kontext.FullCorpusIdent {
-        return this.corpusIdent;
-    }
-
-    getIsWaiting():boolean {
-        return this.isWaiting;
+    sideEffects(state:CorpusViewOptionsModelState, action:Action, dispatch:SEDispatcher):void {
+        switch (action.name) {
+            case ActionName.LoadData:
+                this.loadData(dispatch);
+            break;
+            case ActionName.SaveSettings:
+                this.saveSettings(state, dispatch);
+            break;
+        }
     }
 
     addOnSave(fn:(data:ViewOptions.SaveViewAttrsOptionsResponse)=>void):void {
         this.updateHandlers = this.updateHandlers.push(fn);
     }
 
-    private setAttrVisibilityMode(value:ViewOptions.AttrViewMode):void {
+    private setAttrVisibilityMode(state:CorpusViewOptionsModelState, value:ViewOptions.AttrViewMode):void {
         switch (value) {
             case ViewOptions.AttrViewMode.VISIBLE_ALL:
-                this.attrVmode = 'visible';
-                this.attrAllpos = 'all';
+                state.attrVmode = 'visible';
+                state.attrAllpos = 'all';
+                state.extendedVmode = value;
             break;
             case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                this.attrVmode = 'mixed';
-                this.attrAllpos = 'all';
+                state.attrVmode = 'mixed';
+                state.attrAllpos = 'all';
+                state.extendedVmode = value;
             break;
             case ViewOptions.AttrViewMode.MOUSEOVER:
-                this.attrVmode = 'mouseover';
-                this.attrAllpos = 'all';
+                state.attrVmode = 'mouseover';
+                state.attrAllpos = 'all';
+                state.extendedVmode = value;
             break;
         }
     }
 
-    private serialize():any {
+    private serialize(state:CorpusViewOptionsModelState):any {
 
         // we have to make sure 'word' is always the first - otherwise
         // we may produce incorrect visible/mouseover attribute configuration.
@@ -194,100 +240,208 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
         };
 
         const ans = {
-            setattrs: this.attrList
+            setattrs: state.attrList
+                .sort(attrCmp)
                 .filter(item => item.selected)
                 .map(item => item.n)
                 .toArray(),
-            setstructs: this.structList.filter(item => item.selected).map(item => item.n).toArray(),
-            setstructattrs: this.structAttrs
+            setstructs: state.structList.filter(item => item.selected).map(item => item.n).toArray(),
+            setstructattrs: state.structAttrs
                             .map((v, k) => v.filter(x => x.selected))
                             .map((v, k) => v.map(x => `${k}.${x.n}`))
                             .valueSeq()
                             .flatMap(x => x)
                             .toArray(),
-            setrefs: this.referenceList.filter(item => item.selected).map(item => item.n).toArray(),
-            setattr_allpos: this.attrAllpos,
-            setattr_vmode: this.attrVmode
+                            setrefs: state.refAttrs.valueSeq().reduce((acc, val) => acc = [...acc, ...val.filter(item => item.selected).toArray()], []).map(item => item.n),
+            setattr_allpos: state.attrAllpos,
+            setattr_vmode: state.attrVmode
         };
 
         return ans;
     }
 
-    private saveSettings():RSVP.Promise<ViewOptions.SaveViewAttrsOptionsResponse> {
+    private saveSettings(state:CorpusViewOptionsModelState, dispatch:SEDispatcher):void {
         const corpname = this.layoutModel.getCorpusIdent().id;
         const urlArgs = new MultiDict([['corpname', corpname], ['format', 'json']]);
-        const formArgs = this.serialize();
+        const formArgs = this.serialize(state);
 
-        return this.layoutModel.ajax<ViewOptions.SaveViewAttrsOptionsResponse>(
+        this.layoutModel.ajax$<ViewOptions.SaveViewAttrsOptionsResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewattrsx', urlArgs),
             formArgs
 
-        ).then((data) => {
-            if (this.getAttrsAllpos() === 'all') {
-                this.layoutModel.replaceConcArg('ctxattrs', [formArgs['setattrs'].join(',')]);
+        ).pipe(
+            tap(
+                (data) => {
+                    if (state.attrAllpos === 'all') {
+                        this.layoutModel.replaceConcArg('ctxattrs', [formArgs['setattrs'].join(',')]);
 
-            } else if (this.getAttrsAllpos() === 'kw') {
-                this.layoutModel.replaceConcArg('ctxattrs',
-                        [this.layoutModel.getConf<string>('baseAttr')]);
+                    } else if (state.attrAllpos === 'kw') {
+                        this.layoutModel.replaceConcArg('ctxattrs',
+                                [this.layoutModel.getConf<string>('baseAttr')]);
+                    }
+                    this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
+                    this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
+                    this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
+                    this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
+                    this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
+                    this.updateHandlers.forEach(fn => fn(data));
+                    this.layoutModel.resetMenuActiveItemAndNotify();
+                }
+            )
+        ).subscribe(
+            (_) => {
+                dispatch({
+                    name: ActionName.SaveSettingsDone,
+                    payload: {}
+                });
+                this.layoutModel.showMessage('info', this.layoutModel.translate('options__options_saved'));
+            },
+            (err) => {
+                dispatch({
+                    name: ActionName.SaveSettingsDone,
+                    error: err
+                });
+                this.layoutModel.showMessage('error', err);
             }
-            this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
-            this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
-            this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
-            this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
-            this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
-            return data;
-        });
+        );
     }
 
-    private toggleAllAttributes():void {
-        this.selectAllAttrs = !this.selectAllAttrs;
-        this.attrList = this.attrList
+    private toggleAllAttributes(state:CorpusViewOptionsModelState):void {
+        state.selectAllAttrs = !state.selectAllAttrs;
+        state.attrList = state.attrList
             .map(item => {
                 return {
                     n: item.n,
                     label: item.label,
                     locked: item.locked,
-                    selected: item.locked ? true : this.selectAllAttrs
+                    selected: item.locked ? true : state.selectAllAttrs
                 }
             })
             .toList();
     }
 
-    private toggleAllReferences():void {
-        this.selectAllReferences = !this.selectAllReferences;
-        this.referenceList = this.referenceList.map(item => {
+    private toggleAllStructures(state:CorpusViewOptionsModelState):void {
+        state.selectAllStruct = !state.selectAllStruct;
+        state.structList = state.structList.map(item => {
             return {
                 n: item.n,
                 label: item.label,
-                selected: this.selectAllReferences
+                locked: item.locked,
+                selected: item.locked ? true : state.selectAllStruct,
+                selectAllAttrs: state.selectAllStruct,
             }
         }).toList();
+        state.structAttrs = state.structAttrs.map(structAttrs => structAttrs.map(attr => {
+            return {
+                n: attr.n,
+                selected: state.selectAllStruct,
+            }
+        }).toList()).toMap();
     }
 
-    private toggleReference(idx:number):void {
-        const currItem = this.referenceList.get(idx);
-        this.referenceList = this.referenceList.set(idx, {
-            label: currItem.label,
-            n: currItem.n,
-            selected: !currItem.selected
-        });
-        this.selectAllReferences = false;
+    private toggleAllStructureAttrs(state:CorpusViewOptionsModelState, structIdent:string):void {
+        const struct = state.structList.find(item => item.n == structIdent);
+        const structIdx = state.structList.indexOf(struct);
+
+        struct.selectAllAttrs = !struct.selectAllAttrs;
+        struct.selected = struct.selectAllAttrs;
+        state.structList = state.structList.set(structIdx, struct);
+
+        const structAttrs = state.structAttrs.get(structIdent);
+        state.structAttrs = state.structAttrs.set(structIdent, structAttrs.map(attr => {
+            return {
+                n: attr.n,
+                selected: struct.selectAllAttrs,
+            }
+        }).toList());
+
+        state.selectAllStruct = this.hasSelectedAllStructs(state);
     }
 
-    private toggleAttribute(idx:number):void {
-        const currItem = this.attrList.get(idx);
-        this.attrList = this.attrList.set(idx, {
+    private toggleAllReferenceAttrs(state:CorpusViewOptionsModelState, categoryIdent:string):void {
+        let reference = state.refList.find(item => item.n===categoryIdent);
+        const index = state.refList.indexOf(reference);
+        reference.selectAllAttrs = !reference.selectAllAttrs;
+        reference.selected = reference.selectAllAttrs;
+        state.refList = state.refList.set(index, reference);
+
+        state.refAttrs = state.refAttrs.set(categoryIdent, state.refAttrs.get(categoryIdent).map(value => {
+            return {
+                n: value.n,
+                label: value.label,
+                selected: reference.selectAllAttrs,
+            }
+        }).toList());
+        state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
+    }
+
+    private toggleAllReferences(state:CorpusViewOptionsModelState):void {
+        state.selectAllRef = !state.selectAllRef;
+        state.refList = state.refList.map(item => {
+            return {
+                label: item.label,
+                n: item.n,
+                selectAllAttrs: state.selectAllRef,
+                selected: state.selectAllRef,
+                locked: false,
+            }
+        }).toList();
+        state.refAttrs = state.refAttrs.map(item => item.map(value => {
+            return {
+                n: value.n,
+                label: value.label,
+                selected: state.selectAllRef
+            }
+        }).toList()).toMap();
+    }
+
+    private toggleReference(state:CorpusViewOptionsModelState, refIdent:string, refAttrIdent:string):void {
+        const refAttrs = state.refAttrs.get(refIdent);
+        const reference = state.refList.find(value => value.n===refIdent);
+        const index = state.refList.indexOf(reference);
+        if (refAttrIdent===null) {
+            reference.selected = !reference.selected;
+            if (!reference.selected) {
+                reference.selectAllAttrs = false;
+                state.refAttrs = state.refAttrs.set(refIdent, refAttrs.map(item => {
+                    return {
+                        n: item.n,
+                        selected: false,
+                        label: item.label,
+                    }
+                }).toList());
+            }
+        } else {
+            state.refAttrs = state.refAttrs.set(refIdent, refAttrs.map(item =>
+                item.n === refAttrIdent ?
+                    {
+                        label: item.label,
+                        n: item.n,
+                        selected: !item.selected
+                    } :
+                    item
+            ).toList());
+            reference.selected = state.refAttrs.get(refIdent).some(value => value.selected);
+            reference.selectAllAttrs = state.refAttrs.get(refIdent).every(value => value.selected);
+        }
+        state.refList.set(index, reference);
+        state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
+    }
+
+    private toggleAttribute(state:CorpusViewOptionsModelState, idx:number):void {
+        const currItem = state.attrList.get(idx);
+        state.attrList = state.attrList.set(idx, {
             n: currItem.n,
             label: currItem.label,
             locked: currItem.locked,
             selected: !currItem.selected
         });
-        if (this.attrList.filter(v => v.selected).size === 0) {
-            const srchIdx = this.attrList.findIndex(v => v.locked);
+        if (state.attrList.filter(v => v.selected).size === 0) {
+            const srchIdx = state.attrList.findIndex(v => v.locked);
             if (srchIdx > -1) {
-                const tmp = this.attrList.get(srchIdx);
-                this.attrList = this.attrList.set(srchIdx, {
+                const tmp = state.attrList.get(srchIdx);
+                state.attrList = state.attrList.set(srchIdx, {
                     n: tmp.n,
                     label: tmp.label,
                     locked: tmp.locked,
@@ -295,23 +449,31 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                 });
             }
         }
-        this.selectAllAttrs = false;
+        state.selectAllAttrs = state.attrList.every(attr => attr.selected);
     }
 
-    private hasSelectedStructAttrs(structIdent:string):boolean {
-        return this.structAttrs.get(structIdent).find(item => item.selected) !== undefined;
+    private hasSelectedStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
+        return state.structAttrs.get(structIdent).find(item => item.selected) !== undefined;
     }
 
-    private clearStructAttrSelection(structIdent:string):void {
-        if (this.structAttrs.has(structIdent)) {
-            this.structAttrs = this.structAttrs.set(
-                    structIdent,
-                    this.structAttrs.get(structIdent).map(item => {
-                        return {
-                            n: item.n,
-                            selected: false
-                        };
-                    }).toList()
+    private hasSelectedAllStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
+        return state.structAttrs.get(structIdent).every(item => item.selected);
+    }
+
+    private hasSelectedAllStructs(state:CorpusViewOptionsModelState):boolean {
+        return state.structAttrs.map(value => value.every(attr => attr.selected)).every(value => value);
+    }
+
+    private clearStructAttrSelection(state:CorpusViewOptionsModelState, structIdent:string):void {
+        if (state.structAttrs.has(structIdent)) {
+            state.structAttrs = state.structAttrs.set(
+                structIdent,
+                state.structAttrs.get(structIdent).map(item => {
+                    return {
+                        n: item.n,
+                        selected: false
+                    };
+                }).toList()
             );
         }
     }
@@ -325,17 +487,17 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
      * 3) switching on a struct does not affect structattrs
      * 4) switching off a struct turns off all its child structattrs
      */
-    private toggleStructure(structIdent:string, structAttrIdent:string):void {
-        const struct = this.structList.find(item => item.n == structIdent);
+    private toggleStructure(state:CorpusViewOptionsModelState, structIdent:string, structAttrIdent:string):void {
+        const struct = state.structList.find(item => item.n == structIdent);
 
         if (!struct) {
             throw new Error('structure not found: ' + structIdent);
         }
-        const structIdx = this.structList.indexOf(struct);
+        const structIdx = state.structList.indexOf(struct);
 
         // first, test whether we operate with structattr
         if (structAttrIdent !== null) {
-            const currStructAttrs = this.structAttrs.get(structIdent);
+            const currStructAttrs = state.structAttrs.get(structIdent);
             const currStructAttr = currStructAttrs.find(item => item.n === structAttrIdent);
             let structAttrIdx;
 
@@ -348,170 +510,144 @@ export class CorpusViewOptionsModel extends StatefulModel implements ViewOptions
                         selected: !currStructAttr.selected
                     }
                 );
-                this.structAttrs = this.structAttrs.set(structIdent, newStructAttrs);
+                state.structAttrs = state.structAttrs.set(structIdent, newStructAttrs);
             }
             // now we have to process its parent struct according
             // to the rules 1 & 2
             if (structAttrIdx !== undefined) {
-                let tmp = this.structAttrs.get(structIdent).get(structAttrIdx).selected;
+                let tmp = state.structAttrs.get(structIdent).get(structAttrIdx).selected;
                 let sel;
 
                 if (tmp) {
                     sel = true;
 
                 } else {
-                    sel = this.hasSelectedStructAttrs(structIdent);
+                    sel = this.hasSelectedStructAttrs(state, structIdent);
                 }
 
-                this.structList = this.structList.set(structIdx, {
+                state.structList = state.structList.set(structIdx, {
                     label: struct.label,
                     n: struct.n,
                     locked: struct.locked,
-                    selected: sel
+                    selected: sel,
+                    selectAllAttrs: this.hasSelectedAllStructAttrs(state, structIdent),
                 });
             }
 
         } else { // we are just changing a struct
             if (struct.selected) { // rule 4
-                this.clearStructAttrSelection(structIdent);
+                this.clearStructAttrSelection(state, structIdent);
             }
-            this.structList = this.structList.set(structIdx, {
+            state.structList = state.structList.set(structIdx, {
                 label: struct.label,
                 n: struct.n,
                 locked: struct.locked,
-                selected: !struct.selected
+                selected: !struct.selected,
+                selectAllAttrs: false,
             });
         }
+        state.selectAllStruct = this.hasSelectedAllStructs(state);
     }
 
 
-    initFromPageData(data:ViewOptions.PageData):void {
-        this.attrList = Immutable.List(data.AttrList.map(item => {
+    initFromPageData(state:CorpusViewOptionsModelState, data:ViewOptions.PageData):void {
+        state.attrList = Immutable.List(data.AttrList.map(item => {
             return {
                 label: item.label,
                 n: item.n,
                 selected: data.CurrentAttrs.indexOf(item.n) > -1 ? true : false,
-                locked: item.n === data.FixedAttr ? true : false
+                locked: item.n === data.FixedAttr ? true : false,
             };
         }));
-        this.structList = Immutable.List(data.AvailStructs.map(item => {
-            return {
-                label: item.label,
-                n: item.n,
-                selected: item.sel === 'selected' ? true : false,
-                locked: false
-            };
-        }));
-        this.structAttrs = Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(
+        state.structAttrs = Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(
             Object.keys(data.StructAttrs).map(key => {
-                    return [
-                        key,
-                        Immutable.List(data.StructAttrs[key].map(structAttr => {
-                            return {
-                                n: structAttr,
-                                selected: data.CurrStructAttrs.indexOf(key + '.' + structAttr) > -1 ? true : false
-                            };
-                        }))
-                    ];
+                return [
+                    key,
+                    Immutable.List(data.StructAttrs[key].map(structAttr => {
+                        return {
+                            n: structAttr,
+                            selected: data.CurrStructAttrs.indexOf(key + '.' + structAttr) > -1 ? true : false
+                        };
+                    }))
+                ];
             })
         );
+        state.structList = Immutable.List(
+            data.AvailStructs
+                .filter(item => state.structAttrs.has(item.n))
+                .map(item => ({
+                    label: item.label,
+                    n: item.n,
+                    selected: item.sel === 'selected' ? true : false,
+                    locked: false,
+                    selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
+                }))
+        );
 
-        this.referenceList = Immutable.List<ViewOptions.RefsDesc>(data.AvailRefs.map(item => {
+        state.refAttrs = Immutable.List(data.AvailRefs).groupBy(value => value.n.split('.')[0].replace('=', '')).map(item => item.map(value => {
             return {
-                n: item.n,
-                label: item.label,
-                selected: item.sel === 'selected' ? true : false
+                n: value.n,
+                label: value.label,
+                selected: value.sel === 'selected' ? true : false
             };
-        }));
-        this.fixedAttr = data.FixedAttr;
-        this.attrVmode = data.AttrVmode;
-        this.attrAllpos = this.attrVmode !== 'mouseover' ? data.AttrAllpos : 'all';
-        this.hasLoadedData = true;
-        this.showConcToolbar = data.ShowConcToolbar;
+        }).toList()).toMap();
+
+        state.refList = state.refAttrs.keySeq().map(value => {
+            return {
+                label: value,
+                n: value,
+                selectAllAttrs: state.refAttrs.get(value).every(value => value.selected),
+                selected: state.refAttrs.get(value).some(value => value.selected),
+                locked: false,
+            }
+        }).toList();
+ 
+        state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
+
+        state.fixedAttr = data.FixedAttr;
+        state.attrVmode = data.AttrVmode;
+        state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);
+        state.attrAllpos = state.attrVmode !== 'mouseover' ? data.AttrAllpos : 'all';
+        state.hasLoadedData = true;
+        state.showConcToolbar = data.ShowConcToolbar;
     }
 
-    loadData():RSVP.Promise<ViewOptions.PageData> {
-        let args = this.layoutModel.getConcArgs();
+    private loadData(dispatch:SEDispatcher):void {
+        const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
-        return this.layoutModel.ajax(
+        this.layoutModel.ajax$(
             'GET',
-            this.layoutModel.createActionUrl('options/viewattrs'),
-            args
+            this.layoutModel.createActionUrl('options/viewattrs', args),
+            {}
 
-        ).then(
-            (data:any) => {
-                let imported:ViewOptions.PageData = {
-                    AttrList: data['AttrList'],
-                    FixedAttr: data['fixed_attr'],
-                    CurrentAttrs: data['CurrentAttrs'],
-                    AvailStructs: data['Availstructs'],
-                    StructAttrs: data['structattrs'],
-                    CurrStructAttrs: data['curr_structattrs'],
-                    AvailRefs: data['Availrefs'],
-                    AttrAllpos: data['attr_allpos'],
-                    AttrVmode: data['attr_vmode'],
-                    ShowConcToolbar: data['use_conc_toolbar']
-                }
-                this.initFromPageData(imported);
-                return imported;
+        ).subscribe(
+            (data:ViewOptions.LoadOptionsResponse) => {
+                dispatch({
+                    name: ActionName.LoadDataDone,
+                    payload: {
+                        data: {
+                            AttrList: data.AttrList,
+                            FixedAttr: data.fixed_attr,
+                            CurrentAttrs: data.CurrentAttrs,
+                            AvailStructs: data.Availstructs,
+                            StructAttrs: data.structattrs,
+                            CurrStructAttrs: data.curr_structattrs,
+                            AvailRefs: data.Availrefs,
+                            AttrAllpos: data.attr_allpos,
+                            AttrVmode: data.attr_vmode,
+                            ShowConcToolbar: data.use_conc_toolbar
+                        }
+                    }
+                });
+            },
+            (err:Error) => {
+                this.layoutModel.showMessage('error', err);
+                dispatch({
+                    name: ActionName.LoadDataDone,
+                    error: err
+                });
             }
         );
     }
 
-    isLoaded():boolean {
-        return this.hasLoadedData;
-    }
-
-
-    getAttributes():Immutable.List<ViewOptions.AttrDesc> {
-        return this.attrList;
-    }
-
-    getStructures():Immutable.List<ViewOptions.StructDesc> {
-        return this.structList;
-    }
-
-    getStructAttrs():ViewOptions.AvailStructAttrs {
-        return this.structAttrs;
-    }
-
-    getFixedAttr():string {
-        return this.fixedAttr;
-    }
-
-    getReferences():Immutable.List<ViewOptions.RefsDesc> {
-        return this.referenceList;
-    }
-
-    getSelectAllAttributes():boolean {
-        return this.selectAllAttrs;
-    }
-
-    getSelectAllReferences():boolean {
-        return this.selectAllReferences;
-    }
-
-    getAttrsVmode():ViewOptions.AttrViewMode {
-        return transformVmode(this.attrVmode, this.attrAllpos);
-    }
-
-    getAttrsAllpos():string {
-        return this.attrAllpos;
-    }
-
-    getShowConcToolbar():boolean {
-        return this.showConcToolbar;
-    }
-
-    getUserIsAnonymous():boolean {
-        return this.userIsAnonymous;
-    }
-
-    lockedPosAttrNotSelected():boolean {
-        return !this.attrList.find(v => v.locked).selected;
-    }
-
-    getCorpusUsesRTLText():boolean {
-        return this.corpusUsesRTLText;
-    }
 }

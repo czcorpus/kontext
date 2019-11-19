@@ -214,13 +214,15 @@ export namespace AjaxResponse {
         menuData:any; // TODO type
         Wposlist:Array<any>; // TODO type
         AttrList:Array<any>; // TODO type
-        StructAttrList:Array<any>; // TODO type
+        StructAttrList:Array<Kontext.AttrItem>;
+        StructList:Array<string>;
         InputLanguages:{[corpname:string]:string};
         ConcFormsArgs:any; // TODO type
         CurrentSubcorp:string;
         SubcorpList:Array<{v:string; n:string}>;
         TextTypesNotes:string;
         TextDirectionRTL:boolean;
+        pluginData:{[plgName:string]:any}; // here it is impossible to determine a detailed type in a reasonable way
     }
 }
 

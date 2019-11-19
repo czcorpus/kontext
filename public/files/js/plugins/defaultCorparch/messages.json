@@ -33,7 +33,8 @@
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Please note that the list only displays first {maxNum} items. If you cannot find your corpus, please refine your search or visit the <a href=\"{link}\">full list page</a>.",
     "defaultCorparch__no_keyword": "Reset",
     "defaultCorparch__item_will_be_removed": "Item will be removed from the list in a few moments. Click the star icon to add it back to favourites.",
-    "defaultCorparch__err001": "Maximum allowed number ({maxNum}) of favorite corpora exceeded. To add a new item, please remove an existing item first."
+    "defaultCorparch__err001": "Maximum allowed number ({maxNum}) of favorite corpora exceeded. To add a new item, please remove an existing item first.",
+    "defaultCorparch__favourites_filter_label": "favourites"
 
   },
   "cs-CZ": {
@@ -70,7 +71,8 @@
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Berte prosím na vědomí, že seznam zobrazuje pouze prvních {maxNum} položek. Nemůžete-li najít hledaný korpus, zkuste zpřesnit zadání nebo použijte <a href=\"{link}\">úplný seznam korpusů</a>.",
     "defaultCorparch__no_keyword": "Zrušit výběr",
     "defaultCorparch__item_will_be_removed": "Položka bude za několik okamžiků odstraněna ze seznamu. Klikněte na ikonku hvězdičky pro její opětovné přidání do oblíbených.",
-    "defaultCorparch__err001": "Byl překročen maximální povolený počet oblíbených korpusů ({maxNum}). Pro přidání nové položky je třeba nejdříve smazat některou z existujících."
+    "defaultCorparch__err001": "Byl překročen maximální povolený počet oblíbených korpusů ({maxNum}). Pro přidání nové položky je třeba nejdříve smazat některou z existujících.",
+    "defaultCorparch__favourites_filter_label": "oblíbené"
   },
   "szl": {
     "defaultCorparch__unknown_size": "niyznanŏ srogość",
@@ -106,6 +108,7 @@
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Pamiyntej, iże lista pokŏzuje ino piyrsze {maxNum} elymyntōw. Jak niy możesz znojś swojigo korpusu, poszukej barzij akuratnie abo nawiydź  <a href=\"{link}\">strōnã z połnōm listōm</a>.",
     "defaultCorparch__no_keyword": "Resetuj",
     "defaultCorparch__item_will_be_removed": "Elymynt bydzie skasowany ze listy za chwilã. Kliknij ikōnã gwiŏzdy, żeby go dodać nazŏd do podryncznych.",
-    "defaultCorparch__err001": "Maksymalnŏ wielość ({maxNum}) podryncznych korpusōw bōł przekroczōny. Żeby dodać nowy elymynt, nojprzōd skasuj jakiś inkszy."
+    "defaultCorparch__err001": "Maksymalnŏ wielość ({maxNum}) podryncznych korpusōw bōł przekroczōny. Żeby dodać nowy elymynt, nojprzōd skasuj jakiś inkszy.",
+    "defaultCorparch__favourites_filter_label": "favourites"
   }
 }

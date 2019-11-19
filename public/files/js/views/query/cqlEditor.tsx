@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { of as rxOf, Subscription } from 'rxjs';
 import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
-import * as Rx from '@reactivex/rxjs';
 import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
 import {SetQueryInputAction, MoveCursorInputAction} from '../../models/query/common';
-import {ActionDispatcher} from '../../app/dispatcher';
 import {QueryFormModel} from '../../models/query/common';
+import { IActionDispatcher } from 'kombo';
 
 
 export interface CQLEditorProps {
@@ -54,7 +54,7 @@ export interface CQLEditorViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             queryModel:QueryFormModel, editorModel:CQLEditorModel) {
 
 
@@ -64,6 +64,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         query:string;
         downArrowTriggersHistory:boolean;
     }> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -80,8 +82,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         private inputKeyUpHandler(evt) {
             if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
                 dispatcher.dispatch<MoveCursorInputAction>({
-                    actionType: 'QUERY_INPUT_MOVE_CURSOR',
-                    props: {
+                    name: 'QUERY_INPUT_MOVE_CURSOR',
+                    payload: {
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: this.props.inputRef.current.selectionStart,
                         rawFocusIdx: this.props.inputRef.current.selectionEnd
@@ -104,8 +106,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
             dispatcher.dispatch<SetQueryInputAction>({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                payload: {
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
                     rawAnchorIdx: this.props.inputRef.current.selectionStart,
@@ -123,11 +125,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            queryModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = queryModel.addListener(this.handleModelChange);
         }
 
         componentWillUnmount() {
-            queryModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render():React.ReactElement<{}> {
@@ -144,6 +146,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------- <CQLEditor /> -----------------------------
 
     class CQLEditor extends React.Component<CQLEditorProps, CQLEditorModelState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props:CQLEditorProps) {
             super(props);
@@ -224,8 +228,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             const query = src.map(v => v[0]).join('');
 
             dispatcher.dispatch<SetQueryInputAction>({
-                actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                props: {
+                name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                payload: {
                     sourceId: this.props.sourceId,
                     query: query,
                     rawAnchorIdx: rawAnchorIdx,
@@ -254,17 +258,17 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = Number(a.getAttribute('data-leftIdx'));
                         const rightIdx = Number(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.insert(Rx.Observable.of(
+                        dispatcher.dispatch(rxOf(
                             {
-                                actionType: 'TAGHELPER_PRESET_PATTERN',
-                                props: {
+                                name: 'TAGHELPER_PRESET_PATTERN',
+                                payload: {
                                     sourceId: this.props.sourceId,
                                     pattern: this.state.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                                 }
                             },
                             {
-                                actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                                props: {
+                                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+                                payload: {
                                     sourceId: this.props.sourceId,
                                     value: 'tag',
                                     widgetArgs: {
@@ -284,8 +288,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 dispatcher.dispatch<MoveCursorInputAction>({
-                    actionType: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
-                    props: {
+                    name: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                    payload: {
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: anchorIdx,
                         rawFocusIdx: focusIdx
@@ -318,8 +322,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                             rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
 
                     dispatcher.dispatch<SetQueryInputAction>({
-                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                        props: {
+                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                        payload: {
                             sourceId: this.props.sourceId,
                             query: query,
                             rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
@@ -331,8 +335,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 } else if (rawAnchorIdx < rawFocusIdx) {
                     const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
                     dispatcher.dispatch<SetQueryInputAction>({
-                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                        props: {
+                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                        payload: {
                             sourceId: this.props.sourceId,
                             query: query,
                             rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
@@ -344,8 +348,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 } else {
                     const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
                     dispatcher.dispatch<SetQueryInputAction>({
-                        actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                        props: {
+                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                        payload: {
                             sourceId: this.props.sourceId,
                             query: query,
                             rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
@@ -361,8 +365,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
                 dispatcher.dispatch<SetQueryInputAction>({
-                    actionType: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
-                    props: {
+                    name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    payload: {
                         sourceId: this.props.sourceId,
                         // We have to add a single whitespace here because otherwise FF cannot handle cursor
                         // position properly (normally it inserts its custom br type=_moz element which is
@@ -380,8 +384,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
                 dispatcher.dispatch<MoveCursorInputAction>({
-                    actionType: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
-                    props: {
+                    name: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                    payload: {
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: anchorIdx === focusIdx ? query.length : anchorIdx,
                         rawFocusIdx: query.length
@@ -413,7 +417,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            editorModel.addChangeListener(this.handleModelChange);
+            this.modelSubscription = editorModel.addListener(this.handleModelChange);
             if (this.props.takeFocus && this.props.inputRef.current) {
                 this.props.inputRef.current.focus();
             }
@@ -424,7 +428,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentWillUnmount() {
-            editorModel.removeChangeListener(this.handleModelChange);
+            this.modelSubscription.unsubscribe();
             if (he.browserInfo.isFirefox()) {
                 this.props.inputRef.current.removeEventListener('keydown', this.ffKeyDownHandler);
             }

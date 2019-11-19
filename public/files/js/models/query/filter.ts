@@ -23,12 +23,12 @@ import RSVP from 'rsvp';
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
 import {GeneralQueryFormProperties, QueryFormModel, appendQuery, WidgetsMap} from './common';
+import { Action, IFullActionControl } from 'kombo';
 
 
 /**
@@ -135,7 +135,7 @@ export class FilterFormModel extends QueryFormModel {
 
 
     constructor(
-            dispatcher:ActionDispatcher,
+            dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
@@ -170,95 +170,95 @@ export class FilterFormModel extends QueryFormModel {
         this.supportedWidgets = this.determineSupportedWidgets();
 
         this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+            switch (action.name) {
                 case 'CQL_EDITOR_DISABLE':
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_SELECT_TYPE':
-                    this.queryTypes = this.queryTypes.set(action.props['sourceId'], action.props['queryType']);
+                    this.queryTypes = this.queryTypes.set(action.payload['sourceId'], action.payload['queryType']);
                     this.supportedWidgets = this.determineSupportedWidgets();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
-                    if (action.props['insertRange']) {
-                        this.addQueryInfix(action.props['sourceId'], action.props['query'], action.props['insertRange']);
+                    if (action.payload['insertRange']) {
+                        this.addQueryInfix(action.payload['sourceId'], action.payload['query'], action.payload['insertRange']);
 
                     } else {
-                        this.queries = this.queries.set(action.props['sourceId'], action.props['query']);
+                        this.queries = this.queries.set(action.payload['sourceId'], action.payload['query']);
                     }
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        action.props['sourceId'],
+                        action.payload['sourceId'],
                         this.shouldDownArrowTriggerHistory(
-                            action.props['query'],
-                            action.props['rawAnchorIdx'],
-                            action.props['rawFocusIdx']
+                            action.payload['query'],
+                            action.payload['rawAnchorIdx'],
+                            action.payload['rawFocusIdx']
                         )
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_MOVE_CURSOR':
                     this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        action.props['sourceId'],
+                        action.payload['sourceId'],
                         this.shouldDownArrowTriggerHistory(
-                            this.queries.get(action.props['sourceId']),
-                            action.props['anchorIdx'],
-                            action.props['focusIdx']
+                            this.queries.get(action.payload['sourceId']),
+                            action.payload['anchorIdx'],
+                            action.payload['focusIdx']
                         )
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_APPEND_QUERY':
                     this.queries = this.queries.set(
-                        action.props['sourceId'],
+                        action.payload['sourceId'],
                         appendQuery(
-                            this.queries.get(action.props['sourceId']),
-                            action.props['query'],
-                            !!action.props['prependSpace']
+                            this.queries.get(action.payload['sourceId']),
+                            action.payload['query'],
+                            !!action.payload['prependSpace']
                         )
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_LPOS':
-                    this.lposValues = this.lposValues.set(action.props['sourceId'], action.props['lpos']);
-                    this.notifyChangeListeners();
+                    this.lposValues = this.lposValues.set(action.payload['sourceId'], action.payload['lpos']);
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_MATCH_CASE':
-                    this.matchCaseValues = this.matchCaseValues.set(action.props['sourceId'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.matchCaseValues = this.matchCaseValues.set(action.payload['sourceId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_DEFAULT_ATTR':
-                    this.defaultAttrValues = this.defaultAttrValues.set(action.props['sourceId'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.defaultAttrValues = this.defaultAttrValues.set(action.payload['sourceId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_SET_POS_NEG':
-                    this.pnFilterValues = this.pnFilterValues.set(action.props['filterId'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.pnFilterValues = this.pnFilterValues.set(action.payload['filterId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_SET_FILFL':
-                    this.filflValues = this.filflValues.set(action.props['filterId'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.filflValues = this.filflValues.set(action.payload['filterId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_SET_RANGE':
                     this.setFilPosValue(
-                        action.props['filterId'],
-                        action.props['value'],
-                        action.props['rangeId']
+                        action.payload['filterId'],
+                        action.payload['value'],
+                        action.payload['rangeId']
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case'FILTER_QUERY_SET_INCL_KWIC':
-                    this.inclkwicValues = this.inclkwicValues.set(action.props['filterId'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.inclkwicValues = this.inclkwicValues.set(action.payload['filterId'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'FILTER_QUERY_APPLY_FILTER':
-                    const err = this.validateForm(action.props['filterId']);
+                    const err = this.validateForm(action.payload['filterId']);
                     if (!err) {
-                        this.submitQuery(action.props['filterId']);
-                        this.notifyChangeListeners();
+                        this.submitQuery(action.payload['filterId']);
+                        this.emitChange();
 
                     } else {
                         this.pageModel.showMessage('error', err);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
             }
@@ -306,7 +306,7 @@ export class FilterFormModel extends QueryFormModel {
 
     externalQueryChange(sourceId:string, query:string):void {
         this.queries = this.queries.set(sourceId, query);
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     getActiveWidget(sourceId:string):string {

@@ -26,7 +26,7 @@ from controller import exposed
 import actions.user
 import plugins
 from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
-                                      TokenConnect, KwicConnect, DictLike)
+                                      TokenConnect, KwicConnect, DictLike, TagsetInfo)
 import l10n
 from plugins.rdbms_corparch.backend import ManateeCorpora
 from plugins.rdbms_corparch.backend.sqlite import Backend
@@ -116,6 +116,10 @@ class DeafultCorplistProvider(CorplistProvider):
             requestable = bool(int(filter_dict.get('requestable')))
         else:
             requestable = False
+        if filter_dict.get('favOnly'):
+            favourites_only = bool(int(filter_dict.get('favOnly')))
+        else:
+            favourites_only = False
 
         if offset is None:
             offset = 0
@@ -128,12 +132,8 @@ class DeafultCorplistProvider(CorplistProvider):
             limit = int(limit)
 
         user_items = self._corparch.user_items.get_user_items(plugin_api)
-
-        def fav_id(corpus_id):
-            for item in user_items:
-                if item.is_single_corpus and item.main_corpus_id == corpus_id:
-                    return item.ident
-            return None
+        favourite_corpora = {
+            item.main_corpus_id: item.ident for item in user_items if item.is_single_corpus}
 
         def get_found_in(corp, phrases):
             ans = []
@@ -149,12 +149,13 @@ class DeafultCorplistProvider(CorplistProvider):
         used_keywords = set()
         rows = self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
                                            min_size=min_size, max_size=max_size, requestable=requestable,
-                                           offset=offset, limit=limit + 1, keywords=query_keywords).values()
+                                           offset=offset, limit=limit + 1, keywords=query_keywords,
+                                           favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values()
         ans = []
         for i, corp in enumerate(rows):
             used_keywords.update(corp.keywords)
             corp.keywords = self._corparch.get_l10n_keywords(corp.keywords, plugin_api.user_lang)
-            corp.fav_id = fav_id(corp.id)
+            corp.fav_id = favourite_corpora.get(corp.id, None)
             corp.found_in = get_found_in(corp, normalized_query_substrs)
             ans.append(corp.to_dict())
             if i == limit - 1:
@@ -245,7 +246,6 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.id = row['id']
             ans.web = row['web']
             ans.sentence_struct = row['sentence_struct']
-            ans.tagset = row['tagset']
             ans.collator_locale = row['collator_locale']
             ans.speech_segment = row['speech_segment']
             ans.speaker_id_attr = row['speaker_id_attr']
@@ -288,12 +288,12 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                               keywords=keywords)
 
     def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                     offset=0, limit=-1):
+                     offset=0, limit=-1, favourites=()):
         user_id = plugin_api.user_dict['id']
         ans = OrderedDict()
         for row in self._backend.load_all_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
                                                   max_size=max_size, requestable=requestable, offset=offset,
-                                                  limit=limit):
+                                                  limit=limit, favourites=favourites):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_api, row)
         return ans
 
@@ -347,7 +347,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             data = self._backend.load_tckc_providers(corpus_id)
             for row in data:
                 if row['type'] == 'tc':
-                    self._tc_providers[corpus_id].providers.append(row['provider'])
+                    self._tc_providers[corpus_id].providers.append((row['provider'], row['is_kwic_view']))
                 elif row['type'] == 'kc':
                     self._kc_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id]
@@ -356,18 +356,21 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         if corpus_id not in self._corpus_info_cache:
             row = self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row)
-            self._corpus_info_cache[corpus_id] = corp
-            for art in self._backend.load_corpus_articles(corpus_id):
-                if art['role'] == 'default':
-                    corp.citation_info.default_ref = markdown(art['entry'])
-                elif art['role'] == 'standard':
-                    corp.citation_info.article_ref.append(markdown(art['entry']))
-                elif art['role'] == 'other':
-                    corp.citation_info.other_bibliography = markdown(art['entry'])
-            if row['ttdesc_id'] not in self._descriptions:
-                for drow in self._backend.load_ttdesc(row['ttdesc_id']):
-                    self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
-                    self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
+            if corp:
+                corp.tagsets = [TagsetInfo().from_dict(row2)
+                                for row2 in self._backend.load_corpus_tagsets(corpus_id)]
+                self._corpus_info_cache[corpus_id] = corp
+                for art in self._backend.load_corpus_articles(corpus_id):
+                    if art['role'] == 'default':
+                        corp.citation_info.default_ref = markdown(art['entry'])
+                    elif art['role'] == 'standard':
+                        corp.citation_info.article_ref.append(markdown(art['entry']))
+                    elif art['role'] == 'other':
+                        corp.citation_info.other_bibliography = markdown(art['entry'])
+                if row['ttdesc_id'] not in self._descriptions:
+                    for drow in self._backend.load_ttdesc(row['ttdesc_id']):
+                        self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
+                        self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
         return self._corpus_info_cache.get(corpus_id, None)
 
     def get_corpus_info(self, user_lang, corp_name):
@@ -390,7 +393,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
 
                     return ans
                 return BrokenCorpusInfo(name=corp_name)
-            except Exception as ex:
+            except TypeError as ex:
                 logging.getLogger(__name__).warning(
                     'Failed to fetch corpus info for {0}: {1}'.format(corp_name, ex))
                 return BrokenCorpusInfo(name=corp_name)
@@ -463,7 +466,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
 
 @plugins.inject(plugins.runtime.USER_ITEMS)
 def create_instance(conf, user_items):
-    return RDBMSCorparch(backend=Backend(db_path=conf.get('plugins', 'corparch')['file']),
+    return RDBMSCorparch(backend=Backend(db_path=conf.get('plugins', 'corparch')['default:file']),
                          user_items=user_items,
                          tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],

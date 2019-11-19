@@ -21,9 +21,9 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface FreqFormInputs {
@@ -83,7 +83,7 @@ export class MLFreqFormModel extends StatefulModel {
 
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -95,11 +95,11 @@ export class MLFreqFormModel extends StatefulModel {
         this.alignType = Immutable.List<AlignTypes>(props.alignType);
         this.maxNumLevels = maxNumLevels;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_ML_SET_FLIMIT':
-                    this.flimit.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.flimit.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_ADD_LEVEL':
                     if (this.mlxattr.size < this.maxNumLevels) {
@@ -108,50 +108,50 @@ export class MLFreqFormModel extends StatefulModel {
                     } else {
                         throw new Error('Maximum number of levels reached');
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_REMOVE_LEVEL':
-                    this.removeLevel(action.props['levelIdx']);
-                    this.notifyChangeListeners();
+                    this.removeLevel(action.payload['levelIdx']);
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_CHANGE_LEVEL':
-                    this.changeLevel(action.props['levelIdx'], action.props['direction']);
-                    this.notifyChangeListeners();
+                    this.changeLevel(action.payload['levelIdx'], action.payload['direction']);
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_SET_MLXATTR':
-                    this.mlxattr = this.mlxattr.set(action.props['levelIdx'], action.props['value']);
-                    this.notifyChangeListeners();
+                    this.mlxattr = this.mlxattr.set(action.payload['levelIdx'], action.payload['value']);
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_SET_MLXICASE':
                     this.mlxicase = this.mlxicase.set(
-                        action.props['levelIdx'],
-                        !this.mlxicase.get(action.props['levelIdx'])
+                        action.payload['levelIdx'],
+                        !this.mlxicase.get(action.payload['levelIdx'])
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_SET_MLXCTX_INDEX':
                     this.mlxctxIndices = this.mlxctxIndices.set(
-                        action.props['levelIdx'],
-                        Number(action.props['value'])
+                        action.payload['levelIdx'],
+                        Number(action.payload['value'])
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_SET_ALIGN_TYPE':
                     this.alignType = this.alignType.set(
-                        action.props['levelIdx'],
-                        action.props['value']
+                        action.payload['levelIdx'],
+                        action.payload['value']
                     );
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_ML_SUBMIT':
                     const err = this.validateForm();
                     if (!err) {
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         this.submit();
 
                     } else {
                         this.pageModel.showMessage('error', err);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
                 break;
             }
@@ -280,7 +280,7 @@ export class TTFreqFormModel extends StatefulModel {
 
     private freqSort:string;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:FreqFormProps) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
@@ -289,24 +289,24 @@ export class TTFreqFormModel extends StatefulModel {
         this.flimit = {value: props.flimit, isInvalid: false, isRequired: true};
         this.freqSort = props.freq_sort;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_TT_SET_FTTATTR':
-                    if (this.fttattr.contains(action.props['value'])) {
-                        this.fttattr = this.fttattr.remove((action.props['value']));
+                    if (this.fttattr.contains(action.payload['value'])) {
+                        this.fttattr = this.fttattr.remove((action.payload['value']));
 
                     } else {
-                        this.fttattr = this.fttattr.add(action.props['value']);
+                        this.fttattr = this.fttattr.add(action.payload['value']);
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_TT_SET_FTT_INCLUDE_EMPTY':
                     this.fttIncludeEmpty = !this.fttIncludeEmpty;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_TT_SET_FLIMIT':
-                    this.flimit.value = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.flimit.value = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_TT_SUBMIT':
                     const err = this.validateForm();
@@ -317,7 +317,7 @@ export class TTFreqFormModel extends StatefulModel {
                     } else {
                         this.pageModel.showMessage('error', err);
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });

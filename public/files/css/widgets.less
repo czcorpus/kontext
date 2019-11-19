@@ -189,8 +189,7 @@ section.closeable-frame {
 
 
 #modal-overlay .tooltip-box.async-task-list {
-    min-width: 40%;
-    max-width: 45em;
+    width: 90%;
     font-size: 0.8em;
 
     table {
@@ -204,11 +203,36 @@ section.closeable-frame {
             border-style: solid;
         }
 
+        td {
+            min-width: 10em;
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         td.status {
+            width: 5%;
             img {
                 width: 1em;
                 margin-left: 0.4em;
             }
+        }
+
+        td.task-type {
+            width: 15%;
+        }
+
+        td.label {
+            width: 20%;
+        }
+
+        td.datetime {
+            width: 15%;
+        }
+
+        td.msg {
+            width: 45%;
         }
 
         th {
@@ -472,15 +496,7 @@ fieldset.FieldsetOutputOptions {
 
     .StructsAndAttrsForm {
 
-        fieldset {
-
-            display: inline-block;
-            vertical-align: top;
-            margin-right: 1em;
-
-            legend {
-                font-weight: bold;
-            }
+        div.checkbox-area {
 
             ul {
                 margin: 0;
@@ -489,19 +505,25 @@ fieldset.FieldsetOutputOptions {
 
                 li {
                     margin: 0 0 0 1em;
-                    padding: 0;
+                    padding: 0.1em 0;
+
+                    input[type=checkbox] {
+                        margin-right: 0.4em;
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
                 }
             }
 
             h3.label {
                 text-align: left;
-                font-size: 1.0em;
+                font-size: 1.2em;
                 margin-top: 1.2em;
-                margin-bottom: 0.2em;
+                margin-bottom: 0.4em;
             }
 
             p.warning {
-                max-width: 20em;
+                max-width: 80%;
                 white-space: normal;
 
                 img.icon {
@@ -512,6 +534,37 @@ fieldset.FieldsetOutputOptions {
                     margin-bottom: 0.1em;
                 }
             }
+        }
+
+        .struct-groups {
+
+            display: flex;
+            align-items: flex-start;
+
+            div.group {
+                padding-left: 0.7em;
+            }
+
+            div.group:not(:last-child) {
+                border-color: @color-superlight-text;
+                border-width: 0 1px 0 0;
+                border-style: solid;
+                padding-right: 0.7em;
+            }
+
+            label.struct {
+                color: @color-logo-pink;
+                font-size: 120%;
+
+                input[type=checkbox] {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+        }
+
+        .select-all-structs-and-groups {
+            text-align: center;
         }
 
         .button-replace {
@@ -1090,7 +1143,7 @@ table.CollMetricsSelection {
     }
 
     tr:nth-child(1) th,
-    tr:nth-child(1) td, {
+    tr:nth-child(1) td {
         border: none;
     }
 

@@ -19,15 +19,15 @@
  */
 
 import * as React from 'react';
-import {ActionDispatcher} from '../app/dispatcher';
-import {CoreViews} from '../types/coreViews';
 import {Kontext} from '../types/common';
 import {FormsViews as CollFormsViews} from './coll/forms';
 import {FormsViews as FreqFormsViews} from './freqs/forms';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 
 export interface AnalysisModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     collViews:CollFormsViews;
     freqViews:FreqFormsViews;
@@ -60,6 +60,8 @@ export function init({dispatcher, he, collViews, freqViews,
             this._handleModelChange = this._handleModelChange.bind(this);
             this._handleCloseClick = this._handleCloseClick.bind(this);
         }
+
+        private modelSubscription:Subscription;
 
         _renderContents() {
             switch ((this.state.activeItem || {actionName: null}).actionName) {
@@ -95,17 +97,17 @@ export function init({dispatcher, he, collViews, freqViews,
 
         _handleCloseClick() {
             dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                props: {}
+                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            mainMenuModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = mainMenuModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            mainMenuModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

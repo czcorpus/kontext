@@ -20,11 +20,12 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {PluginInterfaces} from '../types/plugins';
 import {Kontext, TextTypes, KeyCodes} from '../types/common';
 import { ExtendedInfo } from '../models/textTypes/valueSelections';
 import { CoreViews } from '../types/coreViews';
+import { Subscription } from 'rxjs';
 
 
 export interface TextTypesPanelProps {
@@ -35,7 +36,7 @@ export interface TextTypesPanelProps {
 
 
 interface TextTypesPanelState {
-    attributes:Array<TextTypes.AttributeSelection>;
+    attributes:Immutable.List<TextTypes.AttributeSelection>;
     rangeModes:Immutable.Map<string, boolean>;
     minimized:Immutable.Map<string, boolean>;
     hasSomeMaximizedBoxes:boolean;
@@ -54,7 +55,7 @@ export interface TextTypesViews {
 }
 
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, textTypesModel:TextTypes.ITextTypesModel):TextTypesViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, textTypesModel:TextTypes.ITextTypesModel):TextTypesViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -91,8 +92,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         _confirmClickHandler() {
             dispatcher.dispatch({
-                actionType: 'TT_RANGE_BUTTON_CLICKED',
-                props: {
+                name: 'TT_RANGE_BUTTON_CLICKED',
+                payload: {
                     attrName: this.props.attrName,
                     fromVal: this.state.fromValue ? parseFloat(this.state.fromValue) : null,
                     toVal: this.state.toValue ? parseFloat(this.state.toValue) : null,
@@ -214,8 +215,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         _clickHandler() {
             dispatcher.dispatch({
-                actionType: 'TT_VALUE_CHECKBOX_CLICKED',
-                props: {
+                name: 'TT_VALUE_CHECKBOX_CLICKED',
+                payload: {
                     attrName: this.props.itemName,
                     itemIdx: this.props.itemIdx
                 }
@@ -260,8 +261,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         const clickCloseHandler = () => {
             dispatcher.dispatch({
-                actionType: 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST',
-                props: {
+                name: 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST',
+                payload: {
                     attrName: props.attrName,
                     ident: props.ident
                 }
@@ -305,6 +306,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         isWaiting:boolean;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = {isWaiting: false};
@@ -315,8 +318,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         _handleClick(evt) {
             this.setState({isWaiting: true});
             dispatcher.dispatch({
-                actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
-                props: {
+                name: 'TT_EXTENDED_INFORMATION_REQUEST',
+                payload: {
                     attrName: this.props.attrName,
                     ident: this.props.ident
                 }
@@ -330,11 +333,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         componentDidMount() {
-            textTypesModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = textTypesModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            textTypesModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -427,8 +430,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
             } else {
                 dispatcher.dispatch({
-                    actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
-                    props: {
+                    name: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
+                    payload: {
                         attrName: this.props.attrObj.name,
                         ident: item.ident,
                         label: item.label,
@@ -445,8 +448,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             } else if (event.eventPhase === Event.BUBBLING_PHASE) {
                 if (this._outsideClick) {
                     dispatcher.dispatch({
-                        actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET',
-                        props: {
+                        name: 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET',
+                        payload: {
                             attrName: this.props.attrObj.name
                         }
                     });
@@ -512,8 +515,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             const v = evt.target.value;
 
             dispatcher.dispatch({
-                actionType: 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
-                props: {
+                name: 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
+                payload: {
                     attrName: this.props.attrObj.name,
                     value: v
                 }
@@ -524,8 +527,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             }
             this.throttlingTimer = window.setTimeout(() => {
                 dispatcher.dispatch({
-                    actionType: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST',
-                    props: {
+                    name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST',
+                    payload: {
                         attrName: this.props.attrObj.name,
                         value: v
                     }
@@ -579,8 +582,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         const handleAutoCompleteHintClick = (item) => { // typeof item = TextTypes.AutoCompleteItem
             dispatcher.dispatch({
-                actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
-                props: {
+                name: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
+                payload: {
                     attrName: props.attrObj.name,
                     ident: item.ident,
                     label: item.label,
@@ -691,7 +694,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
             this._helpCloseHandler = this._helpCloseHandler.bind(this);
             this.state = {
                 metaInfoHelpVisible: false,
-                hasExtendedInfo: textTypesModel.hasDefinedExtendedInfo(this.props.attrObj.name),
+                hasExtendedInfo: textTypesModel.getBibIdAttr() && textTypesModel.getBibLabelAttr() === this.props.attrObj.name,
                 metaInfo: textTypesModel.getAttrSummary().get(this.props.attrObj.name)
             };
         }
@@ -708,8 +711,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         _selectAllHandler() {
             dispatcher.dispatch({
-                actionType: 'TT_SELECT_ALL_CHECKBOX_CLICKED',
-                props: {
+                name: 'TT_SELECT_ALL_CHECKBOX_CLICKED',
+                payload: {
                     attrName: this.props.attrObj.name
                 }
             });
@@ -717,8 +720,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         _intervalModeSwitchHandler() {
             dispatcher.dispatch({
-                actionType: 'TT_TOGGLE_RANGE_MODE',
-                props: {
+                name: 'TT_TOGGLE_RANGE_MODE',
+                payload: {
                     attrName: this.props.attrObj.name
                 }
             });
@@ -828,8 +831,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         _handleMinimizeIconFn(ident:string):()=>void {
             return () => {
                 dispatcher.dispatch({
-                    actionType: 'TT_TOGGLE_MINIMIZE_ITEM',
-                    props: {
+                    name: 'TT_TOGGLE_MINIMIZE_ITEM',
+                    payload: {
                         ident: ident
                     }
                 });
@@ -890,8 +893,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: props.hasSomeMaximized ? 'TT_MINIMIZE_ALL' : 'TT_MAXIMIZE_ALL',
-                props: {}
+                name: props.hasSomeMaximized ? 'TT_MINIMIZE_ALL' : 'TT_MAXIMIZE_ALL',
+                payload: {}
             });
         };
 
@@ -906,6 +909,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
     // ----------------------------- <TextTypesPanel /> --------------------------
 
     class TextTypesPanel extends React.Component<TextTypesPanelProps, TextTypesPanelState> {
+
+        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -927,14 +932,14 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
         }
 
         componentDidMount() {
-            textTypesModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = textTypesModel.addListener(this._modelChangeHandler);
             if (typeof this.props.onReady === 'function') {
                 this.props.onReady();
             }
         }
 
         componentWillUnmount() {
-            textTypesModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

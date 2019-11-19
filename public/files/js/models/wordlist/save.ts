@@ -21,13 +21,13 @@
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface WordlistSaveModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;
@@ -70,30 +70,30 @@ export class WordlistSaveModel extends StatefulModel {
         this.quickSaveRowLimit = quickSaveRowLimit;
 
         this.dispatcherRegister((action:Action) => {
-            switch (action.actionType) {
+            switch (action.name) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
             case 'WORDLIST_SAVE_FORM_HIDE':
                 this.formIsActive = false;
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
             case 'WORDLIST_SAVE_FORM_SET_TO_LINE':
-                this.toLine.value = action.props['value'];
-                this.notifyChangeListeners();
+                this.toLine.value = action.payload['value'];
+                this.emitChange();
             break;
             case 'WORDLIST_SAVE_FORM_SET_FORMAT':
-                this.saveFormat = action.props['value'];
-                this.notifyChangeListeners();
+                this.saveFormat = action.payload['value'];
+                this.emitChange();
             break;
             case 'WORDLIST_SAVE_SET_INCLUDE_HEADING':
-                this.includeHeading = action.props['value'];
-                this.notifyChangeListeners();
+                this.includeHeading = action.payload['value'];
+                this.emitChange();
             break;
             case 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS':
-                this.includeColHeaders = action.props['value'];
-                this.notifyChangeListeners();
+                this.includeColHeaders = action.payload['value'];
+                this.emitChange();
             break;
             case 'WORDLIST_SAVE_FORM_SUBMIT':
                 const err = this.validateForm();
@@ -104,18 +104,18 @@ export class WordlistSaveModel extends StatefulModel {
                     this.submit();
                     this.formIsActive = false;
                 }
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
-                    {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                    {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
                 ))) {
-                    this.saveFormat = action.props['saveformat'];
+                    this.saveFormat = action.payload['saveformat'];
                     this.toLine.value = `${this.quickSaveRowLimit}`;
                     this.submit();
                     this.toLine.value = '';
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 }
             break;
             }

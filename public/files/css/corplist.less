@@ -50,11 +50,23 @@ section.corplist {
         margin: 0.4em 0.2em;
     }
 
+    .keywords .keyword.iconized {
+
+        img.icon {
+            display: block;
+            width: 0.7em;
+            height: 0.7em;
+            margin:  0 0.3em 0 0;
+            padding: 0;
+        }
+    }
+
     .keywords .keyword .overlay {
         border-width: 0;
         border-radius: @border-radius-default;
         padding: 0.2em 0.4em;
-        display: inline-block;
+        display: flex;
+        align-items: center;
         -webkit-transition: all 0.2s ease-in-out;
         -moz-transition: all 0.2s ease-in-out;
         -o-transition: all 0.2s ease-in-out;
@@ -81,7 +93,6 @@ section.corplist {
         border-color: @color-logo-pink;
         border-width: 1pt;
         color: @color-logo-pink;
-        font-weight: bold;
     }
 
     .keywords a.keyword:hover {

@@ -21,12 +21,12 @@
 import {TextTypes} from '../../types/common';
 import {PageModel, DownloadType} from '../../app/main';
 import {FreqResultResponse} from '../../types/ajaxResponses';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {MultiDict} from '../../util';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  * En extended 2d freq. data item containing
@@ -76,18 +76,18 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
 
     private sortReversed:boolean;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.origData = Immutable.List<FreqDataItem>();
         this.sortBy = 'ipm';
         this.sortReversed = true;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'FREQ_CT_SET_MIN_FREQ':
-                    if (this.validateMinAbsFreqAttr(action.props['value'])) {
-                        this.minFreq = action.props['value'];
+                    if (this.validateMinAbsFreqAttr(action.payload['value'])) {
+                        this.minFreq = action.payload['value'];
                         if (this.data) {
                             this.updateData();
                         }
@@ -95,23 +95,23 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
                     } else {
                         // we do not show error because other active model for 2d table handles this
                     }
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
-                    this.minFreqType = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.minFreqType = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
-                    this.alphaLevel = action.props['value'];
+                    this.alphaLevel = action.payload['value'];
                     this.recalculateConfIntervals();
                     this.updateData();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'FREQ_CT_SORT_FLAT_LIST':
-                    this.sortBy = action.props['value'];
-                    this.sortReversed = action.props['reversed'];
+                    this.sortBy = action.payload['value'];
+                    this.sortReversed = action.payload['reversed'];
                     this.updateData();
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });
@@ -220,7 +220,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
 
     importDataAndNotify(data:FreqResultResponse.CTFreqResultData):void {
         this.importData(data);
-        this.notifyChangeListeners();
+        this.emitChange();
     }
 
     exportData():FormatConversionExportData {

@@ -31,8 +31,8 @@ class ErrorFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(ErrorFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
-        response = super(ErrorFrontend, self).export_data(data, status, lang)
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super(ErrorFrontend, self).export_data(data, status, lang, is_kwic_view)
         response.renderer = 'error'
         response.contents = data
         return response
@@ -43,8 +43,8 @@ class RawHtmlFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(RawHtmlFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
-        response = super(RawHtmlFrontend, self).export_data(data, status, lang)
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super(RawHtmlFrontend, self).export_data(data, status, lang, is_kwic_view)
         response.renderer = 'raw-html'
         response.contents = [('__html', data)]
         return response
@@ -55,8 +55,8 @@ class DatamuseFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(DatamuseFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
-        response = super(DatamuseFrontend, self).export_data(data, status, lang)
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super(DatamuseFrontend, self).export_data(data, status, lang, is_kwic_view)
         response.renderer = 'datamuse-json'
         try:
             response.contents = json.loads(data)
@@ -70,8 +70,8 @@ class TreqFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(TreqFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
-        response = super(TreqFrontend, self).export_data(data, status, lang)
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super(TreqFrontend, self).export_data(data, status, lang, is_kwic_view)
         response.renderer = 'treq-json'
         response.contents = json.loads(data)
         return response

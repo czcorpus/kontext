@@ -12,6 +12,14 @@
                 </attribute>
                 <data type="nonNegativeInteger" />
             </element>
+            <optional>
+                <element name="archive_db_path">
+                    <attribute name="extension-by">
+                        <value>ucnk</value>
+                    </attribute>
+                    <text />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

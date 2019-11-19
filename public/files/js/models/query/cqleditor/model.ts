@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../../types/common';
+import {Kontext, typedProps} from '../../../types/common';
 import * as Immutable from 'immutable';
-import {StatelessModel} from '../../../models/base';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './parser';
-import {ActionDispatcher, Action, typedProps} from '../../../app/dispatcher';
+import { IActionDispatcher, StatelessModel, Action } from 'kombo';
 
 /**
  *
@@ -59,10 +58,11 @@ interface CQLEditorSetRawQueryProps {
 
 
 export interface CQLEditorModelInitArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     pageModel:PageModel;
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
+    structList:Array<string>;
     tagAttr:string;
     actionPrefix:string;
     isEnabled:boolean;
@@ -84,9 +84,9 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     private hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
 
 
-    constructor({dispatcher, pageModel, attrList, structAttrList, tagAttr,
+    constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
                     actionPrefix, isEnabled, currQueries}:CQLEditorModelInitArgs) {
-        const attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
+        const attrHelper = new AttrHelper(attrList, structAttrList, structList, tagAttr);
         super(
             dispatcher,
             {
@@ -121,7 +121,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
 
     reduce(state:CQLEditorModelState, action:Action):CQLEditorModelState {
         let newState:CQLEditorModelState;
-        switch (action.actionType) {
+        switch (action.name) {
             case 'CQL_EDITOR_ENABLE':
                 newState = this.copyState(state);
                 newState.isEnabled = true;
@@ -145,24 +145,24 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
             case this.actionPrefix + 'QUERY_INPUT_MOVE_CURSOR':
                 newState = this.copyState(state);
                 newState.rawAnchorIdx = newState.rawAnchorIdx.set(
-                    action.props['sourceId'],
-                    action.props['rawAnchorIdx']
+                    action.payload['sourceId'],
+                    action.payload['rawAnchorIdx']
                 );
                 newState.rawFocusIdx = newState.rawFocusIdx.set(
-                    action.props['sourceId'],
-                    action.props['rawFocusIdx']
+                    action.payload['sourceId'],
+                    action.payload['rawFocusIdx']
                 );
                 newState.downArrowTriggersHistory = newState.downArrowTriggersHistory.set(
-                    action.props['sourceId'],
+                    action.payload['sourceId'],
                     this.shouldDownArrowTriggerHistory(
                         newState,
-                        action.props['sourceId']
+                        action.payload['sourceId']
                     )
                 );
             break;
             case this.actionPrefix + 'QUERY_INPUT_SET_QUERY': {
                 newState = this.copyState(state);
-                const args = typedProps<CQLEditorSetRawQueryProps>(action.props);
+                const args = typedProps<CQLEditorSetRawQueryProps>(action.payload);
                 if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
                     newState.rawAnchorIdx = newState.rawAnchorIdx.set(args.sourceId, args.rawAnchorIdx || args.query.length);
                     newState.rawFocusIdx = newState.rawFocusIdx.set(args.sourceId, args.rawFocusIdx || args.query.length);
@@ -183,40 +183,40 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 newState = this.copyState(state);
                 this.setRawQuery(
                     newState,
-                    <string>action.props['sourceId'],
-                    <string>action.props['query'],
+                    <string>action.payload['sourceId'],
+                    <string>action.payload['query'],
                     [
-                        this.getQueryLength(newState, action.props['sourceId']),
-                        this.getQueryLength(newState, action.props['sourceId'])
+                        this.getQueryLength(newState, action.payload['sourceId']),
+                        this.getQueryLength(newState, action.payload['sourceId'])
                     ]
                 );
-                this.moveCursorToEnd(newState, action.props['sourceId']);
+                this.moveCursorToEnd(newState, action.payload['sourceId']);
             break;
             case this.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR': {
                 newState = this.copyState(state);
-                const queryLength = newState.rawCode.get(action.props['sourceId']).length;
+                const queryLength = newState.rawCode.get(action.payload['sourceId']).length;
                 this.setRawQuery(
                     newState,
-                    <string>action.props['sourceId'],
+                    <string>action.payload['sourceId'],
                     '',
                     [queryLength - 1, queryLength]
                 );
-                this.moveCursorToEnd(newState, action.props['sourceId']);
+                this.moveCursorToEnd(newState, action.payload['sourceId']);
             }
             break;
             case '@EDIT_QUERY_OPERATION':
                 newState = this.copyState(state);
-                if (action.props['queryType'] === 'cql') {
+                if (action.payload['queryType'] === 'cql') {
                     this.setRawQuery(
                         newState,
-                        action.props['sourceId'],
-                        action.props['query'],
+                        action.payload['sourceId'],
+                        action.payload['query'],
                         null
                     );
                 }
             break;
             case 'CORPUS_SWITCH_MODEL_RESTORE':
-                newState = this.restoreFromCorpSwitch(state, action.props as Kontext.CorpusSwitchActionProps<CQLEditorModelState>);
+                newState = this.restoreFromCorpSwitch(state, action.payload as Kontext.CorpusSwitchActionProps<CQLEditorModelState>);
             break;
             default:
                 newState = state;

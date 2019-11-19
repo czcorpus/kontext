@@ -190,6 +190,9 @@ class Actions(Querying):
         if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
             self.args.refs = self.corp.get_conf('SHORTREF')
 
+        if self.args.fromp < 1:
+            raise UserActionException(translate('Invalid page number'))
+
         self._apply_viewmode(corpus_info['sentence_struct'])
 
         i = 0
@@ -387,8 +390,6 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         out['query_history_page_num_records'] = int(
             settings.get('plugins', 'query_storage')['page_num_records'])
-        out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
-                                 for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',') if n]
         return out
 
     @exposed(return_type='json')
@@ -789,7 +790,7 @@ class Actions(Querying):
             self.args.q.append(q)
         return self.view()
 
-    @exposed(template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(http_method='POST', template='view.tmpl', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
         self.args.q.append('x-{0}'.format(maincorp))
@@ -1498,7 +1499,7 @@ class Actions(Querying):
                         used_refs = ([('#', translate('Token number')), (doc_struct, translate('Document number'))] +
                                      [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
                         used_refs = [x[1] for x in used_refs if x[0] in refs_args]
-                        writer.write_ref_headings(used_refs)
+                        writer.write_ref_headings([''] + used_refs if numbering else used_refs)
 
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
@@ -1531,9 +1532,10 @@ class Actions(Querying):
         access corpus 'X' then all related audio files are accessible).
         """
         chunk = request.args.get('chunk', '')
-        path = os.path.join(settings.get('corpora', 'speech_files_path'), self.args.corpname, chunk)
-        rpath = os.path.realpath(path)
-        if os.path.isfile(rpath) and rpath.startswith(settings.get('corpora', 'speech_files_path')):
+        rpath = os.path.realpath(os.path.join(settings.get(
+            'corpora', 'speech_files_path'), self.args.corpname, chunk))
+        basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
+        if os.path.isfile(rpath) and rpath.startswith(basepath):
             with open(rpath, 'r') as f:
                 file_size = os.path.getsize(rpath)
                 self._headers['Content-Type'] = 'audio/mpeg'
@@ -1727,8 +1729,9 @@ class Actions(Querying):
             self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
 
         tmp_out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
-                                     for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',')
+                                     for n in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(',')
                                      if n]
+        tmp_out['StructList'] = corpus_get_conf(self.corp, 'STRUCTLIST').split(',')
         sref = corpus_get_conf(self.corp, 'SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
@@ -1781,6 +1784,7 @@ class Actions(Querying):
             Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],
             StructAttrList=tmp_out['StructAttrList'],
+            StructList=tmp_out['StructList'],
             InputLanguages=tmp_out['input_languages'],
             ConcFormsArgs=tmp_out['conc_forms_args'],
             CurrentSubcorp=self.args.usesubcorp,
@@ -1789,6 +1793,7 @@ class Actions(Querying):
             TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False,
             structsAndAttrs=self._get_structs_and_attrs()
         )
+        self._attach_plugin_exports(ans, direct=True)
         self._configure_auth_urls(ans)
         return ans
 

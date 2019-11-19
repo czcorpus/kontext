@@ -48,24 +48,24 @@ export interface IAttrHelper {
  */
 export class AttrHelper implements IAttrHelper {
 
-    private attrList:Immutable.List<Kontext.AttrItem>;
+    private readonly attrList:Immutable.List<Kontext.AttrItem>;
 
-    private structAttrList:Immutable.List<Kontext.AttrItem>;
+    private readonly structAttrList:Immutable.List<Kontext.AttrItem>;
 
-    private availStructs:Immutable.Set<string>;
+    private readonly structList:Immutable.List<string>;
 
-    private tagAttr:string;
+    private readonly tagAttr:string;
 
     constructor(attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
-            tagAttr:string) {
+            structList:Array<string>, tagAttr:string) {
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
         this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
-        this.availStructs = Immutable.Set<string>(this.structAttrList.map(v => v.n.split('.')[0]));
+        this.structList = Immutable.List<string>(structList);
         this.tagAttr = tagAttr;
     }
 
     structExists(struct:string):boolean {
-        return this.availStructs.contains(struct);
+        return this.structList.contains(struct);
     }
 
     structAttrExists(struct:string, attr:string):boolean {

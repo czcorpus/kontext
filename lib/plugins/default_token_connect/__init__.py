@@ -39,7 +39,7 @@ import manatee
 
 import plugins
 from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
-from l10n import import_string
+from l10n import import_string, corpus_get_conf
 from actions import concordance
 from controller import exposed
 from plugins.default_token_connect.cache_man import CacheMan
@@ -88,6 +88,12 @@ def add_structattr_support(corp, attrs, token_id):
 
     data = {}
     refs = [x for x in attrs if '.' in x]
+    refs_mapping = {}
+    for n in refs:
+        if n:
+            lab = corpus_get_conf(corp, n + '.LABEL')
+            refs_mapping[lab if lab else n] = n
+
     if len(refs) > 0:
         conc = manatee.Concordance(corp, '[#{}]'.format(int(token_id)), 1, -1)
         conc.sync()
@@ -96,8 +102,10 @@ def add_structattr_support(corp, attrs, token_id):
         if kl.nextline():
             refs_str = kl.get_refs()
             for kv in refs_str.split(','):
-                k, v = kv.split('=')
-                data[k] = import_string(v, corp.get_conf('ENCODING'))
+                if '=' in kv:
+                    k, v = kv.split('=')
+                    k = refs_mapping.get(k)
+                    data[k] = import_string(v, corp.get_conf('ENCODING'))
 
     def decorator(fn):
         def wrapper(corp, attr, token_id, num_tokens):
@@ -115,32 +123,31 @@ class DefaultTokenConnect(AbstractTokenConnect):
         self._providers = providers
         self._cache_path = None
 
-    def map_providers(self, provider_ids):
-        return [self._providers[ident] for ident in provider_ids]
+    def map_providers(self, providers):
+        return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
     def set_cache_path(self, path):
         self._cache_path = path
-        for backend, frontend in self.map_providers(self._providers):
+        for backend, frontend in self._providers.values():
             backend.set_cache_path(path)
 
     @property
     def cache_path(self):
         return self._cache_path
 
-    def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
+    def fetch_data(self, providers, maincorp_obj, corpora, token_id, num_tokens, lang):
         ans = []
-
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
         all_attrs = set()
-        for backend, _ in self.map_providers(provider_ids):
+        for backend, _, _ in self.map_providers(providers):
             all_attrs.update(backend.get_required_attrs())
 
         @add_structattr_support(maincorp_obj, all_attrs, token_id)
         def fetch_any_attr(corp, att, t_id, num_t):
             return fetch_posattr(corp, att, t_id, num_t)
 
-        for backend, frontend in self.map_providers(provider_ids):
+        for backend, frontend, is_kwic_view in self.map_providers(providers):
             try:
                 args = {}
                 for attr in backend.get_required_attrs():
@@ -153,12 +160,12 @@ class DefaultTokenConnect(AbstractTokenConnect):
                     else:
                         args[attr] = v
                 data, status = backend.fetch(corpora, token_id, num_tokens, args, lang)
-                ans.append(frontend.export_data(data, status, lang).to_dict())
-            except Exception as ex:
+                ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
+            except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
                 err_frontend = ErrorFrontend(dict(heading=frontend.headings))
                 ans.append(err_frontend.export_data(
-                    dict(error=u'{0}'.format(ex)), False, lang).to_dict())
+                    dict(error=u'{0}'.format(ex)), False, lang, is_kwic_view).to_dict())
 
         word = fetch_posattr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans
@@ -166,6 +173,11 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def is_enabled_for(self, plugin_api, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
         return len(corpus_info.token_connect.providers) > 0
+
+    def export(self, plugin_api):
+        corpus_info = self._corparch.get_corpus_info(
+            plugin_api.user_lang, plugin_api.current_corpus.corpname)
+        return dict(providers=[dict(ident=k, is_kwic_view=bool(v)) for k, v in corpus_info.token_connect.providers])
 
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}

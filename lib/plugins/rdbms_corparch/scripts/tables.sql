@@ -121,6 +121,7 @@ CREATE TABLE kontext_tckc_corpus (
 	provider TEXT NOT NULL,
 	type TEXT,
 	display_order INT NOT NULL DEFAULT 0,
+	is_kwic_view INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_id, provider, type),
 	CONSTRAINT kontext_tckc_corpus_corpus_id_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id)
 );
@@ -240,3 +241,17 @@ CREATE TABLE kontext_corpus_user (
     CONSTRAINT kontext_corpus_user_pkey PRIMARY KEY (user_id, corpus_id),
     CONSTRAINT kontext_corpus_user_corpus_name_fkey FOREIGN KEY (corpus_id) REFERENCES kontext_corpus(id)
 );
+
+
+CREATE TABLE kontext_corpus_taghelper (
+    corpus_name TEXT NOT NULL,
+    pos_attr TEXT,
+    feat_attr TEXT NOT NULL,
+    tagset_type TEXT NOT NULL,
+    tagset_name TEXT,
+    PRIMARY KEY (corpus_name, feat_attr),
+    CONSTRAINT corpus_structattr_type_chk CHECK (tagset_type IN ('positional', 'keyval', 'other')),
+    CONSTRAINT kontext_corpus_taghelper_pos_attr_id_fkey FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr(corpus_name, name),
+    CONSTRAINT kontext_corpus_taghelper_feat_attr_id_fkey FOREIGN KEY (corpus_name, feat_attr) REFERENCES corpus_posattr(corpus_name, name)
+);
+

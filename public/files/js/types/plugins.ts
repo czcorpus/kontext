@@ -18,31 +18,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Observable, Subscription } from 'rxjs';
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
 import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
-import {ActionDispatcher} from '../app/dispatcher';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
+import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
 
 /**
  * An interface used by KonText plug-ins to access
  * core functionality (for core components, this is
  * typically provided by PageModel).
  */
-export interface IPluginApi {
+export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
+    getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
     ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T>;
-    ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Rx.Observable<T>;
+    ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
-    translate(text:string, values?:any):string;
-    formatNumber(v:number):string;
-    formatDate(d:Date, timeFormat?:number):string;
     userIsAnonymous():boolean;
-    dispatcher():ActionDispatcher;
+    dispatcher():IFullActionControl;
     getComponentHelpers():Kontext.ComponentHelpers;
     renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
                             target:HTMLElement, props?:T):void;
@@ -114,7 +112,6 @@ export namespace PluginInterfaces {
     export namespace SubcMixer {
 
         export interface IPlugin {
-            refreshData():void;
             getWidgetView():React.ComponentClass;
         }
 
@@ -124,8 +121,7 @@ export namespace PluginInterfaces {
             getIsPublic():boolean;
             getDescription():Kontext.FormValue<string>;
             getSubcName():Kontext.FormValue<string>;
-            addChangeListener(fn:Kontext.ModelListener):void;
-            removeChangeListener(fn:Kontext.ModelListener):void;
+            addListener(fn:Kontext.ModelListener):Subscription;
             validateForm():Error|null;
         }
 
@@ -134,7 +130,6 @@ export namespace PluginInterfaces {
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
                 subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
-                getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
                 corpusIdAttr:string
             ):IPlugin;
         }
@@ -146,7 +141,7 @@ export namespace PluginInterfaces {
 
     export namespace SyntaxViewer {
 
-        export interface IPlugin extends Kontext.EventEmitter {
+        export interface IPlugin extends IEventEmitter {
             render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
             close():void;
             onPageResize():void;
@@ -165,6 +160,44 @@ export namespace PluginInterfaces {
 
     export namespace TagHelper {
 
+
+        /**
+         * TagsetInfo specifies a complete information
+         * about tagset - name, type and used positional
+         * attributes.
+         */
+        export interface TagsetInfo {
+
+            /**
+             * Concrete tagset identifier. The values
+             * are KonText-fabricated (pp_tagset, ud,...).
+             * On the other hand, the values are not
+             * hardcoded into the code as they are used
+             * to fetch proper tagset configuration
+             * (which is admin-defined).
+             */
+            ident:string;
+
+            /**
+             * 'other' declares that there is a defined
+             * tagset for the corpus but not a supported one.
+             */
+            type:'positional'|'keyval'|'other';
+
+            /**
+             * A positional attribute reserved for part of speech info.
+             * If null then we assume all the info is stored within featAttr
+             * (see below).
+             */
+            posAttr:string|null;
+
+            /**
+             * A positional attribute all the (other) tag information
+             * is stored within.
+             */
+            featAttr:string;
+        }
+
         export interface ViewProps {
             sourceId:string;
             actionPrefix:string;
@@ -173,10 +206,10 @@ export namespace PluginInterfaces {
             onEscKey:()=>void;
         }
 
-        export type View = React.ComponentClass<ViewProps>;
+        export type View = React.ComponentClass<ViewProps>|React.SFC<ViewProps>;
 
         export interface IPlugin {
-            getWidgetView():TagHelper.View;
+            getWidgetView(corpname:string, tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
         }
 
         export interface Factory {
@@ -189,7 +222,7 @@ export namespace PluginInterfaces {
 
     export namespace QueryStorage {
 
-        export interface IModel extends Kontext.EventEmitter {
+        export interface IModel extends IEventEmitter {
 
             getCurrentCorpusOnly():boolean;
             getData():Immutable.List<Kontext.QueryHistoryItem>;
@@ -238,7 +271,7 @@ export namespace PluginInterfaces {
         export type WidgetView = React.ComponentClass<{}>;
 
 
-        export interface ICorpSelection extends Kontext.EventEmitter {
+        export interface ICorpSelection extends IEventEmitter {
             getCurrentSubcorpus():string;
             getCurrentSubcorpusOrigName():string;
             getIsForeignSubcorpus():boolean;
@@ -277,19 +310,8 @@ export namespace PluginInterfaces {
 
     export namespace LiveAttributes {
 
-        export interface IPlugin extends TextTypes.AttrValueTextInputListener {
-            getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
-            setControlsEnabled(v:boolean):void;
-            selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean):void;
-            hasSelectionSteps():boolean;
-            reset():void;
-            hasSelectedLanguages():boolean;
-            removeUpdateListener(fn:()=>void):void;
-            addUpdateListener(fn:()=>void):void;
-            getTextInputPlaceholder():string;
+        export interface IPlugin {
             getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
-            getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
-            notifyChangeListeners():void;
         }
 
         /**
@@ -334,8 +356,8 @@ export namespace PluginInterfaces {
             (
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
-                selectedCorporaProvider:()=>Immutable.List<string>,
-                ttCheckStatusProvider:()=>boolean,
+                isEnabled:boolean,
+                controlsAlignedCorpora:boolean,
                 args:PluginInterfaces.LiveAttributes.InitArgs
             ):IPlugin;
         }
@@ -388,6 +410,7 @@ export namespace PluginInterfaces {
             token:string;
             items:Array<{
                 renderer:string;
+                is_kwic_view:boolean;
                 contents:Array<[string, string]>;
                 found:boolean;
                 heading:string;
@@ -403,6 +426,7 @@ export namespace PluginInterfaces {
         export interface DataAndRenderer {
             renderer:Renderer;
             contents:Kontext.GeneralProps;
+            isKwicView:boolean;
             found:boolean;
             heading:string;
         }
@@ -414,9 +438,11 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
 
-            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):RSVP.Promise<TCData>;
+            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<TCData>;
 
             selectRenderer(typeId:string):Renderer;
+
+            providesAnyTokenInfo():boolean;
         }
 
         export interface Factory {

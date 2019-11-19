@@ -527,3 +527,6 @@ msgstr "potvrzeno"
 
 msgid "Confirmation key not found"
 msgstr "Potvrzovací klíč nebyl nalezen"
+
+msgid "Invalid page number"
+msgstr "Špatné číslo stránky"

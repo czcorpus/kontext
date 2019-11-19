@@ -501,9 +501,14 @@ i.coll {
 }
 
 .tooltip-box.refs-detail {
-    max-width: 60em;
     min-width: 40em;
     max-height: 80%;
+    display: flex;
+
+    .wrapper {
+        overflow-x: auto;
+        overflow-y: auto;
+    }
 
 }
 
@@ -511,6 +516,10 @@ i.coll {
     max-width: 40em;
     min-width: 30em;
     max-height: 80%;
+}
+
+.tooltip-box.conc-detail.custom {
+    max-width: 60em;
 }
 
 .conc-detail {

@@ -19,14 +19,13 @@
  */
 
 import {Kontext} from '../../types/common';
-import {StatelessModel} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
 import { InputMode } from './common';
 import {SubcorpFormModel} from './form';
 import { MultiDict } from '../../util';
 import RSVP from 'rsvp';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 /**
  *
@@ -66,7 +65,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
 
     private subcFormModel:SubcorpFormModel;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, inputMode:InputMode,
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, inputMode:InputMode,
             structsAndAttrs:Kontext.StructsAndAttrs, subcFormModel:SubcorpFormModel) {
         super(
             dispatcher,
@@ -91,35 +90,35 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
     reduce(state:SubcorpWithinFormModelState, action:Action):SubcorpWithinFormModelState {
         let newState:SubcorpWithinFormModelState;
 
-        switch (action.actionType) {
+        switch (action.name) {
             case 'SUBCORP_FORM_SET_INPUT_MODE':
                 newState = this.copyState(state);
-                newState.inputMode = action.props['value'];
+                newState.inputMode = action.payload['value'];
             break;
             case 'SUBCORP_FORM_WITHIN_LINE_ADDED':
                 newState = this.copyState(state);
                 this.addLine(
                     newState,
-                    action.props['structureName'],
-                    action.props['negated'],
-                    action.props['attributeCql']
+                    action.payload['structureName'],
+                    action.payload['negated'],
+                    action.payload['attributeCql']
                 );
             break;
             case 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE':
                 newState = this.copyState(state);
-                this.updateWithinType(newState, action.props['rowIdx'], action.props['value']);
+                this.updateWithinType(newState, action.payload['rowIdx'], action.payload['value']);
             break;
             case 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT':
                 newState = this.copyState(state);
-                this.updateStruct(newState, action.props['rowIdx'], action.props['value']);
+                this.updateStruct(newState, action.payload['rowIdx'], action.payload['value']);
             break;
             case 'SUBCORP_FORM_WITHIN_LINE_SET_CQL':
                 newState = this.copyState(state);
-                this.updateCql(newState, action.props['rowIdx'], action.props['value']);
+                this.updateCql(newState, action.payload['rowIdx'], action.payload['value']);
             break;
             case 'SUBCORP_FORM_WITHIN_LINE_REMOVED':
                 newState = this.copyState(state);
-                this.removeLine(newState, action.props['rowIdx']);
+                this.removeLine(newState, action.payload['rowIdx']);
             break;
             case 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT':
                 newState = this.copyState(state);
@@ -136,7 +135,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
     }
 
     sideEffects(state:SubcorpWithinFormModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'SUBCORP_FORM_SUBMIT':
                 if (state.inputMode === InputMode.RAW) {
                     const args = this.getSubmitArgs(state);

@@ -20,13 +20,14 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, KeyCodes} from '../../types/common';
 import {WordlistFormModel, WordlistFormState, WlnumsTypes, FileTarget} from '../../models/wordlist/form';
 import {PluginInterfaces} from '../../types/plugins';
+import { Subscription } from 'rxjs';
 
 export interface WordlistFormViewArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
     wordlistFormModel:WordlistFormModel
@@ -83,8 +84,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SELECT_ATTR',
-                props: {
+                name: 'WORDLIST_FORM_SELECT_ATTR',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -133,8 +134,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SET_WLPAT',
-                props: {
+                name: 'WORDLIST_FORM_SET_WLPAT',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -163,8 +164,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleRadioChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SET_WLNUMS',
-                props: {
+                name: 'WORDLIST_FORM_SET_WLNUMS',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -216,8 +217,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SELECT_WLPOSATTR',
-                props: {
+                name: 'WORDLIST_FORM_SELECT_WLPOSATTR',
+                payload: {
                     position: props.position,
                     value: evt.target.value
                 }
@@ -244,8 +245,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleAddPosAttrLevelBtn = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
-                props: {}
+                name: 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
+                payload: {}
             });
         };
 
@@ -298,8 +299,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleOutTypeChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SET_WLTYPE',
-                props: {
+                name: 'WORDLIST_FORM_SET_WLTYPE',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -388,8 +389,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SET_WLMINFREQ',
-                props: {
+                name: 'WORDLIST_FORM_SET_WLMINFREQ',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -420,8 +421,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleInputChange = (evt:React.ChangeEvent<{}>) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SET_FILTER_FILE',
-                props: {
+                name: 'WORDLIST_FORM_SET_FILTER_FILE',
+                payload: {
                     value: evt.target['files'][0],
                     target: props.target
                 }
@@ -430,10 +431,10 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleNewFileClick = (evt) => {
             dispatcher.dispatch({
-                actionType: props.target === FileTarget.WHITELIST ?
+                name: props.target === FileTarget.WHITELIST ?
                         'WORDLIST_FORM_CREATE_WHITELIST' :
                         'WORDLIST_FORM_CREATE_BLACKLIST',
-                props: {}
+                payload: {}
             })
         }
 
@@ -455,8 +456,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleRemoveClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_CLEAR_FILTER_FILE',
-                props: {
+                name: 'WORDLIST_FORM_CLEAR_FILTER_FILE',
+                payload: {
                     target: props.target
                 }
             });
@@ -464,8 +465,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleEditorEnableClick = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_REOPEN_EDITOR',
-                props: {
+                name: 'WORDLIST_FORM_REOPEN_EDITOR',
+                payload: {
                     target: props.target
                 }
             });
@@ -523,15 +524,15 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleClose = () => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_CLOSE_EDITOR',
-                props: {}
+                name: 'WORDLIST_FORM_CLOSE_EDITOR',
+                payload: {}
             });
         };
 
         const handleWriting = (evt) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_UPDATE_EDITOR',
-                props: {
+                name: 'WORDLIST_FORM_UPDATE_EDITOR',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -541,8 +542,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             if (evt.keyCode === KeyCodes.ENTER) {
                 if (evt.shiftKey) {
                     dispatcher.dispatch({
-                        actionType: 'WORDLIST_FORM_UPDATE_EDITOR',
-                        props: {
+                        name: 'WORDLIST_FORM_UPDATE_EDITOR',
+                        payload: {
                             value: props.data.data + '\n'
                         }
                     });
@@ -581,8 +582,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleChange = (evt:React.ChangeEvent<{}>) => {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
-                props: {
+                name: 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
+                payload: {
                     value: !props.value
                 }
             });
@@ -649,6 +650,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     class WordListForm extends React.Component<{}, WordlistFormState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = wordlistFormModel.getState();
@@ -659,8 +662,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'WORDLIST_FORM_SUBMIT',
-                props: {}
+                name: 'WORDLIST_FORM_SUBMIT',
+                payload: {}
             });
         }
 
@@ -677,11 +680,11 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         componentDidMount() {
-            wordlistFormModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = wordlistFormModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            wordlistFormModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

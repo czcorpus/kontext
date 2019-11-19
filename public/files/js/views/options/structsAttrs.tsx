@@ -20,13 +20,14 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
+import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../models/options/structsAttrs';
 
 export interface StructsAttrsModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
-    viewOptionsModel:ViewOptions.ICorpViewOptionsModel;
+    viewOptionsModel:CorpusViewOptionsModel;
     mainMenuModel:Kontext.IMainMenuModel;
 }
 
@@ -56,8 +57,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleClick = () => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
-                props: {
+                name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
+                payload: {
                     idx: props.idx,
                     ident: props.n
                 }
@@ -122,8 +123,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
-                props: {
+                name: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
+                payload: {
                     value: event.target.value
                 }
             });
@@ -164,9 +165,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
         );
     };
 
-    // ---------------------------- <FieldsetAttributes /> ----------------------
+    // ---------------------------- <AttributesCheckboxes /> ----------------------
 
-    const FieldsetAttributes:React.SFC<{
+    const AttributesCheckboxes:React.SFC<{
         attrList:Immutable.List<ViewOptions.AttrDesc>;
         hasSelectAll:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
@@ -177,14 +178,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSelectAll = () => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
-                props: {}
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
+                payload: {}
             });
         };
 
         return (
-            <fieldset className="FieldsetAttributes">
-                <legend>{helpers.translate('options__attributes_hd')}</legend>
+            <div className="AttributesCheckboxes checkbox-area">
                 <ul>
                 {props.attrList.map((item, i) => {
                     return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
@@ -204,74 +204,87 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <hr />
                 <AttributesTweaks attrsVmode={props.attrsVmode}
                         showConcToolbar={props.showConcToolbar} />
-            </fieldset>
+            </div>
         );
     };
 
-    // ---------------------------- <StructAttrList /> ----------------------
+     // ---------------------------- <GeneralAttrList /> ----------------------
 
-    const StructAttrList:React.SFC<{
-        struct:string;
-        items:Immutable.List<ViewOptions.StructAttrDesc>;
+     const AttrList:React.SFC<{
+        ident:string;
+        items:Immutable.List<ViewOptions.StructAttrDesc|ViewOptions.RefAttrDesc>;
+        hasSelectAll:boolean;
         handleClick:(v:string)=>void;
-
+        handleAllClick:(v:string)=>void;
     }> = (props) => {
-
-        const checkboxHandlerFn = (value) => {
-            return () => props.handleClick(value);
-        };
 
         return (
-            <ul>
-                {props.items.map((item, i) => {
-                    return (
-                        <li key={i}>
-                            <label>
-                                <input type="checkbox" name="structattrs" value={`${props.struct}.${item.n}`}
-                                    checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
-                                {item.n}
-                            </label>
-                        </li>
-                    );
-                })}
-            </ul>
+            <div>
+                <ul>
+                    {props.items.map((item, i) => {
+                        return (
+                            <li key={i}>
+                                <label>
+                                    <input type="checkbox" name="structattrs" value={`${props.ident}.${item.n}`}
+                                        checked={item.selected} onChange={() => props.handleClick(item.n)} />
+                                    {'label' in item ? item.label : item.n}
+                                </label>
+                            </li>
+                        );
+                    })}
+                </ul>
+                <SelectAll onChange={() => props.handleAllClick(props.ident)} isSelected={props.hasSelectAll} />
+            </div>
         );
     };
 
-    // ---------------------------- <FieldsetStructures /> ----------------------
+    // ---------------------------- <StructsAndAttrsCheckboxes /> ----------------------
 
-    const FieldsetStructures:React.SFC<{
-        availStructs:Immutable.List<ViewOptions.AttrDesc>;
+    const StructsAndAttrsCheckboxes:React.SFC<{
+        availStructs:Immutable.List<ViewOptions.StructDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
         corpusUsesRTLText:boolean;
-
+        hasSelectAll:boolean;
     }> = (props) => {
 
-        const handleStructClick = (event) => {
+        const handleSelect = (structIdent) => {
+            return (structAttrIdent) => {
+                dispatcher.dispatch({
+                    name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+                    payload: {
+                        structIdent: structIdent,
+                        structAttrIdent: structAttrIdent
+                    }
+                });
+            };
+        };
+
+        const handleSelectCategory = (event) => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-                props: {
+                name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+                payload: {
                     structIdent: event.target.value,
                     structAttrIdent: null
                 }
             });
         };
 
-        const handleStructAttrClickFn = (structIdent) => {
-            return (attrIdent) => {
-                dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-                    props: {
-                        structIdent: structIdent,
-                        structAttrIdent: attrIdent
-                    }
-                });
-            };
+        const handleSelectCategoryAll = (structIdent) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
+                payload: {structIdent: structIdent}
+            });
+        };
+
+        const handleSelectAll = (evt) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
+                payload: {}
+            });
         };
 
         return (
-            <fieldset className="FieldsetStructures">
-                <legend>{helpers.translate('options__structures_hd')}</legend>
+            <section className="StructsAndAttrsCheckboxes">
                 {props.corpusUsesRTLText ?
                     <p className="warning">
                         <img className="icon"
@@ -280,89 +293,95 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         {helpers.translate('options__rtl_text_warning')}
                     </p> :
                     null}
-                <ul>
-                    {props.availStructs.map((item) => {
-                        return (
-                            <li key={item.n}>
-                                <label className="struct">
-                                    <input type="checkbox" name="setstructs" value={item.n}
-                                            checked={item.selected} onChange={handleStructClick} />
-                                    {'<' + item.n + '>'}
-                                </label>
-                                <StructAttrList struct={item.n}
-                                        items={props.structAttrs.get(item.n) || Immutable.List()}
-                                        handleClick={handleStructAttrClickFn(item.n)} />
-                            </li>
-                        );
-                    })}
-                </ul>
-            </fieldset>
+                <div className="struct-groups checkbox-area">
+                    {props.availStructs.map((item) => (
+                        <div key={item.n} className="group">
+                            <label className="struct">
+                                <input type="checkbox" name="setstructs" value={item.n}
+                                        checked={item.selected} onChange={handleSelectCategory} />
+                                {'<' + item.n + '>'}
+                            </label>
+                            <AttrList
+                                ident={item.n}
+                                items={props.structAttrs.get(item.n) || Immutable.List()}
+                                handleClick={handleSelect(item.n)}
+                                handleAllClick={handleSelectCategoryAll}
+                                hasSelectAll={item.selectAllAttrs} />
+                        </div>
+                    ))}
+                </div>
+                <div className="select-all-structs-and-groups">
+                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                </div>
+            </section>
         );
     };
 
+    // ---------------------------- <ConcLineRefCheckboxes /> ----------------------
 
-    // ---------------------------- <LiReferenceItem /> ----------------------
-
-    const LiReferenceItem:React.SFC<{
-        n:string;
-        label:string;
-        isSelected:boolean;
-        onChange:(evt:React.ChangeEvent<{}>)=>void;
-
-    }> = (props) => {
-        return (
-            <li>
-                <label>
-                    <input type="checkbox" name="setrefs" value={props.n}
-                            checked={props.isSelected} onChange={props.onChange} />
-                    {props.label}
-                </label>
-            </li>
-        );
-    };
-
-
-    // ---------------------------- <FieldsetMetainformation /> ----------------------
-
-    const FieldsetMetainformation:React.SFC<{
-        availRefs:Immutable.List<ViewOptions.RefsDesc>;
+    const ConcLineRefCheckboxes:React.SFC<{
+        availRefs:Immutable.List<ViewOptions.RefDesc>;
+        refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
         hasSelectAll:boolean;
-
     }> = (props) => {
 
-        const handleCheckboxChangeFn = (idx) => {
-            return (evt:React.ChangeEvent<{}>) => {
-                dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-                    props: {
-                        idx: idx
-                    }
-                });
-            };
+        const handleSelect = (refIdent) => (refAttrIdent:string) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                payload: {
+                    refIdent: refIdent,
+                    refAttrIdent: refAttrIdent
+                }
+            });
+        };
+
+        const handleSelectCategory = (event) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                payload: {
+                    refIdent: event.target.value,
+                    refAttrIdent: null
+                }
+            });
+        };
+
+        const handleSelectCategoryAll = (refIdent:string) => {
+            dispatcher.dispatch({
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
+                payload: {refIdent: refIdent}
+            });
         };
 
         const handleSelectAll = (evt) => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
-                props: {}
+                name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
+                payload: {}
             });
         };
 
         return (
-            <fieldset className="FieldsetMetainformation">
-                <legend>{helpers.translate('options__references_hd')}</legend>
-                <ul>
-                    {props.availRefs.map((item, i) => {
-                        return <LiReferenceItem
-                                    key={item.n}
-                                    n={item.n}
-                                    label={item.label}
-                                    isSelected={item.selected}
-                                    onChange={handleCheckboxChangeFn(i)} />;
-                    })}
-                </ul>
-                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
-            </fieldset>
+            <section>
+                <div className="struct-groups checkbox-area">                
+                    {props.availRefs.map(item => 
+                        <div key={item.n} className="group">
+                            <label className="struct">
+                                <input type="checkbox" name="setrefs" value={item.n}
+                                        checked={item.selected} onChange={handleSelectCategory} />
+                                {'<' + item.n + '>'}
+                            </label>
+                            <AttrList
+                                ident={item.n}
+                                items={props.refAttrs.get(item.n)}
+                                hasSelectAll={item.selectAllAttrs}
+                                handleClick={handleSelect(item.n)}
+                                handleAllClick={handleSelectCategoryAll} />
+                        </div>
+                    )}
+                </div>
+                <div className="select-all-structs-and-groups">
+                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                </div>
+            </section>
         );
     };
 
@@ -376,8 +395,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         const handleSaveClick = () => {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_SAVE_SETTINGS',
-                props: {}
+                name: 'VIEW_OPTIONS_SAVE_SETTINGS',
+                payload: {}
             });
         };
 
@@ -412,34 +431,60 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasLoadedData:boolean;
         fixedAttr:string;
         attrList:Immutable.List<ViewOptions.AttrDesc>;
-        availStructs: Immutable.List<ViewOptions.StructDesc>;
+        availStructs:Immutable.List<ViewOptions.StructDesc>;
         hasSelectAllAttrs:boolean;
         showConcToolbar:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
-        availRefs:Immutable.List<ViewOptions.RefsDesc>;
-        TehasSelectAllRefs:boolean;
+        hasSelectAllStruct:boolean;
+        availRefs:Immutable.List<ViewOptions.RefDesc>;
+        refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
+        hasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
         lockedPosAttrNotSelected:boolean;
         corpusUsesRTLText:boolean;
 
     }> = (props) => {
-
         if (props.hasLoadedData) {
+            const items = Immutable.List([
+                {
+                    id: 'attributes',
+                    label: helpers.translate('options__attributes_hd'), },
+                {
+                    id: 'structures',
+                    label: helpers.translate('options__structures_hd'), },
+                {
+                    id: 'references',
+                    label: helpers.translate('options__references_hd'), },
+            ])
+
             return (
                 <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <FieldsetAttributes
+                        <layoutViews.TabView
+                            className="FieldsetsTabs"
+                            items={items}>
+                            
+                            <AttributesCheckboxes
                                 attrList={props.attrList}
                                 hasSelectAll={props.hasSelectAllAttrs}
                                 attrsVmode={props.attrsVmode}
                                 showConcToolbar={props.showConcToolbar}
                                 lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
-                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs}
-                                    corpusUsesRTLText={props.corpusUsesRTLText} />
-                        <FieldsetMetainformation availRefs={props.availRefs}
-                                hasSelectAll={props.TehasSelectAllRefs} />
+
+                            <StructsAndAttrsCheckboxes
+                                availStructs={props.availStructs}
+                                structAttrs={props.structAttrs}
+                                hasSelectAll={props.hasSelectAllStruct}
+                                corpusUsesRTLText={props.corpusUsesRTLText} />
+
+                            <ConcLineRefCheckboxes
+                                availRefs={props.availRefs}
+                                refAttrs={props.refAttrs}
+                                hasSelectAll={props.hasSelectAllRefs} />
+                        </layoutViews.TabView>
+
                         {props.userIsAnonymous ?
                             <p className="warn">
                                 <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
@@ -465,111 +510,33 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
-    class StructAttrsViewOptions extends React.Component<StructAttrsViewOptionsProps, {
-        corpusIdent:Kontext.FullCorpusIdent;
-        fixedAttr:string;
-        attrList:Immutable.List<ViewOptions.AttrDesc>;
-        availStructs:Immutable.List<ViewOptions.StructDesc>;
-        structAttrs:ViewOptions.AvailStructAttrs;
-        availRefs:Immutable.List<ViewOptions.RefsDesc>;
-        hasSelectAllAttrs:boolean;
-        TehasSelectAllRefs:boolean;
-        hasLoadedData:boolean;
-        attrsVmode:ViewOptions.AttrViewMode;
-        showConcToolbar:boolean;
-        isWaiting:boolean;
-        isVisible:boolean;
-        userIsAnonymous:boolean;
-        lockedPosAttrNotSelected:boolean;
-        corpusUsesRTLText:boolean;
-    }> {
+    const StructAttrsViewOptions:React.SFC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => {
 
-        // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
-
-        constructor(props) {
-            super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this._handleViewOptsModelChange = this._handleViewOptsModelChange.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                corpusIdent: viewOptionsModel.getCorpusIdent(),
-                fixedAttr: viewOptionsModel.getFixedAttr(),
-                attrList: viewOptionsModel.getAttributes(),
-                availStructs: viewOptionsModel.getStructures(),
-                structAttrs: viewOptionsModel.getStructAttrs(),
-                availRefs: viewOptionsModel.getReferences(),
-                hasSelectAllAttrs: viewOptionsModel.getSelectAllAttributes(),
-                TehasSelectAllRefs: viewOptionsModel.getSelectAllReferences(),
-                hasLoadedData: viewOptionsModel.isLoaded(),
-                attrsVmode: viewOptionsModel.getAttrsVmode(),
-                showConcToolbar: viewOptionsModel.getShowConcToolbar(),
-                isWaiting: viewOptionsModel.getIsWaiting(),
-                isVisible: false,
-                userIsAnonymous: viewOptionsModel.getUserIsAnonymous(),
-                lockedPosAttrNotSelected: viewOptionsModel.lockedPosAttrNotSelected(),
-                corpusUsesRTLText: viewOptionsModel.getCorpusUsesRTLText()
-            };
-        }
-
-        _handleModelChange() {
-            const activeItem = mainMenuModel.getActiveItem();
-            if (activeItem &&
-                    activeItem.actionName === 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS') {
-                const state = this._fetchModelState();
-                state.isVisible = true;
-                this.setState(state);
-            }
-        }
-
-        _handleViewOptsModelChange() {
-            const state = this._fetchModelState();
-            if (this.state.isWaiting && !state.isWaiting) {
-                state.isVisible = false;
-
-            } else {
-                state.isVisible = this.state.isVisible;
-            }
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            mainMenuModel.addChangeListener(this._handleModelChange);
-            viewOptionsModel.addChangeListener(this._handleViewOptsModelChange);
-        }
-
-        componentWillUnmount() {
-            mainMenuModel.removeChangeListener(this._handleModelChange);
-            viewOptionsModel.removeChangeListener(this._handleViewOptsModelChange);
-        }
-
-        render() {
-            return (
-                <div className="StructAttrsViewOptions">
-                    <StructsAndAttrsForm
-                            fixedAttr={this.state.fixedAttr}
-                            attrList={this.state.attrList}
-                            availStructs={this.state.availStructs}
-                            structAttrs={this.state.structAttrs}
-                            availRefs={this.state.availRefs}
-                            hasSelectAllAttrs={this.state.hasSelectAllAttrs}
-                            TehasSelectAllRefs={this.state.TehasSelectAllRefs}
-                            hasLoadedData={this.state.hasLoadedData}
-                            attrsVmode={this.state.attrsVmode}
-                            showConcToolbar={this.state.showConcToolbar}
-                            isWaiting={this.state.isWaiting}
-                            userIsAnonymous={this.state.userIsAnonymous}
-                            lockedPosAttrNotSelected={this.state.lockedPosAttrNotSelected}
-                            corpusUsesRTLText={this.state.corpusUsesRTLText} />
-                </div>
-            );
-        }
+        return (
+            <div className="StructAttrsViewOptions">
+                <StructsAndAttrsForm
+                        fixedAttr={props.fixedAttr}
+                        attrList={props.attrList}
+                        hasSelectAllAttrs={props.selectAllAttrs}
+                        availStructs={props.structList}
+                        structAttrs={props.structAttrs}
+                        hasSelectAllStruct={props.selectAllStruct}
+                        availRefs={props.refList}
+                        refAttrs={props.refAttrs}
+                        hasSelectAllRefs={props.selectAllRef}
+                        hasLoadedData={props.hasLoadedData}
+                        attrsVmode={props.extendedVmode}
+                        showConcToolbar={props.showConcToolbar}
+                        isWaiting={props.isBusy}
+                        userIsAnonymous={props.userIsAnonymous}
+                        lockedPosAttrNotSelected={props.attrList.find(v => v.locked).selected}
+                        corpusUsesRTLText={props.corpusUsesRTLText} />
+            </div>
+        );
     }
 
     return {
-        StructAttrsViewOptions: StructAttrsViewOptions
+        StructAttrsViewOptions: BoundWithProps(StructAttrsViewOptions, viewOptionsModel)
     };
 
 }

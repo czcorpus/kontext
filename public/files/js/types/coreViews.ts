@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {ViewOptions} from './common';
+import * as Immutable from 'immutable';
 
 
 export namespace CoreViews {
@@ -76,7 +76,7 @@ export namespace CoreViews {
             /**
              * an optional inline CSS
              */
-            customStyle?:{[prop:string]:string};
+            customStyle?:React.CSSProperties;
 
             /**
              * if true then the "close" button will take the focus
@@ -333,6 +333,18 @@ export namespace CoreViews {
         export type Component = React.SFC<Props>;
     }
 
+    export namespace TabView {
+
+        export interface Props {
+            items:Immutable.List<{id:string, label:string}>;
+            defaultId?:string;
+            className?:string;
+            callback?:(id:string) => void;
+        }
+
+        export type Component = React.SFC<Props>;
+    }
+
     export namespace PlusButton {
 
         export interface Props {
@@ -364,7 +376,7 @@ export namespace CoreViews {
         StatusIcon:StatusIcon.Component;
         DelItemIcon:DelItemIcon.Component;
         ValidatedItem:ValidatedItem.Component;
-        TabButton:TabButton.Component;
+        TabView:TabView.Component;
         PlusButton:PlusButton.Component;
     }
 }

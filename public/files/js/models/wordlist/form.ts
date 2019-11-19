@@ -19,13 +19,14 @@
  */
 
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
+import { Observable, Observer, of as rxOf } from 'rxjs';
 
 import {Kontext} from '../../types/common';
-import {ActionDispatcher, Action, SEDispatcher} from '../../app/dispatcher';
-import {validateGzNumber, StatelessModel} from '../base';
+import {validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict, puid} from '../../util';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { concatMap } from 'rxjs/operators';
 
 
 export enum FileTarget {
@@ -114,7 +115,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
             initialArgs:WordlistModelInitialArgs) {
         super(
@@ -154,47 +155,47 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
 
     reduce(state:WordlistFormState, action:Action):WordlistFormState {
         let newState:WordlistFormState;
-        switch (action.actionType) {
+        switch (action.name) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 newState = this.copyState(state);
-                if (action.props['pubName']) {
-                    newState.currentSubcorpus = action.props['pubName'];
-                    newState.origSubcorpName = action.props['subcorp'];
-                    newState.isForeignSubcorp = action.props['foreign'];
+                if (action.payload['pubName']) {
+                    newState.currentSubcorpus = action.payload['pubName'];
+                    newState.origSubcorpName = action.payload['subcorp'];
+                    newState.isForeignSubcorp = action.payload['foreign'];
 
                 } else {
-                    newState.currentSubcorpus = action.props['subcorp'];
-                    newState.origSubcorpName = action.props['subcorp'];
+                    newState.currentSubcorpus = action.payload['subcorp'];
+                    newState.origSubcorpName = action.payload['subcorp'];
                     newState.isForeignSubcorp = false;
                 }
             break;
             case 'WORDLIST_FORM_SELECT_ATTR':
                 newState = this.copyState(state);
-                newState.wlattr = action.props['value'];
+                newState.wlattr = action.payload['value'];
             break;
             case 'WORDLIST_FORM_SET_WLPAT':
                 newState = this.copyState(state);
-                newState.wlpat = action.props['value'];
+                newState.wlpat = action.payload['value'];
             break;
             case 'WORDLIST_FORM_SET_WLNUMS':
                 newState = this.copyState(state);
-                newState.wlnums = action.props['value'];
+                newState.wlnums = action.payload['value'];
             break;
             case 'WORDLIST_FORM_SELECT_WLPOSATTR':
                 newState = this.copyState(state);
-                newState.wlposattrs[action.props['position'] - 1] = action.props['value'];
+                newState.wlposattrs[action.payload['position'] - 1] = action.payload['value'];
             break;
             case 'WORDLIST_FORM_SET_WLTYPE':
                 newState = this.copyState(state);
-                newState.wltype = action.props['value'];
+                newState.wltype = action.payload['value'];
             break;
             case 'WORDLIST_FORM_SET_WLMINFREQ':
                 newState = this.copyState(state);
-                newState.wlminfreq.value = action.props['value'];
+                newState.wlminfreq.value = action.payload['value'];
             break;
             case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
                 newState = this.copyState(state);
-                newState.includeNonwords = action.props['value'];
+                newState.includeNonwords = action.payload['value'];
             break;
             case 'WORDLIST_FORM_ADD_POSATTR_LEVEL':
                 newState = this.copyState(state);
@@ -218,7 +219,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             break;
             case 'WORDLIST_FORM_SET_FILTER_FILE_DONE': {
                 newState = this.copyState(state);
-                const props = action.props['data'] as FilterEditorData;
+                const props = action.payload['data'] as FilterEditorData;
                 if (props.target === FileTarget.BLACKLIST) {
                     newState.filterEditorData = {
                         target: FileTarget.BLACKLIST,
@@ -241,14 +242,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     if (newState.filterEditorData.target === FileTarget.BLACKLIST) {
                         newState.filterEditorData = {
                             target: FileTarget.BLACKLIST,
-                            data: action.props['value'] as string,
+                            data: action.payload['value'] as string,
                             fileName: newState.filterEditorData.fileName
                         };
 
                     } else {
                         newState.filterEditorData = {
                             target: FileTarget.WHITELIST,
-                            data: action.props['value'] as string,
+                            data: action.payload['value'] as string,
                             fileName: newState.filterEditorData.fileName
                         };
                     }
@@ -256,14 +257,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             break;
             case 'WORDLIST_FORM_REOPEN_EDITOR':
                 newState = this.copyState(state);
-                if (action.props['target'] === FileTarget.WHITELIST) {
+                if (action.payload['target'] === FileTarget.WHITELIST) {
                     newState.filterEditorData = {
                         target: FileTarget.WHITELIST,
                         data: state.wlwords,
                         fileName: state.wlFileName
                     };
 
-                } else if (action.props['target'] === FileTarget.BLACKLIST) {
+                } else if (action.payload['target'] === FileTarget.BLACKLIST) {
                     newState.filterEditorData = {
                         target: FileTarget.BLACKLIST,
                         data: state.blacklist,
@@ -274,11 +275,11 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             case 'WORDLIST_FORM_CLEAR_FILTER_FILE':
                 newState = this.copyState(state);
                 if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
-                    if (action.props['target'] === FileTarget.WHITELIST) {
+                    if (action.payload['target'] === FileTarget.WHITELIST) {
                         newState.wlwords = '';
                         newState.wlFileName = ''
 
-                    } else if (action.props['target'] === FileTarget.BLACKLIST) {
+                    } else if (action.payload['target'] === FileTarget.BLACKLIST) {
                         newState.blacklist = '';
                         newState.blFileName = ''
                     }
@@ -299,11 +300,11 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             break;
             case 'WORDLIST_RESULT_SET_SORT_COLUMN':
                 newState = this.copyState(state);
-                newState.wlsort = action.props['sortKey'];
+                newState.wlsort = action.payload['sortKey'];
             break;
             case 'CORPUS_SWITCH_MODEL_RESTORE':
-                if (action.props['key'] === this.csGetStateKey()) {
-                    const props = action.props as Kontext.CorpusSwitchActionProps<WordlistFormState>;
+                if (action.payload['key'] === this.csGetStateKey()) {
+                    const props = action.payload as Kontext.CorpusSwitchActionProps<WordlistFormState>;
                     newState = props.data;
 
                 } else {
@@ -318,7 +319,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     }
 
     sideEffects(state:WordlistFormState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.actionType) {
+        switch (action.name) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 const corpIdent = this.layoutModel.getCorpusIdent();
                 this.layoutModel.setConf<Kontext.FullCorpusIdent>(
@@ -334,13 +335,13 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 );
             break;
             case 'WORDLIST_FORM_SET_FILTER_FILE': {
-                const file:File = action.props['value'];
+                const file:File = action.payload['value'];
                 if (file) {
-                    this.handleFilterFileSelection(state, file, action.props['target']).subscribe(
+                    this.handleFilterFileSelection(state, file, action.payload['target']).subscribe(
                         (data) => {
                             dispatch({
-                                actionType: 'WORDLIST_FORM_SET_FILTER_FILE_DONE',
-                                props: {
+                                name: 'WORDLIST_FORM_SET_FILTER_FILE_DONE',
+                                payload: {
                                     data: data
                                 }
                             });
@@ -375,8 +376,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         }
     }
 
-    private handleFilterFileSelection(state:WordlistFormState, file:File, target:string):Rx.Observable<FilterEditorData> {
-        return Rx.Observable.create((observer:Rx.Observer<any>) => {
+    private handleFilterFileSelection(state:WordlistFormState, file:File, target:FileTarget):Observable<FilterEditorData> {
+        return new Observable<string>((observer:Observer<string>) => {
             const fr = new FileReader();
             fr.onload = (evt:any) => { // TODO TypeScript seems to have no type for this
                 observer.next(evt.target.result);
@@ -384,14 +385,16 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             };
             fr.readAsText(file);
 
-        }).concatMap(
-            (data) => {
-                return Rx.Observable.of({
-                    target: target,
-                    data: data,
-                    fileName: file.name
-                });
-            }
+        }).pipe(
+            concatMap(
+                (data:string) => {
+                    return rxOf<FilterEditorData>({
+                        target: target,
+                        data: data,
+                        fileName: file.name
+                    });
+                }
+            )
         );
     }
 

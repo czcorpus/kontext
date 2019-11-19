@@ -15,9 +15,11 @@
         "ucnkLA__undo_selection_btn": "Undo",
         "ucnkLA__reset_selection_btn": "Reset selection",
         "ucnkLA__start_writing_for_suggestions": "Start writing\u2026",
+        "ucnkLA__too_many_values_placeholder": "Vložte přesnou hodnotu",
         "ucnkLA__aligned_lang_cannot_be_set_here": "The list of aligned corpora in this box is determined automatically by corpora added to the query form",
         "ucnkLA__the_selection_is_empty_msg": "The current selection does not provide any result.",
-        "ucnkLA__are_you_sure_to_reset": "The whole text type selection will be lost. Are you sure to reset?"
+        "ucnkLA__are_you_sure_to_reset": "The whole text type selection will be lost. Are you sure to reset?",
+        "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset?"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -35,9 +37,11 @@
         "ucnkLA__undo_selection_btn": "Krok zpět",
         "ucnkLA__reset_selection_btn": "Zrušit výběr",
         "ucnkLA__start_writing_for_suggestions": "Začněte psát\u2026",
+        "ucnkLA__too_many_values_placeholder": "Insert an exact value",
         "ucnkLA__aligned_lang_cannot_be_set_here": "Seznam zarovnaných korpusů v tomto poli je dán automaticky korpusy přidanými do formuláře dotazu.",
         "ucnkLA__the_selection_is_empty_msg": "Aktuální výběr neposkytuje žádné položky.",
-        "ucnkLA__are_you_sure_to_reset": "Celý výběr textů bude ztracen. Chcete provést?"
+        "ucnkLA__are_you_sure_to_reset": "Celý výběr textů bude ztracen. Chcete provést?",
+        "ucnkLA__are_you_sure_to_mod_align_lang": "Přidání/odebrání zarovnaného jazyka způsobí smazání celého výběru textů. Chcete pokračovat?"
 	},
     "szl": {
         "ucnkLA__bib_list_warning": "Skuli wielości ôdpowiadajōncych elymyntōw lista indywidualnych tytułōw bydzie pokŏzanŏ po zakuratniyniu zaznaczyniŏ.",
@@ -55,8 +59,10 @@
         "ucnkLA__undo_selection_btn": "Cŏfnij",
         "ucnkLA__reset_selection_btn": "Wysnŏż zaznaczynie",
         "ucnkLA__start_writing_for_suggestions": "Weź pisać\u2026",
+        "ucnkLA__too_many_values_placeholder": "Insert an exact value",
         "ucnkLA__aligned_lang_cannot_be_set_here": "Lista wyrōwnanych korpusōw we tym polu je ôkryślōnŏ autōmatycznie ôd korpusōw dodanych do formulara zapytaniŏ",
         "ucnkLA__the_selection_is_empty_msg": "Terŏźne zaznaczynie niy przinosi żŏdnego wyniku.",
-        "ucnkLA__are_you_sure_to_reset": "Cołke zaznaczynie typu tekstu bydzie stracōne. Na isto chcesz wysnŏżyć?"
+        "ucnkLA__are_you_sure_to_reset": "Cołke zaznaczynie typu tekstu bydzie stracōne. Na isto chcesz wysnŏżyć?",
+        "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset?"
     }
 }

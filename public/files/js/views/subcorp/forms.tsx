@@ -18,7 +18,8 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import {Subscription} from 'rxjs';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import { SubcorpFormModel } from '../../models/subcorp/form';
@@ -26,7 +27,7 @@ import {SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine} from '.
 import { TextTypesPanelProps } from '../textTypes';
 
 export interface FormsModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorparchComponent:PluginInterfaces.Corparch.WidgetView;
     subcorpFormModel:SubcorpFormModel;
@@ -59,8 +60,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const changeHandler = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE',
-                props: {
+                name: 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE',
+                payload: {
                     rowIdx: props.rowIdx,
                     value: ({'within': false, '!within': true})[evt.target.value]
                 }
@@ -146,8 +147,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const removeHandler = () => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_WITHIN_LINE_REMOVED',
-                props: {rowIdx: props.rowIdx}
+                name: 'SUBCORP_FORM_WITHIN_LINE_REMOVED',
+                payload: {rowIdx: props.rowIdx}
             });
         };
 
@@ -157,8 +158,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const handleStructChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT',
-                props: {
+                name: 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT',
+                payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
                 }
@@ -167,8 +168,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const handleCqlChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_WITHIN_LINE_SET_CQL',
-                props: {
+                name: 'SUBCORP_FORM_WITHIN_LINE_SET_CQL',
+                payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
                 }
@@ -215,8 +216,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const addLineHandler = () => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_WITHIN_LINE_ADDED',
-                props: {
+                name: 'SUBCORP_FORM_WITHIN_LINE_ADDED',
+                payload: {
                     negated: false,
                     structureName: Object.keys(props.structsAndAttrs).sort()[0],
                     attributeCql: ''
@@ -256,6 +257,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     class TRWithinBuilderWrapper extends React.Component<
         {}, SubcorpWithinFormModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = subcorpWithinFormModel.getState();
@@ -269,24 +272,24 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         componentDidMount() {
-            subcorpWithinFormModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = subcorpWithinFormModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            subcorpWithinFormModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         _handleHelpClick() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
-                props: {}
+                name: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
+                payload: {}
             });
         }
 
         _handleHelpCloseClick() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
-                props: {}
+                name: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
+                payload: {}
             });
         }
 
@@ -322,8 +325,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SET_SUBCNAME',
-                props: {
+                name: 'SUBCORP_FORM_SET_SUBCNAME',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -343,8 +346,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const handleCheckbox = (evt) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
-                props: {
+                name: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+                payload: {
                     value: !props.value
                 }
             });
@@ -363,8 +366,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         const handleChange = (evt:React.ChangeEvent<HTMLTextAreaElement>) => {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SET_DESCRIPTION',
-                props: {
+                name: 'SUBCORP_FORM_SET_DESCRIPTION',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -418,7 +421,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             return ans;
         };
 
-        const css = {
+        const css:React.CSSProperties = {
             position: 'absolute',
             maxWidth: '20em',
             fontWeight: 'normal',
@@ -450,6 +453,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -474,8 +479,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         _handleInputModeChange(v) {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SET_INPUT_MODE',
-                props: {
+                name: 'SUBCORP_FORM_SET_INPUT_MODE',
+                payload: {
                     value: v
                 }
             });
@@ -483,17 +488,17 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'SUBCORP_FORM_SUBMIT',
-                props: {}
+                name: 'SUBCORP_FORM_SUBMIT',
+                payload: {}
             });
         }
 
         componentDidMount() {
-            subcorpFormModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = subcorpFormModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            subcorpFormModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderTextTypeSelection() {

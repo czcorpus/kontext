@@ -23,10 +23,35 @@ import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {TextTypesModel} from '../../models/textTypes/main';
 import {InputMode} from './common';
 import RSVP from 'rsvp';
+import { Action, ITranslator, IFullActionControl } from 'kombo';
+
+
+export function validateSubcProps(subcname:Kontext.FormValue<string>, description:Kontext.FormValue<string>,
+        mustHaveTTSelection:boolean, hasSelectedTTItems:boolean, translator:ITranslator):Error|null {
+    if (subcname.value === '') {
+        subcname.isInvalid = true;
+        return new Error(translator.translate('subcform__missing_subcname'));
+
+    } else {
+        subcname.isInvalid = false;
+    }
+
+    if (description.isRequired && description.value === '') {
+        description.isInvalid = true;
+        return new Error(translator.translate('subcform__missing_description'));
+
+    } else {
+        subcname.isInvalid = false;
+    }
+
+    if (mustHaveTTSelection && !hasSelectedTTItems) {
+        return new Error(translator.translate('subcform__at_least_one_type_must_be_selected'));
+    }
+    return null;
+}
 
 
 export class SubcorpFormModel extends StatefulModel {
@@ -47,61 +72,64 @@ export class SubcorpFormModel extends StatefulModel {
 
     private isBusy:boolean;
 
-    private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
+    private alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, textTypesModel:TextTypesModel, corpname:string,
-            inputMode:InputMode, alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, textTypesModel:TextTypesModel, corpname:string,
+            inputMode:InputMode) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
         this.corpname = corpname;
-        this.alignedCorporaProvider = alignedCorporaProvider;
         this.inputMode = inputMode;
         this.subcname = {value: '', isRequired: true, isInvalid: false};
         this.isPublic = false;
         this.description = {value: '', isRequired: false, isInvalid: false};
         this.isBusy = false;
-
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.alignedCorpora = Immutable.List<TextTypes.AlignedLanguageItem>();
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
-                    this.inputMode = action.props['value'];
-                    this.notifyChangeListeners();
+                    this.inputMode = action.payload['value'];
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SET_SUBCNAME':
-                    this.subcname = Kontext.updateFormValue(this.subcname, {value: action.props['value']});
-                    this.notifyChangeListeners();
+                    this.subcname = Kontext.updateFormValue(this.subcname, {value: action.payload['value']});
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC':
-                    this.isPublic = action.props['value'];
+                    this.isPublic = action.payload['value'];
                     this.description = Kontext.updateFormValue(this.description, {isRequired: this.isPublic});
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SET_DESCRIPTION':
-                    this.description = Kontext.updateFormValue(this.description, {value: action.props['value']});
-                    this.notifyChangeListeners();
+                    this.description = Kontext.updateFormValue(this.description, {value: action.payload['value']});
+                    this.emitChange();
                 break;
                 case 'SUBCORP_FORM_SUBMIT':
                     if (this.inputMode === InputMode.GUI) {
                         this.isBusy = true;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         this.submit().then(
                             () => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
                             },
                             (err) => {
                                 this.isBusy = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.pageModel.showMessage('error', err);
                             }
                         );
 
                     } else if (this.inputMode === InputMode.RAW) {
                         this.validateForm(false);
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     }
+                break;
+                case 'SUBCORP_FORM_SET_ALIGNED_CORPORA':
+                    this.alignedCorpora = action.payload['alignedCorpora'];
+                    this.emitChange();
                 break;
             }
         });
@@ -114,9 +142,9 @@ export class SubcorpFormModel extends StatefulModel {
         args.set('publish', this.isPublic ? '1' : '0');
         args.set('description', this.description.value);
         args.set('method', this.inputMode);
-        const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
+        const alignedCorpora = this.alignedCorpora.map(v => v.value).toArray();
         if (alignedCorpora.length > 0) {
-            args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
+            args.replace('aligned_corpora', this.alignedCorpora.map(v => v.value).toArray());
             args.set('attrs', JSON.stringify(this.textTypesModel.exportSelections(false)));
         }
         const selections = this.textTypesModel.exportSelections(false);
@@ -127,26 +155,13 @@ export class SubcorpFormModel extends StatefulModel {
     }
 
     validateForm(mustHaveTTSelection:boolean):Error|null {
-        if (this.subcname.value === '') {
-            this.subcname.isInvalid = true;
-            return new Error(this.pageModel.translate('subcform__missing_subcname'));
-
-        } else {
-            this.subcname.isInvalid = false;
-        }
-
-        if (this.description.isRequired && this.description.value === '') {
-            this.description.isInvalid = true;
-            return new Error(this.pageModel.translate('subcform__missing_description'));
-
-        } else {
-            this.subcname.isInvalid = false;
-        }
-
-        if (mustHaveTTSelection && !this.textTypesModel.hasSelectedItems()) {
-            return new Error(this.pageModel.translate('subcform__at_least_one_type_must_be_selected'));
-        }
-        return null;
+        return validateSubcProps(
+            this.subcname,
+            this.description,
+            mustHaveTTSelection,
+            this.textTypesModel.hasSelectedItems(),
+            this.pageModel
+        );
     }
 
     submit():RSVP.Promise<any> {
@@ -189,7 +204,7 @@ export class SubcorpFormModel extends StatefulModel {
     }
 
     getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
-        return this.alignedCorporaProvider();
+        return this.alignedCorpora;
     }
 
     getTTSelections():{[attr:string]:Array<string>} {

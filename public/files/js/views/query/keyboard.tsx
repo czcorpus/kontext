@@ -20,9 +20,10 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {QueryFormModel, AppendQueryInputAction} from '../../models/query/common';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
+import { Subscription } from 'rxjs';
 
 
 export interface KeyboardProps {
@@ -47,7 +48,7 @@ export interface KeyboardViews {
 }
 
 export interface KeyboardModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     queryModel:QueryFormModel;
     virtualKeyboardModel:VirtualKeyboardModel
@@ -276,6 +277,8 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
 
     class Keyboard extends React.Component<KeyboardProps, KeyboardState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._handleClick = this._handleClick.bind(this);
@@ -296,8 +299,8 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
 
         _handleClick(v) {
             dispatcher.dispatch<AppendQueryInputAction>({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+                payload: {
                     sourceId: this.props.sourceId,
                     query: v,
                     prependSpace: false,
@@ -326,8 +329,8 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
 
         _handleBackspace() {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR',
-                props: {
+                name: this.props.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR',
+                payload: {
                     sourceId: this.props.sourceId
                 }
             });
@@ -338,8 +341,8 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
 
         _handleLayoutChange(evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
-                props: {idx: evt.target.value}
+                name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
+                payload: {idx: evt.target.value}
             });
         }
 
@@ -355,17 +358,17 @@ export function init({dispatcher, he, queryModel, virtualKeyboardModel}:Keyboard
         }
 
         componentDidMount() {
-            virtualKeyboardModel.addChangeListener(this._modelChangeListener);
+            this.modelSubscription = virtualKeyboardModel.addListener(this._modelChangeListener);
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS',
-                props: {
+                name: 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS',
+                payload: {
                     inputLanguage: this.props.inputLanguage
                 }
             });
         }
 
         componentWillUnmount() {
-            virtualKeyboardModel.removeChangeListener(this._modelChangeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         _renderContents() {

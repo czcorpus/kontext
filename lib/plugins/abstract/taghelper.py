@@ -16,11 +16,100 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+This module contains a specification for the server-side of the
+'taghelper' widget which provides an interactive way how to write
+a PoS tag within a CQL query.
+
+Please note that the specification is more strict than necessary -
+there is a concept of 'loaders' and 'fetchers' which is completely
+avoidable but we suggest implementers to adopt this approach and
+reuse existing 'default_taghelper' plug-in with custom loaders and
+fetchers as it should be much easier to accomplish than writing
+a new version of 'taghelper'.
+"""
+
+
+class AbstractValueSelectionFetcher(object):
+    """
+    AbstractValueSelectionFetcher provides way how to
+    obtain user tag value search query data from the
+    werkzeug.wrappers.Request (see a respective pyi file)
+    and encode them in a way suitable for a respective
+    loader.
+    """
+
+    def fetch(self, request):
+        """
+        fetch data from an HTTP request and encode
+        using a custom data type
+        """
+        raise NotImplementedError()
+
+    def is_empty(self, val):
+        """
+        Test whether the 'val' (= fetched data)
+        contains an empty query.
+        """
+        raise NotImplementedError()
+
+
+class AbstractTagsetInfoLoader(object):
+    """
+    AbstractTagsetInfoLoader wraps all the implementation
+    details and concrete data format properties of
+    a tag set into a general interface Tag Helper plug-in
+    can work with.
+
+    The instance is expected to be bound with a concrete corpus.
+    I.e. in case multiple corpora support the same tagset, multiple
+    loaders will be instantiated.
+
+    Note: Having two methods may seem superfluous as the initial
+    values can be seen as getting a variant for an empty query.
+    But there is another important difference between the two
+    methods. A plug-in developer may want get_initial_values
+    to return all the possible values as defined in tagset
+    specification no matter how tag-rich a respective corpus is
+    (i.e. the corpus may not contain values for some property
+    at all but we want it in the selection anyway).
+    The 'get_variant' method on the other hand is expected to
+    be purely data-driven - i.e. it returns data based on
+    actual corpus contents.
+    """
+
+    def is_enabled(self):
+        """
+        Return true if the loader is able to provide answers
+        (e.g. source data files exist etc.)
+        """
+        raise NotImplementedError()
+
+    def get_initial_values(self, lang):
+        """
+        Return all the possible properties of a respective tagset
+        (i.e. all the positions/keys/whatever and their respective
+        labels/descriptions/etc.).
+        """
+        raise NotImplementedError()
+
+    def get_variant(self, user_selection, lang):
+        """
+        Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
+        return a filtered values matching the selected ones.
+
+        E.g. let's say we have the following variants in a corpus: AAB, ACD, BAB, CAA
+        and user selects A.. Then we want to return [A, C] for the second position and
+        [B, D] for the third position as possible values.
+        For key-value tagsets it works in the same way - just imagine K1=A, K2=A,
+        K3=B instead of AAB, K1=A, K2=C, K3=D instead of ACD etc.
+        """
+        raise NotImplementedError()
+
 
 class AbstractTaghelper(object):
-
     """
-    Please note that taghelper is not an instance of CorpusDependentPlugin
+    !!! Please note that taghelper is not an instance of CorpusDependentPlugin
     even if it would sound reasonable. The reason is that e.g. in case of
     parallel corpora, tags may not be enabled for primary corpus but they
     can be enabled for one or more aligned corpora. So it is easier to
@@ -36,5 +125,17 @@ class AbstractTaghelper(object):
 
         arguments:
         corpus_id -- a corpus identifier
+        """
+        raise NotImplementedError()
+
+    def loader(self, corpus_name, tagset_name):
+        """
+        Return a loader for the corpus_name
+        """
+        raise NotImplementedError()
+
+    def fetcher(self, corpus_name, tagset_name):
+        """
+        Return a fetcher for the corpus_name
         """
         raise NotImplementedError()

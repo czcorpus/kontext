@@ -19,9 +19,10 @@
  */
 
 import * as Immutable from 'immutable';
-import * as Rx from '@reactivex/rxjs';
+import { IEventEmitter } from 'kombo';
 import RSVP from 'rsvp';
 import {CoreViews} from './coreViews';
+import { ObservablePrerequisite, PromisePrerequisite } from '../models/mainMenu';
 
 /**
  *
@@ -134,26 +135,14 @@ export namespace Kontext {
     }
 
     /**
-     * A stateful model's interface to interact with React components.
-     */
-    export interface EventEmitter {
-
-        addChangeListener(fn:()=>void):void;
-
-        removeChangeListener(fn:()=>void):void;
-
-        notifyChangeListeners(eventType?:string, error?:Error):void;
-    }
-
-    /**
      * managing access to a user information
      */
-    export interface IUserInfoModel extends EventEmitter {
+    export interface IUserInfoModel extends IEventEmitter {
         getCredentials():UserCredentials;
         loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
     }
 
-    export interface ICorpusInfoModel extends EventEmitter {
+    export interface ICorpusInfoModel extends IEventEmitter {
         getCurrentInfoData():any; // TODO
         isLoading():boolean;
     }
@@ -162,7 +151,7 @@ export namespace Kontext {
      * handling state of server-asynchronous
      * tasks.
      */
-    export interface IAsyncTaskModel extends EventEmitter {
+    export interface IAsyncTaskModel extends IEventEmitter {
 
         registerTask(task:Kontext.AsyncTaskInfo):void;
 
@@ -235,7 +224,7 @@ export namespace Kontext {
      * menu item.
      *
      */
-    export interface IMainMenuModel extends EventEmitter {
+    export interface IMainMenuModel extends IEventEmitter {
 
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
@@ -248,13 +237,20 @@ export namespace Kontext {
          * to prepare themselves before their views are
          * shown.
          */
-        addItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+        addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
 
         /**
-         * Unregister an action which is run before listeners
-         * are notified.
+         *
+         * Please note that the function returns ObservablePrerequisite which is
+         * a wrapper around provided PromisePrerequisite. To be able to remove
+         * the prerequisite, the returned ObservablePrerequisite must be used
+         * as an argument for removeItemActionPrerequisite.
+         *
+         * @deprecated Please use Observable-based removeItemActionPrerequisite instead
          */
-        removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+        addItemActionPrerequisitePromise(actionName:string, fn:PromisePrerequisite):ObservablePrerequisite;
+
+        removeItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
 
         exportKeyShortcutActions():IMainMenuShortcutMapper;
 
@@ -384,7 +380,7 @@ export namespace Kontext {
     }
 
     export interface AjaxResponse {
-        messages:Array<string>;
+        messages:Array<[string, string]>;
     }
 
     export interface AjaxConcResponse extends AjaxResponse {
@@ -644,6 +640,7 @@ export namespace ViewOptions {
         n: string;
         selected: boolean;
         locked: boolean;
+        selectAllAttrs: boolean;
     }
 
     export interface StructAttrDesc {
@@ -651,7 +648,15 @@ export namespace ViewOptions {
         selected: boolean;
     }
 
-    export interface RefsDesc {
+    export interface RefDesc {
+        label: string;
+        n: string;
+        selected: boolean;
+        locked: boolean;
+        selectAllAttrs: boolean;
+    }
+
+    export interface RefAttrDesc {
         n: string;
         label: string;
         selected: boolean;
@@ -678,33 +683,28 @@ export namespace ViewOptions {
         ShowConcToolbar:boolean;
     }
 
+    export interface LoadOptionsResponse extends Kontext.AjaxResponse {
+        AttrList: Array<AttrDesc>;
+        Availstructs: Array<{sel:string; label:string; n:string}>;
+        Availrefs:Array<{n:string; sel:string; label:string}>;
+        curr_structattrs:Array<string>;
+        fixed_attr:string;
+        attr_allpos:string;
+        attr_vmode:string;
+        use_conc_toolbar:boolean;
+        structattrs:{[attr:string]:Array<string>};
+        CurrentAttrs:Array<string>;
+    }
+
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
         widectx_globals:Array<[string, string]>;
     }
 
-    export interface ICorpViewOptionsModel extends Kontext.EventEmitter {
-        getCorpusIdent():Kontext.FullCorpusIdent;
-        initFromPageData(data:PageData):void;
-        loadData():RSVP.Promise<PageData>;
-        isLoaded():boolean;
-        addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
-        getAttributes():Immutable.List<AttrDesc>;
-        getSelectAllAttributes():boolean;
-        getStructures():Immutable.List<StructDesc>;
-        getStructAttrs():AvailStructAttrs;
-        getReferences():Immutable.List<RefsDesc>;
-        getSelectAllReferences():boolean;
-        getFixedAttr():string;
-        getAttrsVmode():AttrViewMode;
-        getAttrsAllpos():string;
-        getShowConcToolbar():boolean;
-        getIsWaiting():boolean;
-        getUserIsAnonymous():boolean;
-        lockedPosAttrNotSelected():boolean;
-        getCorpusUsesRTLText():boolean;
+    export interface ICorpViewOptionsModel {
+       addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
     }
 
-    export interface IGeneralViewOptionsModel extends Kontext.EventEmitter {
+    export interface IGeneralViewOptionsModel extends IEventEmitter {
         getPageSize():Kontext.FormValue<string>;
         getNewCtxSize():Kontext.FormValue<string>;
         getLineNumbers():boolean;
@@ -928,7 +928,7 @@ export namespace TextTypes {
     /**
      *
      */
-    export interface ITextTypesModel extends Kontext.EventEmitter, IAdHocSubcorpusDetector {
+    export interface ITextTypesModel extends IEventEmitter, IAdHocSubcorpusDetector {
 
         applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
 
@@ -936,6 +936,10 @@ export namespace TextTypes {
          * Return a defined structural attribute
          */
         getAttribute(ident:string):TextTypes.AttributeSelection;
+
+        getBibIdAttr():string;
+
+        getBibLabelAttr():string;
 
         /**
          *
@@ -945,31 +949,18 @@ export namespace TextTypes {
         /**
          * Return a list of all the defined attributes
          */
-        getAttributes():Array<AttributeSelection>;
+        getAttributes():Immutable.List<TextTypes.AttributeSelection>;
 
         /**
          * Get all available values of a specific attribute before
          * any filters were applied.
          */
-        getInitialAvailableValues(attrName:string):Immutable.List<TextTypes.AttributeValue>;
+        getInitialAvailableValues():Immutable.List<TextTypes.AttributeSelection>;
 
         /**
          * Export checkbox selections (e.g. for ajax requests)
          */
         exportSelections(lockedOnesOnly:boolean):TextTypes.ServerCheckedValues;
-
-        /**
-         * Reset model state
-         */
-        reset():void;
-
-        /**
-         * Filter existing values of an attribute based on provided values.
-         * E.g. if the attribute "x1" contains values {value: "foo",...}, {value: "bar",...},
-         *  {value:"baz",....} and the "values"" argument contains ["bar", "baz"] then
-         * the model is expected to keep {value: "bar",...}, {value: "baz", ....} for "x1".
-         */
-        updateItems(attrName:string, values:Array<string>):void;
 
         /**
          *
@@ -1006,49 +997,9 @@ export namespace TextTypes {
         getAttributesWithSelectedItems(includeLocked:boolean):Array<string>;
 
         /**
-         * Sets a (typically) numeric summary for a specific attribute.
-         */
-        setAttrSummary(attrName:string, value:AttrSummary):void;
-
-        /**
          * Returns a (typically) numeric summary for a specific attribute.
          */
         getAttrSummary():Immutable.Map<string, AttrSummary>;
-
-        /**
-         * Return the total number of tokens in
-         * texts matching all the attribute values
-         * belonging to the provided attrName.
-         *
-         * Please note that individual sizes
-         * (and thus the total size) may change
-         * during the existence of the object
-         * (e.g. by interactive text type selection).
-         */
-        getAttrSize(attrName:string):number;
-
-        /**
-         * Activate a support for attaching an extended information
-         * for a specific attribute. The 'fn' callback is expected
-         * to update model(s) in such a way that the information becomes
-         * available.
-         */
-        setExtendedInfoSupport<T>(attrName:string, fn:(ident:string)=>RSVP.Promise<T>):void;
-
-        /**
-         * Returns true if a specific attribute has activated support
-         * for displaying extended information.
-         */
-        hasDefinedExtendedInfo(attrName:string):boolean;
-
-        /**
-         * Attaches an extended information item to a specific attribute value.
-         * This is typically used by setExtendedInfoSupport's callback function.
-         */
-        setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, any>):void;
-
-
-        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>RSVP.Promise<any>):void;
 
         getTextInputPlaceholder():string;
 
@@ -1057,24 +1008,6 @@ export namespace TextTypes {
         setRangeMode(attrName:string, rangeIsOn:boolean);
 
         getRangeModes():Immutable.Map<string, boolean>;
-
-        /**
-         * Other models may listen for selection changes and update
-         * themselves accordingly.
-         */
-        addSelectionChangeListener(fn:(target:TextTypes.ITextTypesModel)=>void):void;
-
-        /**
-         * Save the currect selection to object's local history.
-         * This is mainly for UNDO function.
-         */
-        snapshotState():void;
-
-        /**
-         * Return selection state back to the previous
-         * one stored via snapshotState().
-         */
-        undoState():void;
 
         canUndoState():boolean;
 
@@ -1100,26 +1033,6 @@ export namespace TextTypes {
         label:string;
         selected:boolean;
         locked:boolean;
-    }
-
-    /**
-     * Represents an object which is able to provide
-     * a callback function initiated by textTypesModel
-     * every time user enters a text into one of raw text inputs
-     * (used whenever the number of items to display is too high).
-     */
-    export interface AttrValueTextInputListener {
-        getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
-        getTextInputPlaceholder():string; // a text displayed in a respective text field
-        addUpdateListener(fn:()=>void):void;
-        removeUpdateListener(fn:()=>void):void;
-        getAlignedCorpora():Immutable.List<AlignedLanguageItem>;
-        selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean);
-        hasSelectedLanguages():boolean;
-        hasSelectionSteps():boolean;
-        setControlsEnabled(v:boolean):void;
-        reset():void;
-        notifyChangeListeners():void;
     }
 
     export type ExportedSelection = {[attr:string]:Array<string>};
@@ -1152,3 +1065,5 @@ export namespace KeyCodes {
                 code === LEFT_ARROW || code === RIGHT_ARROW;
     }
 }
+
+export const typedProps = <T>(props) => <T>props;

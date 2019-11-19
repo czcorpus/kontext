@@ -9,7 +9,7 @@
 * [Requirements](#requirements)
 * [Build and installation](#build-and-installation)
 * [Customization and contribution](#customization-and-contribution)
-* [Notable installations](#notable-installations)
+* [Notable users](#notable-users)
 
 ## Introduction
 
@@ -91,9 +91,10 @@ Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
 
 Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-and-customization).
 
-## Notable installations
+## Notable users
 
 * [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
 * [LINDAT](https://ufal.mff.cuni.cz/lindat-kontext)
 * [Clarin-PL](https://kontext.clarin-pl.eu/)
 * [Інститут української](https://mova.institute/kontext/first_form)
+* [Serbski Institut](https://www.serbski-institut.de) (API version of KonText)

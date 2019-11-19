@@ -25,7 +25,7 @@ import {init as inputInit} from './input';
 import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext, KeyCodes} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {FirstQueryFormModel} from '../../models/query/first';
@@ -36,10 +36,11 @@ import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {QueryContextModel} from '../../models/query/context';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
+import { Subscription } from 'rxjs';
 
 
 export interface MainModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
     queryModel:FirstQueryFormModel;
@@ -206,6 +207,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     class QueryForm extends React.Component<QueryFormProps, QueryFormState> {
 
+        private modelSubscriptions:Array<Subscription>;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -214,6 +217,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             this._handleTextTypesFormVisibility = this._handleTextTypesFormVisibility.bind(this);
             this._keyEventHandler = this._keyEventHandler.bind(this);
             this.state = this._fetchModelState();
+            this.modelSubscriptions = [];
         }
 
         _fetchModelState() {
@@ -255,8 +259,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
         _handleSubmit() {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SUBMIT',
-                props: {}
+                name: 'QUERY_INPUT_SUBMIT',
+                payload: {}
             });
         }
 
@@ -276,8 +280,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
                     dispatcher.dispatch({
-                        actionType: 'QUERY_INPUT_SUBMIT',
-                        props: {}
+                        name: 'QUERY_INPUT_SUBMIT',
+                        payload: {}
                     });
                 }
                 evt.stopPropagation();
@@ -286,13 +290,14 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         componentDidMount() {
-            queryModel.addChangeListener(this._modelChangeHandler);
-            textTypesModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscriptions = [
+                queryModel.addListener(this._modelChangeHandler),
+                textTypesModel.addListener(this._modelChangeHandler)
+            ];
         }
 
         componentWillUnmount() {
-            queryModel.removeChangeListener(this._modelChangeHandler);
-            textTypesModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscriptions.forEach(s => s.unsubscribe);
         }
 
         render() {
@@ -417,6 +422,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     class QueryFormLite extends React.Component<QueryFormLiteProps, QueryFormLiteState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
@@ -456,14 +463,14 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 if (!evt.ctrlKey) {
                     if (this.props.operationIdx !== undefined) {
                         dispatcher.dispatch({
-                            actionType: 'BRANCH_QUERY',
-                            props: {operationIdx: this.props.operationIdx}
+                            name: 'BRANCH_QUERY',
+                            payload: {operationIdx: this.props.operationIdx}
                         });
 
                     } else {
                         dispatcher.dispatch({
-                            actionType: 'QUERY_INPUT_SUBMIT',
-                            props: {}
+                            name: 'QUERY_INPUT_SUBMIT',
+                            payload: {}
                         });
                     }
                 }
@@ -481,14 +488,14 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
-                    actionType: 'BRANCH_QUERY',
-                    props: {operationIdx: this.props.operationIdx}
+                    name: 'BRANCH_QUERY',
+                    payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
                 dispatcher.dispatch({
-                    actionType: 'QUERY_INPUT_SUBMIT',
-                    props: {}
+                    name: 'QUERY_INPUT_SUBMIT',
+                    payload: {}
                 });
             }
         }
@@ -500,11 +507,11 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         componentDidMount() {
-            queryModel.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = queryModel.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount() {
-            queryModel.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

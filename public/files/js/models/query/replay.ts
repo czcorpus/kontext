@@ -25,13 +25,13 @@ import RSVP from 'rsvp';
 import {UNSAFE_SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {FirstQueryFormModel} from './first';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
 import {FilterFormModel} from './filter';
 import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from './sort';
 import {ConcSampleModel} from './sample';
 import {SwitchMainCorpModel} from './switchmc';
 import {TextTypesModel} from '../textTypes/main';
 import {FirstHitsModel} from '../query/firstHits';
+import { Action, IEventEmitter, IFullActionControl } from 'kombo';
 
 
 /*
@@ -172,20 +172,20 @@ export class QueryInfoModel extends UNSAFE_SynchronizedModel {
 
     protected pageModel:PageModel;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'CLEAR_QUERY_OVERVIEW_DATA':
                     this.currentQueryOverview = null;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
                 case 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO':
                     this.loadQueryOverview().then(
                         (data) => {
-                            this.notifyChangeListeners();
+                            this.emitChange();
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
@@ -215,7 +215,7 @@ export class QueryInfoModel extends UNSAFE_SynchronizedModel {
     }
 }
 
-export interface IQueryReplayModel extends Kontext.EventEmitter {
+export interface IQueryReplayModel extends IEventEmitter {
 
     getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation>;
 
@@ -279,7 +279,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
 
     private _editIsLocked:boolean;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;
@@ -304,12 +304,12 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
             this._editIsLocked = v > 0;
         });
 
-        this.dispatcher.register(payload => {
-                switch (payload.actionType) {
+        this.dispatcher.registerActionListener(action => {
+                switch (action.name) {
                     case 'EDIT_QUERY_OPERATION':
-                        this.editedOperationIdx = payload.props['operationIdx'];
-                        this.notifyChangeListeners();
-                        this.syncFormData(payload.props['operationIdx']).catch(
+                        this.editedOperationIdx = action.payload['operationIdx'];
+                        this.emitChange();
+                        this.syncFormData(action.payload['operationIdx']).catch(
                             (err) => {
                                 this.editedOperationIdx = null;
                                 this.pageModel.showMessage('error', err);
@@ -318,10 +318,10 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                     break;
                     case 'BRANCH_QUERY':
                         this.editedOperationIdx = null;
-                        this.branchQuery(payload.props['operationIdx']).then(
+                        this.branchQuery(action.payload['operationIdx']).then(
                             (data) => {
                                 this.branchReplayIsRunning = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 if (typeof data === 'function') {
                                     data();
 
@@ -331,18 +331,18 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                             },
                             (err) => {
                                 this.branchReplayIsRunning = false;
-                                this.notifyChangeListeners();
+                                this.emitChange();
                                 this.pageModel.showMessage('error', err);
                             }
                         );
                     break;
                     case 'QUERY_SET_STOP_AFTER_IDX':
-                        this.stopAfterOpIdx = payload.props['value'];
-                        this.notifyChangeListeners();
+                        this.stopAfterOpIdx = action.payload['value'];
+                        this.emitChange();
                     break;
                     case 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO':
                         this.editedOperationIdx = null;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                     break;
                 }
         });
@@ -647,7 +647,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
      */
     private branchQuery(changedOpIdx:number):RSVP.Promise<any> {
         this.branchReplayIsRunning = true;
-        this.notifyChangeListeners(); // => start the animation "replaying the query"
+        this.emitChange(); // => start the animation "replaying the query"
 
         const args = this.pageModel.getConcArgs();
         const fetchQueryPipeline:RSVP.Promise<Immutable.List<string>> = this.pageModel.ajax(
@@ -1105,21 +1105,21 @@ export class IndirectQueryReplayModel extends QueryInfoModel implements IQueryRe
 
     private currQueryOverivew:Immutable.List<Kontext.QueryOperation>;
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;
         this.currEncodedOperations = importEncodedOperations(currentOperations);
         this.currQueryOverivew = Immutable.List<Kontext.QueryOperation>(currentOperations);
 
-        this.dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
                 case 'REDIRECT_TO_EDIT_QUERY_OPERATION':
                     window.location.replace(
                         this.pageModel.createActionUrl(
                             'view',
                             this.pageModel.getConcArgs().items()
-                        ) + '#edit_op/operationIdx=' + action.props['operationIdx']
+                        ) + '#edit_op/operationIdx=' + action.payload['operationIdx']
                     );
                 break;
             }

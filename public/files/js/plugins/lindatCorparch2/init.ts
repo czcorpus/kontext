@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {CorplistWidgetModel} from './widget';
-import {CorplistPage, CorplistDataResponse, CorplistServerData, CorplistTableModelState} from './corplist';
+import {CorplistPage, CorplistServerData} from './corplist';
 import {init as viewInit} from './corplistView';
 import {init as widgetInit} from './widgetView';
 import {init as overviewViewInit} from '../../views/overview';

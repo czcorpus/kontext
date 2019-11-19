@@ -38,15 +38,17 @@ element taghelper {
   }
 }
 """
-
-import os
-
 from translation import ugettext as _
 from controller import exposed
 from controller.errors import UserActionException
 import plugins
 from plugins.abstract.taghelper import AbstractTaghelper
-from plugins.default_taghelper.loader import TagVariantLoader
+from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
+from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
+from plugins.default_taghelper.loaders import NullTagVariantLoader
+from plugins.default_taghelper.fetchers.keyval import KeyvalSelectionFetcher
+from plugins.default_taghelper.fetchers.positional import PositionalSelectionFetcher
+from plugins.default_taghelper.fetchers import NullSelectionFetcher
 from actions import corpora
 
 
@@ -54,25 +56,20 @@ from actions import corpora
 def ajax_get_tag_variants(ctrl, request):
     """
     """
-    pattern = request.args.get('pattern', '')
+    corpname = request.args['corpname']
+    tagset_name = request.args['tagset']
+    values_selection = plugins.runtime.TAGHELPER.instance.fetcher(
+        corpname, tagset_name).fetch(request)
     try:
-        tag_loader = plugins.runtime.TAGHELPER.instance.loader(ctrl.args.corpname)
+        tag_loader = plugins.runtime.TAGHELPER.instance.loader(corpname, tagset_name)
     except IOError:
         raise UserActionException(
-            _('Corpus %s is not supported by this widget.') % ctrl.args.corpname)
-
-    if len(pattern) > 0:
-        ans = tag_loader.get_variant(pattern, ctrl.ui_lang)
-    else:
+            _('Corpus %s is not supported by this widget.') % corpname)
+    if plugins.runtime.TAGHELPER.instance.fetcher(corpname, tagset_name).is_empty(values_selection):
         ans = tag_loader.get_initial_values(ctrl.ui_lang)
+    else:
+        ans = tag_loader.get_variant(values_selection, ctrl.ui_lang)
     return ans
-
-
-class TagHelperException(Exception):
-    """
-    General error for the module
-    """
-    pass
 
 
 class Taghelper(AbstractTaghelper):
@@ -81,51 +78,55 @@ class Taghelper(AbstractTaghelper):
         self._conf = conf
         self._corparch = corparch
         self._loaders = {}
+        self._fetchers = {}
 
-    def loader(self, corpus_name):
-        tagset_name = self._corparch.get_corpus_info('en_US', corpus_name)['tagset']
-        if corpus_name not in self._loaders:
-            self._loaders[corpus_name] = TagVariantLoader(
-                corpus_name=corpus_name, tagset_name=tagset_name,
-                cache_dir=self._conf['default:tags_cache_dir'],
-                variants_file_path=self.create_tag_variants_file_path(corpus_name),
-                cache_clear_interval=self._conf['default:clear_interval'],
-                taglist_path=self._conf['default:taglist_path'])
-        return self._loaders[corpus_name]
+    def loader(self, corpus_name, tagset_name):
+        if (corpus_name, tagset_name) not in self._loaders:
+            for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
+                if tagset.tagset_type == 'positional':
+                    self._loaders[(corpus_name, tagset.tagset_name)] = PositionalTagVariantLoader(
+                        corpus_name=corpus_name, tagset_name=tagset.tagset_name,
+                        cache_dir=self._conf['default:tags_cache_dir'],
+                        tags_src_dir=self._conf['default:tags_src_dir'],
+                        cache_clear_interval=self._conf['default:clear_interval'],
+                        taglist_path=self._conf['default:taglist_path'])
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
+                elif tagset.tagset_type == 'keyval':
+                    self._loaders[(corpus_name, tagset.tagset_name)] = KeyvalTagVariantLoader(
+                        corpus_name=corpus_name, tagset_name=tagset.tagset_name,
+                        tags_src_dir=self._conf['default:tags_src_dir'],
+                    )
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
+                else:
+                    self._loaders[(corpus_name, tagset.tagset_name)] = NullTagVariantLoader()
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
+        return self._loaders[(corpus_name, tagset_name)]
 
-    def create_tag_variants_file_path(self, corpus_name):
-        """
-        Generates a full path (full = as defined in the main configuration file)
-        to the file which contains all the existing tag variants for the passed
-        corpus name
-
-        arguments:
-        corpus_name -- str
-
-        returns:
-        a path to a specific cached file
-        """
-        if not corpus_name:
-            raise TagHelperException('Empty corpus name')
-        return os.path.join(self._conf['default:tags_src_dir'], corpus_name)
+    def fetcher(self, corpus_name, tagset_name):
+        if (corpus_name, tagset_name) not in self._fetchers:
+            for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
+                if tagset.tagset_type == 'positional':
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
+                elif tagset.tagset_type == 'keyval':
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
+                else:
+                    self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
+        return self._fetchers[(corpus_name, tagset_name)]
 
     def tags_enabled_for(self, corpus_name):
-        """
-        Tests whether the path to the provided corpus_name exists
-
-        arguments:
-        corpus_name -- str
-
-        returns:
-        a boolean value
-        """
-        if corpus_name:
-            return (os.path.exists(self.create_tag_variants_file_path(corpus_name)) and
-                    self.loader(corpus_name).is_enabled())
+        for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
+            loader = self.loader(corpus_name, tagset.tagset_name)
+            if loader.is_enabled():
+                return True
         return False
 
     def export_actions(self):
         return {corpora.Corpora: [ajax_get_tag_variants]}
+
+    def export(self, plugin_api):
+        info = self._corparch.get_corpus_info(
+            plugin_api.user_lang, plugin_api.current_corpus.corpname)
+        return dict(corp_tagsets=[x.to_dict() for x in info.tagsets])
 
 
 @plugins.inject(plugins.runtime.CORPARCH)

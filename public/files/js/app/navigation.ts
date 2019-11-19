@@ -21,9 +21,11 @@
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
 import RSVP from 'rsvp';
-import * as Rx from '@reactivex/rxjs';
 import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'immutable';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
@@ -366,9 +368,9 @@ export class AppNavigation implements Kontext.IURLHandler {
      * This method behaves exactly the same as "normal" ajax() method above except that
      * it produces Observable.
      */
-    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Rx.Observable<T> {
+    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
         const callArgs = this.prepareAjax(method, url, args, options);
-        return Rx.Observable.ajax({
+        return ajax({
             url: callArgs.url,
             body: callArgs.requestBody,
             method: callArgs.method,
@@ -376,7 +378,7 @@ export class AppNavigation implements Kontext.IURLHandler {
             headers: {
                 'Content-Type': callArgs.contentType
             }
-        }).map<Rx.AjaxResponse, T>(v => v.response);
+        }).pipe(map<RxAjaxResponse, T>(v => v.response));
     }
 
 
@@ -476,13 +478,15 @@ export class AppNavigation implements Kontext.IURLHandler {
                 this.conf.setConf<any>('menuData', data.menuData); // TODO type
                 this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
                 this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                this.conf.setConf<Array<any>>('StructAttrList', data.StructAttrList); // TODO type
+                this.conf.setConf<Array<Kontext.AttrItem>>('StructAttrList', data.StructAttrList);
+                this.conf.setConf<Array<string>>('StructList', data.StructList);
                 this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
                 this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
                 this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
                 this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
                 this.conf.setConf<string>('TextTypesNotes', data.TextTypesNotes);
                 this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
+                this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
             }
         );
     }

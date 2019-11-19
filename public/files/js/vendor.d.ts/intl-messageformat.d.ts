@@ -22,7 +22,7 @@ declare module "vendor/intl-messageformat" {
 
         constructor(translations:any, locale:string);
 
-        format(values:{[k:string]:string});
+        format(values:{[k:string]:string|number|boolean});
     }
 
     export = IntlMessageFormat;

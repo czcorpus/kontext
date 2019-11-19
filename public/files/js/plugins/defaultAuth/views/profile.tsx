@@ -22,7 +22,8 @@ import * as React from 'react';
 import {Kontext} from '../../../types/common';
 import {UserProfileModel, UserProfileState} from '../profile';
 import { ReactElement } from 'react';
-import {ActionDispatcher} from '../../../app/dispatcher';
+import { IActionDispatcher } from 'kombo';
+import { Subscription } from 'rxjs';
 
 export interface UserProfileViews {
     UserProfileView:React.ComponentClass;
@@ -52,7 +53,7 @@ export interface UserProfileViewProps {
 
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, profileModel:UserProfileModel):UserProfileViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, profileModel:UserProfileModel):UserProfileViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -64,8 +65,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'USER_PROFILE_SET_CURR_PASSWD',
-                props: {
+                name: 'USER_PROFILE_SET_CURR_PASSWD',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -94,8 +95,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'USER_PROFILE_SET_NEW_PASSWD',
-                props: {
+                name: 'USER_PROFILE_SET_NEW_PASSWD',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -123,8 +124,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'USER_PROFILE_SET_NEW_PASSWD2',
-                props: {
+                name: 'USER_PROFILE_SET_NEW_PASSWD2',
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -153,8 +154,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
 
         const handleSubmitClick = (props) => {
             dispatcher.dispatch({
-                actionType: 'USER_PROFILE_SUBMIT_NEW_PASSWORD',
-                props: {}
+                name: 'USER_PROFILE_SUBMIT_NEW_PASSWORD',
+                payload: {}
             });
         };
 
@@ -233,6 +234,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
 
     class UserProfileView extends React.Component<UserProfileViewProps, UserProfileState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = profileModel.getState();
@@ -244,11 +247,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, p
         }
 
         componentDidMount() {
-            profileModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = profileModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            profileModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render():ReactElement<{}> {

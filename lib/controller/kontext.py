@@ -29,6 +29,7 @@ import conclib
 from controller import Controller, convert_types, exposed
 from controller.errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException,
                                NotFoundException)
+import strings
 import plugins
 import plugins.abstract
 from plugins.abstract.corpora import BrokenCorpusInfo
@@ -266,13 +267,14 @@ class Kontext(Controller):
     def get_mapping_url_prefix(self):
         return super(Kontext, self).get_mapping_url_prefix()
 
-    def _create_action_log(self, user_settings, action_name, proc_time=None):
+    def _create_action_log(self, user_settings, action_name, err_desc, proc_time=None):
         """
         Logs user's request by storing URL parameters, user settings and user name
 
         arguments:
         user_settings -- a dict containing user settings
         action_name -- name of current action
+        err_desc -- 2-tuple (Exception class name along with optional application log anchor ID) or None
         proc_time -- float specifying how long the action took;
         default is None - in such case no information is stored
 
@@ -283,6 +285,9 @@ class Kontext(Controller):
 
         logged_values = settings.get('logging', 'values', ())
         log_data = {}
+
+        if err_desc:
+            log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
 
         params = {}
         if self.environ.get('QUERY_STRING'):
@@ -558,9 +563,11 @@ class Kontext(Controller):
             self._save_query_to_history(q_id, curr_data)
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
-                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
+                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx],
+                            user_id=self.session_get('user', 'id'))
                 curr = dict(lines_groups=lines_groups,
-                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
+                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict(),
+                            user_id=self.session_get('user', 'id'))
                 q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
             return q_id
 
@@ -824,7 +831,7 @@ class Kontext(Controller):
                 p.instance.setup(self)
         return named_args
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result):
+    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
@@ -832,7 +839,9 @@ class Kontext(Controller):
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(
                 set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
-        super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result)
+        super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
+
+        def encode_err(e): return None if e[0] is None else (e[0].__class__.__name__, e[1])
 
         # create and store concordance query key
         if type(result) is DictType:
@@ -844,7 +853,7 @@ class Kontext(Controller):
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
-                                           proc_time=self._proc_time)
+                                           err_desc=encode_err(err_desc), proc_time=self._proc_time)
         if not settings.get_bool('logging', 'skip_user_actions', False):
             logging.getLogger('QUERY').info(json.dumps(log_data))
         with plugins.runtime.DISPATCH_HOOK as dhook:
@@ -1001,10 +1010,9 @@ class Kontext(Controller):
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
                 continue
-            result[listname] = \
-                [{'label': corpus_get_conf(maincorp, n + '.LABEL') or n, 'n': n}
-                 for n in corpus_get_conf(maincorp, listname.upper()).split(',')
-                 if n]
+            result[listname] = [{'label': corpus_get_conf(maincorp, n + '.LABEL') or n, 'n': n}
+                                for n in corpus_get_conf(maincorp, listname.upper()).split(',') if n]
+        result['StructList'] = corpus_get_conf(self.corp, 'STRUCTLIST').split(',')
 
         if corpus_get_conf(maincorp, 'FREQTTATTRS'):
             ttcrit_attrs = corpus_get_conf(maincorp, 'FREQTTATTRS')
@@ -1012,7 +1020,8 @@ class Kontext(Controller):
             ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
         result['ttcrit'] = [('fcrit', '%s 0' % a)
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
-        result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
+        result['corp_uses_tag'] = 'tag' in corpus_get_conf(
+            maincorp, 'ATTRLIST').split(',')  # legacy value
         result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
                                               ('lemma', self.args.lemma),
                                               ('lpos', self.args.lpos),
@@ -1118,6 +1127,18 @@ class Kontext(Controller):
                 out['login_url'] = None
                 out['logout_url'] = None
 
+    def _attach_plugin_exports(self, result, direct):
+        """
+        Method exports plug-ins' specific data for their respective client parts.
+        KonText core does not care about particular formats - it just passes JSON-encoded
+        data to the client.
+        """
+        key = 'pluginData' if direct else 'plugin_data'
+        result[key] = {}
+        for plg in plugins.runtime:
+            if hasattr(plg.instance, 'export'):
+                result[key][plg.name] = plg.instance.export(self._plugin_api)
+
     def add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -1197,6 +1218,7 @@ class Kontext(Controller):
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
         result['to_json'] = val_to_js
+        result['shorten'] = strings.shorten
         result['camelize'] = l10n.camelize
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
         with plugins.runtime.ISSUE_REPORTING as irp:
@@ -1215,12 +1237,8 @@ class Kontext(Controller):
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
             result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
                 self.args.corpname)
-        # we export plug-ins data KonText core does not care about (it is used
-        # by a respective plug-in client-side code)
-        result['plugin_data'] = {}
-        for plg in plugins.runtime:
-            if hasattr(plg.instance, 'export'):
-                result['plugin_data'][plg.name] = plg.instance.export(self._plugin_api)
+
+        self._attach_plugin_exports(result, direct=False)
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
@@ -1448,6 +1466,10 @@ class Kontext(Controller):
 
     @exposed(accept_kwargs=True, func_arg_mapped=True, skip_corpus_init=True, return_type='json')
     def message_json(self, *args, **kwargs):
+        return self.message(*args, **kwargs)
+
+    @exposed(accept_kwargs=True, func_arg_mapped=True, skip_corpus_init=True, return_type='xml')
+    def message_xml(self, *args, **kwargs):
         return self.message(*args, **kwargs)
 
     @exposed(skip_corpus_init=True, template='compatibility.tmpl')

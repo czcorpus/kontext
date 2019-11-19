@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
+import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
 
 declare var require:(ident:string)=>any; // Webpack
 const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');
@@ -48,32 +48,32 @@ export class VirtualKeyboardModel extends StatefulModel {
         [32]
     ];
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = 0;
 
-        this.dispatcher.register((action:Action) => {
+        this.dispatcher.registerActionListener((action:Action) => {
 
-            switch (action.actionType) {
+            switch (action.name) {
                 case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':
-                    this.externalKeyHit = action.props['keyCode'];
-                    this.notifyChangeListeners();
+                    this.externalKeyHit = action.payload['keyCode'];
+                    this.emitChange();
                     let timeout;
                     const clickSim = () => {
                         this.externalKeyHit = null;
-                        this.notifyChangeListeners();
+                        this.emitChange();
                         window.clearTimeout(timeout);
                     };
                     timeout = window.setTimeout(clickSim, 200);
                 break;
                 case 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT':
-                    this.currLayout = action.props['idx'];
-                    this.notifyChangeListeners();
+                    this.currLayout = action.payload['idx'];
+                    this.emitChange();
                 break;
                 case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS': // TODO this a legacy action (now we have kb bundled)
                     this.layouts = kbLayouts;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 break;
             }
         });

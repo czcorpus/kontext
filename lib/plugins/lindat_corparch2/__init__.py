@@ -125,6 +125,7 @@ from controller import exposed
 import actions.user
 from fallback_corpus import EmptyCorpus
 from translation import ugettext as _
+from settings import import_bool
 
 DEFAULT_LANG = 'en'
 
@@ -224,7 +225,6 @@ class DefaultCorplistProvider(CorplistProvider):
         self._tag_prefix = tag_prefix
         self.SESSION_KEYWORDS_KEY = session_keywords_key
         self.default_label = default_label
-
 
     @staticmethod
     def cut_result(res, offset, limit):
@@ -593,6 +593,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.web = web_url
         ans.sentence_struct = sentence_struct
         ans.tagset = node.attrib.get('tagset', None)
+        ans.tagset_type = node.attrib.get('tagset', None)
+        ans.tagset_pos_attr = node.attrib.get('tagset_pos_attr', None)
+        ans.tagset_feat_attr = node.attrib.get('tagset_feat_attr', None)
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)
@@ -606,7 +609,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.access = access
 
         #ref_elm = node.find('reference')
-        #if ref_elm is not None:
+        # if ref_elm is not None:
         #    ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
         #                                                             'text', None))
         #    articles = [translate_markup(getattr(x, 'text', None))
@@ -637,7 +640,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         token_connect_elm = node.find('token_connect')
         if token_connect_elm is not None:
-            ans.token_connect.providers = [p.text for p in token_connect_elm.findall('provider')]
+            ans.token_connect.providers = [(p.text, import_bool(p.attrib.get('is_kwic_view', '0')))
+                                           for p in token_connect_elm.findall('provider')]
 
         kwic_connect_elm = node.find('kwic_connect')
         if kwic_connect_elm is not None:
@@ -674,9 +678,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
         #desc = ans.metadata.desc
-        #if lang_code in desc:
+        # if lang_code in desc:
         #    ans.metadata.desc = desc[lang_code]
-        #else:
+        # else:
         #    ans.metadata.desc = ''
 
         translated_k = OrderedDict()

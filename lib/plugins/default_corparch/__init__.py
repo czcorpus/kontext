@@ -106,7 +106,6 @@ element corpus {
 from collections import OrderedDict
 import copy
 import re
-from functools import partial
 
 try:
     from markdown import markdown
@@ -117,7 +116,7 @@ from lxml import etree
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
-from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo, DictLike
+from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo, DictLike, TagsetInfo
 from plugins import inject
 import l10n
 import manatee
@@ -125,6 +124,7 @@ from controller import exposed
 import actions.user
 from fallback_corpus import EmptyCorpus
 from translation import ugettext as _
+from settings import import_bool
 
 DEFAULT_LANG = 'en'
 
@@ -271,6 +271,10 @@ class DeafultCorplistProvider(CorplistProvider):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
             max_size = None
+        if filter_dict.get('favOnly'):
+            favourite_only = bool(int(filter_dict.get('favOnly')))
+        else:
+            favourite_only = False
 
         if offset is None:
             offset = 0
@@ -296,6 +300,9 @@ class DeafultCorplistProvider(CorplistProvider):
         for corp in self._corparch.get_list(plugin_api, permitted_corpora):
             full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
+                if favourite_only and fav_id(corp['id']) is None:
+                    continue
+
                 keywords = [k for k in full_data['metadata']['keywords'].keys()]
                 tests = []
                 found_in = []
@@ -535,7 +542,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
-        ans.tagset = node.attrib.get('tagset', None)
+        ans.tagsets = [
+            TagsetInfo().from_dict({
+                'corpus_name': ans.name,
+                'tagset_name': tagset.attrib.get('name', None),
+                'tagset_type': tagset.attrib.get('type', None),
+                'pos_attr': tagset.attrib.get('pos_attr', None),
+                'feat_attr': tagset.attrib.get('feat_attr', None),
+            })
+            for tagset in node.findall('tagsets/tagset')
+        ]
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)
@@ -574,7 +590,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         token_connect_elm = node.find('token_connect')
         if token_connect_elm is not None:
-            ans.token_connect.providers = [p.text for p in token_connect_elm.findall('provider')]
+            ans.token_connect.providers = [(p.text, import_bool(p.attrib.get('is_kwic_view', '0')))
+                                           for p in token_connect_elm.findall('provider')]
 
         kwic_connect_elm = node.find('kwic_connect')
         if kwic_connect_elm is not None:

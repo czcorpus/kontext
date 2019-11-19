@@ -154,6 +154,7 @@ CREATE TABLE kontext_tckc_corpus (
 	provider VARCHAR(127) NOT NULL,
 	type VARCHAR(63),
 	display_order INT NOT NULL DEFAULT 0,
+	is_kwic_view INT NOT NULL DEFAULT 0,
 	CONSTRAINT kontext_tckc_corpus_pkey PRIMARY KEY (corpus_name, provider, type),
 	CONSTRAINT kontext_tckc_corpus_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE = INNODB CHARSET=utf8;
@@ -273,7 +274,7 @@ CREATE TABLE kontext_interval_attr (
     corpus_name VARCHAR(63) NOT NULL,
     interval_struct VARCHAR(63) NOT NULL,
     interval_attr VARCHAR(63) NOT NULL,
-    CONSTRAINT kontext_interval_attr_pkey PRIMARY KEY (corpus_name, interval_attr),
+    CONSTRAINT kontext_interval_attr_pkey PRIMARY KEY (corpus_name, interval_struct, interval_attr),
     CONSTRAINT kontext_interval_attr_interval_attr_fkey FOREIGN KEY (corpus_name, interval_struct, interval_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name)
 ) ENGINE = INNODB CHARSET=utf8;
 
@@ -308,3 +309,17 @@ SELECT user_id, kc.name, NULL AS variant, kc.name
 FROM corpora AS kc;
 END $$
 DELIMITER ;
+
+
+DROP TABLE IF EXISTS kontext_corpus_taghelper;
+CREATE TABLE kontext_corpus_taghelper (
+    corpus_name varchar(63) NOT NULL,
+    pos_attr varchar(63),
+    feat_attr varchar(63) NOT NULL,
+    tagset_type ENUM('positional', 'keyval', 'other') NOT NULL,
+    tagset_name varchar(63),
+    PRIMARY KEY (corpus_name, feat_attr)
+);
+ALTER TABLE `kontext_corpus_taghelper` COLLATE 'utf8_general_ci';
+ALTER TABLE kontext_corpus_taghelper ADD CONSTRAINT kontext_corpus_taghelper_pos_attr_id_fkey FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr(corpus_name, name);
+ALTER TABLE kontext_corpus_taghelper ADD CONSTRAINT kontext_corpus_taghelper_feat_attr_id_fkey FOREIGN KEY (corpus_name, feat_attr) REFERENCES corpus_posattr(corpus_name, name);

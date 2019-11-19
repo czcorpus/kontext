@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PublicSubcorpListState, PublicSubcorpListModel,
-    CorpusItem, DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
+    DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
+import { Subscription } from 'rxjs';
 
 export interface Views {
     List:React.ComponentClass<ListProps>;
@@ -33,7 +34,7 @@ export interface ListProps {
 
 }
 
-export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         model:PublicSubcorpListModel) {
 
     const layoutViews = he.getLayoutViews();
@@ -47,8 +48,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
             dispatcher.dispatch({
-                actionType: Actions.SET_SEARCH_TYPE,
-                props: {
+                name: Actions.SET_SEARCH_TYPE,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -87,8 +88,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         handleChange(evt:React.ChangeEvent<HTMLInputElement>) {
             dispatcher.dispatch({
-                actionType: Actions.SET_SEARCH_QUERY,
-                props: {
+                name: Actions.SET_SEARCH_QUERY,
+                payload: {
                     value: evt.target.value
                 }
             });
@@ -179,8 +180,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
         private _handleUseInQueryButton():void {
             dispatcher.dispatch({
-                actionType: Actions.USE_IN_QUERY,
-                props: {
+                name: Actions.USE_IN_QUERY,
+                payload: {
                     corpname: this.props.item.corpname,
                     id: this.props.item.ident
                 }
@@ -243,6 +244,8 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
 
     class List extends React.Component<ListProps, PublicSubcorpListState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
@@ -254,11 +257,11 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount():void {
-            model.addChangeListener(this._modelChangeHandler);
+            this.modelSubscription = model.addListener(this._modelChangeHandler);
         }
 
         componentWillUnmount():void {
-            model.removeChangeListener(this._modelChangeHandler);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {

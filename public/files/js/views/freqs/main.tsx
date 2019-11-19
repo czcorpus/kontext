@@ -24,7 +24,8 @@ import {Kontext, KeyCodes} from '../../types/common';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
 import {FreqDataRowsModel, ResultBlock} from '../../models/freqs/dataRows';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
+import { Subscription } from 'rxjs';
 
 // --------------------------- exported types --------------------------------------
 
@@ -50,7 +51,7 @@ interface ExportedComponents {
 // ------------------------ factory --------------------------------
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         freqDataRowsModel:FreqDataRowsModel) {
 
@@ -96,16 +97,16 @@ export function init(
         const handlePageChangeByClick = (curr, step) => {
             props.setLoadingFlag();
             dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_SET_CURRENT_PAGE',
-                props: {value: String(Number(curr) + step)}
+                name: 'FREQ_RESULT_SET_CURRENT_PAGE',
+                payload: {value: String(Number(curr) + step)}
             });
         };
 
         const handlePageChange = (evt) => {
             props.setLoadingFlag();
             dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_SET_CURRENT_PAGE',
-                props: {value: evt.target.value}
+                name: 'FREQ_RESULT_SET_CURRENT_PAGE',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -164,8 +165,8 @@ export function init(
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_SET_MIN_FREQ_VAL',
-                props: {value: evt.target.value}
+                name: 'FREQ_RESULT_SET_MIN_FREQ_VAL',
+                payload: {value: evt.target.value}
             });
         };
 
@@ -173,8 +174,8 @@ export function init(
             if (evt.keyCode === KeyCodes.ENTER) {
                 props.setLoadingFlag();
                 dispatcher.dispatch({
-                    actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',
-                    props: {}
+                    name: 'FREQ_RESULT_APPLY_MIN_FREQ',
+                    payload: {}
                 });
                 evt.preventDefault();
                 evt.stopPropagation();
@@ -205,8 +206,8 @@ export function init(
         const handleApplyClick = (evt) => {
             props.setLoadingFlag();
             dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',
-                props: {}
+                name: 'FREQ_RESULT_APPLY_MIN_FREQ',
+                payload: {}
             });
         };
 
@@ -224,6 +225,9 @@ export function init(
     // ----------------------- <FreqResultView /> -------------------------
 
     class FreqResultView extends React.Component<FreqResultViewProps, FreqResultViewState> {
+
+        private modelSubscription:Subscription;
+        private fdrmSubscription:Subscription;
 
         constructor(props) {
             super(props);
@@ -251,13 +255,13 @@ export function init(
         }
 
         componentDidMount() {
-            freqDataRowsModel.addChangeListener(this._handleModelChange);
-            freqDataRowsModel.getSaveModel().addChangeListener(this._handleModelChange);
+            this.modelSubscription = freqDataRowsModel.addListener(this._handleModelChange);
+            this.fdrmSubscription = freqDataRowsModel.getSaveModel().addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            freqDataRowsModel.removeChangeListener(this._handleModelChange);
-            freqDataRowsModel.getSaveModel().removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
+            this.fdrmSubscription.unsubscribe();
         }
 
         _setLoadingFlag() {
@@ -268,8 +272,8 @@ export function init(
 
         _handleSaveFormClose() {
             dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_CLOSE_SAVE_FORM',
-                props: {}
+                name: 'FREQ_RESULT_CLOSE_SAVE_FORM',
+                payload: {}
             });
         }
 

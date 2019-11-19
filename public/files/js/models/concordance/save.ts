@@ -22,11 +22,11 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher, Action} from '../../app/dispatcher';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface ConcSaveModelArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IFullActionControl;
     layoutModel:PageModel;
     concSize:number;
     saveLinkFn:(filename:string, url:string)=>Promise<boolean>;
@@ -71,52 +71,52 @@ export class ConcSaveModel extends StatefulModel {
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        dispatcher.register((action:Action) => {
-            switch (action.actionType) {
+        dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
             case 'MAIN_MENU_DIRECT_SAVE':
                 if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',
-                        {format: action.props['saveformat'], lines: this.quickSaveRowLimit}
+                        {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
                 ))) {
-                    this.saveformat = action.props['saveformat'];
+                    this.saveformat = action.payload['saveformat'];
                     const tmp = this.toLine;
                     this.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
                     this.submit();
                     this.toLine = tmp;
-                    this.notifyChangeListeners();
+                    this.emitChange();
                 }
             break;
             case 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM':
                 this.formIsActive = false;
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_FORMAT':
-                this.saveformat = action.props['value'];
-                this.notifyChangeListeners();
+                this.saveformat = action.payload['value'];
+                this.emitChange();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE':
-                 this.fromLine.value = action.props['value'];
-                 this.notifyChangeListeners();
+                 this.fromLine.value = action.payload['value'];
+                 this.emitChange();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_TO_LINE':
-                this.toLine.value = action.props['value'];
-                this.notifyChangeListeners();
+                this.toLine.value = action.payload['value'];
+                this.emitChange();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC':
-                this.alignKwic = action.props['value'];
-                this.notifyChangeListeners();
+                this.alignKwic = action.payload['value'];
+                this.emitChange();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS':
-                this.includeLineNumbers = action.props['value'];
-                this.notifyChangeListeners();
+                this.includeLineNumbers = action.payload['value'];
+                this.emitChange();
             break;
             case 'CONCORDANCE_SAVE_FORM_SET_HEADING':
-                this.includeHeading = action.props['value'];
-                this.notifyChangeListeners();
+                this.includeHeading = action.payload['value'];
+                this.emitChange();
             break;
             case 'COLL_SAVE_FORM_SUBMIT':
                 const err = this.validateForm();
@@ -127,7 +127,7 @@ export class ConcSaveModel extends StatefulModel {
                     this.formIsActive = false;
                     this.submit();
                 }
-                this.notifyChangeListeners();
+                this.emitChange();
             break;
             }
         });

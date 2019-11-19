@@ -20,9 +20,10 @@ import {Kontext, KeyCodes} from '../types/common';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {ActionDispatcher} from '../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {isTouchDevice} from '../util';
 import {MessageModel, MessageModelState} from '../models/common/layout';
+import { Subscription } from 'rxjs';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -42,7 +43,7 @@ const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
 
 
 export function init(
-        dispatcher:ActionDispatcher,
+        dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         modelProvider:Kontext.LayoutModel,
         messageModel:MessageModel):CoreViews.Runtime {
@@ -165,7 +166,7 @@ export function init(
      */
     class PopupBox extends React.Component<CoreViews.PopupBox.Props, CoreViews.PopupBox.State> {
 
-        private customCss:{[key:string]:string};
+        private customCss:React.CSSProperties;
 
         private rootElm:HTMLElement;
 
@@ -181,8 +182,6 @@ export function init(
             this._handleAreaClick = this._handleAreaClick.bind(this);
             this.closeBtnRef = React.createRef();
 
-            this.customCss = {};
-            this._createStyle();
             if (this.props.autoWidth) {
                 this.resize = (ref) => {
                     if (ref) {
@@ -222,14 +221,6 @@ export function init(
             }
         }
 
-        _createStyle() {
-            for (let p in this.props.customStyle) {
-                if (this.props.customStyle.hasOwnProperty(p)) {
-                    this.customCss[p] = this.props.customStyle[p];
-                }
-            }
-        }
-
         _handleKeyPress(evt) {
             if (evt.keyCode === KeyCodes.ESC) {
                  this._closeClickHandler();
@@ -257,7 +248,7 @@ export function init(
             }
 
             return (
-                <div className={classes.join(' ')} style={this.customCss} ref={this.resize}
+                <div className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
                         onClick={this._handleAreaClick}
                         onKeyDown={this._handleKeyPress}>
                     <div className="header">
@@ -502,8 +493,8 @@ export function init(
         const handleCloseClick = (e) => {
             e.preventDefault();
             dispatcher.dispatch({
-                actionType: 'MESSAGE_CLOSED',
-                props: {
+                name: 'MESSAGE_CLOSED',
+                payload: {
                     messageId: props.messageId
                 }
             });
@@ -556,6 +547,8 @@ export function init(
 
     class Messages extends React.Component<CoreViews.Messages.Props, MessageModelState> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
@@ -567,11 +560,11 @@ export function init(
         }
 
         componentDidMount() {
-            messageModel.addChangeListener(this._changeListener);
+            this.modelSubscription = messageModel.addListener(this._changeListener);
         }
 
         componentWillUnmount() {
-            messageModel.removeChangeListener(this._changeListener);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -596,8 +589,8 @@ export function init(
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch({
-                actionType: 'OVERVIEW_CORPUS_INFO_REQUIRED',
-                props: {
+                name: 'OVERVIEW_CORPUS_INFO_REQUIRED',
+                payload: {
                     corpusId: props.corpname
                 }
             });
@@ -605,8 +598,8 @@ export function init(
 
         const handleSubcnameClick = () => {
             dispatcher.dispatch({
-                actionType: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
-                props: {
+                name: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+                payload: {
                     corpusId: props.corpname,
                     subcorpusId: props.usesubcorp
                 }
@@ -745,6 +738,32 @@ export function init(
             </span>;
     };
 
+    const TabView:CoreViews.TabView.Component = (props) => {
+        if (props.items.size===1) {
+            return <div>{props.children[0]}</div>
+        } else {
+            const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
+            const tabs = props.items.map((value, index) =>
+                <li key={value.id}>
+                    <TabButton
+                        label={value.label}
+                        isActive={index === activeIndex}
+                        onClick={() => {
+                            if (props.callback) {
+                                props.callback(value.id);
+                            }
+                            setActiveIndex(index);
+                        }}/>
+                </li>
+            );
+            return <div>
+                <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
+                <hr />
+                {props.children[activeIndex]}
+            </div>;
+        }
+    };
+
     // ------------------------------------------------------------------------------------
 
     const PlusButton:CoreViews.PlusButton.Component = (props) => {
@@ -776,7 +795,7 @@ export function init(
         StatusIcon: StatusIcon,
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
-        TabButton: TabButton,
+        TabView: TabView,
         PlusButton: PlusButton
     };
 }

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
 import {calcTextColorFromBg, color2str, importColor} from '../../util';
 import {init as lineExtrasViewsInit} from './lineExtras';
@@ -29,11 +29,12 @@ import { LineSelectionModel } from '../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../models/concordance/detail';
 import {LineSelValue} from '../../models/concordance/lineSelection';
 import {KWICSection } from '../../models/concordance/line';
-import {Line, LangSection, TextChunk} from '../../types/concordance';
+import {Line, TextChunk} from '../../types/concordance';
+import { Subscription } from 'rxjs';
 
 
 export interface LinesModuleArgs {
-    dispatcher:ActionDispatcher;
+    dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     lineModel:ConcLineModel;
     lineSelectionModel:LineSelectionModel;
@@ -88,8 +89,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         const handleChange = (_) => {
             dispatcher.dispatch({
-                actionType: 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
-                props: {
+                name: 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
+                payload: {
                     corpusId: props.corpusId,
                     value: !props.isVisible
                 }
@@ -120,16 +121,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         const handleSetMainCorpClick = (corpusId) => {
             if (props.corpsWithKwic.indexOf(corpusId) > -1) {
                 dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_CHANGE_MAIN_CORPUS',
-                    props: {
+                    name: 'CONCORDANCE_CHANGE_MAIN_CORPUS',
+                    payload: {
                         maincorp: corpusId
                     }
                 });
 
             } else {
                 dispatcher.dispatch({
-                    actionType: 'MAIN_MENU_SHOW_FILTER',
-                    props: {
+                    name: 'MAIN_MENU_SHOW_FILTER',
+                    payload: {
                         within: 1,
                         maincorp: corpusId
                     }
@@ -461,6 +462,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         selectionValue:LineSelValue;
     }> {
 
+        private modelSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this.state = this._fetchModelState();
@@ -559,11 +562,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         componentDidMount() {
-            lineSelectionModel.addChangeListener(this._handleModelChange);
+            this.modelSubscription = lineSelectionModel.addListener(this._handleModelChange);
         }
 
         componentWillUnmount() {
-            lineSelectionModel.removeChangeListener(this._handleModelChange);
+            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -640,6 +643,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     class ConcLines extends React.Component<ConcLinesProps, ConcLinesState> {
 
+        private lmSubscription:Subscription;
+        private lsmSubscription:Subscription;
+        private cdmSubscription:Subscription;
+
         constructor(props) {
             super(props);
             this._modelChangeListener = this._modelChangeListener.bind(this);
@@ -675,18 +682,18 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         componentDidMount() {
-            lineModel.addChangeListener(this._modelChangeListener);
-            lineSelectionModel.addChangeListener(this._modelChangeListener);
-            concDetailModel.addChangeListener(this._modelChangeListener);
+            this.lmSubscription = lineModel.addListener(this._modelChangeListener);
+            this.lsmSubscription = lineSelectionModel.addListener(this._modelChangeListener);
+            this.cdmSubscription = concDetailModel.addListener(this._modelChangeListener);
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
                 this.props.onReady();
             }
         }
 
         componentWillUnmount() {
-            lineModel.removeChangeListener(this._modelChangeListener);
-            lineSelectionModel.removeChangeListener(this._modelChangeListener);
-            concDetailModel.removeChangeListener(this._modelChangeListener);
+            this.lmSubscription.unsubscribe();
+            this.lsmSubscription.unsubscribe();
+            this.cdmSubscription.unsubscribe();
         }
 
         _getCatColors(dataItem) {
