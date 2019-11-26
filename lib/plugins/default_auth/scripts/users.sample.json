@@ -6,15 +6,15 @@
     "firstname": "Anonymous",
     "lastname": null,
     "email": null,
-    "permitted_corpora": ["corp1", "corp2"]
+    "permitted_corpora": ["susanne"]
   },
   {
     "id": 1,
-    "username": "jodoe",
-    "pwd": "mypassword",
-    "firstname": "John",
-    "lastname": "Doe",
-    "email": "john.doe@localhost",
-    "permitted_corpora": ["corp1", "corp2", "corp3"]
+    "username": "your_user",
+    "pwd": "yourpwd",
+    "firstname": "Your",
+    "lastname": "Name",
+    "email": "your.email@your.domain",
+    "permitted_corpora": ["susanne", "your_corpus", "your_other_corpus"]
   }
 ]
