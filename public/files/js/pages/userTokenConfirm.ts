@@ -31,14 +31,17 @@ export function init(conf:Kontext.Conf):void {
 
     layoutModel.init().then(
         () => {
-            document.getElementById('try-login').addEventListener('click', () => {
-                layoutModel.dispatcher.dispatch({
-                    name: 'USER_SHOW_LOGIN_DIALOG',
-                    payload: {
-                        returnUrl: layoutModel.createActionUrl('first_form')
-                    }
+            const link = document.getElementById('try-login');
+            if (link) {
+                link.addEventListener('click', () => {
+                    layoutModel.dispatcher.dispatch({
+                        name: 'USER_SHOW_LOGIN_DIALOG',
+                        payload: {
+                            returnUrl: layoutModel.createActionUrl('first_form')
+                        }
+                    });
                 });
-            });
+            }
             layoutModel.addUiTestingFlag();
         }
 

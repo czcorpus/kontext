@@ -1,0 +1,46 @@
+{#-
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2019 Charles University, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2019 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-#}
+
+{%if saveformat == 'text' %}
+{% if heading %}
+# Frequency list
+# Corpus: {{ human_corpname }}
+{% if usesubcorp %}
+# Subcorpus: {{ usesubcorp }}
+{% endif %}
+{% for d in Desc %}
+# {{ d['op'] }}:  {{ d['arg'] }} {{ d['size'] }}
+{% endfor %}
+# Frequency limit: {{ flimit }}
+{% endif %}
+{% for b in Blocks %}
+{% for h in b.Head %}
+| {{ h['n'] -}}
+{% endfor %}
+
+------------------------------
+{% for i in b.Items %}
+{% for w in i.Word %} {{ w['n'] }} {% endfor %} {{ i['freq'] -}} {% if not ml %} {{ i['rel'] }} {% else %} {% endif %}
+
+{% endfor %}
+
+{% endfor %}
+{% endif %}

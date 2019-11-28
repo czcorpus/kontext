@@ -109,7 +109,7 @@ class Options(Kontext):
         out['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         return out
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', func_arg_mapped=True, http_method='POST')
+    @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=True, http_method='POST')
     def viewattrsx(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
                    setstructattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,

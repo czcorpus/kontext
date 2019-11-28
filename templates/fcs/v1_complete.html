@@ -1,24 +1,32 @@
-#from xml.sax.saxutils import escape
+{% macro add_diagnostics(code, details, msg) %}
+    <sru:diagnostics xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
+        <diag:diagnostic>
+            <diag:uri>info:srw/diagnostic/1/{{ code }}</diag:uri>
+            <diag:details>{{ details }}</diag:details>
+            <diag:message>{{ msg }}</diag:message>
+        </diag:diagnostic>
+    </sru:diagnostics>
+{%- endmacro -%}
+
 <?xml version='1.0' encoding='utf-8'?>
 <?xml-stylesheet href="./fcs2html" type="text/xsl"?>
-#if $operation == 'explain'
-#filter WebSafe
+{% if operation == 'explain' %}
 <sru:explainResponse xmlns:sru="http://www.loc.gov/zing/srw/">
-    <sru:version>$version</sru:version>
+    <sru:version>{{ version }}</sru:version>
     <sru:record>
-        #if not $varExists('code')
+        {% if code is not defined %}
         <sru:recordSchema>http://explain.z3950.org/dtd/2.0/</sru:recordSchema>
-        <sru:recordPacking>$recordPacking</sru:recordPacking>
+        <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
         <sru:recordData>
             <zr:explain xmlns:zr="http://explain.z3950.org/dtd/2.0/">
                 <zr:serverInfo protocol="SRU" version="1.2" transport="http">
-                    <zr:host>$server_name</zr:host>
-                    <zr:port>$server_port</zr:port>
-                    <zr:database>$database</zr:database>
+                    <zr:host>{{ server_name }}</zr:host>
+                    <zr:port>{{ server_port }}</zr:port>
+                    <zr:database>{{ database }}</zr:database>
                     </zr:serverInfo>
                 <zr:databaseInfo>
-                    <zr:title lang="en" primary="true">$corpname</zr:title>
-                    <zr:description lang="en" primary="true">$corpus_desc</zr:description>
+                    <zr:title lang="en" primary="true">{{ corpname }}</zr:title>
+                    <zr:description lang="en" primary="true">{{ corpus_desc }}</zr:description>
                 </zr:databaseInfo>
                 <zr:schemaInfo>
                     <zr:schema identifier="http://clarin.eu/fcs/resource" name="fcs">
@@ -30,24 +38,24 @@
                         <zr:title lang="de">CLARIN Content Search</zr:title>
                         <zr:title lang="en" primary="true">CLARIN Content Search</zr:title>
                     </zr:set>
-                    #for $title in $result
+                    {% for title in result %}
                      <zr:index search="true" scan="true" sort="true">
-                        <zr:title lang="en" primary="true">$title</zr:title>
+                        <zr:title lang="en" primary="true">{{ title }}</zr:title>
                         <zr:map primary="true">
-                            <zr:name>$title</zr:name>
+                            <zr:name>{{ title }}</zr:name>
                         </zr:map>
                     </zr:index>
-                    #end for
+                    {% endfor %}
                 </zr:indexInfo>
                 <zr:configInfo>
-                    <zr:setting type="maximumRecords">$maximumRecords</zr:setting>
-                    <zr:default type="maximumTerms">$maximumTerms</zr:default>
+                    <zr:setting type="maximumRecords">{{ maximumRecords }}</zr:setting>
+                    <zr:default type="maximumTerms">{{ maximumTerms }}</zr:default>
                 </zr:configInfo>
             </zr:explain>
         </sru:recordData>
-        #end if
+        {% endif %}
     </sru:record>
-    #if $getVar('show_endpoint_desc', False)
+    {% if show_endpoint_desc|default(false, true) %}
     <sru:extraResponseData>
         <ed:EndpointDescription xmlns:ed="http://clarin.eu/fcs/endpoint-description" version="1">
             <ed:Capabilities>
@@ -58,102 +66,78 @@
             </ed:SupportedDataViews>
             <ed:Resources>
                 <ed:Resource pid="http://hdl.handle.net/4711/0815">
-                    <ed:Title xml:lang="en">$corpus_desc</ed:Title>
+                    <ed:Title xml:lang="en">{{ corpus_desc }}</ed:Title>
                     <ed:Languages>
-                        <ed:Language>$getVar('corpus_lang', '')</ed:Language>
+                        <ed:Language>{{ corpus_lang|default('', true) }}</ed:Language>
                     </ed:Languages>
                     <ed:AvailableDataViews ref="hits"/>
                 </ed:Resource>
             </ed:Resources>
         </ed:EndpointDescription>
     </sru:extraResponseData>
-    #end if
-#end filter
-#filter None
-    $add_diagnostics()
-#end filter
-#filter WebSafe
+    {% endif %}
+    {% if code is defined %}
+    {{ add_diagnostics(code, details, msg) }}
+    {% endif %}
 </sru:explainResponse>
-#end filter
-#elif $operation == 'scan'
-#filter WebSafe
+{% elif operation == 'scan' %}
 <sru:scanResponse xmlns:sru="http://www.loc.gov/zing/srw/">
-    <sru:version>$version</sru:version>
-    #if not $varExists('code') and $result
+    <sru:version>{{ version }}</sru:version>
+    {% if code is not defined and result %}
     <sru:terms>
-        #for $value, $displayTerm, $resourceInfo in $result
+        {% for value, displayTerm, resourceInfo in result %}
             <sru:term>
-                <sru:value>$value</sru:value>
-                <sru:displayTerm>$displayTerm</sru:displayTerm>
-                #if $resourceInfoRequest
+                <sru:value>{{ value }}</sru:value>
+                <sru:displayTerm>{{ displayTerm }}</sru:displayTerm>
+                {% if resourceInfoRequest %}
                 <sru:extraTermData>
                     <ResourceInfo xmlns="http://clarin.eu/fcs/1.0/resource-info" hasSubResources="false">
-                        <Title xml:lang="en">$resourceInfo.title</Title>
-                        #if $resourceInfo.description
-                        <Description xml:lang="en">$resourceInfo.description</Description>
-                        #end if
-                        #if $resourceInfo.landingPageURI
-                        <LandingPageURI>$resourceInfo.landingPageURI</LandingPageURI>
-                        #end if
+                        <Title xml:lang="en">{{ resourceInfo.title }}</Title>
+                        {% if resourceInfo.description %}
+                        <Description xml:lang="en">{{ resourceInfo.description }}</Description>
+                        {% endif %}
+                        {% if resourceInfo.landingPageURI %}
+                        <LandingPageURI>{{ resourceInfo.landingPageURI }}</LandingPageURI>
+                        {% endif %}
                         <Languages>
-                            <Language>$resourceInfo.language</Language>
+                            <Language>{{ resourceInfo.language }}</Language>
                         </Languages>
                     </ResourceInfo>
                 </sru:extraTermData>
-                #end if
+                {% endif %}
             </sru:term>
-        #end for
+        {% endfor %}
     </sru:terms>
-    #end if
-#end filter
-#filter None
-    $add_diagnostics()
-#end filter
-#filter WebSafe
+    {% endif %}
+    {% if code is defined %}
+    {{ add_diagnostics(code, details, msg) }}
+    {% endif %}
 </sru:scanResponse>
-#end filter
-#elif $operation == 'searchRetrieve'
-#filter WebSafe
+{% elif operation == 'searchRetrieve' %}
 <sru:searchRetrieveResponse xmlns:sru="http://www.loc.gov/zing/srw/">
-    <sru:version>$version</sru:version>
-    <sru:numberOfRecords>$numberOfRecords</sru:numberOfRecords>
-    #if not $varExists('code') and $numberOfRecords > 0
+    <sru:version>{{ version }}</sru:version>
+    <sru:numberOfRecords>{{ numberOfRecords }}</sru:numberOfRecords>
+    {% if code is not defined and numberOfRecords > 0 %}
     <sru:records>
-        #for $left, $word, $right, $ref in $result
+        {% for left, word, right, ref in result %}
         <sru:record>
             <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
-            <sru:recordPacking>$recordPacking</sru:recordPacking>
+            <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
-                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="$corppid" ref="$corpname">
+                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" ref="{{ corpname }}">
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
-                            $left <hits:Hit>$word</hits:Hit> $right
+                            {{ left }}<hits:Hit>{{ word }}</hits:Hit> {{ right }}
                         </hits:Result>
                     </fcs:DataView>
                 </fcs:Resource>
             </sru:recordData>
         </sru:record>
-        #end for
+        {% endfor %}
     </sru:records>
-    #end if
-#end filter
-#filter None
-    $add_diagnostics()
-#end filter
-#filter WebSafe
+    {% endif %}
+    {% if code is defined %}
+    {{ add_diagnostics(code, details, msg) }}
+    {% endif %}
 </sru:searchRetrieveResponse>
-#end filter
-#end if
-#def add_diagnostics()
-#filter WebSafe
-    #if $varExists('code')
-    <sru:diagnostics xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
-        <diag:diagnostic>
-            <diag:uri>info:srw/diagnostic/1/$code</diag:uri>
-            <diag:details>$details</diag:details>
-            <diag:message>$msg</diag:message>
-        </diag:diagnostic>
-    </sru:diagnostics>
-    #end if
-#end filter
-#end def
+{% endif %}

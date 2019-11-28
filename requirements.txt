@@ -2,7 +2,7 @@
 # pip install -r requirements.txt
 #
 # for more convenient logging, install concurrent_log_handler
-Cheetah >= 2.4.4
+jinja2 >= 2.10
 Werkzeug >= 0.11
 # please note that lxml package requires the following system packages:
 # libxml2-dev, libxslt-dev, python-dev

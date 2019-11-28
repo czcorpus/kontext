@@ -1,5 +1,5 @@
-#*
-Copyright (c) 2014 Institute of the Czech National Corpus
+{#-
+Copyright (c) 2013 Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -14,33 +14,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
+{% extends "document.html" %}
 
-#encoding UTF-8
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% block title %}KonText - error{% endblock %}
 
-#def title
-KonText - $_('Available corpora')
-#end def
+{% block bodyonload %}
+__conf.LastUsedCorp = {{ last_used_corp|to_json }};
+messagePage.init(__conf);
+{% endblock %}
 
-#def bodyonload
-corplistPage.init(
-    __conf,
-    $to_json($corplist_data)
-);
-#end def
-
-
-#block main
-<section class="corplist">
-    <h2>$_('Available corpora')</h2>
-
-    <form class="filter" action="corplist">
-    </form>
-
-    <div id="corplist"></div>
-
+{% block main %}
+<section class="exclusive">
+<h2 class="panic">
+   <img src="{{ files_path }}/img/crisis.svg" alt="error" style="width: 0.8em" />
+</h2>
+<div id="root-mount"></div>
 </section>
-#end block
+{% endblock %}

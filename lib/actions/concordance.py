@@ -422,7 +422,7 @@ class Actions(Querying):
                     relconcsize=1e6 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', func_arg_mapped=True, mutates_conc=True)
+    @exposed(access_level=1, template='view.html', page_model='view', func_arg_mapped=True, mutates_conc=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
@@ -455,7 +455,7 @@ class Actions(Querying):
         self.args.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True)
     def mlsortx(self, _):
         """
         multiple level sort concordance
@@ -722,7 +722,7 @@ class Actions(Querying):
                     self.args.q.append('p0 0 1 []')
                     self.args.q.append('x-%s' % self.args.corpname)
 
-    @exposed(template='view.tmpl', page_model='view', mutates_conc=True, http_method=('GET', 'POST'))
+    @exposed(template='view.html', page_model='view', mutates_conc=True, http_method=('GET', 'POST'))
     def first(self, request):
         self._clear_prev_conc_params()
         self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
@@ -770,7 +770,7 @@ class Actions(Querying):
         ans.update(self.view())
         return ans
 
-    @exposed(template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(template='view.html', page_model='view', mutates_conc=True)
     def quick_filter(self, request):
         """
         A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
@@ -790,7 +790,7 @@ class Actions(Querying):
             self.args.q.append(q)
         return self.view()
 
-    @exposed(http_method='POST', template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(http_method='POST', template='view.html', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
         self.args.q.append('x-{0}'.format(maincorp))
@@ -798,7 +798,7 @@ class Actions(Querying):
         self.add_conc_form_args(ksargs)
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view', mutates_conc=True)
+    @exposed(access_level=1, template='view.html', vars=('orig_query', ), page_model='view', mutates_conc=True)
     def filter(self, request):
         """
         Positive/Negative filter
@@ -861,7 +861,7 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(access_level=0, template='view.tmpl', vars=('concsize',), page_model='view', mutates_conc=True)
+    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_conc=True)
     def reduce(self, _):
         """
         random sample
@@ -876,7 +876,7 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
     def shuffle(self, _):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
@@ -884,7 +884,7 @@ class Actions(Querying):
         self.args.q.append('f')
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', mutates_conc=True)
+    @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
     def filter_subhits(self, _):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
@@ -892,7 +892,7 @@ class Actions(Querying):
         self.args.q.append('D')
         return self.view()
 
-    @exposed(access_level=0, template='view.tmpl', page_model='view', func_arg_mapped=False,
+    @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=False,
              mutates_conc=True)
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
@@ -1100,7 +1100,7 @@ class Actions(Querying):
             qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
         self.args.q = [u'q[' + '&'.join(qparts) + ']']
 
-    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.tmpl', return_type='plain')
+    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1124,6 +1124,15 @@ class Actions(Querying):
                                                    saved_filename
             output = result
             output['Desc'] = self.concdesc_json()['Desc']
+            output['fcrit'] = fcrit
+            output['flimit'] = flimit
+            output['freq_sort'] = freq_sort
+            output['ml'] = ml
+            output['saveformat'] = saveformat
+            output['from_line'] = from_line
+            output['to_line'] = to_line
+            output['colheaders'] = colheaders
+            output['heading'] = heading
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-freq-distrib.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='freq')
@@ -1156,7 +1165,7 @@ class Actions(Querying):
             output = writer.raw_content()
         return output
 
-    @exposed(access_level=0, template='freqs.tmpl', page_model='freq', accept_kwargs=True, func_arg_mapped=True)
+    @exposed(access_level=0, template='freqs.html', page_model='freq', accept_kwargs=True, func_arg_mapped=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
@@ -1180,13 +1189,13 @@ class Actions(Querying):
         result['freq_form_args'] = tmp
         return result
 
-    @exposed(access_level=1, template='freqs.tmpl', page_model='freq', func_arg_mapped=True)
+    @exposed(access_level=1, template='freqs.html', page_model='freq', func_arg_mapped=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
             raise ConcError(translate('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
-    @exposed(access_level=1, page_model='freq', template='freqs.tmpl')
+    @exposed(access_level=1, page_model='freq', template='freqs.html')
     def freqct(self, request):
         """
         """
@@ -1303,7 +1312,7 @@ class Actions(Querying):
         ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
         return ans
 
-    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/savecoll.tmpl',
+    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/savecoll.html',
              return_type='plain')
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
         """
@@ -1325,6 +1334,11 @@ class Actions(Querying):
                 saved_filename,)
             out_data = result
             out_data['Desc'] = self.concdesc_json()['Desc']
+            out_data['saveformat'] = saveformat
+            out_data['from_line'] = from_line
+            out_data['to_line'] = to_line
+            out_data['heading'] = heading
+            out_data['colheaders'] = colheaders
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-collocations.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
@@ -1385,7 +1399,7 @@ class Actions(Querying):
         pos = int(request.args.get('pos', '0'))
         return self.call_function(conclib.get_full_ref, (self.corp, pos))
 
-    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/saveconc.tmpl',
+    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/saveconc.html',
              return_type='plain')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0):
 
@@ -1430,7 +1444,12 @@ class Actions(Querying):
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)
             to_line = min(int(to_line), conc.size())
-            output = {'from_line': from_line, 'to_line': to_line}
+            output = {
+                'from_line': from_line,
+                'to_line': to_line,
+                'heading': heading,
+                'numbering': numbering
+            }
 
             kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
             kwic_args.speech_attr = self._get_speech_segment()

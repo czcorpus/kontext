@@ -1,4 +1,4 @@
-#*
+{#-
 Copyright (c) 2018 Charles University, Faculty of Arts,
                    Institute of the Czech National Corpus
 Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
@@ -16,39 +16,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
+{% extends "document.html" %}
 
-#encoding UTF-8
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% block title %}KonText - {{ 'Compatibility notice'|_ }}{% endblock %}
 
-#def title
-KonText - $_('Compatibility notice')#slurp
-#end def
+{% block js_load %}{% endblock %}
+{% block js_init %}{% endblock %}
 
-#def js_load
-#end def
-
-#def js_init
-#end def
-
-#def main
+{% block main %}
 <section>
-    <h2>$_('Compatibility notice')</h2>
+    <h2>{{ 'Compatibility notice'|_ }}</h2>
 
-    <p>$_('Please note that KonText is not compatible with Microsoft Internet Explorer browser which has been discontinued by Microsoft in favour of the Edge browser in 2015.')</p>
+    <p>{{ 'Please note that KonText is not compatible with Microsoft Internet Explorer browser which has been discontinued by Microsoft in favour of the Edge browser in 2015.'|_ }}</p>
 
-    <p>$_('To use KonText please install any modern web browser. E.g.'):</p>
+    <p>{{ 'To use KonText please install any modern web browser. E.g.'|_ }}:</p>
 
     <ul>
         <li><a target="_blank" href="https://www.mozilla.org/en-US/firefox/new/">Mozilla Firefox</a></li>
         <li><a target="_blank" href="https://www.google.com/chrome/">Google Chrome</a></li>
-        <li><a target="_blank" href="https://www.microsoft.com/en-us/windows/microsoft-edge">Microsoft Edge</a> ($_('pre-installed on Windows 10'))</li>
+        <li><a target="_blank" href="https://www.microsoft.com/en-us/windows/microsoft-edge">Microsoft Edge</a> ({{ 'pre-installed on Windows 10'|_ }})</li>
         <li><a target="_blank" href="https://www.opera.com/">Opera</a></li>
         <li><a target="_blank" href="https://brave.com/">Brave</a></li>
-        <li><a target="_blank" href="https://www.apple.com/lae/safari/">Safari</a> ($_('pre-installed on Apple macOS'))</li>
+        <li><a target="_blank" href="https://www.apple.com/lae/safari/">Safari</a> ({{ 'pre-installed on Apple macOS'|_ }})</li>
     </ul>
 </section>
-
-#end def
+{% endblock %}

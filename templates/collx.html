@@ -1,0 +1,49 @@
+{#-
+Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-#}
+{% extends "document.html" %}
+
+{% block title %}KonText - {{ page_title }} - {{ "Collocations"|_|lower }}{% endblock %}
+
+{% block bodyonload %}
+__conf.attrname = {{ attrname|to_json }};
+__conf.AttrList = {{ AttrList|default([], true)|to_json }};
+__conf.StructAttrList = {{ StructAttrList|default([], true)|to_json }};
+__conf.CollFormProps = {{ coll_form_args|to_json }};
+__conf.FreqFormProps = {{ freq_form_args|to_json }};
+__conf.CTFreqFormProps = {{ ctfreq_form_args|to_json }};
+__conf.workerTasks = {{ tasks|default([], true)|to_json }};
+__conf.CollResultData = {{ Items|to_json }};
+__conf.CollResultHeading = {{ Head|to_json }};
+__conf.CollPageSize = {{ citemsperpage|default(0, true)|to_json }};
+__conf.CollSaveLinesLimit = {{ save_line_limit|to_json }};
+__conf.CollUnfinished = {{ processing|to_json }};
+__conf.textTypesData = {{ text_types_data|to_json }};
+__conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
+__conf.SaveCollMaxLines = {{ savecoll_max_lines|to_json }};
+collPage.init(__conf, {{ processing|to_json}});
+{% endblock %}
+
+{% block main %}
+<section>
+    <h2>{{ "Collocation candidates"|_ }}</h2>
+    <div id="coll-view-mount"></div>
+    <a id="download-link" style="display:none"></a>
+</section>
+{% endblock %}

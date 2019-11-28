@@ -191,7 +191,7 @@ class Subcorpus(Querying):
         else:
             raise SubcorpusError(translate('Empty subcorpus!'))
 
-    @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
+    @exposed(access_level=1, template='subcorpus/subcorp_form.html', page_model='subcorpForm',
              http_method='POST', return_type='json')
     def subcorp(self, request):
         try:

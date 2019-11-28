@@ -20,6 +20,7 @@ from typing import Dict, List, Tuple, Callable, Any, Union, Optional
 from argmapping import Args, Parameter
 import Cookie
 import werkzeug.wrappers
+import jinja2
 
 
 def exposed(access_level:Optional[int], template:Optional[str], vars:Optional[Tuple[str]], page_model:Optional[str],
@@ -37,15 +38,6 @@ class KonTextCookie(Cookie.BaseCookie): ...
 
 class UserActionException(Exception): ...
 
-class CheetahResponseFile(object):
-
-    _outfile:file
-
-    def __init__(self, outfile:file): ...
-
-    def response(self) -> file: ...
-
-
 class Controller(object):
 
     NO_OPERATION:str
@@ -61,6 +53,7 @@ class Controller(object):
     _proc_time:float
     _validators:List[Callable[[],Exception]]
     _template_dir:unicode
+    _template_env:jinja2.Environment
     args:Args
     _uses_valid_sid:bool
     _plugin_api:Any

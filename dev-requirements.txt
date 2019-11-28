@@ -1,4 +1,4 @@
-Cheetah >= 2.4.4
+jinja2 >= 2.10
 Werkzeug >= 0.11
 lxml >= 3.4
 Markdown >= 2.5
