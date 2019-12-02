@@ -1,0 +1,52 @@
+{#
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#}
+
+{% extends "document.html" %}
+
+
+{% block title %}
+KonText - {{ "query form"|_}}
+{% endblock %}
+
+{% block bodyonload %}
+__conf.textTypesData = {{ text_types_data|to_json }};
+__conf.Wposlist = {{ Wposlist|to_json }};
+__conf.ConcFormsArgs = {{ conc_forms_args|to_json }};
+__conf.SubcorpList = {{ SubcorpList|to_json }};
+__conf.ShuffleConcByDefault = {{ shuffle|default(false, true)|to_json }};
+__conf.Lposlist = {{ Lposlist|to_json }};
+__conf.ForcedAttr = {{ force_cql_default_attr|default(none, true)|to_json }};
+__conf.DefaultAttr = {{ default_attr|to_json }};
+__conf.AttrList = {{ AttrList|default([], true)|to_json }};
+__conf.InputLanguages = {{ input_languages|to_json }};
+__conf.TextTypesNotes = {{ text_types_notes|to_json }};
+__conf.QueryHistoryPageNumRecords = {{ query_history_page_num_records|to_json }};
+__conf.UseCQLEditor = {{ cql_editor|default(false, true)|to_json }};
+__conf.StructAttrList = {{ StructAttrList|to_json }};
+__conf.StructList = {{ StructList|to_json }};
+firstFormPage.init(__conf);
+{% endblock %}
+
+{% block main %}
+<section>
+    <h2>{{ "Search in the corpus"|_ }}</h2>
+    <div id="query-form-mount"></div>
+</section>
+{% endblock %}

@@ -69,7 +69,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 * Rerverse proxy server
   + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested)
 * Python *2.7* and:
-    * [Cheetah](http://www.cheetahtemplate.org/) Template Engine
+    * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) Template Engine
     * [lxml](http://lxml.de/) library
     * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)

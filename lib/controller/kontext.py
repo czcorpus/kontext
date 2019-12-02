@@ -29,7 +29,6 @@ import conclib
 from controller import Controller, convert_types, exposed
 from controller.errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException,
                                NotFoundException)
-import strings
 import plugins
 import plugins.abstract
 from plugins.abstract.corpora import BrokenCorpusInfo
@@ -193,10 +192,6 @@ class AsyncTaskStatus(object):
         to serialize instances to session.
         """
         return self.__dict__
-
-
-def val_to_js(obj):
-    return json.dumps(obj).replace('</script>', '<" + "/script>').replace('<script>', '<" + "script>')
 
 
 class Kontext(Controller):
@@ -1217,10 +1212,7 @@ class Kontext(Controller):
         # util functions
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
-        result['to_json'] = val_to_js
-        result['shorten'] = strings.shorten
-        result['camelize'] = l10n.camelize
-        result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
+
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
                 self._plugin_api).to_dict() if irp else None
@@ -1452,7 +1444,7 @@ class Kontext(Controller):
         self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
         return self.check_tasks_status(request)
 
-    @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message')
+    @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message', template='message.html')
     def message(self, *args, **kwargs):
         kwargs['last_used_corp'] = dict(corpname=None, human_corpname=None)
         if self.cm:
@@ -1472,6 +1464,6 @@ class Kontext(Controller):
     def message_xml(self, *args, **kwargs):
         return self.message(*args, **kwargs)
 
-    @exposed(skip_corpus_init=True, template='compatibility.tmpl')
+    @exposed(skip_corpus_init=True, template='compatibility.html')
     def compatibility(self, req):
         return {}

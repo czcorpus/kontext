@@ -1,0 +1,75 @@
+{#-
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2014 Charles University, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-#}
+{#-
+    Please note that this template serves only for 'text' output format. All the other
+    format options are solved via export plug-ins.
+-#}
+{% if heading %}
+# Corpus: {{ human_corpname }}
+{% if usesubcorp %}
+# Subcorpus: {{ usesubcorp }}
+{% endif %}
+# Hits: {{ concsize }}
+# Relative frequency: {{ result_relative_freq }} ({{ result_relative_freq_rel_to }})
+{% if result_arf != '' %}
+# ARF: {{ result_arf }}
+{% endif %}
+{% for d in Desc %}
+# {{ d.op }}: {{ d.arg }} {{ d.size }}
+{% endfor %}
+{% endif -%} {# END of heading -#}
+## KWIC lines:
+
+{% for l in Lines %}
+{% if numbering %}{{ loop.index }}) {% endif %}
+{% if num_lines_in_groups > 0 %}{{ l.linegroup }}{% endif %}
+{{ l.ref }} | {% if align_kwic %}{{ l.leftspace }}{% endif %}
+{% for ll in l.Left %}
+{% if ll.class != 'strc' %}
+{{ ll.str -}}
+{% endif %}
+{% endfor %} <{%- for kw in l.Kwic %}{{ kw.str }}{% endfor %}> {% for rr in l.Right %}
+{% if rr.class != 'strc' %}
+{{ rr.str -}}
+{% endif -%}
+{% endfor -%} {% if align_kwic %}
+{{ l.rightspace }}
+{%- endif -%} {% if align %} {% for ll in l.get('Align', []) -%}
+{%- if align_kwic -%}
+| {{ ll.ref[0] }} |
+{% else %}
+| {{ ll.ref[0] }} |  {# there is a tab character as a prefix -#}
+{% endif %} {% if align_kwic %}
+{{ ll.leftspace }}
+{% endif %} {% for lw in ll.Left %}
+{% if lw.class != 'strc' %}
+{{ lw.str -}}
+{% endif -%}
+{% endfor %} <{% for kw in ll.Kwic %}{{ kw.str }}{% endfor %}> {% for rr in ll.Right %}
+{% if rr.class != 'strc' %}
+{{ rr.str }}
+{%- endif %}
+{% endfor -%}
+{%- if align_kwic %}{{ ll.rightspace }}{% endif %}
+{%- endfor %}
+{%- endif %}
+
+{% endfor %}

@@ -303,6 +303,13 @@
                             </element>
                         </zeroOrMore>
                     </element>
+                    <optional>
+                        <element name="template_engine_cache_path">
+                            <text />
+                            <a:documentation>A filesystem path to a directory where Jinja2 can store compiled
+                            templates. This improves 'first load' time.</a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">

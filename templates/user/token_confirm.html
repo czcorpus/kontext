@@ -1,4 +1,4 @@
-#*
+{#-
 Copyright (c) 2019 Charles University, Faculty of Arts,
                    Institute of the Czech National Corpus
 Copyright (c) 2019 Tomas Machalek <tomas.machalek@gmail.com>
@@ -16,37 +16,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
+{% extends "document.html" %}
 
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% block title %}{{ "Verification key confirmation"|_ }}{% endblock %}
 
-#def title
-$_("Verification key confirmation")#slurp
-#end def
-
-#def bodyonload
+{% block bodyonload %}
 userTokenConfirmPage.init(__conf);
-#end def
+{% endblock %}
 
-#def main
+{% block main %}
 <section>
-    <h2>$_("Verification key confirmation")</h2>
+    <h2>{{ "Verification key confirmation"|_ }}</h2>
     <div>
-    #if $ok
-        <p class="token-confirmation">$label - $_('confirmed')<p>
+    {% if ok %}
+        <p class="token-confirmation">{{ label }} - {{ 'confirmed'|_ }}<p>
         <p>
-            <a id="try-login" class="util-button">$_('Sign in')</a>
+            <a id="try-login" class="util-button">{{ 'Sign in'|_ }}</a>
         </p>
-    #else
+    {% else %}
         <p class="token-confirmation">
-            $_('Confirmation key not found')
+            {{ 'Confirmation key not found'|_ }}
         </p>
         <p>
-            <a class="util-button" href=${sign_up_url}>$_('Sign up')</a>
+            <a class="util-button" href={{ sign_up_url }}>{{ 'Sign up'|_ }}</a>
         </p>
-    #end if
+    {% endif %}
     </p>
 </section>
-#end def
+{% endblock %}

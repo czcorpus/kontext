@@ -65,7 +65,7 @@ npm install -g webpack
 
 yum install -y epel-release
 yum install -y openssh-server net-tools nginx openssl wget openssl-devel redis pkgconfig pcre httpd m4 parallel patch bzip2
-yum install -y python python-devel python-pip python-lxml python-cheetah python-simplejson
+yum install -y python python-devel python-pip python-lxml python-jinja2 python-simplejson
 yum install -y libxml2 libxslt-devel libxml2-devel libxslt libicu-devel libtool-ltdl libtool-ltdl-devel
 
 pip install --upgrade pip
