@@ -69,11 +69,11 @@ class AuthTest(unittest.TestCase):
 
     def test_load_users(self):
         """
-        test loading users from the sample file to the mocked redis db, jodoe's id in the sample file is 1
+        test loading users from the sample file to the mocked redis db, your_user's id in the sample file is 1
         """
         self.load_users()
-        self.assertEquals('user:1', self.mock_redis_plugin.hash_get('user_index', 'jodoe'))
-        self.assertEquals('jodoe', self.mock_redis_plugin.get('user:1').get('username'))
+        self.assertEquals('user:1', self.mock_redis_plugin.hash_get('user_index', 'your_user'))
+        self.assertEquals('your_user', self.mock_redis_plugin.get('user:1').get('username'))
 
     # ---------------------
     # test package methods:
@@ -121,20 +121,20 @@ class AuthTest(unittest.TestCase):
 
     def test_find_user(self):
         """
-        load users from the sample file, try to find user 'jodoe'
+        load users from the sample file, try to find user 'your_user'
         """
         self.load_users()
-        self.assertEquals('jodoe', self.auth_handler._find_user('jodoe').get('username'))
+        self.assertEquals('your_user', self.auth_handler._find_user('your_user').get('username'))
 
     def test_validate_user(self):
         """
-        load users from sample file, try to authenticate user 'jodoe' using his sample password, then try to
+        load users from sample file, try to authenticate user 'your_user' using his sample password, then try to
         authenticate as a non-existing user, which should return anonymous user
         """
         self.load_users()
-        msg = "failed to authenticate as sample user jodoe"
-        self.assertEquals('jodoe', self.auth_handler.validate_user(
-            None, 'jodoe', 'mypassword').get('user'), msg)
+        msg = "failed to authenticate as sample user your_user"
+        self.assertEquals('your_user', self.auth_handler.validate_user(
+            None, 'your_user', 'yourpwd').get('user'), msg)
 
         msg = "validation failed to return anonymous user for a non-existing user"
         self.assertEquals(0, self.auth_handler.validate_user(
