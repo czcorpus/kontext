@@ -970,7 +970,10 @@ class Controller(object):
         elif type(result) is DictType:
             self.add_globals(result, methodname, action_metadata)
             template = self._template_env.get_template(template)
-            outf.write(template.render(**result))
+            for k in self.args.__dict__:
+                if k not in result:
+                    result[k] = getattr(self.args, k)
+            outf.write(template.render(result))
 
     def user_is_anonymous(self):
         with plugins.runtime.AUTH as auth:
