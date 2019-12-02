@@ -169,7 +169,7 @@ export class CollResultsSaveModel extends StatefulModel {
             this.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (!this.validateNumberFormat(this.toLine.value, false)) {
+        if (!this.validateNumberFormat(this.toLine.value, true)) {
             this.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
