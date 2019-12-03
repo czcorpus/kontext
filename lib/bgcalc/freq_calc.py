@@ -230,10 +230,10 @@ class FreqCalcCache(object):
         self._subcpath = subcpath
 
     def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
-        v = (str(self._corpname) + str(self._subcname).encode('utf-8') + str(self._user_id) +
-             ''.join(self._q).encode('utf-8') + str(fcrit) + str(flimit) + str(freq_sort) + str(ml) +
+        v = (str(self._corpname) + str(self._subcname) + str(self._user_id) +
+             ''.join(self._q) + str(fcrit) + str(flimit) + str(freq_sort) + str(ml) +
              str(ftt_include_empty) + str(rel_mode) + str(collator_locale))
-        filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
+        filename = '%s.pkl' % hashlib.sha1(v.encode('utf-8')).hexdigest()
         return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
 
     def get(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
@@ -488,7 +488,7 @@ def calculate_freqs_ct(args):
             calc_result = res.get()
         except Exception as ex:
             if is_celery_user_error(ex):
-                raise UserActionException(ex.message)
+                raise UserActionException(str(ex)) from ex
             else:
                 raise ex
     elif backend == 'multiprocessing':
