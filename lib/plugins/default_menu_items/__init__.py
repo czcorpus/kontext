@@ -78,7 +78,7 @@ class MenuItems(AbstractMenuItems):
                 if lang in item:
                     ans.append(StaticMenuItem(entry[lang], lang=lang))
                 else:
-                    for lang_code, label in entry.items():
+                    for lang_code, label in list(entry.items()):
                         if lang[:2] == lang_code[:2]:
                             ans.append(StaticMenuItem(entry[lang_code], lang=lang))
                             break

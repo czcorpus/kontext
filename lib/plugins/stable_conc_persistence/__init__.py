@@ -48,7 +48,7 @@ DEFAULT_TTL_DAYS = 7
 
 
 def generate_stable_id(data):
-    return hashlib.md5(json.dumps(data)).hexdigest()
+    return hashlib.md5(json.dumps(data).encode('utf-8')).hexdigest()
 
 
 def mk_key(code):
@@ -182,7 +182,7 @@ class StableConcPersistence(AbstractConcPersistence):
         Export tasks for Celery worker(s)
         """
         def archive_concordance(num_proc, dry_run):
-            import archive
+            from . import archive
             return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
         return archive_concordance,
 

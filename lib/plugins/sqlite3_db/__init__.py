@@ -215,7 +215,7 @@ class DefaultDb(KeyValueStorage):
         """
         if type(data) is dict:
             d2 = dict((k, v)
-                      for k, v in data.items() if not k.startswith('__') and not k.endswith('__'))
+                      for k, v in list(data.items()) if not k.startswith('__') and not k.endswith('__'))
         else:
             d2 = data
         self._save_raw_data(key, json.dumps(d2))

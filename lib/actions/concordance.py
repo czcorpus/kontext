@@ -118,8 +118,8 @@ class Actions(Querying):
         result['query_overview'] = self.concdesc_json().get('Desc', [])
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         if len(result['query_overview']) > 0:
-            result['page_title'] = u'{0} / {1}'.format(self._human_readable_corpname(),
-                                                       result['query_overview'][0].get('nicearg'))
+            result['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
+                                                      result['query_overview'][0].get('nicearg'))
 
     def _apply_linegroups(self, conc):
         """
@@ -145,10 +145,10 @@ class Actions(Querying):
         if contains_within:
             return translate('related to the subset defined by the selected text types')
         elif hasattr(self.corp, 'subcname'):
-            return (translate(u'related to the whole %s') % (corpus_name,)) + \
+            return (translate('related to the whole %s') % (corpus_name,)) + \
                 ':%s' % self.corp.subcname
         else:
-            return translate(u'related to the whole %s') % corpus_name
+            return translate('related to the whole %s') % corpus_name
 
     @staticmethod
     def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
@@ -220,7 +220,7 @@ class Actions(Querying):
                 out.update(self.get_conc_sizes(conc))
             out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
         except Exception as ex:
-            self.add_system_message('error', ex.message)
+            self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
 
         if self.args.viewmode == 'sen':
@@ -267,9 +267,8 @@ class Actions(Querying):
         out['conc_use_safe_font'] = corpus_info.use_safe_font
         speaker_struct = corpus_info.speaker_id_attr.split(
             '.')[0] if corpus_info.speaker_id_attr else None
-        out['speech_attrs'] = map(lambda x: x[1],
-                                  filter(lambda x: x[0] == speaker_struct,
-                                         map(lambda x: x.split('.'), self.corp.get_conf('STRUCTATTRLIST').split(','))))
+        out['speech_attrs'] = [x[1] for x in [x for x in [x.split('.') for x in self.corp.get_conf(
+            'STRUCTATTRLIST').split(',')] if x[0] == speaker_struct]]
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
@@ -568,14 +567,14 @@ class Actions(Querying):
                 return '[lemma="%s"]' % lemma
             elif 'lempos' in attrlist:
                 try:
-                    if not lpos in lposlist.values():
+                    if not lpos in list(lposlist.values()):
                         lpos = lposlist[lpos]
                 except KeyError:
                     raise ConcError(translate('Undefined lemma PoS') + ' "%s"' % lpos)
                 return '[lempos="%s%s"]' % (lemma, lpos)
             else:  # XXX WTF?
                 try:
-                    if lpos in wposlist.values():
+                    if lpos in list(wposlist.values()):
                         wpos = lpos
                     else:
                         wpos = wposlist[lpos]
@@ -599,7 +598,7 @@ class Actions(Querying):
             if not wpos:
                 return '[%s]' % wordattr
             try:
-                if not wpos in wposlist.values():
+                if not wpos in list(wposlist.values()):
                     wpos = wposlist[wpos]
             except KeyError:
                 raise ConcError(translate('Undefined word form PoS') + ' "%s"' % wpos)
@@ -669,7 +668,7 @@ class Actions(Querying):
             ttquery = import_string(' '.join(['within <%s %s />' % nq for nq in texttypes]),
                                     from_encoding=self.corp.get_conf('ENCODING'))
         else:
-            ttquery = u''
+            ttquery = ''
         par_query = ''
         nopq = []
         for al_corpname in self.args.align:
@@ -1086,19 +1085,19 @@ class Actions(Querying):
     def _make_wl_query(self):
         qparts = []
         if self.args.wlpat:
-            qparts.append(u'%s="%s"' % (self.args.wlattr, self.args.wlpat))
+            qparts.append('%s="%s"' % (self.args.wlattr, self.args.wlpat))
         if not self.args.include_nonwords:
-            qparts.append(u'%s!="%s"' % (self.args.wlattr,
-                                         self.corp.get_conf('NONWORDRE')))
+            qparts.append('%s!="%s"' % (self.args.wlattr,
+                                        self.corp.get_conf('NONWORDRE')))
 
         whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
         blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
         if len(whitelist) > 0:
-            qq = [u'%s=="%s"' % (self.args.wlattr, w.strip()) for w in whitelist]
+            qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in whitelist]
             qparts.append('(' + '|'.join(qq) + ')')
         for w in blacklist:
-            qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
-        self.args.q = [u'q[' + '&'.join(qparts) + ']']
+            qparts.append('%s!=="%s"' % (self.args.wlattr, w.strip()))
+        self.args.q = ['q[' + '&'.join(qparts) + ']']
 
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
@@ -1107,7 +1106,7 @@ class Actions(Querying):
         save a frequency list
         """
         from_line = int(from_line)
-        to_line = int(to_line) if to_line else sys.maxint
+        to_line = int(to_line) if to_line else sys.maxsize
 
         self.args.fpage = 1
         self.args.fmaxitems = to_line - from_line + 1
@@ -1141,7 +1140,7 @@ class Actions(Querying):
             # the same number of columns which is quite bad. But currently there is
             # no better common 'denominator'.
             num_word_cols = len(result['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
-            writer.set_col_types(*([int] + num_word_cols * [unicode] + [float, float]))
+            writer.set_col_types(*([int] + num_word_cols * [str] + [float, float]))
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -1342,7 +1341,7 @@ class Actions(Querying):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-collocations.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
-            writer.set_col_types(int, unicode, *(8 * (float,)))
+            writer.set_col_types(int, str, *(8 * (float,)))
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -1405,7 +1404,7 @@ class Actions(Querying):
 
         def merge_conc_line_parts(items):
             """
-            converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \u0159ekl'},
+            converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
                 {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
             """
             ans = ''
@@ -1590,7 +1589,7 @@ class Actions(Querying):
     @staticmethod
     def _filter_lines(data, pnfilter):
         def expand(x, n):
-            return range(x, x + n)
+            return list(range(x, x + n))
 
         sel_lines = []
         for item in data:
@@ -1685,9 +1684,9 @@ class Actions(Querying):
     def ajax_rename_line_group(self, request):
         from_num = int(request.form.get('from_num', '0'))
         to_num = int(request.form.get('to_num', '-1'))
-        new_groups = filter(lambda v: v[2] != from_num or to_num != -1, self._lines_groups)
+        new_groups = [v for v in self._lines_groups if v[2] != from_num or to_num != -1]
         if to_num > 0:
-            new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
+            new_groups = [v if v[2] != from_num else (v[0], v[1], to_num) for v in new_groups]
         self._lines_groups = LinesGroups(data=new_groups)
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
@@ -1699,8 +1698,8 @@ class Actions(Querying):
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._headers['Content-Type'] = ce.get_content_type(format)
             self._headers['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
-            data = sorted(json.loads(request.args.get('data', '{}')
-                                     ).items(), key=lambda x: int(x[0]))
+            data = sorted(list(json.loads(request.args.get('data', '{}')
+                                          ).items()), key=lambda x: int(x[0]))
             total = sum(x[1] for x in data)
             data = [('#{0} ({1}%)'.format(x[0], round(x[1] / float(total) * 100, 1)), x[1])
                     for x in data]
@@ -1732,7 +1731,7 @@ class Actions(Querying):
                                     MainMenu.VIEW('kwic-sentence'))
 
         avail_al_corp = []
-        for al in filter(lambda x: len(x) > 0, self.corp.get_conf('ALIGNED').split(',')):
+        for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
             alcorp = corplib.open_corpus(al)
             avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
 

@@ -79,7 +79,7 @@ class DefaultSessions(SessionStore):
             self.db.set_ttl(key, self.ttl)
 
     def generate_key(self, salt=None):
-        return hashlib.sha1(str(uuid.uuid1()) + str(random.random())).hexdigest()
+        return hashlib.sha1(uuid.uuid1().bytes + str(random.random()).encode('utf-8')).hexdigest()
 
     def delete(self, session):
         self.db.remove(self._mk_key(session.sid))

@@ -55,14 +55,14 @@ class ExpressionJoin(object):
         return self.items.__iter__()
 
     def __unicode__(self):
-        return (u' %s ' % self.operator).join(u'%s' % item for item in self.items)
+        return (' %s ' % self.operator).join('%s' % item for item in self.items)
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
 
 
 class CategoryExpression(object):
-    OPERATORS = {u'==': u'<>', u'<>': u'==', u'<=': u'>=', u'>=': u'<='}
+    OPERATORS = {'==': '<>', '<>': '==', '<=': '>=', '>=': '<='}
 
     @staticmethod
     def create(args):
@@ -87,7 +87,7 @@ class CategoryExpression(object):
         return [self].__iter__()
 
     def __unicode__(self):
-        return u"%s %s '%s'" % (self.attr, self.op, self.value)
+        return "%s %s '%s'" % (self.attr, self.op, self.value)
 
 
 class CategoryTreeException(Exception):
@@ -106,6 +106,7 @@ class CategoryTree(object):
     corpus_max_size -- Maximal size of resulting corpora in words
 
     """
+
     def __init__(self, category_list, meta_db, table_name, corpus_max_size):
         self.category_list = category_list
         self.num_categories = len(category_list)
@@ -229,13 +230,13 @@ class CategoryTree(object):
         arguments:
         mc -- A list of metadata sql conditions that determines if texts belongs to this category
         """
-        sql = u'SELECT SUM(m1.{0}) FROM item as m1'.format(self._db.count_col)
+        sql = 'SELECT SUM(m1.{0}) FROM item as m1'.format(self._db.count_col)
         args = []
 
         sql, args = self._db.append_aligned_corp_sql(sql, args)
 
-        where_items = [u'm1.{0} {1} ?'.format(expr.attr, expr.op) for subl in mc for expr in subl]
-        sql += u' WHERE {0} AND m1.corpus_id = ?'.format(u' AND '.join(where_items))
+        where_items = ['m1.{0} {1} ?'.format(expr.attr, expr.op) for subl in mc for expr in subl]
+        sql += ' WHERE {0} AND m1.corpus_id = ?'.format(' AND '.join(where_items))
         args += [expr.value for subl in mc for expr in subl]
         args.append(self._db.corpus_id)
         self._db.execute(sql, args)

@@ -93,7 +93,7 @@ def mk_short_id(s, min_length=6):
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
-    x = long('0x' + hashlib.md5(s).hexdigest(), 16)
+    x = int('0x' + hashlib.md5(s).hexdigest(), 16)
     ans = []
     while x > 0:
         p = x % len(KEY_ALPHABET)
@@ -296,7 +296,7 @@ class ConcPersistence(AbstractConcPersistence):
         Export tasks for Celery worker(s)
         """
         def archive_concordance(num_proc, dry_run):
-            import archive
+            from . import archive
             return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
         return archive_concordance,
 

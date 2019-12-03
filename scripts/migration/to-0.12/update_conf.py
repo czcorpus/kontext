@@ -234,4 +234,4 @@ if __name__ == '__main__':
         output_path = '%s.new.xml' % args.conf_file.rsplit('.', 1)[0]
         with open(output_path, 'wb') as f:
             f.write(result_xml)
-            print('DONE!\nConverted config written to %s\n' % output_path)
+            print(('DONE!\nConverted config written to %s\n' % output_path))

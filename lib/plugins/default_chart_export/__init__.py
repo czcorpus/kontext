@@ -30,11 +30,11 @@ class DefaultChartExportPlugin(AbstractChartExportPlugin):
         self._exports[e1.get_format_name()] = e1
 
     def _test_format(self, f):
-        if f not in self._exports.keys():
+        if f not in list(self._exports.keys()):
             raise UnknownFormatException(f)
 
     def get_supported_types(self):
-        return self._exports.keys()
+        return list(self._exports.keys())
 
     def get_content_type(self, format):
         self._test_format(format)

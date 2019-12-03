@@ -19,6 +19,7 @@
 from functools import partial
 import re
 import itertools
+import math
 
 import manatee
 from l10n import import_string, export_string
@@ -35,17 +36,17 @@ def lngrp_sortcrit(lab, separator='.'):
             return 'c', n
     if not lab:
         return [('x', 'x')]
-    return map(num2sort, lab.split(separator, 3))
+    return list(map(num2sort, lab.split(separator, 3)))
 
 
 def format_labelmap(labelmap, separator='.'):
     # TODO analyze purpose of this function (it seems to be not used)
     matrix = {}
-    for n, lab in labelmap.items():
+    for n, lab in list(labelmap.items()):
         if lab:
             pref = lab.split(separator)[0]
             matrix.setdefault(pref, []).append((lngrp_sortcrit(lab), lab, n))
-    prefixes = [(lngrp_sortcrit(p), p) for p in matrix.keys()]
+    prefixes = [(lngrp_sortcrit(p), p) for p in list(matrix.keys())]
     prefixes.sort()
     lines = []
     for s, pref in prefixes:
@@ -119,9 +120,9 @@ class KwicLinesArgs(object):
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
             setattr(ans, k, v)
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(ans, k, v)
         return ans
 
@@ -173,7 +174,7 @@ class KwicPageArgs(object):
     attr_vmode = 'mouseover'
 
     def __init__(self, argmapping, base_attr):
-        for k, v in argmapping.__dict__.items():
+        for k, v in list(argmapping.__dict__.items()):
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
@@ -213,7 +214,7 @@ class KwicPageArgs(object):
         ans.righttoleft = self.righttoleft
         ans.alignlist = self.alignlist
         ans.attr_vmode = self.attr_vmode
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(ans, k, v)
         return ans
 
@@ -270,7 +271,7 @@ class Kwic(object):
             pagination.prev_page = fromp - 1
         if self.conc.size() > args.pagesize:
             out.fromp = fromp
-            numofpages = (self.conc.size() - 1) / args.pagesize + 1
+            numofpages = math.ceil((self.conc.size() - 1) / args.pagesize + 1)
             if numofpages < 30:
                 out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
@@ -341,7 +342,7 @@ class Kwic(object):
         # It appears that Manatee returns lists of different lengths in case some translations
         # are missing at the end of a concordance. Following block fixes this issue.
         al_lines_fixed = [fix_length(item, len(result.Lines)) for item in al_lines]
-        aligns = zip(*al_lines_fixed)
+        aligns = list(zip(*al_lines_fixed))
         for i, line in enumerate(result.Lines):
             line['Align'] = aligns[i]
 

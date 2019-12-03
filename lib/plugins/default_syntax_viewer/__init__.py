@@ -51,7 +51,7 @@ import plugins
 from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
 from actions import concordance
 from controller import exposed, UserActionException
-from manatee_backend import ManateeBackend
+from .manatee_backend import ManateeBackend
 from translation import ugettext as _
 
 

@@ -141,7 +141,7 @@ class AbstractFrontend(object):
             value = getattr(self, prop)[lang]
         else:
             srch_lang = lang.split('_')[0]
-            for k, v in getattr(self, prop).items():
+            for k, v in list(getattr(self, prop).items()):
                 v_lang = k.split('_')[0]
                 if v_lang == srch_lang:
                     value = v

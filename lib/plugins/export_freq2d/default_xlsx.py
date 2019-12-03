@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from StringIO import StringIO
+from io import StringIO
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Side, Color, PatternFill, Font, Border, colors
 from plugins.export_freq2d import AbstractExportFreq2d
@@ -64,7 +64,7 @@ class XLSExportInternal2d_flat(object):
         # --------------
         # render caption
         # --------------
-        table_width = len(headings[0])+1
+        table_width = len(headings[0]) + 1
         self._sheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=table_width)
         self._sheet["A1"].fill = GREEN_FILL
         self._sheet["A1"] = "Two-attribute interrelationship"
@@ -87,8 +87,10 @@ class XLSExportInternal2d_flat(object):
             else:
                 column_index += 1
 
-        self._sheet.merge_cells(start_row=headings_row, start_column=4, end_row=headings_row, end_column=6)
-        self._sheet.merge_cells(start_row=headings_row, start_column=7, end_row=headings_row, end_column=9)
+        self._sheet.merge_cells(start_row=headings_row, start_column=4,
+                                end_row=headings_row, end_column=6)
+        self._sheet.merge_cells(start_row=headings_row, start_column=7,
+                                end_row=headings_row, end_column=9)
         self._sheet.cell(row=headings_row, column=4).alignment = Alignment(horizontal='center')
         self._sheet.cell(row=headings_row, column=7).alignment = Alignment(horizontal='center')
 

@@ -21,7 +21,7 @@
 import logging
 import time
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 import os

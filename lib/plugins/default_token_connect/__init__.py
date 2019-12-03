@@ -128,7 +128,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
 
     def set_cache_path(self, path):
         self._cache_path = path
-        for backend, frontend in self._providers.values():
+        for backend, frontend in list(self._providers.values()):
             backend.set_cache_path(path)
 
     @property
@@ -165,7 +165,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
                 err_frontend = ErrorFrontend(dict(heading=frontend.headings))
                 ans.append(err_frontend.export_data(
-                    dict(error=u'{0}'.format(ex)), False, lang, is_kwic_view).to_dict())
+                    dict(error='{0}'.format(ex)), False, lang, is_kwic_view).to_dict())
 
         word = fetch_posattr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans

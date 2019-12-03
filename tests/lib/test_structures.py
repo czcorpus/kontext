@@ -40,16 +40,16 @@ class FixedDictTest(unittest.TestCase):
     def test_set_value(self):
         self.d.foo = self.v1
         self.d.bar = self.v2
-        self.assertEquals(self.d.foo, self.v1)
-        self.assertEquals(self.d.bar, self.v2)
+        self.assertEqual(self.d.foo, self.v1)
+        self.assertEqual(self.d.bar, self.v2)
 
     def test_non_existing_attr(self):
         with self.assertRaises(AttributeError):
             self.d.test = 'value'
 
     def test_default_values(self):
-        self.assertEquals(self.d.foo, None)
-        self.assertEquals(self.d.bar, 'name')
+        self.assertEqual(self.d.foo, None)
+        self.assertEqual(self.d.bar, 'name')
 
     def test_dict_conversion(self):
         class XDict(FixedDict):
@@ -61,5 +61,5 @@ class FixedDictTest(unittest.TestCase):
         d.b = 'hit'
         x = dict(d)
 
-        self.assertEquals(x['a'], 'test')
-        self.assertEquals(x['b'], 'hit')
+        self.assertEqual(x['a'], 'test')
+        self.assertEqual(x['b'], 'hit')

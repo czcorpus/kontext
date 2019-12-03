@@ -33,9 +33,8 @@ internationalisation of KonText:
    processed using the same module.
 """
 
-import os
-import json
 import re
+from functools import cmp_to_key
 from threading import local
 try:
     from icu import Locale, Collator
@@ -72,10 +71,10 @@ def import_string(s, from_encoding):
     """
     if type(s) is str:
         if from_encoding.lower() in ('utf-8', ''):
-            return s.decode('utf-8')
+            return s
         else:
             return s.decode(from_encoding)
-    elif type(s) is unicode:
+    elif type(s) is str:
         return s
     else:
         return None  # TODO raise an exception
@@ -89,7 +88,7 @@ def export_string(s, to_encoding):
     s -- converted string
     to_encoding -- target encoding
     """
-    if type(s) is unicode:
+    if type(s) is str:
         return s.encode(to_encoding)
     else:
         return s.decode('utf-8').encode(to_encoding)
@@ -106,7 +105,13 @@ def sort(iterable, loc, key=None, reverse=False):
     reverse -- whether the result should be in reversed order (default is False)
     """
     collator = Collator.createInstance(Locale(loc))
-    return sorted(iterable, cmp=collator.compare, key=key, reverse=reverse)
+    if key is None:
+        kf = cmp_to_key(collator.compare)
+    else:
+        def tmp(v1, v2):
+            return collator.compare(key(v1), key(v2))
+        kf = cmp_to_key(tmp)
+    return sorted(iterable, key=kf, reverse=reverse)
 
 
 def time_formatting():

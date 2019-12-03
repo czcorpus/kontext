@@ -44,11 +44,11 @@ class CreateSubcorpusTask(object):
             raise EmptySubcorpusException('Failed to create the subcorpus from a concordance')
         if not os.path.isfile(path):  # this should not happen but it looks like it did
             logging.getLogger(__name__).warning(
-                u'Sync. called conc. file not created (path: {})'.format(path))
+                'Sync. called conc. file not created (path: {})'.format(path))
             time.sleep(5)
         # we must set write perms for group as this is created by Celery and we won't be
         # able to create hardlinks otherwise
-        os.chmod(path, 0664)
+        os.chmod(path, 0o664)
         if publish_path:
             corplib.mk_publish_links(path, publish_path, self._author, self._description)
         return ans

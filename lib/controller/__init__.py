@@ -22,14 +22,14 @@ KonText controller and related auxiliary objects
 """
 
 import os
-from types import MethodType, DictType, ListType, TupleType
+from types import MethodType
 from inspect import isclass
-import Cookie
+import http.cookies
 import imp
-from urllib import unquote, quote
+from urllib.parse import unquote, quote
 import json
 import logging
-import StringIO
+import io
 import inspect
 import time
 import re
@@ -104,11 +104,11 @@ def _function_defaults(fun):
     if isclass(fun):
         fun = fun.__init__
     try:
-        default_vals = fun.func_defaults or ()
+        default_vals = fun.__defaults__ or ()
     except AttributeError:
         return {}
-    default_varnames = fun.func_code.co_varnames
-    return dict(zip(default_varnames[fun.func_code.co_argcount - len(default_vals):], default_vals))
+    default_varnames = fun.__code__.co_varnames
+    return dict(list(zip(default_varnames[fun.__code__.co_argcount - len(default_vals):], default_vals)))
 
 
 def convert_types(args, defaults, del_nondef=0, selector=0):
@@ -120,19 +120,19 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     The function returns the same object as passed via 'args'
     """
     # TODO - there is a potential conflict between global Parameter types and function defaults
-    corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
-    for full_k, value in args.items():
+    corr_func = {type(0): int, type(0.0): float, tuple: lambda x: [x]}
+    for full_k, value in list(args.items()):
         if selector:
             k = full_k.split(':')[-1]  # filter out selector
         else:
             k = full_k
         if k.startswith('_') or type(defaults.get(k, None)) is MethodType:
             del args[full_k]
-        elif k in defaults.keys():
+        elif k in list(defaults.keys()):
             default_type = type(defaults[k])
-            if default_type is not TupleType and type(value) is TupleType:
+            if default_type is not tuple and type(value) is tuple:
                 args[k] = value = value[-1]
-            elif default_type is TupleType and type(value) is ListType:
+            elif default_type is tuple and type(value) is list:
                 value = tuple(value)
             if type(value) is not default_type:
                 try:
@@ -150,7 +150,7 @@ def val_to_js(obj):
     return json.dumps(obj).replace('</script>', '<" + "/script>').replace('<script>', '<" + "script>')
 
 
-class KonTextCookie(Cookie.BaseCookie):
+class KonTextCookie(http.cookies.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
     as URI components.
@@ -331,7 +331,7 @@ class Controller(object):
         """
         result['methodname'] = methodname
         deployment_id = settings.get('global', 'deployment_id', None)
-        result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id).hexdigest()[
+        result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id.encode('utf-8')).hexdigest()[
             :6]) if deployment_id else ''
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
 
@@ -370,7 +370,7 @@ class Controller(object):
         """
         Returns an URL representing current application state
         """
-        action_str = '/'.join(filter(lambda x: x, self.get_current_action()))
+        action_str = '/'.join([x for x in self.get_current_action() if x])
         query = '?' + self.environ.get('QUERY_STRING') if self.environ.get('QUERY_STRING') else ''
         return self.get_root_url() + action_str + query
 
@@ -390,11 +390,13 @@ class Controller(object):
         returns:
         updated URL
         """
-        import urlparse
-        import urllib
+        import urllib.parse
+        import urllib.request
+        import urllib.parse
+        import urllib.error
 
-        parsed_url = list(urlparse.urlparse(self.get_current_url()))
-        old_params = urlparse.parse_qsl(parsed_url[4])
+        parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
+        old_params = urllib.parse.parse_qsl(parsed_url[4])
         new_params = []
         for k, v in old_params:
             if k in params:
@@ -403,12 +405,12 @@ class Controller(object):
                 new_params.append((k, v))
 
         old_params = dict(old_params)
-        for k, v in params.items():
+        for k, v in list(params.items()):
             if k not in old_params:
                 new_params.append((k, v))
 
-        parsed_url[4] = urllib.urlencode(new_params)
-        return urlparse.urlunparse(parsed_url)
+        parsed_url[4] = urllib.parse.urlencode(new_params)
+        return urllib.parse.urlunparse(parsed_url)
 
     def get_current_action(self):
         """
@@ -447,7 +449,7 @@ class Controller(object):
                                                              self.environ.get('HTTP_HOST'))),
                      settings.get_str('global', 'action_path_prefix', ''),
                      action_module_path)
-        return '/'.join(filter(lambda x: bool(x), map(lambda x: x.strip('/'), url_items))) + '/'
+        return '/'.join([x for x in [x.strip('/') for x in url_items] if bool(x)]) + '/'
 
     def create_url(self, action, params):
         """
@@ -462,10 +464,11 @@ class Controller(object):
         root = self.get_root_url()
 
         def convert_val(x):
-            return str(x) if type(x) not in (str, unicode) else x.encode('utf-8')
+            return str(x) if type(x) not in (str, str) else x.encode('utf-8')
 
         if type(params) is dict:
-            params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params.items()])
+            params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v)))
+                                   for k, v in list(params.items())])
         else:
             params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params])
 
@@ -491,11 +494,11 @@ class Controller(object):
             err = validator()
             if isinstance(err, UserActionException):
                 logging.getLogger(__name__).error(
-                    u'Pre-action validator {0}: {1}'.format(validator.__name__, err.internal_message))
+                    'Pre-action validator {0}: {1}'.format(validator.__name__, err.internal_message))
                 raise err
             elif isinstance(err, Exception):
                 logging.getLogger(__name__).error(
-                    u'Pre-action validator {0}: {1}'.format(validator.__name__, err))
+                    'Pre-action validator {0}: {1}'.format(validator.__name__, err))
                 raise err
 
     @staticmethod
@@ -620,8 +623,6 @@ class Controller(object):
         self._status = code
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
             url = self.get_root_url() + url
-        if type(url) is unicode:
-            url = url.encode('utf-8')
         self._headers['Location'] = url
 
     def set_not_found(self):
@@ -698,7 +699,7 @@ class Controller(object):
             else:
                 action_metadata['return_type'] = 'text'
                 raise UserActionException(
-                    u'Unknown output format: {0}'.format(self._request.args['format']))
+                    'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return args
 
@@ -743,12 +744,12 @@ class Controller(object):
         if isinstance(err, UserActionException):
             return err
         if err.message:
-            if type(err.message) == unicode:
+            if type(err.message) == str:
                 text = err.message
             else:
                 text = str(err.message).decode(self.corp_encoding, errors='replace')
         else:
-            text = unicode(err)
+            text = str(err)
             err.message = text  # in case we return the original error
         if 'syntax error' in text.lower():
             srch = re.match(r'.+ position (\d+)', text)
@@ -866,10 +867,10 @@ class Controller(object):
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
-            err_id = hashlib.sha1(str(uuid.uuid1())).hexdigest()
+            err_id = hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest()
             err = (ex, err_id)
             logging.getLogger(__name__).error(
-                u'{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
+                '{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
             self._status = 500
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)
@@ -882,7 +883,7 @@ class Controller(object):
         self.post_dispatch(methodname, action_metadata, tmpl, result, err)
         # response rendering
         headers += self.output_headers(action_metadata['return_type'])
-        output = StringIO.StringIO()
+        output = io.StringIO()
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata,
                                return_type=action_metadata['return_type'], outf=output)
@@ -945,12 +946,10 @@ class Controller(object):
             self._headers['Content-Type'] = 'text/plain'
         # Note: 'template' return type should never overwrite content type here as it is action-dependent
         ans = []
-        for k, v in sorted([x for x in self._headers.items() if bool(x[1])], key=lambda item: item[0]):
-            if type(v) is unicode:
-                v = v.encode('utf-8')
+        for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
             ans.append((k, v))
         # Cookies
-        for cookie_id in self._new_cookies.keys():
+        for cookie_id in list(self._new_cookies.keys()):
             ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
         return ans
 
@@ -965,9 +964,9 @@ class Controller(object):
         elif return_type == 'xml':
             from templating import Type2XML
             outf.write(Type2XML.to_xml(result))
-        elif return_type == 'plain' and type(result) is not DictType:
+        elif return_type == 'plain' and type(result) is not dict:
             outf.write(str(result))
-        elif type(result) is DictType:
+        elif type(result) is dict:
             self.add_globals(result, methodname, action_metadata)
             template = self._template_env.get_template(template)
             for k in self.args.__dict__:

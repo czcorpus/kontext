@@ -48,7 +48,7 @@ if __name__ == '__main__':
     parser.add_argument('--subdir', '-s', type=str, default=None,
                         help='Search will be performed in [default:cache_dir]/[subdir]')
     parser.add_argument('--log-level', '-l', type=str, default='info',
-                        help='Logging level (%s)' % ', '.join(autoconf.LOG_LEVELS.keys()))
+                        help='Logging level (%s)' % ', '.join(list(autoconf.LOG_LEVELS.keys())))
     parser.add_argument('--log-path', '-p', type=str, default=None,
                         help='Where to write the log. If omitted then %s is used' %
                              autoconf.DEFAULT_LOG_OUT)
@@ -61,5 +61,3 @@ if __name__ == '__main__':
 
     cleanup.run(root_dir=root_dir, corpus_id=args.corpus, ttl=args.ttl, subdir=args.subdir,
                 dry_run=args.dry_run, db_plugin=plugins.runtime.DB.instance, entry_key_gen=mk_key)
-
-

@@ -50,12 +50,12 @@ class ApplicationBar3(AbstractApplicationBar):
 
     @staticmethod
     def _process_styles(conf):
-        return map(lambda x: x[1], sorted(conf.items(), key=lambda x: int(x[0])))
+        return [x[1] for x in sorted(list(conf.items()), key=lambda x: int(x[0]))]
 
     @staticmethod
     def _process_scripts(conf):
         scripts = []
-        for k, item in sorted(conf['depends'].items(), key=lambda v: int(v[0])):
+        for k, item in sorted(list(conf['depends'].items()), key=lambda v: int(v[0])):
             scripts.append(item['url'])
         scripts.append(conf['main'])
         return scripts

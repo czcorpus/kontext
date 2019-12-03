@@ -87,7 +87,7 @@ class CitationInfo(DictLike):
         self.other_bibliography = None
 
     def to_dict(self):
-        return dict((k, v) for k, v in self.__dict__.items())
+        return dict((k, v) for k, v in list(self.__dict__.items()))
 
 
 class ManateeCorpusInfo(DictLike):
@@ -120,7 +120,7 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
         self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
                                   else corpus_id)
         self.description = import_string(corpus.get_info())
-        self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
+        self.attrs = [x for x in corpus.get_conf('ATTRLIST').split(',') if len(x) > 0]
         self.size = corpus.size()
         attrlist = corpus.get_conf('ATTRLIST').split(',')
         self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
@@ -204,7 +204,7 @@ class BrokenCorpusInfo(CorpusInfo):
 class CorpInfoEncoder(json.JSONEncoder):
     def default(self, o):
         ans = {}
-        for key, val in o.__dict__.items():
+        for key, val in list(o.__dict__.items()):
             if isinstance(val, DictLike):
                 ans[key] = val.__dict__
             else:

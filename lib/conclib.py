@@ -20,7 +20,7 @@ import sys
 import time
 import logging
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 
@@ -447,7 +447,7 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
         if maxdetail == 0:
             maxdetail = int(corp.get_conf('MAXCONTEXT'))
             if maxdetail == 0:
-                maxdetail = sys.maxint
+                maxdetail = sys.maxsize
     except:
         maxdetail = 0
     if maxdetail:

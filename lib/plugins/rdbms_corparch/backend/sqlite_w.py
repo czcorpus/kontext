@@ -254,8 +254,9 @@ class WritableBackend(Backend):
         else:
             t1 = int(time.time())
             cols = ['corpus_id', 'created', 'updated'] + [self.REG_COLS_MAP[k]
-                                                          for k, v in values.items() if k in self.REG_COLS_MAP]
-            vals = [corpus_id, t1, t1] + [v for k, v in values.items() if k in self.REG_COLS_MAP]
+                                                          for k, v in list(values.items()) if k in self.REG_COLS_MAP]
+            vals = [corpus_id, t1, t1] + \
+                [v for k, v in list(values.items()) if k in self.REG_COLS_MAP]
             sql = 'INSERT INTO registry_conf ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(len(cols) * ['?']))
             cursor.execute(sql, vals)
@@ -268,9 +269,10 @@ class WritableBackend(Backend):
             else:
                 cursor.execute('DELETE FROM registry_variable WHERE corpus_id = ? AND variant IS NULL',
                                (corpus_id,))
-        cols = ['corpus_id', 'variant'] + [self.REG_VAR_COLS_MAP[k] for k, v in values.items()
+        cols = ['corpus_id', 'variant'] + [self.REG_VAR_COLS_MAP[k] for k, v in list(values.items())
                                            if k in self.REG_VAR_COLS_MAP]
-        vals = [corpus_id, variant] + [v for k, v in values.items() if k in self.REG_VAR_COLS_MAP]
+        vals = [corpus_id, variant] + \
+            [v for k, v in list(values.items()) if k in self.REG_VAR_COLS_MAP]
         sql = 'INSERT INTO registry_variable ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(len(cols) * ['?']))
         cursor.execute(sql, vals)
@@ -289,7 +291,7 @@ class WritableBackend(Backend):
             cursor.execute(sql, vals)
         except sqlite3.Error as ex:
             logging.getLogger(__name__).error(
-                u'Failed to save registry values: {0}.'.format(zip(cols, vals)))
+                'Failed to save registry values: {0}.'.format(list(zip(cols, vals))))
             raise ex
         cursor.execute('SELECT last_insert_rowid() AS last_id')
         return cursor.fetchone()['last_id']
@@ -312,7 +314,7 @@ class WritableBackend(Backend):
                     'VALUES (?, ?)', (corpus_id, aid))
             except sqlite3.Error as ex:
                 logging.getLogger(__name__).error(
-                    u'Failed to insert values {0}, {1}'.format(corpus_id, aid))
+                    'Failed to insert values {0}, {1}'.format(corpus_id, aid))
                 raise ex
 
     def save_corpus_structure(self, corpus_id, name, values):
@@ -371,7 +373,7 @@ class WritableBackend(Backend):
                 cursor.execute(sql, vals)
         except mysql.connector.errors.Error as ex:
             logging.getLogger(__name__).error(
-                u'Failed to insert values {0}'.format(zip(cols, vals)))
+                'Failed to insert values {0}'.format(list(zip(cols, vals))))
             raise ex
 
     def save_subcorpattr(self, corpus_id, struct_name, attr_name, idx):

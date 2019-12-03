@@ -24,7 +24,7 @@ element getlang {
 }
 """
 import os
-import Cookie
+import http.cookies
 from collections import defaultdict
 
 from plugins.abstract.getlang import AbstractGetLang
@@ -71,7 +71,7 @@ class GetLang(AbstractGetLang):
         of the detected language or an empty string in case no value was found
         """
         code = self.fallback_lang
-        if not isinstance(source, Cookie.BaseCookie):
+        if not isinstance(source, http.cookies.BaseCookie):
             raise TypeError('%s plugin expects Cookie.BaseCookie instance as a source' % __file__)
         if self.cookie_name in source:
             key = normalize_lang(source[self.cookie_name].value).split('_')[0]
