@@ -65,7 +65,7 @@ class AttrArgs(object):
 
         where = []
         sql_values = []
-        for key, values in self.data.items():
+        for key, values in list(self.data.items()):
             key = key.replace('.', '_')
             if key == self._bib_label and self._bib_label != self._autocomplete_attr:
                 key = self._bib_id

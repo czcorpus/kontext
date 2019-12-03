@@ -70,7 +70,7 @@ def update_7(doc):
         with open(srch.text, 'rb') as fr:
             data = json.load(fr)
             data2 = {}
-            for k, item in data.items():
+            for k, item in list(data.items()):
                 data2[k] = []
                 for subitem in item:
                     if 'type' not in subitem:
@@ -80,8 +80,8 @@ def update_7(doc):
         os.rename(srch.text, srch.text + '.bak')
         with open(srch.text, 'wb') as fw:
             json.dump(data2, codecs.getwriter('utf-8')(fw), indent=2, ensure_ascii=False)
-        print('Upgraded {0} menu conf. file, original file backed up as {1}'.format(
-            srch.text, srch.text + '.bak'))
+        print(('Upgraded {0} menu conf. file, original file backed up as {1}'.format(
+            srch.text, srch.text + '.bak')))
 
 
 def update_8(doc):
@@ -138,6 +138,6 @@ if __name__ == '__main__':
         output_path = '%s.new.xml' % args.conf_file.rsplit('.', 1)[0]
         with open(output_path, 'wb') as f:
             f.write(result_xml)
-            print('DONE!\nConverted config written to %s\n' % output_path)
+            print(('DONE!\nConverted config written to %s\n' % output_path))
     print('\nPlease do not forget to update subcorpora paths by running updsubc.py!\n')
     print('\nPlease do not forget to update user_index by running upd_user_index.py!\n')

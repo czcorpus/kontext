@@ -92,13 +92,13 @@ def get_full(section, key):
     m = get_meta(section, key)
     d = get(section, key)
     if hasattr(m, '__iter__') and hasattr(d, '__iter__'):
-        return zip(d, m)
+        return list(zip(d, m))
     else:
         return d, m
 
 
 def import_bool(v):
-    if not isinstance(v, basestring):
+    if not isinstance(v, str):
         return bool(v)
     return {
         'true': True,
@@ -237,7 +237,7 @@ def _load_help_links():
 
 
 def get_help_links(lang_id):
-    return dict((k, v.get(lang_id, None)) for k, v in _help_links.items())
+    return dict((k, v.get(lang_id, None)) for k, v in list(_help_links.items()))
 
 
 def load(path):

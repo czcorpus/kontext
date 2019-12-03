@@ -19,7 +19,6 @@ import logging
 import inspect
 import os.path
 import time
-from types import DictType
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -104,13 +103,13 @@ class RequestArgsProxy(object):
         self._forced = defaultdict(lambda: [])
 
     def __iter__(self):
-        return self.keys().__iter__()
+        return list(self.keys()).__iter__()
 
     def __contains__(self, item):
         return self._forced.__contains__(item) or self._form.__contains__(item) or self._args.__contains__(item)
 
     def keys(self):
-        return list(set(self._forced.keys() + self._form.keys() + self._args.keys()))
+        return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))
 
     def getlist(self, k):
         """
@@ -243,9 +242,9 @@ class Kontext(Controller):
 
         self.subcpath = []
 
-        self._conc_dir = u''
+        self._conc_dir = ''
 
-        self._files_path = settings.get('global', 'static_files_prefix', u'../files')
+        self._files_path = settings.get('global', 'static_files_prefix', '../files')
 
         # data of the current manual concordance line selection/categorization
         self._lines_groups = LinesGroups(data=[])
@@ -286,7 +285,7 @@ class Kontext(Controller):
 
         params = {}
         if self.environ.get('QUERY_STRING'):
-            params.update(dict(self._request.args.items()))
+            params.update(dict(list(self._request.args.items())))
 
         for val in logged_values:
             if val == 'date':
@@ -299,9 +298,9 @@ class Kontext(Controller):
             elif val == 'user':
                 log_data['user'] = self.session_get('user', 'user')
             elif val == 'params':
-                log_data['params'] = dict([(k, v) for k, v in params.items() if v])
+                log_data['params'] = dict([(k, v) for k, v in list(params.items()) if v])
             elif val == 'settings':
-                log_data['settings'] = dict([(k, v) for k, v in user_settings.items() if v])
+                log_data['settings'] = dict([(k, v) for k, v in list(user_settings.items()) if v])
             elif val == 'proc_time' and proc_time is not None:
                 log_data['proc_time'] = proc_time
             elif val.find('environ:') == 0:
@@ -348,7 +347,7 @@ class Kontext(Controller):
             data = self.session_get('settings')
             if not data:
                 data = {}
-        return [x for x in data.items() if x[0] != 'queryselector']
+        return [x for x in list(data.items()) if x[0] != 'queryselector']
 
     def _load_user_settings(self):
         """
@@ -393,7 +392,7 @@ class Kontext(Controller):
         settings of other corpora. Otherwise, no action is performed.
         """
         ans = {}
-        for k, v in options.items():
+        for k, v in list(options.items()):
             # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
             tokens = k.rsplit(':', 1)
             if len(tokens) == 2:
@@ -428,7 +427,7 @@ class Kontext(Controller):
             if opts is None:
                 opts = {}
             excluded_attrs = self._get_save_excluded_attributes()
-            for k in opts.keys():
+            for k in list(opts.keys()):
                 if k in excluded_attrs:
                     del(opts[k])
             opts.update(tosave)
@@ -626,7 +625,7 @@ class Kontext(Controller):
                         fn = fn()
                     if callable(fn):
                         try:
-                            ans = apply(fn, (), action)
+                            ans = fn(*(), **action)
                             if 'message' in ans:
                                 self.add_system_message('message', ans['message'])
                             continue
@@ -662,7 +661,7 @@ class Kontext(Controller):
         if 'json' in req_args:
             json_data = json.loads(req_args.getvalue('json'))
             named_args.update(json_data)
-        for k in req_args.keys():
+        for k in list(req_args.keys()):
             if len(req_args.getlist(k)) > 0:
                 key = str(k)
                 val = req_args.getvalue(k)
@@ -756,7 +755,7 @@ class Kontext(Controller):
                 else:
                     tmp[attr_name] = v
         # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
-        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
+        self._session['semi_persistent_attrs'] = list(tmp.items(multi=True))
 
     def pre_dispatch(self, action_name, named_args, action_metadata=None):
         """
@@ -814,7 +813,7 @@ class Kontext(Controller):
         else:
             self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
-                                                             for k, v in args.items()]))
+                                                             for k, v in list(args.items())]))
         # by default, each action is public
         access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
@@ -839,7 +838,7 @@ class Kontext(Controller):
         def encode_err(e): return None if e[0] is None else (e[0].__class__.__name__, e[1])
 
         # create and store concordance query key
-        if type(result) is DictType:
+        if type(result) is dict:
             if action_metadata['mutates_conc']:
                 next_query_key = self._store_conc_params()
             else:
@@ -891,7 +890,6 @@ class Kontext(Controller):
         # 2nd option: try currently initialized corpname (e.g. from restored semi-persistent args)
         if not cn:
             cn = self.args.corpname
-
         # 3rd option: try user's last
         if not cn and not self.user_is_anonymous():
             with plugins.runtime.QUERY_STORAGE as qs:
@@ -1069,7 +1067,7 @@ class Kontext(Controller):
             v_tmp = get_val(attr)
             if not is_valid(attr, v_tmp):
                 continue
-            if not hasattr(v_tmp, '__iter__'):
+            if type(v_tmp) in (str, float, int, bool) or v_tmp is None:
                 v_tmp = [v_tmp]
             for v in v_tmp:
                 ans.append((attr, v))
@@ -1084,14 +1082,14 @@ class Kontext(Controller):
             logo_alt_img = logo_img
 
         if settings.contains('theme', 'logo_href'):
-            logo_href = unicode(settings.get('theme', 'logo_href'))
+            logo_href = str(settings.get('theme', 'logo_href'))
         else:
             logo_href = self.get_root_url()
 
         if theme_name == 'default':
             logo_title = translate('Click to enter a new query')
         else:
-            logo_title = unicode(logo_href)
+            logo_title = str(logo_href)
 
         theme_favicon = settings.get('theme', 'favicon', None)
         theme_favicon_type = settings.get('theme', 'favicon_type', None)
@@ -1210,7 +1208,7 @@ class Kontext(Controller):
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         # util functions
-        result['to_str'] = lambda s: unicode(s) if s is not None else u''
+        result['to_str'] = lambda s: str(s) if s is not None else ''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
 
         with plugins.runtime.ISSUE_REPORTING as irp:
@@ -1303,7 +1301,7 @@ class Kontext(Controller):
         ans = {}
         bib_mapping = {}
         src_obj = request.args if self.get_http_method() == 'GET' else request.form
-        for p in src_obj.keys():
+        for p in list(src_obj.keys()):
             if p.startswith('sca_'):
                 ans[p[4:]] = src_obj.getlist(p)
 
@@ -1338,7 +1336,7 @@ class Kontext(Controller):
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:
-                srch = (x for x in subcorp_list if x['pub'] == self.corp.subcname).next()
+                srch = next((x for x in subcorp_list if x['pub'] == self.corp.subcname))
             except StopIteration:
                 srch = None
             if srch is None:
@@ -1369,7 +1367,7 @@ class Kontext(Controller):
         else:
             ans = []
         if category is not None:
-            return filter(lambda item: item.category == category, ans)
+            return [item for item in ans if item.category == category]
         else:
             return ans
 
@@ -1441,7 +1439,7 @@ class Kontext(Controller):
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request):
         task_ids = request.form.getlist('tasks')
-        self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
+        self._set_async_tasks([x for x in self.get_async_tasks() if x.ident not in task_ids])
         return self.check_tasks_status(request)
 
     @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message', template='message.html')

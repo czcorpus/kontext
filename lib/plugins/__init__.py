@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 import logging
+from .abstract import PluginException
+
 
 _plugins = {}
 
@@ -138,9 +141,9 @@ runtime = _Names()
 
 def install_plugin(name, module, config):
     if isinstance(module.create_instance, _PluginFactory):
-        _plugins[name] = apply(module.create_instance, (config,))
+        _plugins[name] = module.create_instance(*(config,))
     else:  # modules without @inject will get just the configuration
-        _plugins[name] = apply(module.create_instance, (config,))
+        _plugins[name] = module.create_instance(*(config,))
 
 
 def inject_plugin(ident, obj):
@@ -180,7 +183,7 @@ class _PluginFactory(object):
         self._args = args
 
     def __call__(self, conf):
-        return apply(self._fn, (conf,) + self._args)
+        return self._fn(*(conf,) + self._args)
 
 
 def inject(*args):

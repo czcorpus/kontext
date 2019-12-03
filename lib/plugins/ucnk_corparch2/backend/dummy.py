@@ -28,10 +28,10 @@ class DummyCorpusInfo(object):
         return ord(corp_id[0]) * 1000000
 
     def get_corpus_name(self, corp_id):
-        return u'{0} as corpus name'.format(corp_id)
+        return '{0} as corpus name'.format(corp_id)
 
     def get_corpus_description(self, corp_id):
-        return u'A description of {0}'.format(corp_id)
+        return 'A description of {0}'.format(corp_id)
 
     def get_corpus_encoding(self, corp_id):
         return 'utf-8'
@@ -64,13 +64,13 @@ class DummyShared(DummyCorpusInfo):
         return self._ttdesc_id
 
     def reuse_article(self, entry):
-        ahash = md5(entry.encode('utf-8')).hexdigest()
+        ahash = md5(entry).hexdigest()
         if ahash in self._articles:
             return self._articles[ahash]
         return None
 
     def add_article(self, entry, db_id):
-        ahash = md5(entry.encode('utf-8')).hexdigest()
+        ahash = md5(entry).hexdigest()
         self._articles[ahash] = db_id
 
     def registry_exists(self, corpus_id, variant):
@@ -85,7 +85,7 @@ class DummyCursor(object):
 
     @staticmethod
     def _import_v(v):
-        if isinstance(v, basestring):
+        if isinstance(v, str):
             return v.replace('\'', r'\'')
         elif v is None:
             return ''
@@ -104,7 +104,7 @@ class DummyCursor(object):
                 self._result = [dict(num=0)]
             else:
                 self._result = [[0]]
-        print(sql % tuple(u'\'{0}\''.format(self._import_v(s)) for s in args))
+        print((sql % tuple('\'{0}\''.format(self._import_v(s)) for s in args)))
 
     def fetchone(self):
         return self._result[0]

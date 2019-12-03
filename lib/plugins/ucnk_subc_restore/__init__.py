@@ -29,7 +29,9 @@ required entry in config.xml: please see config.rng
 """
 
 import time
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 import logging
 
 import werkzeug.urls
@@ -82,7 +84,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
                                (user_id, from_idx, to_idx)).fetchall()
         result = []
         for item in ans:
-            result.append(dict(zip(self.COLS, item)))
+            result.append(dict(list(zip(self.COLS, item))))
         return result
 
     def get_info(self, user_id, corpname, subcname):
@@ -90,7 +92,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
                                'FROM subc_archive WHERE user_id = ? AND corpname = ? AND subcname = ? ' +
                                'ORDER BY timestamp DESC LIMIT 1', (user_id, corpname, subcname, )).fetchone()
         if ans:
-            return dict(zip(self.COLS, ans))
+            return dict(list(zip(self.COLS, ans)))
         else:
             return None
 
@@ -98,7 +100,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         ans = self._db.execute('SELECT %s ' % ', '.join(self.COLS) +
                                'FROM subc_archive WHERE id = ?', (query_id, )).fetchone()
         if ans:
-            return dict(zip(self.COLS, ans))
+            return dict(list(zip(self.COLS, ans)))
         else:
             return None
 
@@ -153,7 +155,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
                         'human_corpname': corpus_info.name,
                         'corpname': subc_queries_map[dk]['corpname'],
                         'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
-                        'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
+                        'cql': urllib.parse.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
                         'deleted': True,
                         'published': False})
             except Exception as ex:
@@ -161,7 +163,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         for subc in subc_list:
             key = (subc['corpname'], get_user_subcname(subc))
             if key in subc_queries_map:
-                subc['cql'] = urllib.quote(subc_queries_map[key]['cql'].encode('utf-8'))
+                subc['cql'] = urllib.parse.quote(subc_queries_map[key]['cql'].encode('utf-8'))
             else:
                 subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])

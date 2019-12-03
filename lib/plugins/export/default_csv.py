@@ -21,7 +21,7 @@ like data can be used) to CSV format.
 
 import csv
 import codecs
-import cStringIO
+import io
 
 from . import AbstractExport, lang_row_to_list
 
@@ -30,6 +30,7 @@ class Writeable(object):
     """
     An auxiliary class serving as a buffer
     """
+
     def __init__(self):
         self.rows = []
 
@@ -45,7 +46,7 @@ class UnicodeCSVWriter:
     """
 
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        self.queue = cStringIO.StringIO()
+        self.queue = io.StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()
@@ -53,7 +54,7 @@ class UnicodeCSVWriter:
     def writerow(self, row):
         normalized_row = []
         for item in row:
-            if type(item) not in (str, unicode):
+            if type(item) not in (str, str):
                 item = str(item)
             item = item.encode("utf-8")
             normalized_row.append(item)
@@ -79,7 +80,8 @@ class CSVExport(AbstractExport):
 
     def __init__(self, subtype):
         self.csv_buff = Writeable()
-        self.csv_writer = UnicodeCSVWriter(self.csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+        self.csv_writer = UnicodeCSVWriter(
+            self.csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
         if subtype == 'concordance':
             self._import_row = lang_row_to_list
         else:

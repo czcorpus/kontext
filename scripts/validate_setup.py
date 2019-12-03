@@ -439,8 +439,8 @@ if __name__ == '__main__':
     print('--------------------------------------')
     for test in TESTS:
         print('')
-        print('\n'.join(test(finfo)))
+        print(('\n'.join(test(finfo))))
     print('\n--------------------------------------')
-    print('Total number of tests: {0}'.format(len(SCORE)))
-    print('Number of failed tests: {0}'.format(len(filter(lambda x: x is False, SCORE))))
+    print(('Total number of tests: {0}'.format(len(SCORE))))
+    print(('Number of failed tests: {0}'.format(len([x for x in SCORE if x is False]))))
     print('')

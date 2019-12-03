@@ -44,14 +44,14 @@ class ConcFormArgs(object):
         can be used to update an 'unbound'
         instance.
         """
-        for k, v in attrs.items():
+        for k, v in list(attrs.items()):
             if k in vars(self):
                 setattr(self, k, v)
         self._op_key = op_key
         return self
 
     def to_dict(self):
-        tmp = dict((k, v) for k, v in self.__dict__.items() if not k.startswith('_'))
+        tmp = dict((k, v) for k, v in list(self.__dict__.items()) if not k.startswith('_'))
         if not self.is_persistent:
             tmp['op_key'] = self._op_key
         return tmp
@@ -242,10 +242,10 @@ class SortFormArgs(ConcFormArgs):
         self.ml2pos = 1
         self.ml3pos = 1
         self.ml4pos = 1
-        self.ml1ctx = u'0~0>0'
-        self.ml2ctx = u'0~0>0'
-        self.ml3ctx = u'0~0>0'
-        self.ml4ctx = u'0~0>0'
+        self.ml1ctx = '0~0>0'
+        self.ml2ctx = '0~0>0'
+        self.ml3ctx = '0~0>0'
+        self.ml4ctx = '0~0>0'
 
 
 class SampleFormArgs(ConcFormArgs):
@@ -364,15 +364,15 @@ class ContextFilterArgsConv(object):
     @staticmethod
     def _convert_query(attrname, items, fctxtype):
         if fctxtype == 'any':
-            return u' | '.join(u'[{0}="{1}"]'.format(attrname, v) for v in items)
+            return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
         elif fctxtype == 'all':
             # here we assume len(items) == 1
             # (it's ok - see function append_filter() in _set_first_query action
             # where the operation is split into multiple filters as there
             # is no way how to specify a conjunction in a single query
-            return u'[{0}="{1}"]'.format(attrname, items[0])
+            return '[{0}="{1}"]'.format(attrname, items[0])
         elif fctxtype == 'none':
-            return u' | '.join(u'[{0}="{1}"]'.format(attrname, v) for v in items)
+            return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
 
     def __call__(self, attrname, items, ctx, fctxtype):
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,

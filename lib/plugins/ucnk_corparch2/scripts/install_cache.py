@@ -19,9 +19,9 @@ def user_add_permissions(db, user_id):
     cur.callproc('user_corpus_proc', (user_id,))
     for result in cur.stored_results():
         rows = result.fetchall()
-        print('\t {0} permissions'.format(len(rows)))
+        print(('\t {0} permissions'.format(len(rows))))
         for row in rows:
-            #print(row)
+            # print(row)
             try:
                 cur.execute(
                     'INSERT INTO kontext_corpus_user (user_id, corpus_name, variant) VALUES (%s, %s, %s)',
@@ -35,7 +35,7 @@ def update_cache(db, offset, limit):
     cur.execute('SELECT id FROM user ORDER BY ID LIMIT %s OFFSET %s', (limit, offset,))
     rows = cur.fetchall()
     for row in rows:
-        print('adding permissions for user {0}'.format(row['id']))
+        print(('adding permissions for user {0}'.format(row['id'])))
         clear_cache(db, row['id'])
         user_add_permissions(db, row['id'])
 

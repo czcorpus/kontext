@@ -76,7 +76,7 @@ def process_directory(dir_path, variant, backend, auto_align, verbose):
         for k in ids:
             aligned_ids_map[k] = list(ids - set([k]))
     else:
-        for id, alig in aligned.items():
+        for id, alig in list(aligned.items()):
             for a in alig:
                 try:
                     aligned_ids_map[id].append(id_map[a])
@@ -84,7 +84,7 @@ def process_directory(dir_path, variant, backend, auto_align, verbose):
                     logging.getLogger(__name__).warning(
                         'Ignored alignment {0} --> {1}'.format(id, a))
 
-    for corpus_id, aligned_ids in aligned_ids_map.items():
+    for corpus_id, aligned_ids in list(aligned_ids_map.items()):
         if created_rt.get(corpus_id, False):
             backend.save_corpus_alignments(corpus_id, aligned_ids)
 

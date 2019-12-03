@@ -96,7 +96,7 @@ class EmptyCorpus(object):
     def __init__(self, **kwargs):
         self.cm = object()
         self.corpname = ''
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             if hasattr(self, k):
                 setattr(self, k, v)
 
@@ -181,7 +181,8 @@ class CorptreeParser(object):
         ans.sample_size = elm.attrib.get('sample_size', -1)
         ans.citation_info.default_ref = CorptreeParser._get_repo_citation(
             elm.attrib['repo']) if 'repo' in elm.attrib else None
-        ans.token_connect.providers, ans.kwic_connect.providers = CorptreeParser.parse_tckc_providers(elm)
+        ans.token_connect.providers, ans.kwic_connect.providers = CorptreeParser.parse_tckc_providers(
+            elm)
         return ans
 
     @staticmethod
@@ -217,7 +218,7 @@ class CorptreeParser(object):
                     data['tokenConnect'].append(provider_elm.text)
 
             self._metadata[data['ident']] = self.parse_node_metadata(elm)
-        for child in filter(lambda x: x.tag in ('corplist', 'corpus'), list(elm)):
+        for child in [x for x in list(elm) if x.tag in ('corplist', 'corpus')]:
             if 'corplist' not in data:
                 data['corplist'] = []
             data['corplist'].append(self.parse_node(child))
@@ -297,7 +298,7 @@ class TreeCorparch(AbstractCorporaArchive):
             ans.metadata.desc = ''
 
         translated_k = OrderedDict()
-        for keyword, label in ans.metadata.keywords.items():
+        for keyword, label in list(ans.metadata.keywords.items()):
             if type(label) is dict and lang_code in label:
                 translated_k[keyword] = label[lang_code]
             elif type(label) is str:

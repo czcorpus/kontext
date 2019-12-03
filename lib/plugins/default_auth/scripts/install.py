@@ -28,17 +28,19 @@ def import_user(data, db):
     del data['permitted_corpora']
     db.set('user:{0}'.format(data['id']), json.dumps(data))
     db.hset('user_index', data['username'], json.dumps('user:{0}'.format(data['id'])))
-    print('Installed user {}'.format(data['username']))
+    print(('Installed user {}'.format(data['username'])))
 
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="default_auth - initial data import")
-    argparser.add_argument('file', metavar="FILE", help="a JSON file containing a list of users to be imported")
+    argparser.add_argument('file', metavar="FILE",
+                           help="a JSON file containing a list of users to be imported")
     args = argparser.parse_args()
 
     sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../lib')))
     import settings
-    conf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../conf/config.xml'))
+    conf_path = os.path.realpath(os.path.join(
+        os.path.dirname(__file__), '../../../../conf/config.xml'))
     settings.load(conf_path)
     db_conf = settings.get('plugins', 'db')
 
@@ -46,7 +48,8 @@ if __name__ == '__main__':
         print('Sorry, the script currently supports only Redis db backend')
         sys.exit(1)
 
-    db = redis.StrictRedis(host=db_conf['default:host'], port=db_conf['default:port'], db=db_conf['default:id'])
+    db = redis.StrictRedis(host=db_conf['default:host'],
+                           port=db_conf['default:port'], db=db_conf['default:id'])
     with open(args.file, 'rb') as fr:
         for user in json.load(fr):
             import_user(user, db)

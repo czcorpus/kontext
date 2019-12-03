@@ -33,7 +33,7 @@ from functools import wraps, partial
 import logging
 import sys
 import json
-import httplib
+import http.client
 import inspect
 import time
 import os
@@ -82,9 +82,9 @@ class APIConnection(object):
         self._conf = conf
 
     def _create_connection(self):
-        return httplib.HTTPConnection(self._conf.SERVER,
-                                      port=self._conf.PORT,
-                                      timeout=self._conf.HTTP_CONNECTION_TIMEOUT)
+        return http.client.HTTPConnection(self._conf.SERVER,
+                                          port=self._conf.PORT,
+                                          timeout=self._conf.HTTP_CONNECTION_TIMEOUT)
 
     def _get_task(self, task_id):
         connection = self._create_connection()
@@ -300,7 +300,7 @@ class KonserverApp(APIConnection):
             else:
                 mapping = dict((x[1], x[0]) for x in enumerate(inspect.getargspec(fn).args))
             call_args = [None] * len(mapping)
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 if k in args:
                     call_args[mapping[k]] = args[k]
             return call_args

@@ -99,7 +99,7 @@ class Corpora(Kontext):
             if item != speech_segment:
                 k, v = item.split('.')
                 ans[k].append(v)
-        return dict(structattrs=dict((k, v) for k, v in ans.items() if len(v) > 0))
+        return dict(structattrs=dict((k, v) for k, v in list(ans.items()) if len(v) > 0))
 
     @exposed(return_type='json')
     def bibliography(self, request):
