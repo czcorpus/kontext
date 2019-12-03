@@ -22,7 +22,7 @@ import math
 import hashlib
 import logging
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 from structures import FixedDict
@@ -198,8 +198,8 @@ def build_arf_db(corp, attrname):
             open(logfilename_m, 'w').write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
             log = " 2>> '%s'" % logfilename_m
             if subc_path:
-                cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
-                                                          subc_path.decode('utf-8'), log.decode('utf-8'))
+                cmd = "mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
+                                                         subc_path.decode('utf-8'), log.decode('utf-8'))
                 cmd = cmd.encode('utf-8')
             else:
                 cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
@@ -230,7 +230,7 @@ class FreqCalcCache(object):
         self._subcpath = subcpath
 
     def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
-        v = (str(self._corpname) + unicode(self._subcname).encode('utf-8') + str(self._user_id) +
+        v = (str(self._corpname) + str(self._subcname).encode('utf-8') + str(self._user_id) +
              ''.join(self._q).encode('utf-8') + str(fcrit) + str(flimit) + str(freq_sort) + str(ml) +
              str(ftt_include_empty) + str(rel_mode) + str(collator_locale))
         filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
@@ -442,7 +442,7 @@ class CTCalculation(object):
             norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
         else:
             norms = [self._corp.size()] * len(words)
-        mans = zip(words, freqs, norms)
+        mans = list(zip(words, freqs, norms))
         if limit_type == 'abs':
             ans = [v for v in mans if v[1] >= limit]
         elif limit_type == 'ipm':

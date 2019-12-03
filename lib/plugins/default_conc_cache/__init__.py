@@ -50,7 +50,7 @@ def _uniqname(subchash, query):
     """
     if subchash is None:
         subchash = ''
-    return hashlib.md5('#'.join([q.encode('utf-8') for q in query]) + subchash.encode('utf-8')).hexdigest()
+    return hashlib.md5(('#'.join([q for q in query]) + subchash).encode('utf-8')).hexdigest()
 
 
 class DefaultCacheMapping(AbstractConcCache):
@@ -149,7 +149,7 @@ class DefaultCacheMapping(AbstractConcCache):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
     def del_full_entry(self, subchash, q):
-        for k, stored in self._db.hash_get_all(self._mk_key()).items():
+        for k, stored in list(self._db.hash_get_all(self._mk_key()).items()):
             if _uniqname(subchash, q[:1]) == stored[2]:  # stored[2] = q0hash
                 # original record's key must be used (k ~ entry_key match can be partial)
                 self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
@@ -176,8 +176,8 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         """
         Export tasks for Celery worker(s)
         """
-        from cleanup import run as run_cleanup
-        from monitor import run as run_monitor
+        from .cleanup import run as run_cleanup
+        from .monitor import run as run_monitor
 
         def conc_cache_cleanup(ttl, subdir, dry_run, corpus_id=None):
             return run_cleanup(root_dir=self._cache_dir,

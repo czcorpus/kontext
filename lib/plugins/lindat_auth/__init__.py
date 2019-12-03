@@ -22,14 +22,14 @@ _logger = logging.getLogger(__name__)
 def uni(str_str, encoding="utf-8"):
     """ Try to get unicode without errors """
     try:
-        if isinstance(str_str, unicode):
+        if isinstance(str_str, str):
             return str_str
-        elif isinstance(str_str, basestring):
-            return unicode(str_str, encoding)
+        elif isinstance(str_str, str):
+            return str(str_str, encoding)
     except UnicodeError:
         pass
     try:
-        return unicode(str(str_str), encoding=encoding, errors='ignore')
+        return str(str(str_str), encoding=encoding, errors='ignore')
     except UnicodeError:
         pass
     return str_str.decode(encoding=encoding, errors="ignore")
@@ -172,7 +172,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         if 0 == len(firstname) and 0 == len(surname):
             names = displayname.split()
             if 1 < len(names):
-                firstname = u" ".join(names[:-1])
+                firstname = " ".join(names[:-1])
                 surname = names[-1]
 
         idp = uni(_get_non_empty_header(
@@ -184,7 +184,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                 "id": self._new_user_id(),
                 "username": username,
                 "idp": idp,
-                "fullname": u"%s %s" % (firstname, surname)
+                "fullname": "%s %s" % (firstname, surname)
             }
             self._db.hash_set_map(username, user_d)
         else:
@@ -220,10 +220,10 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                 user.User: [lindat_login]}
 
     def get_groups_for(self, user_dict):
-        groups = [u'anonymous']
+        groups = ['anonymous']
         user_id = user_dict['id']
         if not self.is_anonymous(user_id):
-            groups.append(u'authenticated')
+            groups.append('authenticated')
             if 'groups' in user_dict:
                 groups = groups + user_dict['groups']
         return groups
@@ -291,7 +291,7 @@ def _load_corplist(corptree_path):
 def _flatten_corplist(corp_list):
     ans = []
     for item in corp_list:
-        if item.has_key('corplist'):
+        if 'corplist' in item:
             ans += _flatten_corplist(item['corplist'])
         else:
             ans.append(item)

@@ -150,7 +150,7 @@ class AbstractMenuItem(object):
         return self
 
     def filter_empty_args(self):
-        self._args = filter(lambda x: x[1] is not None and x[1] != '', self._args)
+        self._args = [x for x in self._args if x[1] is not None and x[1] != '']
         return self
 
     def mark_indirect(self):
@@ -541,10 +541,7 @@ class MenuGenerator(object):
         """
 
         def custom_menu_items(section):
-            return map(
-                lambda item: item.to_dict(),
-                plugins.runtime.MENU_ITEMS.instance.get_items(section.name, lang=ui_lang)
-            )
+            return [item.to_dict() for item in plugins.runtime.MENU_ITEMS.instance.get_items(section.name, lang=ui_lang)]
 
         def is_disabled(menu_item):
             if isinstance(menu_item, MainMenuItemId):

@@ -79,7 +79,7 @@ class CorpusListItem(DictLike):
         self.keywords = [] if keywords is None else keywords
 
     def __unicode__(self):
-        return u'CorpusListItem({0})'.format(self.__dict__)
+        return 'CorpusListItem({0})'.format(self.__dict__)
 
     def __repr__(self):
         return self.__unicode__()
@@ -147,10 +147,10 @@ class DeafultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
-        rows = self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
-                                           min_size=min_size, max_size=max_size, requestable=requestable,
-                                           offset=offset, limit=limit + 1, keywords=query_keywords,
-                                           favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values()
+        rows = list(self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
+                                                min_size=min_size, max_size=max_size, requestable=requestable,
+                                                offset=offset, limit=limit + 1, keywords=query_keywords,
+                                                favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values())
         ans = []
         for i, corp in enumerate(rows):
             used_keywords.update(corp.keywords)
@@ -347,7 +347,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             data = self._backend.load_tckc_providers(corpus_id)
             for row in data:
                 if row['type'] == 'tc':
-                    self._tc_providers[corpus_id].providers.append((row['provider'], row['is_kwic_view']))
+                    self._tc_providers[corpus_id].providers.append(
+                        (row['provider'], row['is_kwic_view']))
                 elif row['type'] == 'kc':
                     self._kc_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id]
@@ -420,7 +421,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         all_keywords = self.all_keywords(plugin_api.user_lang)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
-                        for k, lab in all_keywords.items()]
+                        for k, lab in list(all_keywords.items())]
         return {
             'keywords': exp_keywords,
             'filters': {
@@ -457,7 +458,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             favorite=self._export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
-                            for k, lab in self.all_keywords(plugin_api.user_lang).items()],
+                            for k, lab in list(self.all_keywords(plugin_api.user_lang).items())],
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints,
             max_page_size=self.max_page_size

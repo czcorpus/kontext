@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 import hashlib
@@ -76,7 +76,7 @@ class CollCalcCache(object):
         self._samplesize = samplesize
 
     def _cache_file_path(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
-        v = (str(self._corpname) + unicode(self._subcname).encode('utf-8') + str(self._user_id) +
+        v = (str(self._corpname) + str(self._subcname).encode('utf-8') + str(self._user_id) +
              ''.join(self._q).encode('utf-8') + str(cattr) + str(csortfn) + str(cbgrfns) + str(cfromw) +
              str(ctow) + str(cminbgr) + str(cminbgr) + str(cminfreq))
         filename = '%s.pkl' % hashlib.sha1(v).hexdigest()

@@ -21,7 +21,7 @@ like data can be used) to XLSX (Office Open XML) format.
 Plug-in requires openpyxl library.
 """
 
-from StringIO import StringIO
+from io import StringIO
 
 from openpyxl import Workbook
 from openpyxl.compat import range
@@ -66,7 +66,7 @@ class XLSXExport(AbstractExport):
     def writeheading(self, data):
         self._curr_line = 1
         if type(data) is dict:
-            data = ['%s: %s' % (k, v) for (k, v) in data.items()]
+            data = ['%s: %s' % (k, v) for (k, v) in list(data.items())]
         for i in range(1, len(data) + 1):
             col = get_column_letter(i)
             self._sheet['%s%s' % (col, self._curr_line)].value = data[i - 1]
@@ -87,18 +87,18 @@ class XLSXExport(AbstractExport):
     def _import_value(self, v, i):
         format_map = {
             int: '0',
-            long: '0',
+            int: '0',
             float: '0.00',
-            unicode: 'General'
+            str: 'General'
         }
         if i < len(self._col_types):
             out_type = self._col_types[i]
         else:
-            out_type = unicode
+            out_type = str
         if out_type not in format_map:
             raise ExportPluginException('Unsupported cell type %s' % out_type)
-        if out_type is not unicode and v is None or v == '':
-            out_type = unicode
+        if out_type is not str and v is None or v == '':
+            out_type = str
         return out_type(v), format_map[out_type]
 
     def writerow(self, line_num, *lang_rows):

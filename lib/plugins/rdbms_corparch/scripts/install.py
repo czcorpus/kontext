@@ -54,13 +54,13 @@ class Shared(InstallCorpusInfo):
         return self._ttdesc_id
 
     def reuse_article(self, entry):
-        ahash = md5(entry.encode('utf-8')).hexdigest()
+        ahash = md5(entry).hexdigest()
         if ahash in self._articles:
             return self._articles[ahash]
         return None
 
     def add_article(self, entry, db_id):
-        ahash = md5(entry.encode('utf-8')).hexdigest()
+        ahash = md5(entry).hexdigest()
         self._articles[ahash] = db_id
 
     def registry_exists(self, corpus_id, variant):
@@ -89,7 +89,7 @@ class InstallJsonDir(object):
         if args.json_out:
             if not os.path.exists(args.json_out):
                 os.makedirs(args.json_out)
-            for ident, conf in self._data.items():
+            for ident, conf in list(self._data.items()):
                 fpath = os.path.join(self._dir_path, ident + '.json')
                 with open(fpath, 'wb') as fw:
                     conf.write(fw)
@@ -227,7 +227,7 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
     ans = {}
     desc_all = meta_elm.findall('desc')
     cursor = new_cursor(db)
-    if len(desc_all) == 1 and 'ref' in desc_all[0].keys():
+    if len(desc_all) == 1 and 'ref' in list(desc_all[0].keys()):
         message_key = desc_all[0].attrib['ref']
         value = shared.get_ref_ttdesc(message_key)
         cursor.execute(
@@ -242,7 +242,7 @@ def parse_meta_desc(meta_elm, db, shared, corpus_id, json_out):
                 text_en = d.text
             elif lang_code == 'cs':
                 text_cs = d.text
-            if 'ident' in d.keys():
+            if 'ident' in list(d.keys()):
                 ident = d.attrib['ident']
         cursor.execute('INSERT INTO kontext_ttdesc (id, text_cs, text_en) VALUES (?, ?, ?)',
                        (shared.ttdesc_id_inc, text_cs, text_en))
@@ -375,7 +375,7 @@ def parse_corplist(path, db, shared, json_out, variant, verbose):
             try:
                 create_corp_record(c, db, shared, json_out, variant)
             except Exception as ex:
-                print('Skipping corpus [{0}] due to error: {1}'.format(c.attrib['ident'], ex))
+                print(('Skipping corpus [{0}] due to error: {1}'.format(c.attrib['ident'], ex)))
                 if verbose:
                     import traceback
                     traceback.print_exc()

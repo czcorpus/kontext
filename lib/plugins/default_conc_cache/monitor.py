@@ -21,7 +21,7 @@ import json
 try:
     from elasticsearch import Elasticsearch
 except ImportError:
-    from es_dummy import Elasticsearch
+    from .es_dummy import Elasticsearch
 
 
 def get_disk_free_space(path):
@@ -87,8 +87,8 @@ class Monitor(object):
         total_files = len(self._data)
         total_bytes = sum(v.size for v in self._data)
 
-        ans = dict(datetime=self.export_timestamp(), top_10_sum_bytes=round(top_10/1e6), num_cache_files=total_files,
-                   sum_cache_bytes=round(total_bytes/1e6), disk_free_bytes=round(free_sp/1e6))
+        ans = dict(datetime=self.export_timestamp(), top_10_sum_bytes=round(top_10 / 1e6), num_cache_files=total_files,
+                   sum_cache_bytes=round(total_bytes / 1e6), disk_free_bytes=round(free_sp / 1e6))
 
         if free_sp < self.free_capacity_trigger:
             rm_ans = self.find_rm_candidates()
@@ -110,7 +110,7 @@ class Monitor(object):
         return self.entry_key_gen(os.path.basename(os.path.dirname(path))), os.path.basename(path)[:-len('.conc')]
 
     def find_rm_candidates(self):
-        rmlist = sorted(filter(lambda v: v.age > self.min_file_age, self._data),
+        rmlist = sorted([v for v in self._data if v.age > self.min_file_age],
                         key=lambda v: v.size * v.age, reverse=True)
         total = 0
         i = 0
@@ -140,4 +140,3 @@ def run(db_plugin, entry_key_gen, root_dir, min_file_age, free_capacity_goal, fr
                       min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
                       free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
     return monitor.run()
-

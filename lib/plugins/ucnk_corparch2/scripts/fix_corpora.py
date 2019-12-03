@@ -119,7 +119,7 @@ def parse_corplist(corplist_path):
 def fix_corpora(db, corplist, corplist_conf):
     cursor = db.cursor()
     for corp in corplist:
-        print('{0}:'.format(corp))
+        print(('{0}:'.format(corp)))
         try:
             mod_id = corp.rsplit('/', 1)[-1]
             size, web, keywords = analyze_corpus(corp, corplist_conf.get(mod_id, CorpusInfo()))
@@ -132,7 +132,7 @@ def fix_corpora(db, corplist, corplist_conf):
                     'INSERT INTO kontext_keyword_corpus (corpus_name, keyword_id) VALUES (%s, %s)', (corp, k))
 
         except Exception as ex:
-            print('skipping {0} due to: {1}'.format(corp, ex))
+            print(('skipping {0} due to: {1}'.format(corp, ex)))
         print('---------')
 
 

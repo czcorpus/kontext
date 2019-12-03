@@ -19,7 +19,8 @@ if __name__ == '__main__':
     import argparse
 
     argparser = argparse.ArgumentParser(description="RedisDB clean-up utility")
-    argparser.add_argument('clean_what', metavar="ACTION", help="what item group should be cleaned (session, concordance)")
+    argparser.add_argument('clean_what', metavar="ACTION",
+                           help="what item group should be cleaned (session, concordance)")
 
     args = argparser.parse_args()
     patterns = {
@@ -36,6 +37,6 @@ if __name__ == '__main__':
     i = 0
     for key in keys:
         db.delete(key)
-        print('deleted: %s' % key)
+        print(('deleted: %s' % key))
         i += 1
-    print('Finished deleting %d keys' % i)
+    print(('Finished deleting %d keys' % i))
