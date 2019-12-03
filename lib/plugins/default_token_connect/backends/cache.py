@@ -35,7 +35,7 @@ def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query
             args.append((x, sorted([(x2, y2) for x2, y2 in list(y.items())], key=lambda x: x[0])))
         else:
             args.append((x, y))
-    return md5('%r%r%r%r%r%r' % (provider_id, corpora, token_id, num_tokens, args, lang)).hexdigest()
+    return md5(f'{provider_id}{corpora}{token_id}{num_tokens}{args}{lang}'.encode('utf-8')).hexdigest()
 
 
 def cached(fn):
@@ -70,7 +70,7 @@ def cached(fn):
                     # if a result is returned by the backend function, encode and zip its data part and store it in
                     # the cache along with the "found" parameter
                     if res:
-                        zipped = buffer(zlib.compress(res[0].encode('utf-8')))
+                        zipped = memoryview(zlib.compress(res[0].encode('utf-8')))
                         curs.execute(
                             "INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
                             (key, self.provider_id, zipped, 1 if res[1] else 0, int(round(time.time()))))

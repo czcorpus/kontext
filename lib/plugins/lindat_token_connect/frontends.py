@@ -25,7 +25,7 @@ class VallexFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(VallexFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
+    def export_data(self, data, status, lang, is_kwic_view):
         response = super(VallexFrontend, self).export_data(data, status, lang)
         response.renderer = 'vallex-json'
         response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
@@ -36,8 +36,8 @@ class PDTVallexFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(PDTVallexFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
-        response = super(PDTVallexFrontend, self).export_data(data, status, lang)
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super(PDTVallexFrontend, self).export_data(data, status, lang, is_kwic_view)
         response.renderer = 'pdt-vallex-json'
         response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
         return response
@@ -47,8 +47,8 @@ class ENGVallexFrontend(AbstractFrontend):
     def __init__(self, conf):
         super(ENGVallexFrontend, self).__init__(conf)
 
-    def export_data(self, data, status, lang):
-        response = super(ENGVallexFrontend, self).export_data(data, status, lang)
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super(ENGVallexFrontend, self).export_data(data, status, lang, is_kwic_view)
         response.renderer = 'eng-vallex-json'
         response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
         return response
