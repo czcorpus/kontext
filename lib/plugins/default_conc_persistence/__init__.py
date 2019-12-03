@@ -66,7 +66,7 @@ def mk_short_id(s, min_length):
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
-    x = long('0x' + hashlib.md5(s).hexdigest(), 16)
+    x = int('0x' + hashlib.md5(s).hexdigest(), 16)
     ans = []
     while x > 0:
         p = x % len(KEY_ALPHABET)

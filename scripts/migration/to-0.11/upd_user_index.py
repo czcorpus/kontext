@@ -29,8 +29,8 @@ if __name__ == '__main__':
     db = plugins.runtime.DB.instance
     redis_db = getattr(db, 'redis')
     data = redis_db.hgetall(uindex_key)
-    for k, v in data.items():
-        print('%s -> %s' % (k, v))
+    for k, v in list(data.items()):
+        print(('%s -> %s' % (k, v)))
         db.hash_set(tmp_key, k, v)
     db.rename(uindex_key, 'user_index:old')
     db.rename(tmp_key, uindex_key)

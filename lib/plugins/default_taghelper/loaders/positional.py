@@ -108,13 +108,13 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             for s in cache_path_items:
                 tst_path += '%s/' % s
                 if not os.path.exists(tst_path):
-                    os.mkdir(tst_path, 0775)
+                    os.mkdir(tst_path, 0o775)
             ans = [set() for i in range(tagset['num_pos'])]
             with open(self.variants_file_path) as fr:
                 for line in fr:
                     line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                     for i in range(tagset['num_pos']):
-                        value = ''.join(map(lambda x: char_replac_tab.get(x, x), line[i]))
+                        value = ''.join([char_replac_tab.get(x, x) for x in line[i]])
                         if line[i] == '-':
                             ans[i].add(('-', ''))
                         elif i < len(tagset['values']):
@@ -172,7 +172,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         for item in matching_tags:
             for i in range(len(tag_elms)):
                 value = ''.join(
-                    map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, item[i]))
+                    [char_replac_tab[x] if x in char_replac_tab else x for x in item[i]])
                 if item[i] == '-':
                     ans[i].add(('-', ''))
                 elif item[i] in translation_tables[i]:

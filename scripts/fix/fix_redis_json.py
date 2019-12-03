@@ -15,15 +15,13 @@ if __name__ == '__main__':
     redis.flushdb()
     auth_db = plugin_db.get_instance('auth')
     redis = getattr(auth_db, 'redis')
-    keys = list(filter(lambda key: key != '__user_count', auth_db.keys()))
+    keys = list([key for key in list(auth_db.keys()) if key != '__user_count'])
     for key in keys:
         try:
             auth_db.hash_get_all(key)
         except:
             data = redis.hgetall(key)
-            for k,v in data.items():
+            for k, v in list(data.items()):
                 if k == 'id':
                     v = int(v)
                 auth_db.hash_set(key, k, v)
-
-

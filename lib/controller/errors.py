@@ -33,7 +33,7 @@ def fetch_exception_msg(ex):
     msg = getattr(ex, 'message', None)
     if not msg:
         try:
-            msg = unicode(ex)
+            msg = str(ex)
         except:
             msg = '%r' % ex
     if not msg:

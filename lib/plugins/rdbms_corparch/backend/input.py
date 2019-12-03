@@ -31,7 +31,7 @@ class InstallJsonMetadata(object):
         self.featured = False
 
     def update(self, data):
-        for attr in self.__dict__.keys():
+        for attr in list(self.__dict__.keys()):
             if attr == 'featured':
                 self.featured = bool(data.get('featured', []))
             else:
@@ -96,7 +96,7 @@ class InstallJson(object):
 
     def update(self, fr):
         data = json.load(fr)
-        for attr in self.__dict__.keys():
+        for attr in list(self.__dict__.keys()):
             if attr == 'metadata':
                 self.metadata.update(data.get(attr, {}))
             elif attr == 'reference':
@@ -125,5 +125,3 @@ class InstallJson(object):
 
     def write(self, fw):
         return json.dump(self.to_dict(), fw,  indent=4)
-
-

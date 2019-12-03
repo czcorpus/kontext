@@ -63,9 +63,9 @@ def manatee_min_version(ver):
     arguments:
     ver -- a version signature string 'X.Y.Z' (e.g. '2.130.7')
     """
-    ver = int(''.join(map(lambda x: '%03d' % int(x), ver.split('.'))))
-    actual = int(''.join(map(lambda x: '%03d' %
-                             int(x), manatee.version().split('-')[-1].split('.'))))
+    ver = int(''.join(['%03d' % int(x) for x in ver.split('.')]))
+    actual = int(''.join(['%03d' %
+                          int(x) for x in manatee.version().split('-')[-1].split('.')]))
     return ver <= actual
 
 
@@ -341,7 +341,7 @@ class CorpusManager(object):
                 subcname = public_subcname
             for sp in self.subcpath:
                 spath = os.path.join(sp, corpname, subcname + '.subc')
-                if type(spath) == unicode:
+                if type(spath) == str:
                     spath = spath.encode('utf-8')
                 if os.path.isfile(spath):
                     subc = self._open_subcorpus(corpname, subcname, corp, spath, decode_desc)
@@ -371,7 +371,7 @@ class CorpusManager(object):
         Returns:
              a list of pairs
         """
-        if type(corp) is basestring:
+        if type(corp) is str:
             corp = self.get_Corpus(corp)
         val = import_string(corp.get_conf(label), from_encoding=corp.get_conf('ENCODING'))
         if len(val) > 2:
@@ -382,15 +382,10 @@ class CorpusManager(object):
 
     def subc_files(self, corpname):
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
-        enc_corpname = corpname.encode('utf-8')
         sp = self.subcpath[0]
         items = []
-        for x in glob.glob(os.path.join(sp, enc_corpname, '*.subc').encode('utf-8')):
-            try:
-                items.append(x.decode('utf-8'))
-            except UnicodeDecodeError:
-                logging.getLogger(__name__).warning(
-                    'Subcorpus filename encoding problem. File: %s' % x)
+        for x in glob.glob(os.path.join(sp, corpname, '*.subc')):
+            items.append(x)
         return sorted(items)
 
     def subcorp_names(self, corpname):
@@ -421,7 +416,7 @@ def get_wordlist_length(corp, wlattr, wlpat, wlnums, wlminfreq, words, blacklist
         gen = attr.regexp2ids(enc_pattern, 0)
     i = 0
     while not gen.end():
-        wid = gen.next()
+        wid = next(gen)
         frq = attrfreq[wid]
         if not frq:
             continue
@@ -446,7 +441,7 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
         else:
             if len(items) >= wlmaxitems:
                 break
-        wid = gen.next()
+        wid = next(gen)
         frq = attrfreq[wid]
         if not frq:
             continue
@@ -538,7 +533,7 @@ def doc_sizes(corp, struct, attrname, i, normvals):
     cnt = 0
     while not r.end():
         cnt += normvals[r.peek_beg()]
-        r.next()
+        next(r)
     return cnt
 
 
@@ -682,7 +677,7 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
 
 def subc_freqs(subcorp, attr, minfreq=50, maxfreq=10000, last_id=None):
     return [(i, subcorp.count_rest(attr.id2poss(i)))
-            for i in xrange(last_id or attr.id_range())
+            for i in range(last_id or attr.id_range())
             if maxfreq > attr.freq(i) > minfreq]
 
 
@@ -700,7 +695,7 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
                   maxitems=100):
     p = (subcorp.size() - subcorp.search_size()) / float(subcorp.search_size())
     candidates = []
-    for i in xrange(last_id or attr.id_range()):
+    for i in range(last_id or attr.id_range()):
         if not (maxfreq > attr.freq(i) > minfreq):
             continue
         freq = subcorp.count_rest(attr.id2poss(i))
@@ -730,7 +725,7 @@ class MissingSubCorpFreqFile(Exception):
         self._orig_error = orig_error
 
     def __unicode__(self):
-        return u'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
+        return 'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -773,7 +768,7 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
             except IOError as ex:
                 if not hasattr(corp, 'spath') and nums == 'frq':
                     a = corp.get_attr(attrname)
-                    frq.fromlist([a.freq(i) for i in xrange(a.id_range())])
+                    frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:
                     raise MissingSubCorpFreqFile(corp, ex)
     return frq
@@ -804,7 +799,7 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     except TypeError:
         gen = attr.regexp2ids(wlpat.strip(), 0)
     while not gen.end():
-        i = gen.next()
+        i = next(gen)
         w = attr.id2str(i)
         if f[i] < wlminfreq or (wlwords and w not in wlwords) \
                 or (blacklist and w in blacklist):

@@ -27,6 +27,7 @@ import l10n
 from l10n import import_string, export_string, escape
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
+from functools import reduce
 
 
 def get_conc_labelmap(infopath):
@@ -36,8 +37,8 @@ def get_conc_labelmap(infopath):
         annoti = parse(infopath)
         for e in annoti.find('labels'):
             labels[e.find('n').text] = e.find('lab').text
-    except IOError, err:
-        print >>stderr, 'get_conc_labelmap: %s' % err
+    except IOError as err:
+        print('get_conc_labelmap: %s' % err, file=stderr)
         pass
     return labels
 
@@ -124,8 +125,8 @@ class PyConc(manatee.Concordance):
         self.set_linegroup_from_conc(annot)
         lmap = annot.labelmap
         lmap[0] = None
-        ids = manatee.IntVector(map(int, lmap.keys()))
-        strs = manatee.StrVector(map(lngrp_sortstr, lmap.values()))
+        ids = manatee.IntVector(list(map(int, list(lmap.keys()))))
+        strs = manatee.StrVector(list(map(lngrp_sortstr, list(lmap.values()))))
         self.linegroup_sort(ids, strs)
 
     def command_s(self, options):
@@ -223,7 +224,7 @@ class PyConc(manatee.Concordance):
             cnt = 0
             while not r.end():
                 cnt += normvals[r.peek_beg()]
-                r.next()
+                next(r)
             ans[self.import_string(value)] = cnt
         return ans
 
@@ -383,7 +384,7 @@ class PyConc(manatee.Concordance):
         begs = manatee.IntVector(xrange)
         vals = manatee.IntVector(xrange)
         self.distribution(vals, begs, yrange)
-        return zip(vals, begs)
+        return list(zip(vals, begs))
 
     def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
         statdesc = {'t': translate('T-score'),
@@ -411,7 +412,7 @@ class PyConc(manatee.Concordance):
                 pfilter=qfilter % ('P', escape(self.import_string(colls.get_item()))),
                 nfilter=qfilter % ('N', escape(self.import_string(colls.get_item())))
             ))
-            colls.next()
+            next(colls)
             i += 1
 
         head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] + \
@@ -444,11 +445,11 @@ class PyConc(manatee.Concordance):
         ids = manatee.IntVector()
         freqs = manatee.IntVector()
         conc.get_linegroup_stat(ids, freqs)
-        info = dict(zip(ids, freqs))
+        info = dict(list(zip(ids, freqs)))
         if not info:
             # no annotation
             return 0, 0, [0] * (len(self.selected_grps) + 1)
         hist = [info.get(i, 0) for i in self.selected_grps]
         hist.append(conc.size() - sum(hist))
-        cnt, maxid = max(zip(freqs, ids))
+        cnt, maxid = max(list(zip(freqs, ids)))
         return maxid, (cnt / float(conc.size())), hist

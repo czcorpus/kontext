@@ -24,17 +24,17 @@ initializer.init_plugin('db')
 
 if __name__ == '__main__':
     subc_root = autoconf.settings.get('corpora', 'users_subcpath')
-    for username, user_key in plugins.runtime.DB.instance.hash_get_all('user_index').items():
+    for username, user_key in list(plugins.runtime.DB.instance.hash_get_all('user_index').items()):
         user_id = user_key.split(':')[1]
 
         from_path = os.path.join(subc_root, username)
         to_path = os.path.join(subc_root, user_id)
         if os.path.exists(from_path) and not os.path.exists(to_path):
             try:
-                print('%s ---> %s' % (from_path, to_path))
+                print(('%s ---> %s' % (from_path, to_path)))
                 os.rename(from_path, to_path)
             except Exception as e:
-                print('    ERR: %s' % (e,))
+                print(('    ERR: %s' % (e,)))
         elif os.path.exists(to_path):
-            print('    ERR: path collision: %s  vs. %s' % (from_path, to_path))
+            print(('    ERR: path collision: %s  vs. %s' % (from_path, to_path)))
         print('')

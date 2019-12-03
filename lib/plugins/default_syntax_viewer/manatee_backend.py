@@ -164,7 +164,7 @@ class TreeConf(object):
         return (self.word_attr, ) + tuple(ans)   # word attr must be first
 
     def __repr__(self):
-        return unicode(self._data)
+        return str(self._data)
 
 
 class ManateeBackendConf(object):
@@ -444,14 +444,14 @@ class ManateeBackend(SearchBackend):
         for i in range(0, len(in_data), 4):
             parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
             if len(parsed) > len(tree_attrs):
-                item = dict(zip(tree_attrs, len(tree_attrs) * [None]))
+                item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
                 item['word'] = in_data[i]
                 # In case of a parsing error we wrap a partial result into
                 # an error and try later to fetch essential data only (= parent
                 # and other references to other values).
                 data.append(BackendDataParseException(result=item))
             else:
-                item = dict(zip(tree_attrs, parsed))
+                item = dict(list(zip(tree_attrs, parsed)))
                 item['word'] = in_data[i]
                 data.append(item)
         return data
@@ -561,7 +561,7 @@ class ManateeBackend(SearchBackend):
 
     def get_detail_attr_orders(self, corpus_id, corpus):
         ans = {}
-        for tree_id, conf in self._conf.get_trees(corpus_id, corpus).items():
+        for tree_id, conf in list(self._conf.get_trees(corpus_id, corpus).items()):
             ans[tree_id] = conf.detail_attrs
         return ans
 
