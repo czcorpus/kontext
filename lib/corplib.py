@@ -713,9 +713,9 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
 
 def subcorp_base_file(corp, attrname):
     if hasattr(corp, 'spath'):
-        return corp.spath[:-4].decode('utf-8') + attrname
+        return corp.spath[:-4] + attrname
     else:
-        return corp.get_conf('PATH').decode('utf-8') + attrname
+        return corp.get_conf('PATH') + attrname
 
 
 class MissingSubCorpFreqFile(Exception):
@@ -737,8 +737,7 @@ class MissingSubCorpFreqFile(Exception):
 
 def frq_db(corp, attrname, nums='frq', id_range=0):
     import array
-    import exceptions
-    filename = (subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    filename = (subcorp_base_file(corp, attrname) + '.' + nums)
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
@@ -747,7 +746,7 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
             frq.fromfile(open(filename), id_range)
         except IOError as ex:
             raise MissingSubCorpFreqFile(corp, ex)
-        except exceptions.EOFError as ex:
+        except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             raise MissingSubCorpFreqFile(corp, ex)
     else:
@@ -756,7 +755,7 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
                 raise IOError
             frq = array.array('i')
             frq.fromfile(open(filename), id_range)
-        except exceptions.EOFError as ex:
+        except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             os.remove(filename.rsplit('.', 1)[0] + '.arf')
             os.remove(filename.rsplit('.', 1)[0] + '.frq')

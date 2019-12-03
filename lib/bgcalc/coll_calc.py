@@ -76,10 +76,8 @@ class CollCalcCache(object):
         self._samplesize = samplesize
 
     def _cache_file_path(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
-        v = (str(self._corpname) + str(self._subcname).encode('utf-8') + str(self._user_id) +
-             ''.join(self._q).encode('utf-8') + str(cattr) + str(csortfn) + str(cbgrfns) + str(cfromw) +
-             str(ctow) + str(cminbgr) + str(cminbgr) + str(cminfreq))
-        filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
+        v = f'{self._corpname}{self._subcname}{self._user_id}{"".join(self._q)}{cattr}{csortfn}{cbgrfns}{cfromw}{ctow}{cminbgr}{cminbgr}{cminfreq}'
+        filename = f'{hashlib.sha1(v.encode("utf-8")).hexdigest()}.pkl'
         return os.path.join(settings.get('corpora', 'colls_cache_dir'), filename)
 
     def get(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
