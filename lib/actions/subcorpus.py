@@ -196,7 +196,7 @@ class Subcorpus(Querying):
         try:
             return self._create_subcorpus(request)
         except (SubcorpusError, RuntimeError) as e:
-            raise UserActionException(e.message)
+            raise UserActionException(str(e)) from e
 
     @exposed(access_level=1, apply_semi_persist_args=True)
     def subcorp_form(self, request):

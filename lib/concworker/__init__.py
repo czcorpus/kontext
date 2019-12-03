@@ -201,4 +201,4 @@ class ConcCalculation(GeneralWorker):
                     subchash, query, dict(
                         finished=True,
                         curr_wait=sleeptime,
-                        error=e.message if getattr(e, 'message', None) else e.__class__.__name__))
+                        error=str(e) if str(e) else e.__class__.__name__))

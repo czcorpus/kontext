@@ -56,14 +56,14 @@ class UserActionException(Exception):
         self._internal_message = internal_message
 
     def __repr__(self):
-        return self.message
+        return super().__repr__()
 
     def __str__(self):
-        return self.message
+        return super().__str__()
 
     @property
     def internal_message(self):
-        return self._internal_message if self._internal_message else self.message
+        return self._internal_message if self._internal_message else str(self)
 
 
 class NotFoundException(UserActionException):
