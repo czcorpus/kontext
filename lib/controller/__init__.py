@@ -743,14 +743,8 @@ class Controller(object):
         """
         if isinstance(err, UserActionException):
             return err
-        if err.message:
-            if type(err.message) == str:
-                text = err.message
-            else:
-                text = str(err.message).decode(self.corp_encoding, errors='replace')
-        else:
-            text = str(err)
-            err.message = text  # in case we return the original error
+        text = str(err)
+        setattr(err, 'message', text)  # in case we return the original error
         if 'syntax error' in text.lower():
             srch = re.match(r'.+ position (\d+)', text)
             if srch:
@@ -848,7 +842,7 @@ class Controller(object):
             err = (ex, None)
             self._status = ex.code
             tmpl, result = self._run_message_action(
-                named_args, action_metadata, 'error', ex.message)
+                named_args, action_metadata, 'error', str(err))
         except ImmediateRedirectException as ex:
             err = (ex, None)
             tmpl, result = None, None
@@ -858,7 +852,7 @@ class Controller(object):
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
-                msg_args, action_metadata, 'error', ex.message)
+                msg_args, action_metadata, 'error', str(err))
         except werkzeug.exceptions.BadRequest as ex:
             err = (ex, None)
             self._status = ex.code

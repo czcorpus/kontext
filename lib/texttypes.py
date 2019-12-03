@@ -112,7 +112,7 @@ class StructNormsCalc(object):
         cnt = 0
         while not r.end():
             cnt += self.normvals[r.peek_beg()]
-            next(r)
+            r.next()
         return cnt
 
 

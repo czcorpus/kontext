@@ -416,7 +416,7 @@ def get_wordlist_length(corp, wlattr, wlpat, wlnums, wlminfreq, words, blacklist
         gen = attr.regexp2ids(enc_pattern, 0)
     i = 0
     while not gen.end():
-        wid = next(gen)
+        wid = gen.next()
         frq = attrfreq[wid]
         if not frq:
             continue
@@ -441,7 +441,7 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
         else:
             if len(items) >= wlmaxitems:
                 break
-        wid = next(gen)
+        wid = gen.next()
         frq = attrfreq[wid]
         if not frq:
             continue
@@ -533,7 +533,7 @@ def doc_sizes(corp, struct, attrname, i, normvals):
     cnt = 0
     while not r.end():
         cnt += normvals[r.peek_beg()]
-        next(r)
+        r.next()
     return cnt
 
 
@@ -799,7 +799,7 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     except TypeError:
         gen = attr.regexp2ids(wlpat.strip(), 0)
     while not gen.end():
-        i = next(gen)
+        i = gen.next()
         w = attr.id2str(i)
         if f[i] < wlminfreq or (wlwords and w not in wlwords) \
                 or (blacklist and w in blacklist):

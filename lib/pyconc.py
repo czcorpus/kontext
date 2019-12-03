@@ -224,7 +224,7 @@ class PyConc(manatee.Concordance):
             cnt = 0
             while not r.end():
                 cnt += normvals[r.peek_beg()]
-                next(r)
+                r.next()
             ans[self.import_string(value)] = cnt
         return ans
 

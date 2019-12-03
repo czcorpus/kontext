@@ -44,7 +44,7 @@ def mk_pwd_hash_default(data):
     iterations = 1000
     keylen = 24
     algo = 'sha512'
-    salt = os.urandom(keylen).encode('hex')
+    salt = str(os.urandom(keylen))
     return mk_pwd_hash(data, salt, iterations, keylen, algo)
 
 

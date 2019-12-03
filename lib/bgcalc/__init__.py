@@ -41,7 +41,7 @@ def _init_backend_app(conf, fn_prefix):
     app_type = conf.get('calc_backend', 'type')
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
-        from . import celery
+        import celery
         from bgcalc.celery import Config
 
         if app_conf:
