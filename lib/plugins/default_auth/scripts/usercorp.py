@@ -45,20 +45,20 @@ def add_corpora(user_id, corpora):
             if corp not in curr_list:
                 curr_list.append(corp)
             else:
-                print('Corpus {0} already present, skipping.'.format(corp))
+                print(('Corpus {0} already present, skipping.'.format(corp)))
         db.set(mk_list_key(user_id), curr_list)
 
 
 def remove_corpora(user_id, corpora):
     with plugins.runtime.DB as db:
         curr_list = db.get(mk_list_key(user_id))
-        print('Current corpora for the user:\n\t{0}'.format(', '.join(curr_list)))
+        print(('Current corpora for the user:\n\t{0}'.format(', '.join(curr_list))))
         new_list = []
         for corp in curr_list:
             if corp not in corpora:
                 new_list.append(corp)
         db.set(mk_list_key(user_id), new_list)
-        print('New corpora for the user:\n\t{0}'.format(', '.join(new_list)))
+        print(('New corpora for the user:\n\t{0}'.format(', '.join(new_list))))
 
 
 def remove_all_corpora(user_id):
@@ -66,13 +66,13 @@ def remove_all_corpora(user_id):
         curr_items = db.get(mk_list_key(user_id))
         db.set(mk_list_key(user_id), [])
         print('Removed access to any corpus for the user.')
-        print('Removed values:\n\t{0}'.format(', '.join(curr_items)))
+        print(('Removed values:\n\t{0}'.format(', '.join(curr_items))))
 
 
 def list_corpora(user_id):
     with plugins.runtime.DB as db:
         items = db.get(mk_list_key(user_id))
-        print('Current corpora for the user:\n\t{0}'.format(', '.join(items)))
+        print(('Current corpora for the user:\n\t{0}'.format(', '.join(items))))
 
 
 def import_corplist(s):
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     user_key = get_user_key(args.user_ident)
     if user_key is None:
-        print('user [{0}] not found'.format(args.user_ident))
+        print(('user [{0}] not found'.format(args.user_ident)))
         sys.exit(1)
 
     user_id = get_user_id_from_key(user_key)
@@ -104,5 +104,5 @@ if __name__ == '__main__':
     elif args.action == 'list':
         list_corpora(user_id)
     else:
-        print('Unknown action {0}'.format(args.action))
+        print(('Unknown action {0}'.format(args.action)))
         sys.exit(1)

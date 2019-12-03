@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import absolute_import
+
 import datetime
 import pytz
 import logging
@@ -133,7 +133,8 @@ class WritableBackend(Backend):
                                (corpus_id, name))
 
     def save_corpus_config(self, install_json, registry_dir, corp_size):
-        t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
+        t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
+                                   ).strftime("%Y-%m-%dT%H:%M:%S%z")
         cursor = self._db.cursor()
 
         vals1 = (
@@ -262,10 +263,12 @@ class WritableBackend(Backend):
         if self._registry_table_exists(corpus_id):
             created = False
         else:
-            t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
+            t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
+                                       ).strftime("%Y-%m-%dT%H:%M:%S%z")
             cols = ['corpus_name', 'created', 'updated'] + [self.REG_COLS_MAP[k]
-                                                            for k, v in values.items() if k in self.REG_COLS_MAP]
-            vals = [corpus_id, t1, t1] + [v for k, v in values.items() if k in self.REG_COLS_MAP]
+                                                            for k, v in list(values.items()) if k in self.REG_COLS_MAP]
+            vals = [corpus_id, t1, t1] + \
+                [v for k, v in list(values.items()) if k in self.REG_COLS_MAP]
             sql = 'INSERT INTO registry_conf ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(len(cols) * ['%s']))
             cursor.execute(sql, vals)
@@ -278,9 +281,10 @@ class WritableBackend(Backend):
             else:
                 cursor.execute('DELETE FROM registry_variable WHERE corpus_name = %s AND variant IS NULL',
                                (corpus_id,))
-        cols = ['corpus_name', 'variant'] + [self.REG_VAR_COLS_MAP[k] for k, v in values.items()
+        cols = ['corpus_name', 'variant'] + [self.REG_VAR_COLS_MAP[k] for k, v in list(values.items())
                                              if k in self.REG_VAR_COLS_MAP]
-        vals = [corpus_id, variant] + [v for k, v in values.items() if k in self.REG_VAR_COLS_MAP]
+        vals = [corpus_id, variant] + \
+            [v for k, v in list(values.items()) if k in self.REG_VAR_COLS_MAP]
         sql = 'INSERT INTO registry_variable ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(len(cols) * ['%s']))
         cursor.execute(sql, vals)
@@ -299,7 +303,7 @@ class WritableBackend(Backend):
             cursor.execute(sql, vals)
         except mysql.connector.errors.Error as ex:
             logging.getLogger(__name__).error(
-                u'Failed to save registry values: {0}.'.format(zip(cols, vals)))
+                'Failed to save registry values: {0}.'.format(list(zip(cols, vals))))
             raise ex
         cursor.execute('SELECT last_insert_id() AS last_id')
         return cursor.fetchone()['last_id']
@@ -322,7 +326,7 @@ class WritableBackend(Backend):
                     'VALUES (%s, %s)', (corpus_id, aid))
             except mysql.connector.errors.Error as ex:
                 logging.getLogger(__name__).error(
-                    u'Failed to insert values {0}, {1}'.format(corpus_id, aid))
+                    'Failed to insert values {0}, {1}'.format(corpus_id, aid))
                 raise ex
 
     def save_corpus_structure(self, corpus_id, name, values):
@@ -381,7 +385,7 @@ class WritableBackend(Backend):
                 cursor.execute(sql, vals)
         except mysql.connector.errors.Error as ex:
             logging.getLogger(__name__).error(
-                u'Failed to insert values {0}'.format(zip(cols, vals)))
+                'Failed to insert values {0}'.format(list(zip(cols, vals))))
             raise ex
 
     def save_subcorpattr(self, corpus_id, struct_name, attr_name, idx):

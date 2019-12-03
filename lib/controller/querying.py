@@ -182,8 +182,8 @@ class Querying(Kontext):
         try:
             # we must include only regular (i.e. the ones visible in the breadcrumb-like
             # navigation bar) operations - otherwise the indices would not match.
-            pipeline = filter(lambda x: x.form_type != 'nop',
-                              self.load_pipeline_ops(request.args['last_key']))
+            pipeline = [x for x in self.load_pipeline_ops(
+                request.args['last_key']) if x.form_type != 'nop']
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
         except (IndexError, KeyError):

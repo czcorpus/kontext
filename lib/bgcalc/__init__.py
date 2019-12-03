@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from __future__ import absolute_import
+
 import imp
 
 
@@ -41,7 +41,7 @@ def _init_backend_app(conf, fn_prefix):
     app_type = conf.get('calc_backend', 'type')
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
-        import celery
+        from . import celery
         from bgcalc.celery import Config
 
         if app_conf:
@@ -65,8 +65,10 @@ def _init_backend_app(conf, fn_prefix):
             kconf.SERVER = conf.get('calc_backend', 'konserver_server')
             kconf.PORT = conf.get_int('calc_backend', 'konserver_port')
             kconf.PATH = conf.get('calc_backend', 'konserver_path')
-            kconf.HTTP_CONNECTION_TIMEOUT = conf.get_int('calc_backend', 'konserver_http_connection_timeout')
-            kconf.RESULT_WAIT_MAX_TIME = conf.get_int('calc_backend', 'konserver_result_wait_max_time')
+            kconf.HTTP_CONNECTION_TIMEOUT = conf.get_int(
+                'calc_backend', 'konserver_http_connection_timeout')
+            kconf.RESULT_WAIT_MAX_TIME = conf.get_int(
+                'calc_backend', 'konserver_result_wait_max_time')
         return KonserverApp(conf=kconf, fn_prefix=fn_prefix)
     elif app_type == 'multiprocessing':  # legacy stuff
         return None

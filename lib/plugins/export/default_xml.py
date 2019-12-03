@@ -45,7 +45,7 @@ class GeneralDocument(object):
         elif type(data) in (list, tuple):
             items = [('item', x) for x in data]
         else:
-            items = data.items()
+            items = list(data.items())
         for k, v in items:
             elm = etree.Element(k)
             self._heading.append(elm)
@@ -55,7 +55,7 @@ class GeneralDocument(object):
                     item_elm.text = item
                     elm.append(item_elm)
             else:
-                elm.text = unicode(v)
+                elm.text = str(v)
 
 
 class CollDocument(GeneralDocument):

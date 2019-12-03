@@ -194,22 +194,22 @@ class UcnkCorpArch(CorpusArchive):
         user_email = user_info['email']
         username = user_info['username']
 
-        text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
-        text += u'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
-        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, user_id, user_email)
-        text += u'korpus ID: %s\n' % corpus_id
+        text = 'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
+        text += 'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
+        text += 'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, user_id, user_email)
+        text += 'korpus ID: %s\n' % corpus_id
 
         if custom_message:
-            text += u'Doplňující zpráva od uživatele:\n\n'
+            text += 'Doplňující zpráva od uživatele:\n\n'
             text += custom_message + '\n\n'
 
-        text += u'\n---------------------\n'
+        text += '\n---------------------\n'
 
         s = smtplib.SMTP(self.access_req_smtp_server)
 
         for recipient in self.access_req_recipients:
             msg = MIMEText(text, 'plain', 'utf-8')
-            msg['Subject'] = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu'
+            msg['Subject'] = 'Žádost o zpřístupnění korpusu zaslaná z KonTextu'
             msg['From'] = self.access_req_sender
             msg['To'] = recipient
             msg.add_header('Reply-To', user_email)
@@ -256,7 +256,7 @@ class UcnkCorpArch(CorpusArchive):
                                 accessible by the current user
         """
         cl = []
-        for item in self._raw_list(plugin_api.user_lang).values():
+        for item in list(self._raw_list(plugin_api.user_lang).values()):
             corp_id, path, web = item['id'], item['path'], item['sentence_struct']
             try:
                 corp_info = self._manatee_corpora.get_info(corp_id)
@@ -272,8 +272,8 @@ class UcnkCorpArch(CorpusArchive):
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).warn(
-                    u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
-                                                                           type(e).__name__, e))
+                    'Failed to fetch info about %s with error %s (%r)' % (corp_id,
+                                                                          type(e).__name__, e))
                 cl.append({
                     'id': corp_id, 'name': corp_id, 'path': path, 'desc': '', 'size': None})
         return cl

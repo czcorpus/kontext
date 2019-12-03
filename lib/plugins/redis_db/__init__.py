@@ -166,7 +166,7 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        return dict((k, json.loads(v)) for k, v in self.redis.hgetall(key).items())
+        return dict((k, json.loads(v)) for k, v in list(self.redis.hgetall(key).items()))
 
     def get(self, key, default=None):
         """

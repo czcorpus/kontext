@@ -92,12 +92,12 @@ class Backend(DatabaseBackend):
             values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
-                where_cond.append(u'(rc.name LIKE ? OR c.id LIKE ? OR rc.info LIKE ?)')
-                values_cond.append(u'%{0}%'.format(substr))
-                values_cond.append(u'%{0}%'.format(substr))
-                values_cond.append(u'%{0}%'.format(substr))
+                where_cond.append('(rc.name LIKE ? OR c.id LIKE ? OR rc.info LIKE ?)')
+                values_cond.append('%{0}%'.format(substr))
+                values_cond.append('%{0}%'.format(substr))
+                values_cond.append('%{0}%'.format(substr))
         if keywords is not None and len(keywords) > 0:
-            where_cond.append(u'({0})'.format(' OR '.join(
+            where_cond.append('({0})'.format(' OR '.join(
                 'kc.keyword_id = ?' for _ in range(len(keywords)))))
             for keyword in keywords:
                 values_cond.append(keyword)
@@ -147,8 +147,8 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def load_registry_table(self, corpus_id, variant):
-        cols = (['rc.{0} AS {1}'.format(v, k) for k, v in self.REG_COLS_MAP.items()] +
-                ['rv.{0} AS {1}'.format(v, k) for k, v in self.REG_VAR_COLS_MAP.items()])
+        cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(self.REG_COLS_MAP.items())] +
+                ['rv.{0} AS {1}'.format(v, k) for k, v in list(self.REG_VAR_COLS_MAP.items())])
         if variant:
             sql = (
                 'SELECT {0} FROM rc. AS rc '
@@ -167,7 +167,7 @@ class Backend(DatabaseBackend):
 
     def load_corpus_posattrs(self, corpus_id):
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_id = ? ORDER BY position'.format(
-            ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in self.POS_COLS_MAP.items()]))
+            ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(self.POS_COLS_MAP.items())]))
         cursor = self._db.cursor()
         cursor.execute(sql, (corpus_id,))
         return cursor.fetchall()
@@ -190,7 +190,8 @@ class Backend(DatabaseBackend):
         return [row['id'] for row in cursor.fetchall()]
 
     def load_corpus_structures(self, corpus_id):
-        cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in self.STRUCT_COLS_MAP.items()]
+        cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k)
+                           for k, v in list(self.STRUCT_COLS_MAP.items())]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_id = ?'.format(', '.join(cols))
         cursor = self._db.cursor()
         cursor.execute(sql, (corpus_id,))
@@ -199,7 +200,7 @@ class Backend(DatabaseBackend):
     def load_corpus_structattrs(self, corpus_id, structure_id):
         cursor = self._db.cursor()
         sql = 'SELECT {0} FROM corpus_structattr WHERE corpus_id = ? AND structure_name = ?'.format(
-            ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in self.SATTR_COLS_MAP.items()]))
+            ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(self.SATTR_COLS_MAP.items())]))
         cursor.execute(sql, (corpus_id, structure_id))
         return cursor.fetchall()
 

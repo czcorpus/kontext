@@ -59,6 +59,7 @@ import manatee
 from l10n import import_string
 from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
 
+
 class TreeConf(object):
     """
     A single tree configuration access
@@ -163,7 +164,7 @@ class TreeConf(object):
         return (self.word_attr, ) + tuple(ans)   # word attr must be first
 
     def __repr__(self):
-        return unicode(self._data)
+        return str(self._data)
 
 
 class ManateeBackendConf(object):
@@ -358,8 +359,7 @@ class TreeBuilder(object):
 
         Returns (tuple(list_of_nodes, TreeNodeEncoder))
         """
-        globalconf = tree_conf
-        
+
         def export_labels(item):
             values = [v[1] for v in self._dict_portion(item, tree_conf.node_attrs)]
             return [k % (v if v is not None else '') for k, v in zip(tree_conf.label_templates, values)]
@@ -444,18 +444,18 @@ class ManateeBackend(SearchBackend):
         for i in range(0, len(in_data), 4):
             parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
             if len(parsed) > len(tree_attrs):
-                item = dict(zip(tree_attrs, len(tree_attrs) * [None]))
+                item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
                 item['word'] = in_data[i]
                 # In case of a parsing error we wrap a partial result into
                 # an error and try later to fetch essential data only (= parent
                 # and other references to other values).
                 data.append(BackendDataParseException(result=item))
             else:
-                item = dict(zip(tree_attrs, parsed))
+                item = dict(list(zip(tree_attrs, parsed)))
                 item['word'] = in_data[i]
                 data.append(item)
         return data
-        
+
     def _get_ord_reference(self, curr_idx, data, tree_conf = {}):
         """
         * Customizable reference resolution
@@ -463,10 +463,10 @@ class ManateeBackend(SearchBackend):
         Transform relative parents references as defined in original nodes
         into an sentence-absolute representation (e.g. 5th element referring
         to '-2' translates into reference to '3').
-		OPTION 2: (id)
-		Transform ID-based parent references into sentence-absolute representation
-		OPTION 3: (ord)
-		Keep sentence-absolute representation
+        OPTION 2: (id)
+        Transform ID-based parent references into sentence-absolute representation
+        OPTION 3: (ord)
+        Keep sentence-absolute representation
         Args:
             curr_idx (int): current position within a sentence
             item (dict): processed node
@@ -475,33 +475,32 @@ class ManateeBackend(SearchBackend):
         Returns (list of int):
             sentence-absolute position of the parent or None if nothing found
         """
-        
+
         # Old arguments from _get_abs_reference
         item = data[curr_idx]
         ref_attr = tree_conf.parent_attr
 
         if tree_conf.parent_type == "ord":
-        	# This already is an nr in the sentence - just return
-        	return [item[ref_attr]]
+            # This already is an nr in the sentence - just return
+            return [item[ref_attr]]
         elif tree_conf.parent_type == "id":
-        	# Return the sentence element that has this as its ID
-        	# Check that items have a ID
-        	if not 'id' in item:
-				raise ValueError('ID has not been specified for nodes')
-			# Go through all the words to see which matched by ID
-        	for i in range(len(data)):
-				parit = data[i]        
-				if parit.get('id', '') == item[ref_attr]:
-					return [i]
-        	return []
+            # Return the sentence element that has this as its ID
+            # Check that items have a ID
+            if not 'id' in item:
+                raise ValueError('ID has not been specified for nodes')
+            # Go through all the words to see which matched by ID
+            for i in range(len(data)):
+                parit = data[i]
+                if parit.get('id', '') == item[ref_attr]:
+                    return [i]
+            return []
         else:
-        	# Provide an absolute nr from a relative one
-			if item[ref_attr]:
-				rel_parents = self.import_parent_values(item[ref_attr])
-				return [curr_idx + rp for rp in rel_parents if rp != 0]
-			else:
-				return []
-		
+            # Provide an absolute nr from a relative one
+            if item[ref_attr]:
+                rel_parents = self.import_parent_values(item[ref_attr])
+                return [curr_idx + rp for rp in rel_parents if rp != 0]
+            else:
+                return []
 
     def _process_attr_refs(self, data, curr_idx, attr_refs, tree_conf = {}):
         """
@@ -527,7 +526,7 @@ class ManateeBackend(SearchBackend):
             data[curr_idx][ident] = []
             for abs_ref in abs_refs:
                 ref_item = data[abs_ref]
-                ref_label = ' '.join(map(lambda k: ref_item[k], keys))
+                ref_label = ' '.join([ref_item[k] for k in keys])
                 data[curr_idx][ident].append((abs_ref + corr, ref_label))
 
     def _decode_tree_data(self, data, parent_attr, attr_refs, tree_conf = {}):
@@ -552,7 +551,7 @@ class ManateeBackend(SearchBackend):
 
     def get_detail_attr_orders(self, corpus_id, corpus):
         ans = {}
-        for tree_id, conf in self._conf.get_trees(corpus_id, corpus).items():
+        for tree_id, conf in list(self._conf.get_trees(corpus_id, corpus).items()):
             ans[tree_id] = conf.detail_attrs
         return ans
 

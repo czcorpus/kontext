@@ -70,7 +70,7 @@ class CalcStatus(object):
         return False
 
     def update(self, data):
-        for k, v in data.items():
+        for k, v in list(data.items()):
             if hasattr(self, k):
                 setattr(self, k, v)
             else:

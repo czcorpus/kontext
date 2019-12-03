@@ -12,20 +12,20 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Rename subcorpora directories')
-    parser.add_argument('--old-user_dict-key', dest='old_key', default='username', help='The old ' \
-                                                                                      'key used to name directories, e.g. username in 0.9')
-    parser.add_argument('--new-user_dict-key', dest='new_key', default='id', help='The new key ' \
-                                                                                 'used to name directories, e.g. id in 0.12')
+    parser.add_argument('--old-user_dict-key', dest='old_key', default='username', help='The old '
+                        'key used to name directories, e.g. username in 0.9')
+    parser.add_argument('--new-user_dict-key', dest='new_key', default='id', help='The new key '
+                        'used to name directories, e.g. id in 0.12')
 
     args = parser.parse_args()
     subcpath = autoconf.settings.get('corpora', 'users_subcpath')
     redis_db = plugins.runtime.DB.instance
     db = redis_db.get_instance('auth')
-    keys = list(filter(lambda key: key != '__user_count', db.keys()))
+    keys = list([key for key in list(db.keys()) if key != '__user_count'])
     users = {db.hash_get(key, args.old_key): db.hash_get_all(key) for key in keys}
 
     for user_subc_dir in [f for f in os.listdir(subcpath) if os.path.isdir(os.path.join(subcpath, f))]:
-	key = user_subc_dir
+        key = user_subc_dir
         if args.old_key == 'id':
             key = int(user_subc_dir)
         user = users[key]
@@ -33,4 +33,3 @@ if __name__ == '__main__':
         if args.new_key == 'id':
             new_val = str(user[args.new_key])
         os.rename(os.path.join(subcpath, user_subc_dir), os.path.join(subcpath, new_val))
-

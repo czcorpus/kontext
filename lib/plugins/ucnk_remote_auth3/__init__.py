@@ -84,8 +84,10 @@ element auth {
 }
 """
 
-import urllib
-import httplib
+import urllib.request
+import urllib.parse
+import urllib.error
+import http.client
 import json
 import logging
 import MySQLdb
@@ -169,23 +171,23 @@ class CentralAuth(AbstractRemoteAuth):
     def _create_connection(self):
         if self._toolbar_uses_ssl:
             if self._ssl_context is not None:
-                return httplib.HTTPSConnection(self._toolbar_conf.server,
-                                               port=self._toolbar_conf.port,
-                                               timeout=self._auth_conf.toolbar_server_timeout,
-                                               context=self._ssl_context)
+                return http.client.HTTPSConnection(self._toolbar_conf.server,
+                                                   port=self._toolbar_conf.port,
+                                                   timeout=self._auth_conf.toolbar_server_timeout,
+                                                   context=self._ssl_context)
             else:
-                return httplib.HTTPSConnection(self._toolbar_conf.server,
-                                               port=self._toolbar_conf.port,
-                                               timeout=self._auth_conf.toolbar_server_timeout)
+                return http.client.HTTPSConnection(self._toolbar_conf.server,
+                                                   port=self._toolbar_conf.port,
+                                                   timeout=self._auth_conf.toolbar_server_timeout)
         else:
-            return httplib.HTTPConnection(self._toolbar_conf.server,
-                                          port=self._toolbar_conf.port,
-                                          timeout=self._auth_conf.toolbar_server_timeout)
+            return http.client.HTTPConnection(self._toolbar_conf.server,
+                                              port=self._toolbar_conf.port,
+                                              timeout=self._auth_conf.toolbar_server_timeout)
 
     def _fetch_toolbar_api_response(self, args):
         connection = self._create_connection()
         try:
-            connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
+            connection.request('GET', self._toolbar_conf.path + '?' + urllib.parse.urlencode(args))
             response = connection.getresponse()
             if response and response.status == 200:
                 return response.read().decode('utf-8')
@@ -207,8 +209,8 @@ class CentralAuth(AbstractRemoteAuth):
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
         api_cookies = self._conf.get('plugins', 'auth', {}).get('ucnk:api_cookies', [])
 
-        api_args = map(lambda x: (x[0][len('cnc_toolbar_'):], x[1].value),
-                       filter(lambda x: x[0] in api_cookies, plugin_api.cookies.items()))
+        api_args = [(x[0][len('cnc_toolbar_'):], x[1].value)
+                    for x in [x for x in list(plugin_api.cookies.items()) if x[0] in api_cookies]]
         api_args.extend([('current',  'kontext'), ('continue', plugin_api.current_url)])
         api_response = self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
@@ -229,8 +231,8 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_api.session['user'] = {
                     'id': int(response_obj['user']['id']),
                     'user': response_obj['user'].get('user'),  # TODO API unknown
-                    'fullname': u'%s %s' % (response_obj['user'].get('firstName'),
-                                            response_obj['user'].get('surname'))  # TODO API unknown
+                    'fullname': '%s %s' % (response_obj['user'].get('firstName'),
+                                           response_obj['user'].get('surname'))  # TODO API unknown
                 }
             else:  # logout => clear current user's session data and set new credentials
                 plugin_api.session.clear()
@@ -284,10 +286,10 @@ class CentralAuth(AbstractRemoteAuth):
         return False
 
     def get_login_url(self, return_url=None):
-        return self._auth_conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
+        return self._auth_conf.login_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
     def get_logout_url(self, return_url=None):
-        return self._auth_conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
+        return self._auth_conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
 
 @inject(plugins.runtime.DB, plugins.runtime.SESSIONS)

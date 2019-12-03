@@ -2,7 +2,6 @@ import sys
 import pickle
 
 
-
 def parse_word_line(line):
     ''' parses word line to get POS and features '''
 
@@ -17,7 +16,7 @@ def parse_word_line(line):
 
     # check multiple keys of the same kind
     if len([x[0] for x in data]) > len(set(x[0] for x in data)):
-        print 'multiple keys in {}'.format(data)
+        print('multiple keys in {}'.format(data))
 
     # return tuple of tuples (key, value) sorted by key
     return tuple(sorted(data, key=lambda x: x[0]))
@@ -41,8 +40,8 @@ if __name__ == '__main__':
     except KeyError:
         sys.exit('Missing source or destination file')
 
-    print 'Loading resource from {}...'.format(src_path)
+    print('Loading resource from {}...'.format(src_path))
     variations = load_variations(src_path)
     with open(dest_path, 'w') as f:
         pickle.dump(variations, f, protocol=2)
-    print '...saved to {} ({} items)'.format(dest_path, len(variations))
+    print('...saved to {} ({} items)'.format(dest_path, len(variations)))

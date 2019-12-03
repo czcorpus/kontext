@@ -118,7 +118,7 @@ class DefaultKwicConnect(AbstractKwicConnect):
                     data, status = backend.fetch(corpora, None, None, dict(lemma=lemma), lang)
                     ans.append(frontend.export_data(data, status, lang, False).to_dict())
             except EnvironmentError as ex:
-                logging.getLogger(__name__).error(u'KwicConnect backend error: {0}'.format(ex))
+                logging.getLogger(__name__).error('KwicConnect backend error: {0}'.format(ex))
                 raise ex
         return ans
 

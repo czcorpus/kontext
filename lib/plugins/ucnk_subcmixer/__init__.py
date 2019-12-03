@@ -23,11 +23,11 @@ from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
 import plugins
 from plugins.abstract import PluginException
-from category_tree import CategoryTree, CategoryExpression
-from metadata_model import MetadataModel
+from .category_tree import CategoryTree, CategoryExpression
+from .metadata_model import MetadataModel
 from controller import exposed
 import actions.subcorpus
-from database import Database
+from .database import Database
 import corplib
 
 
@@ -98,7 +98,7 @@ class SubcMixer(AbstractSubcMixer):
         expressions = [item[3] for item in cat_tree.category_list if item[3]]
         ans = dict(attrs=[], total=total_size)
         for i, expression in enumerate(expressions):
-            ans['attrs'].append((unicode(expression), float(sizes[i]) / float(total_size),))
+            ans['attrs'].append((str(expression), float(sizes[i]) / float(total_size),))
         return ans
 
     @staticmethod
@@ -113,7 +113,7 @@ class SubcMixer(AbstractSubcMixer):
             grouped[item['attrName']].append(item)
 
         counter = 1
-        for expressions in grouped.values():
+        for expressions in list(grouped.values()):
             tmp = []
             for pg in ans[-1]:
                 for item in expressions:
@@ -133,22 +133,24 @@ class SubcMixer(AbstractSubcMixer):
     def process(self, plugin_api, corpus, corpname, aligned_corpora, args):
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
-            raise SubcMixerException('Subcorpora based on more than a single structure are not supported at the moment.')
+            raise SubcMixerException(
+                'Subcorpora based on more than a single structure are not supported at the moment.')
         corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
         db = Database(db_path=corpus_info.metadata.database, table_name='item', corpus_id=corpus_info.id,
                       id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
 
         conditions = self._import_task_args(args)
         cat_tree = CategoryTree(conditions, db, 'item', SubcMixer.CORPUS_MAX_SIZE)
-        mm = MetadataModel(meta_db=db, category_tree=cat_tree, id_attr=corpus_info.metadata.id_attr.replace('.', '_'))
+        mm = MetadataModel(meta_db=db, category_tree=cat_tree,
+                           id_attr=corpus_info.metadata.id_attr.replace('.', '_'))
         corpus_items = mm.solve()
 
         if corpus_items.size_assembled > 0:
             ans = {}
-            ans.update(self._calculate_real_sizes(cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
-            doc_indices = map(lambda item: item[0],
-                              filter(lambda item: item[1] > 0,
-                                     (x for x in enumerate(corpus_items.variables))))
+            ans.update(self._calculate_real_sizes(
+                cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
+            doc_indices = [item[0] for item in [item for item in (
+                x for x in enumerate(corpus_items.variables)) if item[1] > 0]]
             ans['ids'] = doc_indices,
             ans['structs'] = list(used_structs)
             return ans
@@ -163,4 +165,3 @@ class SubcMixer(AbstractSubcMixer):
 @inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
     return SubcMixer(corparch)
-

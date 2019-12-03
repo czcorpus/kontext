@@ -62,7 +62,7 @@ class TestingKeyValueStorage(KeyValueStorage):
             raise Exception('Not a hash type')  # TODO exception type
 
     def _check_valid_str(self, key):
-        if key in self._data and type(self._data[key]) not in (str, unicode):
+        if key in self._data and type(self._data[key]) not in (str, str):
             raise Exception('Not a simple type')  # TODO exception type
 
     def hash_get(self, key, field):
@@ -81,7 +81,7 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def hash_get_all(self, key):
         self._check_valid_hash(key)
-        return dict((k, json.loads(v)) for k, v in self._data[key].items())
+        return dict((k, json.loads(v)) for k, v in list(self._data[key].items()))
 
     def get(self, key, default=None):
         self._check_valid_str(key)

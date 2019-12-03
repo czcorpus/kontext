@@ -35,15 +35,15 @@ class MockHTTPBackend(AbstractBackend):
     def fetch(self, corpora, token_id, num_tokens, query_args, lang):
         lemma = query_args.get('lemma', None)
         word = query_args.get('word', None)
-        if lemma == u'unicode':
-            return [u"mocked HTTP backend output - unicode characters: ěščřžýáíé", True]
-        if lemma == u'false':
+        if lemma == 'unicode':
+            return ["mocked HTTP backend output - unicode characters: ěščřžýáíé", True]
+        if lemma == 'false':
             return ["mocked HTTP backend output - not found", False]
-        if lemma == u'lemma1':
+        if lemma == 'lemma1':
             return ['Lemma 1 response', True]
-        if lemma == u'lemma2':
+        if lemma == 'lemma2':
             return ['Lemma 2 response', True]
-        if lemma == u'exception':
+        if lemma == 'exception':
             raise Exception("Mocked exception")
         return ["mocked HTTP backend output - word: %s, lemma: %s" % (word, lemma), True]
 

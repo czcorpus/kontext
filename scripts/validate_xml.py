@@ -39,14 +39,14 @@ def validate_main_config(conf_obj, schema_path):
     ans_err = 0
     with open(schema_path, 'rb') as schema_f:
         if hasattr(conf_obj, 'docinfo'):
-            ans += u'Validating main configuration file "{0}"...'.format(conf_obj.docinfo.URL)
+            ans += 'Validating main configuration file "{0}"...'.format(conf_obj.docinfo.URL)
         else:
             ans += '  {0} ...'.format(os.path.basename(os.path.dirname(schema_path)))
         schema = etree.parse(schema_f)
         err = validate_config(schema, conf_obj)
         if err:
             ans_err = 1
-            ans += u' ERROR: {0}'.format(err)
+            ans += ' ERROR: {0}'.format(err)
         else:
             ans += ' OK'
     return ans, ans_err
@@ -87,9 +87,9 @@ if __name__ == '__main__':
         ans, err2 = validate_main_config(elm, schema_path)
         total_errors += err2
         print(ans)
-    print(80 * '=')
+    print((80 * '='))
     if total_errors > 0:
-        print('Validation finished with {0} error(s)'.format(total_errors))
+        print(('Validation finished with {0} error(s)'.format(total_errors)))
     else:
         print('There were no errors')
     sys.exit(1 if total_errors > 0 else 0)

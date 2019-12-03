@@ -59,12 +59,12 @@ class Scheduler(object):
                 if recipient in users:
                     ans[recipient] = users[recipient]
                 else:
-                    print('unknown user: %s - omitting' % recipient)
+                    print(('unknown user: %s - omitting' % recipient))
         return ans
 
     def add_user_task(self, data):
         anonymous_user = self._get_anonymous_key()
-        for username, user_id in self.get_recipients(data).items():
+        for username, user_id in list(self.get_recipients(data).items()):
             if user_id != anonymous_user:
                 task = self._create_task_fn(data, username, user_id)
                 user_settings = self._get_user_settings(user_id)
@@ -76,7 +76,7 @@ class Scheduler(object):
                 if not self._dry_run:
                     self._set_user_settings(user_id, user_settings)
                 else:
-                    print('%s --> %s\n' % (user_id, task))
+                    print(('%s --> %s\n' % (user_id, task)))
 
     def process_tasks(self):
         for task in self._conf['tasks']:
