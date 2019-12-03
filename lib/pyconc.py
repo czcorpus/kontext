@@ -192,7 +192,7 @@ class PyConc(manatee.Concordance):
     def pn_filter(self, options, ispositive, excludekwic=False):
         lctx, rctx, rank, query = options.split(None, 3)
         collnum = self.numofcolls() + 1
-        self.set_collocation(collnum, self.export_string(query) + ';', lctx, rctx, int(rank),
+        self.set_collocation(collnum, self.export_string(query + ';'), lctx, rctx, int(rank),
                              excludekwic)
         self.delete_pnfilter(collnum, ispositive)
 
@@ -412,7 +412,7 @@ class PyConc(manatee.Concordance):
                 pfilter=qfilter % ('P', escape(self.import_string(colls.get_item()))),
                 nfilter=qfilter % ('N', escape(self.import_string(colls.get_item())))
             ))
-            next(colls)
+            colls.next()
             i += 1
 
         head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] + \

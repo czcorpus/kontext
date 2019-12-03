@@ -116,7 +116,7 @@ class HTTPBackend(AbstractBackend):
             logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
 
             try:
-                query_string = self._conf['path'].format(**args).encode('utf-8', 'replace')
+                query_string = self._conf['path'].format(**args)
             except KeyError as ex:
                 raise BackendException('Failed to build query - value {0} not found'.format(ex))
 
