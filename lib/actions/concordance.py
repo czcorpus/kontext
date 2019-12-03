@@ -765,7 +765,7 @@ class Actions(Querying):
             ans['TextTypeSel'] = get_tt(
                 self.corp, self._plugin_api).export_with_norms(ret_nums=False)
         except ConcError as e:
-            self.add_system_message('warning', e.message)
+            self.add_system_message('warning', str(e))
         ans.update(self.view())
         return ans
 
@@ -1214,7 +1214,7 @@ class Actions(Querying):
             freq_data = freq_calc.calculate_freqs_ct(args)
         except UserActionException as ex:
             freq_data = dict(data=[], full_size=0)
-            self.add_system_message('error', ex.message)
+            self.add_system_message('error', str(e))
 
         self._add_save_menu_item('XLSX', save_format='xlsx')
 

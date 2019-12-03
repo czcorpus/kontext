@@ -93,12 +93,12 @@ def mk_short_id(s, min_length=6):
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
-    x = int('0x' + hashlib.md5(s).hexdigest(), 16)
+    x = int('0x' + hashlib.md5(s.encode('utf-8')).hexdigest(), 16)
     ans = []
     while x > 0:
         p = x % len(KEY_ALPHABET)
         ans.append(KEY_ALPHABET[p])
-        x /= len(KEY_ALPHABET)
+        x = int(x / len(KEY_ALPHABET))
     ans = ''.join([str(x) for x in ans])
     max_length = len(ans)
     i = min_length
