@@ -330,12 +330,24 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                                 return (
                                                     <tr key={item.value}>
                                                         <td>
-                                                            <AlignedLangItem item={item} itemIdx={i} />
+                                                            {props.manualAlignCorporaMode || item.selected ?
+                                                                <AlignedLangItem item={item} itemIdx={i} /> :
+                                                                null
+                                                            }
                                                         </td>
                                                         <td />
                                                     </tr>
                                                 );
                                             })}
+                                            {!props.manualAlignCorporaMode && !props.alignedCorpora.some(x => x.selected) ?
+                                                (
+                                                    <tr>
+                                                        <td>
+                                                            <p style={{maxWidth: '18em'}}>{he.translate('ucnkLA__no_aligned_corpora_yet')}</p>
+                                                        </td>
+                                                    </tr>
+                                                 ) : null
+                                            }
                                         </tbody>
                                     </table>
                                 </div>
