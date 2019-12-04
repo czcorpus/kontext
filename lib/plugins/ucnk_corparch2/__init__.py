@@ -36,6 +36,9 @@ import smtplib
 from email.mime.text import MIMEText
 import time
 import logging
+from collections import defaultdict
+import os
+
 
 import plugins
 from plugins import inject
@@ -205,6 +208,15 @@ class UcnkCorpArch2(RDBMSCorparch):
 
     def export_actions(self):
         return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
+
+    def on_soft_reset(self):
+        num_items = len(self._corpus_info_cache)
+        self._corpus_info_cache = {}
+        self._keywords = None
+        self._colors = {}
+        self._descriptions = defaultdict(lambda: {})
+        logging.getLogger(__name__).warning(
+            'soft reset, cleaning all corpus info caches (pid {}: {} corpora)'.format(os.getpid(), num_items))
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH)
