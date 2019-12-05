@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {init as viewInit, Views as TreeCorparchViews} from './view';
 import {FirstQueryFormModel} from '../../models/query/first';
 import { Action } from 'kombo';
 import { Subscription } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -36,6 +36,16 @@ export interface Node {
     name: string;
     ident?: string;
     corplist?: Immutable.List<Node>
+}
+
+export interface TreeResponseNode {
+    name:string;
+    ident?:string;
+    corplist:Array<TreeResponseNode>;
+}
+
+export interface TreeResponseData extends Kontext.AjaxResponse {
+    corplist:Array<TreeResponseNode>;
 }
 
 /**
@@ -75,8 +85,10 @@ export class TreeWidgetModel extends StatefulModel {
                         this.emitChange();
                     break;
                     case 'TREE_CORPARCH_GET_DATA':
-                        this.loadData().then(
-                            (d) => this.emitChange(),
+                        this.loadData().subscribe(
+                            (d) => {
+                                this.emitChange();
+                            },
                             (err) => {
                                 this.pluginApi.showMessage('error', err);
                             }
@@ -93,19 +105,21 @@ export class TreeWidgetModel extends StatefulModel {
         );
     }
 
-    private importTree(rootNode:any, nodeId:string='a') {
-        rootNode['active'] = false;
-        if (rootNode['corplist']) {
-            rootNode['ident'] = nodeId;
-            this.idMap = this.idMap.set(nodeId, rootNode);
-            rootNode['corplist'] = Immutable.List(
-                rootNode['corplist'].map((node, i) => this.importTree(node, nodeId + '.' + String(i)))
-            );
-
-        } else {
-            rootNode['corplist'] = Immutable.List([]);
+    private importTree(rootNode:TreeResponseNode, nodeId:string='a'):Node {
+        const node = {
+            active: false,
+            name: rootNode.name,
+            ident: rootNode.ident,
+            corplist: Immutable.List<Node>()
+        };
+        this.idMap = this.idMap.set(nodeId, node);
+        if (rootNode.corplist) {
+            node.ident = nodeId;
+            this.idMap = this.idMap.set(nodeId, node);
+            node.corplist = Immutable.List<Node>(
+                rootNode.corplist.map((node, i) => this.importTree(node, nodeId + '.' + String(i))));
         }
-        return rootNode;
+        return node;
     }
 
     dumpNode(rootNode:Node):void {
@@ -114,25 +128,18 @@ export class TreeWidgetModel extends StatefulModel {
         }
     }
 
-    loadData():RSVP.Promise<any> {
-        let prom:RSVP.Promise<any> = this.pluginApi.ajax<any>(
+    loadData():Observable<TreeResponseNode> {
+        return this.pluginApi.ajax$<TreeResponseNode>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
             {},
-            { contentType : 'application/x-www-form-urlencoded' }
-        );
-        return prom.then(
-            (data) => {
-                if (!data.containsErrors) {
-                    this.data = this.importTree(data);
 
-                } else {
-                    this.pluginApi.showMessage('error', data.message);
+        ).pipe(
+            tap(
+                (data) => {
+                    this.data = this.importTree(data);
                 }
-            },
-            (error) => {
-                this.pluginApi.showMessage('error', error);
-            }
+            )
         );
     }
 
