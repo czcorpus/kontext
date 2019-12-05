@@ -877,12 +877,12 @@ class Controller(object):
         self.post_dispatch(methodname, action_metadata, tmpl, result, err)
         # response rendering
         headers += self.output_headers(action_metadata['return_type'])
-        output = io.StringIO()
+
         if self._status < 300 or self._status >= 400:
-            self.output_result(methodname, tmpl, result, action_metadata,
-                               return_type=action_metadata['return_type'], outf=output)
-        ans_body = output.getvalue()
-        output.close()
+            ans_body = self.output_result(methodname, tmpl, result, action_metadata,
+                                          return_type=action_metadata['return_type'])
+        else:
+            ans_body = ''
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
     def process_action(self, methodname, named_args):
@@ -947,26 +947,32 @@ class Controller(object):
             ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
         return ans
 
-    def output_result(self, methodname, template, result, action_metadata, return_type, outf):
+    def output_result(self, methodname, template, result, action_metadata, return_type):
         """
-        Renders a response body
+        Renders a response body out of a provided data resource along with which can
+        required target data type.
+
+        The data source can be:
+        1) a callable object returning a string or bytes
+        2) a dictionary
+        3) str or bytes
         """
         if callable(result):
-            outf.write(result())
+            return result()
         elif return_type == 'json':
-            json.dump(result, outf)
+            return json.dumps(result)
         elif return_type == 'xml':
             from templating import Type2XML
-            outf.write(Type2XML.to_xml(result))
+            return Type2XML.to_xml(result)
         elif return_type == 'plain' and type(result) is not dict:
-            outf.write(str(result))
+            return result
         elif type(result) is dict:
             self.add_globals(result, methodname, action_metadata)
             template = self._template_env.get_template(template)
             for k in self.args.__dict__:
                 if k not in result:
                     result[k] = getattr(self.args, k)
-            outf.write(template.render(result))
+            return template.render(result)
 
     def user_is_anonymous(self):
         with plugins.runtime.AUTH as auth:
