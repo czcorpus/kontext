@@ -21,10 +21,9 @@ like data can be used) to XLSX (Office Open XML) format.
 Plug-in requires openpyxl library.
 """
 
-from io import StringIO
+from io import BytesIO
 
 from openpyxl import Workbook
-from openpyxl.compat import range
 try:
     from openpyxl.utils import get_column_letter
 except ImportError:
@@ -59,7 +58,7 @@ class XLSXExport(AbstractExport):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     def raw_content(self):
-        output = StringIO()
+        output = BytesIO()
         self._wb.save(filename=output)
         return output.getvalue()
 
