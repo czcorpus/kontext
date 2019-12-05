@@ -252,9 +252,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.speech_overlap_attr = row['speech_overlap_attr']
             ans.speech_overlap_val = row['speech_overlap_val']
             ans.use_safe_font = row['use_safe_font']
-            ans.metadata.id_attr = row['id_attr'].encode('utf-8') if row['id_attr'] else None
-            ans.metadata.label_attr = row['label_attr'].encode(
-                'utf-8') if row['label_attr'] else None
+            ans.metadata.id_attr = row['id_attr']
+            ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = [x for x in (
