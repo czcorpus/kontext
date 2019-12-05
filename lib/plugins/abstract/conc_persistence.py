@@ -48,7 +48,7 @@ class AbstractConcPersistence(object):
         Returns how many days a concordance link persist for
         a specified user (typically it is a registered vs. public user).
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def open(self, data_id):
         """
