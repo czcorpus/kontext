@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
+from functools import cmp_to_key
 
 
 def should_be_quoted(attr, s):
@@ -348,7 +349,7 @@ class RegModelSerializer(object):
         ans = ''
         if self._add_heading:
             ans += '###### This file was generated automatically by KonText. Please do not edit. ######\n'
-        for item in sorted(conf.simple_items, cmp=self._cmp_names):
+        for item in sorted(conf.simple_items, key=cmp_to_key(self._cmp_names)):
             if item.value is not None:
                 ans += self._sprint_simple(item)
                 ans += '\n'
