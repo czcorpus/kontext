@@ -252,8 +252,9 @@ class TextTypes(object):
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         subcorp_attr_list_tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
-        subcorp_attr_list = list(collections.OrderedDict(
-            list(zip(subcorp_attr_list_tmp, [None] * len(subcorp_attr_list_tmp)))).keys())
+        subcorp_attr_list = collections.OrderedDict(
+            zip(subcorp_attr_list_tmp, [None] * len(subcorp_attr_list_tmp))).keys()
+
         subcorpattrs = '|'.join(subcorp_attr_list)
         if len(subcorp_attr_list_tmp) != len(subcorp_attr_list):
             logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
@@ -261,7 +262,6 @@ class TextTypes(object):
         if plugins.runtime.LIVE_ATTRIBUTES.exists:
             ans['bib_attr'] = corpus_info['metadata']['label_attr']
             ans['id_attr'] = corpus_info['metadata']['id_attr']
-
             # We have to ensure that the bibliography item (which uses different values
             # for labels and different values for actual identifiers) is represented
             # as an input box on client-side. Passing list_none with bib_attr element
