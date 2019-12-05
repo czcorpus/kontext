@@ -59,7 +59,7 @@ module.exports = (env) => merge(common.wpConf(env), {
         compress: true,
         port: 9000,
         host: 'localhost',
-        public: 'kontext.korpus.test',
+        public: 'kontext6.korpus.test',
         publicPath: common.PUBLIC_PATH + '/files/dist/',
         inline: false,
         before: function(app) {
