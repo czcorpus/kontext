@@ -122,7 +122,7 @@ class Archiver(object):
                     dict(key=conc_prefix + item[0])))
             return dict(
                 num_processed=i,
-                error=ex,
+                error=str(ex),
                 dry_run=dry_run,
                 queue_size=self._get_queue_size())
         return dict(
