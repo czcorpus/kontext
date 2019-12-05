@@ -49,17 +49,17 @@ class UserActionException(Exception):
     """
 
     def __init__(self, message, code=400, error_code=None, error_args=None, internal_message=None):
-        super(UserActionException, self).__init__(message)
+        super().__init__(message)
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
         self._internal_message = internal_message
 
     def __repr__(self):
-        return super().__repr__()
+        return f'UserActionException, code: {self.code}, message: {self.args[0] if len(self.args) > 0 else "--"}'
 
     def __str__(self):
-        return super().__str__()
+        return self.args[0]
 
     @property
     def internal_message(self):
@@ -72,7 +72,7 @@ class NotFoundException(UserActionException):
     """
 
     def __init__(self, message, internal_message=None):
-        super(NotFoundException, self).__init__(message, 404, internal_message=internal_message)
+        super().__init__(message, 404, internal_message=internal_message)
 
 
 class ForbiddenException(UserActionException):
@@ -81,12 +81,12 @@ class ForbiddenException(UserActionException):
     """
 
     def __init__(self, message, internal_message=None):
-        super(ForbiddenException, self).__init__(message, 403, internal_message=internal_message)
+        super().__init__(message, 403, internal_message=internal_message)
 
 
 class CorpusForbiddenException(ForbiddenException):
     def __init__(self, corpname, variant):
-        super(CorpusForbiddenException, self).__init__('No access to corpus {0}'.format(corpname))
+        super().__init__('No access to corpus {0}'.format(corpname))
         self.corpname = corpname
         self.variant = variant
 
@@ -94,7 +94,7 @@ class CorpusForbiddenException(ForbiddenException):
 class AlignedCorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
-        super(AlignedCorpusForbiddenException, self).__init__(
+        super().__init__(
             'No access to corpus {0}'.format(corpname))
         self.corpname = corpname
         self.variant = variant
@@ -111,7 +111,7 @@ class ImmediateRedirectException(UserActionException):
     """
 
     def __init__(self, url, code=303):
-        super(ImmediateRedirectException, self).__init__('Redirect', code)
+        super().__init__('Redirect', code)
         self.url = url
 
 
