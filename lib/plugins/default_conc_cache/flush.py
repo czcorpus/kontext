@@ -26,8 +26,8 @@ import plugins
 import initializer
 initializer.init_plugin('db')
 initializer.init_plugin('conc_cache')
-from plugins.redis_conc_cache import cleanup
-from plugins.redis_conc_cache import DefaultCacheMapping
+from plugins.default_conc_cache import cleanup
+from plugins.default_conc_cache import DefaultCacheMapping
 
 
 if __name__ == '__main__':
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     def mk_key(corpus_id):
         return DefaultCacheMapping.KEY_TEMPLATE % corpus_id
 
-    parser = argparse.ArgumentParser(description='A script to control UCNK metadata cache')
+    parser = argparse.ArgumentParser(description='A script to control UCNK concordance cache')
     parser.add_argument('--dry-run', '-d', action='store_true',
                         help='Just analyze, do not modify anything')
     parser.add_argument('--exclude', '-x', type=str, default=None,
