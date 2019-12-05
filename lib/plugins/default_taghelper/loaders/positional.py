@@ -133,7 +133,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             for i in range(len(ans)):
                 def cmp_by_seq(x, y): return (cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0]))
                                               if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0)
-                ans_sorted.append(sorted(ans[i], cmp=cmp_to_key(cmp_by_seq)))
+                ans_sorted.append(sorted(ans[i], key=cmp_to_key(cmp_by_seq)))
 
             for i in range(len(ans_sorted)):
                 if len(ans_sorted[i]) == 1 and ans_sorted[i][0] == '-':
@@ -197,7 +197,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
 
             def cmp_by_seq(x, y): return cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
                 if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
-            ans[key] = sorted(ans[key], cmp=cmp_to_key(cmp_by_seq)) if ans[key] is not None else None
+            ans[key] = sorted(ans[key], key=cmp_to_key(cmp_by_seq)) if ans[key] is not None else None
         return {'tags': ans, 'labels': []}
 
     def _load_tag_descriptions(self, tagset_name, lang):

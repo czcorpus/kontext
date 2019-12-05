@@ -46,6 +46,12 @@ import manatee
 from functools import partial
 from translation import ugettext as _
 import plugins
+from functools import cmp_to_key
+
+
+def cmp(a, b):
+    """Python 3 workaround for in-built python 2 cmp() function"""
+    return (a>b)-(a<b)
 
 
 def manatee_version():
@@ -621,8 +627,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
                 elif collator_locale:
                     attrval['Values'] = l10n.sort(vals, collator_locale, key=lambda item: item['v'])
                 else:
-                    attrval['Values'] = sorted(vals, cmp=lambda x1, x2: cmp(
-                        x1['v'].lower(), x2['v'].lower()))
+                    attrval['Values'] = sorted(vals, key=cmp_to_key(lambda x1, x2: cmp(
+                        x1['v'].lower(), x2['v'].lower())))
             attrvals.append(attrval)
         attrlines.append({'Line': attrvals})
     return attrlines
