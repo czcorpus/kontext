@@ -54,8 +54,7 @@ def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete
     Generates a cache key based on the relevant parameters.
     Returned value is hashed.
     """
-    return md5('%r%r%r%r%r' % (attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr,
-                               limit_lists)).hexdigest()
+    return md5(f'{attr_map}{max_attr_list_size}{aligned_corpora}{autocomplete_attr}{limit_lists}'.encode('utf-8')).hexdigest()
 
 
 def cached(f):
