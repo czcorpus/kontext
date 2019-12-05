@@ -21,9 +21,7 @@ alternative compatible modules you can modify imports 'from plugins import ...'
 to your custom values and everything should work well.
 """
 
-import sys
 import os
-import argparse
 import time
 import collections
 import json

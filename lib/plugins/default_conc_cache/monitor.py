@@ -76,7 +76,7 @@ class Monitor(object):
 
     @staticmethod
     def create_doc_hash(doc):
-        return sha1(json.dumps(doc)).hexdigest()
+        return sha1(json.dumps(doc).encode('utf-8')).hexdigest()
 
     def run(self):
         self._time = time.time()
