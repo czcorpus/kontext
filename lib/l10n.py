@@ -69,15 +69,12 @@ def import_string(s, from_encoding):
     s -- converted string
     from_encoding -- expected source encoding
     """
-    if type(s) is str:
-        if from_encoding.lower() in ('utf-8', ''):
-            return s
-        else:
-            return s.decode(from_encoding)
+    if type(s) is bytes:
+        return s.decode(from_encoding)
     elif type(s) is str:
         return s
     else:
-        return None  # TODO raise an exception
+        return None
 
 
 def export_string(s, to_encoding):

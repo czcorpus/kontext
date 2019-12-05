@@ -99,7 +99,7 @@ class StaticApplicationBar(AbstractApplicationBar):
             tmp = fname.split('.')
             if len(tmp) == 3 and self._is_in_avail_langs(tmp[1]) and tmp[2] == 'html':
                 with open(os.path.join(dir_path, fname)) as fr:
-                    ans[tmp[1]] = fr.read().decode('utf-8')
+                    ans[tmp[1]] = fr.read()
             else:
                 logging.getLogger(__name__).warning(
                     'Possible application bar contents file {0} will be ignored'.format(fname))
