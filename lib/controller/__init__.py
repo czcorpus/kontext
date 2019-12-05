@@ -842,7 +842,7 @@ class Controller(object):
             err = (ex, None)
             self._status = ex.code
             tmpl, result = self._run_message_action(
-                named_args, action_metadata, 'error', str(err))
+                named_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except ImmediateRedirectException as ex:
             err = (ex, None)
             tmpl, result = None, None
@@ -852,7 +852,7 @@ class Controller(object):
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
-                msg_args, action_metadata, 'error', str(err))
+                msg_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except werkzeug.exceptions.BadRequest as ex:
             err = (ex, None)
             self._status = ex.code
