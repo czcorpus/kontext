@@ -407,7 +407,7 @@
             </element>
             <optional>
                 <element name="mailing">
-                    <optional>
+                    <interleave>
                         <element name="smtp_server">
                             <text />
                         </element>
@@ -429,7 +429,7 @@
                         <element name="auth_password">
                             <text />
                         </element>
-                    </optional>
+                    </interleave>
                 </element>
             </optional>
             <element name="logging">
