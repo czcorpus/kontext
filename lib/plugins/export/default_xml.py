@@ -49,7 +49,7 @@ class GeneralDocument(object):
         for k, v in items:
             elm = etree.Element(k)
             self._heading.append(elm)
-            if hasattr(v, '__iter__'):
+            if type(v) is list or type(v) is tuple:
                 for item in v:
                     item_elm = etree.Element('item')
                     item_elm.text = item
