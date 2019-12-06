@@ -89,7 +89,7 @@ class TreeConf(object):
         """
         An attribute specifying the type of parent: relative (default), id, or ord
         """
-        return self._data['parentType']
+        return self._data.get('parentType')
 
     @property
     def parent_attr(self):
@@ -437,10 +437,12 @@ class ManateeBackend(SearchBackend):
         Returns (list of dict):
             a list of dict items representing tree nodes
         """
+        import logging
         def import_raw_val(v):
             return None if v in empty_val_placeholders or v == '' else v
 
         data = []
+        logging.getLogger(__name__).debug('in_data: {}'.format(in_data))
         for i in range(0, len(in_data), 4):
             parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
             if len(parsed) > len(tree_attrs):
@@ -454,9 +456,10 @@ class ManateeBackend(SearchBackend):
                 item = dict(list(zip(tree_attrs, parsed)))
                 item['word'] = in_data[i]
                 data.append(item)
+        logging.getLogger(__name__).debug('>>>> {}'.format(len(data)))
         return data
 
-    def _get_ord_reference(self, curr_idx, data, tree_conf = {}):
+    def _get_ord_reference(self, curr_idx, data, tree_conf=None):
         """
         * Customizable reference resolution
         OPTION 1: (rel)
@@ -475,18 +478,19 @@ class ManateeBackend(SearchBackend):
         Returns (list of int):
             sentence-absolute position of the parent or None if nothing found
         """
-
+        if tree_conf is None:
+            tree_conf = {}
         # Old arguments from _get_abs_reference
         item = data[curr_idx]
         ref_attr = tree_conf.parent_attr
 
-        if tree_conf.parent_type == "ord":
+        if tree_conf.parent_type == 'ord':
             # This already is an nr in the sentence - just return
             return [item[ref_attr]]
-        elif tree_conf.parent_type == "id":
+        elif tree_conf.parent_type == 'id':
             # Return the sentence element that has this as its ID
             # Check that items have a ID
-            if not 'id' in item:
+            if 'id' not in item:
                 raise ValueError('ID has not been specified for nodes')
             # Go through all the words to see which matched by ID
             for i in range(len(data)):
@@ -497,12 +501,14 @@ class ManateeBackend(SearchBackend):
         else:
             # Provide an absolute nr from a relative one
             if item[ref_attr]:
+                import logging
+                logging.getLogger(__name__).debug('importing: {}'.format(item[ref_attr]))
                 rel_parents = self.import_parent_values(item[ref_attr])
-                return [curr_idx + rp for rp in rel_parents if rp != 0]
+                return [curr_idx + rp - 1 for rp in rel_parents if rp != 0]
             else:
                 return []
 
-    def _process_attr_refs(self, data, curr_idx, attr_refs, tree_conf = {}):
+    def _process_attr_refs(self, data, curr_idx, attr_refs, tree_conf=None):
         """
         Process indirect node values (values which are actually
         in referred nodes). Please do not confuse this with
@@ -517,27 +523,36 @@ class ManateeBackend(SearchBackend):
             attr_refs (dict of str:list): configured indirect values
 
         """
+        if tree_conf is None:
+            tree_conf = {}
+
         if data[0].get('hidden', False):
             corr = -1
         else:
             corr = 0
-        for ident, keys in attr_refs.items():
-            abs_refs = self._get_ord_reference(curr_idx, data, tree_conf )
+        import logging
+        logging.getLogger(__name__).debug('LEN: {}'.format(len(data)))
+        for ident, keys in list(attr_refs.items()):
+            abs_refs = self._get_ord_reference(curr_idx, data, tree_conf)
+
+            logging.getLogger(__name__).debug('foo: {}'.format(abs_refs))
             data[curr_idx][ident] = []
             for abs_ref in abs_refs:
                 ref_item = data[abs_ref]
                 ref_label = ' '.join([ref_item[k] for k in keys])
                 data[curr_idx][ident].append((abs_ref + corr, ref_label))
 
-    def _decode_tree_data(self, data, parent_attr, attr_refs, tree_conf = {}):
+    def _decode_tree_data(self, data, parent_attr, attr_refs, tree_conf=None):
         """
         Args:
             data (list of dict of str:any): parsed sentence
             parent_attr (str): an attribute used to refer to node's parent
             attr_refs (dict of str:list of str): indirect values
         """
+        if tree_conf is None:
+            tree_conf = {}
         for i in range(1, len(data)):
-            abs_parents = self._get_ord_reference(i, data, tree_conf )
+            abs_parents = self._get_ord_reference(i, data, tree_conf)
             abs_parent = abs_parents[0] if len(abs_parents) > 0 else None
             # Please note that referring to the 0-th node
             # means 'out of range' error too because our 0-th node
