@@ -20,6 +20,7 @@ Required plug-in configuration:
 element footer_bar {
   element module { "lindat_footer_bar" }
   element js_module { "lindatFooterBar" }
+  element template_cs {
 }
 """
 
@@ -39,7 +40,7 @@ class FootBar(AbstractFootbar):
         else:
             return self._templates['en_US']
 
-    def get_contents(self, plugin_api, return_url):
+    def get_contents(self, plugin_api, return_url=None):
         tpl_path = self.get_template(plugin_api.user_lang)
         if not os.path.exists(tpl_path):
             return "template [%s] does not exist!" % tpl_path
