@@ -48,7 +48,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { ActionDispatcher, ITranslator, IFullActionControl, StatelessModel } from 'kombo';
+import { ActionDispatcher, ITranslator, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 
 declare var require:any; // webpack's require
@@ -689,17 +689,19 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     private initIssueReporting():boolean {
         if (this.pluginIsActive('issue_reporting')) {
-            const plugin = issueReportingPlugin(this.pluginApi())
-            this.renderReactComponent(
-                plugin.getWidgetView(),
-                document.getElementById('error-reporting-mount'),
-                this.getConf<Kontext.GeneralProps>('issueReportingAction')
-            );
-            return true;
-
-        } else {
-            return false;
+            const plugin = issueReportingPlugin(this.pluginApi());
+            const targetElm = document.getElementById('error-reporting-mount');
+            if (targetElm) {
+                this.renderReactComponent(
+                    plugin.getWidgetView(),
+                    targetElm,
+                    this.getConf<Kontext.GeneralProps>('issueReportingAction')
+                );
+                return true;
+            }
+            console.error('Plug-in ERROR: issue_reporting - cannot find target element. Please check your application_bar and/or footer_bar plug-ins.');
         }
+        return false;
     }
 
     isNotEmptyPlugin(plugin:any):boolean {

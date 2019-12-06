@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="footer_bar">
+            <element name="module">
+                <value>lindat_footer_bar</value>
+            </element>
+            <element name="js_module">
+                <value>lindatFooterBar</value>
+            </element>
+            <interleave>
+                <element name="template_cs">
+                    <a:documentation>
+                        Path to a Czech version of the footer
+                    </a:documentation>
+                    <attribute name="extension-by">
+                        <value>lindat</value>
+                    </attribute>
+                    <text />
+                </element>
+                <element name="template_en">
+                    <a:documentation>
+                        Path to an English version of the footer
+                    </a:documentation>
+                    <attribute name="extension-by">
+                        <value>lindat</value>
+                    </attribute>
+                    <text />
+                </element>
+            </interleave>
+        </element>
+    </start>
+</grammar>
