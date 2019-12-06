@@ -437,10 +437,12 @@ class ManateeBackend(SearchBackend):
         Returns (list of dict):
             a list of dict items representing tree nodes
         """
+        import logging
         def import_raw_val(v):
             return None if v in empty_val_placeholders or v == '' else v
 
         data = []
+        logging.getLogger(__name__).debug('in_data: {}'.format(in_data))
         for i in range(0, len(in_data), 4):
             parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
             if len(parsed) > len(tree_attrs):
@@ -454,6 +456,7 @@ class ManateeBackend(SearchBackend):
                 item = dict(list(zip(tree_attrs, parsed)))
                 item['word'] = in_data[i]
                 data.append(item)
+        logging.getLogger(__name__).debug('>>>> {}'.format(len(data)))
         return data
 
     def _get_ord_reference(self, curr_idx, data, parent_attr, parent_type):
@@ -477,7 +480,6 @@ class ManateeBackend(SearchBackend):
         """
         # Old arguments from _get_abs_reference
         item = data[curr_idx]
-
         if parent_type == 'ord':
             # This already is an nr in the sentence - just return
             return [item[parent_attr]]

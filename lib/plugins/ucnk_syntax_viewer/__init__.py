@@ -57,6 +57,8 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         super(UcnkManateeBackend, self).__init__(conf)
 
     def import_parent_values(self, v):
+        if type(v) is int:
+            return [v]
         return [int(x) for x in v.split('|') if x != '']
 
     def _fetch_fallback_info(self, corpus, corpus_id, token_id, kwic_len, parent_attr, ref_attrs):
@@ -71,7 +73,6 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
         parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
                                            self._conf.get_empty_value_placeholders(corpus_id))
-
         fallback_parse = None
         for i in range(len(parsed_data)):
             if self.is_error_node(parsed_data[i]):
