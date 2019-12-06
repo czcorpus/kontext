@@ -91,7 +91,7 @@ def get_full(section, key):
     """
     m = get_meta(section, key)
     d = get(section, key)
-    if hasattr(m, '__iter__') and hasattr(d, '__iter__'):
+    if type(m) in (list, tuple) and type(d) in (list, tuple):
         return list(zip(d, m))
     else:
         return d, m
@@ -141,7 +141,7 @@ def get_list(section, key):
     tmp = get(section, key)
     if not tmp:
         return []
-    elif hasattr(tmp, '__iter__'):
+    elif type(tmp) is list:
         return [x for x in tmp]
     else:
         return [tmp]

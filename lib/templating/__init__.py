@@ -81,8 +81,10 @@ class StateGlobals(object):
         return StateGlobals(data=new_data)
 
     def set(self, k, v):
-        if hasattr(v, '__iter__'):
+        if type(v) is list:
             self._data[k] = v
+        elif type(v) is tuple:
+            self._data[k] = list(v)
         else:
             self._data[k] = [v]
 
@@ -112,7 +114,7 @@ class Type2XML(object):
         out = []
         if type(d) is dict:
             out += Type2XML._dict_to_xml(d, indent + 1)
-        elif hasattr(d, '__iter__'):
+        elif type(d) is list or type(d) is tuple:
             out += Type2XML._list_to_xml(d, indent + 1)
         else:
             out.append((escape('{0}'.format(d if d is not None else '')), indent - 1))

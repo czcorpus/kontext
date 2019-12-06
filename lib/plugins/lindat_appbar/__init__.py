@@ -53,7 +53,7 @@ class LindatTopBar(AbstractApplicationBar):
                 login_html = ('<i class="fa fa-user fa-lg">&nbsp;</i>%(fullname)s' +
                               '<span style="margin-left: 5px; margin-right: 5px;"> | </span>' +
                               '<form style="display: inline-block;" action="%(logout_url)s" method="POST"><i class="fa fa-sign-out fa-lg">&nbsp;</i><input type="submit" style="border:none;cursor:pointer;background-color:#428bca;color:#fff;font-weight:700;font-size:16px" value="%(logout_msg)s"/></form>'
-                              ) % msgs 
+                              ) % msgs
             else:
                 msgs = dict(login_url='',
                             login_msg=_('Login'))
@@ -85,8 +85,8 @@ def create_instance(settings, auth):
     """
     plugin_conf = settings.get('plugins', 'application_bar')
     main_css = plugin_conf.get('lindat:css_url')
-    external_css = settings.get('theme', 'lindat:external_css', [])
-    external_js = settings.get('theme', 'lindat:external_js', [])
+    external_css = settings.get_list('theme', 'lindat:external_css')
+    external_js = settings.get_list('theme', 'lindat:external_js')
     templates = {
         'cs_CZ': plugin_conf['lindat:template_cs'],
         'en_US': plugin_conf['lindat:template_en']
