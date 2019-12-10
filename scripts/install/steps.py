@@ -4,20 +4,35 @@ from abc import ABC, abstractmethod
 import sys
 import os
 import subprocess
-import runpy
+import pathlib
+import shutil
 
 import random
 import string
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib'))
 from plugins.default_auth import mk_pwd_hash_default
 
+WEBSERVER_USER="www-data"
+MANATEE_VER='2.167.8'
+
+
+def create_directory(path: str, user: str = None, group: str = None, mode: int = 0o755):
+    p = pathlib.Path(path)
+    p.mkdir(parents=True, exist_ok=True, mode = mode)
+    if user or group:
+        shutil.chown(p, user, group)
+
+
+def replace_string_in_file(path: str, old: str, new: str):
+    with open(path, 'r') as f:
+        config_text = f.read()
+    with open(path, 'w') as f:
+        f.write(config_text.replace(old, new))
+
+
 def generate_random_password() -> Tuple[str, str]:
     password = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(8)])
     return password, mk_pwd_hash_default(password)
-
-
-WEBSERVER_USER="www-data"
-MANATEE_VER='2.167.8'
 
 
 
@@ -70,14 +85,12 @@ class SetupManatee(InstallationStep):
         except:
             pass
         subprocess.check_call(['adduser', 'celery', WEBSERVER_USER])
-        subprocess.check_call(['mkdir', '-p', '/etc/conf.d'])
+        create_directory('/etc/conf.d')
         subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/celery-conf.d'), '/etc/conf.d/celery'])
         subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/celery.service'), '/etc/systemd/system'])
         subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/celery.tmpfiles'), '/usr/lib/tmpfiles.d/celery.conf'])
-        subprocess.check_call(['mkdir', '-p', '/var/log/celery'])
-        subprocess.check_call(['chown', 'celery:root', '/var/log/celery'])
-        subprocess.check_call(['mkdir', '-p', '/var/run/celery'])
-        subprocess.check_call(['chown', 'celery:root', '/var/run/celery'])
+        create_directory('/var/log/celery', 'celery', 'root')
+        create_directory('/var/run/celery', 'celery', 'root')
         subprocess.check_call(['systemctl', 'enable', 'celery'])
         subprocess.check_call(['systemctl', 'daemon-reload'])
 
@@ -102,12 +115,12 @@ class SetupManatee(InstallationStep):
         subprocess.check_call(['wget', 'https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2'], cwd = '/usr/local/src')
         subprocess.check_call(['tar', 'xjvf', 'susanne-example-source.tar.bz2'], cwd = '/usr/local/src')
         
-        subprocess.check_call(['mkdir', '-p', '/var/lib/manatee/registry'])
-        subprocess.check_call(['mkdir', '-p', '/var/lib/manatee/vert'])
-        subprocess.check_call(['mkdir', '-p', '/var/lib/manatee/data/susanne'])
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/user_filter_files'])
+        create_directory('/var/lib/manatee/registry')
+        create_directory('/var/lib/manatee/vert')
+        create_directory('/var/lib/manatee/data/susanne')
+        create_directory('/var/local/corpora/user_filter_files')
 
-        subprocess.check_call(['sed', '-i', 's%PATH susanne%PATH "/var/lib/manatee/data/susanne"%', './config'], cwd = '/usr/local/src/susanne-example-source')
+        replace_string_in_file('/usr/local/src/susanne-example-source/config', 'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
         subprocess.check_call(['cp', './source', '/var/lib/manatee/vert/susanne.vert'], cwd = '/usr/local/src/susanne-example-source')
         subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'], cwd = '/usr/local/src/susanne-example-source')
 
@@ -132,33 +145,18 @@ class SetupKontext(InstallationStep):
         subprocess.check_call(['cp', 'beatconfig.sample.py', 'beatconfig.py'], cwd = os.path.join(self.kontext_path, 'conf'))
 
         # update config.xml with current install path
-        subprocess.check_call(['sed', '-i', f's%/opt/kontext%{self.kontext_path}%', 'config.xml'], cwd = os.path.join(self.kontext_path, 'conf'))
+        replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'), '/opt/kontext', self.kontext_path)
 
         # create directories, set permissions
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/registry'])
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/cache'])
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/subcorp'])
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/freqs-precalc'])
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/freqs-cache'])
-        subprocess.check_call(['mkdir', '-p', '/var/local/corpora/colls-cache'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:{WEBSERVER_USER}', '/var/local/corpora/cache'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:{WEBSERVER_USER}', '/var/local/corpora/subcorp'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:{WEBSERVER_USER}', '/var/local/corpora/freqs-precalc'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:{WEBSERVER_USER}', '/var/local/corpora/freqs-cache'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:{WEBSERVER_USER}', '/var/local/corpora/colls-cache'])
-        subprocess.check_call(['chmod', 'g+ws', '/var/local/corpora/cache'])
-        subprocess.check_call(['chmod', 'g+ws', '/var/local/corpora/subcorp'])
-        subprocess.check_call(['chmod', 'g+ws', '/var/local/corpora/freqs-precalc'])
-        subprocess.check_call(['chmod', 'g+ws', '/var/local/corpora/freqs-cache'])
-        subprocess.check_call(['chmod', 'g+ws', '/var/local/corpora/colls-cache'])
-        subprocess.check_call(['chmod', '-R', '775', '/var/local/corpora/subcorp'])
+        create_directory('/var/local/corpora/registry', WEBSERVER_USER, WEBSERVER_USER)
+        create_directory('/var/local/corpora/cache', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
+        create_directory('/var/local/corpora/subcorp', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
+        create_directory('/var/local/corpora/freqs-precalc', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
+        create_directory('/var/local/corpora/freqs-cache', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
+        create_directory('/var/local/corpora/colls-cache', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
 
-        subprocess.check_call(['mkdir', '-p', '/var/log/kontext'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:', '/var/log/kontext'])
-
-        subprocess.check_call(['mkdir', '-p', '/tmp/kontext-upload'])
-        subprocess.check_call(['chown', f'{WEBSERVER_USER}:', '/tmp/kontext-upload'])
-        subprocess.check_call(['chmod', '-R', '775', '/tmp/kontext-upload'])
+        create_directory('/var/log/kontext', WEBSERVER_USER, None)
+        create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
         # TODO
         # subprocess.check_call(['python3', 'scripts/validate_setup.py', 'conf/config.xml'], cwd = self.kontext_path)
