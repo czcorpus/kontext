@@ -96,39 +96,49 @@ class SetupManatee(InstallationStep):
 
         # config nginx
         subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/nginx'), '/etc/nginx/sites-available/default'])
-
-        # install manatee with ucnk patch
-        subprocess.check_call(['wget', f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{MANATEE_VER}.tar.gz'], cwd = '/usr/local/src')
-        subprocess.check_call(['tar', 'xzvf', f'manatee-open-{MANATEE_VER}.tar.gz'], cwd = '/usr/local/src')
         
-        # apply patch if available
+        # install manatee with ucnk patch
         if os.path.isfile(os.path.join(self.kontext_path, f'scripts/install/ucnk-manatee-{MANATEE_VER}.patch')):
+            # build manatee from source using patch
+            subprocess.check_call(['wget', f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{MANATEE_VER}.tar.gz'], cwd = '/usr/local/src')
+            subprocess.check_call(['tar', 'xzvf', f'manatee-open-{MANATEE_VER}.tar.gz'], cwd = '/usr/local/src')
+
             subprocess.check_call(['cp', os.path.join(self.kontext_path, f'scripts/install/ucnk-manatee-{MANATEE_VER}.patch'), './'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
             subprocess.check_call(['patch', '-p0', '<', f'ucnk-manatee-{MANATEE_VER}.patch'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
         
-        subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
-        subprocess.check_call(['make'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
-        subprocess.check_call(['make', 'install'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
-        subprocess.check_call(['ldconfig'])
+            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
+            subprocess.check_call(['make'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
+            subprocess.check_call(['make', 'install'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}')
+            subprocess.check_call(['ldconfig'])
 
-        # setup Susanne corpus
-        subprocess.check_call(['wget', 'https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2'], cwd = '/usr/local/src')
-        subprocess.check_call(['tar', 'xjvf', 'susanne-example-source.tar.bz2'], cwd = '/usr/local/src')
-        
-        create_directory('/var/lib/manatee/registry')
-        create_directory('/var/lib/manatee/vert')
-        create_directory('/var/lib/manatee/data/susanne')
-        create_directory('/var/local/corpora/user_filter_files')
+            # install susanne corpus
+            subprocess.check_call(['wget', 'https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2'], cwd = '/usr/local/src')
+            subprocess.check_call(['tar', 'xjvf', 'susanne-example-source.tar.bz2'], cwd = '/usr/local/src')
+            
+            create_directory('/var/lib/manatee/registry')
+            create_directory('/var/lib/manatee/vert')
+            create_directory('/var/lib/manatee/data/susanne')
+            create_directory('/var/local/corpora/user_filter_files')
 
-        replace_string_in_file('/usr/local/src/susanne-example-source/config', 'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
-        subprocess.check_call(['cp', './source', '/var/lib/manatee/vert/susanne.vert'], cwd = '/usr/local/src/susanne-example-source')
-        subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'], cwd = '/usr/local/src/susanne-example-source')
+            replace_string_in_file('/usr/local/src/susanne-example-source/config', 'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
+            subprocess.check_call(['cp', './source', '/var/lib/manatee/vert/susanne.vert'], cwd = '/usr/local/src/susanne-example-source')
+            subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'], cwd = '/usr/local/src/susanne-example-source')
 
-        subprocess.check_call(['encodevert', '-v', '-c', './config', '-p', '/var/lib/manatee/data/susanne', './source'], cwd = '/usr/local/src/susanne-example-source')
+            subprocess.check_call(['encodevert', '-v', '-c', './config', '-p', '/var/lib/manatee/data/susanne', './source'], cwd = '/usr/local/src/susanne-example-source')
 
-        # install python3 support
-        subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
-        subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            # install manatee python3 support
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+        else:
+            # install manatee from package
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            subprocess.check_call(['dpkg', '-i', f'manatee-open_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            # install manatee python3 support
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            # install susanne corpus
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            subprocess.check_call(['dpkg', '-i', f'manatee-open-susanne_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
 
 
 
@@ -158,8 +168,6 @@ class SetupKontext(InstallationStep):
         create_directory('/var/log/kontext', WEBSERVER_USER, None)
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
-        # TODO
-        # subprocess.check_call(['python3', 'scripts/validate_setup.py', 'conf/config.xml'], cwd = self.kontext_path)
         subprocess.check_call(['npm', 'install'], cwd = self.kontext_path)
         subprocess.check_call(['make', 'production'], cwd = self.kontext_path)
 
