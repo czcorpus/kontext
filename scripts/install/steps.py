@@ -130,15 +130,21 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
             subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
         else:
+            # install manatee python3 support (must be installed before manatee itself)
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
             # install manatee from package
             subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
             subprocess.check_call(['dpkg', '-i', f'manatee-open_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
-            # install manatee python3 support
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
             # install susanne corpus
             subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
             subprocess.check_call(['dpkg', '-i', f'manatee-open-susanne_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin')
+
+            self.add_final_message(f'''
+                {bcolors.BOLD}{bcolors.WARNING}
+                UCNK patch not available. Manatee was installed without it.
+                {bcolors.ENDC}{bcolors.ENDC}
+            ''')
 
 
 
@@ -185,21 +191,21 @@ class SetupDefaultUsers(InstallationStep):
         redis_client = redis.Redis(host='localhost', port=6379, db=1)
         
         # set up anonymous user in Redis
-        redis_client.set('user:0', json.dumps({'id': 0, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
-        redis_client.set('corplist:user:0', json.dumps(['susanne']))
+        redis_client.set('user:1', json.dumps({'id': 1, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
+        redis_client.set('corplist:user:1', json.dumps(['susanne']))
         
         # set up kontext user in Redis
         password, password_hash = generate_random_password()
-        redis_client.set('user:1', json.dumps({'id': 1, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
-        redis_client.set('corplist:user:1', json.dumps(['susanne']))
-        redis_client.hset('user_index', 'kontext', '\\"user:1\\"')
+        redis_client.set('user:2', json.dumps({'id': 2, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
+        redis_client.set('corplist:user:2', json.dumps(['susanne']))
+        redis_client.hset('user_index', 'kontext', '"user:2"')
 
         self.add_final_message(f'''
             {bcolors.BOLD}{bcolors.OKGREEN}
             KonText installation successfully completed.
             To start KonText, enter the following command in the KonText install root directory (i.e. {self.kontext_path}):
             
-                sudo -u {WEBSERVER_USER} python public/app.py --address 127.0.0.1 --port 8080
+                sudo -u {WEBSERVER_USER} python3 public/app.py --address 127.0.0.1 --port 8080
 
             (--address and --port parameters are optional; default serving address is 127.0.0.1:5000)
             --------------------
