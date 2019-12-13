@@ -6,6 +6,7 @@ import os
 import subprocess
 import pathlib
 import shutil
+import json
 
 import random
 import string
@@ -31,7 +32,7 @@ def replace_string_in_file(path: str, old: str, new: str):
 
 
 def generate_random_password() -> Tuple[str, str]:
-    password = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(8)])
+    password = ''.join(random.choice(string.ascii_letters + string.digits) for n in range(8))
     return password, mk_pwd_hash_default(password)
 
 
@@ -185,26 +186,31 @@ class SetupKontext(InstallationStep):
 
 
 class SetupDefaultUsers(InstallationStep):
+    def __init__(self, kontext_path: str, stdout: str):
+        super().__init__(kontext_path, stdout)
+
+        import redis
+        self.redis_client = redis.Redis(host='localhost', port=6379, db=1)
+
     def is_done(self):
-        pass
+        redis_keys = self.redis_client.keys()
+        return all(key in redis_keys for key in ['user:1', 'corplist:user:1', 'user:2', 'corplist:user:2', 'user_index'])
 
     def abort(self):
-        pass
+        self.redis_client.flushdb()
 
     def run(self):
-        print('Setting up users kontext...')
-        import redis, json
-        redis_client = redis.Redis(host='localhost', port=6379, db=1)
+        print('Setting up Kontext users...')
         
         # set up anonymous user in Redis
-        redis_client.set('user:1', json.dumps({'id': 1, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
-        redis_client.set('corplist:user:1', json.dumps(['susanne']))
+        self.redis_client.set('user:1', json.dumps({'id': 1, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
+        self.redis_client.set('corplist:user:1', json.dumps(['susanne']))
         
         # set up kontext user in Redis
         password, password_hash = generate_random_password()
-        redis_client.set('user:2', json.dumps({'id': 2, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
-        redis_client.set('corplist:user:2', json.dumps(['susanne']))
-        redis_client.hset('user_index', 'kontext', '"user:2"')
+        self.redis_client.set('user:2', json.dumps({'id': 2, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
+        self.redis_client.set('corplist:user:2', json.dumps(['susanne']))
+        self.redis_client.hset('user_index', 'kontext', '"user:2"')
 
         self.add_final_message(f'''
             {bcolors.BOLD}{bcolors.OKGREEN}
