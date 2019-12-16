@@ -18,8 +18,9 @@ if __name__ == "__main__":
     print('Installing requirements...')
     subprocess.check_call(['./scripts/install/install_requirements.sh'], cwd=KONTEXT_PATH, stdout=stdout)
     
-    # installation steps
+    # import steps here, because some depend on packages installed by this script
     import steps
+    # installation steps
     steps.SetupManatee(KONTEXT_PATH, stdout).run()
     steps.SetupKontext(KONTEXT_PATH, stdout).run()
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout).run()
