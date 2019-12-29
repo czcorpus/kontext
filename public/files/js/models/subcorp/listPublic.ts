@@ -97,7 +97,6 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     reduce(state:PublicSubcorpListState, action:Action):PublicSubcorpListState {
         let newState:PublicSubcorpListState;
-
         switch (action.name) {
             case Actions.SET_SEARCH_TYPE:
                 newState = this.copyState(state);
@@ -130,7 +129,6 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
     }
 
     sideEffects(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
-
         switch (action.name) {
             case Actions.SET_SEARCH_TYPE:
             case Actions.SET_SEARCH_QUERY:
@@ -141,6 +139,26 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                                 name: Actions.SET_CODE_PREFIX_DONE,
                                 payload: {}
                             });
+                            this.loadData(state).then(
+                                (data) => {
+                                    dispatch({
+                                        name: Actions.DATA_LOAD_DONE,
+                                        payload: {
+                                            data: data
+                                        }
+                                    });
+                                }
+
+                            ).catch(
+                                (err) => {
+                                    this.pageModel.showMessage('error', err);
+                                    dispatch({
+                                        name: Actions.DATA_LOAD_DONE,
+                                        payload: {},
+                                        error: err
+                                    });
+                                }
+                            );
                         }
                         window.clearTimeout(state.inputPrefixThrottleTimer);
                     },
@@ -152,28 +170,6 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                         timerId: timerId
                     }
                 });
-            break;
-            case Actions.SET_CODE_PREFIX_DONE:
-                this.loadData(state).then(
-                    (data) => {
-                        dispatch({
-                            name: Actions.DATA_LOAD_DONE,
-                            payload: {
-                                data: data
-                            }
-                        });
-                    }
-
-                ).catch(
-                    (err) => {
-                        this.pageModel.showMessage('error', err);
-                        dispatch({
-                            name: Actions.DATA_LOAD_DONE,
-                            payload: {},
-                            error: err
-                        });
-                    }
-                );
             break;
             case Actions.USE_IN_QUERY:
                 const args = new MultiDict();
