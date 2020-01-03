@@ -60,21 +60,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         </>;
     }
 
-    // ------------ <ValueShare /> -------------------------------------
+    // ------------ <ValueShareInput /> -------------------------------------
 
-    const ValueShare:React.SFC<{
-        rowId:number;
+    const ValueShareInput:React.SFC<{
         hasResults:boolean;
         attrName:string;
         attrValue:string;
-        baseRatio:string;
-        ratio:string;
-        result:[string, number, boolean];
-        ratioLimit:number;
+        ratio:Kontext.FormValue<string>;
 
     }> = (props) => {
 
-        const handleRatioValueChange = (evt) => {
+        const handleRatioValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch({
                 name: 'UCNK_SUBCMIXER_SET_RATIO',
                 payload: {
@@ -84,6 +80,33 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 }
             });
         };
+
+        return (
+            <span>
+                <layoutViews.ValidatedItem invalid={props.ratio.isInvalid}>
+                    <input type="text" className={props.hasResults ? ' disabled' : ''}
+                        style={{width: '3em'}} value={props.ratio.value}
+                        disabled={props.hasResults ? true : false}
+                        onChange={handleRatioValueChange} />
+                </layoutViews.ValidatedItem>
+                {'\u00a0'}<strong>%</strong>
+            </span>
+        );
+    }
+
+    // ------------ <ValueShare /> -------------------------------------
+
+    const ValueShare:React.SFC<{
+        rowId:number;
+        hasResults:boolean;
+        attrName:string;
+        attrValue:string;
+        baseRatio:string;
+        ratio:Kontext.FormValue<string>;
+        result:[string, number, boolean];
+        ratioLimit:number;
+
+    }> = (props) => {
 
         return (
             <tr className="ucnkSyntaxViewer_ValueShare">
@@ -96,13 +119,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     {props.baseRatio}<strong>%</strong>
                 </td>
                 <td className="num">
-                    <span>
-                        <input type="text" className={'num' + (props.hasResults ? ' disabled' : '')}
-                                style={{width: '3em'}} value={props.ratio}
-                                disabled={props.hasResults ? true : false}
-                                onChange={handleRatioValueChange} />
-                        {'\u00a0'}<strong>%</strong>
-                    </span>
+                    <ValueShareInput hasResults={props.hasResults} attrName={props.attrName}
+                            attrValue={props.attrValue} ratio={props.ratio} />
                 </td>
                 <td className="num">
                     {props.result ? <CalculatedRatio success={props.result[2]} limit={props.ratioLimit}
@@ -158,10 +176,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         const handleUpdateParamsButton = () => {
             dispatcher.dispatch({
                 name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
-                payload: {}
-            });
-            dispatcher.dispatch({
-                name: 'XXXX ________',
                 payload: {}
             });
         };
