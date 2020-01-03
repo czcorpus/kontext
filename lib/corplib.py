@@ -215,10 +215,10 @@ def get_subcorp_pub_info(spath):
             desc = ''
             for i, line in enumerate(nf):
                 if i == 0:
-                    metadata = PublishedSubcMetadata.from_json(line.decode('utf-8'))
+                    metadata = PublishedSubcMetadata.from_json(line)
                 elif i > 1:
                     desc += line
-    return metadata, desc.decode('utf-8') if desc else None
+    return metadata, desc
 
 
 def rewrite_subc_desc(publicpath, desc):
@@ -257,9 +257,9 @@ def mk_publish_links(subcpath, publicpath, author, desc):
             author_id = os.path.basename(os.path.dirname(os.path.dirname(subcpath)))
             meta = PublishedSubcMetadata(
                 subcpath=subcpath, author_id=int(author_id) if author_id else None, author_name=author)
-            namefile.write(meta.to_json().encode('utf-8'))
+            namefile.write(meta.to_json())
             namefile.write('\n\n')
-            namefile.write(desc.encode('utf-8'))
+            namefile.write(desc)
     except Exception as ex:
         rm_silent(symlink_path)
         rm_silent(namefile_path)
@@ -296,8 +296,8 @@ class CorpusManager(object):
             pass
         subc.corpname = str(corpname)  # never unicode (paths)
         subc.subcname = subcname
-        subc.cm = self
-        subc.subchash = md5(open(spath).read()).hexdigest()
+        with open(spath, 'rb') as subcinfo:
+            subc.subchash = md5(subcinfo.read()).hexdigest()
         subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
         subc.is_published = subcorpus_is_published(spath)
         meta, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
@@ -347,8 +347,6 @@ class CorpusManager(object):
                 subcname = public_subcname
             for sp in self.subcpath:
                 spath = os.path.join(sp, corpname, subcname + '.subc')
-                if type(spath) == str:
-                    spath = spath.encode('utf-8')
                 if os.path.isfile(spath):
                     subc = self._open_subcorpus(corpname, subcname, corp, spath, decode_desc)
                     self._cache[cache_key] = subc

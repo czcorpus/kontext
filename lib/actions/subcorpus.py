@@ -140,9 +140,6 @@ class Subcorpus(Querying):
         publish_path = self.prepare_subc_path(
             basecorpname, subcname, publish=True) if publish else None
 
-        if type(path) == str:
-            path = path.encode('utf-8')
-
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
