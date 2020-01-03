@@ -85,10 +85,10 @@ def export_string(s, to_encoding):
     s -- converted string
     to_encoding -- target encoding
     """
-    if type(s) is str:
+    if type(s) is bytes:
         return s.encode(to_encoding)
     else:
-        return s.decode('utf-8').encode(to_encoding)
+        return s
 
 
 def sort(iterable, loc, key=None, reverse=False):
