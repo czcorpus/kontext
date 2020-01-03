@@ -54,11 +54,11 @@ class ExpressionJoin(object):
     def __iter__(self):
         return self.items.__iter__()
 
-    def __unicode__(self):
+    def __str__(self):
         return (' %s ' % self.operator).join('%s' % item for item in self.items)
 
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return f'ExpressionJoin{{{self.__str__()}}}'
 
 
 class CategoryExpression(object):
@@ -80,14 +80,14 @@ class CategoryExpression(object):
         self.op = op
         self.value = value
 
-    def __repr__(self):
-        return self.__unicode__().encode('utf-8')
-
     def __iter__(self):
         return [self].__iter__()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s %s '%s'" % (self.attr, self.op, self.value)
+
+    def __repr__(self):
+        return f'CategoryExpression{{{self.__str__()}}}'
 
 
 class CategoryTreeException(Exception):
@@ -125,7 +125,7 @@ class CategoryTree(object):
         cats_updated = [False] * self.num_categories
         for cat in self.category_list:
             par_id = cat[1]
-            if par_id > 0:
+            if par_id and par_id > 0:
                 i = 0
                 mdc = ExpressionJoin('AND')
                 for other_cat in self.category_list:
