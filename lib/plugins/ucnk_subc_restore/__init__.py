@@ -167,7 +167,6 @@ class UCNKSubcRestore(AbstractSubcRestore):
             else:
                 subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])
-
         return subc_list + deleted_items
 
 
