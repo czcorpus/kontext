@@ -79,10 +79,10 @@ class MetadataModel:
         result a record has a different index then in
         all the records list).
         """
-        sql = 'SELECT m1.id, m1.{cc} FROM {tn} AS m1 '.format(
+        sql = 'SELECT MIN(m1.id) AS db_id, SUM(m1.{cc}) FROM {tn} AS m1 '.format(
             cc=self._db.count_col, tn=self.c_tree.table_name)
         args = []
-        sql += ' WHERE m1.corpus_id = ? ORDER BY m1.id'
+        sql += ' WHERE m1.corpus_id = ? GROUP BY {} ORDER BY db_id'.format(self._id_attr)
         args.append(self._db.corpus_id)
         sizes = []
         id_map = {}
@@ -116,12 +116,13 @@ class MetadataModel:
             sql_items = ['m1.{0} {1} ?'.format(mc.attr, mc.op)
                          for subl in node.metadata_condition for mc in subl]
             sql_args = []
-            sql = 'SELECT m1.id, m1.{cc} FROM {tn} AS m1 '.format(cc=self._db.count_col,
-                                                                  tn=self.c_tree.table_name)
+            sql = 'SELECT MIN(m1.id) AS db_id, SUM(m1.{cc}) FROM {tn} AS m1 '.format(cc=self._db.count_col,
+                                                                                     tn=self.c_tree.table_name)
 
             sql, sql_args = self._db.append_aligned_corp_sql(sql, sql_args)
 
-            sql += ' WHERE {where} AND m1.corpus_id = ?'.format(where=' AND '.join(sql_items))
+            sql += ' WHERE {where} AND m1.corpus_id = ? GROUP BY {gb} ORDER BY db_id'.format(
+                where=' AND '.join(sql_items), gb=self._id_attr)
             sql_args += [mc.value for subl in node.metadata_condition for mc in subl]  # 'WHERE' args
             sql_args.append(self._db.corpus_id)
             self._db.execute(sql, sql_args)
