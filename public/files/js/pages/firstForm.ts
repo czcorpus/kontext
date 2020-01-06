@@ -180,10 +180,6 @@ export class FirstFormPage {
 
         let liveAttrsViews;
         if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            // Complicated dependencies between QueryModel, TextTypesModel and LiveAttrsModel
-            // cause that LiveAttrs model needs QueryModel data but it is not available
-            // here yet. That's the reason we have to define a callback here to configure
-            // required values later.
             this.textTypesModel.enableAutoCompleteSupport();
             liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
 
