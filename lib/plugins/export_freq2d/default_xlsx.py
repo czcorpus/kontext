@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from io import StringIO
+from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Side, Color, PatternFill, Font, Border, colors
 from plugins.export_freq2d import AbstractExportFreq2d
@@ -50,7 +50,7 @@ class XLSXExport(AbstractExportFreq2d):
                         data=data)
 
     def raw_content(self):
-        output = StringIO()
+        output = BytesIO()
         self._wb.save(filename=output)
         return output.getvalue()
 
