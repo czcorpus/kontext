@@ -54,7 +54,7 @@ class UcnkTreeTemplate(mbk.TreexTemplate):
 
 class UcnkManateeBackend(mbk.ManateeBackend):
     def __init__(self, conf):
-        super(UcnkManateeBackend, self).__init__(conf)
+        super().__init__(conf)
 
     def import_parent_values(self, v):
         if type(v) is int:

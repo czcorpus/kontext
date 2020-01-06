@@ -423,7 +423,7 @@ class ManateeBackend(SearchBackend):
             kwic_tk = kl.get_kwic()
             return dict(data=[import_string(s, from_encoding=encoding)
                               for s in left_tk + kwic_tk + kl.get_right()],
-                        kwic_pos=(len(left_tk) / 4, len(kwic_tk) / 4))
+                        kwic_pos=(len(left_tk) // 4, len(kwic_tk) // 4))
 
     @staticmethod
     def _parse_raw_sent(in_data, tree_attrs, empty_val_placeholders):
@@ -437,12 +437,10 @@ class ManateeBackend(SearchBackend):
         Returns (list of dict):
             a list of dict items representing tree nodes
         """
-        import logging
         def import_raw_val(v):
             return None if v in empty_val_placeholders or v == '' else v
 
         data = []
-        logging.getLogger(__name__).debug('in_data: {}'.format(in_data))
         for i in range(0, len(in_data), 4):
             parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
             if len(parsed) > len(tree_attrs):
@@ -456,10 +454,9 @@ class ManateeBackend(SearchBackend):
                 item = dict(list(zip(tree_attrs, parsed)))
                 item['word'] = in_data[i]
                 data.append(item)
-        logging.getLogger(__name__).debug('>>>> {}'.format(len(data)))
         return data
 
-    def _get_ord_reference(self, curr_idx, data, tree_conf=None):
+    def _get_ord_reference(self, curr_idx, data, parent_attr, parent_type):
         """
         * Customizable reference resolution
         OPTION 1: (rel)
@@ -478,16 +475,13 @@ class ManateeBackend(SearchBackend):
         Returns (list of int):
             sentence-absolute position of the parent or None if nothing found
         """
-        if tree_conf is None:
-            tree_conf = {}
         # Old arguments from _get_abs_reference
         item = data[curr_idx]
-        ref_attr = tree_conf.parent_attr
 
-        if tree_conf.parent_type == 'ord':
+        if parent_type == 'ord':
             # This already is an nr in the sentence - just return
-            return [item[ref_attr]]
-        elif tree_conf.parent_type == 'id':
+            return [item[parent_attr]]
+        elif parent_type == 'id':
             # Return the sentence element that has this as its ID
             # Check that items have a ID
             if 'id' not in item:
@@ -495,16 +489,21 @@ class ManateeBackend(SearchBackend):
             # Go through all the words to see which matched by ID
             for i in range(len(data)):
                 parit = data[i]
-                if parit.get('id', '') == item[ref_attr]:
+                if parit.get('id', '') == item[parent_attr]:
                     return [i]
             return []
         else:
+            """
+             if item[ref_attr]:
+            rel_parents = self.import_parent_values(item[ref_attr])
+            return [curr_idx + rp for rp in rel_parents if rp != 0]
+            else:
+            return []
+            """
             # Provide an absolute nr from a relative one
-            if item[ref_attr]:
-                import logging
-                logging.getLogger(__name__).debug('importing: {}'.format(item[ref_attr]))
-                rel_parents = self.import_parent_values(item[ref_attr])
-                return [curr_idx + rp - 1 for rp in rel_parents if rp != 0]
+            if item[parent_attr]:
+                rel_parents = self.import_parent_values(item[parent_attr])
+                return [curr_idx + rp for rp in rel_parents if rp != 0]
             else:
                 return []
 
@@ -530,12 +529,10 @@ class ManateeBackend(SearchBackend):
             corr = -1
         else:
             corr = 0
-        import logging
-        logging.getLogger(__name__).debug('LEN: {}'.format(len(data)))
-        for ident, keys in list(attr_refs.items()):
-            abs_refs = self._get_ord_reference(curr_idx, data, tree_conf)
 
-            logging.getLogger(__name__).debug('foo: {}'.format(abs_refs))
+        for ident, keys in attr_refs.items():
+            abs_refs = self._get_ord_reference(
+                curr_idx, data, parent_attr=ident, parent_type=tree_conf.parent_type)
             data[curr_idx][ident] = []
             for abs_ref in abs_refs:
                 ref_item = data[abs_ref]
@@ -551,8 +548,9 @@ class ManateeBackend(SearchBackend):
         """
         if tree_conf is None:
             tree_conf = {}
-        for i in range(1, len(data)):
-            abs_parents = self._get_ord_reference(i, data, tree_conf)
+        for i in range(1, len(data)):  # we skip 0 element (= root)
+            abs_parents = self._get_ord_reference(i, data, parent_attr=tree_conf.parent_attr,
+                                                  parent_type=tree_conf.parent_type)
             abs_parent = abs_parents[0] if len(abs_parents) > 0 else None
             # Please note that referring to the 0-th node
             # means 'out of range' error too because our 0-th node
