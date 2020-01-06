@@ -151,8 +151,8 @@ export class SubcorpForm {
         );
 
         let subcMixerComponent:React.ComponentClass;
-        if (this.layoutModel.pluginIsActive('subcmixer')) {
-            if (liveAttrsPlugin) {
+        if (this.layoutModel.pluginIsActive(PluginName.SUBCMIXER)) {
+            if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
                 subcMixerComponent = subcmixerPlg.getWidgetView();
 
             } else {
@@ -162,7 +162,15 @@ export class SubcorpForm {
         } else {
             subcMixerComponent = null;
         }
-        const liveAttrsViews = liveAttrsPlugin ? liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel) : {};
+
+        let liveAttrsViews;
+        if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+            liveAttrsViews = liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
+            this.textTypesModel.enableAutoCompleteSupport();
+
+        } else {
+            liveAttrsViews = {};
+        }
         return {
             component: ttViewComponents.TextTypesPanel,
             props: {
