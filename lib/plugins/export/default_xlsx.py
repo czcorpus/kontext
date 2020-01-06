@@ -20,9 +20,7 @@ like data can be used) to XLSX (Office Open XML) format.
 
 Plug-in requires openpyxl library.
 """
-
 from io import BytesIO
-
 from openpyxl import Workbook
 try:
     from openpyxl.utils import get_column_letter
