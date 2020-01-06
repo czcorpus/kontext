@@ -206,6 +206,9 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         this.textInputPlaceholder = null;
         this._isBusy = false;
         this.minimizedBoxes = Immutable.Map<string, boolean>(this.attributes.map(v => [v.name, false]));
+        // the autocomplete is enabled by outside conditions (e.g. liveattrs plug-in
+        // is enabled) so it must be turned on via enableAutoCompleteSupport() by the
+        // user of this model.
         this.autoCompleteSupport = false;
 
         this.dispatcher.registerActionListener((action:Action, dispatch:SEDispatcher) => {
