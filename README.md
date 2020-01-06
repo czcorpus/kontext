@@ -2,6 +2,10 @@
 
 [![Build status](https://travis-ci.org/czcorpus/kontext.svg?branch=master)](https://travis-ci.org/czcorpus/kontext)
 
+## Important note
+
+Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-2/), KonText **version 0.13.x is the last one running in Python 2**. It means that the **next release** (planned for Q1 2020) **will run only in Python 3**. The upgrade won't require any data/configuration change in KonText. The only action needed will be an installation of py3 versions of KonText dependencies and making sure Gunicorn and Celery systemd (or equivalent) configurations point to py3 versions of respective programs (e.g. by removing py2 versions and then installing py3 ones).
+
 ## Contents
 
 * [Introduction](#introduction)
