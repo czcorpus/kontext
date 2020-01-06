@@ -32,7 +32,7 @@ __conf.FreqResultData = {{ Blocks|to_json }};
 __conf.FreqItemsPerPage = {{ fmaxitems|to_json }};
 __conf.FreqCrit = {{ fcrit|to_json }};
 {% elif freq_type == 'ct' %}
-__conf.CTFreqResultData = data|to_json }};
+__conf.CTFreqResultData = {{ data|to_json }};
 __conf.Attr1 = {{ attr1|to_json }};
 __conf.Attr2 = {{ attr2|to_json }};
 {% endif %}
