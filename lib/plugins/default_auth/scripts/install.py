@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 import sys
 import os
-import redis
 import argparse
 import json
 
@@ -21,13 +20,42 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from plugins.default_auth import mk_pwd_hash_default
 
 
-def import_user(data, db):
+def import_user_redis(data):
+    import redis
+    db = redis.StrictRedis(host=db_conf['default:host'],
+                           port=db_conf['default:port'], db=db_conf['default:id'])
     data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
     del data['pwd']
     db.set('corplist:user:{0}'.format(data['id']), json.dumps(data.get('permitted_corpora', [])))
     del data['permitted_corpora']
     db.set('user:{0}'.format(data['id']), json.dumps(data))
     db.hset('user_index', data['username'], json.dumps('user:{0}'.format(data['id'])))
+    print(('Installed user {}'.format(data['username'])))
+
+
+def import_user_sqlite3(data):
+    import sqlite3
+    db = sqlite3.connect(db_conf['default:db_path'])
+    cursor = db.cursor()
+    cursor.execute('BEGIN')
+    data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
+    del data['pwd']
+    cursor.execute('INSERT INTO data (key, value, expires) VALUES (?, ?, -1)', ('corplist:user:{0}'.format(data['id']),
+                                                                                json.dumps(data.get('permitted_corpora', []))))
+    del data['permitted_corpora']
+    cursor.execute('INSERT INTO data (key, value, expires) VALUES (?, ?, -1)', ('user:{0}'.format(data['id']),
+                                                                                json.dumps(data)))
+    cursor.execute('SELECT value FROM data WHERE key = ?', ('user_index',))
+    tmp = cursor.fetchone()
+    if not tmp:
+        uindex = {}
+    else:
+        uindex = json.loads(tmp[0])
+    uindex[data['username']] = 'user:{0}'.format(data['id'])
+
+    cursor.execute('INSERT OR REPLACE INTO data (key, value, expires) VALUES (?, ?, -1)',
+                   ('user_index', json.dumps(uindex)))
+    cursor.execute('COMMIT')
     print(('Installed user {}'.format(data['username'])))
 
 
@@ -44,12 +72,12 @@ if __name__ == '__main__':
     settings.load(conf_path)
     db_conf = settings.get('plugins', 'db')
 
-    if db_conf['module'] != 'redis_db':
-        print('Sorry, the script currently supports only Redis db backend')
-        sys.exit(1)
-
-    db = redis.StrictRedis(host=db_conf['default:host'],
-                           port=db_conf['default:port'], db=db_conf['default:id'])
     with open(args.file, 'rb') as fr:
         for user in json.load(fr):
-            import_user(user, db)
+            if db_conf['module'] == 'redis_db':
+                import_user_redis(user)
+            elif db_conf['module'] == 'sqlite3_db':
+                import_user_sqlite3(user)
+            else:
+                print('Sorry, the script currently supports only Redis db backend')
+                sys.exit(1)
