@@ -26,9 +26,9 @@ def create_directory(path: str, user: str = None, group: str = None, mode: int =
 
 
 def replace_string_in_file(path: str, old: str, new: str):
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf8') as f:
         config_text = f.read()
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf8') as f:
         f.write(config_text.replace(old, new))
 
 

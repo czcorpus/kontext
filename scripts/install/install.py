@@ -4,8 +4,35 @@ import os
 import sys
 import subprocess
 import inspect
+import apt
 
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+
+REQUIREMENTS = [
+    'ca-certificates',
+    'wget',
+    'curl',
+    'openssh-server',
+    'net-tools',
+    'redis-server',
+    'build-essential',
+    'openssl',
+    'pkg-config',
+    'libltdl7',
+    'libpcre3',
+    'swig',
+    'nginx',
+    'nodejs',
+    'npm',
+    'libicu-dev',
+    'libpcre++-dev',
+    'libxml2-dev',
+    'libxslt1-dev',
+    'libltdl-dev',
+    'm4',
+    'parallel',
+    'locales-all'
+]
 
 
 if __name__ == "__main__":
@@ -16,8 +43,19 @@ if __name__ == "__main__":
 
     # install prerequisites
     print('Installing requirements...')
-    subprocess.check_call(['./scripts/install/install_requirements.sh'], cwd=KONTEXT_PATH, stdout=stdout)
+    subprocess.check_call(['locale-gen', 'en_US.UTF-8'], cwd=KONTEXT_PATH, stdout=stdout)
     
+    cache = apt.cache.Cache()
+    cache.update()
+    cache.open()
+    for requirement in REQUIREMENTS:
+        pkg = cache[requirement]
+        if not pkg.is_installed:
+            pkg.mark_install()
+    cache.commit()
+
+    subprocess.check_call(['pip3', 'install', 'simplejson', 'celery', 'signalfd', '-r', 'requirements.txt'], cwd=KONTEXT_PATH, stdout=stdout)
+
     # import steps here, because some depend on packages installed by this script
     import steps
     # installation steps
