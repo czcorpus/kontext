@@ -67,7 +67,7 @@ class StaticAuth(AbstractRemoteAuth):
         return dict(id=self._api_user_id, user='apiuser', fullname='API user')
 
     def _validate_key(self, k):
-        return self._api_key == hashlib.sha256(k).hexdigest() if k is not None else False
+        return self._api_key == hashlib.sha256(k.encode()).hexdigest() if k is not None else False
 
     def _get_api_key(self, plugin_api):
         if self._api_key_cookie_name:
