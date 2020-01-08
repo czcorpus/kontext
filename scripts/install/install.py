@@ -8,6 +8,7 @@ import inspect
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 
 REQUIREMENTS = [
+    'python3-pip',
     'wget',
     'curl',
     'openssh-server',
@@ -41,9 +42,10 @@ if __name__ == "__main__":
 
     # install prerequisites
     print('Installing requirements...')
-    subprocess.check_call(['locale-gen', 'en_US.UTF-8'], cwd=KONTEXT_PATH, stdout=stdout)
-    subprocess.check_call(['apt-get', 'update', '-y'], cwd=KONTEXT_PATH, stdout=stdout)
-    subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, cwd=KONTEXT_PATH, stdout=stdout)
+    subprocess.check_call(['locale-gen', 'en_US.UTF-8'], stdout=stdout)
+    subprocess.check_call(['apt-get', 'update', '-y'], stdout=stdout)
+    subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
+    subprocess.check_call(['python3', '-m', 'pip', 'install', 'pip', '--upgrade'], stdout=stdout)
     subprocess.check_call(['pip3', 'install', 'simplejson', 'celery', 'signalfd', '-r', 'requirements.txt'], cwd=KONTEXT_PATH, stdout=stdout)
 
     # import steps here, because some depend on packages installed by this script
