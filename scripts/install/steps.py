@@ -15,7 +15,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib'))
 from plugins.default_auth import mk_pwd_hash_default
 
 WEBSERVER_USER="www-data"
-MANATEE_VER='2.167.8'
 
 
 def create_directory(path: str, user: str = None, group: str = None, mode: int = 0o755):
@@ -81,7 +80,7 @@ class SetupManatee(InstallationStep):
     def abort(self):
         pass
 
-    def run(self):
+    def run(self, manatee_version: str, patch_path: str = None):
         # config celery
         print('Setting up celery...')
         try:
@@ -104,17 +103,28 @@ class SetupManatee(InstallationStep):
         
         # install manatee with ucnk patch
         print('Installing manatee...')
-        if os.path.isfile(os.path.join(self.kontext_path, f'scripts/install/ucnk-manatee-{MANATEE_VER}.patch')):
+        if patch_path is None:
+            # install manatee python3 support (must be installed before manatee itself)
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
+            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
+            # install manatee from package
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{manatee_version}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
+            subprocess.check_call(['dpkg', '-i', f'manatee-open_{manatee_version}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
+            # install susanne corpus
+            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
+            subprocess.check_call(['dpkg', '-i', f'manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
+        elif os.path.isfile(os.path.join(self.kontext_path, patch_path)):
             # build manatee from source using patch
-            subprocess.check_call(['wget', f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{MANATEE_VER}.tar.gz', '-N'], cwd = '/usr/local/src', stdout=self.stdout)
-            subprocess.check_call(['tar', 'xzvf', f'manatee-open-{MANATEE_VER}.tar.gz'], cwd = '/usr/local/src', stdout=self.stdout)
+            subprocess.check_call(['wget', f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz', '-N'], cwd = '/usr/local/src', stdout=self.stdout)
+            subprocess.check_call(['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd = '/usr/local/src', stdout=self.stdout)
 
-            subprocess.check_call(['cp', os.path.join(self.kontext_path, f'scripts/install/ucnk-manatee-{MANATEE_VER}.patch'), './'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
-            subprocess.check_call(['patch', '-p0', '<', f'ucnk-manatee-{MANATEE_VER}.patch'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
+            subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+            subprocess.check_call(['patch', '-p0', '<', f'ucnk-manatee-{manatee_version}.patch'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
         
-            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
-            subprocess.check_call(['make'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
-            subprocess.check_call(['make', 'install'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
+            python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
+            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env={'PYTHON': python_path})
+            subprocess.check_call(['make'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+            subprocess.check_call(['make', 'install'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
             subprocess.check_call(['ldconfig'], stdout=self.stdout)
 
             # install susanne corpus
@@ -131,26 +141,8 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'], cwd = '/usr/local/src/susanne-example-source', stdout=self.stdout)
 
             subprocess.check_call(['encodevert', '-v', '-c', './config', '-p', '/var/lib/manatee/data/susanne', './source'], cwd = '/usr/local/src/susanne-example-source', stdout=self.stdout)
-
-            # install manatee python3 support
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
         else:
-            # install manatee python3 support (must be installed before manatee itself)
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
-            # install manatee from package
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{MANATEE_VER}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
-            # install susanne corpus
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{MANATEE_VER}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-susanne_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
-
-            self.add_final_message(f'''
-                {bcolors.BOLD}{bcolors.FAIL}
-                UCNK patch not available. Manatee was installed without it.
-                {bcolors.ENDC}{bcolors.ENDC}
-            ''')
+            raise FileNotFoundError(f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
 
 
 
@@ -183,6 +175,26 @@ class SetupKontext(InstallationStep):
 
         subprocess.check_call(['npm', 'install'], cwd = self.kontext_path, stdout=self.stdout)
         subprocess.check_call(['make', 'production'], cwd = self.kontext_path, stdout=self.stdout)
+
+
+
+class SetupGunicorn(InstallationStep):
+    def is_done(self):
+        pass
+
+    def abort(self):
+        pass
+
+    def run(self):
+        print('Installing gunicorn...')
+        subprocess.check_call(['pip3', 'install', 'gunicorn'], stdout=self.stdout)
+        
+        subprocess.check_call(['cp', 'gunicorn-config.sample.py', 'gunicorn-config.py'], cwd = os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
+        subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/gunicorn.service'), '/etc/systemd/system'], stdout=self.stdout)
+        replace_string_in_file('/etc/systemd/system/gunicorn.service', '/opt/kontext', self.kontext_path)
+        create_directory('/var/log/gunicorn/kontext', WEBSERVER_USER, None)
+
+        subprocess.check_call(['systemctl', 'enable', 'gunicorn'], stdout=self.stdout)
 
 
 
