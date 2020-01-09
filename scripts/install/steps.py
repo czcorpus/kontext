@@ -112,7 +112,8 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['cp', os.path.join(self.kontext_path, f'scripts/install/ucnk-manatee-{MANATEE_VER}.patch'), './'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
             subprocess.check_call(['patch', '-p0', '<', f'ucnk-manatee-{MANATEE_VER}.patch'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
         
-            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
+            python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
+            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout, env={'PYTHON': python_path})
             subprocess.check_call(['make'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
             subprocess.check_call(['make', 'install'], cwd = f'/usr/local/src/manatee-open-{MANATEE_VER}', stdout=self.stdout)
             subprocess.check_call(['ldconfig'], stdout=self.stdout)
@@ -131,10 +132,6 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'], cwd = '/usr/local/src/susanne-example-source', stdout=self.stdout)
 
             subprocess.check_call(['encodevert', '-v', '-c', './config', '-p', '/var/lib/manatee/data/susanne', './source'], cwd = '/usr/local/src/susanne-example-source', stdout=self.stdout)
-
-            # install manatee python3 support
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb'], cwd = '/usr/local/bin', stdout=self.stdout)
         else:
             # install manatee python3 support (must be installed before manatee itself)
             subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{MANATEE_VER}-1ubuntu1_amd64.deb', '-N'], cwd = '/usr/local/bin', stdout=self.stdout)
