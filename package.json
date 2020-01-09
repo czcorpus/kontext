@@ -2,7 +2,7 @@
   "name": "KonText",
   "description": "An advanced web front-end for the Manatee-open corpus search engine",
   "license": "GPL-2.0",
-  "version": "0.13.0",
+  "version": "0.13.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/czcorpus/kontext"
