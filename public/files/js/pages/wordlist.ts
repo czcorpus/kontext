@@ -140,134 +140,127 @@ export class WordlistPage extends StatefulModel  {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            (data) => {
-                if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
-                    const updateStream = this.startWatching();
-                    updateStream.subscribe(
-                        (data) => {
+        this.layoutModel.init(() => {
+            if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
+                const updateStream = this.startWatching();
+                updateStream.subscribe(
+                    (data) => {
+                        this.layoutModel.dispatcher.dispatch({
+                            name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                            payload: data
+                        });
+                    }
+                );
+                updateStream.pipe(last()).subscribe(
+                    (data) => {
+                        if (data.status === 100) {
+                            window.location.href = this.layoutModel.createActionUrl(
+                                'wordlist/result',
+                                new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
+                            );
+
+                        } else {
                             this.layoutModel.dispatcher.dispatch({
                                 name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                                payload: data
+                                payload: data,
+                                error: new Error(this.layoutModel.translate('global__bg_calculation_failed'))
                             });
-                        }
-                    );
-                    updateStream.pipe(last()).subscribe(
-                        (data) => {
-                            if (data.status === 100) {
-                                window.location.href = this.layoutModel.createActionUrl(
-                                    'wordlist/result',
-                                    new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
-                                );
-
-                            } else {
-                                this.layoutModel.dispatcher.dispatch({
-                                    name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                                    payload: data,
-                                    error: new Error(this.layoutModel.translate('global__bg_calculation_failed'))
-                                });
-                                this.layoutModel.showMessage(
-                                    'error',
-                                    this.layoutModel.translate('global__bg_calculation_failed')
-                                );
-                            }
-                        },
-                        (err) => {
                             this.layoutModel.showMessage(
                                 'error',
                                 this.layoutModel.translate('global__bg_calculation_failed')
                             );
-                            this.layoutModel.dispatcher.dispatch({
-                                name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                                payload: data,
-                                error: err
-                            });
-                            console.error(err);
                         }
-                    )
-                }
-                const formModel = new WordlistFormModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-                    this.layoutModel.getConf<Array<string>>('SubcorpList'),
-                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                    this.layoutModel.getConf<WordlistModelInitialArgs>('FormArgs')
-                );
-
-                this.saveModel = new WordlistSaveModel({
-                    dispatcher: this.layoutModel.dispatcher,
-                    layoutModel: this.layoutModel,
-                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
-                    saveLinkFn: this.setDownloadLink.bind(this),
-                    wordlistArgsProviderFn: () => formModel.createSubmitArgs(formModel.getState())
-                });
-
-                const resultModel = new WordlistResultModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    formModel,
-                    {
-                        data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
-                        page: this.layoutModel.getConf<number>('PageNum'),
-                        pageSize: this.layoutModel.getConf<number>('PageSize'),
-                        isLastPage: !!this.layoutModel.getConf<boolean>('IsLastPage')
                     },
-                    [
-                        {
-                            str: this.layoutModel.getConf<string>('wlattrLabel'),
-                            sortKey: ''
-                        },
-                        {
-                            str: this.layoutModel.getConf<string>('freqFigure'),
-                            sortKey: 'f'
-                        }
-                    ],
-                    this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'),
-                    this.layoutModel.getConf<boolean>('IsUnfinished')
-                );
-
-                const saveViews = wordlistSaveViewInit({
-                    dispatcher: this.layoutModel.dispatcher,
-                    utils: this.layoutModel.getComponentHelpers(),
-                    commonViews: this.layoutModel.commonViews,
-                    saveModel: this.saveModel
-                });
-
-                const view = wordlistResultViewInit({
-                    dispatcher: this.layoutModel.dispatcher,
-                    utils: this.layoutModel.getComponentHelpers(),
-                    wordlistSaveViews:saveViews,
-                    wordlistResultModel: resultModel,
-                    wordlistSaveModel: this.saveModel
-                });
-
-                this.layoutModel.renderReactComponent(
-                    view.WordlistResult,
-                    document.getElementById('wordlist-result-mount'),
-                    {}
-                );
-
-                this.initCorpInfoToolbar();
-
-                this.layoutModel.getHistory().replaceState(
-                    'wordlist/result',
-                    new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
-                    {
-                        pagination: true,
-                        page: 1
-                    },
-                    ''
+                    (err) => {
+                        this.layoutModel.showMessage(
+                            'error',
+                            this.layoutModel.translate('global__bg_calculation_failed')
+                        );
+                        this.layoutModel.dispatcher.dispatch({
+                            name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                            payload: {},
+                            error: err
+                        });
+                        console.error(err);
+                    }
                 )
             }
+            const formModel = new WordlistFormModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                this.layoutModel.getConf<WordlistModelInitialArgs>('FormArgs')
+            );
 
-        ).then(
-            this.layoutModel.addUiTestingFlag
+            this.saveModel = new WordlistSaveModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
+                saveLinkFn: this.setDownloadLink.bind(this),
+                wordlistArgsProviderFn: () => formModel.createSubmitArgs(formModel.getState())
+            });
 
-        ).catch(
-            (err) => console.error(err)
-        );
+            const resultModel = new WordlistResultModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                formModel,
+                {
+                    data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
+                    page: this.layoutModel.getConf<number>('PageNum'),
+                    pageSize: this.layoutModel.getConf<number>('PageSize'),
+                    isLastPage: !!this.layoutModel.getConf<boolean>('IsLastPage')
+                },
+                [
+                    {
+                        str: this.layoutModel.getConf<string>('wlattrLabel'),
+                        sortKey: ''
+                    },
+                    {
+                        str: this.layoutModel.getConf<string>('freqFigure'),
+                        sortKey: 'f'
+                    }
+                ],
+                this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'),
+                this.layoutModel.getConf<boolean>('IsUnfinished')
+            );
+
+            const saveViews = wordlistSaveViewInit({
+                dispatcher: this.layoutModel.dispatcher,
+                utils: this.layoutModel.getComponentHelpers(),
+                commonViews: this.layoutModel.commonViews,
+                saveModel: this.saveModel
+            });
+
+            const view = wordlistResultViewInit({
+                dispatcher: this.layoutModel.dispatcher,
+                utils: this.layoutModel.getComponentHelpers(),
+                wordlistSaveViews:saveViews,
+                wordlistResultModel: resultModel,
+                wordlistSaveModel: this.saveModel
+            });
+
+            this.layoutModel.renderReactComponent(
+                view.WordlistResult,
+                document.getElementById('wordlist-result-mount'),
+                {}
+            );
+
+            this.initCorpInfoToolbar();
+
+            this.layoutModel.getHistory().replaceState(
+                'wordlist/result',
+                new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
+                {
+                    pagination: true,
+                    page: 1
+                },
+                ''
+            );
+            this.layoutModel.addUiTestingFlag();
+        });
     }
 }
 

@@ -68,26 +68,19 @@ class SubcorpListPage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            (data) => {
-                this.subcorpListModel = new SubcorpListModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
-                    this.layoutModel.getConf<SortKey>('SortKey'),
-                    this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
-                    this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
-                    this.layoutModel.getConf<SubcListFilter>('Filter')
-                );
-                this.renderView();
-            }
-
-        ).then(
-            this.layoutModel.addUiTestingFlag
-
-        ).catch(
-            (err) => console.error(err)
-        );
+        this.layoutModel.init(() => {
+            this.subcorpListModel = new SubcorpListModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
+                this.layoutModel.getConf<SortKey>('SortKey'),
+                this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
+                this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
+                this.layoutModel.getConf<SubcListFilter>('Filter')
+            );
+            this.renderView();
+            this.layoutModel.addUiTestingFlag();
+        });
     }
 }
 

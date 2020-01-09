@@ -66,47 +66,39 @@ class QueryHistoryPage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            (data) => {
-                this.subcorpSel = new NonQueryCorpusSelectionModel({
-                    layoutModel: this.layoutModel,
-                    dispatcher: this.layoutModel.dispatcher,
-                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                    corpora: [this.layoutModel.getCorpusIdent().id],
-                    availSubcorpora: []
-                });
-                const qsModel = queryStoragePlugin(
-                    this.layoutModel.pluginApi(),
-                    this.layoutModel.getConf<number>('Offset'),
-                    this.layoutModel.getConf<number>('Limit'),
-                    this.layoutModel.getConf<number>('PageSize')
-                );
-                qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
-                const qhViews = initQueryHistoryViews(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    qsModel.getModel()
-                );
+        this.layoutModel.init(() => {
+            this.subcorpSel = new NonQueryCorpusSelectionModel({
+                layoutModel: this.layoutModel,
+                dispatcher: this.layoutModel.dispatcher,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
+                corpora: [this.layoutModel.getCorpusIdent().id],
+                availSubcorpora: []
+            });
+            const qsModel = queryStoragePlugin(
+                this.layoutModel.pluginApi(),
+                this.layoutModel.getConf<number>('Offset'),
+                this.layoutModel.getConf<number>('Limit'),
+                this.layoutModel.getConf<number>('PageSize')
+            );
+            qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
+            const qhViews = initQueryHistoryViews(
+                this.layoutModel.dispatcher,
+                this.layoutModel.getComponentHelpers(),
+                qsModel.getModel()
+            );
 
-                this.layoutModel.renderReactComponent(
-                    qhViews.RecentQueriesPageList,
-                    document.getElementById('query-history-mount'),
-                    {}
-                );
+            this.layoutModel.renderReactComponent(
+                qhViews.RecentQueriesPageList,
+                document.getElementById('query-history-mount'),
+                {}
+            );
 
-                this.initCorpnameLink();
-            }
+            this.initCorpnameLink();
+            this.layoutModel.addUiTestingFlag();
 
-        ).then(
-            this.layoutModel.addUiTestingFlag
-
-        ).catch(
-            (err) => {
-                console.error(err);
-            }
-        )
+        });
     }
 }
 

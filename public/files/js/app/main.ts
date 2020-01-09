@@ -48,8 +48,9 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { ActionDispatcher, ITranslator, IFullActionControl, StatelessModel } from 'kombo';
-import { Observable } from 'rxjs';
+import { ActionDispatcher, ITranslator, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { concatMap, tap } from 'rxjs/operators';
 
 declare var require:any; // webpack's require
 require('styles/layout.less');
@@ -250,7 +251,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
         return this.appNavig.switchCorpus(corpora, subcorpus).then(
             () => {
-                return this.init();
+                return this.init(() => undefined);
             }
         );
     }
@@ -763,114 +764,99 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
-     * Page layout initialization. Any concrete page should
-     * call this before it runs its own initialization.
-     * To prevent syncing issues, the page initialization
-     * should be chained to the returned promise.
+     * Page layout and content initialization. Any concrete page should
+     * call this while passing its own initialization logic as the
+     * pageInitFn argument. Please note that the page initialization is
+     * expected to be synchronous. Any implicit asynchronous initialization
+     * should be performed as a side effect of a respective model.
      */
-    init():RSVP.Promise<any> {
-        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-            try {
-                this.dispatcher = new ActionDispatcher();
-                this.asyncTaskChecker = new AsyncTaskChecker(
-                    this.dispatcher,
-                    this.pluginApi(),
-                    this.getConf<any>('asyncTasks') || []
-                );
+    init(pageInitFn:()=>void):void {
+        try {
+            this.dispatcher = new ActionDispatcher();
+            this.asyncTaskChecker = new AsyncTaskChecker(
+                this.dispatcher,
+                this.pluginApi(),
+                this.getConf<any>('asyncTasks') || []
+            );
+            this.corpusInfoModel = new docModels.CorpusInfoModel(this.dispatcher, this.pluginApi());
+            this.messageModel = new docModels.MessageModel(
+                this.dispatcher,
+                this.pluginApi(),
+                this.getConf<boolean>('popupServerMessages')
+            );
+            this.userInfoModel = new UserInfo(this.dispatcher, this);
+            this.corpViewOptionsModel = new CorpusViewOptionsModel(
+                this.dispatcher,
+                this,
+                this.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                this.getConf<boolean>('anonymousUser')
+            );
 
-                this.corpusInfoModel = new docModels.CorpusInfoModel(this.dispatcher, this.pluginApi());
-                this.messageModel = new docModels.MessageModel(
-                    this.dispatcher,
-                    this.pluginApi(),
-                    this.getConf<boolean>('popupServerMessages')
-                );
-                this.userInfoModel = new UserInfo(this.dispatcher, this);
-                this.corpViewOptionsModel = new CorpusViewOptionsModel(
-                    this.dispatcher,
-                    this,
-                    this.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-                    this.getConf<boolean>('anonymousUser')
-                );
+            this.mainMenuModel = new MainMenuModel(
+                this.dispatcher,
+                this,
+                this.getConf<InitialMenuData>('menuData')
+            );
 
-                this.mainMenuModel = new MainMenuModel(
-                    this.dispatcher,
-                    this,
-                    this.getConf<InitialMenuData>('menuData')
-                );
+            this.generalViewOptionsModel = new GeneralViewOptionsModel(
+                this.dispatcher,
+                this,
+                this.getConf<boolean>('anonymousUser')
+            );
+            this.generalViewOptionsModel.addOnSubmitResponseHandler(
+                ()=>this.mainMenuModel.resetActiveItemAndNotify()
+            );
 
-                this.generalViewOptionsModel = new GeneralViewOptionsModel(
-                    this.dispatcher,
-                    this,
-                    this.getConf<boolean>('anonymousUser')
-                );
-                this.generalViewOptionsModel.addOnSubmitResponseHandler(
-                    ()=>this.mainMenuModel.resetActiveItemAndNotify()
-                );
+            this.layoutViews = documentViewsFactory(
+                this.dispatcher,
+                this.getComponentHelpers(),
+                this.getModels(),
+                this.messageModel
+            );
 
-                this.layoutViews = documentViewsFactory(
-                    this.dispatcher,
-                    this.getComponentHelpers(),
-                    this.getModels(),
-                    this.messageModel
-                );
+            this.commonViews = commonViewsFactory(this.getComponentHelpers());
 
-                this.commonViews = commonViewsFactory(this.getComponentHelpers());
+            window.onkeydown = (evt) => {
+                this.globalKeyHandlers.forEach(fn => fn(evt));
+            }
+            this.userSettings.init();
+            this.initMainMenu();
+            this.initOverviewArea();
+            this.bindLangSwitch();
+            this.initNotifications();
+            this.initViewOptions(
+                this.mainMenuModel,
+                this.generalViewOptionsModel,
+                this.corpViewOptionsModel
+            );
+            this.asyncTaskChecker.init();
+            applicationBar(this.pluginApi());
+            footerBar(this.pluginApi());
 
-                window.onkeydown = (evt) => {
-                    this.globalKeyHandlers.forEach(fn => fn(evt));
+            const auth:PluginInterfaces.Auth.IPlugin = authPlugin(this.pluginApi());
+            if (this.isNotEmptyPlugin(auth)) {
+                const mountElm = document.getElementById('user-pane-mount');
+                const userPaneView = auth.getUserPaneView();
+                if (userPaneView) {
+                    this.renderReactComponent(
+                        userPaneView,
+                        mountElm,
+                        {
+                            isAnonymous: this.getConf<boolean>('anonymousUser'),
+                            fullname: this.getConf<string>('userFullname')
+                        }
+                    );
                 }
-                this.userSettings.init();
-                this.initMainMenu();
-                this.initOverviewArea();
-                this.bindLangSwitch();
-                this.initNotifications();
-                this.initViewOptions(
-                    this.mainMenuModel,
-                    this.generalViewOptionsModel,
-                    this.corpViewOptionsModel
-                );
-                this.asyncTaskChecker.init();
-                resolve(null);
-
-            } catch (e) {
-                reject(e);
             }
+            this.authPlugin = auth;
+            this.initIssueReporting();
 
-        }).then(
-            () => {
-                return applicationBar(this.pluginApi());
-            }
+            pageInitFn();
 
-        ).then(
-            () => {
-                return authPlugin(this.pluginApi());
-            }
-
-        ).then(
-            (authPlugin) => {
-                if (this.isNotEmptyPlugin(authPlugin)) {
-                    const mountElm = document.getElementById('user-pane-mount');
-                    const userPaneView = authPlugin.getUserPaneView();
-                    if (userPaneView) {
-                        this.renderReactComponent(
-                            userPaneView,
-                            mountElm,
-                            {
-                                isAnonymous: this.getConf<boolean>('anonymousUser'),
-                                fullname: this.getConf<string>('userFullname')
-                            }
-                        );
-                    }
-                }
-                this.authPlugin = authPlugin;
-                return footerBar(this.pluginApi());
-            }
-
-        ).then(
-            () => {
-                return this.initIssueReporting();
-            }
-        );
+        } catch (err) {
+            this.showMessage('error', err);
+            console.error(err);
+        }
     }
 }
 

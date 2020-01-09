@@ -35,27 +35,25 @@ class PubSubcorpPage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            () => {
-                const model = new PublicSubcorpListModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.layoutModel.getConf<Array<DataItem>>('Data'),
-                    this.layoutModel.getConf<number>('MinCodePrefix'),
-                    this.layoutModel.getConf<number>('MinAuthorPrefix')
-                );
-                const views = viewInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    model
-                )
-                this.layoutModel.renderReactComponent(
-                    views.List,
-                    document.getElementById('published-subcorpora-mount'),
-                    {}
-                );
-            }
-        );
+        this.layoutModel.init(() => {
+            const model = new PublicSubcorpListModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                this.layoutModel.getConf<Array<DataItem>>('Data'),
+                this.layoutModel.getConf<number>('MinCodePrefix'),
+                this.layoutModel.getConf<number>('MinAuthorPrefix')
+            );
+            const views = viewInit(
+                this.layoutModel.dispatcher,
+                this.layoutModel.getComponentHelpers(),
+                model
+            )
+            this.layoutModel.renderReactComponent(
+                views.List,
+                document.getElementById('published-subcorpora-mount'),
+                {}
+            );
+        });
     }
 }
 

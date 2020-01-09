@@ -29,17 +29,11 @@ require('styles/userSignUp.less');
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new PageModel(conf);
 
-    layoutModel.init().then(
-        () => {
-            layoutModel.renderReactComponent(
-                layoutModel.getAuthPlugin().getSignUpView(),
-                document.getElementById('user-administration-mount'),
-                {}
-            );
-        }
-    ).catch(
-        (err) => {
-            console.error(err);
-        }
-    )
+    layoutModel.init(() => {
+        layoutModel.renderReactComponent(
+            layoutModel.getAuthPlugin().getSignUpView(),
+            document.getElementById('user-administration-mount'),
+            {}
+        );
+    });
 }

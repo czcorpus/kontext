@@ -382,70 +382,63 @@ class FreqPage {
     }
 
     init() {
-        this.layoutModel.init().then(
-            () => {
-                this.subcorpSel = new NonQueryCorpusSelectionModel({
-                    layoutModel: this.layoutModel,
-                    dispatcher: this.layoutModel.dispatcher,
-                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                    corpora: [this.layoutModel.getCorpusIdent().id],
-                    availSubcorpora: []
-                });
-                const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
-                // we must capture concordance-related actions which lead
-                // to specific "pop-up" forms and redirect user back to
-                // the 'view' action with additional information (encoded in
-                // the fragment part of the URL) which form should be opened
-                // once the 'view' page is loaded
-                mainMenuModel.addListener(() => {
-                    const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
-                    switch (activeItem.actionName) {
-                        case 'MAIN_MENU_SHOW_FILTER':
-                            const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
-                            window.location.replace(
-                                this.layoutModel.createActionUrl(
-                                    'view',
-                                    this.layoutModel.getConcArgs().items()
-                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
-                            );
-                        break;
-                        case 'MAIN_MENU_SHOW_SORT':
-                            window.location.replace(this.layoutModel.createActionUrl(
+        this.layoutModel.init(() => {
+            this.subcorpSel = new NonQueryCorpusSelectionModel({
+                layoutModel: this.layoutModel,
+                dispatcher: this.layoutModel.dispatcher,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
+                corpora: [this.layoutModel.getCorpusIdent().id],
+                availSubcorpora: []
+            });
+            const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
+            // we must capture concordance-related actions which lead
+            // to specific "pop-up" forms and redirect user back to
+            // the 'view' action with additional information (encoded in
+            // the fragment part of the URL) which form should be opened
+            // once the 'view' page is loaded
+            mainMenuModel.addListener(() => {
+                const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
+                switch (activeItem.actionName) {
+                    case 'MAIN_MENU_SHOW_FILTER':
+                        const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
+                        window.location.replace(
+                            this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
-                            ) + '#sort');
-                        break;
-                        case 'MAIN_MENU_SHOW_SAMPLE':
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs().items()
-                            ) + '#sample');
-                        break;
-                        case 'MAIN_MENU_APPLY_SHUFFLE':
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs().items()
-                            ) + '#shuffle');
-                        break;
-                    }
-                });
-                const adhocSubcIdentifier = this.initAdhocSubcDetector();
-                this.initAnalysisViews(adhocSubcIdentifier);
-                this.initQueryOpNavigation();
-                this.initFreqResult();
-                this.setupBackButtonListening();
-            }
+                            ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                        );
+                    break;
+                    case 'MAIN_MENU_SHOW_SORT':
+                        window.location.replace(this.layoutModel.createActionUrl(
+                            'view',
+                            this.layoutModel.getConcArgs().items()
+                        ) + '#sort');
+                    break;
+                    case 'MAIN_MENU_SHOW_SAMPLE':
+                        window.location.replace(this.layoutModel.createActionUrl(
+                            'view',
+                            this.layoutModel.getConcArgs().items()
+                        ) + '#sample');
+                    break;
+                    case 'MAIN_MENU_APPLY_SHUFFLE':
+                        window.location.replace(this.layoutModel.createActionUrl(
+                            'view',
+                            this.layoutModel.getConcArgs().items()
+                        ) + '#shuffle');
+                    break;
+                }
+            });
+            const adhocSubcIdentifier = this.initAdhocSubcDetector();
+            this.initAnalysisViews(adhocSubcIdentifier);
+            this.initQueryOpNavigation();
+            this.initFreqResult();
+            this.setupBackButtonListening();
 
-        ).then(
-            this.layoutModel.addUiTestingFlag
+            this.layoutModel.addUiTestingFlag();
 
-        ).catch(
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
+        });
     }
 }
 

@@ -27,25 +27,18 @@ require('styles/login.less');
 
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new PageModel(conf);
-    layoutModel.init().then(
-        () => {
-            document.getElementById('try-login').addEventListener('click', () => {
-                layoutModel.dispatcher.dispatch({
-                    name: 'USER_SHOW_LOGIN_DIALOG',
-                    payload: {
-                        returnUrl: layoutModel.createActionUrl('first_form')
-                    }
-                });
+    layoutModel.init(() => {
+        document.getElementById('try-login').addEventListener('click', () => {
+            layoutModel.dispatcher.dispatch({
+                name: 'USER_SHOW_LOGIN_DIALOG',
+                payload: {
+                    returnUrl: layoutModel.createActionUrl('first_form')
+                }
             });
-            document.getElementById('go-to-query').addEventListener('click', () => {
-                window.location.href = layoutModel.createActionUrl('first_form');
-            });
-            layoutModel.addUiTestingFlag();
-        }
-
-    ).catch(
-        (err) => {
-            console.error(err);
-        }
-    );
+        });
+        document.getElementById('go-to-query').addEventListener('click', () => {
+            window.location.href = layoutModel.createActionUrl('first_form');
+        });
+        layoutModel.addUiTestingFlag();
+    });
 }

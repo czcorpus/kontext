@@ -69,6 +69,7 @@ import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { Action } from 'kombo';
 import { Observable } from 'rxjs';
+import { concatMap, tap, map } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -261,9 +262,12 @@ export class ViewPage {
         });
     }
 
-    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):RSVP.Promise<RenderLinesDeps> {
-        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-            renderDeps.lvprops.onReady = () => resolve(renderDeps);
+    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):Observable<RenderLinesDeps> {
+        return new Observable(observer => {
+            renderDeps.lvprops.onReady = () => {
+                observer.next(renderDeps);
+                observer.complete();
+            };
             try {
                 this.layoutModel.renderReactComponent(
                     this.concViews.ConcordanceDashboard,
@@ -276,7 +280,7 @@ export class ViewPage {
 
             } catch (e) {
                 console.error(e.stack);
-                throw e;
+                observer.error(e);
             }
         });
     }
@@ -1150,99 +1154,80 @@ export class ViewPage {
         this.layoutModel.bgDownload(filename, DownloadType.CONCORDANCE, url);
     }
 
-    /**
-     *
-     */
     init():void {
-        this.layoutModel.init().then<RenderLinesDeps>(
-            () => {
-                this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
-                    (optsModel) => {
-                        this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
-                    }
-                );
-                const ttModel = this.initTextTypesModel();
-                let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
-                if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
-                    syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
+        this.layoutModel.init(() => {
+            this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
+                (optsModel) => {
+                    this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
                 }
-                const tokenConnectPlg = this.initTokenConnect();
-                const lineViewProps = this.initModels(
-                    ttModel,
-                    syntaxViewerModel,
-                    tokenConnectPlg
+            );
+            const ttModel = this.initTextTypesModel();
+            let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
+            if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
+                syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
+            }
+            const lineViewProps = this.initModels(
+                ttModel,
+                syntaxViewerModel,
+                this.initTokenConnect()
+            );
+            // we must handle non-React widgets:
+            lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
+                this.showGroupsStats(
+                    <HTMLElement>document.querySelector('#selection-actions .chart-area'),
+                    usePrevData
                 );
-                // we must handle non-React widgets:
-                lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                    this.showGroupsStats(
-                        <HTMLElement>document.querySelector('#selection-actions .chart-area'),
-                        usePrevData
-                    );
-                };
-                this.initUndoFunction();
-
-            	this.concViews = concViewsInit({
-                    dispatcher: this.layoutModel.dispatcher,
-                    he: this.layoutModel.getComponentHelpers(),
-                    ...this.viewModels
-                });
-
-                const queryStoragePlg = queryStoragePlugin(
-                    this.layoutModel.pluginApi(),
-                    0,
-                    this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                    this.layoutModel.getConf<number>('QueryHistoryPageNumRecords')
-                );
-
-                const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
-
-                return {
+            };
+            this.initUndoFunction();
+            this.concViews = concViewsInit({
+                dispatcher: this.layoutModel.dispatcher,
+                he: this.layoutModel.getComponentHelpers(),
+                ...this.viewModels
+            });
+            const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
+            const queryStoragePlg = queryStoragePlugin(
+                this.layoutModel.pluginApi(),
+                0,
+                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
+                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords')
+            );
+            this.setupHistoryOnPopState();
+            this.onBeforeUnloadAsk();
+            this.initQueryForm();
+            this.initFirsthitsForm();
+            this.initFilterForm(this.queryModels.firstHitsModel);
+            this.initSortForm();
+            this.initSwitchMainCorpForm();
+            this.initSampleForm(this.queryModels.switchMcModel);
+            this.initQueryOverviewArea(tagHelperPlg, queryStoragePlg);
+            this.initAnalysisViews(ttModel);
+            this.updateMainMenu();
+            this.initKeyShortcuts();
+            this.updateHistory();
+            if (this.layoutModel.getConf<boolean>('Unfinished')) {
+                this.reloadHits();
+            }
+            this.layoutModel.addUiTestingFlag
+            this.renderLines(
+                {
                     ttModel: ttModel,
                     lvprops: lineViewProps,
                     qs: queryStoragePlg,
                     tagh: tagHelperPlg
-                };
-            }
-        ).then(
-            (deps) => {
-                return this.renderLines(
-                    deps,
-                    this.layoutModel.pluginIsActive('kwic_connect') ?
-                        kwicConnectInit(
-                            this.layoutModel.pluginApi(),
-                            this.viewModels.lineViewModel,
-                            this.layoutModel.getConf<Array<string>>('alignedCorpora')
-                        ).getView() :
-                        null
-                );
-            }
+                },
+                this.layoutModel.pluginIsActive('kwic_connect') ?
+                    kwicConnectInit(
+                        this.layoutModel.pluginApi(),
+                        this.viewModels.lineViewModel,
+                        this.layoutModel.getConf<Array<string>>('alignedCorpora')
+                    ).getView() :
+                    null
 
-        ).then(
-            (deps) => {
-                this.setupHistoryOnPopState();
-                this.onBeforeUnloadAsk();
-                this.initQueryForm();
-                this.initFirsthitsForm();
-                this.initFilterForm(this.queryModels.firstHitsModel);
-                this.initSortForm();
-                this.initSwitchMainCorpForm();
-                this.initSampleForm(this.queryModels.switchMcModel);
-                this.initQueryOverviewArea(deps.tagh, deps.qs);
-                this.initAnalysisViews(deps.ttModel);
-                this.updateMainMenu();
-                this.initKeyShortcuts();
-                this.updateHistory();
-                if (this.layoutModel.getConf<boolean>('Unfinished')) {
-                    this.reloadHits();
-                }
-            }
-
-        ).then(
-            this.layoutModel.addUiTestingFlag
-
-        ).catch(
-            (err) => console.error(err)
-        );
+            ).subscribe(
+                () => undefined,
+                (err) => this.layoutModel.showMessage('error', err)
+            );
+        });
     }
 }
 

@@ -29,28 +29,21 @@ require('styles/corplist.less');
  */
 export function init(conf:Kontext.Conf, corplistData:any):void {
     const layoutModel = new PageModel(conf);
-    layoutModel.init().then(
-        () => {
-            const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
-            layoutModel.renderReactComponent(
-                pagePlugin.getForm(),
-                <HTMLElement>document.getElementById('content').querySelector('form.filter'),
-                {}
-            );
+    layoutModel.init(() => {
+        const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
+        layoutModel.renderReactComponent(
+            pagePlugin.getForm(),
+            <HTMLElement>document.getElementById('content').querySelector('form.filter'),
+            {}
+        );
 
-            layoutModel.renderReactComponent(
-                pagePlugin.getList(),
-                document.getElementById('corplist'),
-                {
-                    anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
-                }
-            );
-        }
-
-    ).then(
-        layoutModel.addUiTestingFlag
-
-    ).catch(
-        (err) => console.error(err)
-    );
+        layoutModel.renderReactComponent(
+            pagePlugin.getList(),
+            document.getElementById('corplist'),
+            {
+                anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
+            }
+        );
+        layoutModel.addUiTestingFlag();
+    });
 }
