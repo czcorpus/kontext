@@ -119,7 +119,7 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd = '/usr/local/src', stdout=self.stdout)
 
             subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
-            subprocess.check_call(['patch', '-p0', '<', f'ucnk-manatee-{manatee_version}.patch'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+            subprocess.check_call(['patch', '-p0', '-i', os.path.basename(patch_path)], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
         
             python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
             subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env={'PYTHON': python_path})
