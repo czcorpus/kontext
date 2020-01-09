@@ -4,8 +4,10 @@ import os
 import sys
 import subprocess
 import inspect
+import argparse
 
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+MANATEE_VER='2.167.8'
 
 REQUIREMENTS = [
     'python3-pip',
@@ -35,9 +37,15 @@ REQUIREMENTS = [
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser('Kontext instalation script')
+    argparser.add_argument('--gunicorn', dest='install_gunicorn', action='store_true', default=False, help='Install gunicorn to run web server')
+    argparser.add_argument('--patch', dest='patch_path', action='store', default=None, help='Path to UCNK Manatee patch')
+    argparser.add_argument('--manatee-version', dest='manatee_version', action='store', default=MANATEE_VER, help='Set Manatee version')
+    argparser.add_argument('-v', dest='verbose', action='store_true', default=False, help='Verbose mode')
+    args = argparser.parse_args()
+
     stdout = open(os.devnull, 'wb')
-    print(sys.argv)
-    if '-v' in sys.argv:
+    if args.verbose:
         stdout = None
 
     # install prerequisites
@@ -51,7 +59,7 @@ if __name__ == "__main__":
     # import steps here, because some depend on packages installed by this script
     import steps
     # run installation steps
-    steps.SetupManatee(KONTEXT_PATH, stdout).run()
+    steps.SetupManatee(KONTEXT_PATH, stdout).run(args.manatee_version, args.patch_path)
     steps.SetupKontext(KONTEXT_PATH, stdout).run()
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout).run()
     
