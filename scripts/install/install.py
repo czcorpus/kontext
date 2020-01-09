@@ -62,11 +62,16 @@ if __name__ == "__main__":
     steps.SetupManatee(KONTEXT_PATH, stdout).run(args.manatee_version, args.patch_path)
     steps.SetupKontext(KONTEXT_PATH, stdout).run()
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout).run()
-    
+    if args.install_gunicorn:
+        steps.SetupGunicorn(KONTEXT_PATH, stdout).run()
+
     # finalize instalation
     print('Initializing celery and nginx services...')
     subprocess.check_call(['systemctl', 'start', 'celery'], stdout=stdout)
     subprocess.check_call(['systemctl', 'restart', 'nginx'], stdout=stdout)
+    if args.install_gunicorn:
+        print('Initializing gunicorn...')
+        subprocess.check_call(['systemctl', 'start', 'gunicorn'], stdout=stdout)
 
     # print final messages
     print(inspect.cleandoc(f'''
@@ -77,6 +82,7 @@ if __name__ == "__main__":
             sudo -u {steps.WEBSERVER_USER} python3 public/app.py --address 127.0.0.1 --port 8080
 
         (--address and --port parameters are optional; default serving address is 127.0.0.1:5000)
+        or you can use Gunicorn instead.
         {steps.bcolors.ENDC}{steps.bcolors.ENDC}
     '''))
 

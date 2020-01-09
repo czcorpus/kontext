@@ -178,6 +178,26 @@ class SetupKontext(InstallationStep):
 
 
 
+class SetupGunicorn(InstallationStep):
+    def is_done(self):
+        pass
+
+    def abort(self):
+        pass
+
+    def run(self):
+        print('Installing gunicorn...')
+        subprocess.check_call(['pip3', 'install', 'gunicorn'], stdout=self.stdout)
+        
+        subprocess.check_call(['cp', 'gunicorn-config.sample.py', 'gunicorn-config.py'], cwd = os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
+        subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/gunicorn.service'), '/etc/systemd/system'], stdout=self.stdout)
+        replace_string_in_file('/etc/systemd/system/gunicorn.service', '/opt/kontext', self.kontext_path)
+        create_directory('/var/log/gunicorn/kontext', WEBSERVER_USER, None)
+
+        subprocess.check_call(['systemctl', 'enable', 'gunicorn'], stdout=self.stdout)
+
+
+
 class SetupDefaultUsers(InstallationStep):
     def __init__(self, kontext_path: str, stdout: str):
         super().__init__(kontext_path, stdout)
