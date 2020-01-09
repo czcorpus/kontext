@@ -322,9 +322,12 @@ class RuleCharMap {
             case 'LPAREN':
             case 'RPAREN':
                 return `<span class="${CLASS_BRACKETS}">${this.query.substring(startIdx, endIdx)}</span>`;
+            case 'RG_AMP':
+                return `<span class="${CLASS_REGEXP}">&amp;</span>`;
             case 'LETTER':
             case 'LETTER_PHON':
             case 'RG_NON_LETTER':
+            case 'RG_NON_SPEC':
             case 'QUOT':
                 return `<span class="${CLASS_REGEXP}">${this.query.substring(startIdx, endIdx)}</span>`;
             case 'ASCII_LETTERS':
