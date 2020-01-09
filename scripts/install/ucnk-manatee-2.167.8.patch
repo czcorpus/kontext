@@ -1,0 +1,31 @@
+--- concord/concedit.cc	2019-07-16 13:49:00.000000000 +0200
++++ concord/concedit.cc.patched	2020-01-09 15:15:32.153044668 +0100
+@@ -214,6 +214,18 @@
+     coll_count [collnum - 1] = 0;
+ }
+ 
++/**
++ * Generates a random number from 0 to min(i, RAND_MAX)
++ * always with the same seed (i.e. there is no state).
++ * We assume that RAND_MAX is ~ max. available integer
++ * (see you stdlib.h for actual value).
++ */
++int custom_rand(int i)
++    {
++    srand(1298131);
++    return rand() % i;
++}
++
+ void Concordance::shuffle()
+ {
+     sync();
+@@ -222,7 +234,7 @@
+         for (ConcIndex i=0; i < size(); i++)
+             (*view)[i] = i;
+     }
+-    random_shuffle(view->begin(), view->end());
++    random_shuffle(view->begin(), view->end(), custom_rand);
+ }
+ 
+ void Concordance::switch_aligned (const char *corpname)
+
