@@ -241,7 +241,7 @@ export class WordlistResultModel extends StatefulModel {
     }
 
     private createPQuery(s:string):string {
-        return `[${this.formModel.getState().wlattr}="${s.replace(/([.?+*\[\]{}])/g, '\\$1')}"]`;
+        return `[${this.formModel.getState().wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
     }
 
     private processPageLoad(skipHistory=false):void {
