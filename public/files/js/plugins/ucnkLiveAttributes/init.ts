@@ -69,12 +69,13 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
  */
 const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi, textTypesModel, isEnabled, controlsAlignedCorpora, args) => {
+    const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
     const alignedCorpora = Immutable.List(args.availableAlignedCorpora
         .map((item) => {
             return {
                 value: item.n,
                 label: item.label,
-                selected: false,
+                selected: currAligned.indexOf(item.n) > -1,
                 locked: !controlsAlignedCorpora
             };
     }));
