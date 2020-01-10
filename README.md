@@ -73,9 +73,9 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * WSGI-compatible server
       * [Gunicorn](http://gunicorn.org/) (recommended)
       * or [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
-    * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) Template Engine
-    * [lxml](http://lxml.de/) library
-    * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
+    * [Werkzeug](http://werkzeug.pocoo.org/) web application library
+    * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) template engine
+    * [lxml](http://lxml.de/) library    
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
