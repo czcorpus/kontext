@@ -67,11 +67,12 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ## Requirements
 
-* WSGI-compatible server
-    * [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
 * Rerverse proxy server
   + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested)
 * Python *3.6* (or newer) and:
+    * WSGI-compatible server
+      * [Gunicorn](http://gunicorn.org/) (recommended)
+      * or [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
     * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) Template Engine
     * [lxml](http://lxml.de/) library
     * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
