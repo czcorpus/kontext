@@ -36,6 +36,13 @@ def generate_random_password() -> Tuple[str, str]:
     return password, mk_pwd_hash_default(password)
 
 
+def make_simlink(src: str, dst: str) -> None:
+    try:
+        pathlib.Path(dst).symlink_to(src)
+    except FileExistsError:
+        print(f'File = {dst} already exists!')
+
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -122,10 +129,18 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['patch', '-p0', '-i', os.path.basename(patch_path)], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
         
             python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
-            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env={'PYTHON': python_path})
+            env_variables = os.environ.copy()
+            env_variables['PYTHON'] = python_path
+            subprocess.check_call(['./configure', '--with-pcre'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env=env_variables)
             subprocess.check_call(['make'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
             subprocess.check_call(['make', 'install'], cwd = f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
             subprocess.check_call(['ldconfig'], stdout=self.stdout)
+            
+            lib_path = [path for path in sys.path if path.startswith('/usr/local/lib/python3') and path.endswith('dist-packages')][0]
+            make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'), os.path.join(lib_path, 'manatee.py'))
+            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'), os.path.join(lib_path, '_manatee.a'))
+            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'), os.path.join(lib_path, '_manatee.la'))
+            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'), os.path.join(lib_path, '_manatee.so'))
 
             # install susanne corpus
             subprocess.check_call(['wget', 'https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', '-N'], cwd = '/usr/local/src', stdout=self.stdout)
