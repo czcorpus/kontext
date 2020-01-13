@@ -45,7 +45,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { ActionDispatcher, ITranslator, IFullActionControl } from 'kombo';
+import { ITranslator, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 
 
@@ -118,12 +118,12 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     /**
      *
      */
-    constructor(conf:Kontext.IConfHandler, l10n:L10n, appNavig:AppNavigation, userSettings:UserSettings) {
+    constructor(conf:Kontext.IConfHandler, dispatcher:IFullActionControl, l10n:L10n, appNavig:AppNavigation, userSettings:UserSettings) {
         this.conf = conf;
         this.l10n = l10n;
         this.appNavig = appNavig;
         this.userSettings = userSettings;
-        this.dispatcher = new ActionDispatcher();
+        this.dispatcher = dispatcher;
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
         this.addUiTestingFlag = this.addUiTestingFlag.bind(this);
     }

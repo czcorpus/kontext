@@ -29,6 +29,7 @@ import { ComponentTools } from './component';
 import { L10n } from './l10n';
 import { UserSettings } from './userSettings';
 import { AppNavigation } from './navigation';
+import { ActionDispatcher } from 'kombo';
 
 declare var require:any; // webpack's require
 require('styles/layout.less');
@@ -121,6 +122,7 @@ export class KontextPage extends PageModel {
         const confHandler = new KontextConf(conf);
         super(
             confHandler,
+            new ActionDispatcher(),
             new L10n(conf['uiLang'], conf['helpLinks'] || {}),
             new AppNavigation(confHandler),
             UserSettings.createInstance()
