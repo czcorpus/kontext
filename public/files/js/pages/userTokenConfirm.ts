@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import {KontextPage} from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -27,27 +27,20 @@ require('styles/userTokenConfirm.less');
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
+    const layoutModel = new KontextPage(conf);
 
-    layoutModel.init().then(
-        () => {
-            const link = document.getElementById('try-login');
-            if (link) {
-                link.addEventListener('click', () => {
-                    layoutModel.dispatcher.dispatch({
-                        name: 'USER_SHOW_LOGIN_DIALOG',
-                        payload: {
-                            returnUrl: layoutModel.createActionUrl('first_form')
-                        }
-                    });
+    layoutModel.init(() => {
+        const link = document.getElementById('try-login');
+        if (link) {
+            link.addEventListener('click', () => {
+                layoutModel.dispatcher.dispatch({
+                    name: 'USER_SHOW_LOGIN_DIALOG',
+                    payload: {
+                        returnUrl: layoutModel.createActionUrl('first_form')
+                    }
                 });
-            }
-            layoutModel.addUiTestingFlag();
+            });
         }
-
-    ).catch(
-        (err) => {
-            console.error(err);
-        }
-    );
+        layoutModel.addUiTestingFlag();
+    });
 }

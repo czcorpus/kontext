@@ -20,7 +20,7 @@
 
 import { Kontext, ViewOptions } from '../../types/common';
 import * as Immutable from 'immutable';
-import { PageModel } from '../../app/main';
+import { PageModel } from '../../app/page';
 import { MultiDict } from '../../util';
 import { Action, IFullActionControl, StatelessModel, SEDispatcher } from 'kombo';
 import { tap } from 'rxjs/operators';
@@ -601,7 +601,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 locked: false,
             }
         }).toList();
- 
+
         state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
 
         state.fixedAttr = data.FixedAttr;

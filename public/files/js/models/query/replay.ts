@@ -23,7 +23,7 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {UNSAFE_SynchronizedModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {FirstQueryFormModel} from './first';
 import {FilterFormModel} from './filter';
 import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from './sort';

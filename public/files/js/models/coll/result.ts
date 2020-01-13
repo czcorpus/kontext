@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {CollFormModel} from '../../models/coll/collForm';
 import RSVP from 'rsvp';
 import {MultiDict} from '../../util';

@@ -127,9 +127,9 @@ export class UserSettings implements Kontext.IUserSettings {
     }
 
     /**
-     * createInstance is a factory function
+     * createInstance is a factory function for UserSettings
      */
-    static createInstance(conf:Kontext.IConfHandler):UserSettings {
+    static createInstance():UserSettings {
         return new UserSettings(
             typeof window.localStorage === 'object' ?
                 window.localStorage : new TransientStorage(),

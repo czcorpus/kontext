@@ -23,8 +23,8 @@
 
 import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
-import {PageModel, DownloadType} from '../app/main';
-import {MultiDict} from '../util';
+import { MultiDict } from '../util';
+import { PageModel, DownloadType } from '../app/page';
 import RSVP from 'rsvp';
 
 

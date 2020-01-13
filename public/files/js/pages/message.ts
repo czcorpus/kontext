@@ -19,9 +19,10 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import {init as messageViewsInit, MessageViewProps} from '../views/message';
+import { KontextPage } from '../app/main';
 
 
 declare var require:any;
@@ -40,48 +41,31 @@ class MessagePage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            () => {
-                if (this.layoutModel.pluginIsActive('issue_reporting')) {
-                    return issueReportingPlugin(this.layoutModel.pluginApi());
+        this.layoutModel.init(() => {
+            const plugin = this.layoutModel.pluginIsActive('issue_reporting') ?
+                    issueReportingPlugin(this.layoutModel.pluginApi()) : null;
 
-                } else {
-                    return null;
+            const views = messageViewsInit(
+                this.layoutModel.dispatcher,
+                this.layoutModel.getComponentHelpers(),
+                this.layoutModel.getMessageModel()
+            );
+            this.layoutModel.renderReactComponent<MessageViewProps>(
+                views.MessagePageHelp,
+                document.getElementById('root-mount'),
+                {
+                    widgetProps: this.layoutModel.getConf<Kontext.GeneralProps>('issueReportingAction') || null,
+                    anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+                    issueReportingView: plugin ? <React.SFC<{}>>plugin.getWidgetView() : null,
+                    lastUsedCorpus: this.layoutModel.getConf<{corpname:string; human_corpname:string}>('LastUsedCorp')
                 }
-            }
-        ).then(
-            (plugin) => {
-                const views = messageViewsInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.getMessageModel()
-                );
-                this.layoutModel.renderReactComponent<MessageViewProps>(
-                    views.MessagePageHelp,
-                    document.getElementById('root-mount'),
-                    {
-                        widgetProps: this.layoutModel.getConf<Kontext.GeneralProps>('issueReportingAction') || null,
-                        anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-                        issueReportingView: plugin ? <React.SFC<{}>>plugin.getWidgetView() : null,
-                        lastUsedCorpus: this.layoutModel.getConf<{corpname:string; human_corpname:string}>('LastUsedCorp')
-                    }
-                );
-
-            }
-
-        ).then(
-            this.layoutModel.addUiTestingFlag
-
-        ).catch(
-            (err) => {
-                console.error(err);
-                this.layoutModel.showMessage('error', err);
-            }
-        );
+            );
+            this.layoutModel.addUiTestingFlag();
+        });
     }
 }
 
 
 export function init(conf:Kontext.Conf):void {
-    new MessagePage(new PageModel(conf)).init();
+    new MessagePage(new KontextPage(conf)).init();
 }

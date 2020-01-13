@@ -114,6 +114,7 @@ export namespace Kontext {
 
     export interface IConfHandler {
         getConf<T>(item:string):T;
+        getNestedConf<T>(...keys:Array<string>):T;
         setConf<T>(key:string, value:T):void;
         addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void;
     }

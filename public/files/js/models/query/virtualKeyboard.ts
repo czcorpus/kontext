@@ -20,8 +20,8 @@
 
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
+import {PageModel} from '../../app/page';
+import { Action, IFullActionControl } from 'kombo';
 
 declare var require:(ident:string)=>any; // Webpack
 const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');

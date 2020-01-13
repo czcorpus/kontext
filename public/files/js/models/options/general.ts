@@ -22,7 +22,7 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {StatefulModel, validateGzNumber} from '../base';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
 

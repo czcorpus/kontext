@@ -17,8 +17,8 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
 import corparch from 'plugins/corparch/init';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
  // weback - ensure a style (even empty one) is created for the page
@@ -28,29 +28,22 @@ require('styles/corplist.less');
  * Initializes a corplist.tmpl page model.
  */
 export function init(conf:Kontext.Conf, corplistData:any):void {
-    const layoutModel = new PageModel(conf);
-    layoutModel.init().then(
-        () => {
-            const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
-            layoutModel.renderReactComponent(
-                pagePlugin.getForm(),
-                <HTMLElement>document.getElementById('content').querySelector('form.filter'),
-                {}
-            );
+    const layoutModel = new KontextPage(conf);
+    layoutModel.init(() => {
+        const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
+        layoutModel.renderReactComponent(
+            pagePlugin.getForm(),
+            <HTMLElement>document.getElementById('content').querySelector('form.filter'),
+            {}
+        );
 
-            layoutModel.renderReactComponent(
-                pagePlugin.getList(),
-                document.getElementById('corplist'),
-                {
-                    anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
-                }
-            );
-        }
-
-    ).then(
-        layoutModel.addUiTestingFlag
-
-    ).catch(
-        (err) => console.error(err)
-    );
+        layoutModel.renderReactComponent(
+            pagePlugin.getList(),
+            document.getElementById('corplist'),
+            {
+                anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
+            }
+        );
+        layoutModel.addUiTestingFlag();
+    });
 }

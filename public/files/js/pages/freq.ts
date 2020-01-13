@@ -21,7 +21,7 @@
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
-import {PageModel, DownloadType} from '../app/main';
+import {PageModel, DownloadType} from '../app/page';
 import {MultiDict, dictToPairs, nTimes} from '../util';
 import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
@@ -42,6 +42,7 @@ import {FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 import {TextTypesModel} from '../models/textTypes/main';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -382,75 +383,68 @@ class FreqPage {
     }
 
     init() {
-        this.layoutModel.init().then(
-            () => {
-                this.subcorpSel = new NonQueryCorpusSelectionModel({
-                    layoutModel: this.layoutModel,
-                    dispatcher: this.layoutModel.dispatcher,
-                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                    corpora: [this.layoutModel.getCorpusIdent().id],
-                    availSubcorpora: []
-                });
-                const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
-                // we must capture concordance-related actions which lead
-                // to specific "pop-up" forms and redirect user back to
-                // the 'view' action with additional information (encoded in
-                // the fragment part of the URL) which form should be opened
-                // once the 'view' page is loaded
-                mainMenuModel.addListener(() => {
-                    const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
-                    switch (activeItem.actionName) {
-                        case 'MAIN_MENU_SHOW_FILTER':
-                            const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
-                            window.location.replace(
-                                this.layoutModel.createActionUrl(
-                                    'view',
-                                    this.layoutModel.getConcArgs().items()
-                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
-                            );
-                        break;
-                        case 'MAIN_MENU_SHOW_SORT':
-                            window.location.replace(this.layoutModel.createActionUrl(
+        this.layoutModel.init(() => {
+            this.subcorpSel = new NonQueryCorpusSelectionModel({
+                layoutModel: this.layoutModel,
+                dispatcher: this.layoutModel.dispatcher,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
+                corpora: [this.layoutModel.getCorpusIdent().id],
+                availSubcorpora: []
+            });
+            const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
+            // we must capture concordance-related actions which lead
+            // to specific "pop-up" forms and redirect user back to
+            // the 'view' action with additional information (encoded in
+            // the fragment part of the URL) which form should be opened
+            // once the 'view' page is loaded
+            mainMenuModel.addListener(() => {
+                const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
+                switch (activeItem.actionName) {
+                    case 'MAIN_MENU_SHOW_FILTER':
+                        const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
+                        window.location.replace(
+                            this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
-                            ) + '#sort');
-                        break;
-                        case 'MAIN_MENU_SHOW_SAMPLE':
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs().items()
-                            ) + '#sample');
-                        break;
-                        case 'MAIN_MENU_APPLY_SHUFFLE':
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs().items()
-                            ) + '#shuffle');
-                        break;
-                    }
-                });
-                const adhocSubcIdentifier = this.initAdhocSubcDetector();
-                this.initAnalysisViews(adhocSubcIdentifier);
-                this.initQueryOpNavigation();
-                this.initFreqResult();
-                this.setupBackButtonListening();
-            }
+                            ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                        );
+                    break;
+                    case 'MAIN_MENU_SHOW_SORT':
+                        window.location.replace(this.layoutModel.createActionUrl(
+                            'view',
+                            this.layoutModel.getConcArgs().items()
+                        ) + '#sort');
+                    break;
+                    case 'MAIN_MENU_SHOW_SAMPLE':
+                        window.location.replace(this.layoutModel.createActionUrl(
+                            'view',
+                            this.layoutModel.getConcArgs().items()
+                        ) + '#sample');
+                    break;
+                    case 'MAIN_MENU_APPLY_SHUFFLE':
+                        window.location.replace(this.layoutModel.createActionUrl(
+                            'view',
+                            this.layoutModel.getConcArgs().items()
+                        ) + '#shuffle');
+                    break;
+                }
+            });
+            const adhocSubcIdentifier = this.initAdhocSubcDetector();
+            this.initAnalysisViews(adhocSubcIdentifier);
+            this.initQueryOpNavigation();
+            this.initFreqResult();
+            this.setupBackButtonListening();
 
-        ).then(
-            this.layoutModel.addUiTestingFlag
+            this.layoutModel.addUiTestingFlag();
 
-        ).catch(
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
+        });
     }
 }
 
 
 export function init(conf:Kontext.Conf):void {
-    let page = new FreqPage(new PageModel(conf));
+    let page = new FreqPage(new KontextPage(conf));
     page.init();
 }

@@ -22,7 +22,7 @@ import {TextTypes} from '../../types/common';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {availConfLevels} from './confIntervalCalc';
 import {isStructAttr, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities} from './ctFreqForm';

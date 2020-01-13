@@ -21,7 +21,7 @@ import * as Immutable from 'immutable';
 import * as React from 'react';
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel, PluginName} from '../app/main';
+import {PageModel} from '../app/page';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpFormModel} from '../models/subcorp/form';
 import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
@@ -33,6 +33,8 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import { InputMode } from '../models/subcorp/common';
+import { PluginName } from '../app/plugin';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -201,84 +203,76 @@ export class SubcorpForm {
     }
 
     init():void {
+        this.layoutModel.init(() => {
+            const ttComponent = this.createTextTypesComponents(
+                this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
+            );
+            this.subcorpSel = new NonQueryCorpusSelectionModel({
+                layoutModel: this.layoutModel,
+                dispatcher: this.layoutModel.dispatcher,
+                usesubcorp: this.corpusIdent.usesubcorp,
+                origSubcorpName: this.corpusIdent.origSubcorpName,
+                foreignSubcorp: this.corpusIdent.foreignSubcorp,
+                corpora: [this.corpusIdent.id],
+                availSubcorpora: []
+            });
+            this.subcorpFormModel = new SubcorpFormModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                ttComponent.ttModel,
+                this.layoutModel.getCorpusIdent().id,
+                InputMode.GUI
+            );
 
-        this.layoutModel.init().then(
-            () => {
-                const ttComponent = this.createTextTypesComponents(
-                    this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
-                );
-                this.subcorpSel = new NonQueryCorpusSelectionModel({
-                    layoutModel: this.layoutModel,
-                    dispatcher: this.layoutModel.dispatcher,
-                    usesubcorp: this.corpusIdent.usesubcorp,
-                    origSubcorpName: this.corpusIdent.origSubcorpName,
-                    foreignSubcorp: this.corpusIdent.foreignSubcorp,
-                    corpora: [this.corpusIdent.id],
-                    availSubcorpora: []
-                });
-                this.subcorpFormModel = new SubcorpFormModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    ttComponent.ttModel,
-                    this.layoutModel.getCorpusIdent().id,
-                    InputMode.GUI
-                );
+            this.subcorpWithinFormModel = new SubcorpWithinFormModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                InputMode.GUI,
+                this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'),
+                this.subcorpFormModel
+            );
 
-                this.subcorpWithinFormModel = new SubcorpWithinFormModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    InputMode.GUI,
-                    this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'),
-                    this.subcorpFormModel
-                );
-
-                const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
-                    this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                    this.subcorpSel,
-                    {
-                        itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                            return this.layoutModel.switchCorpus(corpora, subcorpId).then(
-                                () => {
-                                    // all the components must be deleted to prevent memory leaks
-                                    // and unwanted action handlers from previous instance
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
-                                    this.init();
-                                },
-                                (err) => {
-                                    this.layoutModel.showMessage('error', err);
-                                }
-                            )
-                        }
+            const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
+                this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
+                this.subcorpSel,
+                {
+                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        return this.layoutModel.switchCorpus(corpora, subcorpId).then(
+                            () => {
+                                // all the components must be deleted to prevent memory leaks
+                                // and unwanted action handlers from previous instance
+                                this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
+                                this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
+                                this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
+                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                                this.init();
+                            },
+                            (err) => {
+                                this.layoutModel.showMessage('error', err);
+                            }
+                        )
                     }
-                );
+                }
+            );
 
-                this.initCorpusInfo();
+            this.initCorpusInfo();
 
-                this.viewComponents = subcorpViewsInit({
-                    dispatcher: this.layoutModel.dispatcher,
-                    he: this.layoutModel.getComponentHelpers(),
-                    CorparchComponent: corplistWidget,
-                    subcorpFormModel: this.subcorpFormModel,
-                    subcorpWithinFormModel: this.subcorpWithinFormModel
-                });
-                this.initSubcorpForm(ttComponent.component, ttComponent.props);
-            }
-
-        ).then(
-            this.layoutModel.addUiTestingFlag
-
-        ).catch(
-            (err) => console.error(err)
-        );
+            this.viewComponents = subcorpViewsInit({
+                dispatcher: this.layoutModel.dispatcher,
+                he: this.layoutModel.getComponentHelpers(),
+                CorparchComponent: corplistWidget,
+                subcorpFormModel: this.subcorpFormModel,
+                subcorpWithinFormModel: this.subcorpWithinFormModel
+            });
+            this.initSubcorpForm(ttComponent.component, ttComponent.props);
+            this.layoutModel.addUiTestingFlag();
+        });
     }
 }
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel:PageModel = new PageModel(conf);
+    const layoutModel:PageModel = new KontextPage(conf);
     const pageModel = new SubcorpForm(
         layoutModel,
         layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')

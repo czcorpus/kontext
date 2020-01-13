@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -27,19 +27,13 @@ require('styles/userProfile.less');
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
+    const layoutModel = new KontextPage(conf);
 
-    layoutModel.init().then(
-        () => {
-            layoutModel.renderReactComponent(
-                layoutModel.getAuthPlugin().getProfileView(),
-                document.getElementById('user-administration-mount'),
-                {}
-            );
-        }
-    ).catch(
-        (err) => {
-            console.error(err);
-        }
-    )
+    layoutModel.init(() => {
+        layoutModel.renderReactComponent(
+            layoutModel.getAuthPlugin().getProfileView(),
+            document.getElementById('user-administration-mount'),
+            {}
+        );
+    });
 }

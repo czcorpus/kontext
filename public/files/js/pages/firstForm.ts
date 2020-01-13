@@ -21,7 +21,7 @@
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel, PluginName} from '../app/main';
+import {PageModel} from '../app/page';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import {TextTypesModel} from '../models/textTypes/main';
 import {FirstQueryFormModel} from '../models/query/first';
@@ -40,6 +40,8 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
 import { Action, IFullActionControl } from 'kombo';
 import { PluginInterfaces } from '../types/plugins';
+import { PluginName } from '../app/plugin';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -301,59 +303,51 @@ export class FirstFormPage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            () => {
-                this.queryHintModel = new UsageTipsModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.translate.bind(this.layoutModel)
-                );
-                this.withinBuilderModel = new WithinBuilderModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel
-                );
-                this.virtualKeyboardModel = new VirtualKeyboardModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel
-                );
-                this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
+        this.layoutModel.init(() => {
+            this.queryHintModel = new UsageTipsModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel.translate.bind(this.layoutModel)
+            );
+            this.withinBuilderModel = new WithinBuilderModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel
+            );
+            this.virtualKeyboardModel = new VirtualKeyboardModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel
+            );
+            this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
 
-                const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
-                const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
-                const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
-                const ttAns = this.createTTViews();
-                ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
-                        tagHelperPlg.getWidgetView(
-                            this.layoutModel.getCorpusIdent().id,
-                            this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
-                        ) :
-                        null;
-                ttAns.queryStorageView = qsPlugin.getWidgetView();
-                ttAns.allowCorpusSelection = true;
-                ttAns.actionPrefix = '';
-                this.initQueryModel();
-                const corparchWidget = this.initCorplistComponent();
-                this.attachQueryForm(ttAns, corparchWidget);
-                this.layoutModel.registerSwitchCorpAwareObject(this.cqlEditorModel);
-                this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
-                this.initCorpnameLink();
-                new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
-            }
+            const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
+            const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
+            const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
+            const ttAns = this.createTTViews();
+            ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
+                    tagHelperPlg.getWidgetView(
+                        this.layoutModel.getCorpusIdent().id,
+                        this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                    ) :
+                    null;
+            ttAns.queryStorageView = qsPlugin.getWidgetView();
+            ttAns.allowCorpusSelection = true;
+            ttAns.actionPrefix = '';
+            this.initQueryModel();
+            const corparchWidget = this.initCorplistComponent();
+            this.attachQueryForm(ttAns, corparchWidget);
+            this.layoutModel.registerSwitchCorpAwareObject(this.cqlEditorModel);
+            this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
+            this.initCorpnameLink();
+            new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
 
-        ).then(
-            (_) => {
-                this.layoutModel.restoreModelsDataAfterSwitch();
-                this.layoutModel.addUiTestingFlag();
-            }
-
-        ).catch(
-            (err) => console.error(err)
-        );
+            this.layoutModel.restoreModelsDataAfterSwitch();
+            this.layoutModel.addUiTestingFlag();
+        });
     }
 }
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
+    const layoutModel = new KontextPage(conf);
     const clStorage:ConcLinesStorage = openStorage((err) => {
         layoutModel.showMessage('error', err);
     });

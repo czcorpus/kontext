@@ -22,11 +22,11 @@ import {Kontext} from '../../types/common';
 import {MultiDict} from '../../util';
 import {StatefulModel} from '../base';
 import {ConcLinesStorage} from '../../conclines';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {ConcLineModel} from './lines';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
-import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {

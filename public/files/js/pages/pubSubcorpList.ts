@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/main';
+import { PageModel } from '../app/page';
 import {init as viewInit} from '../views/subcorp/listPublic';
 import {PublicSubcorpListModel, DataItem} from '../models/subcorp/listPublic';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 require('styles/pubSubcorpList.less'); // webpack
@@ -35,33 +36,29 @@ class PubSubcorpPage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            () => {
-                const model = new PublicSubcorpListModel(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel,
-                    this.layoutModel.getConf<Array<DataItem>>('Data'),
-                    this.layoutModel.getConf<number>('MinCodePrefix'),
-                    this.layoutModel.getConf<number>('MinAuthorPrefix')
-                );
-                const views = viewInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    model
-                )
-                this.layoutModel.renderReactComponent(
-                    views.List,
-                    document.getElementById('published-subcorpora-mount'),
-                    {}
-                );
-            }
-        );
+        this.layoutModel.init(() => {
+            const model = new PublicSubcorpListModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                this.layoutModel.getConf<Array<DataItem>>('Data'),
+                this.layoutModel.getConf<number>('MinCodePrefix'),
+                this.layoutModel.getConf<number>('MinAuthorPrefix')
+            );
+            const views = viewInit(
+                this.layoutModel.dispatcher,
+                this.layoutModel.getComponentHelpers(),
+                model
+            )
+            this.layoutModel.renderReactComponent(
+                views.List,
+                document.getElementById('published-subcorpora-mount'),
+                {}
+            );
+        });
     }
 }
 
 
 export function init(conf):void {
-    const layoutModel = new PageModel(conf);
-    const pageModel = new PubSubcorpPage(layoutModel);
-    pageModel.init();
+    new PubSubcorpPage(new KontextPage(conf)).init();
 }

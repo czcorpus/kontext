@@ -22,7 +22,7 @@
 
 import {PluginInterfaces} from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {StatefulModel} from '../../models/base';
 import { Action, IFullActionControl } from 'kombo';
 
@@ -64,6 +64,3 @@ const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
 };
 
 export default create;
-
-
-

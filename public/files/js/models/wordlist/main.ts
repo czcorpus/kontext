@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
 import {StatefulModel, validateGzNumber} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {WordlistFormModel} from './form';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';

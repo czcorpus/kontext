@@ -20,12 +20,13 @@
 
 import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import {init as initQueryHistoryViews} from '../views/query/history';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import queryStoragePlugin from 'plugins/queryStorage/init';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -66,50 +67,42 @@ class QueryHistoryPage {
     }
 
     init():void {
-        this.layoutModel.init().then(
-            (data) => {
-                this.subcorpSel = new NonQueryCorpusSelectionModel({
-                    layoutModel: this.layoutModel,
-                    dispatcher: this.layoutModel.dispatcher,
-                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                    corpora: [this.layoutModel.getCorpusIdent().id],
-                    availSubcorpora: []
-                });
-                const qsModel = queryStoragePlugin(
-                    this.layoutModel.pluginApi(),
-                    this.layoutModel.getConf<number>('Offset'),
-                    this.layoutModel.getConf<number>('Limit'),
-                    this.layoutModel.getConf<number>('PageSize')
-                );
-                qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
-                const qhViews = initQueryHistoryViews(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    qsModel.getModel()
-                );
+        this.layoutModel.init(() => {
+            this.subcorpSel = new NonQueryCorpusSelectionModel({
+                layoutModel: this.layoutModel,
+                dispatcher: this.layoutModel.dispatcher,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
+                corpora: [this.layoutModel.getCorpusIdent().id],
+                availSubcorpora: []
+            });
+            const qsModel = queryStoragePlugin(
+                this.layoutModel.pluginApi(),
+                this.layoutModel.getConf<number>('Offset'),
+                this.layoutModel.getConf<number>('Limit'),
+                this.layoutModel.getConf<number>('PageSize')
+            );
+            qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
+            const qhViews = initQueryHistoryViews(
+                this.layoutModel.dispatcher,
+                this.layoutModel.getComponentHelpers(),
+                qsModel.getModel()
+            );
 
-                this.layoutModel.renderReactComponent(
-                    qhViews.RecentQueriesPageList,
-                    document.getElementById('query-history-mount'),
-                    {}
-                );
+            this.layoutModel.renderReactComponent(
+                qhViews.RecentQueriesPageList,
+                document.getElementById('query-history-mount'),
+                {}
+            );
 
-                this.initCorpnameLink();
-            }
+            this.initCorpnameLink();
+            this.layoutModel.addUiTestingFlag();
 
-        ).then(
-            this.layoutModel.addUiTestingFlag
-
-        ).catch(
-            (err) => {
-                console.error(err);
-            }
-        )
+        });
     }
 }
 
 export function init(conf:Kontext.Conf):void {
-    new QueryHistoryPage(new PageModel(conf)).init();
+    new QueryHistoryPage(new KontextPage(conf)).init();
 }

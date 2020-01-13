@@ -21,7 +21,7 @@
 import * as Immutable from 'immutable';
 import {Kontext, ViewOptions} from '../../types/common';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';

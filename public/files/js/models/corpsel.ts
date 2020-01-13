@@ -21,7 +21,7 @@
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import { StatefulModel } from './base';
 import { Action, IFullActionControl } from 'kombo';
 
