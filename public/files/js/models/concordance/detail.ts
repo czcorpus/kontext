@@ -23,7 +23,7 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'immutable';

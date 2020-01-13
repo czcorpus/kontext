@@ -17,8 +17,8 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
 import corparch from 'plugins/corparch/init';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
  // weback - ensure a style (even empty one) is created for the page
@@ -28,7 +28,7 @@ require('styles/corplist.less');
  * Initializes a corplist.tmpl page model.
  */
 export function init(conf:Kontext.Conf, corplistData:any):void {
-    const layoutModel = new PageModel(conf);
+    const layoutModel = new KontextPage(conf);
     layoutModel.init(() => {
         const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
         layoutModel.renderReactComponent(

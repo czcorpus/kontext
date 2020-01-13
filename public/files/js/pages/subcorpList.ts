@@ -20,25 +20,15 @@
 
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
 import {init as listViewInit} from '../views/subcorp/list';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/subcorpList.less');
 
-/**
- * Server-defined data (subcorpus/ajax_subcorp_info)
- */
-interface SubcorpusExtendedInfo {
-    corpname:string;
-    cql:string;
-    id:number;
-    subcname:string;
-    timestamp:number;
-    user_id:number;
-}
 
 /**
  *
@@ -88,7 +78,5 @@ class SubcorpListPage {
  * A function used to initialize the model on a respective page.
  */
 export function init(conf):void {
-    const layoutModel = new PageModel(conf);
-    const pageModel = new SubcorpListPage(layoutModel);
-    pageModel.init();
+    new SubcorpListPage(new KontextPage(conf)).init();
 }

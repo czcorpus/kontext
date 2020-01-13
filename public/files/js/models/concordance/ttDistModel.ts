@@ -22,10 +22,10 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import {ConcLineModel} from './lines';
-import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 export type TTCrit = Array<[string, string]>;
 

@@ -23,7 +23,7 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {StatefulModel, UNSAFE_SynchronizedModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {KWICSection} from './line';
 import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';

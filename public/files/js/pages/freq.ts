@@ -21,7 +21,7 @@
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
-import {PageModel, DownloadType} from '../app/main';
+import {PageModel, DownloadType} from '../app/page';
 import {MultiDict, dictToPairs, nTimes} from '../util';
 import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
@@ -42,6 +42,7 @@ import {FreqCTResultsSaveModel} from '../models/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 import {TextTypesModel} from '../models/textTypes/main';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -444,6 +445,6 @@ class FreqPage {
 
 
 export function init(conf:Kontext.Conf):void {
-    let page = new FreqPage(new PageModel(conf));
+    let page = new FreqPage(new KontextPage(conf));
     page.init();
 }

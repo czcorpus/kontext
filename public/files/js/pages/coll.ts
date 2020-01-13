@@ -18,7 +18,8 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel, DownloadType} from '../app/main';
+import {PageModel, DownloadType} from '../app/page';
+import {KontextPage} from '../app/main';
 import {MultiDict, dictToPairs, nTimes} from '../util';
 import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
@@ -339,5 +340,5 @@ export class CollPage {
 
 
 export function init(conf:Kontext.Conf, runningInBg:boolean):void {
-    new CollPage(new PageModel(conf)).init();
+    new CollPage(new KontextPage(conf)).init();
 }

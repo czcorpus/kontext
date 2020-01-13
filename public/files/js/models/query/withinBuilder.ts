@@ -22,8 +22,8 @@ import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {PageModel} from '../../app/main';
-import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
+import {PageModel} from '../../app/page';
+import { Action, IFullActionControl } from 'kombo';
 
 /**
  *

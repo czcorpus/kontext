@@ -19,7 +19,7 @@
  */
 
 import {TextTypes} from '../../types/common';
-import {PageModel, DownloadType} from '../../app/main';
+import {PageModel, DownloadType} from '../../app/page';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';

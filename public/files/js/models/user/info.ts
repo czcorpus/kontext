@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import RSVP from 'rsvp';
 import { Action, IFullActionControl } from 'kombo';
 

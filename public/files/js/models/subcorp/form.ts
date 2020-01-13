@@ -22,7 +22,7 @@ import {Kontext, TextTypes} from '../../types/common';
 import {StatefulModel} from '../base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {TextTypesModel} from '../../models/textTypes/main';
 import {InputMode} from './common';
 import RSVP from 'rsvp';

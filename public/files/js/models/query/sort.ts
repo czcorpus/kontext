@@ -23,9 +23,9 @@ import RSVP from 'rsvp';
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
-import { IActionDispatcher, Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 
 
 export interface SortFormProperties {

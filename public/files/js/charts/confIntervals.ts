@@ -22,8 +22,7 @@
 /// <reference path="../vendor.d.ts/d3-color.d.ts" />
 
 import * as d3 from 'vendor/d3';
-import * as d3Color from 'vendor/d3-color';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 
 
 export type NumTriplet = [number, number, number];

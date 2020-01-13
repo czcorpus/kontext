@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel, validateNumber} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import { Action, IFullActionControl } from 'kombo';
 
 

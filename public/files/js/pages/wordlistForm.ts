@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import {PluginInterfaces} from '../types/plugins';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
@@ -27,6 +27,7 @@ import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {WordlistFormModel, WlnumsTypes, WlTypes} from '../models/wordlist/form';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import createCorparch from 'plugins/corparch/init';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -147,5 +148,5 @@ class WordlistFormPage {
 
 
 export function init(conf:Kontext.Conf):void {
-    new WordlistFormPage(new PageModel(conf)).init();
+    new WordlistFormPage(new KontextPage(conf)).init();
 }

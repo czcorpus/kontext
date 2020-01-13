@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 

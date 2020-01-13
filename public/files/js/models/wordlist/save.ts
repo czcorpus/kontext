@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';

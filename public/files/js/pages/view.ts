@@ -24,7 +24,7 @@ import RSVP from 'rsvp';
 
 import {Kontext, TextTypes} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel, DownloadType} from '../app/main';
+import {PageModel, DownloadType} from '../app/page';
 import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
 import {MultiDict, updateProps, nTimes} from '../util';
@@ -70,6 +70,7 @@ import kwicConnectInit from 'plugins/kwicConnect/init';
 import { Action } from 'kombo';
 import { Observable } from 'rxjs';
 import { concatMap, tap, map } from 'rxjs/operators';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -1232,9 +1233,5 @@ export class ViewPage {
 }
 
 export function init(conf):void {
-    const layoutModel = new PageModel(conf);
-    const pageModel = new ViewPage(
-        layoutModel
-    );
-    pageModel.init();
+    new ViewPage(new KontextPage(conf)).init();
 };

@@ -21,7 +21,7 @@ import * as Immutable from 'immutable';
 import * as React from 'react';
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel, PluginName} from '../app/main';
+import {PageModel} from '../app/page';
 import {init as subcorpViewsInit} from '../views/subcorp/forms';
 import {SubcorpFormModel} from '../models/subcorp/form';
 import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
@@ -33,6 +33,8 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import { InputMode } from '../models/subcorp/common';
+import { PluginName } from '../app/plugin';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -270,7 +272,7 @@ export class SubcorpForm {
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel:PageModel = new PageModel(conf);
+    const layoutModel:PageModel = new KontextPage(conf);
     const pageModel = new SubcorpForm(
         layoutModel,
         layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')

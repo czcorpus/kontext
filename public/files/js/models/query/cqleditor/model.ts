@@ -20,7 +20,7 @@
 
 import {Kontext, typedProps} from '../../../types/common';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../../app/main';
+import {PageModel} from '../../../app/page';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './parser';
 import { IActionDispatcher, StatelessModel, Action } from 'kombo';

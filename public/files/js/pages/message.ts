@@ -19,9 +19,10 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import {init as messageViewsInit, MessageViewProps} from '../views/message';
+import { KontextPage } from '../app/main';
 
 
 declare var require:any;
@@ -66,5 +67,5 @@ class MessagePage {
 
 
 export function init(conf:Kontext.Conf):void {
-    new MessagePage(new PageModel(conf)).init();
+    new MessagePage(new KontextPage(conf)).init();
 }

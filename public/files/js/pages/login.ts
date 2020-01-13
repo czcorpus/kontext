@@ -19,14 +19,14 @@
  */
 
 import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/login.less');
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
+    const layoutModel = new KontextPage(conf);
     layoutModel.init(() => {
         document.getElementById('try-login').addEventListener('click', () => {
             layoutModel.dispatcher.dispatch({

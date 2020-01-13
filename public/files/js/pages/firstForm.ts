@@ -21,7 +21,7 @@
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel, PluginName} from '../app/main';
+import {PageModel} from '../app/page';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import {TextTypesModel} from '../models/textTypes/main';
 import {FirstQueryFormModel} from '../models/query/first';
@@ -40,6 +40,8 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import { StatefulModel } from '../models/base';
 import { Action, IFullActionControl } from 'kombo';
 import { PluginInterfaces } from '../types/plugins';
+import { PluginName } from '../app/plugin';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -345,7 +347,7 @@ export class FirstFormPage {
 
 
 export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
+    const layoutModel = new KontextPage(conf);
     const clStorage:ConcLinesStorage = openStorage((err) => {
         layoutModel.showMessage('error', err);
     });

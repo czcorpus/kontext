@@ -21,7 +21,7 @@
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';

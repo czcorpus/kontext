@@ -23,7 +23,7 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import {StatefulModel} from '../base';
 import { MultiDict } from '../../util';
 import { AsyncTaskStatus } from '../asyncTask';

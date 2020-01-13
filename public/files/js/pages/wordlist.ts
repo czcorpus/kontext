@@ -20,7 +20,7 @@
 
 import { Observable, interval as rxInterval } from 'rxjs';
 import {Kontext} from '../types/common';
-import {PageModel, DownloadType} from '../app/main';
+import {PageModel, DownloadType} from '../app/page';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as wordlistResultViewInit} from '../views/wordlist/result';
@@ -30,6 +30,7 @@ import {WordlistResultModel, ResultItem} from '../models/wordlist/main';
 import {WordlistFormModel, WordlistModelInitialArgs} from '../models/wordlist/form';
 import {WordlistSaveModel} from '../models/wordlist/save';
 import { concatMap, scan, takeWhile, last } from 'rxjs/operators';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -266,6 +267,5 @@ export class WordlistPage extends StatefulModel  {
 
 
 export function init(conf:Kontext.Conf):void {
-    const page:WordlistPage = new WordlistPage(new PageModel(conf));
-    page.init();
+    new WordlistPage(new KontextPage(conf)).init();
 }

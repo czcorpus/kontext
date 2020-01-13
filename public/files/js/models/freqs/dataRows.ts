@@ -20,7 +20,7 @@
 
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
-import {PageModel} from '../../app/main';
+import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import RSVP from 'rsvp';
 import {FreqFormInputs} from './freqForms';

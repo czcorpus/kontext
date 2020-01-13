@@ -20,12 +20,13 @@
 
 import {Kontext} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/main';
+import {PageModel} from '../app/page';
 import {init as initQueryHistoryViews} from '../views/query/history';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
 import queryStoragePlugin from 'plugins/queryStorage/init';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -103,5 +104,5 @@ class QueryHistoryPage {
 }
 
 export function init(conf:Kontext.Conf):void {
-    new QueryHistoryPage(new PageModel(conf)).init();
+    new QueryHistoryPage(new KontextPage(conf)).init();
 }

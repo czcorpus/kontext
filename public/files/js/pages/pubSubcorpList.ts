@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/main';
+import { PageModel } from '../app/page';
 import {init as viewInit} from '../views/subcorp/listPublic';
 import {PublicSubcorpListModel, DataItem} from '../models/subcorp/listPublic';
+import { KontextPage } from '../app/main';
 
 declare var require:any;
 require('styles/pubSubcorpList.less'); // webpack
@@ -59,7 +60,5 @@ class PubSubcorpPage {
 
 
 export function init(conf):void {
-    const layoutModel = new PageModel(conf);
-    const pageModel = new PubSubcorpPage(layoutModel);
-    pageModel.init();
+    new PubSubcorpPage(new KontextPage(conf)).init();
 }
