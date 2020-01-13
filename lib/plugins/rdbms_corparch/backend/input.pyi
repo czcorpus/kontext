@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, IO
 
 
 class InstallJsonMetadata(object):
@@ -31,9 +31,9 @@ class InstallJsonMetadata(object):
 
 class InstallJsonReference(object):
 
-    default:basestring
-    articles:List[basestring]
-    other_bibliography:basestring
+    default:str
+    articles:List[str]
+    other_bibliography:str
 
 
 class InstallJson(object):
@@ -58,7 +58,7 @@ class InstallJson(object):
 
     def to_dict(self) -> Dict[str, Any]: ...
 
-    def write(self, fw:file): ...
+    def write(self, fw:IO[Any]): ...
 
     def get_group_name(self) -> str: ...
 

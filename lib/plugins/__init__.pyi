@@ -24,15 +24,15 @@ from .abstract.subcmixer import AbstractSubcMixer
 from .abstract.chart_export import AbstractChartExportPlugin
 from .abstract.issue_reporting import AbstractIssueReporting
 from .abstract.dispatch_hook import AbstractDispatchHook
-from ..kontext import PluginApi
 from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
+from ..controller.plg import PluginApi
 
 T = TypeVar('T')
 
 class _ID(Generic[T]):
 
-    def __init__(self, ident:str, optional:Optional[bool]): ...
+    def __init__(self, ident:str, optional:Optional[bool]) -> None: ...
 
     @property
     def instance(self) -> T: ...
@@ -81,7 +81,6 @@ class _Names(object):
     SYNTAX_VIEWER:_ID[AbstractSyntaxViewerPlugin]
     SUBCMIXER:_ID[AbstractSubcMixer]
     CHART_EXPORT:_ID[AbstractChartExportPlugin]
-    CHART_EXPORT:_ID[AbstractChartExportPlugin]
     ISSUE_REPORTING: _ID[AbstractIssueReporting]
     DISPATCH_HOOK: _ID[AbstractDispatchHook]
     TOKEN_CONNECT: _ID[AbstractTokenConnect]
@@ -101,6 +100,6 @@ def add_missing_plugin(name:str) -> None: ...
 
 def flush_plugins() -> None: ...
 
-def inject(*args:List[_ID]) -> Callable[Any, Any]: ...
+def inject(*args:List[_ID]) -> Callable[[Any], Any]: ...
 
 def load_plugin_module(name:str) -> ModuleType: ...

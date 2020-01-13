@@ -19,12 +19,10 @@
 from typing import Dict, Any, Union, ClassVar, List, Callable
 import kontext
 
-AnyStr = Union[str, unicode]
-
 
 class IssueReportingAction(object):
 
-    def to_dict(self) -> Dict[Any]: ...
+    def to_dict(self) -> Dict[Any, Any]: ...
 
 
 class DynamicReportingAction(IssueReportingAction): ...
@@ -32,17 +30,17 @@ class DynamicReportingAction(IssueReportingAction): ...
 
 class StaticReportingAction(IssueReportingAction):
 
-    url:AnyStr
-    args:Dict[AnyStr, AnyStr]
-    label:AnyStr
+    url:str
+    args:Dict[str, str]
+    label:str
     blank_window:bool
-    type:AnyStr
+    type:str
 
-    def __init__(self, url:AnyStr, args:AnyStr, label:Dict[AnyStr, AnyStr], blank_window:bool): ...
+    def __init__(self, url:str, args:str, label:Dict[str, str], blank_window:bool): ...
 
 
 class AbstractIssueReporting(object):
 
-    def export_report_action(self, plugin_api:):Dict[ClassVar, List[Callable[[self, Any]:Any]]]: ...
+    def export_report_action(self, plugin_api:kontext.PluginApi) -> Dict[Any, List[Callable[[Any], Any]]]: ...
 
-    def submit(self, plugin_api:kontext.PluginApi, args:Dict[AnyStr, AnyStr]): ...
+    def submit(self, plugin_api:kontext.PluginApi, args:Dict[str, str]): ...

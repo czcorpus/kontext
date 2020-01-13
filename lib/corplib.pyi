@@ -16,9 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import List, Any, Optional, Tuple, Dict
+from typing import List, Any, Optional, Tuple, Dict, Union
 from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
-import array.array
+from array import array
 
 def manatee_version() -> str: ...
 
@@ -34,7 +34,7 @@ def subcorpus_from_conc(path:str, conc:Concordance, struct:Optional[str]) -> Sub
 
 def is_subcorpus(corp_obj:Corpus) -> bool: ...
 
-def list_public_subcorpora(subcpath:str, author_prefix:Optional[unicode], code_prefix:Optional[unicode],
+def list_public_subcorpora(subcpath:str, author_prefix:Optional[str], code_prefix:Optional[str],
                            offset:Optional[int], limit:Optional[int]) -> List[Dict[str, Any]]: ...
 
 def create_str_vector() -> StrVector: ...
@@ -66,7 +66,7 @@ def subc_keywords(subcorp:SubCorpus, attr:PosAttr, minfreq:Optional[int], maxfre
 
 def subcorp_base_file(corp:SubCorpus, attrname:str) -> str: ...
 
-def frq_db(corp:Corpus, attrname:str, nums:Optional[str], id_range:Optional[int]) -> array.array: ...
+def frq_db(corp:Corpus, attrname:str, nums:Optional[str], id_range:Optional[int]) -> array: ...
 
 def subc_keywords_onstr(sc:SubCorpus, scref:SubCorpus, attrname:Optional[str], wlminfreq:Optional[int],
                         wlpat:Optional[str], wlmaxitems:Optional[int], simple_n:Optional[int],
@@ -77,21 +77,21 @@ def subc_keywords_onstr(sc:SubCorpus, scref:SubCorpus, attrname:Optional[str], w
 
 class PublishedSubcMetadata(object):
         author_id:int
-        author_name:unicode
+        author_name:str
         subcpath:str
 
 
 def subcorpus_is_published(subcpath:str) -> bool: ...
 
-def get_subcorp_pub_info(spath:str) -> Tuple[PublishedSubcMetadata, unicode]: ...
+def get_subcorp_pub_info(spath:str) -> Tuple[PublishedSubcMetadata, str]: ...
 
-def mk_publish_links(subcpath:str, publicpath:str, author:unicode, description:unicode): ...
+def mk_publish_links(subcpath:str, publicpath:str, author:str, description:str): ...
 
-def rewrite_subc_desc(publicpath:str, desc:unicode): ...
+def rewrite_subc_desc(publicpath:str, desc:str): ...
 
 class CorpusManager(object):
 
-    def __init__(self, subcpath:List[str]|Tuple[str]): ...
+    def __init__(self, subcpath:Union[List[str], Tuple[str, ...]]) -> None: ...
 
     subcpath:List[str]
 

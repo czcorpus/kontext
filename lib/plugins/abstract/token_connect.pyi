@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, List, Tuple, ClassVar, Iterable
+from typing import Dict, Any, List, Tuple, Iterable
 
 from plugins.abstract import CorpusDependentPlugin
 import kontext
@@ -29,13 +29,13 @@ class BackendException(Exception):
 
 class Response(object):
 
-    contents:basestring
+    contents:str
     renderer:str
     status:bool
-    heading:unicode
-    note:unicode
+    heading:str
+    note:str
 
-    def __init__(self, contents:basestring, renderer:str, status:bool, heading:unicode, note:unicode,
+    def __init__(self, contents:str, renderer:str, status:bool, heading:str, note:str,
                  is_kwic_view:bool): ...
 
     def to_dict(self) -> Dict[str, Any]: ...
@@ -47,7 +47,7 @@ class AbstractBackend(object):
 
     provider_id:str
 
-    def fetch(self, corpora:List[str], token_id:int, num_tokens:int, query_args:Dict[str, basestring],
+    def fetch(self, corpora:List[str], token_id:int, num_tokens:int, query_args:Dict[str, str],
               lang:str) -> Tuple[Any, bool]: ...
 
     def set_cache_path(self, path:str): ...
@@ -61,14 +61,14 @@ class AbstractBackend(object):
 
 class AbstractFrontend(object):
 
-    _headings:Dict[str, basestring]
-    _notes:Dict[str, basestring]
+    _headings:Dict[str, str]
+    _notes:Dict[str, str]
 
-    def _fetch_localized_prop(self, prop:str, lang:str) -> unicode: ...
+    def _fetch_localized_prop(self, prop:str, lang:str) -> str: ...
 
     def export_data(self, data:Any, status:bool, lang:str, is_kwic_view:bool) -> Response: ...
 
-    def get_heading(self, lang:str) -> unicode: ...
+    def get_heading(self, lang:str) -> str: ...
 
 
 class AbstractTokenConnect(CorpusDependentPlugin):
@@ -78,7 +78,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
 
     def get_required_structattrs(self) -> List[str]: ...
 
-    def is_enabled_for(self, plugin_api:kontext.PluginApi, corpname:basestring) -> bool: ...
+    def is_enabled_for(self, plugin_api:kontext.PluginApi, corpname:str) -> bool: ...
 
 
-def find_implementation(path:str) -> ClassVar: ...
+def find_implementation(path:str) -> Any: ...

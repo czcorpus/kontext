@@ -23,7 +23,7 @@ from main_menu import AbstractMenuItem
 
 T = TypeVar('T')
 
-JSONVal = Union[basestring, int, float, bool, None, Dict[str, Any], List[Any]]
+JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 class LinesGroups(object):
 
@@ -57,10 +57,10 @@ class AsyncTaskStatus(object):
 
     args:Dict[str, Any]
 
-    error:unicode
+    error:str
 
     def __init__(self, status:int, ident:str, category:str, created:int, label:str, args:Dict[str, Any],
-                 error:unicode): ...
+                 error:str): ...
 
     def is_finished(self) -> bool: ...
 
@@ -88,9 +88,9 @@ class Kontext(Controller):
 
     _save_menu:List[AbstractMenuItem]
 
-    _conc_dir:unicode
+    _conc_dir:str
 
-    _files_path:unicode
+    _files_path:str
 
     _lines_groups:LinesGroups
 
@@ -98,7 +98,7 @@ class Kontext(Controller):
 
     subcpath:List[str]
 
-    get_corpus_info:Callable[str, Dict[str, Any]]
+    get_corpus_info:Callable[[str], Dict[str, Any]]
 
     _q_code:str
 
@@ -136,7 +136,7 @@ class Kontext(Controller):
 
     def get_available_aligned_corpora(self) -> List[str]: ...
 
-    def _add_save_menu_item(self, label:basestring, save_format:str, hint:Optional[basestring]): ...
+    def _add_save_menu_item(self, label:str, save_format:str, hint:Optional[str]): ...
 
     def _create_action_log(self, user_settings:Dict[str, Any], action_name:str, err_desc:Tuple[str, str], proc_time:float) -> Dict[str, JSONVal]: ...
 
@@ -154,7 +154,7 @@ class Kontext(Controller):
 
     def _attach_aligned_query_params(self, out:Dict[str, Any]): ...
 
-    def _export_subcorpora_list(self, corpname:str, curr_subcorp:unicode, out:Dict[str, Any]): ...
+    def _export_subcorpora_list(self, corpname:str, curr_subcorp:str, out:Dict[str, Any]): ...
 
     def _get_mapped_attrs(self, attr_names:Iterable[str], force_values:bool) -> List[Tuple[str, str]]: ...
 

@@ -18,7 +18,7 @@
 
 from typing import Union, List, Dict
 
-Serializable = Union[int, float, str, unicode, bool, list, dict, None]
+Serializable = Union[int, float, str, bool, list, dict, None]
 
 
 class KeyValueStorage(object):

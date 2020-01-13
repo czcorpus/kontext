@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from controller.plg import PluginApi
 
 class DictLike(object): ...
@@ -35,9 +35,9 @@ class CorpusMetadata(DictLike):
 
 
 class CitationInfo(DictLike):
-    default_ref:unicode
-    article_ref:List[unicode]
-    other_bibliography:unicode
+    default_ref:str
+    article_ref:List[str]
+    other_bibliography:str
 
     def to_dict(self) -> Dict[str, Any]: ...
 
@@ -45,7 +45,7 @@ class CitationInfo(DictLike):
 class ManateeCorpusInfo(DictLike):
     encoding:str
     name:str
-    description:unicode
+    description:str
     attrs:List[str]
     size:int
     has_lemma:bool
@@ -57,7 +57,7 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     encoding:str
     import_string:Any
     name:str
-    description:unicode
+    description:str
     attrs:List[str]
     size:int
     attrlist:List[str]
@@ -90,7 +90,7 @@ class CorpusInfo(DictLike):
     path:str
     web:str
     sentence_struct:str
-    tagsets = []
+    tagsets:List[str] = []
     speech_segment = None
     speaker_id_attr = None
     speech_overlap_attr = None
@@ -107,8 +107,29 @@ class CorpusInfo(DictLike):
     manatee = ManateeCorpusInfo()
 
 
+class BrokenCorpusInfo(CorpusInfo): ...
+
+
 class AbstractCorporaArchive(object):
 
     def get_corpus_info(self, user_lang:str, corp_id:str) -> CorpusInfo: ...
 
     def mod_corplist_menu(self, plugin_api:PluginApi, menu_item:Any) -> Any: ...  # TODO
+
+
+class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
+
+    def search(self, plugin_api: PluginApi, query:str, offset:int, limit:Optional[int], filter_dict=Dict[str, Any]) -> Any: ...
+
+    def create_corplist_provider(self, plugin_api: PluginApi) -> CorplistProvider: ...
+
+    def initial_search_params(self, plugin_api: PluginApi, query: str, args: Any) -> Dict[str, Any]: ...
+
+    def custom_filter(self, plugin_api: PluginApi, corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool: ...  # TODO CorpusListItem object
+
+    def create_corpus_info(self) -> CorpusInfo: ...
+
+
+class CorplistProvider(object):
+
+    def search(self, plugin_api: PluginApi, query:str, offset:int, limit:Optional[int], filter_dict=Dict[str, Any]) -> Any: ...
