@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 from typing import Dict, Any, List, Optional
 from controller.plg import PluginApi
 
@@ -110,7 +111,7 @@ class CorpusInfo(DictLike):
 class BrokenCorpusInfo(CorpusInfo): ...
 
 
-class AbstractCorporaArchive(object):
+class AbstractCorporaArchive(abc.ABC):
 
     def get_corpus_info(self, user_lang:str, corp_id:str) -> CorpusInfo: ...
 
@@ -130,6 +131,6 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     def create_corpus_info(self) -> CorpusInfo: ...
 
 
-class CorplistProvider(object):
+class CorplistProvider(abc.ABC):
 
     def search(self, plugin_api: PluginApi, query:str, offset:int, limit:Optional[int], filter_dict=Dict[str, Any]) -> Any: ...

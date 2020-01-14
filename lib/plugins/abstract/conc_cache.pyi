@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+import abc
 from typing import Dict, Any, List, Optional, Union, Tuple
 from manatee import Corpus
 
@@ -50,7 +51,7 @@ class CalcStatus(object):
 
 
 
-class AbstractConcCache(object):
+class AbstractConcCache(abc.ABC):
 
     def get_stored_size(self, subchash:str, q:QueryType) -> int: ...
 
@@ -69,7 +70,7 @@ class AbstractConcCache(object):
     def del_full_entry(self, subchash:str, q:QueryType): ...
 
 
-class AbstractCacheMappingFactory(object):
+class AbstractCacheMappingFactory(abc.ABC):
     """
     A factory which provides AbstractConcCache instances. Please note
     that your module's 'create_instance' should return this factory and

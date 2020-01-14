@@ -43,6 +43,7 @@ frontends and backends. It means that in case you need a special functionality,
 it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
+import abc
 import importlib
 
 from plugins.abstract import CorpusDependentPlugin
@@ -79,7 +80,7 @@ class Response(object):
         return self.__dict__
 
 
-class AbstractBackend(object):
+class AbstractBackend(abc.ABC):
     """
     A general description of a service providing
     external data for (word, lemma, pos, corpora, lang)
@@ -94,8 +95,9 @@ class AbstractBackend(object):
     def provider_id(self):
         return self._provider_id
 
+    @abc.abstractmethod
     def fetch(self, corpora, token_id, num_tokens, query_args, lang):
-        raise NotImplementedError()
+        pass
 
     def set_cache_path(self, path):
         self._cache_path = path
@@ -188,7 +190,7 @@ def find_implementation(path):
 class AbstractTokenConnect(CorpusDependentPlugin):
 
     def map_providers(self, provider_ids):
-        raise NotImplementedError()
+        pass
 
     def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
         """

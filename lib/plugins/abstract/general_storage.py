@@ -16,8 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 
-class KeyValueStorage(object):
+
+class KeyValueStorage(abc.ABC):
     """
     A general key-value storage is a core data storage for KonText and its default
     plug-ins. The interface was written with [Redis](https://redis.io/) in mind
@@ -31,13 +33,14 @@ class KeyValueStorage(object):
     properly serialized.
     """
 
+    @abc.abstractmethod
     def rename(self, key, new_key):
         """
         Rename an existing key to a new one. If the new value already
         exists then the record is overwritten.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
         Return a stored list. If there is a non-list value stored with the passed key
@@ -49,8 +52,8 @@ class KeyValueStorage(object):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_append(self, key, value):
         """
         Add a value at the end of a list
@@ -59,16 +62,16 @@ class KeyValueStorage(object):
         key -- data access key
         value -- value to be pushed
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_pop(self, key):
         """
         Remove and return an element from the
         beginning of the list.
 
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_len(self, key):
         """
         Return length of a list. If there is a non-list value stored with the passed key
@@ -77,8 +80,8 @@ class KeyValueStorage(object):
         arguments:
         key -- data access key
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_set(self, key, idx, value):
         """
         Sets the list element at index to value
@@ -88,8 +91,8 @@ class KeyValueStorage(object):
         idx -- a zero based index where the set should be performed
         value -- a value to be inserted
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_trim(self, key, keep_left, keep_right):
         """
         Trim the list from the beginning to keep_left - 1 and from keep_right to the end.
@@ -100,8 +103,8 @@ class KeyValueStorage(object):
         keep_left -- the first value to be kept
         keep_right -- the last value to be kept
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def hash_get(self, key, field):
         """
         Get a value from a hash table stored under the passed key. If there is no
@@ -111,8 +114,8 @@ class KeyValueStorage(object):
         key -- data access key
         field -- hash table entry key
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def hash_set(self, key, field, value):
         """
         Put a value into a hash table stored under the passed key
@@ -122,8 +125,8 @@ class KeyValueStorage(object):
         field -- hash table entry key
         value -- a value to be stored
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def hash_del(self, key, field):
         """
         Removes a field from a hash item
@@ -132,8 +135,8 @@ class KeyValueStorage(object):
         key -- hash item access key
         field -- the field to be deleted
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def hash_get_all(self, key):
         """
         Return a complete hash object (= Python dict) stored under the passed
@@ -143,8 +146,8 @@ class KeyValueStorage(object):
         arguments:
         key -- data access key
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get(self, key, default=None):
         """
         Get a value stored with passed key
@@ -154,8 +157,8 @@ class KeyValueStorage(object):
         key -- data access key
         default -- a value to be returned in case there is no such key
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def set(self, key, data):
         """
         Save 'data' with 'key'.
@@ -164,8 +167,8 @@ class KeyValueStorage(object):
         key -- an access key
         data -- a dictionary containing data to be saved
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def remove(self, key):
         """
         Remove a value specified by a key
@@ -173,8 +176,8 @@ class KeyValueStorage(object):
         arguments:
         key -- key of the data to be removed
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def exists(self, key):
         """
         Test whether there is a value with the specified key
@@ -185,8 +188,8 @@ class KeyValueStorage(object):
         returns:
         boolean value
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def set_ttl(self, key, ttl):
         """
         Set auto expiration timeout in seconds.
@@ -197,8 +200,8 @@ class KeyValueStorage(object):
                (please note that update actions may reset the timer to zero
                which means you have to set_ttl again)
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_ttl(self, key):
         """
         Return number of seconds of item's TTL or -1 if it's not set
@@ -206,16 +209,16 @@ class KeyValueStorage(object):
         arguments:
         key -- data access key
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def clear_ttl(self, key):
         """
         Make the record persistent again.
 
         key -- data access key
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def fork(self):
         """
         Return a new instance of the plug-in with the same connection
@@ -225,7 +228,6 @@ class KeyValueStorage(object):
         for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used,
         it is never called).
         """
-        raise NotImplementedError()
 
     def get_instance(self, plugin_id):
         """

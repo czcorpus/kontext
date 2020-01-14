@@ -10,18 +10,20 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import abc
+
 """
 All the application_bar plug-in implementations should inherit from AbstractApplicationBar
 """
 
 
-class AbstractApplicationBar(object):
+class AbstractApplicationBar(abc.ABC):
 
+    @abc.abstractmethod
     def get_fallback_content(self):
         """
         Returns an HTML content usable as a fallback replacement for the standard content
         """
-        raise NotImplementedError()
 
     def get_styles(self, plugin_api):
         """
@@ -50,6 +52,7 @@ class AbstractApplicationBar(object):
         """
         return None
 
+    @abc.abstractmethod
     def get_contents(self, plugin_api, return_url):
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
@@ -58,4 +61,3 @@ class AbstractApplicationBar(object):
         plugin_api -- a controller.PluginApi instance
         return_url -- a URL user returns to in case she uses some of he appbar's links/services
         """
-        raise NotImplementedError()

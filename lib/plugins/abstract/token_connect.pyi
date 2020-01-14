@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 from typing import Dict, Any, List, Tuple, Iterable
 
 from plugins.abstract import CorpusDependentPlugin
@@ -41,7 +42,7 @@ class Response(object):
     def to_dict(self) -> Dict[str, Any]: ...
 
 
-class AbstractBackend(object):
+class AbstractBackend(abc.ABC):
 
     _cache_path:str
 

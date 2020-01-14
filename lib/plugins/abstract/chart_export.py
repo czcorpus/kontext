@@ -12,23 +12,26 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import abc
+
 
 class UnknownFormatException(Exception):
     pass
 
 
-class AbstractChartExport(object):
+class AbstractChartExport(abc.ABC):
     """
     AbstractChartExport represents a single
     format export (e.g. PDF, Excel).
     """
 
+    @abc.abstractmethod
     def get_content_type(self):
         """
         return a content type identifier (e.g. 'application/json')
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_format_name(self):
         """
         Return a format identifier. It should be both
@@ -38,14 +41,14 @@ class AbstractChartExport(object):
         it may be necessary to modify some names to
         keep all the export functions available.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_suffix(self):
         """
         Return a proper file suffix (e.g. 'xlsx' for Excel).
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def export_pie_chart(self, data, title):
         """
         Generate a PIE chart based on passed data and title.
@@ -53,10 +56,9 @@ class AbstractChartExport(object):
         The method is expected to return raw file data ready
         to be downloaded by a client.
         """
-        raise NotImplementedError()
 
 
-class AbstractChartExportPlugin(object):
+class AbstractChartExportPlugin(abc.ABC):
     """
     AbstractChartExportPlugin represents plug-in itself
     which is expected to contain one or more implementations
@@ -71,6 +73,7 @@ class AbstractChartExportPlugin(object):
         """
         return []
 
+    @abc.abstractmethod
     def get_content_type(self, format):
         """
         Return a content type for a specified format
@@ -79,8 +82,8 @@ class AbstractChartExportPlugin(object):
         arguments:
         format -- format name (AbstractChartExport.get_format_name())
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_suffix(self, format):
         """
         Return a suffix for a specified format.
@@ -88,8 +91,8 @@ class AbstractChartExportPlugin(object):
         arguments:
         format -- format name (AbstractChartExport.get_format_name())
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def export_pie_chart(self, data, title, format):
         """
         Export PIE chart data to a PIE chart of
@@ -100,4 +103,3 @@ class AbstractChartExportPlugin(object):
         title -- chart label
         format -- format name (AbstractChartExport.get_format_name())
         """
-        raise NotImplementedError()

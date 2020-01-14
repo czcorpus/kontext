@@ -16,9 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 from typing import Dict, Optional, Tuple, Any
 
-class AbstractConcPersistence(object):
+class AbstractConcPersistence(abc.ABC):
 
     def is_valid_id(self, data_id:str) -> bool: ...
 

@@ -24,6 +24,7 @@ of AbstractCacheMappingFactory (i.e. not AbstractConcCache) because
 the instance of AbstractConcCache is request-dependent.
 """
 
+import abc
 import os
 import time
 import math
@@ -79,8 +80,9 @@ class CalcStatus(object):
         return self
 
 
-class AbstractConcCache(object):
+class AbstractConcCache(abc.ABC):
 
+    @abc.abstractmethod
     def get_stored_size(self, subchash, q):
         """
         Return stored concordance size.
@@ -91,11 +93,12 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_calc_status(self, subchash, query):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def refresh_map(self):
         """
         Test whether the data for a given corpus (the one this instance
@@ -108,8 +111,8 @@ class AbstractConcCache(object):
         handle 'missing initialization / invalid cache' situations
         themselves.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def cache_file_path(self, subchash, q):
         """
         Return a path to a cache file matching provided subcorpus hash and query
@@ -120,8 +123,8 @@ class AbstractConcCache(object):
         subchash -- hashed subcorpus identifier (corplib.CorpusManager does this)
         q -- a list of query items
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def add_to_map(self, subchash, query, size, calc_status=None):
         """
         Add or update a cache map entry
@@ -144,8 +147,8 @@ class AbstractConcCache(object):
             cache_file_path -- path to a respective cache file
             previous_status -- an instance of CalcStatus storing previous calc. state
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def del_entry(self, subchash, q):
         """
         Remove a specific entry with concrete subchash and query.
@@ -154,8 +157,8 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def del_full_entry(self, subchash, q):
         """
         Removes all the entries with the same base query no matter
@@ -165,27 +168,26 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
-        raise NotImplementedError()
 
 
-class AbstractCacheMappingFactory(object):
+class AbstractCacheMappingFactory(abc.ABC):
     """
     A factory which provides AbstractConcCache instances. Please note
     that your module's 'create_instance' should return this factory and
     not the cache itself.
     """
 
+    @abc.abstractmethod
     def get_mapping(self, corpus):
         """
         returns:
         an AbstractConcCache compatible instance
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def fork(self):
         """
         Create a new instance with forked db plug-in. This is
         used only in case 'multiprocessing' is defined for
         background/asynchronous tasks.
         """
-        raise NotImplementedError()

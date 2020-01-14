@@ -6,12 +6,16 @@ a compatible interface) it is recommended to extend these
 classes to keep the plug-in implementation clear and consistent.
 """
 
+import abc
 
-class CorpusDependentPlugin(object):
+
+class CorpusDependentPlugin(abc.ABC):
     """
     This class prescribes methods required by optional plug-ins which
     must remain inactive in case of some corpora.
     """
+
+    @abc.abstractmethod
     def is_enabled_for(self, plugin_api, corpname):
         """
         arguments:
@@ -20,7 +24,6 @@ class CorpusDependentPlugin(object):
         returns:
         True if plug-in supports corpus 'corpname' else False
         """
-        raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(plugin_api, corpname)')
 
 
 class PluginException(Exception):

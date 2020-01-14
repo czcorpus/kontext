@@ -12,11 +12,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import abc
 from translation import ugettext as _
 from controller.errors import CorpusForbiddenException, UserActionException
 
 
-class AbstractAuth(object):
+class AbstractAuth(abc.ABC):
     """
     Represents general authentication module.
     Custom implementations should inherit from this.
@@ -53,6 +54,7 @@ class AbstractAuth(object):
         """
         return False
 
+    @abc.abstractmethod
     def permitted_corpora(self, user_dict):
         """
         Return a dictionary containing corpora IDs user can access.
@@ -65,7 +67,6 @@ class AbstractAuth(object):
         returns:
         a dict corpus_id=>corpus_variant
         """
-        raise NotImplementedError()
 
     def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
         """
@@ -82,13 +83,13 @@ class AbstractAuth(object):
             # (e.g. no default accessible corpus for the current user)
             raise UserActionException('Cannot find any usable corpus for the user.')
 
+    @abc.abstractmethod
     def get_user_info(self, plugin_api):
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
         etc. are not expected/required to be included.
         """
-        raise NotImplementedError()
 
     def logout_hook(self, plugin_api):
         """
@@ -99,6 +100,7 @@ class AbstractAuth(object):
 
 class AbstractSemiInternalAuth(AbstractAuth):
 
+    @abc.abstractmethod
     def validate_user(self, plugin_api, username, password):
         """
         Tries to find a user with matching 'username' and 'password'.
@@ -115,7 +117,6 @@ class AbstractSemiInternalAuth(AbstractAuth):
         a dict {'id': ..., 'user': ..., 'fullname'} where 'user' means
         actually 'username'.
         """
-        raise NotImplementedError()
 
 
 class AbstractInternalAuth(AbstractSemiInternalAuth):
@@ -123,68 +124,72 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
     A general authentication running within KonText.
     """
 
+    @abc.abstractmethod
     def get_login_url(self, return_url=None):
         """
         Specifies where should KonText redirect a user in case
         he wants to log in. In general, it can be KonText's URL
         or a URL of some other authentication application.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_logout_url(self, return_url=None):
         """
         Specifies where should KonText redirect a user in case
         he wants to log out. In general, it can be KonText's URL
         or a URL of some other authentication application.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def update_user_password(self, user_id, password):
         """
         Changes a password of provided user.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def logout(self, session):
         """
         Logs-out current user (identified by passed session object).
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_required_password_properties(self):
         """
         Returns a text description of required password
         properties (e.g.: "at least 5 characters long, at least one digit)
         This should be consistent with validate_new_password().
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def validate_new_password(self, password):
         """
         Tests whether the provided password matches all the
         required properties. This should be consistent with
         get_required_password_properties().
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_required_username_properties(self, plugin_api):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def validate_new_username(self, plugin_api, username):
         """
         returns:
             a 2-tuple (availability, validity) (both bool)
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def sign_up_user(self, plugin_api, credentials):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def sign_up_confirm(self, plugin_api, key):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def get_form_props_from_token(self, key):
-        raise NotImplementedError()
+        pass
 
 
 class AbstractRemoteAuth(AbstractAuth):
@@ -192,6 +197,7 @@ class AbstractRemoteAuth(AbstractAuth):
     A general authentication based on an external authentication service.
     """
 
+    @abc.abstractmethod
     def revalidate(self, plugin_api):
         """
         Re-validates user authentication against external database with central
@@ -209,7 +215,6 @@ class AbstractRemoteAuth(AbstractAuth):
         arguments:
         plugin_api -- a controller.PluginApi instance
         """
-        raise NotImplementedError()
 
 
 class AuthException(Exception):

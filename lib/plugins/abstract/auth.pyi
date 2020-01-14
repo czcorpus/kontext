@@ -12,12 +12,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import abc
 from typing import Dict, Any, Optional, Tuple
 from controller.plg import PluginApi
 from werkzeug.contrib.sessions import Session
 
 
-class AbstractAuth(object):
+class AbstractAuth(abc.ABC):
 
     def __init__(self, anonymous_id): ...
 

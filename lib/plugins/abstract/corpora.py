@@ -37,6 +37,7 @@ tightly related to respective corpora registry (configuration)
 files.
 """
 
+import abc
 import json
 from functools import partial
 
@@ -212,7 +213,7 @@ class CorpInfoEncoder(json.JSONEncoder):
         return ans
 
 
-class AbstractCorporaArchive(object):
+class AbstractCorporaArchive(abc.ABC):
     """
     A template for the 'corparch' (the quite misleading name stays
     for historical reasons) plug-in.
@@ -221,6 +222,7 @@ class AbstractCorporaArchive(object):
     not defined in a KonText core independent way.
     """
 
+    @abc.abstractmethod
     def get_corpus_info(self, user_lang, corp_id):
         """
         Return a full available corpus information.
@@ -238,7 +240,6 @@ class AbstractCorporaArchive(object):
         {id, path, web, sentence_struct, tagset, speech_segment, bib_struct, citation_info,
         metadata} where metadata is a dict with keys {database, label_attr, id_attr, desc, keywords}.
         """
-        raise NotImplementedError()
 
     def mod_corplist_menu(self, plugin_api, menu_item):
         """
@@ -252,19 +253,20 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     An archive without server-side searching/filtering abilities
     """
 
+    @abc.abstractmethod
     def get_all(self, plugin_api):
         """
         Return all the available corpora (user credentials can be accessed
         via plugin_api).
         """
-        raise NotImplementedError()
 
 
-class CorplistProvider(object):
+class CorplistProvider(abc.ABC):
     """
     An object providing actual corpus list based on passed arguments.
     """
 
+    @abc.abstractmethod
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         """
         arguments:
@@ -274,7 +276,6 @@ class CorplistProvider(object):
         limit -- number of items to return
         filter_dict -- a dictionary containing additional search parameters
         """
-        raise NotImplementedError()
 
 
 class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
@@ -304,6 +305,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         return service.search(plugin_api=plugin_api, query=query, offset=offset, limit=limit,
                               filter_dict=filter_dict)
 
+    @abc.abstractmethod
     def create_corplist_provider(self, plugin_api):
         """
         A factory function for a configured search service
@@ -314,14 +316,13 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         returns:
         A CorplistProvider instance
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def initial_search_params(self, plugin_api, query, args):
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
         """
-        raise NotImplementedError()
 
     def custom_filter(self, plugin_api, corpus_list_item, permitted_corpora):
         """

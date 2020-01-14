@@ -16,12 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 from typing import Union, List, Dict
 
 Serializable = Union[int, float, str, bool, list, dict, None]
 
 
-class KeyValueStorage(object):
+class KeyValueStorage(abc.ABC):
 
     def rename(self, key:str, new_key:str) -> None: ...
 

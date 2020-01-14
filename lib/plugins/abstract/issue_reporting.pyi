@@ -16,7 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, Union, ClassVar, List, Callable
+import abc
+from typing import Dict, Any, List, Callable
 import kontext
 
 
@@ -39,7 +40,7 @@ class StaticReportingAction(IssueReportingAction):
     def __init__(self, url:str, args:str, label:Dict[str, str], blank_window:bool): ...
 
 
-class AbstractIssueReporting(object):
+class AbstractIssueReporting(abc.ABC):
 
     def export_report_action(self, plugin_api:kontext.PluginApi) -> Dict[Any, List[Callable[[Any], Any]]]: ...
 

@@ -29,8 +29,10 @@ fetchers as it should be much easier to accomplish than writing
 a new version of 'taghelper'.
 """
 
+import abc
 
-class AbstractValueSelectionFetcher(object):
+
+class AbstractValueSelectionFetcher(abc.ABC):
     """
     AbstractValueSelectionFetcher provides way how to
     obtain user tag value search query data from the
@@ -39,22 +41,22 @@ class AbstractValueSelectionFetcher(object):
     loader.
     """
 
+    @abc.abstractmethod
     def fetch(self, request):
         """
         fetch data from an HTTP request and encode
         using a custom data type
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def is_empty(self, val):
         """
         Test whether the 'val' (= fetched data)
         contains an empty query.
         """
-        raise NotImplementedError()
 
 
-class AbstractTagsetInfoLoader(object):
+class AbstractTagsetInfoLoader(abc.ABC):
     """
     AbstractTagsetInfoLoader wraps all the implementation
     details and concrete data format properties of
@@ -78,21 +80,22 @@ class AbstractTagsetInfoLoader(object):
     actual corpus contents.
     """
 
+    @abc.abstractmethod
     def is_enabled(self):
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_initial_values(self, lang):
         """
         Return all the possible properties of a respective tagset
         (i.e. all the positions/keys/whatever and their respective
         labels/descriptions/etc.).
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_variant(self, user_selection, lang):
         """
         Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
@@ -104,10 +107,9 @@ class AbstractTagsetInfoLoader(object):
         For key-value tagsets it works in the same way - just imagine K1=A, K2=A,
         K3=B instead of AAB, K1=A, K2=C, K3=D instead of ACD etc.
         """
-        raise NotImplementedError()
 
 
-class AbstractTaghelper(object):
+class AbstractTaghelper(abc.ABC):
     """
     !!! Please note that taghelper is not an instance of CorpusDependentPlugin
     even if it would sound reasonable. The reason is that e.g. in case of
@@ -118,6 +120,7 @@ class AbstractTaghelper(object):
     use tags_enabled_for method).
     """
 
+    @abc.abstractmethod
     def tags_enabled_for(self, corpus_id):
         """
         Test whether tag variant data exist for a specified
@@ -126,16 +129,15 @@ class AbstractTaghelper(object):
         arguments:
         corpus_id -- a corpus identifier
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def loader(self, corpus_name, tagset_name):
         """
         Return a loader for the corpus_name
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def fetcher(self, corpus_name, tagset_name):
         """
         Return a fetcher for the corpus_name
         """
-        raise NotImplementedError()

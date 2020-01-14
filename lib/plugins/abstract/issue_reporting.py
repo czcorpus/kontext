@@ -16,6 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
+
 
 class IssueReportingAction(object):
 
@@ -39,10 +41,12 @@ class StaticReportingAction(IssueReportingAction):
         self.type = 'static'
 
 
-class AbstractIssueReporting(object):
+class AbstractIssueReporting(abc.ABC):
 
+    @abc.abstractmethod
     def export_report_action(self, plugin_api):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def submit(self, plugin_api, args):
-        raise NotImplementedError()
+        pass
