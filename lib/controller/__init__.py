@@ -29,7 +29,6 @@ import imp
 from urllib.parse import unquote, quote
 import json
 import logging
-import io
 import inspect
 import time
 import re

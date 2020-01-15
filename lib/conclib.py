@@ -19,10 +19,6 @@ import os
 import sys
 import time
 import logging
-try:
-    import pickle as pickle
-except ImportError:
-    import pickle
 
 import manatee
 import settings

@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 
 import settings
-import plugins
 from texttypes import get_tt
 
 

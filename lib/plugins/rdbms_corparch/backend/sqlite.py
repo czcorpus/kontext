@@ -17,10 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import sqlite3
-import time
-import logging
 
-from plugins.rdbms_corparch.backend import DatabaseBackend
+from . import DatabaseBackend
 
 
 class Backend(DatabaseBackend):

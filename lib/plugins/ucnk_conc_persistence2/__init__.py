@@ -53,9 +53,10 @@ import logging
 
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
-from plugins.ucnk_conc_persistence2.archive import Archiver
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
+
+from .archive import Archiver
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \

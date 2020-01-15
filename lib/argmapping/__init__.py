@@ -10,10 +10,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import inspect
-
-from werkzeug.datastructures import MultiDict
-
 
 class Parameter(object):
     """

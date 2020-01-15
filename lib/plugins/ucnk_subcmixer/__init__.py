@@ -23,12 +23,13 @@ from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
 import plugins
 from plugins.abstract import PluginException
-from .category_tree import CategoryTree, CategoryExpression
-from .metadata_model import MetadataModel
 from controller import exposed
 import actions.subcorpus
-from .database import Database
 import corplib
+
+from .database import Database
+from .category_tree import CategoryTree, CategoryExpression
+from .metadata_model import MetadataModel
 
 
 @exposed(return_type='json', access_level=1, http_method='POST')

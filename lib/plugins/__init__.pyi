@@ -26,7 +26,7 @@ from .abstract.issue_reporting import AbstractIssueReporting
 from .abstract.dispatch_hook import AbstractDispatchHook
 from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
-from ..controller.plg import PluginApi
+from controller.plg import PluginApi
 
 T = TypeVar('T')
 

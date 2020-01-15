@@ -28,9 +28,9 @@ import plugins
 from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
                                       TokenConnect, KwicConnect, DictLike, TagsetInfo)
 import l10n
-from plugins.rdbms_corparch.backend import ManateeCorpora
-from plugins.rdbms_corparch.backend.sqlite import Backend
-from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
+from .backend import ManateeCorpora
+from .backend.sqlite import Backend
+from .registry import RegModelSerializer, RegistryConf
 
 try:
     from markdown import markdown

@@ -25,7 +25,6 @@ import logging
 from controller.kontext import Kontext
 import corplib
 import plugins
-import l10n
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               FirstHitsFilterFormArgs, build_conc_form_args)
 from translation import ugettext as translate

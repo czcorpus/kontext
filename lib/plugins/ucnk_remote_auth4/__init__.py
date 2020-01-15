@@ -37,7 +37,8 @@ import logging
 import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins import inject
-from plugins.ucnk_remote_auth4.backend.mysql import Backend, MySQLConf
+
+from .backend.mysql import Backend, MySQLConf
 
 
 IMPLICIT_CORPUS = 'susanne'

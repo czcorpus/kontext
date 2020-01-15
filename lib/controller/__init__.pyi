@@ -17,8 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Dict, List, Tuple, Callable, Any, Union, Optional
+import http.cookies
 from argmapping import Args, Parameter
-import Cookie
 import werkzeug.wrappers
 import jinja2
 
@@ -34,7 +34,7 @@ def convert_types(args:Dict[str, Any], defaults:Dict[str, Any], del_nondef:Optio
 def get_traceback() -> List[str]: ...
 
 
-class KonTextCookie(Cookie.BaseCookie): ...
+class KonTextCookie(http.cookies.BaseCookie): ...
 
 class UserActionException(Exception): ...
 

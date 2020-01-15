@@ -20,7 +20,6 @@ import abc
 from typing import Dict, Any, List, Tuple, Iterable
 
 from plugins.abstract import CorpusDependentPlugin
-import kontext
 import manatee
 
 

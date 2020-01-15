@@ -19,7 +19,7 @@
 from typing import List, Any, Tuple, Dict, Optional
 
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
-from plugins.rdbms_corparch.backend.input import InstallJson
+from .input import InstallJson
 
 
 class ManateeCorpora(object):

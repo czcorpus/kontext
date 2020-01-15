@@ -18,7 +18,6 @@
 
 import abc
 from typing import Dict, Any, List, Callable
-import kontext
 
 
 class IssueReportingAction(object):
