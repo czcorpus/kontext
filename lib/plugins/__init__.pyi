@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Any, List, Iterator, Callable, Optional
+from typing import TypeVar, Generic, Any, List, Iterator, Callable
 from types import ModuleType
 import werkzeug.contrib.sessions
 
@@ -32,7 +32,7 @@ T = TypeVar('T')
 
 class _ID(Generic[T]):
 
-    def __init__(self, ident:str, optional:Optional[bool]) -> None: ...
+    def __init__(self, ident:str, optional:bool = False) -> None: ...
 
     @property
     def instance(self) -> T: ...
@@ -94,7 +94,7 @@ runtime:_Names
 
 def install_plugin(name, module, config) -> None: ...
 
-def inject_plugin(name:str, obj:object) -> None: ...
+def inject_plugin(ident:str, obj:object) -> None: ...
 
 def add_missing_plugin(name:str) -> None: ...
 

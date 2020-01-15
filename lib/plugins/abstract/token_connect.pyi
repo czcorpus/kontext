@@ -19,6 +19,7 @@
 import abc
 from typing import Dict, Any, List, Tuple, Iterable
 
+from controller.plg import PluginApi
 from plugins.abstract import CorpusDependentPlugin
 import manatee
 
@@ -36,7 +37,7 @@ class Response(object):
     note:str
 
     def __init__(self, contents:str, renderer:str, status:bool, heading:str, note:str,
-                 is_kwic_view:bool): ...
+                 is_kwic_view:bool) -> None: ...
 
     def to_dict(self) -> Dict[str, Any]: ...
 
@@ -78,7 +79,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
 
     def get_required_structattrs(self) -> List[str]: ...
 
-    def is_enabled_for(self, plugin_api:kontext.PluginApi, corpname:str) -> bool: ...
+    def is_enabled_for(self, plugin_api:PluginApi, corpname:str) -> bool: ...
 
 
 def find_implementation(path:str) -> Any: ...

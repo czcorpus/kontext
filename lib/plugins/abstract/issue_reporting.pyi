@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from controller.plg import PluginApi
 from typing import Dict, Any, List, Callable
 
 
@@ -36,11 +37,11 @@ class StaticReportingAction(IssueReportingAction):
     blank_window:bool
     type:str
 
-    def __init__(self, url:str, args:str, label:Dict[str, str], blank_window:bool): ...
+    def __init__(self, url:str, args:str, label:Dict[str, str], blank_window:bool) -> None: ...
 
 
 class AbstractIssueReporting(abc.ABC):
 
-    def export_report_action(self, plugin_api:kontext.PluginApi) -> Dict[Any, List[Callable[[Any], Any]]]: ...
+    def export_report_action(self, plugin_api:PluginApi) -> Dict[Any, List[Callable[[Any], Any]]]: ...
 
-    def submit(self, plugin_api:kontext.PluginApi, args:Dict[str, str]): ...
+    def submit(self, plugin_api:PluginApi, args:Dict[str, str]): ...
