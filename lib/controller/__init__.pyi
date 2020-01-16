@@ -23,7 +23,7 @@ import werkzeug.wrappers
 import jinja2
 
 
-def exposed(access_level:int = 0, template:Optional[str] = None, vars:Optional[Tuple[str]] = (), page_model:Optional[str] = None,
+def exposed(access_level:int = 0, template:Optional[str] = None, vars:Tuple = (), page_model:Optional[str] = None,
             func_arg_mapped:bool = False, skip_corpus_init:bool = False, mutates_conc:bool = False, http_method:Union[Optional[str], Tuple[str,...]] = 'GET',
             accept_kwargs:bool = False, apply_semi_persist_args:bool = False, return_type:str = 'template') -> Callable[..., Any]: ...
 
