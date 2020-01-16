@@ -12,6 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import Dict, Any, List, Tuple
 import re
 import logging
 
@@ -29,11 +30,11 @@ class ConcFormArgs(object):
     to the client-side).
     """
 
-    def __init__(self, persist):
+    def __init__(self, persist: bool) -> None:
         self._persistent = persist
         self._op_key = '__new__'
 
-    def updated(self, attrs, op_key):
+    def updated(self, attrs: Dict[str, Any], op_key: str) -> 'ConcFormArgs':
         """
         Return an updated self object
         (the same instance). There must
@@ -44,19 +45,19 @@ class ConcFormArgs(object):
         can be used to update an 'unbound'
         instance.
         """
-        for k, v in list(attrs.items()):
+        for k, v in attrs.items():
             if k in vars(self):
                 setattr(self, k, v)
         self._op_key = op_key
         return self
 
-    def to_dict(self):
-        tmp = dict((k, v) for k, v in list(self.__dict__.items()) if not k.startswith('_'))
+    def to_dict(self) -> Dict[str, Any]:
+        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
         if not self.is_persistent:
             tmp['op_key'] = self._op_key
         return tmp
 
-    def serialize(self):
+    def serialize(self) -> Dict[str, Any]:
         """
         Export data required to be saved. In case there
         are some corpus-dependent and fixed data (e.g. list of PoS),
@@ -67,11 +68,11 @@ class ConcFormArgs(object):
         return self.to_dict()
 
     @property
-    def is_persistent(self):
+    def is_persistent(self) -> bool:
         return self._persistent
 
     @property
-    def op_key(self):
+    def op_key(self) -> str:
         """
         op_key property has a special status as
         it is kept separate from other attributes
@@ -95,9 +96,9 @@ class LgroupOpArgs(ConcFormArgs):
     operations).
     """
 
-    def __init__(self, persist):
-        super(LgroupOpArgs, self).__init__(persist)
-        self.form_type = 'lgroup'
+    def __init__(self, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'lgroup'
 
 
 class LockedOpFormsArgs(ConcFormArgs):
@@ -111,9 +112,9 @@ class LockedOpFormsArgs(ConcFormArgs):
     do not bother with storing the arguments.
     """
 
-    def __init__(self, persist):
-        super(LockedOpFormsArgs, self).__init__(persist)
-        self.form_type = 'locked'
+    def __init__(self, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'locked'
 
 
 class QueryFormArgs(ConcFormArgs):
@@ -127,26 +128,30 @@ class QueryFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
 
-    def __init__(self, corpora, persist):
-        super(QueryFormArgs, self).__init__(persist)
-        self.form_type = 'query'
-        self.curr_query_types = dict((c, None) for c in corpora)
-        self.curr_queries = dict((c, None) for c in corpora)
-        self.curr_pcq_pos_neg_values = dict((c, None) for c in corpora)
-        self.curr_include_empty_values = dict((c, None) for c in corpora)
-        self.curr_lpos_values = dict((c, None) for c in corpora)
-        self.curr_qmcase_values = dict((c, None) for c in corpora)
-        self.curr_default_attr_values = dict((c, None) for c in corpora)
-        self.tag_builder_support = dict((c, None) for c in corpora)
-        self.tagset_docs = dict((c, None) for c in corpora)
-        self.has_lemma = dict((c, False) for c in corpora)
-        self.selected_text_types = {}
+    def __init__(self, corpora: List[str], persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'query'
+
+        empty_dict: Dict[str, Any] = {c: None for c in corpora}
+        self.curr_query_types = empty_dict.copy()
+        self.curr_queries = empty_dict.copy()
+        self.curr_pcq_pos_neg_values = empty_dict.copy()
+        self.curr_include_empty_values = empty_dict.copy()
+        self.curr_lpos_values = empty_dict.copy()
+        self.curr_qmcase_values = empty_dict.copy()
+        self.curr_default_attr_values = empty_dict.copy()
+        self.tag_builder_support = empty_dict.copy()
+        self.tagset_docs = empty_dict.copy()
+        self.has_lemma = empty_dict.copy()
+
+        self.selected_text_types: Dict[str, str] = {}
         # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
-        self.bib_mapping = {}
+        self.bib_mapping: Dict[str, str] = {}
+
         for corp in corpora:
             self._add_corpus_metadata(corp)
 
-    def _add_corpus_metadata(self, corpus_id):
+    def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.TAGHELPER as th:
             self.tag_builder_support[corpus_id] = th.tags_enabled_for(corpus_id)
 
@@ -155,8 +160,8 @@ class QueryFormArgs(ConcFormArgs):
             self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.tagset_docs[corpus_id] = corp_info.manatee.tagset_doc
 
-    def serialize(self):
-        ans = super(QueryFormArgs, self).to_dict()
+    def serialize(self) -> Dict[str, Any]:
+        ans = super().to_dict()
         del ans['has_lemma']
         del ans['tagset_docs']
         del ans['tag_builder_support']
@@ -173,22 +178,22 @@ class FilterFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
 
-    def __init__(self, maincorp, persist):
-        super(FilterFormArgs, self).__init__(persist)
-        self.form_type = 'filter'
-        self.query_type = 'iquery'
-        self.query = ''
-        self.maincorp = maincorp
-        self.pnfilter = 'p'
-        self.filfl = 'f'
-        self.filfpos = '-5'
-        self.filtpos = '5'
-        self.inclkwic = True
-        self.qmcase = False
-        self.default_attr = 'word'
-        self.has_lemma = False
-        self.tagset_doc = ''
-        self.tag_builder_support = False
+    def __init__(self, maincorp: str, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'filter'
+        self.query_type: str = 'iquery'
+        self.query: str = ''
+        self.maincorp: str = maincorp
+        self.pnfilter: str = 'p'
+        self.filfl: str = 'f'
+        self.filfpos: str = '-5'
+        self.filtpos: str = '5'
+        self.inclkwic: bool = True
+        self.qmcase: bool = False
+        self.default_attr: str = 'word'
+        self.has_lemma: bool = False
+        self.tagset_doc: str = ''
+        self.tag_builder_support: bool = False
         self._add_corpus_metadata()
 
     def _add_corpus_metadata(self):
@@ -211,82 +216,82 @@ class SortFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
 
-    def __init__(self, persist):
+    def __init__(self, persist: bool) -> None:
         """
         args:
             persist -- specify whether the object should be stored
                        to disk when the current action is finished
         """
-        super(SortFormArgs, self).__init__(persist)
-        self.form_type = 'sort'
-        self.form_action = 'sortx'
-        self.sattr = ''
-        self.skey = 'kw'
-        self.spos = 3  # number of tokens to sort
-        self.sicase = ''
-        self.sbward = ''
-        self.sortlevel = 1
-        self.ml1attr = ''
-        self.ml2attr = ''
-        self.ml3attr = ''
-        self.ml4attr = ''
-        self.ml1icase = ''
-        self.ml2icase = ''
-        self.ml3icase = ''
-        self.ml4icase = ''
-        self.ml1bward = ''
-        self.ml2bward = ''
-        self.ml3bward = ''
-        self.ml4bward = ''
-        self.ml1pos = 1
-        self.ml2pos = 1
-        self.ml3pos = 1
-        self.ml4pos = 1
-        self.ml1ctx = '0~0>0'
-        self.ml2ctx = '0~0>0'
-        self.ml3ctx = '0~0>0'
-        self.ml4ctx = '0~0>0'
+        super().__init__(persist)
+        self.form_type: str = 'sort'
+        self.form_action: str = 'sortx'
+        self.sattr: str = ''
+        self.skey: str = 'kw'
+        self.spos: int = 3  # number of tokens to sort
+        self.sicase: str = ''
+        self.sbward: str = ''
+        self.sortlevel: int = 1
+        self.ml1attr: str = ''
+        self.ml2attr: str = ''
+        self.ml3attr: str = ''
+        self.ml4attr: str = ''
+        self.ml1icase: str = ''
+        self.ml2icase: str = ''
+        self.ml3icase: str = ''
+        self.ml4icase: str = ''
+        self.ml1bward: str = ''
+        self.ml2bward: str = ''
+        self.ml3bward: str = ''
+        self.ml4bward: str = ''
+        self.ml1pos: int = 1
+        self.ml2pos: int = 1
+        self.ml3pos: int = 1
+        self.ml4pos: int = 1
+        self.ml1ctx: str = '0~0>0'
+        self.ml2ctx: str = '0~0>0'
+        self.ml3ctx: str = '0~0>0'
+        self.ml4ctx: str = '0~0>0'
 
 
 class SampleFormArgs(ConcFormArgs):
 
-    def __init__(self, persist):
-        super(SampleFormArgs, self).__init__(persist)
-        self.form_type = 'sample'
-        self.rlines = '250'
+    def __init__(self, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'sample'
+        self.rlines: str = '250'
 
 
 class ShuffleFormArgs(ConcFormArgs):
 
-    def __init__(self, persist):
-        super(ShuffleFormArgs, self).__init__(persist)
-        self.form_type = 'shuffle'
+    def __init__(self, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'shuffle'
 
 
 class SubHitsFilterFormArgs(ConcFormArgs):
 
-    def __init__(self, persist):
-        super(SubHitsFilterFormArgs, self).__init__(persist)
-        self.form_type = 'subhits'
+    def __init__(self, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'subhits'
 
 
 class FirstHitsFilterFormArgs(ConcFormArgs):
 
-    def __init__(self, persist, doc_struct):
-        super(FirstHitsFilterFormArgs, self).__init__(persist)
-        self.doc_struct = doc_struct
-        self.form_type = 'firsthits'
+    def __init__(self, persist: bool, doc_struct: str) -> None:
+        super().__init__(persist)
+        self.doc_struct: str = doc_struct
+        self.form_type: str = 'firsthits'
 
 
 class KwicSwitchArgs(ConcFormArgs):
 
-    def __init__(self, maincorp, persist):
-        super(KwicSwitchArgs, self).__init__(persist)
-        self.form_type = 'switchmc'
-        self.maincorp = maincorp
+    def __init__(self, maincorp: str, persist: bool) -> None:
+        super().__init__(persist)
+        self.form_type: str = 'switchmc'
+        self.maincorp: str = maincorp
 
 
-def build_conc_form_args(corpora, data, op_key):
+def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:
     """
     A factory method to create a conc form args
     instance based on deserialized data from
@@ -314,28 +319,28 @@ def build_conc_form_args(corpora, data, op_key):
     elif tp == 'firsthits':
         return FirstHitsFilterFormArgs(persist=False, doc_struct=data['doc_struct']).updated(data, op_key)
     else:
-        raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
+        raise ValueError(f'Cannot determine stored conc args class from type {tp}')
 
 
 class QuickFilterArgsConv(object):
 
-    def __init__(self, args):
+    def __init__(self, args) -> None:  # TODO args type ???
         self.args = args
 
     @staticmethod
-    def _parse(q):
+    def _parse(q: str) -> Tuple[str, ...]:
         srch = re.search(r'^([pPnN])(-?\d)([<>]\d)?\s(-?\d)([<>]\d)?\s(\d+)\s(.*)', q)
         if srch:
             return tuple(x.strip() if x is not None else x for x in srch.groups())
         else:
-            logging.getLogger(__name__).warning('Failed to parse quick filter query: %s' % (q,))
+            logging.getLogger(__name__).warning(f'Failed to parse quick filter query: {q}')
             return 'p', '', '', ''
 
     @staticmethod
-    def _incl_kwic(v):
+    def _incl_kwic(v: str) -> bool:
         return True if v in ('n', 'p') else False
 
-    def __call__(self, query):
+    def __call__(self, query: str) -> FilterFormArgs:
         elms = self._parse(query)
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
@@ -358,11 +363,11 @@ class ContextFilterArgsConv(object):
     form arguments into the regular filter ones.
     """
 
-    def __init__(self, args):
+    def __init__(self, args) -> None:  # TODO args type ???
         self.args = args
 
     @staticmethod
-    def _convert_query(attrname, items, fctxtype):
+    def _convert_query(attrname: str, items: List[str], fctxtype: str) -> str:
         if fctxtype == 'any':
             return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
         elif fctxtype == 'all':
@@ -373,8 +378,9 @@ class ContextFilterArgsConv(object):
             return '[{0}="{1}"]'.format(attrname, items[0])
         elif fctxtype == 'none':
             return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
+        raise ValueError(f'Unknown type fctxtype = {fctxtype}')
 
-    def __call__(self, attrname, items, ctx, fctxtype):
+    def __call__(self, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:  # TODO ctx type
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
         ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
