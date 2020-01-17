@@ -37,11 +37,12 @@ tightly related to respective corpora registry (configuration)
 files.
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 import abc
 import json
 from functools import partial
-from controller.plg import PluginApi
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 
 import l10n
 
@@ -255,7 +256,7 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     """
 
     @abc.abstractmethod
-    def get_all(self, plugin_api: PluginApi):
+    def get_all(self, plugin_api: 'PluginApi'):
         """
         Return all the available corpora (user credentials can be accessed
         via plugin_api).
@@ -268,7 +269,7 @@ class CorplistProvider(abc.ABC):
     """
 
     @abc.abstractmethod
-    def search(self, plugin_api: PluginApi, query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None) -> Any:
+    def search(self, plugin_api: 'PluginApi', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None) -> Any:
         """
         arguments:
         plugin_api --
@@ -284,7 +285,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, plugin_api: PluginApi, query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None):
+    def search(self, plugin_api: 'PluginApi', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None):
         """
         Returns a subset of corplist matching provided query.
 
@@ -307,7 +308,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
                               filter_dict=filter_dict)
 
     @abc.abstractmethod
-    def create_corplist_provider(self, plugin_api: PluginApi) -> CorplistProvider:
+    def create_corplist_provider(self, plugin_api: 'PluginApi') -> CorplistProvider:
         """
         A factory function for a configured search service
 
@@ -319,13 +320,13 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
 
     @abc.abstractmethod
-    def initial_search_params(self, plugin_api: PluginApi, query: str, args: Any) -> Dict[str, Any]:
+    def initial_search_params(self, plugin_api: 'PluginApi', query: str, args: Any) -> Dict[str, Any]:
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
         """
 
-    def custom_filter(self, plugin_api: PluginApi, corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
+    def custom_filter(self, plugin_api: 'PluginApi', corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
         """
         An optional custom filter to exclude specific items from results.
 

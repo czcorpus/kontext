@@ -50,11 +50,13 @@ import settings
 from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
 from plugins.abstract.auth import AbstractAuth
-from controller.plg import PluginApi
-from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
+from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException, ImmediateRedirectException)
 
-from typing import Dict, List, Tuple, Callable, Any, Union, Optional, cast
+from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from .plg import PluginApi
+
 import http.cookies
 import werkzeug.wrappers
 

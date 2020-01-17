@@ -25,11 +25,9 @@ from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from controller import Controller, convert_types, exposed
-from controller.errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException,
-                               NotFoundException)
+from . import Controller, convert_types, exposed
+from .errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException, NotFoundException)
 import plugins
-import plugins.abstract
 from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
@@ -40,7 +38,7 @@ import scheduled
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
-from controller.plg import PluginApi
+from .plg import PluginApi
 from templating import DummyGlobals
 from collections import defaultdict
 
@@ -334,9 +332,10 @@ class Kontext(Controller):
                 'corpora', 'users_subcpath'), str(user_id)))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
-    def _user_has_persistent_settings(self) -> bool:
-        sstorage = plugins.runtime.SETTINGS_STORAGE
-        return self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')() and not self.user_is_anonymous()
+    # missing return statement type check error
+    def _user_has_persistent_settings(self) -> bool:  # type: ignore
+        with plugins.runtime.SETTINGS_STORAGE as sstorage:
+            return self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')() and not self.user_is_anonymous()
 
     def get_current_aligned_corpora(self) -> List[str]:
         return [getattr(self.args, 'corpname')] + getattr(self.args, 'align')

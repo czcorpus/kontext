@@ -17,14 +17,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Optional
-from controller.plg import PluginApi
+from typing import Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 
 
 class AbstractFootbar(abc.ABC):
 
     @abc.abstractmethod
-    def get_contents(self, plugin_api: PluginApi, return_url: Optional[str] = None):
+    def get_contents(self, plugin_api: 'PluginApi', return_url: Optional[str] = None):
         """
         arguments:
         plugin_api -- an instance of kontext.PluginApi

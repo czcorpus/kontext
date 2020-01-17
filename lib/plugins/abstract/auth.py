@@ -16,8 +16,9 @@ import abc
 from translation import ugettext as _
 from controller.errors import CorpusForbiddenException, UserActionException
 
-from typing import Dict, Any, Optional, Tuple
-from controller.plg import PluginApi
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 from werkzeug.contrib.sessions import Session
 
 
@@ -72,7 +73,7 @@ class AbstractAuth(abc.ABC):
         a dict corpus_id=>corpus_variant
         """
 
-    def on_forbidden_corpus(self, plugin_api: PluginApi, corpname: str, corp_variant: str):
+    def on_forbidden_corpus(self, plugin_api: 'PluginApi', corpname: str, corp_variant: str):
         """
         Optional method run in case KonText finds out that user
         does not have access rights to a corpus specified by 'corpname'.
@@ -88,14 +89,14 @@ class AbstractAuth(abc.ABC):
             raise UserActionException('Cannot find any usable corpus for the user.')
 
     @abc.abstractmethod
-    def get_user_info(self, plugin_api: PluginApi) -> Dict[str, Any]:
+    def get_user_info(self, plugin_api: 'PluginApi') -> Dict[str, Any]:
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
         etc. are not expected/required to be included.
         """
 
-    def logout_hook(self, plugin_api: PluginApi):
+    def logout_hook(self, plugin_api: 'PluginApi'):
         """
         An action performed after logout process finishes
         """
@@ -105,7 +106,7 @@ class AbstractAuth(abc.ABC):
 class AbstractSemiInternalAuth(AbstractAuth):
 
     @abc.abstractmethod
-    def validate_user(self, plugin_api: PluginApi, username: str, password: str) -> Dict[str, Any]:
+    def validate_user(self, plugin_api: 'PluginApi', username: str, password: str) -> Dict[str, Any]:
         """
         Tries to find a user with matching 'username' and 'password'.
         If a match is found then proper credentials of the user are
@@ -173,22 +174,22 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def get_required_username_properties(self, plugin_api: PluginApi) -> str:
+    def get_required_username_properties(self, plugin_api: 'PluginApi') -> str:
         pass
 
     @abc.abstractmethod
-    def validate_new_username(self, plugin_api: PluginApi, username: str) -> Tuple[bool, bool]:
+    def validate_new_username(self, plugin_api: 'PluginApi', username: str) -> Tuple[bool, bool]:
         """
         returns:
             a 2-tuple (availability, validity) (both bool)
         """
 
     @abc.abstractmethod
-    def sign_up_user(self, plugin_api: PluginApi, credentials: Dict[str, Any]):
+    def sign_up_user(self, plugin_api: 'PluginApi', credentials: Dict[str, Any]):
         pass
 
     @abc.abstractmethod
-    def sign_up_confirm(self, plugin_api: PluginApi, key: str) -> bool:
+    def sign_up_confirm(self, plugin_api: 'PluginApi', key: str) -> bool:
         pass
 
     @abc.abstractmethod
@@ -202,7 +203,7 @@ class AbstractRemoteAuth(AbstractAuth):
     """
 
     @abc.abstractmethod
-    def revalidate(self, plugin_api: PluginApi):
+    def revalidate(self, plugin_api: 'PluginApi'):
         """
         Re-validates user authentication against external database with central
         authentication ticket (stored as a cookie) and session data.

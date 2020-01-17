@@ -17,8 +17,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from controller.plg import PluginApi
-from typing import Dict, Any, List, Callable
+from typing import Dict, Any, List, Callable, TYPE_CHECKING
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 
 
 class IssueReportingAction(object):
@@ -46,9 +47,9 @@ class StaticReportingAction(IssueReportingAction):
 class AbstractIssueReporting(abc.ABC):
 
     @abc.abstractmethod
-    def export_report_action(self, plugin_api: PluginApi) -> Dict[Any, List[Callable[[Any], Any]]]:
+    def export_report_action(self, plugin_api: 'PluginApi') -> Dict[Any, List[Callable[[Any], Any]]]:
         pass
 
     @abc.abstractmethod
-    def submit(self, plugin_api: PluginApi, args: Dict[str, str]):
+    def submit(self, plugin_api: 'PluginApi', args: Dict[str, str]):
         pass

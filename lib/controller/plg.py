@@ -15,9 +15,10 @@
 import settings
 from texttypes import get_tt
 
-from typing import Optional, Dict, Any, TypeVar
+from typing import Optional, Dict, Any, TypeVar, TYPE_CHECKING
+if TYPE_CHECKING:
+    from .kontext import Kontext
 from manatee import Corpus
-from .kontext import Kontext
 from . import KonTextCookie
 import werkzeug.contrib.sessions
 
@@ -26,8 +27,8 @@ T = TypeVar('T')
 
 class PluginApi(object):
 
-    def __init__(self, controller: Kontext, request: werkzeug.Request, cookies: KonTextCookie) -> None:
-        self._controller: Kontext = controller
+    def __init__(self, controller: 'Kontext', request: werkzeug.Request, cookies: KonTextCookie) -> None:
+        self._controller: 'Kontext' = controller
         self._request: werkzeug.Request = request
         self._cookies: KonTextCookie = cookies
         self._shared_data: Dict[str, Any] = {}

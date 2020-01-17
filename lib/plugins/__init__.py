@@ -16,14 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
-
-from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict
-from types import ModuleType
+from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING
 import werkzeug.contrib.sessions
 from .abstract.general_storage import KeyValueStorage
 from .abstract.settings_storage import AbstractSettingsStorage
-from .abstract.auth import AbstractAuth
 from .abstract.conc_persistence import AbstractConcPersistence
 from .abstract.conc_cache import AbstractCacheMappingFactory
 from .export import Loader
@@ -45,8 +41,14 @@ from .abstract.issue_reporting import AbstractIssueReporting
 from .abstract.dispatch_hook import AbstractDispatchHook
 from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
-from controller.plg import PluginApi
+if TYPE_CHECKING:
+    from .abstract.auth import AbstractAuth
+
 T = TypeVar('T')
+
+import logging
+from types import ModuleType
+from controller.plg import PluginApi
 
 _plugins: Dict[str, Any] = {}
 
@@ -133,7 +135,7 @@ class _Names(object):
     DB: _ID[KeyValueStorage] = _ID('db')
     SESSIONS: _ID[werkzeug.contrib.sessions.Session] = _ID('sessions')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
-    AUTH: _ID[AbstractAuth] = _ID('auth')
+    AUTH: _ID['AbstractAuth'] = _ID('auth')
     CONC_PERSISTENCE: _ID[AbstractConcPersistence] = _ID('conc_persistence')
     CONC_CACHE: _ID[AbstractCacheMappingFactory] = _ID('conc_cache')
     EXPORT: _ID[Loader] = _ID('export')

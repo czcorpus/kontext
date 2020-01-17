@@ -48,8 +48,9 @@ import importlib
 
 from plugins.abstract import CorpusDependentPlugin
 
-from typing import Dict, Any, List, Tuple, Iterable, Optional
-from controller.plg import PluginApi
+from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 import manatee
 
 
@@ -221,5 +222,5 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         """
         return []
 
-    def is_enabled_for(self, plugin_api: PluginApi, corpname: str) -> bool:
+    def is_enabled_for(self, plugin_api: 'PluginApi', corpname: str) -> bool:
         raise NotImplementedError()
