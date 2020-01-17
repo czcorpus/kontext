@@ -27,6 +27,8 @@ import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
 import { Action, SEDispatcher, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 
 /**
@@ -529,16 +531,13 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         return null;
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.QueryFormArgs>):RSVP.Promise<AjaxResponse.QueryFormArgs> {
-        return fn().then(
-            (data) => {
-                this.applyCheckedItems(data.selected_text_types, data.bib_mapping);
-                return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
-                    (resolve:(data)=>void, reject:(err)=>void) => {
-                        resolve(data);
-                    }
-                );
-            }
+    syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
+        return src.pipe(
+            tap(
+                (data) => {
+                    this.applyCheckedItems(data.selected_text_types, data.bib_mapping);
+                }
+            )
         );
     }
 

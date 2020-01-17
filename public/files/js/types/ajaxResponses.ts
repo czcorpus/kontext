@@ -192,7 +192,7 @@ export namespace AjaxResponse {
         sort:SortFormArgs;
         sample:SampleFormArgs;
         firsthits:FirstHitsFormArgs;
-        switchmc:{};
+        switchmc:SwitchMainCorpArgs;
     }
 
     export interface CorpusSwitchResponse extends Kontext.AjaxConcResponse {

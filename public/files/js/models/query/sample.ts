@@ -19,12 +19,13 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 export interface SampleFormProperties {
@@ -75,21 +76,28 @@ export class ConcSampleModel extends StatefulModel {
         });
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.SampleFormArgs>):RSVP.Promise<AjaxResponse.SampleFormArgs> {
-        return fn().then(
-            (data) => {
-                if (data.form_type === 'sample') {
-                    const filterId = data.op_key;
-                    this.rlinesValues = this.rlinesValues.set(data.op_key, data.rlines);
-                    return data;
-
-                } else if (data.form_type === 'locked') {
-                    return null;
-
-                } else {
-                    throw new Error('Cannot sync sample model - invalid form data type: ' + data.form_type);
+    syncFrom(src:Observable<AjaxResponse.SampleFormArgs>):Observable<AjaxResponse.SampleFormArgs> {
+        return src.pipe(
+            tap(
+                (data) => {
+                    if (data.form_type === 'sample') {
+                        this.rlinesValues = this.rlinesValues.set(data.op_key, data.rlines);
+                    }
                 }
-            }
+            ),
+            map(
+                (data) => {
+                    if (data.form_type === 'sample') {
+                        return data;
+
+                    } else if (data.form_type === 'locked') {
+                        return null;
+
+                    } else {
+                        throw new Error('Cannot sync sample model - invalid form data type: ' + data.form_type);
+                    }
+                }
+            )
         );
     }
 

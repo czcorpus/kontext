@@ -23,7 +23,6 @@
 import {Kontext, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import {TextTypesModel} from '../textTypes/main';
@@ -31,6 +30,8 @@ import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
 import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
 import { IFullActionControl } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { concatMap, tap, map } from 'rxjs/operators';
 
 
 export interface QueryFormUserEntries {
@@ -409,32 +410,40 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currPcqPosNegValues[item] || 'pos']));
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.QueryFormArgs>):RSVP.Promise<AjaxResponse.QueryFormArgs> {
-        return fn().then(
-            (data) => {
-                if (data.form_type === 'query') {
-                    this.setUserValues({
-                        currQueries: data.curr_queries,
-                        currQueryTypes: data.curr_query_types,
-                        currLposValues: data.curr_lpos_values,
-                        currDefaultAttrValues: data.curr_default_attr_values,
-                        currQmcaseValues: data.curr_qmcase_values,
-                        currPcqPosNegValues: data.curr_pcq_pos_neg_values,
-                        currIncludeEmptyValues: data.curr_include_empty_values
-                    });
-                    this.tagBuilderSupport = Immutable.Map<string, boolean>(data.tag_builder_support);
-                    this.hasLemma = Immutable.Map<string, boolean>(data.has_lemma);
-                    this.tagsetDocs = Immutable.Map<string, string>(data.tagset_docs);
-                    return data;
-
-                } else if (data.form_type === 'locked') {
-                    return null;
-
-                } else {
-                    throw new Error('Cannot sync query store - invalid form data type: ' + data.form_type);
+    syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
+        return src.pipe(
+            tap(
+                (data) => {
+                    if (data.form_type === 'query') {
+                        this.setUserValues({
+                            currQueries: data.curr_queries,
+                            currQueryTypes: data.curr_query_types,
+                            currLposValues: data.curr_lpos_values,
+                            currDefaultAttrValues: data.curr_default_attr_values,
+                            currQmcaseValues: data.curr_qmcase_values,
+                            currPcqPosNegValues: data.curr_pcq_pos_neg_values,
+                            currIncludeEmptyValues: data.curr_include_empty_values
+                        });
+                        this.tagBuilderSupport = Immutable.Map<string, boolean>(data.tag_builder_support);
+                        this.hasLemma = Immutable.Map<string, boolean>(data.has_lemma);
+                        this.tagsetDocs = Immutable.Map<string, string>(data.tagset_docs);
+                    }
                 }
-            }
-        );
+            ),
+            map(
+                (data) => {
+                    if (data.form_type === 'query') {
+                        return data;
+
+                    } else if (data.form_type === 'locked') {
+                        return null;
+
+                    } else {
+                        throw new Error('Cannot sync query store - invalid form data type: ' + data.form_type);
+                    }
+                }
+            )
+        )
     }
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {

@@ -26,6 +26,8 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 export interface SortFormProperties {
@@ -185,26 +187,34 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
         });
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.SortFormArgs>):RSVP.Promise<AjaxResponse.SortFormArgs> {
-        return fn().then(
-            (data) => {
-                if (data.form_type === 'sort') {
-                    const sortId = data.op_key;
-                    this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'sortx');
-                    this.sattrValues = this.sattrValues.set(sortId, data.sattr);
-                    this.skeyValues = this.skeyValues.set(sortId, data.skey);
-                    this.sposValues = this.sposValues.set(sortId, data.spos);
-                    this.sbwardValues = this.sbwardValues.set(sortId, data.sbward);
-                    this.sicaseValues = this.sicaseValues.set(sortId, data.sicase);
-                    return data;
-
-                } else if (data.form_type === 'locked') {
-                    return null;
-
-                } else {
-                    throw new Error('Cannot sync sort model - invalid form data type: ' + data.form_type);
+    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
+        return src.pipe(
+            tap(
+                (data) => {
+                    if (data.form_type === 'sort') {
+                        const sortId = data.op_key;
+                        this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'sortx');
+                        this.sattrValues = this.sattrValues.set(sortId, data.sattr);
+                        this.skeyValues = this.skeyValues.set(sortId, data.skey);
+                        this.sposValues = this.sposValues.set(sortId, data.spos);
+                        this.sbwardValues = this.sbwardValues.set(sortId, data.sbward);
+                        this.sicaseValues = this.sicaseValues.set(sortId, data.sicase);
+                    }
                 }
-            }
+            ),
+            map(
+                (data) => {
+                    if (data.form_type === 'sort') {
+                        return data;
+
+                    } else if (data.form_type === 'locked') {
+                        return null;
+
+                    } else {
+                        throw new Error('Cannot sync sort model - invalid form data type: ' + data.form_type);
+                    }
+                }
+            )
         );
     }
 
@@ -385,34 +395,42 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
         });
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.SortFormArgs>):RSVP.Promise<AjaxResponse.SortFormArgs> {
-        return fn().then(
-            (data) => {
-                if (data.form_type === 'sort') {
-                    const sortId = data.op_key;
-                    this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'mlsortx');
-                    this.sortlevelValues = this.sortlevelValues.set(sortId, data.sortlevel);
-                    this.mlxattrValues = this.mlxattrValues.set(sortId, Immutable.List<string>(
-                            importMultiLevelArg<string>('mlxattr', data, (n)=>this.availAttrList.get(0).n)));
-                    this.mlxicaseValues = this.mlxicaseValues.set(sortId, Immutable.List<string>(
-                            importMultiLevelArg<string>('mlxicase', data)));
-                    this.mlxbwardValues = this.mlxbwardValues.set(sortId, Immutable.List<string>(
-                            importMultiLevelArg<string>('mlxbward', data)));
+    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
+        return src.pipe(
+            tap(
+                (data) => {
+                    if (data.form_type === 'sort') {
+                        const sortId = data.op_key;
+                        this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'mlsortx');
+                        this.sortlevelValues = this.sortlevelValues.set(sortId, data.sortlevel);
+                        this.mlxattrValues = this.mlxattrValues.set(sortId, Immutable.List<string>(
+                                importMultiLevelArg<string>('mlxattr', data, (n)=>this.availAttrList.get(0).n)));
+                        this.mlxicaseValues = this.mlxicaseValues.set(sortId, Immutable.List<string>(
+                                importMultiLevelArg<string>('mlxicase', data)));
+                        this.mlxbwardValues = this.mlxbwardValues.set(sortId, Immutable.List<string>(
+                                importMultiLevelArg<string>('mlxbward', data)));
 
-                    const mlxctxTmp = importMultiLevelArg<string>('mlxctx', data);
-                    this.ctxIndexValues = this.ctxIndexValues.set(sortId,
-                            Immutable.List<number>(mlxctxTmp.map(item => this.decodeCtxValue(item))));
-                    this.ctxAlignValues = this.ctxAlignValues.set(sortId,
-                            Immutable.List<string>(mlxctxTmp.map(item => this.decodeCtxAlignValue(item))));
-                    return data;
-
-                } else if (data.form_type === 'locked') {
-                    return null;
-
-                } else {
-                    throw new Error('Cannot sync mlsort model - invalid form data type: ' + data.form_type);
+                        const mlxctxTmp = importMultiLevelArg<string>('mlxctx', data);
+                        this.ctxIndexValues = this.ctxIndexValues.set(sortId,
+                                Immutable.List<number>(mlxctxTmp.map(item => this.decodeCtxValue(item))));
+                        this.ctxAlignValues = this.ctxAlignValues.set(sortId,
+                                Immutable.List<string>(mlxctxTmp.map(item => this.decodeCtxAlignValue(item))));
+                    }
                 }
-            }
+            ),
+            map(
+                (data) => {
+                    if (data.form_type === 'sort') {
+                        return data;
+
+                    } else if (data.form_type === 'locked') {
+                        return null;
+
+                    } else {
+                        throw new Error('Cannot sync mlsort model - invalid form data type: ' + data.form_type);
+                    }
+                }
+            )
         );
     }
 

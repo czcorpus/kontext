@@ -21,6 +21,9 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import RSVP from 'rsvp';
+import { Action } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { KontextPage } from '../app/main';
 
 import {Kontext, TextTypes} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
@@ -67,10 +70,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { Action } from 'kombo';
-import { Observable } from 'rxjs';
-import { concatMap, tap, map } from 'rxjs/operators';
-import { KontextPage } from '../app/main';
+import { mergeMap } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -571,17 +571,13 @@ export class ViewPage {
             );
         });
 
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_FILTER',
-            (args:Kontext.GeneralProps) => {
+            (args:{}) => {
                 if (args['within'] === 1) {
                     this.layoutModel.replaceConcArg('maincorp', [args['maincorp']]);
                 }
-                return this.queryModels.filterModel.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.FilterFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(updateProps(this.concFormsInitialArgs.filter, args));
-                    });
-                });
+                return this.queryModels.filterModel.syncFrom(rxOf(updateProps(this.concFormsInitialArgs.filter, args)));
             }
         );
 
@@ -629,23 +625,18 @@ export class ViewPage {
             this.layoutModel,
             sortModelProps
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SORT',
-            (args:Kontext.GeneralProps) => {
-                return this.queryModels.sortModel.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(updateProps(this.concFormsInitialArgs.sort, args));
-                    });
-                }).then(
-                    () => {
-                        this.queryModels.multiLevelConcSortModel.syncFrom(() => {
-                            return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                                resolve(updateProps(this.concFormsInitialArgs.sort, args));
-                            });
-                        });
-                    }
-                );
-            }
+            (args:Kontext.GeneralProps) => this.queryModels.sortModel.syncFrom(
+                rxOf(updateProps(this.concFormsInitialArgs.sort, args))
+
+            ).pipe(
+                mergeMap(
+                    () => this.queryModels.multiLevelConcSortModel.syncFrom(
+                        rxOf(updateProps(this.concFormsInitialArgs.sort, args))
+                    )
+                )
+            )
         );
 
         this.sortFormViews = sortFormInit({
@@ -669,15 +660,11 @@ export class ViewPage {
             this.layoutModel,
             sampleModelProps
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SAMPLE',
-            (args:Kontext.GeneralProps) => {
-                return this.queryModels.sampleModel.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.SampleFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(updateProps(this.concFormsInitialArgs.sample, args));
-                    });
-                });
-            }
+            (args:Kontext.GeneralProps) => this.queryModels.sampleModel.syncFrom(
+                rxOf(updateProps(this.concFormsInitialArgs.sample, args))
+            )
         );
         this.miscQueryOpsViews = sampleFormInit(
             this.layoutModel.dispatcher,
@@ -701,14 +688,12 @@ export class ViewPage {
             switchMainCorpProps
         );
 
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SWITCHMC',
             (args:Kontext.GeneralProps) => {
-                return this.queryModels.switchMcModel.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.SwitchMainCorpArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(updateProps(this.concFormsInitialArgs.sample, args));
-                    });
-                });
+                return this.queryModels.switchMcModel.syncFrom(
+                    rxOf(updateProps(this.concFormsInitialArgs.switchmc, args))
+                )
             }
         );
     }
@@ -718,15 +703,11 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisitePromise(
+        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
-            (args:Kontext.GeneralProps) => {
-                return this.queryModels.firstHitsModel.syncFrom(() => {
-                    return new RSVP.Promise<AjaxResponse.FirstHitsFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(updateProps(this.concFormsInitialArgs.firsthits, args));
-                    });
-                });
-            }
+            (args:Kontext.GeneralProps) => this.queryModels.firstHitsModel.syncFrom(
+                rxOf(updateProps(this.concFormsInitialArgs.firsthits, args))
+            )
         );
     }
 

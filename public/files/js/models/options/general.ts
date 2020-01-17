@@ -25,6 +25,8 @@ import RSVP from 'rsvp';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
+import { tap, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 
 interface ViewOptsResponse extends Kontext.AjaxResponse {
@@ -201,25 +203,29 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         this.submitResponseHandlers = this.submitResponseHandlers.push(fn);
     }
 
-    loadData():RSVP.Promise<boolean> {
-        return this.layoutModel.ajax<ViewOptsResponse>(
+    loadData():Observable<boolean> {
+        return this.layoutModel.ajax$<ViewOptsResponse>(
             'GET',
             this.layoutModel.createActionUrl('options/viewopts'),
             {}
 
-        ).then(
-            (data) => {
-                this.pageSize = {value: `${data.pagesize}`, isInvalid: false, isRequired: true};
-                this.newCtxSize = {value: `${data.newctxsize}`, isInvalid: false, isRequired: true};
-                this.ctxUnit = data.ctxunit;
-                this.lineNumbers = !!data.line_numbers;
-                this.shuffle = !!data.shuffle;
-                this.wlpagesize = {value: `${data.wlpagesize}`, isInvalid: false, isRequired: true};
-                this.fmaxitems = {value: `${data.fmaxitems}`, isInvalid: false, isRequired: true};
-                this.citemsperpage = {value: `${data.citemsperpage}`, isInvalid: false, isRequired: true};
-                this.useCQLEditor = !!data.cql_editor;
-                return true;
-            }
+        ).pipe(
+            tap(
+                (data) => {
+                    this.pageSize = {value: `${data.pagesize}`, isInvalid: false, isRequired: true};
+                    this.newCtxSize = {value: `${data.newctxsize}`, isInvalid: false, isRequired: true};
+                    this.ctxUnit = data.ctxunit;
+                    this.lineNumbers = !!data.line_numbers;
+                    this.shuffle = !!data.shuffle;
+                    this.wlpagesize = {value: `${data.wlpagesize}`, isInvalid: false, isRequired: true};
+                    this.fmaxitems = {value: `${data.fmaxitems}`, isInvalid: false, isRequired: true};
+                    this.citemsperpage = {value: `${data.citemsperpage}`, isInvalid: false, isRequired: true};
+                    this.useCQLEditor = !!data.cql_editor;
+                }
+            ),
+            map(
+                data => true
+            )
         );
     }
 

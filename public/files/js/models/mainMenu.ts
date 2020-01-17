@@ -123,9 +123,6 @@ class MenuShortcutMapper implements Kontext.IMainMenuShortcutMapper {
     }
 }
 
-
-export type PromisePrerequisite = (args:Kontext.GeneralProps)=>RSVP.Promise<any>;
-
 export type ObservablePrerequisite = (args:Kontext.GeneralProps)=>Observable<any>;
 
 
@@ -279,26 +276,6 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
     resetActiveItemAndNotify():void {
         this.activeItem = null;
         this.emitChange();
-    }
-
-    /**
-     * @deprecated
-     */
-    addItemActionPrerequisitePromise(actionName:string, fn:PromisePrerequisite):ObservablePrerequisite {
-        const fnWrap:ObservablePrerequisite = (args:Kontext.GeneralProps) => new Observable((observer) => {
-            fn(args).then(
-                (data) => {
-                    observer.next(data);
-                    observer.complete();
-                }
-            ).catch(
-                (err) => {
-                    observer.error(err);
-                }
-            );
-        });
-        this.addItemActionPrerequisite(actionName, fnWrap);
-        return fnWrap;
     }
 
     /**
