@@ -15,72 +15,80 @@
 import settings
 from texttypes import get_tt
 
+from typing import Optional, Dict, Any, TypeVar
+from manatee import Corpus
+from .kontext import Kontext
+from . import KonTextCookie
+import werkzeug.contrib.sessions
+
+T = TypeVar('T')
+
 
 class PluginApi(object):
 
-    def __init__(self, controller, request, cookies):
-        self._controller = controller
-        self._request = request
-        self._cookies = cookies
-        self._shared_data = {}
+    def __init__(self, controller: Kontext, request: werkzeug.Request, cookies: KonTextCookie) -> None:
+        self._controller: Kontext = controller
+        self._request: werkzeug.Request = request
+        self._cookies: KonTextCookie = cookies
+        self._shared_data: Dict[str, Any] = {}
 
-    def set_shared(self, key, value):
+    def set_shared(self, key: str, value: Any):
         self._shared_data[key] = value
 
-    def get_shared(self, key, default=None):
+    def get_shared(self, key: str, default: Optional[T] = None) -> Any:
         return self._shared_data.get(key, default)
 
-    def get_from_environ(self, key, default=None):
+    def get_from_environ(self, key: str, default: Optional[str] = None) -> Optional[str]:
         """
         Return a WSGI environment variable
         """
         return self._controller.environ.get(key, default)
 
     @property
-    def request(self):
+    def request(self) -> werkzeug.Request:
         return self._request
 
     @property
-    def cookies(self):
+    def cookies(self) -> KonTextCookie:
         return self._cookies
 
     @property
-    def session(self):
+    def session(self) -> werkzeug.contrib.sessions.Session:
         return self._request.session
 
-    def refresh_session_id(self):
+    def refresh_session_id(self) -> None:
         return self._controller.refresh_session_id()
 
     @property
-    def user_lang(self):
+    def user_lang(self) -> str:
         return self._controller.ui_lang
 
     @property
-    def user_id(self):
+    def user_id(self) -> int:
         return self._request.session.get('user', {'id': None}).get('id')
 
     @property
-    def user_dict(self):
+    def user_dict(self) -> Dict[str, Any]:
         return self._request.session.get('user', {'id': None})
 
     @property
-    def user_is_anonymous(self):
+    def user_is_anonymous(self) -> bool:
         return self._controller.user_is_anonymous()
 
     @property
-    def current_corpus(self):
+    def current_corpus(self) -> Corpus:
         return self._controller.corp
 
     @property
     def aligned_corpora(self):
-        return self._controller.args.align
+        return getattr(self._controller.args, 'align')
 
     @property
-    def current_url(self):
+    def current_url(self) -> str:
         return self._controller.get_current_url()
 
     @property
-    def root_url(self):
+    def root_url(self) -> str:
         return self._controller.get_root_url()
 
     def create_url(self, action, params):
@@ -89,7 +97,7 @@ class PluginApi(object):
     def updated_current_url(self, args):
         return self._controller.updated_current_url(args)
 
-    def redirect(self, url, code=303):
+    def redirect(self, url: str, code: int = 303) -> None:
         return self._controller.redirect(url, code=code)
 
     def set_not_found(self):
@@ -99,7 +107,7 @@ class PluginApi(object):
         self._controller.add_system_message(msg_type, text)
 
     @property
-    def text_types(self):
+    def text_types(self) -> Dict:
         ans = {}
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')

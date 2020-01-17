@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from typing import Dict, Optional, Tuple, Any
 
 
 class AbstractConcPersistence(abc.ABC):
@@ -37,7 +38,7 @@ class AbstractConcPersistence(abc.ABC):
     """
 
     @abc.abstractmethod
-    def is_valid_id(self, data_id):
+    def is_valid_id(self, data_id: str) -> bool:
         """
         Return True if data_id is a valid data identifier else False
 
@@ -46,14 +47,14 @@ class AbstractConcPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_conc_ttl_days(self, user_id):
+    def get_conc_ttl_days(self, user_id: int) -> int:
         """
         Returns how many days a concordance link persist for
         a specified user (typically it is a registered vs. public user).
         """
 
     @abc.abstractmethod
-    def open(self, data_id):
+    def open(self, data_id: str) -> Dict:
         """
         Load operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -66,7 +67,7 @@ class AbstractConcPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def store(self, user_id, curr_data, prev_data=None):
+    def store(self, user_id: int, curr_data: Dict, prev_data: Optional[Dict] = None) -> str:
         """
         Store a current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
@@ -83,7 +84,7 @@ class AbstractConcPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def archive(self, user_id, conc_id, revoke=False):
+    def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
         """
         Make the concordance record persistent. For implementations which
         archive concordances automatically this can be just an empty
@@ -104,7 +105,7 @@ class AbstractConcPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def is_archived(self, conc_id):
+    def is_archived(self, conc_id: str) -> bool:
         """
         arguments:
             conc_id -- a concordance hash

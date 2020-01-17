@@ -19,16 +19,18 @@
 import json
 import re
 
+from typing import List, Dict, Any, IO, Optional
+
 
 class InstallJsonMetadata(object):
 
     def __init__(self):
-        self.database = None
-        self.label_attr = None
-        self.id_attr = None
-        self.desc = None
-        self.keywords = []
-        self.featured = False
+        self.database: Optional[str] = None
+        self.label_attr: Optional[str] = None
+        self.id_attr: Optional[str] = None
+        self.desc: Optional[int] = None
+        self.keywords: List[str] = []
+        self.featured: bool = False
 
     def update(self, data):
         for attr in list(self.__dict__.keys()):
@@ -41,9 +43,9 @@ class InstallJsonMetadata(object):
 class InstallJsonReference(object):
 
     def __init__(self):
-        self.default = None
-        self.articles = []
-        self.other_bibliography = None
+        self.default: Optional[str] = None
+        self.articles: List[str] = []
+        self.other_bibliography: Optional[str] = None
 
     def update(self, data):
         self.default = data.get('default', None)
@@ -61,23 +63,23 @@ class InstallJson(object):
     """
 
     def __init__(self):
-        self.ident = None
-        self.sentence_struct = None
-        self.tagset = None
-        self.web = None
-        self.collator_locale = None
-        self.speech_segment = None
-        self.speaker_id_attr = None
-        self.speech_overlap_attr = None
-        self.speech_overlap_val = None
-        self.use_safe_font = False
-        self.metadata = InstallJsonMetadata()
-        self.reference = InstallJsonReference()
-        self.token_connect = []
-        self.kwic_connect = []
+        self.ident: Optional[str] = None
+        self.sentence_struct: Optional[str] = None
+        self.tagset: Optional[str] = None
+        self.web: Optional[str] = None
+        self.collator_locale: Optional[str] = None
+        self.speech_segment: Optional[str] = None
+        self.speaker_id_attr: Optional[str] = None
+        self.speech_overlap_attr: Optional[str] = None
+        self.speech_overlap_val: Optional[str] = None
+        self.use_safe_font: bool = False
+        self.metadata: InstallJsonMetadata = InstallJsonMetadata()
+        self.reference: InstallJsonReference = InstallJsonReference()
+        self.token_connect: List[str] = []
+        self.kwic_connect: List[str] = []
 
     @staticmethod
-    def create_sorting_values(ident):
+    def create_sorting_values(ident: str):
         srch = re.match(r'(?i)^intercorp(_v(\d+))?_\w+$', ident)
         if srch:
             if srch.groups()[0]:
@@ -105,7 +107,7 @@ class InstallJson(object):
             else:
                 setattr(self, attr, data.get(attr, None))
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         ans = {}
         ans.update(self.__dict__)
         ans['group_name'], ans['version'] = self.create_sorting_values(self.ident)
@@ -115,13 +117,13 @@ class InstallJson(object):
         ans['reference'].update(self.reference.__dict__)
         return ans
 
-    def get_group_name(self):
+    def get_group_name(self) -> str:
         ans, _ = self.create_sorting_values(self.ident)
         return ans
 
-    def get_version(self):
+    def get_version(self) -> int:
         _, ans = self.create_sorting_values(self.ident)
         return ans
 
-    def write(self, fw):
+    def write(self, fw: IO[Any]):
         return json.dump(self.to_dict(), fw,  indent=4)

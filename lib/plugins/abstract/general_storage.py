@@ -17,6 +17,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from typing import Union, List, Dict
+
+Serializable = Union[int, float, str, bool, list, dict, None]
 
 
 class KeyValueStorage(abc.ABC):
@@ -34,14 +37,14 @@ class KeyValueStorage(abc.ABC):
     """
 
     @abc.abstractmethod
-    def rename(self, key, new_key):
+    def rename(self, key: str, new_key: str) -> None:
         """
         Rename an existing key to a new one. If the new value already
         exists then the record is overwritten.
         """
 
     @abc.abstractmethod
-    def list_get(self, key, from_idx=0, to_idx=-1):
+    def list_get(self, key: str, from_idx=0, to_idx=-1) -> List[Serializable]:
         """
         Return a stored list. If there is a non-list value stored with the passed key
         then TypeError is raised.
@@ -54,7 +57,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_append(self, key, value):
+    def list_append(self, key: str, value: Serializable):
         """
         Add a value at the end of a list
 
@@ -64,7 +67,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_pop(self, key):
+    def list_pop(self, key: str) -> Serializable:
         """
         Remove and return an element from the
         beginning of the list.
@@ -72,7 +75,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_len(self, key):
+    def list_len(self, key: str) -> Serializable:
         """
         Return length of a list. If there is a non-list value stored with the passed key
         then TypeError is raised.
@@ -82,7 +85,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_set(self, key, idx, value):
+    def list_set(self, key: str, idx: int, value: Serializable):
         """
         Sets the list element at index to value
 
@@ -93,7 +96,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_trim(self, key, keep_left, keep_right):
+    def list_trim(self, key: str, keep_left: int, keep_right: int):
         """
         Trim the list from the beginning to keep_left - 1 and from keep_right to the end.
         The function does not return anything.
@@ -105,7 +108,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def hash_get(self, key, field):
+    def hash_get(self, key: str, field: str) -> Serializable:
         """
         Get a value from a hash table stored under the passed key. If there is no
         such field then None is returned.
@@ -116,7 +119,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def hash_set(self, key, field, value):
+    def hash_set(self, key: str, field: str, value: Serializable):
         """
         Put a value into a hash table stored under the passed key
 
@@ -127,7 +130,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def hash_del(self, key, field):
+    def hash_del(self, key: str, field: str):
         """
         Removes a field from a hash item
 
@@ -137,7 +140,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def hash_get_all(self, key):
+    def hash_get_all(self, key: str) -> Dict[str, Serializable]:
         """
         Return a complete hash object (= Python dict) stored under the passed
         key. If the provided key is not present then an empty dict should be
@@ -148,7 +151,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get(self, key, default=None):
+    def get(self, key: str, default: Serializable = None) -> Serializable:
         """
         Get a value stored with passed key
         and return its JSON decoded form.
@@ -159,7 +162,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set(self, key, data):
+    def set(self, key: str, data: Serializable):
         """
         Save 'data' with 'key'.
 
@@ -169,7 +172,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove(self, key):
+    def remove(self, key: str):
         """
         Remove a value specified by a key
 
@@ -178,7 +181,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def exists(self, key):
+    def exists(self, key: str) -> bool:
         """
         Test whether there is a value with the specified key
 
@@ -190,7 +193,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_ttl(self, key, ttl):
+    def set_ttl(self, key: str, ttl: int):
         """
         Set auto expiration timeout in seconds.
 
@@ -202,7 +205,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_ttl(self, key):
+    def get_ttl(self, key: str) -> int:
         """
         Return number of seconds of item's TTL or -1 if it's not set
 
@@ -211,7 +214,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_ttl(self, key):
+    def clear_ttl(self, key: str):
         """
         Make the record persistent again.
 
@@ -219,7 +222,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def fork(self):
+    def fork(self) -> 'KeyValueStorage':
         """
         Return a new instance of the plug-in with the same connection
         parameters.

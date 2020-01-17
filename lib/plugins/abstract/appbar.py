@@ -11,6 +11,8 @@
 # GNU General Public License for more details.
 
 import abc
+from typing import Dict, Optional, Any
+from controller.plg import PluginApi
 
 """
 All the application_bar plug-in implementations should inherit from AbstractApplicationBar
@@ -25,7 +27,7 @@ class AbstractApplicationBar(abc.ABC):
         Returns an HTML content usable as a fallback replacement for the standard content
         """
 
-    def get_styles(self, plugin_api):
+    def get_styles(self, plugin_api: PluginApi):
         """
         Returns a list of dicts {'url': ...} defining external CSS requirements KonText
         must load.
@@ -37,7 +39,7 @@ class AbstractApplicationBar(abc.ABC):
         """
         return []
 
-    def get_scripts(self, plugin_api):
+    def get_scripts(self, plugin_api: PluginApi) -> Optional[Dict[str, Any]]:
         """
         Returns a dict:
             'main': ... url of the main script ...,
@@ -53,7 +55,7 @@ class AbstractApplicationBar(abc.ABC):
         return None
 
     @abc.abstractmethod
-    def get_contents(self, plugin_api, return_url):
+    def get_contents(self, plugin_api: PluginApi, return_url: str) -> str:
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
 

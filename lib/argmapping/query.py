@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 import re
 import logging
 
@@ -33,6 +33,7 @@ class ConcFormArgs(object):
     def __init__(self, persist: bool) -> None:
         self._persistent = persist
         self._op_key = '__new__'
+        self.form_type: Optional[str] = None
 
     def updated(self, attrs: Dict[str, Any], op_key: str) -> 'ConcFormArgs':
         """
@@ -153,10 +154,10 @@ class QueryFormArgs(ConcFormArgs):
 
     def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.TAGHELPER as th:
-            self.tag_builder_support[corpus_id] = th.tags_enabled_for(corpus_id)
+            self.tag_builder_support[corpus_id] = getattr(th, 'tags_enabled_for')(corpus_id)
 
         with plugins.runtime.CORPARCH as ca:
-            corp_info = ca.get_corpus_info('en_US', corpus_id)
+            corp_info = getattr(ca, 'get_corpus_info')('en_US', corpus_id)
             self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.tagset_docs[corpus_id] = corp_info.manatee.tagset_doc
 

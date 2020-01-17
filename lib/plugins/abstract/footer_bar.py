@@ -17,12 +17,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from typing import Optional
+from controller.plg import PluginApi
 
 
 class AbstractFootbar(abc.ABC):
 
     @abc.abstractmethod
-    def get_contents(self, plugin_api, return_url=None):
+    def get_contents(self, plugin_api: PluginApi, return_url: Optional[str] = None):
         """
         arguments:
         plugin_api -- an instance of kontext.PluginApi
@@ -32,7 +34,7 @@ class AbstractFootbar(abc.ABC):
         an HTML string
         """
 
-    def get_css_url(self):
+    def get_css_url(self) -> Optional[str]:
         """
         Return a URL of a custom CSS resource or None if not needed.
         """

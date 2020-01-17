@@ -32,7 +32,14 @@ a new version of 'taghelper'.
 import abc
 
 
-class AbstractValueSelectionFetcher(abc.ABC):
+from typing import TypeVar, Generic
+from werkzeug.wrappers import Request
+
+T = TypeVar('T')
+U = TypeVar('U')
+
+
+class AbstractValueSelectionFetcher(abc.ABC, Generic[T]):
     """
     AbstractValueSelectionFetcher provides way how to
     obtain user tag value search query data from the
@@ -42,21 +49,21 @@ class AbstractValueSelectionFetcher(abc.ABC):
     """
 
     @abc.abstractmethod
-    def fetch(self, request):
+    def fetch(self, request: Request) -> T:
         """
         fetch data from an HTTP request and encode
         using a custom data type
         """
 
     @abc.abstractmethod
-    def is_empty(self, val):
+    def is_empty(self, val: T) -> bool:
         """
         Test whether the 'val' (= fetched data)
         contains an empty query.
         """
 
 
-class AbstractTagsetInfoLoader(abc.ABC):
+class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
     """
     AbstractTagsetInfoLoader wraps all the implementation
     details and concrete data format properties of
@@ -81,14 +88,14 @@ class AbstractTagsetInfoLoader(abc.ABC):
     """
 
     @abc.abstractmethod
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
         """
 
     @abc.abstractmethod
-    def get_initial_values(self, lang):
+    def get_initial_values(self, lang: str) -> T:
         """
         Return all the possible properties of a respective tagset
         (i.e. all the positions/keys/whatever and their respective
@@ -96,7 +103,7 @@ class AbstractTagsetInfoLoader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_variant(self, user_selection, lang):
+    def get_variant(self, user_selection: U, lang: str) -> T:
         """
         Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
         return a filtered values matching the selected ones.
@@ -109,7 +116,7 @@ class AbstractTagsetInfoLoader(abc.ABC):
         """
 
 
-class AbstractTaghelper(abc.ABC):
+class AbstractTaghelper(abc.ABC, Generic[T, U]):
     """
     !!! Please note that taghelper is not an instance of CorpusDependentPlugin
     even if it would sound reasonable. The reason is that e.g. in case of
@@ -121,7 +128,7 @@ class AbstractTaghelper(abc.ABC):
     """
 
     @abc.abstractmethod
-    def tags_enabled_for(self, corpus_id):
+    def tags_enabled_for(self, corpus_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.
@@ -131,13 +138,13 @@ class AbstractTaghelper(abc.ABC):
         """
 
     @abc.abstractmethod
-    def loader(self, corpus_name, tagset_name):
+    def loader(self, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
         """
         Return a loader for the corpus_name
         """
 
     @abc.abstractmethod
-    def fetcher(self, corpus_name, tagset_name):
+    def fetcher(self, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
         """
         Return a fetcher for the corpus_name
         """

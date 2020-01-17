@@ -15,6 +15,9 @@
 import abc
 
 
+from typing import List, Tuple
+
+
 class UnknownFormatException(Exception):
     pass
 
@@ -26,13 +29,13 @@ class AbstractChartExport(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_content_type(self):
+    def get_content_type(self) -> str:
         """
         return a content type identifier (e.g. 'application/json')
         """
 
     @abc.abstractmethod
-    def get_format_name(self):
+    def get_format_name(self) -> str:
         """
         Return a format identifier. It should be both
         human-readable and unique within a single plug-in
@@ -43,13 +46,13 @@ class AbstractChartExport(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_suffix(self):
+    def get_suffix(self) -> str:
         """
         Return a proper file suffix (e.g. 'xlsx' for Excel).
         """
 
     @abc.abstractmethod
-    def export_pie_chart(self, data, title):
+    def export_pie_chart(self, data: List[Tuple[str, float]], title: str) -> str:
         """
         Generate a PIE chart based on passed data and title.
 
@@ -65,7 +68,7 @@ class AbstractChartExportPlugin(abc.ABC):
     of AbstractChartExport.
     """
 
-    def get_supported_types(self):
+    def get_supported_types(self) -> List[str]:
         """
         Return a list of supported format names
         (i.e. the values returned by AbstractChartExport.get_format_name()
@@ -74,7 +77,7 @@ class AbstractChartExportPlugin(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def get_content_type(self, format):
+    def get_content_type(self, format: str) -> str:
         """
         Return a content type for a specified format
         (e.g. 'PDF' -> 'application/pdf')
@@ -84,7 +87,7 @@ class AbstractChartExportPlugin(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_suffix(self, format):
+    def get_suffix(self, format: str) -> str:
         """
         Return a suffix for a specified format.
 
@@ -93,7 +96,7 @@ class AbstractChartExportPlugin(abc.ABC):
         """
 
     @abc.abstractmethod
-    def export_pie_chart(self, data, title, format):
+    def export_pie_chart(self, data: List[Tuple[str, float]], title: str, format: str) -> str:
         """
         Export PIE chart data to a PIE chart of
         a specified format.

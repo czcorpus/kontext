@@ -7,6 +7,7 @@ classes to keep the plug-in implementation clear and consistent.
 """
 
 import abc
+from controller.plg import PluginApi
 
 
 class CorpusDependentPlugin(abc.ABC):
@@ -16,7 +17,7 @@ class CorpusDependentPlugin(abc.ABC):
     """
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_api, corpname):
+    def is_enabled_for(self, plugin_api: PluginApi, corpname: str) -> bool:
         """
         arguments:
         corpname -- a name of the corpus

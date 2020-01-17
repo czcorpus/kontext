@@ -29,6 +29,12 @@ from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, Sampl
                               FirstHitsFilterFormArgs, build_conc_form_args)
 from translation import ugettext as translate
 from controller import exposed
+from collections import defaultdict
+
+from typing import Dict, Any, Optional, Callable, List, Tuple
+from argmapping.query import ConcFormArgs
+import werkzeug.wrappers
+from werkzeug import Request
 
 
 class Querying(Kontext):
@@ -40,14 +46,14 @@ class Querying(Kontext):
     by 'prev_id' reference (i.e. a reversed list).
     """
 
-    def __init__(self, request, ui_lang):
-        super(Querying, self).__init__(request=request, ui_lang=ui_lang)
-        self._curr_conc_form_args = None
+    def __init__(self, request: Request, ui_lang: str) -> None:
+        super().__init__(request=request, ui_lang=ui_lang)
+        self._curr_conc_form_args: Optional[ConcFormArgs] = None
 
-    def get_mapping_url_prefix(self):
+    def get_mapping_url_prefix(self) -> str:
         return super(Kontext, self).get_mapping_url_prefix()
 
-    def acknowledge_auto_generated_conc_op(self, q_idx, query_form_args):
+    def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
         In some cases KonText may automatically (either
         based on user's settings or for an internal reason)
@@ -65,7 +71,7 @@ class Querying(Kontext):
         """
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
-    def add_conc_form_args(self, item):
+    def add_conc_form_args(self, item: ConcFormArgs) -> None:
         """
         Add persistent form arguments for a currently processed
         action. The data are used in two ways:
@@ -75,37 +81,37 @@ class Querying(Kontext):
         """
         self._curr_conc_form_args = item
 
-    def get_saveable_conc_data(self):
+    def get_saveable_conc_data(self) -> Dict[str, Any]:
         """
         Export data stored by conc_persistence
         """
-        ans = super(Querying, self).get_saveable_conc_data()
+        ans = super().get_saveable_conc_data()
 
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
             ans.update(lastop_form=self._curr_conc_form_args.serialize())
         return ans
 
     @staticmethod
-    def import_qs(qs):
+    def import_qs(qs: Optional[str]) -> Optional[str]:
         """
         Import query selector value (e.g. 'iqueryrow')
         into a query type identifier (e.g. 'iquery').
         """
         return qs[:-3] if qs is not None else None
 
-    def _select_current_aligned_corpora(self, active_only):
+    def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
-    def _attach_query_params(self, tpl_out):
+    def _attach_query_params(self, tpl_out: Dict[str, Any]):
         """
         Attach data required by client-side forms which are
         part of the current query pipeline (i.e. initial query, filters,
         sorting, samples,...)
         """
-        corpus_info = self.get_corpus_info(self.args.corpname)
+        corpus_info = self.get_corpus_info(getattr(self.args, 'corpname'))
         tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
         tpl_out['input_languages'] = {}
-        tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
+        tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info['collator_locale']
         if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
             op_key = self._prev_q_data['id']
             conc_forms_args = {
@@ -125,16 +131,17 @@ class Querying(Kontext):
         corpora = self._select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
             query=QueryFormArgs(corpora=corpora, persist=False).to_dict(),
-            filter=FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                  persist=False).to_dict(),
+            filter=FilterFormArgs(
+                maincorp=getattr(self.args, 'maincorp') if getattr(self.args, 'maincorp') else getattr(self.args, 'corpname'),
+                persist=False
+            ).to_dict(),
             sort=SortFormArgs(persist=False).to_dict(),
             sample=SampleFormArgs(persist=False).to_dict(),
             shuffle=ShuffleFormArgs(persist=False).to_dict(),
-            firsthits=FirstHitsFilterFormArgs(
-                persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
+            firsthits=FirstHitsFilterFormArgs(persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
         )
 
-    def _attach_aligned_query_params(self, tpl_out):
+    def _attach_aligned_query_params(self, tpl_out: Dict[str, Any]):
         """
         Adds template data required to generate components for adding/overviewing
         aligned corpora. This is called by individual actions.
@@ -143,6 +150,9 @@ class Querying(Kontext):
         tpl_out -- a dict where exported data is stored
         """
         if self.corp.get_conf('ALIGNED'):
+            if self.cm is None:
+                raise RuntimeError('Cm is not initialized')
+
             tpl_out['Aligned'] = []
             if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
@@ -155,34 +165,30 @@ class Querying(Kontext):
                 if 'lempos' in attrlist:
                     poslist = self.cm.corpconf_pairs(alcorp, 'LPOSLIST')
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                tpl_out['input_languages'][al] = self.get_corpus_info(al).collator_locale
+                tpl_out['input_languages'][al] = self.get_corpus_info(al)['collator_locale']
 
-    def export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
+    def export_aligned_form_params(self, aligned_corp: str, state_only: bool, name_filter: Callable[[str], bool] = lambda x: True) -> Dict[str, Any]:
         """
         Collects aligned corpora-related arguments with dynamic names
         (i.e. the names with corpus name as a suffix)
         """
-        if name_filter is None:
-            def name_filter(v):
-                return True
 
-        args = (('include_empty', lambda x: int(x)), ('pcq_pos_neg', lambda x: x))
+        args: Tuple[Tuple[str, Callable[[Any], Any]], ...] = (('include_empty', lambda x: int(x)), ('pcq_pos_neg', lambda x: x))
         if not state_only:
             args += (('queryselector', lambda x: x),)
-        ans = {}
+        ans: Dict[str, Any] = {}
         for param_name, type_conv in args:
-            full_name = '%s_%s' % (param_name, aligned_corp)
+            full_name = f'{param_name}_{aligned_corp}'
             if full_name in self._request.args and name_filter(param_name):
                 ans[full_name] = type_conv(self._request.args[full_name])
         return ans
 
     @exposed(return_type='json', http_method='GET')
-    def ajax_fetch_conc_form_args(self, request):
+    def ajax_fetch_conc_form_args(self, request: werkzeug.wrappers.Request) -> Dict[str, Any]:
         try:
             # we must include only regular (i.e. the ones visible in the breadcrumb-like
             # navigation bar) operations - otherwise the indices would not match.
-            pipeline = [x for x in self.load_pipeline_ops(
-                request.args['last_key']) if x.form_type != 'nop']
+            pipeline = [x for x in self.load_pipeline_ops(request.args['last_key']) if x.form_type != 'nop']
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
         except (IndexError, KeyError):
@@ -190,17 +196,18 @@ class Querying(Kontext):
             return {}
 
     @staticmethod
-    def load_pipeline_ops(last_id):
+    def load_pipeline_ops(last_id: str) -> List[ConcFormArgs]:
         ans = []
+        # here checking if instance exists -> we can ignore type check error cp.open does not exist on None
         if plugins.runtime.CONC_PERSISTENCE.exists:
             with plugins.runtime.CONC_PERSISTENCE as cp:
-                data = cp.open(last_id)
+                data = cp.open(last_id)  # type: ignore
                 if data is not None:
                     ans.append(build_conc_form_args(
                         data.get('corpora', []), data['lastop_form'], data['id']))
                 limit = 100
                 while data is not None and data.get('prev_id') and limit > 0:
-                    data = cp.open(data['prev_id'])
+                    data = cp.open(data['prev_id'])  # type: ignore
                     ans.insert(0, build_conc_form_args(
                         data.get('corpora', []), data['lastop_form'], data['id']))
                     limit -= 1
@@ -209,21 +216,19 @@ class Querying(Kontext):
                             last_id))
         return ans
 
-    def _get_structs_and_attrs(self):
-        structs_and_attrs = {}
+    def _get_structs_and_attrs(self) -> Dict[str, List[str]]:
+        structs_and_attrs: Dict[str, List[str]] = defaultdict(list)
         attrs = (t for t in self.corp.get_conf('STRUCTATTRLIST').split(',') if t != '')
         for s, a in [t.split('.') for t in attrs]:
-            if s not in structs_and_attrs:
-                structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)
-        return structs_and_attrs
+        return dict(structs_and_attrs)
 
-    def add_globals(self, result, methodname, action_metadata):
+    def add_globals(self, result: Dict[str, Any], methodname: str, action_metadata: Dict[str, Any]):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        super(Querying, self).add_globals(result, methodname, action_metadata)
+        super().add_globals(result, methodname, action_metadata)
 
         result['structs_and_attrs'] = self._get_structs_and_attrs()
