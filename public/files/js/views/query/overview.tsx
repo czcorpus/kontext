@@ -24,7 +24,8 @@ import {init as saveViewInit} from './save';
 import {init as basicOverviewInit} from './basicOverview';
 import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../../types/common';
-import {IQueryReplayModel, QueryReplayModel, ExtendedQueryOperation} from '../../models/query/replay';
+import { ExtendedQueryOperation, IQueryReplayModel } from '../../models/query/replay/common';
+import { QueryReplayModel } from '../../models/query/replay';
 import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 import {ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps} from './miscActions';
 import {QueryFormLiteProps, QueryFormProps} from './first';
@@ -451,11 +452,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         _modelChangeListener() {
+            const latestEditOpIdx = (queryReplayModel as QueryReplayModel).getEditedOperationIdx();
             this.setState({
                 replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
                 ops: queryReplayModel.getCurrEncodedOperations(),
-                editOpIdx: (queryReplayModel as QueryReplayModel).getEditedOperationIdx(),
-                editOpKey: (queryReplayModel as QueryReplayModel).opIdxToCachedQueryKey(this.state.editOpIdx),
+                editOpIdx: latestEditOpIdx,
+                editOpKey: (queryReplayModel as QueryReplayModel).opIdxToCachedQueryKey(latestEditOpIdx),
                 isLoading: false,
                 queryOverview: (queryReplayModel as QueryReplayModel).getCurrentQueryOverview(),
                 modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),

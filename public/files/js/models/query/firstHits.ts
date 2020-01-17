@@ -19,11 +19,12 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 export class FirstHitsModel extends StatefulModel {
@@ -57,20 +58,28 @@ export class FirstHitsModel extends StatefulModel {
         window.location.href = this.getSubmitUrl(opKey);
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.FirstHitsFormArgs>):RSVP.Promise<AjaxResponse.FirstHitsFormArgs> {
-        return fn().then(
-            (data) => {
-                if (data.form_type === 'firsthits') {
-                    this.docStructValues = this.docStructValues.set(data.op_key, data.doc_struct);
-                    return data;
-
-                } else if (data.form_type === 'locked') {
-                    return null;
-
-                } else {
-                    throw new Error('Cannot sync FirstHitsModel - invalid form data type: ' + data.form_type);
+    syncFrom(fn:Observable<AjaxResponse.FirstHitsFormArgs>):Observable<AjaxResponse.FirstHitsFormArgs> {
+        return fn.pipe(
+            tap(
+                (data) => {
+                    if (data.form_type === 'firsthits') {
+                        this.docStructValues = this.docStructValues.set(data.op_key, data.doc_struct);
+                    }
                 }
-            }
+            ),
+            map(
+                (data) => {
+                    if (data.form_type === 'firsthits') {
+                        return data;
+
+                    } else if (data.form_type === 'locked') {
+                        return null;
+
+                    } else {
+                        throw new Error('Cannot sync FirstHitsModel - invalid form data type: ' + data.form_type);
+                    }
+                }
+            )
         );
     }
 

@@ -29,6 +29,8 @@ import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';
 import {GeneralQueryFormProperties, QueryFormModel, appendQuery, WidgetsMap} from './common';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 
 /**
@@ -333,39 +335,39 @@ export class FilterFormModel extends QueryFormModel {
      * Synchronize user input values from an external source
      * (typically a server response or a local cache).
      */
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.FilterFormArgs>):RSVP.Promise<AjaxResponse.FilterFormArgs> {
-        return fn().then(
-            (data) => {
-                const filterId = data.op_key;
-                if (data.form_type === 'filter') {
-                    this.queries = this.queries.set(filterId, data.query);
-                    this.queryTypes = this.queryTypes.set(filterId, data.query_type);
-                    this.maincorps = this.queryTypes.set(filterId, data.maincorp);
-                    this.pnFilterValues = this.pnFilterValues.set(filterId, data.pnfilter);
-                    this.filflValues = this.filflValues.set(filterId, data.filfl);
-                    this.filfposValues = this.filfposValues.set(filterId, {
-                        value: data.filfpos, isInvalid: false, isRequired: true});
-                    this.filtposValues = this.filtposValues.set(filterId, {
-                        value: data.filtpos, isInvalid: false, isRequired: true});
-                    this.inclkwicValues = this.inclkwicValues.set(filterId, data.inclkwic);
-                    this.matchCaseValues = this.matchCaseValues.set(filterId, data.qmcase);
-                    this.defaultAttrValues = this.defaultAttrValues.set(filterId, data.default_attr_value);
-                    this.tagBuilderSupport = this.tagBuilderSupport.set(filterId, data.tag_builder_support);
-                    this.withinArgs = this.withinArgs.set(filterId, data.within);
-                    this.lposValues = this.lposValues.set(filterId, data.lpos);
-                    this.hasLemma = this.hasLemma.set(filterId, data.has_lemma);
-                    this.tagsetDocs = this.tagsetDocs.set(filterId, data.tagset_doc);
-                    this.opLocks = this.opLocks.set(filterId, false);
-                    return data;
+    syncFrom(fn:Observable<AjaxResponse.FilterFormArgs>):Observable<AjaxResponse.FilterFormArgs> {
+        return fn.pipe(
+            tap(
+                (data) => {
+                    const filterId = data.op_key;
+                    if (data.form_type === 'filter') {
+                        this.queries = this.queries.set(filterId, data.query);
+                        this.queryTypes = this.queryTypes.set(filterId, data.query_type);
+                        this.maincorps = this.queryTypes.set(filterId, data.maincorp);
+                        this.pnFilterValues = this.pnFilterValues.set(filterId, data.pnfilter);
+                        this.filflValues = this.filflValues.set(filterId, data.filfl);
+                        this.filfposValues = this.filfposValues.set(filterId, {
+                            value: data.filfpos, isInvalid: false, isRequired: true});
+                        this.filtposValues = this.filtposValues.set(filterId, {
+                            value: data.filtpos, isInvalid: false, isRequired: true});
+                        this.inclkwicValues = this.inclkwicValues.set(filterId, data.inclkwic);
+                        this.matchCaseValues = this.matchCaseValues.set(filterId, data.qmcase);
+                        this.defaultAttrValues = this.defaultAttrValues.set(filterId, data.default_attr_value);
+                        this.tagBuilderSupport = this.tagBuilderSupport.set(filterId, data.tag_builder_support);
+                        this.withinArgs = this.withinArgs.set(filterId, data.within);
+                        this.lposValues = this.lposValues.set(filterId, data.lpos);
+                        this.hasLemma = this.hasLemma.set(filterId, data.has_lemma);
+                        this.tagsetDocs = this.tagsetDocs.set(filterId, data.tagset_doc);
+                        this.opLocks = this.opLocks.set(filterId, false);
 
-                } else if (data.form_type === 'locked' || data.form_type == 'lgroup') {
-                    this.opLocks = this.opLocks.set(filterId, true);
-                    return data;
+                    } else if (data.form_type === 'locked' || data.form_type == 'lgroup') {
+                        this.opLocks = this.opLocks.set(filterId, true);
 
-                } else {
-                    throw new Error('Cannot sync filter model - invalid form data type: ' + data.form_type);
+                    } else {
+                        throw new Error('Cannot sync filter model - invalid form data type: ' + data.form_type);
+                    }
                 }
-            }
+            )
         );
     }
 

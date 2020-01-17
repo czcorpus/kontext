@@ -630,11 +630,9 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 return ans;
             }
         );
-        this.mainMenuModel.addItemActionPrerequisitePromise(
+        this.mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
-            (args:Kontext.GeneralProps) => {
-                return this.generalViewOptionsModel.loadData();
-            }
+            (args:Kontext.GeneralProps) => this.generalViewOptionsModel.loadData()
         );
 
         this.renderReactComponent(

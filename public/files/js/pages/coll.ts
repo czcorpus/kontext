@@ -24,7 +24,6 @@ import {MultiDict, dictToPairs, nTimes} from '../util';
 import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
 import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
 import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
-import {IndirectQueryReplayModel} from '../models/query/replay';
 import {QuerySaveAsFormModel} from '../models/query/save';
 import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
 import {init as analysisFrameInit} from '../views/analysis';
@@ -34,6 +33,7 @@ import {init as freqFormInit} from '../views/freqs/forms';
 import {init as queryOverviewInit} from '../views/query/overview';
 import {TextTypesModel} from '../models/textTypes/main';
 import {NonQueryCorpusSelectionModel} from '../models/corpsel';
+import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 
 
 declare var require:any;

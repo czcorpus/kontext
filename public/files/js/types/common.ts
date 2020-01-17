@@ -22,7 +22,7 @@ import * as Immutable from 'immutable';
 import { IEventEmitter } from 'kombo';
 import RSVP from 'rsvp';
 import {CoreViews} from './coreViews';
-import { ObservablePrerequisite, PromisePrerequisite } from '../models/mainMenu';
+import { ObservablePrerequisite } from '../models/mainMenu';
 
 /**
  *
@@ -33,6 +33,8 @@ export namespace Kontext {
      *
      */
     export type GeneralProps = {[key:string]:any};
+
+    export type AnyInterface<T> = {[P in keyof T]: T[P]};
 
     export type ListOfPairs = Array<[string, string]>;
 
@@ -239,17 +241,6 @@ export namespace Kontext {
          * shown.
          */
         addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
-
-        /**
-         *
-         * Please note that the function returns ObservablePrerequisite which is
-         * a wrapper around provided PromisePrerequisite. To be able to remove
-         * the prerequisite, the returned ObservablePrerequisite must be used
-         * as an argument for removeItemActionPrerequisite.
-         *
-         * @deprecated Please use Observable-based removeItemActionPrerequisite instead
-         */
-        addItemActionPrerequisitePromise(actionName:string, fn:PromisePrerequisite):ObservablePrerequisite;
 
         removeItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
 

@@ -50,9 +50,9 @@ export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
  * @param incomingProps incoming properties (these will rewrite
  *        the target in case of a property collision)
  */
-export function updateProps(myProps:Kontext.GeneralProps,
-        incomingProps:Kontext.GeneralProps):Kontext.GeneralProps {
-    const ans = {};
+export function updateProps<T>(myProps:T,
+        incomingProps:{[K in keyof T]?:T[K]}):T {
+    const ans:any = {};
     for (let p in myProps) {
         if (myProps.hasOwnProperty(p)) {
             ans[p] = myProps[p];
