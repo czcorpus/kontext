@@ -47,6 +47,7 @@ import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import { ITranslator, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 
 export enum DownloadType {
@@ -229,11 +230,13 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * @param corpora - a primary corpus plus possible aligned corpora
      * @param subcorpus - an optional subcorpus
      */
-    switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
-        return this.appNavig.switchCorpus(corpora, subcorpus).then(
-            () => {
-                return this.init(() => undefined);
-            }
+    switchCorpus(corpora:Array<string>, subcorpus?:string):Observable<any> {
+        return this.appNavig.switchCorpus(corpora, subcorpus).pipe(
+            tap(
+                () => {
+                    return this.init(() => undefined);
+                }
+            )
         );
     }
 

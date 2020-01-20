@@ -19,11 +19,12 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/page';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 /**
  *
@@ -49,7 +50,7 @@ export class WithinBuilderModel extends StatefulModel {
         this.dispatcher.registerActionListener(function (action:Action) {
             switch (action.name) {
                 case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
-                    self.loadAttrs().then(
+                    self.loadAttrs().subscribe(
                         () => {
                             self.emitChange();
                         },
@@ -71,8 +72,8 @@ export class WithinBuilderModel extends StatefulModel {
         });
     }
 
-    private loadAttrs():RSVP.Promise<any> {
-        return this.pageModel.ajax<AjaxResponse.WithinBuilderData>(
+    private loadAttrs():Observable<any> {
+        return this.pageModel.ajax$<AjaxResponse.WithinBuilderData>(
             'GET',
             this.pageModel.createActionUrl('corpora/ajax_get_structattrs_details'),
             {
@@ -80,8 +81,8 @@ export class WithinBuilderModel extends StatefulModel {
             },
             {contentType : 'application/x-www-form-urlencoded'}
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.data = this.data.clear();
                 for (let attr in data.structattrs) {
                     if (data.structattrs.hasOwnProperty(attr)) {
@@ -91,7 +92,7 @@ export class WithinBuilderModel extends StatefulModel {
                     }
                 }
                 this.currAttrIdx = 0;
-            }
+            })
         );
     }
 

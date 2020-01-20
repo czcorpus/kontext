@@ -19,7 +19,6 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';

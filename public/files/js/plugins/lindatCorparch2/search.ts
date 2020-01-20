@@ -23,6 +23,8 @@ import RSVP from 'rsvp';
 import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {Kontext} from '../../types/common';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 /**
@@ -105,33 +107,25 @@ export class SearchEngine {
         return `${kw} ${phrase}`;
     }
 
-    search(phrase:string, keywords:Immutable.List<SearchKeyword>):RSVP.Promise<Immutable.List<SearchResultRow>> {
+    search(phrase:string, keywords:Immutable.List<SearchKeyword>):Observable<Immutable.List<SearchResultRow>> {
         const q = this.mkQuery(phrase, keywords);
-        return (() => {
-            if (this.cache.has(q)) {
-                return new RSVP.Promise((resolve:(v)=>void, reject:(e)=>void) => {
-                    resolve(this.cache.get(q));
-                });
+        if (this.cache.has(q)) {
+            return rxOf(this.cache.get(q));
 
-            } else {
-                const args = new MultiDict();
-                args.set('query', q);
-                return this.pluginApi.ajax(
-                    'GET',
-                    this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
-                    args
-                ).then(
-                    (data:SearchResponse) => {
-                        this.cache.set(q, data.rows);
-                        return data.rows;
-                    }
-                );
-            }
-        })().then(
-            (data:Array<SearchResultRow>) => {
-                return Immutable.List<SearchResultRow>(data);
-            }
-        );
+        } else {
+            const args = new MultiDict();
+            args.set('query', q);
+            return this.pluginApi.ajax$<SearchResponse>(
+                'GET',
+                this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
+                args
+
+            ).pipe(
+                tap((data) => {
+                    this.cache.set(q, data.rows);
+                }),
+                map((data) => Immutable.List<SearchResultRow>(data.rows))
+            );
+        }
     }
-
 }

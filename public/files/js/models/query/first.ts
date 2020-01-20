@@ -30,8 +30,8 @@ import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';
 import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
 import { IFullActionControl } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
-import { concatMap, tap, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 export interface QueryFormUserEntries {

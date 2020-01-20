@@ -35,6 +35,7 @@ import subcMixer from 'plugins/subcmixer/init';
 import { InputMode } from '../models/subcorp/common';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
+import { tap } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -237,20 +238,19 @@ export class SubcorpForm {
                 this.subcorpSel,
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        return this.layoutModel.switchCorpus(corpora, subcorpId).then(
-                            () => {
-                                // all the components must be deleted to prevent memory leaks
-                                // and unwanted action handlers from previous instance
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
-                                this.init();
-                            },
-                            (err) => {
-                                this.layoutModel.showMessage('error', err);
-                            }
-                        )
+                        return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
+                            tap(
+                                () => {
+                                    // all the components must be deleted to prevent memory leaks
+                                    // and unwanted action handlers from previous instance
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
+                                    this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                                    this.init();
+                                }
+                            )
+                        );
                     }
                 }
             );

@@ -240,8 +240,6 @@ class Plugin {
      * @param options A configuration of the widget
      */
     createWidget(targetAction:string, queryModel:FirstQueryFormModel, options:Kontext.GeneralProps):React.ComponentClass {
-        const widgetWrapper = window.document.createElement('div');
-
         const treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),

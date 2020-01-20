@@ -22,11 +22,12 @@ import {FreqResultResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {FreqFormInputs} from './freqForms';
 import {FreqResultsSaveModel} from './save';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 
 export interface ResultItem {
@@ -114,8 +115,8 @@ export class FreqDataRowsModel extends StatefulModel {
                     this.emitChange();
                 break;
                 case 'FREQ_RESULT_APPLY_MIN_FREQ':
-                    this.loadPage().then(
-                        (data) => {
+                    this.loadPage().subscribe(
+                        (_) => {
                             this.currentPage = '1';
                             this.pushStateToHistory();
                             this.emitChange();
@@ -129,8 +130,8 @@ export class FreqDataRowsModel extends StatefulModel {
                 break;
                 case 'FREQ_RESULT_SORT_BY_COLUMN':
                     this.sortColumn = action.payload['value'];
-                    this.loadPage().then(
-                        (data) => {
+                    this.loadPage().subscribe(
+                        (_) => {
                             this.emitChange();
                         },
                         (err) => {
@@ -142,8 +143,8 @@ export class FreqDataRowsModel extends StatefulModel {
                 case 'FREQ_RESULT_SET_CURRENT_PAGE':
                     if (this.validateNumber(action.payload['value'], 1)) {
                         this.currentPage = action.payload['value'];
-                        this.loadPage().then(
-                            (data) => {
+                        this.loadPage().subscribe(
+                            (_) => {
                                 this.emitChange();
                             },
                             (err) => {
@@ -197,18 +198,17 @@ export class FreqDataRowsModel extends StatefulModel {
         return args;
     }
 
-    loadPage():RSVP.Promise<FreqResultResponse.FreqResultResponse> {
-        return this.pageModel.ajax<FreqResultResponse.FreqResultResponse>(
+    loadPage():Observable<FreqResultResponse.FreqResultResponse> {
+        return this.pageModel.ajax$<FreqResultResponse.FreqResultResponse>(
             'GET',
             this.pageModel.createActionUrl('freqs'),
             this.getSubmitArgs()
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.importData(data['Blocks'], data['fmaxitems'],  Number(this.currentPage));
-                return data;
-            }
-        )
+            })
+        );
     }
 
 

@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
-
-import { timer as rxTimer, Observable } from 'rxjs';
+import { timer as rxTimer, Observable, of as rxOf, throwError } from 'rxjs';
 import {Kontext} from '../../types/common';
 import * as common from './common';
 import {IPluginApi, PluginInterfaces} from '../../types/plugins';
@@ -28,7 +26,7 @@ import * as Immutable from 'immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, tap, map, concatMap } from 'rxjs/operators';
 
 /**
  *
@@ -433,7 +431,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         switch (action.name) {
             case 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM':
                 if (state.activeListItem[0] === 0) {
-                    this.handleFavItemClick(state, state.dataFav.get(state.activeListItem[1]).id).then(
+                    this.handleFavItemClick(state, state.dataFav.get(state.activeListItem[1]).id).subscribe(
                         (_) => {
                             dispatch({
                                 name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
@@ -450,7 +448,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     );
 
                 } else {
-                    this.handleFeatItemClick(state, state.dataFeat.get(state.activeListItem[1]).id).then(
+                    this.handleFeatItemClick(state, state.dataFeat.get(state.activeListItem[1]).id).subscribe(
                         () => {
                             dispatch({
                                 name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
@@ -468,7 +466,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
             break;
             case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
-                this.handleFavItemClick(state, action.payload['itemId']).then(
+                this.handleFavItemClick(state, action.payload['itemId']).subscribe(
                     (_) => {
                         dispatch({
                             name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
@@ -485,7 +483,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 );
             break;
             case 'DEFAULT_CORPARCH_FAV_ITEM_ADD':
-                this.removeItemFromTrash(state, action.payload['itemId']).then(
+                this.removeItemFromTrash(state, action.payload['itemId']).subscribe(
                     (rescuedItem) => {
                         dispatch({
                             name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE',
@@ -508,7 +506,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 );
             break;
             case 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK':
-                this.handleFeatItemClick(state, action.payload['itemId']).then(
+                this.handleFeatItemClick(state, action.payload['itemId']).subscribe(
                     () => {
                         dispatch({
                             name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
@@ -525,7 +523,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 );
             break;
             case 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED':
-                this.handleSearchItemClick(state, action.payload['itemId']).then(
+                this.handleSearchItemClick(state, action.payload['itemId']).subscribe(
                 () => {
                     dispatch({
                         name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
@@ -542,7 +540,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             );
             break;
             case 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE':
-                this.removeFavItemFromServer(action.payload['itemId']).then(
+                this.removeFavItemFromServer(action.payload['itemId']).subscribe(
                     (favItem) => {
                         const src = rxTimer(0, 1000).pipe(take(CorplistWidgetModel.TRASH_TTL_TICKS));
                         if (this.trashTimerSubsc) {
@@ -569,14 +567,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 );
             break;
             case 'DEFAULT_CORPARCH_STAR_ICON_CLICK':
-                (() => {
-                    if (action.payload['status']) {
-                        return this.setFavItem(state);
-
-                    } else {
-                        return this.unsetFavItem(action.payload['itemId']);
-                    }
-                })().then(
+                (action.payload['status'] ?
+                    this.setFavItem(state) :
+                    this.unsetFavItem(action.payload['itemId'])
+                ).subscribe(
                     (data) => {
                         dispatch({
                             name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE',
@@ -596,7 +590,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             case 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED':
             case 'LINDAT_CORPARCH_KEYWORD_CLICKED':
             case 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED':
-                this.searchDelayed(state).then(
+                this.searchDelayed(state).subscribe(
                     (data) => {
                         dispatch({
                             name: 'DEFAULT_CORPARCH_SEARCH_DONE',
@@ -617,7 +611,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 if (state.focusedRowIdx > -1) {
                     this.handleSearchItemClick(
                             state,
-                            state.currSearchResult.get(state.focusedRowIdx).id).then(
+                            state.currSearchResult.get(state.focusedRowIdx).id).subscribe(
                         () => {
                             dispatch({
                                 name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
@@ -661,20 +655,20 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         };
     };
 
-    private removeFavItemFromServer(itemId:string):RSVP.Promise<boolean> {
-        return this.pluginApi.ajax(
+    private removeFavItemFromServer(itemId:string):Observable<boolean> {
+        return this.pluginApi.ajax$(
             'POST',
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
             {id: itemId}
 
-        ).then(
-            () => {
+        ).pipe(
+            tap(() => {
                 this.pluginApi.showMessage(
                     'info',
                     this.pluginApi.translate('defaultCorparch__item_removed_from_fav')
-                );
-                return true;
-            }
+                )
+            }),
+            map(_ => true)
         );
     }
 
@@ -682,7 +676,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      * Returns (promise wrapped) newly created item
      * as a result of "rescue" operation or null if the item is lost.
      */
-    private removeItemFromTrash(state:CorplistWidgetModelState, itemId:string):RSVP.Promise<SetFavItemResponse> {
+    private removeItemFromTrash(state:CorplistWidgetModelState, itemId:string):Observable<SetFavItemResponse> {
 
         if (this.trashTimerSubsc && state.dataFav.find(x => x.trashTTL !== null) === undefined) {
             this.trashTimerSubsc.unsubscribe();
@@ -693,7 +687,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         );
         const trashedItem = state.dataFav.find(x => x.id === itemId);
         if (trashedItem) {
-            return this.pluginApi.ajax<SetFavItemResponse>(
+            return this.pluginApi.ajax$<SetFavItemResponse>(
                 'POST',
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
@@ -703,7 +697,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             );
 
         } else {
-            return RSVP.resolve(null);
+            return rxOf(null);
         }
     }
 
@@ -746,88 +740,70 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             state.availSearchKeywords.find(x => x.selected) !== undefined;
     }
 
-    private searchDelayed(state:CorplistWidgetModelState):RSVP.Promise<Immutable.List<SearchResultRow>> {
+    private searchDelayed(state:CorplistWidgetModelState):Observable<Immutable.List<SearchResultRow>> {
         if (this.inputThrottleTimer) {
             window.clearTimeout(this.inputThrottleTimer);
         }
         if (this.shouldStartSearch(state)) {
-            return new RSVP.Promise<Immutable.List<SearchResultRow>>(
-                (resolve:(value)=>void, reject:(err)=>void) => {
-                    this.inputThrottleTimer = window.setTimeout(() => {
-                        this.searchEngine.search(
-                            state.currSearchPhrase,
-                            state.availSearchKeywords
-                        ).then(
-                            (data) => {
-                                resolve(data);
-                            },
-                            (err) => {
-                                reject(err);
-                            }
-                        );
-                    }, 350);
-                }
+            return new Observable<Immutable.List<SearchResultRow>>(observer => {
+                this.inputThrottleTimer = window.setTimeout(() => { // TODO antipattern here
+                    this.searchEngine.search(
+                        state.currSearchPhrase,
+                        state.availSearchKeywords
+
+                    ).subscribe(
+                        (data) => {
+                            observer.next(data);
+                            observer.complete();
+                        },
+                        (err) => {
+                            observer.error(err);
+                        }
+                    );
+                }, 350);
+            }
             );
 
         } else {
-            return RSVP.resolve(Immutable.List<SearchResultRow>());
+            return rxOf(Immutable.List<SearchResultRow>());
         }
     }
 
-    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):RSVP.Promise<any> {
+    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
         const item = state.dataFav.find(item => item.id === itemId);
-        return (() => {
-            if (item !== undefined) {
-                return this.onItemClick(item.corpora.map(x => x.id), item.subcorpus_id);
-
-            } else {
-                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                    reject(new Error(`Favorite item ${itemId} not found`));
-                });
-            }
-        })();
+        return item !== undefined ?
+                this.onItemClick(item.corpora.map(x => x.id), item.subcorpus_id) :
+                throwError(new Error(`Favorite item ${itemId} not found`));
     }
 
-    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):RSVP.Promise<any> {
+    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
         const item = state.dataFeat.find(item => item.id === itemId);
-        return (() => {
-            if (item !== undefined) {
-                return this.onItemClick([item.corpus_id], item.subcorpus_id);
-
-            } else {
-                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                    reject(new Error(`Featured item ${itemId} not found`));
-                });
-            }
-        })();
+        return item !== undefined ?
+                this.onItemClick([item.corpus_id], item.subcorpus_id) :
+                throwError(new Error(`Featured item ${itemId} not found`));
     }
 
-    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):RSVP.Promise<any> {
+    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
         const item = state.currSearchResult.find(item => item.id === itemId);
-        return (() => {
-            if (item !== undefined) {
-                return this.onItemClick([item.id], '');
-
-            } else {
-                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                    reject(new Error(`Clicked item ${itemId} not found in search results`));
-                });
-            }
-        })();
+        return item !== undefined ?
+                this.onItemClick([item.id], '') :
+                throwError(new Error(`Clicked item ${itemId} not found in search results`));
     }
 
-    private reloadItems(editAction:RSVP.Promise<any>, message:string|null):RSVP.Promise<FavitemsList> {
-        return editAction.then<Array<common.CorplistItem>>(
-            (data:Kontext.AjaxResponse) => {
+    private reloadItems(editAction:Observable<Array<common.CorplistItem>>, message:string|null):Observable<FavitemsList> {
+        return editAction.pipe(
+            tap((_) => {
                 if (message !== null) {
                     this.pluginApi.showMessage('info', message);
                 }
-                return this.pluginApi.ajax<Array<common.CorplistItem>>(
+            }),
+            concatMap(
+                (_) => this.pluginApi.ajax<Array<common.CorplistItem>>(
                     'GET',
                     this.pluginApi.createActionUrl('user/get_favorite_corpora'),
                     {}
-                );
-            }
+                )
+            )
         );
     }
 
@@ -835,23 +811,23 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     // TODO: this.dataFav = this.importServerItems(favItems);
 
-    private setFavItem(state:CorplistWidgetModelState, showMessage:boolean=true):RSVP.Promise<FavitemsList> {
+    private setFavItem(state:CorplistWidgetModelState, showMessage:boolean=true):Observable<FavitemsList> {
         const message = showMessage ?
                 this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
                 null;
         const newItem = this.getFullCorpusSelection();
-        return this.reloadItems(this.pluginApi.ajax(
+        return this.reloadItems(this.pluginApi.ajax$(
             'POST',
             this.pluginApi.createActionUrl('user/set_favorite_item'),
             newItem
         ), message);
     }
 
-    private unsetFavItem(id:string, showMessage:boolean=true):RSVP.Promise<any> {
+    private unsetFavItem(id:string, showMessage:boolean=true):Observable<any> {
         const message = showMessage ?
                 this.pluginApi.translate('defaultCorparch__item_removed_from_fav') :
                 null;
-        return this.reloadItems(this.pluginApi.ajax(
+        return this.reloadItems(this.pluginApi.ajax$(
             'POST',
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
             {id: id}

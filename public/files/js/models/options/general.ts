@@ -21,7 +21,6 @@
 import {Kontext, ViewOptions} from '../../types/common';
 import {StatefulModel, validateGzNumber} from '../base';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
@@ -129,7 +128,7 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
                     if (!err) {
                         this.isBusy = true;
                         this.emitChange();
-                        this.submit().then(
+                        this.submit().subscribe(
                             () => {
                                 this.isBusy = false;
                                 this.emitChange();
@@ -229,7 +228,7 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         );
     }
 
-    private submit():RSVP.Promise<Kontext.AjaxResponse> {
+    private submit():Observable<Kontext.AjaxResponse> {
         const args = new MultiDict();
         args.set('pagesize', this.pageSize.value);
         args.set('newctxsize', this.newCtxSize.value);
@@ -240,17 +239,17 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         args.set('fmaxitems', this.fmaxitems.value);
         args.set('citemsperpage', this.citemsperpage.value);
         args.set('cql_editor', this.useCQLEditor ? '1' : '0');
-        return this.layoutModel.ajax<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewoptsx'),
             args
 
-        ).then(
-            (d) => {
+        ).pipe(
+            tap((d) => {
                 this.layoutModel.replaceConcArg('pagesize', [this.pageSize.value]);
                 return d;
-            }
-        )
+            })
+        );
     }
 
     getPageSize():Kontext.FormValue<string> {
