@@ -12,14 +12,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
+from werkzeug.contrib.sessions import Session
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
+
 import abc
 from translation import ugettext as _
 from controller.errors import CorpusForbiddenException, UserActionException
-
-from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
-if TYPE_CHECKING:
-    from controller.plg import PluginApi
-from werkzeug.contrib.sessions import Session
 
 
 class AbstractAuth(abc.ABC):

@@ -44,7 +44,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_get(self, key: str, from_idx=0, to_idx=-1) -> List[Serializable]:
+    def list_get(self, key: str, from_idx: int = 0, to_idx: int = -1) -> List[Serializable]:
         """
         Return a stored list. If there is a non-list value stored with the passed key
         then TypeError is raised.

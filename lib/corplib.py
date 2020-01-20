@@ -18,15 +18,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import List, Any, Optional, Tuple, Dict, Union, Set
+from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
+from array import array
+
 import os
 import glob
 from hashlib import md5
 from datetime import datetime
 import json
 import logging
-from typing import List, Any, Optional, Tuple, Dict, Union, Set
-from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
-from array import array
 
 
 try:

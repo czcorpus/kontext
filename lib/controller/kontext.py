@@ -13,19 +13,27 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union, Iterable, cast
+from main_menu import AbstractMenuItem
+from argmapping.query import ConcFormArgs
+from manatee import Corpus
+from werkzeug import Request
+from . import Controller
+
 import json
 from functools import partial
 import logging
 import inspect
 import os.path
 import time
+from collections import defaultdict
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from . import Controller, convert_types, exposed
+from . import convert_types, exposed
 from .errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException, NotFoundException)
 import plugins
 from plugins.abstract.corpora import BrokenCorpusInfo
@@ -40,15 +48,6 @@ from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginApi
 from templating import DummyGlobals
-from collections import defaultdict
-
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union, Iterable, cast
-import werkzeug.contrib.sessions
-import werkzeug.wrappers
-from manatee import Corpus
-import argmapping.query
-from corplib import CorpusManager
-from main_menu import AbstractMenuItem
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 T = TypeVar('T')
@@ -62,7 +61,7 @@ class LinesGroups(object):
     """
 
     def __init__(self, data: List[Any]) -> None:
-        if type(data) is not list:
+        if not isinstance(data, list):
             raise ValueError('LinesGroups data argument must be a list')
         self.data = data
         self.sorted = False
@@ -229,7 +228,7 @@ class Kontext(Controller):
 
     PARAM_TYPES = dict(inspect.getmembers(GlobalArgs, predicate=lambda x: isinstance(x, Parameter)))
 
-    def __init__(self, request: werkzeug.wrappers.Request, ui_lang: str) -> None:
+    def __init__(self, request: Request, ui_lang: str) -> None:
         super().__init__(request=request, ui_lang=ui_lang)
         # Note: always use _corp() method to access current corpus even from inside the class
         self._curr_corpus: Optional[Corpus] = None
@@ -239,7 +238,7 @@ class Kontext(Controller):
 
         # a CorpusManager instance (created in pre_dispatch() phase)
         # generates (sub)corpus objects with additional properties
-        self.cm: Optional[CorpusManager] = None
+        self.cm: Optional[corplib.CorpusManager] = None
 
         self.disabled_menu_items: List[str] = []
 
@@ -261,7 +260,7 @@ class Kontext(Controller):
         # conc_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
         self._prev_q_data: Optional[Dict[str, Any]] = None  # data of the previous operation are stored here
-        self._auto_generated_conc_ops: List[Tuple[int, argmapping.query.ConcFormArgs]] = []
+        self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
     def get_mapping_url_prefix(self) -> str:
         return super().get_mapping_url_prefix()
@@ -518,7 +517,7 @@ class Kontext(Controller):
             lines_groups=self._lines_groups.serialize()
         )
 
-    def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: argmapping.query.ConcFormArgs) -> None:
+    def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
         In some cases, KonText automatically (either
         based on user's settings or for an internal reason)
@@ -1385,8 +1384,8 @@ class Kontext(Controller):
         self._set_async_tasks(at_list)
 
     @exposed(return_type='json')
-    def concdesc_json(self, _: Optional[werkzeug.wrappers.Request] = None) -> Dict[str, Any]:
-        out: Dict[str, Any] = {'Desc': []}
+    def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:
+        out_list: List[Dict[str, Any]] = []
         conc_desc = conclib.get_conc_desc(corpus=self.corp, q=getattr(self.args, 'q'),
                                           subchash=getattr(self.corp, 'subchash', None))
 
@@ -1411,7 +1410,7 @@ class Kontext(Controller):
             u2.append(('corpname', getattr(self.args, 'corpname')))
             if getattr(self.args, 'usesubcorp'):
                 u2.append(('usesubcorp', getattr(self.args, 'usesubcorp')))
-            out['Desc'].append(dict(
+            out_list.append(dict(
                 op=o,
                 opid=opid,
                 arg=a,
@@ -1419,10 +1418,10 @@ class Kontext(Controller):
                 churl=self.urlencode(u1),
                 tourl=self.urlencode(u2),
                 size=s))
-        return out
+        return {'Desc': out_list}
 
     @exposed(return_type='json', skip_corpus_init=True)
-    def check_tasks_status(self, request: werkzeug.wrappers.Request) -> Dict[str, Any]:
+    def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
         if backend in('celery', 'konserver'):
             import bgcalc
@@ -1442,7 +1441,7 @@ class Kontext(Controller):
             return dict(data=[])  # other backends are not supported
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
-    def remove_task_info(self, request: werkzeug.wrappers.Request) -> Dict[str, Any]:
+    def remove_task_info(self, request: Request) -> Dict[str, Any]:
         task_ids = request.form.getlist('tasks')
         self._set_async_tasks([x for x in self.get_async_tasks() if x.ident not in task_ids])
         return self.check_tasks_status(request)

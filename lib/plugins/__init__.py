@@ -17,7 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING
-import werkzeug.contrib.sessions
+from types import ModuleType
+from werkzeug.contrib.sessions import Session
 from .abstract.general_storage import KeyValueStorage
 from .abstract.settings_storage import AbstractSettingsStorage
 from .abstract.conc_persistence import AbstractConcPersistence
@@ -43,12 +44,11 @@ from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
-
-T = TypeVar('T')
+    from controller.plg import PluginApi
 
 import logging
-from types import ModuleType
-from controller.plg import PluginApi
+
+T = TypeVar('T')
 
 _plugins: Dict[str, Any] = {}
 
@@ -115,7 +115,7 @@ class _ID(Generic[T]):
         """
         return _plugins.get(self._ident) is not None
 
-    def is_enabled_for(self, plugin_api: PluginApi, corpus_id: str) -> bool:
+    def is_enabled_for(self, plugin_api: 'PluginApi', corpus_id: str) -> bool:
         """
         Returns True if the plugin exists and is enabled for a specified
         corpus or it is corpus independent (e.g. db plugin, session,...)
@@ -133,7 +133,7 @@ class _ID(Generic[T]):
 
 class _Names(object):
     DB: _ID[KeyValueStorage] = _ID('db')
-    SESSIONS: _ID[werkzeug.contrib.sessions.Session] = _ID('sessions')
+    SESSIONS: _ID[Session] = _ID('sessions')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
     AUTH: _ID['AbstractAuth'] = _ID('auth')
     CONC_PERSISTENCE: _ID[AbstractConcPersistence] = _ID('conc_persistence')

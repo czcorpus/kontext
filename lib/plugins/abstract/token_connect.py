@@ -44,14 +44,13 @@ it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
 import abc
-import importlib
-
-from plugins.abstract import CorpusDependentPlugin
-
 from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
+from manatee import Corpus
 if TYPE_CHECKING:
     from controller.plg import PluginApi
-import manatee
+
+import importlib
+from plugins.abstract import CorpusDependentPlugin
 
 
 class BackendException(Exception):
@@ -195,9 +194,9 @@ def find_implementation(path: str) -> Any:
 class AbstractTokenConnect(CorpusDependentPlugin):
 
     def map_providers(self, provider_ids: List[str]):
-        pass
+        raise NotImplementedError()
 
-    def fetch_data(self, provider_ids: List[str], maincorp_obj: manatee.Corpus, corpora: List[str], token_id: int, num_tokens: int, lang: str) -> List[Tuple[Any, bool]]:
+    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int, num_tokens: int, lang: str) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.

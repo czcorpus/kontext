@@ -12,24 +12,25 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import settings
-from texttypes import get_tt
-
 from typing import Optional, Dict, Any, TypeVar, TYPE_CHECKING
+from manatee import Corpus
+from werkzeug import Request
+from werkzeug.contrib.sessions import Session
+from . import KonTextCookie
 if TYPE_CHECKING:
     from .kontext import Kontext
-from manatee import Corpus
-from . import KonTextCookie
-import werkzeug.contrib.sessions
+
+import settings
+from texttypes import get_tt
 
 T = TypeVar('T')
 
 
 class PluginApi(object):
 
-    def __init__(self, controller: 'Kontext', request: werkzeug.Request, cookies: KonTextCookie) -> None:
+    def __init__(self, controller: 'Kontext', request: Request, cookies: KonTextCookie) -> None:
         self._controller: 'Kontext' = controller
-        self._request: werkzeug.Request = request
+        self._request: Request = request
         self._cookies: KonTextCookie = cookies
         self._shared_data: Dict[str, Any] = {}
 
@@ -46,7 +47,7 @@ class PluginApi(object):
         return self._controller.environ.get(key, default)
 
     @property
-    def request(self) -> werkzeug.Request:
+    def request(self) -> Request:
         return self._request
 
     @property
@@ -54,7 +55,7 @@ class PluginApi(object):
         return self._cookies
 
     @property
-    def session(self) -> werkzeug.contrib.sessions.Session:
+    def session(self) -> Session:
         return self._request.session
 
     def refresh_session_id(self) -> None:

@@ -20,6 +20,11 @@
 This module contains a functionality related to
 extended, re-editable query processing.
 """
+
+from typing import Dict, Any, Optional, Callable, List, Tuple
+from argmapping.query import ConcFormArgs
+from werkzeug import Request
+
 import logging
 
 from controller.kontext import Kontext
@@ -30,11 +35,6 @@ from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, Sampl
 from translation import ugettext as translate
 from controller import exposed
 from collections import defaultdict
-
-from typing import Dict, Any, Optional, Callable, List, Tuple
-from argmapping.query import ConcFormArgs
-import werkzeug.wrappers
-from werkzeug import Request
 
 
 class Querying(Kontext):
@@ -150,9 +150,6 @@ class Querying(Kontext):
         tpl_out -- a dict where exported data is stored
         """
         if self.corp.get_conf('ALIGNED'):
-            if self.cm is None:
-                raise RuntimeError('Cm is not initialized')
-
             tpl_out['Aligned'] = []
             if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
@@ -160,10 +157,10 @@ class Querying(Kontext):
                 alcorp = corplib.open_corpus(al)
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
                 attrlist = alcorp.get_conf('ATTRLIST').split(',')
-                poslist = self.cm.corpconf_pairs(alcorp, 'WPOSLIST')
+                poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'WPOSLIST')
                 tpl_out['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 if 'lempos' in attrlist:
-                    poslist = self.cm.corpconf_pairs(alcorp, 'LPOSLIST')
+                    poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'LPOSLIST')
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 tpl_out['input_languages'][al] = self.get_corpus_info(al)['collator_locale']
 
@@ -184,7 +181,7 @@ class Querying(Kontext):
         return ans
 
     @exposed(return_type='json', http_method='GET')
-    def ajax_fetch_conc_form_args(self, request: werkzeug.wrappers.Request) -> Dict[str, Any]:
+    def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:
         try:
             # we must include only regular (i.e. the ones visible in the breadcrumb-like
             # navigation bar) operations - otherwise the indices would not match.

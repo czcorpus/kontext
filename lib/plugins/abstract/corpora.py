@@ -37,12 +37,13 @@ tightly related to respective corpora registry (configuration)
 files.
 """
 
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
 import abc
-import json
-from functools import partial
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 if TYPE_CHECKING:
     from controller.plg import PluginApi
+
+import json
+from functools import partial
 
 import l10n
 

@@ -21,6 +21,10 @@
 KonText controller and related auxiliary objects
 """
 
+from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from .plg import PluginApi
+
 import os
 from types import MethodType
 from inspect import isclass
@@ -52,10 +56,6 @@ from argmapping import Parameter, GlobalArgs, Args
 from plugins.abstract.auth import AbstractAuth
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException, ImmediateRedirectException)
-
-from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING
-if TYPE_CHECKING:
-    from .plg import PluginApi
 
 import http.cookies
 import werkzeug.wrappers
@@ -472,7 +472,7 @@ class Controller(object):
         root = self.get_root_url()
 
         def convert_val(x):
-            return str(x) if type(x) not in (str, str) else x.encode('utf-8')
+            return x.encode('utf-8') if isinstance(x, str) else str(x)
 
         if isinstance(params, dict):
             params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in params.items())
@@ -612,7 +612,7 @@ class Controller(object):
             path = path[len(ac_prefix):]
 
         path_split = path.split('/')
-        if len(path_split) == 0 or path_split[0] == '':
+        if not path_split or path_split[0] == '':
             path_split = [Controller.NO_OPERATION]
         return path_split
 
@@ -984,11 +984,10 @@ class Controller(object):
             return template_object.render(result)
         raise RuntimeError('Unknown source or return type')
 
-    def user_is_anonymous(self) -> bool:
+    # mypy error: missing return statement
+    def user_is_anonymous(self) -> bool:  # type: ignore
         with plugins.runtime.AUTH as auth:
-            if isinstance(auth, AbstractAuth):
-                return auth.is_anonymous(self.session_get('user', 'id'))
-        raise RuntimeError('AUTH was not initialized')
+            return getattr(auth, 'is_anonymous')(self.session_get('user', 'id'))
 
     @exposed()
     def nop(self, request: werkzeug.wrappers.Request, *args: Any) -> None:

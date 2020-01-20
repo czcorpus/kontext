@@ -30,8 +30,6 @@ a new version of 'taghelper'.
 """
 
 import abc
-
-
 from typing import TypeVar, Generic
 from werkzeug.wrappers import Request
 

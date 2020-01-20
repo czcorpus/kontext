@@ -13,8 +13,6 @@
 # GNU General Public License for more details.
 
 import abc
-
-
 from typing import List, Tuple
 
 

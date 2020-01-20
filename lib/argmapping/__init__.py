@@ -80,7 +80,7 @@ class Parameter(Generic[ValueType]):
     def is_array(self) -> bool:
         return isinstance(self.value, (tuple, list))
 
-    def meets_persistence(self, p_level) -> bool:
+    def meets_persistence(self, p_level: int) -> bool:
         return self.persistent & p_level == p_level
 
 
