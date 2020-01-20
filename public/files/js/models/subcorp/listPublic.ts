@@ -19,12 +19,12 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 
 import {PageModel} from '../../app/page';
 import { MultiDict } from '../../util';
 import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { Observable } from 'rxjs';
 
 interface LoadDataResponse extends Kontext.AjaxResponse {
     data:Array<DataItem>;
@@ -139,7 +139,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                                 name: Actions.SET_CODE_PREFIX_DONE,
                                 payload: {}
                             });
-                            this.loadData(state).then(
+                            this.loadData(state).subscribe(
                                 (data) => {
                                     dispatch({
                                         name: Actions.DATA_LOAD_DONE,
@@ -147,9 +147,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                                             data: data
                                         }
                                     });
-                                }
-
-                            ).catch(
+                                },
                                 (err) => {
                                     this.pageModel.showMessage('error', err);
                                     dispatch({
@@ -183,7 +181,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         }
     }
 
-    private loadData(state:PublicSubcorpListState):RSVP.Promise<LoadDataResponse> {
+    private loadData(state:PublicSubcorpListState):Observable<LoadDataResponse> {
         // TODO
         const args = new MultiDict();
         args.set('format', 'json');
@@ -191,7 +189,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         args.set('search_type', state.searchType);
         args.set('offset', 0); // TODO
         args.set('limit', 20); // TODO
-        return this.pageModel.ajax<LoadDataResponse>(
+        return this.pageModel.ajax$<LoadDataResponse>(
             'GET',
             this.pageModel.createActionUrl('subcorpus/list_published'),
             args

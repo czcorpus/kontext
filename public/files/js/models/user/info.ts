@@ -21,8 +21,9 @@
 import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
-import RSVP from 'rsvp';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 /**
  */
@@ -40,7 +41,7 @@ export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
         this.dispatcher.registerActionListener((action:Action) => {
             switch (action.name) {
                 case 'USER_INFO_REQUESTED':
-                    this.loadUserInfo().then(
+                    this.loadUserInfo().subscribe(
                         (_) => {
                             this.emitChange();
                         },
@@ -55,26 +56,20 @@ export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
     }
 
 
-    loadUserInfo(forceReload:boolean=false):RSVP.Promise<boolean> {
-        return (() => {
-            if (!this.userData || forceReload) {
-                return this.layoutModel.ajax<{user:Kontext.UserCredentials}>(
+    loadUserInfo(forceReload:boolean=false):Observable<boolean> {
+        return (
+            !this.userData || forceReload ?
+                this.layoutModel.ajax$<{user:Kontext.UserCredentials}>(
                     'GET',
                     this.layoutModel.createActionUrl('user/ajax_user_info'),
                     {}
-                );
-
-            } else {
-                return new RSVP.Promise((resolve:(v:{user:Kontext.UserCredentials})=>void,
-                        reject:(e:any)=>void) => {
-                    resolve({user: this.userData});
-                });
-            }
-        })().then(
-            (data) => {
+                ) :
+                rxOf({user: this.userData})
+        ).pipe(
+            tap((data) => {
                 this.userData = data.user;
-                return true;
-            }
+            }),
+            map(_ => true)
         );
     }
 

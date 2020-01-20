@@ -20,7 +20,6 @@
 
 import * as Immutable from 'immutable';
 import { IEventEmitter } from 'kombo';
-import RSVP from 'rsvp';
 import {CoreViews} from './coreViews';
 import { ObservablePrerequisite } from '../models/mainMenu';
 import { Observable } from 'rxjs';
@@ -143,7 +142,7 @@ export namespace Kontext {
      */
     export interface IUserInfoModel extends IEventEmitter {
         getCredentials():UserCredentials;
-        loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
+        loadUserInfo(forceReload:boolean):Observable<boolean>;
     }
 
     export interface ICorpusInfoModel extends IEventEmitter {

@@ -23,7 +23,6 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
 import { Action, SEDispatcher, IFullActionControl } from 'kombo';

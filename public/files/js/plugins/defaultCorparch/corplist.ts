@@ -24,7 +24,7 @@ import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -260,7 +260,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             case 'KEYWORD_RESET_CLICKED':
             case 'FILTER_CHANGED':
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset, undefined, state.favouritesOnly).then(
+                        state.offset, undefined, state.favouritesOnly).subscribe(
                     (data) => {
                         dispatch({
                             name: 'LOAD_DATA_DONE',
@@ -278,7 +278,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             break;
             case 'EXPANSION_CLICKED':
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset, undefined, state.favouritesOnly).then(
+                        state.offset, undefined, state.favouritesOnly).subscribe(
                     (data) => {
                         dispatch({
                             name: 'LOAD_EXPANSION_DATA_DONE',
@@ -295,7 +295,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 );
             break;
             case 'LIST_STAR_CLICKED':
-                this.changeFavStatus(state, action.payload['corpusId'], action.payload['favId']).then(
+                this.changeFavStatus(state, action.payload['corpusId'], action.payload['favId']).subscribe(
                     (message) => {
                         dispatch({
                             name: 'LIST_STAR_CLICKED_DONE',
@@ -312,7 +312,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 );
             break;
             case 'CORPARCH_CORPUS_INFO_REQUIRED':
-                this.loadCorpusInfo(action.payload['corpusId']).then(
+                this.loadCorpusInfo(action.payload['corpusId']).subscribe(
                     (data) => {
                         dispatch({
                             name: 'CORPARCH_CORPUS_INFO_LOADED',

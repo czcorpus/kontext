@@ -798,7 +798,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
             }),
             concatMap(
-                (_) => this.pluginApi.ajax<Array<common.CorplistItem>>(
+                (_) => this.pluginApi.ajax$<Array<common.CorplistItem>>(
                     'GET',
                     this.pluginApi.createActionUrl('user/get_favorite_corpora'),
                     {}

@@ -18,10 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
-
-import RSVP from 'rsvp';
-import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'immutable';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -360,14 +356,6 @@ export class AppNavigation implements Kontext.IURLHandler {
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
-    ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
-        return rsvpAjax.requestObject<string>(this.prepareAjax(method, url, args, options));
-    }
-
-    /**
-     * This method behaves exactly the same as "normal" ajax() method above except that
-     * it produces Observable.
-     */
     ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
         const callArgs = this.prepareAjax(method, url, args, options);
         return ajax({
@@ -382,22 +370,23 @@ export class AppNavigation implements Kontext.IURLHandler {
     }
 
 
-    bgDownload(filename:string, url:string, method:string, args?:AjaxArgs):RSVP.Promise<boolean> {
-        return this.ajax<Blob>(
+    bgDownload(filename:string, url:string, method:string, args?:AjaxArgs):Observable<boolean> {
+        return this.ajax$<Blob>(
             method,
             url,
             args || {},
             {responseType: 'blob'}
-        ).then(
-            (data) => {
+
+        ).pipe(
+            tap((data) => {
                 const objectURL = window.URL.createObjectURL(data);
                 const link = <HTMLAnchorElement>document.getElementById('download-link');
                 link.href = objectURL;
                 link.download = filename;
                 link.click();
                 window.setTimeout(() => window.URL.revokeObjectURL(objectURL), 2000);
-                return true;
-            }
+            }),
+            map(_ => true)
         );
     }
 

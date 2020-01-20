@@ -296,7 +296,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                     () => {
                         const url = this.filterModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax(
+                            return this.pageModel.ajax$(
                                 'GET',
                                 url,
                                 {format: 'json'}

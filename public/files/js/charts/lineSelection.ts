@@ -25,7 +25,8 @@ import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
 import { MultiDict } from '../util';
 import { PageModel, DownloadType } from '../app/page';
-import RSVP from 'rsvp';
+import { of as rxOf } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 
 export type LineGroupChartData = Array<{groupId:number; group:string; count:number}>;
@@ -195,12 +196,10 @@ export class LineSelGroupsRatiosChart {
         [this.currWidth, this.currHeight] = size;
         (() => {
             if (this.lastGroupStats && usePrevData) {
-                return new RSVP.Promise<LineGroupStats>((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                    resolve(this.lastGroupStats);
-                });
+                return rxOf(this.lastGroupStats);
 
             } else {
-                return this.layoutModel.ajax<LineGroupStats>(
+                return this.layoutModel.ajax$<LineGroupStats>(
                     'GET',
                     this.layoutModel.createActionUrl(
                         'ajax_get_line_groups_stats',
@@ -208,14 +207,13 @@ export class LineSelGroupsRatiosChart {
                     ),
                     {}
 
-                ).then(
-                    (data) => {
+                ).pipe(
+                    tap((data) => {
                         this.lastGroupStats = data;
-                        return data;
-                    }
+                    })
                 );
             }
-        })().then(
+        })().subscribe(
             (data) => {
                 const chartData:LineGroupChartData = [];
                 for (let p in data) {

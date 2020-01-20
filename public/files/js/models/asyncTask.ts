@@ -19,11 +19,11 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {Kontext} from '../types/common';
 import {IPluginApi} from '../types/plugins';
 import {StatefulModel} from './base';
 import {Action, IFullActionControl} from 'kombo';
+import { Observable } from 'rxjs';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
@@ -78,7 +78,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         this.dispatcher.registerActionListener((action:Action) => {
             switch (action.name) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
-                    this.deleteFinishedTaskInfo().then(
+                    this.deleteFinishedTaskInfo().subscribe(
                         (data) => {
                             this.updateMessageList(data.data);
                             this.emitChange();
@@ -151,17 +151,17 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         return this.asyncTasks.filter(item => this.taskIsFinished(item)).size;
     }
 
-    private checkForStatus():RSVP.Promise<AsyncTaskResponse> {
-         return this.pageModel.ajax(
+    private checkForStatus():Observable<AsyncTaskResponse> {
+         return this.pageModel.ajax$(
             'GET',
             this.pageModel.createActionUrl('check_tasks_status'),
             {}
         );
     }
 
-    private deleteFinishedTaskInfo():RSVP.Promise<AsyncTaskResponse> {
+    private deleteFinishedTaskInfo():Observable<AsyncTaskResponse> {
         const finishedTasksIds = this.asyncTasks.filter(this.taskIsFinished).map(item => item.ident).toArray();
-        return this.pageModel.ajax(
+        return this.pageModel.ajax$(
             'DELETE',
             this.pageModel.createActionUrl('remove_task_info'),
             {'tasks': finishedTasksIds}
@@ -191,7 +191,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
             this.emitChange();
             if (!this.asyncTaskCheckerInterval) {
                 this.asyncTaskCheckerInterval = window.setInterval(() => {
-                    this.checkForStatus().then(
+                    this.checkForStatus().subscribe(
                         (data) => {
                             this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data.data);
                             if (this.getNumRunningTasks() === 0) {
@@ -206,8 +206,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
                             }
                             this.updateMessageList(data.data);
                             this.emitChange();
-                        }
-                    ).catch(
+                        },
                         (err) => {
                             this.pageModel.showMessage('error', err);
                         }

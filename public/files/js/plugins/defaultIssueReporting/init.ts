@@ -53,14 +53,14 @@ export class IssueReportingModel extends StatefulModel {
                 case 'ISSUE_REPORTING_SUBMIT_ISSUE':
                     this._isBusy = true;
                     this.emitChange();
-                    this.pluginApi.ajax(
+                    this.pluginApi.ajax$(
                         'POST',
                         this.pluginApi.createActionUrl('user/submit_issue'),
                         {
                             body: this.issueBody,
                             args: JSON.stringify(this.fetchBrowserInfo())
                         }
-                    ).then(
+                    ).subscribe(
                         (data) => {
                             this._isBusy = false;
                             this._isActive = false;

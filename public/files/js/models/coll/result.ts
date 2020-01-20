@@ -289,12 +289,12 @@ class CalcWatchdog {
         this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
             args.add('worker_tasks', taskId);
         });
-        this.layoutModel.ajax(
+        this.layoutModel.ajax$(
             'GET',
             this.layoutModel.createActionUrl('wordlist_process'),
             args
 
-        ).then(
+        ).subscribe(
             (data:Kontext.AjaxResponse) => {
                 if (data['status'] === 100) {
                         this.stopWatching(); // just for sure
