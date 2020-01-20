@@ -556,15 +556,16 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
     // TODO move notify... out of the method
     private applyRange(attrName:string, fromVal:number, toVal: number, strictInterval:boolean,
             keepCurrent:boolean):void {
-        const prom = this.rangeSelector.applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
-        prom.then(
-            (newSelection:TextTypes.AttributeSelection) => {
-                this.emitChange();
-            },
-            (err) => {
-                this.pluginApi.showMessage('error', err);
-            }
-        );
+        this.rangeSelector
+            .applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent)
+            .subscribe(
+                (newSelection:TextTypes.AttributeSelection) => {
+                    this.emitChange();
+                },
+                (err) => {
+                    this.pluginApi.showMessage('error', err);
+                }
+            );
     }
 
     private applySelectAll(ident:string) {

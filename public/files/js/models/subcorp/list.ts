@@ -21,13 +21,14 @@
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 
 import {PageModel} from '../../app/page';
 import {StatefulModel} from '../base';
 import { MultiDict } from '../../util';
 import { AsyncTaskStatus } from '../asyncTask';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable, throwError, of as rxOf } from 'rxjs';
+import { tap, concatMap } from 'rxjs/operators';
 
 
 
@@ -102,7 +103,7 @@ export class SubcorpListModel extends StatefulModel {
             if (subcTasks.size > 0) {
                 this.layoutModel.showMessage('info',
                     this.layoutModel.translate('task__type_subcorpus_done'));
-                this.reloadItems().then(
+                this.reloadItems().subscribe(
                     (data) => {
                         this.emitChange();
                     },
@@ -117,7 +118,7 @@ export class SubcorpListModel extends StatefulModel {
         this.dispatcher.registerActionListener((action:Action) => {
             switch (action.name) {
                 case 'SUBCORP_LIST_SORT_LINES':
-                    this.sortItems(action.payload['colName'], action.payload['reverse']).then(
+                    this.sortItems(action.payload['colName'], action.payload['reverse']).subscribe(
                         (data) => {
                             this.emitChange();
                         },
@@ -128,7 +129,7 @@ export class SubcorpListModel extends StatefulModel {
                     )
                 break;
                 case 'SUBCORP_LIST_DELETE_SUBCORPUS':
-                    this.deleteSubcorpus(action.payload['rowIdx']).then(
+                    this.deleteSubcorpus(action.payload['rowIdx']).subscribe(
                         (data) => {
                             this.emitChange();
                             this.layoutModel.showMessage(
@@ -143,7 +144,7 @@ export class SubcorpListModel extends StatefulModel {
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_FILTER':
-                    this.filterItems(<SubcListFilter>action.payload).then(
+                    this.filterItems(<SubcListFilter>action.payload).subscribe(
                         (data) => {
                             this.emitChange();
                         },
@@ -167,7 +168,7 @@ export class SubcorpListModel extends StatefulModel {
                     this.emitChange();
                 break;
                 case 'SUBCORP_LIST_WIPE_SUBCORPUS':
-                    this.wipeSubcorpus(action.payload['idx']).then(
+                    this.wipeSubcorpus(action.payload['idx']).subscribe(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
@@ -182,7 +183,7 @@ export class SubcorpListModel extends StatefulModel {
                     );
                 break;
                 case 'SUBCORP_LIST_RESTORE_SUBCORPUS':
-                    this.createSubcorpus(action.payload['idx'], true).then(
+                    this.createSubcorpus(action.payload['idx'], true).subscribe(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
@@ -197,7 +198,12 @@ export class SubcorpListModel extends StatefulModel {
                     );
                 break;
                 case 'SUBCORP_LIST_REUSE_QUERY':
-                    this.createSubcorpus(action.payload['idx'], false, action.payload['newName'], action.payload['newCql']).then(
+                    this.createSubcorpus(
+                        action.payload['idx'],
+                        false,
+                        action.payload['newName'],
+                        action.payload['newCql']
+                    ).subscribe(
                         (data) => {
                             this.layoutModel.showMessage('info',
                                     this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
@@ -216,7 +222,7 @@ export class SubcorpListModel extends StatefulModel {
                     this.emitChange();
                     this.publishSubcorpus(
                                 action.payload['rowIdx'],
-                                action.payload['description']).then(
+                                action.payload['description']).subscribe(
                         (_) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage(
@@ -248,7 +254,7 @@ export class SubcorpListModel extends StatefulModel {
                     this.isBusy = true;
                     this.emitChange();
                     this.updateSubcorpusDescSubmit(
-                            action.payload['rowIdx']).then(
+                            action.payload['rowIdx']).subscribe(
                         (_) => {
                             this.isBusy = false;
                             this.layoutModel.showMessage(
@@ -270,14 +276,14 @@ export class SubcorpListModel extends StatefulModel {
         });
     }
 
-    private updateSubcorpusDescSubmit(rowIdx:number):RSVP.Promise<any> {
+    private updateSubcorpusDescSubmit(rowIdx:number):Observable<any> {
         const data = this.lines.get(rowIdx);
         const args = new MultiDict();
         args.set('corpname', data.corpname);
         args.set('usesubcorp', data.usesubcorp);
         args.set('description', data.description);
 
-        return this.layoutModel.ajax(
+        return this.layoutModel.ajax$(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
             args
@@ -303,27 +309,27 @@ export class SubcorpListModel extends StatefulModel {
         });
     }
 
-    private publishSubcorpus(rowIdx:number, description:string):RSVP.Promise<any> {
+    private publishSubcorpus(rowIdx:number, description:string):Observable<any> {
         const srchIdx = this.lines.findIndex((_, i) => i === this.actionBoxVisibleRow);
         if (srchIdx === -1) {
             throw new Error('Row not found');
         }
         const data = this.lines.get(srchIdx);
         if (data.deleted) {
-            return RSVP.reject(new Error('Cannot publish deleted subcorpus'));
+            return throwError(new Error('Cannot publish deleted subcorpus'));
         }
 
         const args = new MultiDict();
         args.set('corpname', data.corpname);
         args.set('subcname', data.usesubcorp);
         args.set('description', description);
-        return this.layoutModel.ajax(
+        return this.layoutModel.ajax$(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
             args
 
-        ).then(
-            (_) => {
+        ).pipe(
+            tap((_) => {
                 this.lines = this.lines.set(srchIdx, {
                     name: data.name,
                     corpname: data.corpname,
@@ -336,11 +342,11 @@ export class SubcorpListModel extends StatefulModel {
                     published: true,
                     description: description
                 });
-            }
-        )
+            })
+        );
     }
 
-    private createSubcorpus(idx:number, removeOrig:boolean, subcname?:string, cql?:string):RSVP.Promise<any> {
+    private createSubcorpus(idx:number, removeOrig:boolean, subcname?:string, cql?:string):Observable<any> {
         const srcRow = this.lines.get(idx);
         const params = new MultiDict();
         params.set('corpname', srcRow.corpname);
@@ -348,13 +354,13 @@ export class SubcorpListModel extends StatefulModel {
         params.set('publish', '0'); // TODO do we want to user-editable?
         params.set('cql', cql !== undefined ? cql : srcRow.cql);
 
-        return this.layoutModel.ajax<AjaxResponse.CreateSubcorpus>(
+        return this.layoutModel.ajax$<AjaxResponse.CreateSubcorpus>(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
             params
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 data.processed_subc.forEach(item => {
                     this.layoutModel.registerTask({
                         ident: item.ident,
@@ -375,21 +381,16 @@ export class SubcorpListModel extends StatefulModel {
                         this.lines = this.lines.remove(idx);
                     }
                 });
-                if (data.processed_subc.length > 0) {
-                    return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                        resolve(null);
-                    });
-
-                } else {
-                    return this.reloadItems();
-                }
-            }
+            }),
+            concatMap((data) => data.processed_subc.length > 0 ?
+                    rxOf(null) : this.reloadItems()
+            )
         );
     }
 
-    private wipeSubcorpus(lineIdx:number):RSVP.Promise<any> {
+    private wipeSubcorpus(lineIdx:number):Observable<any> {
         const delRow = this.lines.get(lineIdx);
-        return this.layoutModel.ajax(
+        return this.layoutModel.ajax$(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/ajax_wipe_subcorpus'),
             {
@@ -397,11 +398,10 @@ export class SubcorpListModel extends StatefulModel {
                 subcname: delRow.usesubcorp
             }
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((_) => {
                 this.lines = this.lines.remove(lineIdx);
-                return data;
-            }
+            })
         );
     }
 
@@ -435,40 +435,38 @@ export class SubcorpListModel extends StatefulModel {
                 })));
     }
 
-    private deleteSubcorpus(rowIdx:number):RSVP.Promise<any> {
+    private deleteSubcorpus(rowIdx:number):Observable<any> {
         const item = this.lines.get(rowIdx);
         if (!item) {
-            return RSVP.reject(new Error(`Cannot delete item. Row ${rowIdx} not found.`));
+            return throwError(new Error(`Cannot delete item. Row ${rowIdx} not found.`));
         }
         const args = new MultiDict();
         args.set('corpname', item.corpname);
         args.set('usesubcorp', item.usesubcorp);
-        return this.layoutModel.ajax<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/delete'),
             args,
 
-        ).then(
-            (data) => {
-                return this.reloadItems();
-            }
+        ).pipe(
+            concatMap((data) => this.reloadItems())
         );
     }
 
-    private sortItems(name:string, reverse:boolean):RSVP.Promise<any> {
+    private sortItems(name:string, reverse:boolean):Observable<any> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (reverse ? '-' : '') + name
         }
         this.mergeFilter(args, this.filter);
 
-        return this.layoutModel.ajax<AjaxResponse.SubcorpList>(
+        return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
             'GET',
             this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.importLines(data.subcorp_list);
                 this.importProcessed(data.processed_subc);
                 this.relatedCorpora = Immutable.List<string>(data.related_corpora);
@@ -476,7 +474,7 @@ export class SubcorpListModel extends StatefulModel {
                     name: data.sort_key.name,
                     reverse: data.sort_key.reverse
                 };
-            }
+            })
         );
     }
 
@@ -494,23 +492,23 @@ export class SubcorpListModel extends StatefulModel {
         }
     }
 
-    private reloadItems():RSVP.Promise<any> {
+    private reloadItems():Observable<any> {
         return this.filterItems(this.filter);
     }
 
-    private filterItems(filter:SubcListFilter):RSVP.Promise<any> {
+    private filterItems(filter:SubcListFilter):Observable<any> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.sortKey.reverse ? '-' : '') + this.sortKey.name,
         }
         this.mergeFilter(args, filter);
-        return this.layoutModel.ajax<AjaxResponse.SubcorpList>(
+        return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
             'GET',
             this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.importLines(data.subcorp_list);
                 this.importProcessed(data.processed_subc);
                 this.relatedCorpora = Immutable.List<string>(data.related_corpora);
@@ -519,24 +517,8 @@ export class SubcorpListModel extends StatefulModel {
                         this.filter[p] = filter[p];
                     }
                 }
-            }
+            })
         );
-    }
-
-    private selectLine(idx:number):void {
-        const line = this.lines.get(idx);
-        this.lines = this.lines.set(idx, {
-            corpname: line.corpname,
-            cql: line.cql,
-            created: line.created,
-            deleted: line.deleted,
-            name: line.name,
-            size: line.size,
-            usesubcorp: line.usesubcorp,
-            origSubcName: line.origSubcName,
-            published: line.published,
-            description: line.description
-        });
     }
 
     getLines():Immutable.List<SubcorpListItem> {

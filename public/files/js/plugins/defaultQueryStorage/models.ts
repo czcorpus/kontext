@@ -23,10 +23,11 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import {highlightSyntaxStatic} from '../../models/query/cqleditor/parser';
 import { Action } from 'kombo';
+import { tap, concatMap, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 
 export interface InputBoxHistoryItem {
@@ -132,7 +133,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                     this.emitChange();
                 break;
                 case 'QUERY_STORAGE_DO_NOT_ARCHIVE':
-                    this.saveItem(action.payload['queryId'], null).then(
+                    this.saveItem(action.payload['queryId'], null).subscribe(
                         (msg) => {
                             this.isBusy = false;
                             this.emitChange();
@@ -153,26 +154,8 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
 
                     } else {
                         this.isBusy = true;
-                        this.emitChange();/*
-                        * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
-                        *                    Institute of the Czech National Corpus
-                        * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
-                        *
-                        * This program is free software; you can redistribute it and/or
-                        * modify it under the terms of the GNU General Public License
-                        * as published by the Free Software Foundation; version 2
-                        * dated June, 1991.
-                        *
-                        * This program is distributed in the hope that it will be useful,
-                        * but WITHOUT ANY WARRANTY; without even the implied warranty of
-                        * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-                        * GNU General Public License for more details.
-
-                        * You should have received a copy of the GNU General Public License
-                        * along with this program; if not, write to the Free Software
-                        * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-                        */
-                        this.saveItem(this.editingQueryId, this.editingQueryName).then(
+                        this.emitChange();
+                        this.saveItem(this.editingQueryId, this.editingQueryName).subscribe(
                             (msg) => {
                                 this.isBusy = false;
                                 this.emitChange();
@@ -219,7 +202,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
     private performLoadAction():void {
         this.isBusy = true;
         this.emitChange();
-        this.loadData().then(
+        this.loadData().subscribe(
             () => {
                 this.isBusy = false;
                 this.emitChange();
@@ -232,7 +215,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         );
     }
 
-    private loadData():RSVP.Promise<any> {
+    private loadData():Observable<any> {
         const args = new MultiDict();
         args.set('corpname', this.pluginApi.getCorpusIdent().id);
         args.set('offset', this.offset);
@@ -240,13 +223,13 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         args.set('query_type', this.queryType);
         args.set('current_corpus', this.currentCorpusOnly ? '1' : '0');
         args.set('archived_only', this.archivedOnly ? '1' : '0');
-        return this.pluginApi.ajax(
+        return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
             'GET',
             this.pluginApi.createActionUrl('user/ajax_query_history'),
             args
 
-        ).then(
-            (data:AjaxResponse.QueryHistory) => {
+        ).pipe(
+            tap((data) => {
                 this.hasMoreItems = data.data.length === this.limit + 1;
                 this.data = this.hasMoreItems ?
                     Immutable.List<Kontext.QueryHistoryItem>(
@@ -254,17 +237,17 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                             .map(attachSh.bind(null, this.pluginApi.getComponentHelpers()))) :
                     Immutable.List<Kontext.QueryHistoryItem>(data.data
                             .map(attachSh.bind(null, this.pluginApi.getComponentHelpers())));
-            }
+            })
         );
     }
 
-    private saveItem(queryId:string, name:string):RSVP.Promise<string> {
+    private saveItem(queryId:string, name:string):Observable<string> {
         return (() => {
             const args = new MultiDict();
             args.set('query_id', queryId);
             args.set('name', name);
             if (name) {
-                return this.pluginApi.ajax<any>(
+                return this.pluginApi.ajax$<any>(
                     'POST',
                     this.pluginApi.createActionUrl('save_query'),
                     args
@@ -274,25 +257,23 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
             } else {
                 const args = new MultiDict();
                 args.set('query_id', queryId);
-                return this.pluginApi.ajax<any>(
+                return this.pluginApi.ajax$<any>(
                     'POST',
                     this.pluginApi.createActionUrl('delete_query'),
                     args
                 );
             }
-        })().then(
-            (data) => {
+
+        })().pipe(
+            tap((data) => {
                 this.editingQueryId = null;
                 this.editingQueryName = null;
-                return this.loadData();
-            }
-
-        ).then(
-            () => {
-                return name ?
+            }),
+            concatMap((_) => this.loadData()),
+            map(() => name ?
                     this.pluginApi.translate('query__save_as_item_saved') :
-                    this.pluginApi.translate('query__save_as_item_removed');
-            }
+                    this.pluginApi.translate('query__save_as_item_removed')
+            )
         );
     }
 

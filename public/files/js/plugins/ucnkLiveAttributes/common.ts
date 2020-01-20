@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import rsvp = require('rsvp');
-
 /**
  * A minimal interface required by RangeSelector to cooperate with
  * text types checkboxes.

@@ -24,8 +24,8 @@ import {PageModel} from '../../app/page';
 import { InputMode } from './common';
 import {SubcorpFormModel} from './form';
 import { MultiDict } from '../../util';
-import RSVP from 'rsvp';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { throwError } from 'rxjs';
 
 /**
  *
@@ -140,18 +140,15 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                 if (state.inputMode === InputMode.RAW) {
                     const args = this.getSubmitArgs(state);
                     const err = this.validateForm(state);
-                    (() => {
-                        if (err === null) {
-                            return this.pageModel.ajax<any>(
-                                'POST',
-                                this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
-                                args
-                            );
+                    (err === null ?
+                        this.pageModel.ajax$<any>(
+                            'POST',
+                            this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
+                            args
+                        ) :
+                        throwError(err)
 
-                        } else {
-                            return RSVP.Promise.reject(err);
-                        }
-                    })().then(
+                    ).subscribe(
                         () => {
                             window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
                         },

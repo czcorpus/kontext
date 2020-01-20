@@ -19,7 +19,6 @@
  */
 
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {Kontext} from '../../types/common';

@@ -16,15 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
-import { init } from '../../views/query/input';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -374,46 +374,47 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         };
     }
 
-    private changeFavStatus(state:CorplistTableModelState, corpusId:string, favId:string):RSVP.Promise<string> {
+    private changeFavStatus(state:CorplistTableModelState, corpusId:string, favId:string):Observable<string> {
         if (favId === null) {
             const item:common.GeneratedFavListItem = {
                 subcorpus_id: null,
                 subcorpus_orig_id: null,
                 corpora:[corpusId]
             };
-            return this.pluginApi.ajax<SetFavItemResponse>(
+            return this.pluginApi.ajax$<SetFavItemResponse>(
                 'POST',
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 item
 
-            ).then(
-                (data) => {
+            ).pipe(
+                tap((data) => {
                     this.updateDataItem(state, corpusId, {fav_id: data.id});
-                    return this.pluginApi.translate('defaultCorparch__item_added_to_fav');
-                }
+                }),
+                map(_ => this.pluginApi.translate('defaultCorparch__item_added_to_fav'))
             );
 
         } else {
-            return this.pluginApi.ajax<SetFavItemResponse>(
+            return this.pluginApi.ajax$<SetFavItemResponse>(
                 'POST',
                 this.pluginApi.createActionUrl('user/unset_favorite_item'),
                 {id: favId}
 
-            ).then(
-                (data) => {
+            ).pipe(
+                tap((data) => {
                     if (state.favouritesOnly) {
                         state.rows = state.rows.filterNot(value => value.corpus_id == corpusId).toList();
+
                     } else {
                         this.updateDataItem(state, corpusId, {fav_id: null});
                     }
-                    return this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
-                }
-            )
+                }),
+                map(_ => this.pluginApi.translate('defaultCorparch__item_removed_from_fav'))
+            );
         }
     }
 
-    private loadCorpusInfo(corpusId:string):RSVP.Promise<CorpusInfoResponse> {
-        return this.pluginApi.ajax<CorpusInfoResponse>(
+    private loadCorpusInfo(corpusId:string):Observable<CorpusInfoResponse> {
+        return this.pluginApi.ajax$<CorpusInfoResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
             {
@@ -422,7 +423,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    private loadData(query:string, filters:Filters, offset:number, limit?:number, favouriteOnly?:boolean):RSVP.Promise<CorplistDataResponse> {
+    private loadData(query:string, filters:Filters, offset:number, limit?:number, favouriteOnly?:boolean):Observable<CorplistDataResponse> {
         const args = new MultiDict();
         args.set('query', query);
         args.set('offset', offset);
@@ -438,7 +439,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             args.set('favOnly', +favouriteOnly);
         }
         args.set('requestable', '1');
-        return this.pluginApi.ajax<CorplistDataResponse>(
+        return this.pluginApi.ajax$<CorplistDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
             args

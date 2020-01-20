@@ -20,8 +20,9 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 enum IntervalChar {
@@ -192,7 +193,7 @@ export class RangeSelector {
      * @param attribArgs Custom attributes overwriting the implicit ones plug-in collects itself
      * @param alignedCorpnames Optional list of aligned corpora
      */
-    loadData(attribArgs:{[key:string]:any}, alignedCorpnames?:Array<string>):RSVP.Promise<any> { // TODO type
+    loadData(attribArgs:{[key:string]:any}, alignedCorpnames?:Array<string>):Observable<any> { // TODO type
         const requestURL:string = this.pluginApi.createActionUrl('filter_attributes');
         const args = {corpname: this.pluginApi.getCorpusIdent().id};
 
@@ -206,56 +207,54 @@ export class RangeSelector {
         }
         args['attrs'] = JSON.stringify(attrs);
 
-        return this.pluginApi.ajax(
+        return this.pluginApi.ajax$(
             'GET',
             requestURL,
             args
         );
     }
 
-    private loadAndReplaceRawInput(attribName:string, from:number, to:number):RSVP.Promise<Kontext.GeneralProps> {
+    private loadAndReplaceRawInput(attribName:string, from:number, to:number):Observable<Kontext.GeneralProps> {
         let args:{[key:string]:any} = {};
         args[attribName] = {from: from, to: to};
-        return this.loadData(args).then(
-            // TODO data type relies on liveattrs specific returned data
-            (data:{attr_values:{[key:string]:any}}) => {
+        return this.loadData(args).pipe(
+            tap((data:{attr_values:{[key:string]:any}}) => { // TODO data type relies on liveattrs specific returned data
                 this.textTypesModel.setValues(attribName,
                         data.attr_values[attribName].map(item=>item[0]));
-                return data.attr_values;
-            }
+            }),
+            map((data) => data.attr_values)
         );
     }
 
     applyRange(attrName:string, fromVal:number, toVal:number, strictInterval:boolean,
-            keepCurrent:boolean):RSVP.Promise<TextTypes.AttributeSelection> {
+            keepCurrent:boolean):Observable<TextTypes.AttributeSelection> {
 
         if (isNaN(fromVal) && isNaN(toVal)) {
             this.pluginApi.showMessage('warning',
                     this.pluginApi.translate('ucnkLA__at_least_one_required'));
+            return rxOf(this.textTypesModel.getAttribute(attrName));
 
         } else {
-            let prom:RSVP.Promise<any>;
-            if (this.isEmpty(attrName)) {
-                prom = this.loadAndReplaceRawInput(attrName, fromVal, toVal);
-
-            } else {
-                prom = new RSVP.Promise((resolve:(d)=>void, reject:(err)=>void) => { resolve(null); });
-            }
-
-            return prom.then(
-                () => {
-                    const currSelection = this.textTypesModel.getAttribute(attrName);
+            return (this.isEmpty(attrName) ?
+                this.loadAndReplaceRawInput(attrName, fromVal, toVal) :
+                rxOf(null)
+            ).pipe(
+                map(() => this.textTypesModel.getAttribute(attrName)),
+                tap(() => {
                     this.checkIntervalRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
-                    const ans = this.textTypesModel.getAttribute(attrName);
-                    if (currSelection.getNumOfSelectedItems() === ans.getNumOfSelectedItems()) {
+                }),
+                map<TextTypes.AttributeSelection, [TextTypes.AttributeSelection, TextTypes.AttributeSelection]>((currSelection) =>
+                    [currSelection, this.textTypesModel.getAttribute(attrName)]),
+                tap(([currSelection, updatedSelection]) => {
+                    if (currSelection.getNumOfSelectedItems() === updatedSelection.getNumOfSelectedItems()) {
                         this.pluginApi.showMessage('warning',
                                 this.pluginApi.translate('ucnkLA__nothing_selected'));
 
                     } else {
                         this.modeStatus = this.modeStatus.set(attrName, false);
                     }
-                    return ans;
-                }
+                }),
+                map(([_, updatedSelection]) => updatedSelection)
             );
         }
     }
