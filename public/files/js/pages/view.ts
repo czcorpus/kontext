@@ -20,7 +20,6 @@
 
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
-import RSVP from 'rsvp';
 import { Action } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { KontextPage } from '../app/main';
@@ -329,20 +328,18 @@ export class ViewPage {
         } else {
             const loop = (idx:number, delay:number, decay:number) => {
                 window.setTimeout(() => {
-                    this.layoutModel.ajax(
+                    this.layoutModel.ajax$(
                         'GET',
                         this.layoutModel.createActionUrl('get_cached_conc_sizes'),
                         this.layoutModel.getConcArgs()
 
-                    ).then(
+                    ).subscribe(
                         (data:AjaxResponse.ConcStatus) => {
                             applyData(data);
                             if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
                                 loop(idx + 1, delay * decay, decay);
                             }
-                        }
-
-                    ).catch(
+                        },
                         (err) => {
                             this.layoutModel.dispatcher.dispatch({
                                 name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',

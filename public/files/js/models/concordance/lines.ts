@@ -27,11 +27,12 @@ import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {KWICSection} from './line';
 import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
-import RSVP from 'rsvp';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 import {transformVmode} from '../options/structsAttrs';
 import { Action, IFullActionControl } from 'kombo';
+import { throwError, Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 export interface ServerTextChunk {
     class:string;
@@ -401,7 +402,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                 break;
                 case 'CONCORDANCE_CHANGE_PAGE':
                 case 'CONCORDANCE_REVISIT_PAGE':
-                    this.changePage(action.payload['action'], action.payload['pageNum']).then(
+                    this.changePage(action.payload['action'], action.payload['pageNum']).subscribe(
                         (data) => {
                             if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
                                 this.pushHistoryState(this.currentPage);
@@ -442,7 +443,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
                     this.isBusy = true;
                     this.emitChange();
-                    this.calculateAdHocIpm().then(
+                    this.calculateAdHocIpm().subscribe(
                         (data) => {
                             this.isBusy = false;
                             this.emitChange();
@@ -460,7 +461,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     this.emitChange();
                 break;
                 case 'CONCORDANCE_SWITCH_KWIC_SENT_MODE':
-                    this.changeViewMode().then(
+                    this.changeViewMode().subscribe(
                         () => {
                             this.emitChange();
                         },
@@ -494,7 +495,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
         this.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
 
-        this.reloadPage().then(
+        this.reloadPage().subscribe(
             (data) => {
                 this.pushHistoryState(this.currentPage);
                 this.emitChange();
@@ -508,7 +509,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     updateOnGlobalViewOptsChange(model:ViewOptions.IGeneralViewOptionsModel):void {
         this.showLineNumbers = model.getLineNumbers();
         this.currentPage = 1;
-        this.reloadPage().then(
+        this.reloadPage().subscribe(
             (data) => {
                 this.pushHistoryState(this.currentPage);
                 this.emitChange();
@@ -543,7 +544,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    reloadPage(concId?:string):RSVP.Promise<MultiDict> {
+    reloadPage(concId?:string):Observable<MultiDict> {
         return this.changePage('customPage', this.currentPage, concId);
     }
 
@@ -561,13 +562,11 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    private changePage(action:string, pageNumber?:number, concId?:string):RSVP.Promise<MultiDict> {
+    private changePage(action:string, pageNumber?:number, concId?:string):Observable<MultiDict> {
         const args = this.layoutModel.getConcArgs();
         const pageNum:number = Number(action === 'customPage' ? pageNumber : this.pagination[action]);
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
-            return new RSVP.Promise((resolve: (v: MultiDict)=>void, reject:(e:any)=>void) => {
-                reject(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));
-            });
+            return throwError(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));
         }
 
         args.set('fromp', pageNum);
@@ -576,17 +575,17 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
             args.set('q', concId);
         }
 
-        return this.layoutModel.ajax<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             'GET',
             this.layoutModel.createActionUrl('view'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.importData(data);
                 this.currentPage = pageNum;
-                return this.layoutModel.getConcArgs();
-            }
+            }),
+            map(_ => this.layoutModel.getConcArgs())
         );
     }
 
@@ -603,7 +602,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         }
     }
 
-    private changeViewMode():RSVP.Promise<any> {
+    private changeViewMode():Observable<any> {
         let mode:string;
         if (this.corporaColumns.size > 1) {
             mode = {'align': 'kwic', 'kwic': 'align'}[this.viewMode];
@@ -616,15 +615,15 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
 
-        return this.layoutModel.ajax<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             'GET',
             this.layoutModel.createActionUrl('view'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.importData(data);
-            }
+            })
         );
     }
 
@@ -730,23 +729,23 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         }
     }
 
-    private calculateAdHocIpm():RSVP.Promise<number> {
+    private calculateAdHocIpm():Observable<number> {
         const selections = this.ttModel.exportSelections(false);
         const args = new MultiDict();
         args.set('corpname', this.baseCorpname);
         for (let p in selections) {
             args.replace(`sca_${p}`, selections[p]);
         }
-        return this.layoutModel.ajax<AjaxResponse.WithinMaxHits>(
+        return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
             'POST',
             this.layoutModel.createActionUrl('ajax_get_within_max_hits'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.adHocIpm = this.concSummary.fullSize / data.total * 1e6;
-                return this.adHocIpm;
-            }
+            }),
+            map(_ => this.adHocIpm)
         );
     }
 

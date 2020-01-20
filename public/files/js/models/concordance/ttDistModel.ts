@@ -20,12 +20,13 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import {ConcLineModel} from './lines';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { map, concatMap, tap } from 'rxjs/operators';
 
 export type TTCrit = Array<[string, string]>;
 
@@ -161,7 +162,7 @@ export class TextTypesDistModel extends StatefulModel {
             if (this.lastArgs !== args.getFirst('q')) {
                 this.isBusy = true;
                 this.emitChange();
-                this.loadData(args).then(
+                this.loadData(args).subscribe(
                     (ans) => {
                         this.isBusy = false;
                         this.emitChange();
@@ -180,25 +181,25 @@ export class TextTypesDistModel extends StatefulModel {
         return this.concLineModel.getConcSummary().concSize;
     }
 
-    private loadData(args:MultiDict):RSVP.Promise<boolean> {
+    private loadData(args:MultiDict):Observable<boolean> {
 
         return (() => {
             if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
                 args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
                 this.lastArgs = args.getFirst('q');
-                return this.layoutModel.ajax<any>(
+                return this.layoutModel.ajax$<Response.Reduce>(
                     'GET',
                     this.layoutModel.createActionUrl('reduce'),
                     args
                 );
 
             } else {
-                return RSVP.Promise.resolve({});
+                return rxOf({});
             }
-        })().then(
-            (reduceAns:Response.Reduce) => {
-                const args = this.layoutModel.getConcArgs();
+        })().pipe(
+            map((reduceAns) => [reduceAns, this.layoutModel.getConcArgs()] as [Response.Reduce, MultiDict]),
+            concatMap(([reduceAns, args]) => {  // TODO side effects here
                 this.ttCrit.forEach(v => args.add(v[0], v[1]));
                 this.flimit = this.concLineModel.getRecommOverviewMinFreq();
                 args.set('ml', 0);
@@ -209,14 +210,13 @@ export class TextTypesDistModel extends StatefulModel {
                     this.sampleSize = reduceAns.sampled_size;
                     args.set('q', `~${reduceAns.conc_persistence_op_id}`);
                 }
-                return this.layoutModel.ajax<Response.FreqData>(
+                return this.layoutModel.ajax$<Response.FreqData>(
                     'GET',
                     this.layoutModel.createActionUrl('freqs'),
                     args
                 );
-            }
-        ).then(
-            (data) => {
+            }),
+            tap((data) => {
                 this.blocks = Immutable.List<FreqBlock>(
                     data.Blocks.filter(block => block.Items.length > 0).map(block => {
                         const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
@@ -234,8 +234,8 @@ export class TextTypesDistModel extends StatefulModel {
                         };
                     })
                 );
-                return true;
-            }
+            }),
+            map(_ => true)
         );
     }
 

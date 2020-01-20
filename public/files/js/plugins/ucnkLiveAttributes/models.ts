@@ -20,18 +20,12 @@
 
 import {TextTypes, Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
-import RSVP from 'rsvp';
 import * as Immutable from 'immutable';
 import { SelectedTextTypes, SelectionFilterMap } from '../../models/textTypes/main';
 import { IActionDispatcher, Action, StatelessModel, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-
-interface ServerBibData {
-    error?:string;
-    bib_data:Array<Array<string>>;
-}
 
 interface ServerRefineResponse extends Kontext.AjaxResponse {
     error?:string;
@@ -40,6 +34,10 @@ interface ServerRefineResponse extends Kontext.AjaxResponse {
     attr_values:{
         [key:string]:{poscount:number}|Array<[string, string, string, number, number]>
     };
+}
+
+interface ServerBibInfoResponse extends Kontext.AjaxResponse {
+    bib_data:Array<[string, string]>;
 }
 
 export interface TTSelectionStep {
@@ -274,8 +272,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
             case 'TT_EXTENDED_INFORMATION_REQUEST':
                 const ident:string = action.payload['ident'];
                 if (state.bibliographyIds.contains(ident)) {
-                    this.loadBibInfo(ident).then(
-                        (serverData:ServerBibData) => {
+                    this.loadBibInfo(ident).subscribe(
+                        (serverData) => {
                             dispatch({
                                 name: 'TT_EXTENDED_INFORMATION_REQUEST_DONE',
                                 payload: {
@@ -283,11 +281,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                                     ident: ident,
                                     data: serverData.bib_data
                                 }
-                            });
-
-                        }
-                    ).catch(
-                        (err:any) => {
+                            })
+                        },
+                        (err:Error) => {
                             this.pluginApi.showMessage('error', err);
                             dispatch({
                                 name: 'TT_EXTENDED_INFORMATION_REQUEST_DONE',
@@ -298,9 +294,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                     );
 
                 } else {
-                    return new RSVP.Promise<any>((resolve:()=>void, reject:(err)=>void) => {
-                        reject(new Error('Item not found'));
-                    })
+                    return this.pluginApi.showMessage('error', this.pluginApi.translate('ucnkLA__item_not_found'));
                 }
             break;
             case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED':
@@ -450,8 +444,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
         return ans;
     }
 
-    private loadBibInfo(bibId:string):RSVP.Promise<any> {
-        return this.pluginApi.ajax(
+    private loadBibInfo(bibId:string):Observable<ServerBibInfoResponse> {
+        return this.pluginApi.ajax$<ServerBibInfoResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/bibliography'),
             {

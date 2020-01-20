@@ -24,7 +24,6 @@ import { MultiDict } from '../util';
 import { CommonViews } from '../views/common';
 import { CoreViews } from '../types/coreViews';
 import { Observable } from 'rxjs';
-import RSVP from 'rsvp';
 import { PageModel } from './page';
 
 
@@ -69,10 +68,6 @@ export class PluginApi implements IPluginApi {
 
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict) {
         return this.pageModel.createActionUrl(path, args);
-    }
-
-    ajax<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):RSVP.Promise<T> {
-        return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
     }
 
     ajax$<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):Observable<T> {

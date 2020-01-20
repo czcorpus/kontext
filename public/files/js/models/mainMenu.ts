@@ -22,7 +22,6 @@ import {Kontext} from '../types/common';
 import {StatefulModel} from './base';
 import {PageModel} from '../app/page';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import { MultiDict } from '../util';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, forkJoin } from 'rxjs';

@@ -20,7 +20,6 @@
 
 import { Observable, Subscription } from 'rxjs';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
@@ -36,7 +35,6 @@ export interface IPluginApi extends ITranslator {
     getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
-    ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T>;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     userIsAnonymous():boolean;

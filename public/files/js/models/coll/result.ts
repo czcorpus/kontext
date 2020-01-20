@@ -24,9 +24,10 @@ import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/page';
 import {CollFormModel} from '../../models/coll/collForm';
-import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 
 export interface CollResultRow {
@@ -288,12 +289,12 @@ class CalcWatchdog {
         this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
             args.add('worker_tasks', taskId);
         });
-        this.layoutModel.ajax(
+        this.layoutModel.ajax$(
             'GET',
             this.layoutModel.createActionUrl('wordlist_process'),
             args
 
-        ).then(
+        ).subscribe(
             (data:Kontext.AjaxResponse) => {
                 if (data['status'] === 100) {
                         this.stopWatching(); // just for sure
@@ -471,7 +472,7 @@ export class CollResultModel extends StatefulModel {
     }
 
     private processDataReload():void {
-        this.loadData().then(
+        this.loadData().subscribe(
             (_) => {
                 this.isWaiting = false;
                 this.emitChange();
@@ -492,15 +493,15 @@ export class CollResultModel extends StatefulModel {
         return args;
     }
 
-    private loadData():RSVP.Promise<boolean> {
+    private loadData():Observable<boolean> {
         const args = this.getSubmitArgs();
-        return this.layoutModel.ajax<AjaxResponse>(
+        return this.layoutModel.ajax$<AjaxResponse>(
             'GET',
             this.layoutModel.createActionUrl('collx'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 if (data.Items.length === 0) {
                     this.hasNextPage = false;
                     this.currPage -= 1;
@@ -515,8 +516,8 @@ export class CollResultModel extends StatefulModel {
                     this.heading = Immutable.List<CollResultHeadingCell>(data.Head).slice(1).toList();
                     this.data = Immutable.List<CollResultRow>(data.Items);
                 }
-                return true;
-            }
+            }),
+            map(_ => true)
         );
     }
 

@@ -24,8 +24,9 @@ import {Kontext} from '../../types/common';
 import { StatefulModel } from '../../models/base';
 import { IPluginApi } from '../../types/plugins';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import { Action } from 'kombo';
+import { forkJoin, Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -164,10 +165,8 @@ export class TreeWidgetModel extends StatefulModel {
                         this.emitChange();
                         break;
                     case 'TREE_CORPARCH_GET_DATA':
-                        this.loadData().then(
-                            (d) => this.emitChange()
-
-                        ).catch(
+                        this.loadData().subscribe(
+                            (d) => this.emitChange(),
                             (err) => {
                                 this.pluginApi.showMessage('error', err);
                                 this.emitChange();
@@ -342,28 +341,27 @@ export class TreeWidgetModel extends StatefulModel {
     /**
      * Load corplist and permitted corpora from server
      */
-    loadData():RSVP.Promise<boolean> {
-        return RSVP.all([
-            this.pluginApi.ajax<CorplistNodeServerResponse>(
+    loadData():Observable<boolean> {
+        return forkJoin(
+            this.pluginApi.ajax$<CorplistNodeServerResponse>(
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
                 {}
             ),
-            this.pluginApi.ajax<PermittedCorporaResponse>(
+            this.pluginApi.ajax$<PermittedCorporaResponse>(
                 'GET',
                 this.pluginApi.createActionUrl('corpora/ajax_get_permitted_corpora'),
                 {}
             )
-        ]).then(
-            (data) => {
-                const [corptreeDataResp, permittedCorporaResp] = data;
+        ).pipe(
+            tap(([corptreeDataResp, permittedCorporaResp]) => {
                 this.attachPermittedFlag(
                     corptreeDataResp,
                     Object.keys(permittedCorporaResp.permitted_corpora || {})
                 );
                 this.setData(corptreeDataResp);
-                return true;
-            }
+            }),
+            map(_ =>  true)
         );
     }
 

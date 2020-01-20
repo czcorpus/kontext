@@ -183,12 +183,12 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 );
             break;
             case 'QUERY_GET_CONC_ARCHIVED_STATUS':
-                this.layoutModel.ajax<IsArchivedResponse>(
+                this.layoutModel.ajax$<IsArchivedResponse>(
                     'GET',
                     this.layoutModel.createActionUrl('get_stored_conc_archived_status'),
                     {code: state.queryId}
 
-                ).then(
+                ).subscribe(
                     (data) => {
                         dispatch({
                             name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',

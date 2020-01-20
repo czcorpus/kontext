@@ -18,9 +18,9 @@
 
 import {IPluginApi} from '../../../types/plugins';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { TagBuilderBaseState } from '../common';
+import { Observable } from 'rxjs';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -169,7 +169,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
                 if (state.data.last().size === 0) {
-                    this.loadInitialData(state).then(
+                    this.loadInitialData(state).subscribe(
                         (data) => {
                             dispatch({
                                 name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
@@ -194,7 +194,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 }
             break;
             case 'TAGHELPER_CHECKBOX_CHANGED':
-            this.updateData(state, action.payload['position']).then(
+            this.updateData(state, action.payload['position']).subscribe(
                 (data) => {
                     dispatch({
                         name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
@@ -221,8 +221,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         }
     }
 
-    private loadInitialData(state:TagHelperModelState):RSVP.Promise<TagDataResponse> {
-        return this.pluginApi.ajax<TagDataResponse>(
+    private loadInitialData(state:TagHelperModelState):Observable<TagDataResponse> {
+        return this.pluginApi.ajax$<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
@@ -235,8 +235,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         );
     }
 
-    private updateData(state:TagHelperModelState, triggerRow:number):RSVP.Promise<TagDataResponse> {
-        let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
+    private updateData(state:TagHelperModelState, triggerRow:number):Observable<TagDataResponse> {
+        return this.pluginApi.ajax$<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
@@ -247,11 +247,6 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 ]
             ),
             {}
-        );
-        return prom.then(
-            (data) => {
-                return data;
-            }
         );
     }
 

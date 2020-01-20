@@ -25,8 +25,8 @@ import {MultiDict} from '../../util';
 import {PageModel} from '../../app/page';
 import {TextTypesModel} from '../../models/textTypes/main';
 import {InputMode} from './common';
-import RSVP from 'rsvp';
 import { Action, ITranslator, IFullActionControl } from 'kombo';
+import { Observable, throwError } from 'rxjs';
 
 
 export function validateSubcProps(subcname:Kontext.FormValue<string>, description:Kontext.FormValue<string>,
@@ -109,7 +109,7 @@ export class SubcorpFormModel extends StatefulModel {
                     if (this.inputMode === InputMode.GUI) {
                         this.isBusy = true;
                         this.emitChange();
-                        this.submit().then(
+                        this.submit().subscribe(
                             () => {
                                 this.isBusy = false;
                                 this.emitChange();
@@ -164,18 +164,18 @@ export class SubcorpFormModel extends StatefulModel {
         );
     }
 
-    submit():RSVP.Promise<any> {
+    submit():Observable<any> {
         const args = this.getSubmitArgs();
         const err = this.validateForm(true);
         if (err === null) {
-            return this.pageModel.ajax<any>(
+            return this.pageModel.ajax$<any>(
                 'POST',
                 this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
                 args
             );
 
         } else {
-            return RSVP.Promise.reject(err);
+            return throwError(err);
         }
     }
 

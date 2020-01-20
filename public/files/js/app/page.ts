@@ -20,7 +20,6 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import RSVP from 'rsvp';
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
 import {CoreViews} from '../types/coreViews';
@@ -251,12 +250,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
-    ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
-        return this.appNavig.ajax(method, url, args, options);
-    }
-
     ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
-        return this.appNavig.ajax$(method, url, args, options);
+        return this.appNavig.ajax$<T>(method, url, args, options);
     }
 
     /**
@@ -282,7 +277,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 category: type
             }
         });
-        this.appNavig.bgDownload(filename, url, method(), args).then(
+        this.appNavig.bgDownload(filename, url, method(), args).subscribe(
             () => {
                 this.dispatcher.dispatch({
                     name: 'INBOX_UPDATE_ASYNC_TASK',
@@ -354,9 +349,9 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     }
 
     /**
-     * Pops-up a user message at the center of page. It is able
+     * Pops-up a user message at the center of page. It is also able
      * to handle process error-returned XMLHttpRequest objects
-     * when using RSVP-ajax too.
+     * when using Ajax.
      *
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
      * @param message - text of the message in most cases; in case of

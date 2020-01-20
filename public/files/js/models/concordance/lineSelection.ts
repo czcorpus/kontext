@@ -25,8 +25,9 @@ import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/page';
 import {ConcLineModel} from './lines';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable, throwError } from 'rxjs';
+import { tap, map, concatMap } from 'rxjs/operators';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
@@ -122,7 +123,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_RESET_ON_SERVER':
                     this._isBusy = true;
                     this.emitChange();
-                    this.resetServerLineGroups().then(
+                    this.resetServerLineGroups().subscribe(
                         (args:MultiDict) => {
                             this._isBusy = false;
                             this.concLineModel.emitChange();
@@ -147,7 +148,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_MARK_LINES':
                     this._isBusy = true;
                     this.emitChange();
-                    this.markLines().then(
+                    this.markLines().subscribe(
                         (args:MultiDict) => {
                             this._isBusy = false;
                             this.emitChange();
@@ -167,7 +168,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_REENABLE_EDIT':
                     this._isBusy = true;
                     this.emitChange();
-                    this.reenableEdit().then(
+                    this.reenableEdit().subscribe(
                         (args:MultiDict) => {
                             this._isBusy = false;
                             this.concLineModel.emitChange();
@@ -184,7 +185,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_GROUP_RENAME':
                     this._isBusy = true;
                     this.emitChange();
-                    this.renameLineGroup(action.payload['srcGroupNum'], action.payload['dstGroupNum']).then(
+                    this.renameLineGroup(action.payload['srcGroupNum'], action.payload['dstGroupNum']).subscribe(
                         (args:MultiDict) => {
                             this._isBusy = false;
                             this.concLineModel.emitChange();
@@ -201,7 +202,7 @@ export class LineSelectionModel extends StatefulModel {
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
                     this._isBusy = true;
                     this.emitChange();
-                    this.sendSelectionUrlToEmail(action.payload['email']).then(
+                    this.sendSelectionUrlToEmail(action.payload['email']).subscribe(
                         (data) => {
                             this._isBusy = false;
                             this.emitChange();
@@ -222,7 +223,7 @@ export class LineSelectionModel extends StatefulModel {
                     }
                     break;
                 case 'LINE_SELECTION_LOAD_USER_CREDENTIALS':
-                    this.userInfoModel.loadUserInfo(false).then(
+                    this.userInfoModel.loadUserInfo(false).subscribe(
                         () => {
                             this.emailDialogCredentials = this.userInfoModel.getCredentials();
                             this.emitChange();
@@ -283,26 +284,20 @@ export class LineSelectionModel extends StatefulModel {
         this.clStorage.clear();
     }
 
-    private renameLineGroup(srcGroupNum:number, dstGroupNum:number):RSVP.Promise<MultiDict> {
+    private renameLineGroup(srcGroupNum:number, dstGroupNum:number):Observable<MultiDict> {
         if (!this.validateGroupId(srcGroupNum) || !this.validateGroupId(dstGroupNum)) {
-            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                reject(this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
-                        {max_group: this.maxGroupId}));
-            });
+            return throwError(new Error(this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
+                        {max_group: this.maxGroupId})));
 
         } else if (!srcGroupNum) {
-            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                reject(this.layoutModel.translate('linesel__group_missing'));
-            });
+            return throwError(new Error(this.layoutModel.translate('linesel__group_missing')));
 
         } else if (this.currentGroupIds.indexOf(srcGroupNum) < 0) {
-            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                reject(this.layoutModel.translate('linesel__group_does_not_exist_{group}',
-                    {group: srcGroupNum}));
-            });
+            return throwError(new Error(this.layoutModel.translate('linesel__group_does_not_exist_{group}',
+                    {group: srcGroupNum})));
 
         } else {
-            return this.layoutModel.ajax<Kontext.AjaxConcResponse>(
+            return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
                 'POST',
                 this.layoutModel.createActionUrl(
                     'ajax_rename_line_group',
@@ -315,18 +310,18 @@ export class LineSelectionModel extends StatefulModel {
                 {
                     contentType : 'application/x-www-form-urlencoded'
                 }
-            ).then<MultiDict>(
-                (data) => {
+            ).pipe(
+                tap((data) => {
                     this.currentGroupIds = data['lines_groups_numbers'];
                     this.updateGlobalArgs(data);
-                    return this.concLineModel.reloadPage();
-                }
+                }),
+                concatMap(_ => this.concLineModel.reloadPage())
             );
         }
     }
 
-    private sendSelectionUrlToEmail(email:string):RSVP.Promise<boolean> {
-        const prom = this.layoutModel.ajax<SendSelToMailResponse>(
+    private sendSelectionUrlToEmail(email:string):Observable<boolean> {
+        return this.layoutModel.ajax$<SendSelToMailResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                 'ajax_send_group_selection_link_to_mail',
@@ -337,31 +332,29 @@ export class LineSelectionModel extends StatefulModel {
                 ]
             ),
             {}
-        );
 
-        return prom.then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 if (data.ok) {
                     this.layoutModel.showMessage('info',
                         this.layoutModel.translate('linesel__mail_has_been_sent'));
-                    return true;
 
                 } else {
                     this.layoutModel.showMessage('error',
                         this.layoutModel.translate('linesel__failed_to_send_the_mail'));
-                    return false;
                 }
-            }
+            }),
+            map((data) => data.ok)
         );
     }
 
-    private finishAjaxActionWithRedirect(prom:RSVP.Promise<Kontext.AjaxConcResponse>):void {
+    private finishAjaxActionWithRedirect(src:Observable<Kontext.AjaxConcResponse>):void {
         /*
          * please note that we do not have to update layout model
          * query code or any other state parameter here because client
          * is redirected to a new URL once the action is done
          */
-        prom.then(
+        src.subscribe(
             (data:Kontext.AjaxConcResponse) => { // TODO type
                 this.performActionFinishHandlers();
                 this.clStorage.clear();
@@ -370,8 +363,7 @@ export class LineSelectionModel extends StatefulModel {
                 const nextUrl = this.layoutModel.createActionUrl('view', args.items());
                 this.onLeavePage();
                 window.location.href = nextUrl; // we're leaving Flux world here so it's ok
-            }
-        ).catch(
+            },
             (err) => {
                 this.performActionFinishHandlers();
                 this.layoutModel.showMessage('error', err);
@@ -379,8 +371,8 @@ export class LineSelectionModel extends StatefulModel {
         );
     }
 
-    public resetServerLineGroups():RSVP.Promise<MultiDict> {
-        return this.layoutModel.ajax<Kontext.AjaxConcResponse>(
+    public resetServerLineGroups():Observable<MultiDict> {
+        return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                     'ajax_unset_lines_groups',
@@ -390,17 +382,18 @@ export class LineSelectionModel extends StatefulModel {
             {
                 contentType : 'application/x-www-form-urlencoded'
             }
-        ).then<MultiDict>(
-            (data) => {
+
+        ).pipe(
+            tap((data) => {
                 this.clStorage.clear();
                 this.updateGlobalArgs(data);
-                return this.concLineModel.reloadPage();
-            }
-        )
+            }),
+            concatMap(_ => this.concLineModel.reloadPage())
+        );
     }
 
-    private markLines():RSVP.Promise<MultiDict> {
-        return this.layoutModel.ajax<Kontext.AjaxConcResponse>(
+    private markLines():Observable<MultiDict> {
+        return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                 'ajax_apply_lines_groups',
@@ -409,28 +402,24 @@ export class LineSelectionModel extends StatefulModel {
             {
                 rows : JSON.stringify(this.clStorage.getAll())
             }
-        ).then<MultiDict>(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.updateGlobalArgs(data);
                 this.currentGroupIds = data['lines_groups_numbers'];
-                return this.concLineModel.reloadPage();
-            }
+            }),
+            concatMap(_ => this.concLineModel.reloadPage())
         );
     }
 
     private removeNonGroupLines():void {
-        const prom:RSVP.Promise<Kontext.AjaxConcResponse> = this.layoutModel.ajax<Kontext.AjaxConcResponse>(
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                 'ajax_remove_non_group_lines',
                 this.layoutModel.getConcArgs().items()
             ),
-            {},
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
-        );
-        this.finishAjaxActionWithRedirect(prom);
+            {}
+        ));
     }
 
     private queryChecksum(q:string):number {
@@ -442,8 +431,8 @@ export class LineSelectionModel extends StatefulModel {
         return cc;
     }
 
-    private reenableEdit():RSVP.Promise<MultiDict> {
-        return this.layoutModel.ajax<ReenableEditResponse>(
+    private reenableEdit():Observable<MultiDict> {
+        return this.layoutModel.ajax$<ReenableEditResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                 'ajax_reedit_line_selection',
@@ -451,20 +440,20 @@ export class LineSelectionModel extends StatefulModel {
             ),
             {}
 
-        ).then<MultiDict>(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.registerQuery(data.Q);
                 this.importData(data.selection);
                 this.updateGlobalArgs(data);
-                return this.concLineModel.reloadPage();
-            }
+            }),
+            concatMap(_ => this.concLineModel.reloadPage())
         );
     }
 
     private removeLines(filter:string):void {
         const args = this.layoutModel.getConcArgs();
         args.set('pnfilter', filter);
-        const prom:RSVP.Promise<Kontext.AjaxConcResponse> = this.layoutModel.ajax<Kontext.AjaxConcResponse>(
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                 'ajax_remove_selected_lines',
@@ -472,12 +461,8 @@ export class LineSelectionModel extends StatefulModel {
             ),
             {
                 rows : JSON.stringify(this.getAll())
-            },
-            {
-                contentType : 'application/x-www-form-urlencoded'
             }
-        );
-        this.finishAjaxActionWithRedirect(prom);
+        ));
     }
 
     /**
@@ -534,13 +519,12 @@ export class LineSelectionModel extends StatefulModel {
     }
 
     sortLines():void {
-        let prom:RSVP.Promise<Kontext.AjaxConcResponse> = this.layoutModel.ajax<Kontext.AjaxConcResponse>(
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl('ajax_sort_group_lines',
                     this.layoutModel.getConcArgs().items()),
             {}
-        );
-        this.finishAjaxActionWithRedirect(prom);
+        ));
     }
 
     private importData(data:Array<[number, number, number]>):void {
