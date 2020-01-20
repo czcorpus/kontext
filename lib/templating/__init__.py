@@ -16,7 +16,8 @@
 from collections import defaultdict
 import codecs
 from xml.sax.saxutils import escape
-codecs.register_error('replacedot', lambda err: ('.', err.end))
+# TODO type checking error: "UnicodeError" has no attribute "end"
+codecs.register_error('replacedot', lambda err: ('.', err.end))  # type: ignore
 
 
 class DummyGlobals(object):

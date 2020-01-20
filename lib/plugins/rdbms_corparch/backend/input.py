@@ -19,12 +19,12 @@
 import json
 import re
 
-from typing import List, Dict, Any, IO, Optional
+from typing import List, Dict, Any, IO, Optional, Tuple, Mapping
 
 
 class InstallJsonMetadata(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.database: Optional[str] = None
         self.label_attr: Optional[str] = None
         self.id_attr: Optional[str] = None
@@ -32,7 +32,7 @@ class InstallJsonMetadata(object):
         self.keywords: List[str] = []
         self.featured: bool = False
 
-    def update(self, data):
+    def update(self, data: Mapping[str, Any]) -> None:
         for attr in list(self.__dict__.keys()):
             if attr == 'featured':
                 self.featured = bool(data.get('featured', []))
@@ -42,12 +42,12 @@ class InstallJsonMetadata(object):
 
 class InstallJsonReference(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.default: Optional[str] = None
         self.articles: List[str] = []
         self.other_bibliography: Optional[str] = None
 
-    def update(self, data):
+    def update(self, data: Mapping[str, Any]) -> None:
         self.default = data.get('default', None)
         self.articles = data.get('articles', [])
         self.other_bibliography = data.get('other_bibliography', None)
@@ -62,7 +62,7 @@ class InstallJson(object):
     from default_corparch XML schema.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.ident: Optional[str] = None
         self.sentence_struct: Optional[str] = None
         self.tagset: Optional[str] = None
@@ -79,7 +79,7 @@ class InstallJson(object):
         self.kwic_connect: List[str] = []
 
     @staticmethod
-    def create_sorting_values(ident: str):
+    def create_sorting_values(ident: str) -> Tuple[str, int]:
         srch = re.match(r'(?i)^intercorp(_v(\d+))?_\w+$', ident)
         if srch:
             if srch.groups()[0]:
@@ -96,7 +96,7 @@ class InstallJson(object):
             return 'oral', int(srch.groups()[0]) - 3000
         return ident, 1
 
-    def update(self, fr):
+    def update(self, fr: IO):
         data = json.load(fr)
         for attr in list(self.__dict__.keys()):
             if attr == 'metadata':
@@ -108,6 +108,9 @@ class InstallJson(object):
                 setattr(self, attr, data.get(attr, None))
 
     def to_dict(self) -> Dict[str, Any]:
+        if self.ident is None:
+            raise RuntimeError('Identificator is None')
+
         ans = {}
         ans.update(self.__dict__)
         ans['group_name'], ans['version'] = self.create_sorting_values(self.ident)
@@ -118,12 +121,18 @@ class InstallJson(object):
         return ans
 
     def get_group_name(self) -> str:
+        if self.ident is None:
+            raise RuntimeError('Identificator is None')
+
         ans, _ = self.create_sorting_values(self.ident)
         return ans
 
     def get_version(self) -> int:
+        if self.ident is None:
+            raise RuntimeError('Identificator is None')
+
         _, ans = self.create_sorting_values(self.ident)
         return ans
 
-    def write(self, fw: IO[Any]):
-        return json.dump(self.to_dict(), fw,  indent=4)
+    def write(self, fw: IO):
+        return json.dump(self.to_dict(), fw, indent=4)

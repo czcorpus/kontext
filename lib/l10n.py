@@ -33,6 +33,8 @@ internationalisation of KonText:
    processed using the same module.
 """
 
+from typing import Dict, Any
+
 import re
 from functools import cmp_to_key
 from threading import local
@@ -41,11 +43,13 @@ try:
 except ImportError:
     import locale
 
-    class Locale(object):
+    # ignoring mypy error: Name 'Locale' already defined (possibly by an import)
+    class Locale(object):  # type: ignore
         def __init__(self, *args, **kwargs):
             pass
 
-    class Collator(object):
+    # ignoring mypy error: Name 'Collator' already defined (possibly by an import)
+    class Collator(object):  # type: ignore
         def __init__(self, locale):
             self.locale = locale
 
@@ -57,7 +61,7 @@ except ImportError:
             return Collator(locale)
 
 
-_formats = {}  # contains lang_code -> Formatter() pairs
+_formats: Dict[str, Any] = {}  # contains lang_code -> Formatter() pairs
 _current = local()  # thread-local variable stores per-request formatter
 
 

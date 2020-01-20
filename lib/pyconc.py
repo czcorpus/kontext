@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+from typing import List
+
 import os
 from functools import partial
 from sys import stderr
@@ -65,10 +67,9 @@ class EmptyParallelCorporaIntersection(Exception):
 
 
 class PyConc(manatee.Concordance):
-    selected_grps = []
+    selected_grps: List[int] = []
 
-    def __init__(self, corp, action, params, sample_size=0, full_size=-1,
-                 orig_corp=None):
+    def __init__(self, corp, action, params, sample_size=0, full_size=-1, orig_corp=None):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
