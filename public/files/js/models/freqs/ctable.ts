@@ -22,13 +22,14 @@ import {TextTypes} from '../../types/common';
 import {PageModel, DownloadType} from '../../app/page';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import RSVP from 'rsvp';
 import {MultiDict} from '../../util';
 import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
 import { Action, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 /**
  * A representation of 2D freq table.
@@ -293,7 +294,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
                 }
                 this.isWaiting = true;
                 this.emitChange();
-                this.updateData().then(
+                this.updateData().subscribe(
                     () => {
                         this.isWaiting = false;
                         this.pushStateToHistory();
@@ -424,18 +425,13 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         return parseInt(this.minFreq, 10) < this.serverMinFreq || this.serverMinFreq === null;
     }
 
-    private updateData():RSVP.Promise<boolean> {
-        return (() => {
-            if (this.mustLoadDueToLimit()) {
-                return this.fetchData();
+    private updateData():Observable<boolean> {
+        return (this.mustLoadDueToLimit() ?
+            this.fetchData() :
+            rxOf(null)
 
-            } else {
-                return new RSVP.Promise((resolve, reject) => {
-                    resolve(null);
-                });
-            }
-        })().then(
-            (data:FreqResultResponse.CTFreqResultResponse) => {
+        ).pipe(
+            tap((data:FreqResultResponse.CTFreqResultResponse) => {
                 if (data !== null) {
                     this.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
                     this.importData(data.data);
@@ -443,8 +439,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
                 } else {
                     this.updateLocalData();
                 }
-                return true;
-            }
+            }),
+            map(_ => true)
         );
     }
 
@@ -520,19 +516,18 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         this.onNewDataHandlers = this.onNewDataHandlers.push(fn);
     }
 
-    private fetchData():RSVP.Promise<FreqResultResponse.CTFreqResultResponse> {
+    private fetchData():Observable<FreqResultResponse.CTFreqResultResponse> {
         const args = this.getSubmitArgs();
         args.set('format', 'json');
-        return this.pageModel.ajax<FreqResultResponse.CTFreqResultResponse>(
+        return this.pageModel.ajax$<FreqResultResponse.CTFreqResultResponse>(
             'GET',
             this.pageModel.createActionUrl('freqct'),
             args
 
-        ).then(
-            (data) => {
+        ).pipe(
+            tap((data) => {
                 this.onNewDataHandlers.forEach(fn => fn(data.data));
-                return data;
-            }
+            })
         );
     }
 

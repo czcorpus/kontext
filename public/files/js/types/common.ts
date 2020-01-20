@@ -23,6 +23,7 @@ import { IEventEmitter } from 'kombo';
 import RSVP from 'rsvp';
 import {CoreViews} from './coreViews';
 import { ObservablePrerequisite } from '../models/mainMenu';
+import { Observable } from 'rxjs';
 
 /**
  *
@@ -134,7 +135,7 @@ export namespace Kontext {
      * A general click action performed on featured/favorite/searched item
      */
     export interface CorplistItemClick {
-        (corpora:Array<string>, subcorpId:string):RSVP.Promise<any>;
+        (corpora:Array<string>, subcorpId:string):Observable<any>;
     }
 
     /**

@@ -24,7 +24,7 @@ import RSVP from 'rsvp';
 import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'immutable';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 
 import {AjaxResponse} from '../types/ajaxResponses';
@@ -439,7 +439,7 @@ export class AppNavigation implements Kontext.IURLHandler {
      * @param corpora - a primary corpus plus possible aligned corpora
      * @param subcorpus - an optional subcorpus
      */
-    switchCorpus(corpora:Array<string>, subcorpus:string):RSVP.Promise<any> {
+    switchCorpus(corpora:Array<string>, subcorpus:string):Observable<any> {
         this.switchCorpAwareObjects.forEach((item, key) => {
             this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.csGetStateKey(), item.csExportState());
         });
@@ -447,7 +447,7 @@ export class AppNavigation implements Kontext.IURLHandler {
         this.switchCorpPreviousCorpora = Immutable.List<string>(
             [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id].concat(this.conf.getConf<Array<string>>('alignedCorpora'))
         );
-        return this.ajax<AjaxResponse.CorpusSwitchResponse>(
+        return this.ajax$<AjaxResponse.CorpusSwitchResponse>(
             'POST',
             this.createActionUrl('ajax_switch_corpus'),
             {
@@ -456,38 +456,40 @@ export class AppNavigation implements Kontext.IURLHandler {
                 align: corpora.slice(1)
             }
 
-        ).then(
-            (data) => {
-                const args = new MultiDict();
-                args.set('corpname', data.corpusIdent.id);
-                args.set('usesubcorp', data.corpusIdent.usesubcorp);
-                this.history.pushState(this.conf.getConf<string>('currentAction'), args);
+        ).pipe(
+            tap(
+                (data) => {
+                    const args = new MultiDict();
+                    args.set('corpname', data.corpusIdent.id);
+                    args.set('usesubcorp', data.corpusIdent.usesubcorp);
+                    this.history.pushState(this.conf.getConf<string>('currentAction'), args);
 
-                this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
-                this.conf.setConf<string>('baseAttr', data.baseAttr);
-                this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
-                this.conf.setConf<Array<string>>('compiledQuery', data.compiledQuery);
-                this.conf.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
-                this.conf.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
-                this.conf.setConf<Array<Kontext.AttrItem>>('availableAlignedCorpora', data.availableAlignedCorpora);
-                this.conf.setConf<Array<string>>('activePlugins', data.activePlugins);
-                this.conf.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
-                this.conf.setConf<number>('numQueryOps', data.numQueryOps);
-                this.conf.setConf<any>('textTypesData', data.textTypesData); // TODO type
-                this.conf.setConf<Kontext.StructsAndAttrs>('structsAndAttrs', data.structsAndAttrs);
-                this.conf.setConf<any>('menuData', data.menuData); // TODO type
-                this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
-                this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                this.conf.setConf<Array<Kontext.AttrItem>>('StructAttrList', data.StructAttrList);
-                this.conf.setConf<Array<string>>('StructList', data.StructList);
-                this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
-                this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
-                this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
-                this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
-                this.conf.setConf<string>('TextTypesNotes', data.TextTypesNotes);
-                this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
-                this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
-            }
+                    this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
+                    this.conf.setConf<string>('baseAttr', data.baseAttr);
+                    this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
+                    this.conf.setConf<Array<string>>('compiledQuery', data.compiledQuery);
+                    this.conf.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
+                    this.conf.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
+                    this.conf.setConf<Array<Kontext.AttrItem>>('availableAlignedCorpora', data.availableAlignedCorpora);
+                    this.conf.setConf<Array<string>>('activePlugins', data.activePlugins);
+                    this.conf.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
+                    this.conf.setConf<number>('numQueryOps', data.numQueryOps);
+                    this.conf.setConf<any>('textTypesData', data.textTypesData); // TODO type
+                    this.conf.setConf<Kontext.StructsAndAttrs>('structsAndAttrs', data.structsAndAttrs);
+                    this.conf.setConf<any>('menuData', data.menuData); // TODO type
+                    this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
+                    this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
+                    this.conf.setConf<Array<Kontext.AttrItem>>('StructAttrList', data.StructAttrList);
+                    this.conf.setConf<Array<string>>('StructList', data.StructList);
+                    this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
+                    this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
+                    this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
+                    this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
+                    this.conf.setConf<string>('TextTypesNotes', data.TextTypesNotes);
+                    this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
+                    this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
+                }
+            )
         );
     }
 

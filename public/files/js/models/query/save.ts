@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import RSVP from 'rsvp';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../util';
 import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { Observable } from 'rxjs';
 
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
@@ -135,7 +135,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                             this.layoutModel.translate('query__save_as_cannot_have_empty_name'));
 
                 } else {
-                    this.submit(state).then(
+                    this.submit(state).subscribe(
                         () => {
                             this.layoutModel.resetMenuActiveItemAndNotify();
                             dispatch({
@@ -154,7 +154,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 }
             break;
             case 'QUERY_MAKE_CONCORDANCE_PERMANENT':
-                this.layoutModel.ajax<MakePermanentResponse>(
+                this.layoutModel.ajax$<MakePermanentResponse>(
                     'POST',
                     this.layoutModel.createActionUrl(
                         'archive_concordance',
@@ -165,7 +165,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     ),
                     {}
 
-                ).then(
+                ).subscribe(
                     (data) => {
                         dispatch({
                             name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
@@ -208,11 +208,11 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         }
     }
 
-    private submit(state:QuerySaveAsFormModelState):RSVP.Promise<boolean> {
+    private submit(state:QuerySaveAsFormModelState):Observable<boolean> {
         const args = new MultiDict();
         args.set('query_id', state.queryId);
         args.set('name', state.name);
-        return this.layoutModel.ajax<any>(
+        return this.layoutModel.ajax$<any>(
             'POST',
             this.layoutModel.createActionUrl('save_query'),
             args
