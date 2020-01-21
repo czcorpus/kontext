@@ -18,7 +18,7 @@
 
 import re
 from functools import wraps
-from plugins.rdbms_corparch.registry import Attribute, PosAttribute, Struct, SimpleAttr, RegistryConf
+from . import Attribute, PosAttribute, Struct, SimpleAttr, RegistryConf
 
 
 DEBUG = 0

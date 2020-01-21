@@ -19,7 +19,7 @@
 import logging
 import time
 import sqlite3
-from plugins.rdbms_corparch.backend.sqlite import Backend
+from .sqlite import Backend
 
 
 class WritableBackend(Backend):

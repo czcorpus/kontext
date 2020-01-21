@@ -43,8 +43,14 @@ frontends and backends. It means that in case you need a special functionality,
 it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
-import importlib
+import abc
+from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
+from manatee import Corpus
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 
+import importlib
 from plugins.abstract import CorpusDependentPlugin
 
 
@@ -58,7 +64,7 @@ class Response(object):
     frontend receives data from backend).
     """
 
-    def __init__(self, contents, renderer, status, heading, note, is_kwic_view):
+    def __init__(self, contents: str, renderer: str, status: bool, heading: str, note: str, is_kwic_view: bool) -> None:
         """
 
         Arguments:
@@ -68,42 +74,43 @@ class Response(object):
             heading -- a (possibly localized) heading to be displayed along with the data
             note -- a (possibly localized) additional info describing what service does.
         """
-        self.contents = contents
-        self.renderer = renderer
-        self.status = status
-        self.heading = heading
-        self.note = note
-        self.is_kwic_view = is_kwic_view
+        self.contents: str = contents
+        self.renderer: str = renderer
+        self.status: bool = status
+        self.heading: str = heading
+        self.note: str = note
+        self.is_kwic_view: bool = is_kwic_view
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return self.__dict__
 
 
-class AbstractBackend(object):
+class AbstractBackend(abc.ABC):
     """
     A general description of a service providing
     external data for (word, lemma, pos, corpora, lang)
     combination.
     """
 
-    def __init__(self, provider_id):
-        self._cache_path = None
-        self._provider_id = provider_id
+    def __init__(self, provider_id: str):
+        self._cache_path: Optional[str] = None
+        self._provider_id: str = provider_id
 
     @property
-    def provider_id(self):
+    def provider_id(self) -> str:
         return self._provider_id
 
-    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def fetch(self, corpora: List[str], token_id: int, num_tokens: int, query_args: Dict[str, str], lang: str) -> Tuple[Any, bool]:
+        pass
 
-    def set_cache_path(self, path):
+    def set_cache_path(self, path: str):
         self._cache_path = path
 
-    def get_cache_path(self):
+    def get_cache_path(self) -> Optional[str]:
         return self._cache_path
 
-    def enabled_for_corpora(self, corpora):
+    def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
         """
         Return False if the backend cannot
         be used for a specific combination(s)
@@ -112,7 +119,7 @@ class AbstractBackend(object):
         """
         return True
 
-    def get_required_attrs(self):
+    def get_required_attrs(self) -> List[str]:
         """
         Which positional and structural attributes are needed to
         perform a query against the provider.
@@ -131,11 +138,11 @@ class AbstractFrontend(object):
     then can continue with specific data filling.
     """
 
-    def __init__(self, conf):
-        self._headings = conf.get('heading', {})
-        self._notes = conf.get('note', {})
+    def __init__(self, conf: Dict[str, Any]) -> None:
+        self._headings: Dict[str, str] = conf.get('heading', {})
+        self._notes: Dict[str, str] = conf.get('note', {})
 
-    def _fetch_localized_prop(self, prop, lang):
+    def _fetch_localized_prop(self, prop: str, lang: str) -> str:
         value = ''
         if lang in getattr(self, prop):
             value = getattr(self, prop)[lang]
@@ -151,20 +158,20 @@ class AbstractFrontend(object):
         return value
 
     @property
-    def headings(self):
+    def headings(self) -> Dict[str, str]:
         return self._headings
 
-    def get_heading(self, lang):
+    def get_heading(self, lang: str) -> str:
         return self._fetch_localized_prop('_headings', lang)
 
-    def export_data(self, data, status, lang, is_kwic_view):
+    def export_data(self, data: Any, status: bool, lang: str, is_kwic_view: bool) -> Response:
         return Response(contents='', renderer='', status=status,
                         is_kwic_view=bool(is_kwic_view),
                         heading=self._fetch_localized_prop('_headings', lang),
                         note=self._fetch_localized_prop('_notes', lang))
 
 
-def find_implementation(path):
+def find_implementation(path: str) -> Any:
     """
     Find a class identified by a string.
     This is used to decode frontends and backends
@@ -187,10 +194,10 @@ def find_implementation(path):
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def map_providers(self, provider_ids):
+    def map_providers(self, provider_ids: List[str]):
         raise NotImplementedError()
 
-    def fetch_data(self, provider_ids, maincorp_obj, corpora, token_id, num_tokens, lang):
+    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int, num_tokens: int, lang: str) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
@@ -206,7 +213,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
-    def get_required_structattrs(self):
+    def get_required_structattrs(self) -> List[str]:
         """
         Return a list of structural attributes (encoded as [structure].[attribute]
         e.g. "doc.id") required by the plug-in to be able to trigger request
@@ -215,5 +222,5 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         """
         return []
 
-    def is_enabled_for(self, plugin_api, corpname):
+    def is_enabled_for(self, plugin_api: 'PluginApi', corpname: str) -> bool:
         raise NotImplementedError()

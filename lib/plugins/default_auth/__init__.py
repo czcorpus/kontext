@@ -28,7 +28,6 @@ import time
 import datetime
 import mailing
 from werkzeug.security import pbkdf2_hex
-from controller.errors import ImmediateRedirectException
 from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
 from translation import ugettext as _
 import plugins

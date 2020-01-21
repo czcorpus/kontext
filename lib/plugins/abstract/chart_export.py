@@ -12,24 +12,28 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import abc
+from typing import List, Tuple
+
 
 class UnknownFormatException(Exception):
     pass
 
 
-class AbstractChartExport(object):
+class AbstractChartExport(abc.ABC):
     """
     AbstractChartExport represents a single
     format export (e.g. PDF, Excel).
     """
 
-    def get_content_type(self):
+    @abc.abstractmethod
+    def get_content_type(self) -> str:
         """
         return a content type identifier (e.g. 'application/json')
         """
-        raise NotImplementedError()
 
-    def get_format_name(self):
+    @abc.abstractmethod
+    def get_format_name(self) -> str:
         """
         Return a format identifier. It should be both
         human-readable and unique within a single plug-in
@@ -38,32 +42,31 @@ class AbstractChartExport(object):
         it may be necessary to modify some names to
         keep all the export functions available.
         """
-        raise NotImplementedError()
 
-    def get_suffix(self):
+    @abc.abstractmethod
+    def get_suffix(self) -> str:
         """
         Return a proper file suffix (e.g. 'xlsx' for Excel).
         """
-        raise NotImplementedError()
 
-    def export_pie_chart(self, data, title):
+    @abc.abstractmethod
+    def export_pie_chart(self, data: List[Tuple[str, float]], title: str) -> str:
         """
         Generate a PIE chart based on passed data and title.
 
         The method is expected to return raw file data ready
         to be downloaded by a client.
         """
-        raise NotImplementedError()
 
 
-class AbstractChartExportPlugin(object):
+class AbstractChartExportPlugin(abc.ABC):
     """
     AbstractChartExportPlugin represents plug-in itself
     which is expected to contain one or more implementations
     of AbstractChartExport.
     """
 
-    def get_supported_types(self):
+    def get_supported_types(self) -> List[str]:
         """
         Return a list of supported format names
         (i.e. the values returned by AbstractChartExport.get_format_name()
@@ -71,7 +74,8 @@ class AbstractChartExportPlugin(object):
         """
         return []
 
-    def get_content_type(self, format):
+    @abc.abstractmethod
+    def get_content_type(self, format: str) -> str:
         """
         Return a content type for a specified format
         (e.g. 'PDF' -> 'application/pdf')
@@ -79,18 +83,18 @@ class AbstractChartExportPlugin(object):
         arguments:
         format -- format name (AbstractChartExport.get_format_name())
         """
-        raise NotImplementedError()
 
-    def get_suffix(self, format):
+    @abc.abstractmethod
+    def get_suffix(self, format: str) -> str:
         """
         Return a suffix for a specified format.
 
         arguments:
         format -- format name (AbstractChartExport.get_format_name())
         """
-        raise NotImplementedError()
 
-    def export_pie_chart(self, data, title, format):
+    @abc.abstractmethod
+    def export_pie_chart(self, data: List[Tuple[str, float]], title: str, format: str) -> str:
         """
         Export PIE chart data to a PIE chart of
         a specified format.
@@ -100,4 +104,3 @@ class AbstractChartExportPlugin(object):
         title -- chart label
         format -- format name (AbstractChartExport.get_format_name())
         """
-        raise NotImplementedError()

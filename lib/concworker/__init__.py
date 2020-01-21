@@ -20,10 +20,6 @@
 
 import logging
 import time
-try:
-    import pickle as pickle
-except ImportError:
-    import pickle
 import os
 import sys
 from plugins.abstract import conc_cache

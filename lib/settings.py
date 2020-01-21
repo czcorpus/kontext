@@ -19,6 +19,8 @@ This module wraps application's configuration (as specified in config.xml) and
 provides some additional helper methods.
 """
 
+from typing import Any, Dict
+
 import os
 from lxml import etree
 import json
@@ -28,10 +30,10 @@ class ConfState(object):
     conf_path = None
 
 
-_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
-_meta = {}  # contains data of attributes of XML elements representing configuration values
-_help_links = {}
-_state = ConfState()
+_conf: Dict[str, Any] = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
+_meta: Dict[str, Any] = {}  # contains data of attributes of XML elements representing configuration values
+_help_links: Dict[str, Any] = {}
+_state: ConfState = ConfState()
 
 SECTIONS = (
     'theme', 'global', 'calc_backend', 'job_scheduler', 'mailing', 'logging', 'corpora', 'fcs', 'plugins')

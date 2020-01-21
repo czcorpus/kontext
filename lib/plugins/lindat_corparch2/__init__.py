@@ -106,7 +106,6 @@ element corpus {
 from collections import OrderedDict
 import copy
 import re
-from functools import partial
 
 try:
     from markdown import markdown

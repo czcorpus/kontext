@@ -14,9 +14,7 @@
 
 
 from collections import defaultdict
-import codecs
 from xml.sax.saxutils import escape
-codecs.register_error('replacedot', lambda err: ('.', err.end))
 
 
 class DummyGlobals(object):

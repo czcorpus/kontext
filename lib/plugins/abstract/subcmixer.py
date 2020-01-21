@@ -19,9 +19,12 @@ types. It requires a working 'live_attributes'
 plug-in which provides input arguments used by 'subcmixer'.
 """
 
+import abc
 
-class AbstractSubcMixer(object):
 
+class AbstractSubcMixer(abc.ABC):
+
+    @abc.abstractmethod
     def process(self, plugin_api, corpus, corpname, aligned_corpora, args):
         """
         arguments:
@@ -33,4 +36,3 @@ class AbstractSubcMixer(object):
                             can be included)
             args -- required text types ratios
         """
-        raise NotImplementedError()

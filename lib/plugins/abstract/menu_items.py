@@ -22,6 +22,8 @@ Please note that KonText currently understands only "menu-help" section when ins
 custom menu items into its menu.
 """
 
+import abc
+
 
 class DynamicMenuItem(object):
 
@@ -75,8 +77,9 @@ class StaticMenuItem(object):
         return dict(label=self.label, action=self.url, openInBlank=self.open_in_blank, args={})
 
 
-class AbstractMenuItems(object):
+class AbstractMenuItems(abc.ABC):
 
+    @abc.abstractmethod
     def get_items(self, menu_section, lang):
         """
         Return custom menu items which will be appended to the existing ones.
@@ -91,4 +94,3 @@ class AbstractMenuItems(object):
         returns:
         a list/tuple of plugin.abstract.menu_items.MenuItem instances
         """
-        raise NotImplementedError()

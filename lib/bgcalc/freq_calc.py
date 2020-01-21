@@ -21,10 +21,7 @@ import time
 import math
 import hashlib
 import logging
-try:
-    import pickle as pickle
-except ImportError:
-    import pickle
+import pickle
 from structures import FixedDict
 
 import manatee

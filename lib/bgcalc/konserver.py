@@ -257,17 +257,20 @@ class KonserverApp(APIConnection):
             if bind:
                 cls = type('KonserverApp_' + fn_name, (KonserverApp,), {})
 
+                # mypy: all conditional tmp() functions has to have the same signature
                 def tmp(task_id, *args, **kwargs):
                     obj = cls()
                     obj.request = Request(task_id=task_id)
                     return fn(obj, *args, **kwargs)
+
                 tmp.is_bound = True
                 wrapped = tmp
 
             elif base:
                 cls = type(base.__name__ + fn_name, (base,), {})
 
-                def tmp(_, *args, **kwargs):
+                # mypy: all conditional tmp() functions has to have the same signature
+                def tmp(task_id, *args, **kwargs):
                     return fn(*args, **kwargs)
 
                 cls.__call__ = tmp
@@ -377,6 +380,10 @@ if __name__ == '__main__':  # here we operate in worker mode
     logger = logging.getLogger('')
     worker_path = os.path.join(os.path.dirname(__file__), '..', '..', 'worker.py')
     worker = imp.load_source('worker', worker_path)
-    setup_logger(worker.settings.get('calc_backend', 'konserver_worker_log'),
-                 worker.settings.get_bool('global', 'debug'), logger)
-    worker.app.listen()
+    # ignoring type checker errors: Module has no attribute...
+    setup_logger(
+        worker.settings.get('calc_backend', 'konserver_worker_log'),  # type: ignore
+        worker.settings.get_bool('global', 'debug'),  # type: ignore
+        logger
+    )
+    worker.app.listen()  # type: ignore

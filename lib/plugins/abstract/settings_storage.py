@@ -21,9 +21,12 @@ The 'settings storage' plug-in works as a backend for storing and
 loading user settings.
 """
 
+import abc
 
-class AbstractSettingsStorage(object):
 
+class AbstractSettingsStorage(abc.ABC):
+
+    @abc.abstractmethod
     def save(self, user_id, data):
         """
         Save user settings. Old user settings are expected to be rewritten.
@@ -32,8 +35,8 @@ class AbstractSettingsStorage(object):
         user_id -- user identifier
         data -- a dictionary containing user settings
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def load(self, user_id, current_settings=None):
         """
         Loads user individual settings.
@@ -47,7 +50,6 @@ class AbstractSettingsStorage(object):
         returns:
         new or updated settings dictionary provided as a parameter
         """
-        raise NotImplementedError()
 
     def get_excluded_users(self):
         """

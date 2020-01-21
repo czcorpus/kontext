@@ -56,8 +56,7 @@ from lxml import etree
 import copy
 
 import plugins
-from plugins.abstract.corpora import (
-    AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo)
+from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
 from controller import exposed
 from actions import corpora

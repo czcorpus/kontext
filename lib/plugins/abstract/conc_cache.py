@@ -24,9 +24,15 @@ of AbstractCacheMappingFactory (i.e. not AbstractConcCache) because
 the instance of AbstractConcCache is request-dependent.
 """
 
+import abc
+from typing import Dict, Any, List, Optional, Union, Tuple
+from manatee import Corpus
+
 import os
 import time
 import math
+
+QueryType = Union[List[str], Tuple[str]]
 
 
 class CalcStatusException(Exception):
@@ -35,24 +41,24 @@ class CalcStatusException(Exception):
 
 class CalcStatus(object):
 
-    def __init__(self, task_id=None):
-        self.task_id = task_id
-        self.pid = os.getpid()
-        self.created = int(time.time())
-        self.last_upd = self.created
+    def __init__(self, task_id: Optional[str] = None) -> None:
+        self.task_id: Optional[str] = task_id
+        self.pid: int = os.getpid()
+        self.created: int = int(time.time())
+        self.last_upd: int = self.created
         # in case we check status before any calculation (represented by the
         # BackgroundCalc class) starts (the calculation updates curr_wait as it
         # runs), we want to be sure the limit is big enough for BackgroundCalc to
         # be considered alive
-        self.curr_wait = 100
-        self.concsize = 0
-        self.fullsize = 0
-        self.relconcsize = 0
+        self.curr_wait: int = 100
+        self.concsize: int = 0
+        self.fullsize: int = 0
+        self.relconcsize: int = 0
         self.arf = None
-        self.error = None
-        self.finished = False
+        self.error: Optional[BaseException] = None
+        self.finished: bool = False
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return dict(self.__dict__)
 
     def test_error(self):
@@ -61,7 +67,7 @@ class CalcStatus(object):
         if math.ceil(self.last_upd + self.curr_wait) < math.floor(time.time()):
             raise CalcStatusException('Wait limit for initial data exceeded')
 
-    def has_some_result(self, minsize):
+    def has_some_result(self, minsize: int) -> bool:
         if minsize == -1:
             if self.finished:  # whole conc
                 return True
@@ -69,7 +75,7 @@ class CalcStatus(object):
             return True
         return False
 
-    def update(self, data):
+    def update(self, data: Dict[str, Any]) -> 'CalcStatus':
         for k, v in list(data.items()):
             if hasattr(self, k):
                 setattr(self, k, v)
@@ -79,9 +85,10 @@ class CalcStatus(object):
         return self
 
 
-class AbstractConcCache(object):
+class AbstractConcCache(abc.ABC):
 
-    def get_stored_size(self, subchash, q):
+    @abc.abstractmethod
+    def get_stored_size(self, subchash: str, q: QueryType) -> int:
         """
         Return stored concordance size.
         The method should return None if no record is found at all.
@@ -91,11 +98,12 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
-        raise NotImplementedError()
 
-    def get_calc_status(self, subchash, query):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def get_calc_status(self, subchash: str, query: QueryType) -> CalcStatus:
+        pass
 
+    @abc.abstractmethod
     def refresh_map(self):
         """
         Test whether the data for a given corpus (the one this instance
@@ -108,9 +116,9 @@ class AbstractConcCache(object):
         handle 'missing initialization / invalid cache' situations
         themselves.
         """
-        raise NotImplementedError()
 
-    def cache_file_path(self, subchash, q):
+    @abc.abstractmethod
+    def cache_file_path(self, subchash: str, q: QueryType) -> str:
         """
         Return a path to a cache file matching provided subcorpus hash and query
         elements. If there is no entry matching (subchash, q) then None must be
@@ -120,9 +128,9 @@ class AbstractConcCache(object):
         subchash -- hashed subcorpus identifier (corplib.CorpusManager does this)
         q -- a list of query items
         """
-        raise NotImplementedError()
 
-    def add_to_map(self, subchash, query, size, calc_status=None):
+    @abc.abstractmethod
+    def add_to_map(self, subchash: str, query: QueryType, size: int, calc_status: Optional[CalcStatus] = None):
         """
         Add or update a cache map entry
 
@@ -144,9 +152,9 @@ class AbstractConcCache(object):
             cache_file_path -- path to a respective cache file
             previous_status -- an instance of CalcStatus storing previous calc. state
         """
-        raise NotImplementedError()
 
-    def del_entry(self, subchash, q):
+    @abc.abstractmethod
+    def del_entry(self, subchash: str, q: QueryType):
         """
         Remove a specific entry with concrete subchash and query.
 
@@ -154,9 +162,9 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
-        raise NotImplementedError()
 
-    def del_full_entry(self, subchash, q):
+    @abc.abstractmethod
+    def del_full_entry(self, subchash: str, q: QueryType):
         """
         Removes all the entries with the same base query no matter
         what other operations the query (e.g. shuffle, filter) contains.
@@ -165,27 +173,26 @@ class AbstractConcCache(object):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
-        raise NotImplementedError()
 
 
-class AbstractCacheMappingFactory(object):
+class AbstractCacheMappingFactory(abc.ABC):
     """
     A factory which provides AbstractConcCache instances. Please note
     that your module's 'create_instance' should return this factory and
     not the cache itself.
     """
 
-    def get_mapping(self, corpus):
+    @abc.abstractmethod
+    def get_mapping(self, corpus: Corpus) -> AbstractConcCache:
         """
         returns:
         an AbstractConcCache compatible instance
         """
-        raise NotImplementedError()
 
-    def fork(self):
+    @abc.abstractmethod
+    def fork(self) -> 'AbstractCacheMappingFactory':
         """
         Create a new instance with forked db plug-in. This is
         used only in case 'multiprocessing' is defined for
         background/asynchronous tasks.
         """
-        raise NotImplementedError()

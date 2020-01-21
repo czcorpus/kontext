@@ -16,6 +16,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+from typing import Any, List, Mapping, Dict, Tuple, Union
+
+from collections import defaultdict
 from functools import partial
 import re
 import itertools
@@ -26,10 +29,13 @@ from l10n import import_string, export_string
 from structures import FixedDict
 from corplib import is_subcorpus
 
+SortCritType = List[Tuple[str, Union[str, int]]]
+LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
 
-def lngrp_sortcrit(lab, separator='.'):
+
+def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:
     # TODO
-    def num2sort(n):
+    def num2sort(n: str) -> Tuple[str, Union[str, int]]:
         if re.compile('[0-9]+$').match(n):
             return 'n', int(n)
         else:
@@ -39,16 +45,16 @@ def lngrp_sortcrit(lab, separator='.'):
     return list(map(num2sort, lab.split(separator, 3)))
 
 
-def format_labelmap(labelmap, separator='.'):
+def format_labelmap(labelmap: Mapping[str, str], separator: str = '.') -> LabelMapType:
     # TODO analyze purpose of this function (it seems to be not used)
-    matrix = {}
-    for n, lab in list(labelmap.items()):
+    matrix: Dict[str, List[Tuple[SortCritType, str, str]]] = defaultdict(list)
+    for n, lab in labelmap.items():
         if lab:
             pref = lab.split(separator)[0]
-            matrix.setdefault(pref, []).append((lngrp_sortcrit(lab), lab, n))
-    prefixes = [(lngrp_sortcrit(p), p) for p in list(matrix.keys())]
+            matrix[pref].append((lngrp_sortcrit(lab), lab, n))
+    prefixes = [(lngrp_sortcrit(p), p) for p in matrix.keys()]
     prefixes.sort()
-    lines = []
+    lines: LabelMapType = []
     for s, pref in prefixes:
         line = matrix[pref]
         line.sort()
@@ -112,7 +118,7 @@ class KwicLinesArgs(object):
     ctxattrs = 'word'
     refs = '#'
     user_structs = 'p'
-    labelmap = {}
+    labelmap: Dict[str, str] = {}
     righttoleft = False
     alignlist = ()
     attr_vmode = 'mouseover'
@@ -159,13 +165,13 @@ class KwicPageArgs(object):
     pagesize = 40
 
     # ???
-    labelmap = {}
+    labelmap: Dict[str, str] = {}
 
     # whether the text flows from right to left
     righttoleft = False
 
     # ???
-    alignlist = []
+    alignlist: List[Any] = []  # TODO better type
 
     # whether display ===EMPTY=== or '' in case a value is empty
     hidenone = 0
