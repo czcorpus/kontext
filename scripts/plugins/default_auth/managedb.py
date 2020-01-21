@@ -17,9 +17,12 @@ if __name__ == '__main__':
     import argparse
     import json
     argparser = argparse.ArgumentParser(description="User data editor")
-    argparser.add_argument('source_file', metavar="FILE", help="a file containing JSON-encoded initial data")
-    argparser.add_argument('action', metavar="ACTION", help="an action to be performed (add, reset)")
-    argparser.add_argument('-s', '--specific-id', type=int, help='add only user with specific ID (even if the source contains a list)')
+    argparser.add_argument('source_file', metavar="FILE",
+                           help="a file containing JSON-encoded initial data")
+    argparser.add_argument('action', metavar="ACTION",
+                           help="an action to be performed (add, reset)")
+    argparser.add_argument('-s', '--specific-id', type=int,
+                           help='add only user with specific ID (even if the source contains a list)')
     argparser.add_argument('-d', '--dry-run', action='store_true',
                            help='allows running without affecting storage data')
     args = argparser.parse_args()
@@ -34,7 +37,7 @@ if __name__ == '__main__':
         src_data = [src_data]
 
     if args.specific_id is not None:
-        src_data = filter(lambda x: x.get('id', None) == args.specific_id, src_data)
+        src_data = [x for x in src_data if x.get('id', None) == args.specific_id]
 
     if len(src_data) > 0:
         query_storage = plugins.runtime.QUERY_STORAGE.instance
@@ -50,8 +53,8 @@ if __name__ == '__main__':
                 db.set(corplist_key, corpora)
                 db.hash_set('user_index', item['username'], user_key)
             else:
-                print('> set(%s, %s)' % (user_key, item))
-                print('> set(%s, %s)' % (corplist_key, corpora))
-                print('> hash_set(%s, %s, %s)' % ('user_index', item['username'], user_key))
+                print(('> set(%s, %s)' % (user_key, item)))
+                print(('> set(%s, %s)' % (corplist_key, corpora)))
+                print(('> hash_set(%s, %s, %s)' % ('user_index', item['username'], user_key)))
     else:
         print('Nothing to store. Either the source list is empty or the specific-id parameter does not match any item.')

@@ -20,8 +20,6 @@ like data can be used) to CSV format.
 """
 
 import csv
-import codecs
-import cStringIO
 
 from . import AbstractExport, lang_row_to_list
 
@@ -30,46 +28,12 @@ class Writeable(object):
     """
     An auxiliary class serving as a buffer
     """
+
     def __init__(self):
         self.rows = []
 
     def write(self, s):
         self.rows.append(s)
-
-
-class UnicodeCSVWriter:
-    """
-    An auxiliary class for creating UTF-8 encoded CSV file.
-
-    Code taken from http://docs.python.org/2/library/csv.html
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        normalized_row = []
-        for item in row:
-            if type(item) not in (str, unicode):
-                item = str(item)
-            item = item.encode("utf-8")
-            normalized_row.append(item)
-        self.writer.writerow(normalized_row)
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
 
 
 class CSVExport(AbstractExport):
@@ -79,7 +43,8 @@ class CSVExport(AbstractExport):
 
     def __init__(self, subtype):
         self.csv_buff = Writeable()
-        self.csv_writer = UnicodeCSVWriter(self.csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+        self.csv_writer = csv.writer(self.csv_buff, delimiter=';',
+                                     quotechar='"', quoting=csv.QUOTE_ALL)
         if subtype == 'concordance':
             self._import_row = lang_row_to_list
         else:

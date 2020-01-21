@@ -37,6 +37,12 @@ tightly related to respective corpora registry (configuration)
 files.
 """
 
+import abc
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
+
 import json
 from functools import partial
 
@@ -68,26 +74,26 @@ class DictLike(object):
 
 
 class CorpusMetadata(DictLike):
-    def __init__(self):
-        self.database = None
-        self.label_attr = None
-        self.avg_label_attr_len = None
-        self.id_attr = None
-        self.sort_attrs = False
-        self.desc = {}
-        self.keywords = {}
-        self.interval_attrs = []
-        self.group_duplicates = False
+    def __init__(self) -> None:
+        self.database: Optional[str] = None
+        self.label_attr: Optional[str] = None
+        self.avg_label_attr_len: Optional[int] = None
+        self.id_attr: Optional[str] = None
+        self.sort_attrs: bool = False
+        self.desc: Dict[str, Any] = {}
+        self.keywords: Dict[str, Any] = {}
+        self.interval_attrs: List[str] = []
+        self.group_duplicates: bool = False
 
 
 class CitationInfo(DictLike):
-    def __init__(self):
-        self.default_ref = None
-        self.article_ref = []
-        self.other_bibliography = None
+    def __init__(self) -> None:
+        self.default_ref: Optional[str] = None
+        self.article_ref: List[str] = []
+        self.other_bibliography: Optional[str] = None
 
-    def to_dict(self):
-        return dict((k, v) for k, v in self.__dict__.items())
+    def to_dict(self) -> Dict[str, Any]:
+        return {k: v for k, v in self.__dict__.items()}
 
 
 class ManateeCorpusInfo(DictLike):
@@ -96,15 +102,15 @@ class ManateeCorpusInfo(DictLike):
     as provided by manatee.Corpus instance
     """
 
-    def __init__(self):
-        self.encoding = None
-        self.name = None
-        self.description = None
-        self.attrs = []
-        self.size = 0
-        self.has_lemma = False
-        self.tagset_doc = None
-        self.lang = None
+    def __init__(self) -> None:
+        self.encoding: Optional[str] = None
+        self.name: Optional[str] = None
+        self.description: Optional[str] = None
+        self.attrs: List[str] = []
+        self.size: int = 0
+        self.has_lemma: bool = False
+        self.tagset_doc: Optional[str] = None
+        self.lang: Optional[str] = None
 
 
 class DefaultManateeCorpusInfo(ManateeCorpusInfo):
@@ -113,14 +119,14 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     as provided by manatee.Corpus instance
     """
 
-    def __init__(self, corpus, corpus_id):
-        super(DefaultManateeCorpusInfo, self).__init__()
+    def __init__(self, corpus, corpus_id) -> None:
+        super().__init__()
         self.encoding = corpus.get_conf('ENCODING')
         import_string = partial(l10n.import_string, from_encoding=self.encoding)
         self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
                                   else corpus_id)
         self.description = import_string(corpus.get_info())
-        self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
+        self.attrs = [x for x in corpus.get_conf('ATTRLIST').split(',') if len(x) > 0]
         self.size = corpus.size()
         attrlist = corpus.get_conf('ATTRLIST').split(',')
         self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
@@ -130,24 +136,24 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
 
 class TokenConnect(DictLike):
 
-    def __init__(self):
-        self.providers = []
+    def __init__(self) -> None:
+        self.providers: List[Any] = []
 
 
 class KwicConnect(DictLike):
 
-    def __init__(self):
-        self.providers = []
+    def __init__(self) -> None:
+        self.providers: List[Any] = []
 
 
 class TagsetInfo(DictLike):
 
-    def __init__(self):
-        self.corpus_name = None
-        self.pos_attr = None
-        self.feat_attr = None
-        self.tagset_type = None
-        self.tagset_name = None
+    def __init__(self) -> None:
+        self.corpus_name: Optional[str] = None
+        self.pos_attr: Optional[str] = None
+        self.feat_attr: Optional[str] = None
+        self.tagset_type: Optional[str] = None
+        self.tagset_name: Optional[str] = None
 
     def to_dict(self):
         # Note: the returned type must match client-side's PluginInterfaces.TagHelper.TagsetInfo
@@ -162,27 +168,27 @@ class CorpusInfo(DictLike):
     apply for all the users.
     """
 
-    def __init__(self):
-        self.id = None
-        self.name = None
-        self.path = None
-        self.web = None
-        self.sentence_struct = None
-        self.tagsets = []
+    def __init__(self) -> None:
+        self.id: Optional[str] = None
+        self.name: Optional[str] = None
+        self.path: Optional[str] = None
+        self.web: Optional[str] = None
+        self.sentence_struct: Optional[str] = None
+        self.tagsets: List[str] = []
         self.speech_segment = None
         self.speaker_id_attr = None
         self.speech_overlap_attr = None
         self.speech_overlap_val = None
         self.bib_struct = None
-        self.sample_size = -1
-        self.featured = False
-        self.collator_locale = 'en_US'  # this does not apply for Manatee functions
-        self.use_safe_font = False
-        self.citation_info = CitationInfo()
-        self.metadata = CorpusMetadata()
-        self.token_connect = TokenConnect()
-        self.kwic_connect = KwicConnect()
-        self.manatee = ManateeCorpusInfo()
+        self.sample_size: int = -1
+        self.featured: bool = False
+        self.collator_locale: str = 'en_US'  # this does not apply for Manatee functions
+        self.use_safe_font: bool = False
+        self.citation_info: CitationInfo = CitationInfo()
+        self.metadata: CorpusMetadata = CorpusMetadata()
+        self.token_connect: TokenConnect = TokenConnect()
+        self.kwic_connect: KwicConnect = KwicConnect()
+        self.manatee: ManateeCorpusInfo = ManateeCorpusInfo()
 
 
 class BrokenCorpusInfo(CorpusInfo):
@@ -194,9 +200,9 @@ class BrokenCorpusInfo(CorpusInfo):
     because missing configuration can break/disable many functions.
     """
 
-    def __init__(self, name=None):
-        super(BrokenCorpusInfo, self).__init__()
-        self.name = (name if name else 'undefined')
+    def __init__(self, name: Optional[str] = None) -> None:
+        super().__init__()
+        self.name = name if name else 'undefined'
         self.metadata = CorpusMetadata()
         self.manatee = ManateeCorpusInfo()
 
@@ -204,7 +210,7 @@ class BrokenCorpusInfo(CorpusInfo):
 class CorpInfoEncoder(json.JSONEncoder):
     def default(self, o):
         ans = {}
-        for key, val in o.__dict__.items():
+        for key, val in list(o.__dict__.items()):
             if isinstance(val, DictLike):
                 ans[key] = val.__dict__
             else:
@@ -212,7 +218,7 @@ class CorpInfoEncoder(json.JSONEncoder):
         return ans
 
 
-class AbstractCorporaArchive(object):
+class AbstractCorporaArchive(abc.ABC):
     """
     A template for the 'corparch' (the quite misleading name stays
     for historical reasons) plug-in.
@@ -221,7 +227,8 @@ class AbstractCorporaArchive(object):
     not defined in a KonText core independent way.
     """
 
-    def get_corpus_info(self, user_lang, corp_id):
+    @abc.abstractmethod
+    def get_corpus_info(self, user_lang: str, corp_id: str) -> CorpusInfo:
         """
         Return a full available corpus information.
 
@@ -238,13 +245,11 @@ class AbstractCorporaArchive(object):
         {id, path, web, sentence_struct, tagset, speech_segment, bib_struct, citation_info,
         metadata} where metadata is a dict with keys {database, label_attr, id_attr, desc, keywords}.
         """
-        raise NotImplementedError()
 
     def mod_corplist_menu(self, plugin_api, menu_item):
         """
         The method allows the plug-in to customize main menu link from "Corpora -> Available corpora".
         """
-        pass
 
 
 class SimpleCorporaArchive(AbstractCorporaArchive):
@@ -252,20 +257,21 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     An archive without server-side searching/filtering abilities
     """
 
-    def get_all(self, plugin_api):
+    @abc.abstractmethod
+    def get_all(self, plugin_api: 'PluginApi'):
         """
         Return all the available corpora (user credentials can be accessed
         via plugin_api).
         """
-        raise NotImplementedError()
 
 
-class CorplistProvider(object):
+class CorplistProvider(abc.ABC):
     """
     An object providing actual corpus list based on passed arguments.
     """
 
-    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
+    @abc.abstractmethod
+    def search(self, plugin_api: 'PluginApi', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None) -> Any:
         """
         arguments:
         plugin_api --
@@ -274,7 +280,6 @@ class CorplistProvider(object):
         limit -- number of items to return
         filter_dict -- a dictionary containing additional search parameters
         """
-        raise NotImplementedError()
 
 
 class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
@@ -282,7 +287,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api: 'PluginApi', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None):
         """
         Returns a subset of corplist matching provided query.
 
@@ -304,7 +309,8 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         return service.search(plugin_api=plugin_api, query=query, offset=offset, limit=limit,
                               filter_dict=filter_dict)
 
-    def create_corplist_provider(self, plugin_api):
+    @abc.abstractmethod
+    def create_corplist_provider(self, plugin_api: 'PluginApi') -> CorplistProvider:
         """
         A factory function for a configured search service
 
@@ -314,16 +320,15 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         returns:
         A CorplistProvider instance
         """
-        raise NotImplementedError()
 
-    def initial_search_params(self, plugin_api, query, args):
+    @abc.abstractmethod
+    def initial_search_params(self, plugin_api: 'PluginApi', query: str, args: Any) -> Dict[str, Any]:
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
         """
-        raise NotImplementedError()
 
-    def custom_filter(self, plugin_api, corpus_list_item, permitted_corpora):
+    def custom_filter(self, plugin_api: 'PluginApi', corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
         """
         An optional custom filter to exclude specific items from results.
 
@@ -335,7 +340,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         return True
 
-    def create_corpus_info(self):
+    def create_corpus_info(self) -> CorpusInfo:
         """
         An optional factory method which returns a CorpusInfo compatible instance.
         Overriding this method allows you to use your own CorpusInfo implementations.

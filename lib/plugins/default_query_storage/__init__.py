@@ -187,23 +187,23 @@ class QueryStorage(AbstractQueryStorage):
             from_date = [int(d) for d in from_date.split('-')]
             from_date = time.mktime(
                 datetime(from_date[0], from_date[1], from_date[2], 0, 0, 0).timetuple())
-            full_data = filter(lambda x: x['created'] >= from_date, full_data)
+            full_data = [x for x in full_data if x['created'] >= from_date]
 
         if to_date:
             to_date = [int(d) for d in to_date.split('-')]
             to_date = time.mktime(
                 datetime(to_date[0], to_date[1], to_date[2], 23, 59, 59).timetuple())
-            full_data = filter(lambda x: x['created'] <= to_date, full_data)
+            full_data = [x for x in full_data if x['created'] <= to_date]
 
         if query_type:
-            full_data = filter(lambda x: matches_corp_prop(x, 'query_type', query_type), full_data)
+            full_data = [x for x in full_data if matches_corp_prop(x, 'query_type', query_type)]
 
         if corpname:
-            full_data = filter(lambda x: matches_corp_prop(
-                x, 'corpus_id', corpname), full_data)
+            full_data = [x for x in full_data if matches_corp_prop(
+                x, 'corpus_id', corpname)]
 
         if archived_only:
-            full_data = filter(lambda x: x.get('name', None) is not None, full_data)
+            full_data = [x for x in full_data if x.get('name', None) is not None]
 
         if limit is None:
             limit = len(full_data)
@@ -238,8 +238,8 @@ class QueryStorage(AbstractQueryStorage):
                     new_list.append(item)
                 else:
                     logging.getLogger(__name__).warning(
-                        u'Removed unpaired named query {0} of concordance {1}.'.format(item['name'],
-                                                                                       item['query_id']))
+                        'Removed unpaired named query {0} of concordance {1}.'.format(item['name'],
+                                                                                      item['query_id']))
             elif int(curr_time - item['created']) / 86400 < self.ttl_days:
                 new_list.append(item)
         for item in new_list:

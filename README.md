@@ -21,7 +21,7 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 
 ## Features
 
-### new features
+### notable end-user features
 
 * fully **editable query chain**
     * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed
@@ -53,7 +53,6 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 * integrability with external data resources (e.g. dictionaries, media libraries)
 
 
-
 ### internal features
 
 * server-side written as a **WSGI application**
@@ -68,14 +67,15 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ## Requirements
 
-* WSGI-compatible server
-    * [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
 * Rerverse proxy server
   + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested)
-* Python *2.7* and:
-    * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) Template Engine
-    * [lxml](http://lxml.de/) library
-    * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
+* Python *3.6* (or newer) and:
+    * WSGI-compatible server
+      * [Gunicorn](http://gunicorn.org/) (recommended)
+      * or [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
+    * [Werkzeug](http://werkzeug.pocoo.org/) web application library
+    * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) template engine
+    * [lxml](http://lxml.de/) library    
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
@@ -85,10 +85,15 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default)
 * (optional) [Celery task queue](http://www.celeryproject.org/) task queue for (asynchronous) background calculations and maintenance tasks
 
+Note: KonText versions up to 0.13.x (incl.) run on Python 2. To use Python 3, 0.15.x and newer versions of KonText must be used.
+
 
 ## Build and installation
 
-Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
+KonText provides a [script](scripts/install/install.py) for automatic installation 
+to an existing Ubuntu system. The easiest way to install KonText is to create an LXC/LXD container, clone
+the repository there and run the script. On a decently fast network, the whole process takes only a couple
+of seconds. Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details. 
 
 
 ## Customization and contribution

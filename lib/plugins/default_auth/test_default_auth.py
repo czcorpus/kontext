@@ -62,18 +62,18 @@ class AuthTest(unittest.TestCase):
                                         'Mary', 'White', 'mary.white@localhost')
         self.mock_redis_plugin.add_user_old_hashing(
             3, 'ann', 'annspassword', 'Ann', 'Rose', 'ann.rose@localhost')
-        self.assertEquals('user:2', self.mock_redis_plugin.hash_get('user_index', 'mary'))
-        self.assertEquals('mary', self.mock_redis_plugin.get('user:2').get('username'))
-        self.assertEquals('user:3', self.mock_redis_plugin.hash_get('user_index', 'ann'))
-        self.assertEquals('ann', self.mock_redis_plugin.get('user:3').get('username'))
+        self.assertEqual('user:2', self.mock_redis_plugin.hash_get('user_index', 'mary'))
+        self.assertEqual('mary', self.mock_redis_plugin.get('user:2').get('username'))
+        self.assertEqual('user:3', self.mock_redis_plugin.hash_get('user_index', 'ann'))
+        self.assertEqual('ann', self.mock_redis_plugin.get('user:3').get('username'))
 
     def test_load_users(self):
         """
         test loading users from the sample file to the mocked redis db, your_user's id in the sample file is 1
         """
         self.load_users()
-        self.assertEquals('user:1', self.mock_redis_plugin.hash_get('user_index', 'your_user'))
-        self.assertEquals('your_user', self.mock_redis_plugin.get('user:1').get('username'))
+        self.assertEqual('user:1', self.mock_redis_plugin.hash_get('user_index', 'your_user'))
+        self.assertEqual('your_user', self.mock_redis_plugin.get('user:1').get('username'))
 
     # ---------------------
     # test package methods:
@@ -112,7 +112,7 @@ class AuthTest(unittest.TestCase):
         """
         pwd = "legacyHash"
         split_legacy = split_pwd_hash(pwd)
-        self.assertEquals(split_legacy['data'], pwd, "returned wrong value as legacy hash")
+        self.assertEqual(split_legacy['data'], pwd, "returned wrong value as legacy hash")
         self.assertFalse('salt' in split_legacy, "split legacy hash must not contain salt value")
 
         # -------------------
@@ -124,7 +124,7 @@ class AuthTest(unittest.TestCase):
         load users from the sample file, try to find user 'your_user'
         """
         self.load_users()
-        self.assertEquals('your_user', self.auth_handler._find_user('your_user').get('username'))
+        self.assertEqual('your_user', self.auth_handler._find_user('your_user').get('username'))
 
     def test_validate_user(self):
         """
@@ -133,11 +133,11 @@ class AuthTest(unittest.TestCase):
         """
         self.load_users()
         msg = "failed to authenticate as sample user your_user"
-        self.assertEquals('your_user', self.auth_handler.validate_user(
+        self.assertEqual('your_user', self.auth_handler.validate_user(
             None, 'your_user', 'yourpwd').get('user'), msg)
 
         msg = "validation failed to return anonymous user for a non-existing user"
-        self.assertEquals(0, self.auth_handler.validate_user(
+        self.assertEqual(0, self.auth_handler.validate_user(
             None, 'jimmy', 'doesNotExist').get('id'), msg)
 
     def test_validate_user_old_hashing_and_update_password(self):
@@ -150,10 +150,10 @@ class AuthTest(unittest.TestCase):
             2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
 
         msg = "wrong length of pwd_hash created using the legacy method"
-        self.assertEquals(len(self.auth_handler._find_user('mary').get('pwd_hash')), 32, msg)
+        self.assertEqual(len(self.auth_handler._find_user('mary').get('pwd_hash')), 32, msg)
 
         msg = "failed to authenticate using the old hashing method"
-        self.assertEquals('mary', self.auth_handler.validate_user(
+        self.assertEqual('mary', self.auth_handler.validate_user(
             None, 'mary', 'maryspassword').get('user'), msg)
 
         self.auth_handler.update_user_password(2, 'marysnewpassword')
@@ -163,7 +163,7 @@ class AuthTest(unittest.TestCase):
             split_new['data']) == 2 * split_new['keylen'], msg)
 
         msg = "failed to authenticate using the new hashing method"
-        self.assertEquals('mary', self.auth_handler.validate_user(
+        self.assertEqual('mary', self.auth_handler.validate_user(
             None, 'mary', 'marysnewpassword').get('user'), msg)
 
 

@@ -16,8 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
+from typing import Union, List, Dict
 
-class KeyValueStorage(object):
+Serializable = Union[int, float, str, bool, list, dict, None]
+
+
+class KeyValueStorage(abc.ABC):
     """
     A general key-value storage is a core data storage for KonText and its default
     plug-ins. The interface was written with [Redis](https://redis.io/) in mind
@@ -31,14 +36,15 @@ class KeyValueStorage(object):
     properly serialized.
     """
 
-    def rename(self, key, new_key):
+    @abc.abstractmethod
+    def rename(self, key: str, new_key: str) -> None:
         """
         Rename an existing key to a new one. If the new value already
         exists then the record is overwritten.
         """
-        raise NotImplementedError()
 
-    def list_get(self, key, from_idx=0, to_idx=-1):
+    @abc.abstractmethod
+    def list_get(self, key: str, from_idx: int = 0, to_idx: int = -1) -> List[Serializable]:
         """
         Return a stored list. If there is a non-list value stored with the passed key
         then TypeError is raised.
@@ -49,9 +55,9 @@ class KeyValueStorage(object):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        raise NotImplementedError()
 
-    def list_append(self, key, value):
+    @abc.abstractmethod
+    def list_append(self, key: str, value: Serializable):
         """
         Add a value at the end of a list
 
@@ -59,17 +65,17 @@ class KeyValueStorage(object):
         key -- data access key
         value -- value to be pushed
         """
-        raise NotImplementedError()
 
-    def list_pop(self, key):
+    @abc.abstractmethod
+    def list_pop(self, key: str) -> Serializable:
         """
         Remove and return an element from the
         beginning of the list.
 
         """
-        raise NotImplementedError()
 
-    def list_len(self, key):
+    @abc.abstractmethod
+    def list_len(self, key: str) -> Serializable:
         """
         Return length of a list. If there is a non-list value stored with the passed key
         then TypeError is raised.
@@ -77,9 +83,9 @@ class KeyValueStorage(object):
         arguments:
         key -- data access key
         """
-        raise NotImplementedError()
 
-    def list_set(self, key, idx, value):
+    @abc.abstractmethod
+    def list_set(self, key: str, idx: int, value: Serializable):
         """
         Sets the list element at index to value
 
@@ -88,9 +94,9 @@ class KeyValueStorage(object):
         idx -- a zero based index where the set should be performed
         value -- a value to be inserted
         """
-        raise NotImplementedError()
 
-    def list_trim(self, key, keep_left, keep_right):
+    @abc.abstractmethod
+    def list_trim(self, key: str, keep_left: int, keep_right: int):
         """
         Trim the list from the beginning to keep_left - 1 and from keep_right to the end.
         The function does not return anything.
@@ -100,9 +106,9 @@ class KeyValueStorage(object):
         keep_left -- the first value to be kept
         keep_right -- the last value to be kept
         """
-        raise NotImplementedError()
 
-    def hash_get(self, key, field):
+    @abc.abstractmethod
+    def hash_get(self, key: str, field: str) -> Serializable:
         """
         Get a value from a hash table stored under the passed key. If there is no
         such field then None is returned.
@@ -111,9 +117,9 @@ class KeyValueStorage(object):
         key -- data access key
         field -- hash table entry key
         """
-        raise NotImplementedError()
 
-    def hash_set(self, key, field, value):
+    @abc.abstractmethod
+    def hash_set(self, key: str, field: str, value: Serializable):
         """
         Put a value into a hash table stored under the passed key
 
@@ -122,9 +128,9 @@ class KeyValueStorage(object):
         field -- hash table entry key
         value -- a value to be stored
         """
-        raise NotImplementedError()
 
-    def hash_del(self, key, field):
+    @abc.abstractmethod
+    def hash_del(self, key: str, field: str):
         """
         Removes a field from a hash item
 
@@ -132,9 +138,9 @@ class KeyValueStorage(object):
         key -- hash item access key
         field -- the field to be deleted
         """
-        raise NotImplementedError()
 
-    def hash_get_all(self, key):
+    @abc.abstractmethod
+    def hash_get_all(self, key: str) -> Dict[str, Serializable]:
         """
         Return a complete hash object (= Python dict) stored under the passed
         key. If the provided key is not present then an empty dict should be
@@ -143,9 +149,9 @@ class KeyValueStorage(object):
         arguments:
         key -- data access key
         """
-        raise NotImplementedError()
 
-    def get(self, key, default=None):
+    @abc.abstractmethod
+    def get(self, key: str, default: Serializable = None) -> Serializable:
         """
         Get a value stored with passed key
         and return its JSON decoded form.
@@ -154,9 +160,9 @@ class KeyValueStorage(object):
         key -- data access key
         default -- a value to be returned in case there is no such key
         """
-        raise NotImplementedError()
 
-    def set(self, key, data):
+    @abc.abstractmethod
+    def set(self, key: str, data: Serializable):
         """
         Save 'data' with 'key'.
 
@@ -164,18 +170,18 @@ class KeyValueStorage(object):
         key -- an access key
         data -- a dictionary containing data to be saved
         """
-        raise NotImplementedError()
 
-    def remove(self, key):
+    @abc.abstractmethod
+    def remove(self, key: str):
         """
         Remove a value specified by a key
 
         arguments:
         key -- key of the data to be removed
         """
-        raise NotImplementedError()
 
-    def exists(self, key):
+    @abc.abstractmethod
+    def exists(self, key: str) -> bool:
         """
         Test whether there is a value with the specified key
 
@@ -185,9 +191,9 @@ class KeyValueStorage(object):
         returns:
         boolean value
         """
-        raise NotImplementedError()
 
-    def set_ttl(self, key, ttl):
+    @abc.abstractmethod
+    def set_ttl(self, key: str, ttl: int):
         """
         Set auto expiration timeout in seconds.
 
@@ -197,26 +203,26 @@ class KeyValueStorage(object):
                (please note that update actions may reset the timer to zero
                which means you have to set_ttl again)
         """
-        raise NotImplementedError()
 
-    def get_ttl(self, key):
+    @abc.abstractmethod
+    def get_ttl(self, key: str) -> int:
         """
         Return number of seconds of item's TTL or -1 if it's not set
 
         arguments:
         key -- data access key
         """
-        raise NotImplementedError()
 
-    def clear_ttl(self, key):
+    @abc.abstractmethod
+    def clear_ttl(self, key: str):
         """
         Make the record persistent again.
 
         key -- data access key
         """
-        raise NotImplementedError()
 
-    def fork(self):
+    @abc.abstractmethod
+    def fork(self) -> 'KeyValueStorage':
         """
         Return a new instance of the plug-in with the same connection
         parameters.
@@ -225,7 +231,6 @@ class KeyValueStorage(object):
         for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used,
         it is never called).
         """
-        raise NotImplementedError()
 
     def get_instance(self, plugin_id):
         """

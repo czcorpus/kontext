@@ -12,7 +12,7 @@ server {
     location / {
         proxy_set_header Host $http_host;
         proxy_redirect off;
-        proxy_pass http://app_server;
+        proxy_pass http://app_server/;
         proxy_read_timeout 120;
     }
 }

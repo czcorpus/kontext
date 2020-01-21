@@ -16,38 +16,45 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+from typing import Any, List, Mapping, Dict, Tuple, Union
+
+from collections import defaultdict
 from functools import partial
 import re
 import itertools
+import math
 
 import manatee
 from l10n import import_string, export_string
 from structures import FixedDict
 from corplib import is_subcorpus
 
+SortCritType = List[Tuple[str, Union[str, int]]]
+LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
 
-def lngrp_sortcrit(lab, separator='.'):
+
+def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:
     # TODO
-    def num2sort(n):
+    def num2sort(n: str) -> Tuple[str, Union[str, int]]:
         if re.compile('[0-9]+$').match(n):
             return 'n', int(n)
         else:
             return 'c', n
     if not lab:
         return [('x', 'x')]
-    return map(num2sort, lab.split(separator, 3))
+    return list(map(num2sort, lab.split(separator, 3)))
 
 
-def format_labelmap(labelmap, separator='.'):
+def format_labelmap(labelmap: Mapping[str, str], separator: str = '.') -> LabelMapType:
     # TODO analyze purpose of this function (it seems to be not used)
-    matrix = {}
+    matrix: Dict[str, List[Tuple[SortCritType, str, str]]] = defaultdict(list)
     for n, lab in labelmap.items():
         if lab:
             pref = lab.split(separator)[0]
-            matrix.setdefault(pref, []).append((lngrp_sortcrit(lab), lab, n))
+            matrix[pref].append((lngrp_sortcrit(lab), lab, n))
     prefixes = [(lngrp_sortcrit(p), p) for p in matrix.keys()]
     prefixes.sort()
-    lines = []
+    lines: LabelMapType = []
     for s, pref in prefixes:
         line = matrix[pref]
         line.sort()
@@ -111,7 +118,7 @@ class KwicLinesArgs(object):
     ctxattrs = 'word'
     refs = '#'
     user_structs = 'p'
-    labelmap = {}
+    labelmap: Dict[str, str] = {}
     righttoleft = False
     alignlist = ()
     attr_vmode = 'mouseover'
@@ -119,9 +126,9 @@ class KwicLinesArgs(object):
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
             setattr(ans, k, v)
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(ans, k, v)
         return ans
 
@@ -158,13 +165,13 @@ class KwicPageArgs(object):
     pagesize = 40
 
     # ???
-    labelmap = {}
+    labelmap: Dict[str, str] = {}
 
     # whether the text flows from right to left
     righttoleft = False
 
     # ???
-    alignlist = []
+    alignlist: List[Any] = []  # TODO better type
 
     # whether display ===EMPTY=== or '' in case a value is empty
     hidenone = 0
@@ -173,7 +180,7 @@ class KwicPageArgs(object):
     attr_vmode = 'mouseover'
 
     def __init__(self, argmapping, base_attr):
-        for k, v in argmapping.__dict__.items():
+        for k, v in list(argmapping.__dict__.items()):
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
@@ -213,7 +220,7 @@ class KwicPageArgs(object):
         ans.righttoleft = self.righttoleft
         ans.alignlist = self.alignlist
         ans.attr_vmode = self.attr_vmode
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(ans, k, v)
         return ans
 
@@ -270,7 +277,7 @@ class Kwic(object):
             pagination.prev_page = fromp - 1
         if self.conc.size() > args.pagesize:
             out.fromp = fromp
-            numofpages = (self.conc.size() - 1) / args.pagesize + 1
+            numofpages = math.ceil((self.conc.size() - 1) / args.pagesize + 1)
             if numofpages < 30:
                 out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
@@ -341,7 +348,7 @@ class Kwic(object):
         # It appears that Manatee returns lists of different lengths in case some translations
         # are missing at the end of a concordance. Following block fixes this issue.
         al_lines_fixed = [fix_length(item, len(result.Lines)) for item in al_lines]
-        aligns = zip(*al_lines_fixed)
+        aligns = list(zip(*al_lines_fixed))
         for i, line in enumerate(result.Lines):
             line['Align'] = aligns[i]
 

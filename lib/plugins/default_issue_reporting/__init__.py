@@ -53,7 +53,7 @@ class DefaultErrorReporting(AbstractIssueReporting):
 
     @staticmethod
     def _dump_browser_info(info):
-        return '\n'.join(('  {0}: {1}'.format(k, v)) for k, v in info.items())
+        return '\n'.join(('  {0}: {1}'.format(k, v)) for k, v in list(info.items()))
 
     def _send_mail(self, plugin_api, body, browser_info):
         user_info = self._auth.get_user_info(plugin_api)

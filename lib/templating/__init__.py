@@ -14,9 +14,7 @@
 
 
 from collections import defaultdict
-import codecs
 from xml.sax.saxutils import escape
-codecs.register_error('replacedot', lambda err: (u'.', err.end))
 
 
 class DummyGlobals(object):
@@ -46,17 +44,17 @@ class StateGlobals(object):
         return iter(self._data)
 
     def items(self):
-        return self._data.items()
+        return list(self._data.items())
 
     def export(self):
         ans = []
-        for k, v in self._data.items():
+        for k, v in list(self._data.items()):
             for item in v:
                 ans.append((k, item))
         return ans
 
     def _copy_data(self):
-        return [(k, v[:]) for k, v in self._data.items()]
+        return [(k, v[:]) for k, v in list(self._data.items())]
 
     def update(self, *args):
         """
@@ -74,15 +72,17 @@ class StateGlobals(object):
         for k, v in self._copy_data():
             new_data[k] = v
         if type(args[0]) is dict:
-            for k, v in args[0].items():
+            for k, v in list(args[0].items()):
                 new_data[k].append(v)
         elif len(args) == 2:
             new_data[args[0]].append(args[1])
         return StateGlobals(data=new_data)
 
     def set(self, k, v):
-        if hasattr(v, '__iter__'):
+        if type(v) is list:
             self._data[k] = v
+        elif type(v) is tuple:
+            self._data[k] = list(v)
         else:
             self._data[k] = [v]
 
@@ -93,18 +93,18 @@ class Type2XML(object):
     def _list_to_xml(d, indent):
         out = []
         for item in d:
-            out.append((u'<item>', indent))
+            out.append(('<item>', indent))
             out += Type2XML._item_to_xml(item, indent + 1)
-            out.append((u'</item>', indent))
+            out.append(('</item>', indent))
         return out
 
     @staticmethod
     def _dict_to_xml(d, indent):
         out = []
-        for k, v in d.items():
-            out.append((u'<{0}>'.format(k), indent))
+        for k, v in list(d.items()):
+            out.append(('<{0}>'.format(k), indent))
             out += Type2XML._item_to_xml(v, indent + 1)
-            out.append((u'</{0}>'.format(k), indent))
+            out.append(('</{0}>'.format(k), indent))
         return out
 
     @staticmethod
@@ -112,24 +112,24 @@ class Type2XML(object):
         out = []
         if type(d) is dict:
             out += Type2XML._dict_to_xml(d, indent + 1)
-        elif hasattr(d, '__iter__'):
+        elif type(d) is list or type(d) is tuple:
             out += Type2XML._list_to_xml(d, indent + 1)
         else:
-            out.append((escape(u'{0}'.format(d if d is not None else '')), indent - 1))
+            out.append((escape('{0}'.format(d if d is not None else '')), indent - 1))
         return out
 
     @staticmethod
     def to_xml(d):
-        out = [(u'<kontext>', 0)]
+        out = [('<kontext>', 0)]
         out += Type2XML._item_to_xml(d, 0)
-        out.append((u'</kontext>', 0))
+        out.append(('</kontext>', 0))
         buff = []
         prev_ind = 0
         for item in out:
             if item[1] == prev_ind and (item[0].startswith('</') or not item[0].startswith('<')):
                 buff.append('')
             else:
-                buff.append('\n' + (u'  ' * item[1]))
+                buff.append('\n' + ('  ' * item[1]))
             buff.append(item[0])
             prev_ind = item[1]
         return ''.join(buff)

@@ -23,9 +23,12 @@ it if needed. This plug-in is optional.
 Expected factory method signature: create_instance(config, db)
 """
 
+import abc
 
-class AbstractSubcRestore(object):
 
+class AbstractSubcRestore(abc.ABC):
+
+    @abc.abstractmethod
     def store_query(self, user_id, corpname, subcname, cql):
         """
         Store user's subcorpus query. Please note that the method should
@@ -41,8 +44,8 @@ class AbstractSubcRestore(object):
         returns:
         None
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def delete_query(self, user_id, corpname, subcname):
         """
         Remove a query from archive
@@ -55,8 +58,8 @@ class AbstractSubcRestore(object):
         returns:
         None
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def list_queries(self, user_id, from_idx, to_idx):
         """
         List all user subcorpus queries from index from_idx to index to_idx
@@ -81,14 +84,14 @@ class AbstractSubcRestore(object):
         }
         If nothing is found then an empty list/tuple is returned.
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_info(self, user_id, corpname, subcname):
         """
         Returns an information about the most recent record matching provided arguments
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_query(self, query_id):
         """
         Returns a query with ID == query_id
@@ -106,4 +109,3 @@ class AbstractSubcRestore(object):
         }
         If nothing is found then None is returned.
         """
-        raise NotImplementedError()

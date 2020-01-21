@@ -12,24 +12,31 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
+from werkzeug.contrib.sessions import Session
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
+
+import abc
 from translation import ugettext as _
 from controller.errors import CorpusForbiddenException, UserActionException
 
 
-class AbstractAuth(object):
+class AbstractAuth(abc.ABC):
     """
     Represents general authentication module.
     Custom implementations should inherit from this.
     """
 
-    def __init__(self, anonymous_id):
+    def __init__(self, anonymous_id: int) -> None:
         """
         arguments:
         anonymous_id -- a numeric ID of anonymous user
         """
         self._anonymous_id = anonymous_id
 
-    def anonymous_user(self):
+    def anonymous_user(self) -> Dict[str, Any]:
         """
         Returns a dictionary containing (key, value) pairs
         specifying anonymous user. By default it is ID = 0,
@@ -40,10 +47,10 @@ class AbstractAuth(object):
             user='anonymous',
             fullname=_('anonymous'))
 
-    def is_anonymous(self, user_id):
+    def is_anonymous(self, user_id: int) -> bool:
         return user_id == self._anonymous_id
 
-    def is_administrator(self, user_id):
+    def is_administrator(self, user_id: int) -> bool:
         """
         Should return True if user has administrator's privileges
         else False
@@ -53,7 +60,8 @@ class AbstractAuth(object):
         """
         return False
 
-    def permitted_corpora(self, user_dict):
+    @abc.abstractmethod
+    def permitted_corpora(self, user_dict: Dict[str, Any]) -> Dict[str, str]:
         """
         Return a dictionary containing corpora IDs user can access.
 
@@ -65,9 +73,8 @@ class AbstractAuth(object):
         returns:
         a dict corpus_id=>corpus_variant
         """
-        raise NotImplementedError()
 
-    def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
+    def on_forbidden_corpus(self, plugin_api: 'PluginApi', corpname: str, corp_variant: str):
         """
         Optional method run in case KonText finds out that user
         does not have access rights to a corpus specified by 'corpname'.
@@ -82,15 +89,15 @@ class AbstractAuth(object):
             # (e.g. no default accessible corpus for the current user)
             raise UserActionException('Cannot find any usable corpus for the user.')
 
-    def get_user_info(self, plugin_api):
+    @abc.abstractmethod
+    def get_user_info(self, plugin_api: 'PluginApi') -> Dict[str, Any]:
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
         etc. are not expected/required to be included.
         """
-        raise NotImplementedError()
 
-    def logout_hook(self, plugin_api):
+    def logout_hook(self, plugin_api: 'PluginApi'):
         """
         An action performed after logout process finishes
         """
@@ -99,7 +106,8 @@ class AbstractAuth(object):
 
 class AbstractSemiInternalAuth(AbstractAuth):
 
-    def validate_user(self, plugin_api, username, password):
+    @abc.abstractmethod
+    def validate_user(self, plugin_api: 'PluginApi', username: str, password: str) -> Dict[str, Any]:
         """
         Tries to find a user with matching 'username' and 'password'.
         If a match is found then proper credentials of the user are
@@ -115,7 +123,6 @@ class AbstractSemiInternalAuth(AbstractAuth):
         a dict {'id': ..., 'user': ..., 'fullname'} where 'user' means
         actually 'username'.
         """
-        raise NotImplementedError()
 
 
 class AbstractInternalAuth(AbstractSemiInternalAuth):
@@ -123,68 +130,72 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
     A general authentication running within KonText.
     """
 
-    def get_login_url(self, return_url=None):
+    @abc.abstractmethod
+    def get_login_url(self, return_url: Optional[str] = None) -> str:
         """
         Specifies where should KonText redirect a user in case
         he wants to log in. In general, it can be KonText's URL
         or a URL of some other authentication application.
         """
-        raise NotImplementedError()
 
-    def get_logout_url(self, return_url=None):
+    @abc.abstractmethod
+    def get_logout_url(self, return_url: Optional[str] = None) -> str:
         """
         Specifies where should KonText redirect a user in case
         he wants to log out. In general, it can be KonText's URL
         or a URL of some other authentication application.
         """
-        raise NotImplementedError()
 
-    def update_user_password(self, user_id, password):
+    @abc.abstractmethod
+    def update_user_password(self, user_id: int, password: str):
         """
         Changes a password of provided user.
         """
-        raise NotImplementedError()
 
-    def logout(self, session):
+    @abc.abstractmethod
+    def logout(self, session: Session):
         """
         Logs-out current user (identified by passed session object).
         """
-        raise NotImplementedError()
 
-    def get_required_password_properties(self):
+    @abc.abstractmethod
+    def get_required_password_properties(self) -> str:
         """
         Returns a text description of required password
         properties (e.g.: "at least 5 characters long, at least one digit)
         This should be consistent with validate_new_password().
         """
-        raise NotImplementedError()
 
-    def validate_new_password(self, password):
+    @abc.abstractmethod
+    def validate_new_password(self, password: str) -> bool:
         """
         Tests whether the provided password matches all the
         required properties. This should be consistent with
         get_required_password_properties().
         """
-        raise NotImplementedError()
 
-    def get_required_username_properties(self, plugin_api):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def get_required_username_properties(self, plugin_api: 'PluginApi') -> str:
+        pass
 
-    def validate_new_username(self, plugin_api, username):
+    @abc.abstractmethod
+    def validate_new_username(self, plugin_api: 'PluginApi', username: str) -> Tuple[bool, bool]:
         """
         returns:
             a 2-tuple (availability, validity) (both bool)
         """
-        raise NotImplementedError()
 
-    def sign_up_user(self, plugin_api, credentials):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def sign_up_user(self, plugin_api: 'PluginApi', credentials: Dict[str, Any]):
+        pass
 
-    def sign_up_confirm(self, plugin_api, key):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def sign_up_confirm(self, plugin_api: 'PluginApi', key: str) -> bool:
+        pass
 
-    def get_form_props_from_token(self, key):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def get_form_props_from_token(self, key: str) -> Dict[str, Any]:
+        pass
 
 
 class AbstractRemoteAuth(AbstractAuth):
@@ -192,7 +203,8 @@ class AbstractRemoteAuth(AbstractAuth):
     A general authentication based on an external authentication service.
     """
 
-    def revalidate(self, plugin_api):
+    @abc.abstractmethod
+    def revalidate(self, plugin_api: 'PluginApi'):
         """
         Re-validates user authentication against external database with central
         authentication ticket (stored as a cookie) and session data.
@@ -209,7 +221,6 @@ class AbstractRemoteAuth(AbstractAuth):
         arguments:
         plugin_api -- a controller.PluginApi instance
         """
-        raise NotImplementedError()
 
 
 class AuthException(Exception):

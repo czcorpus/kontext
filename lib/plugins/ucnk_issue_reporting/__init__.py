@@ -16,7 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from plugins import inject
 from plugins.abstract.issue_reporting import AbstractIssueReporting, StaticReportingAction
@@ -26,7 +28,7 @@ from translation import ugettext as _
 class UcnkErrorReporting(AbstractIssueReporting):
 
     def export_report_action(self, plugin_api):
-        args = {'issue[custom_field_values][16]': urllib.quote_plus(plugin_api.current_url)}
+        args = {'issue[custom_field_values][16]': urllib.parse.quote_plus(plugin_api.current_url)}
         return StaticReportingAction(
             url='https://podpora.korpus.cz/projects/kontext/issues/new',
             args=args,

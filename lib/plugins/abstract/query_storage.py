@@ -20,9 +20,12 @@
 Query storage plug-in works as a backend for the 'recent queries' function.
 """
 
+import abc
 
-class AbstractQueryStorage(object):
 
+class AbstractQueryStorage(abc.ABC):
+
+    @abc.abstractmethod
     def write(self, user_id, query_id):
         """
         Write data as a new saved query
@@ -34,8 +37,8 @@ class AbstractQueryStorage(object):
         returns:
         an ID of the query (either new or existing)
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def make_persistent(self, user_id, query_id, name):
         """
         Finds (if implemented) a specific query history
@@ -47,8 +50,8 @@ class AbstractQueryStorage(object):
         query_id -- a query ID (in URLs: q=~[query_id])
         name -- a name user gave to the query
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def delete(self, user_id, query_id):
         """
         Delete a named query from the storage.
@@ -57,8 +60,8 @@ class AbstractQueryStorage(object):
         user_id -- a user ID
         conc_id -- a concordance ID
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
                          archived_only=False, offset=0, limit=None):
         """
@@ -75,8 +78,8 @@ class AbstractQueryStorage(object):
         offset -- where to start the list (starts from zero)
         limit -- how many rows will be selected
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def delete_old_records(self, user_id):
         """
         Remove old records to keep the query history
@@ -87,4 +90,3 @@ class AbstractQueryStorage(object):
         arguments:
         user_id -- user ID
         """
-        raise NotImplementedError()

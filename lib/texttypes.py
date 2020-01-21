@@ -27,6 +27,7 @@ import corplib
 import settings
 import plugins
 from translation import ugettext as _
+from functools import reduce
 
 
 class TextTypesCache(object):
@@ -164,8 +165,8 @@ class TextTypeCollector(object):
             self._attr_producer_fn = lambda o: dir(o)
             self._access_fn = lambda o, att: getattr(o, att)
         elif isinstance(src_obj, Request):
-            self._attr_producer_fn = lambda o: o.form.keys()
-            self._access_fn = lambda o, x: apply(o.form.getlist, (x,))
+            self._attr_producer_fn = lambda o: list(o.form.keys())
+            self._access_fn = lambda o, x: o.form.getlist(*(x,))
         else:
             raise ValueError('Invalid source object (must be either argmapping.Args or Request): %s' % (
                              src_obj.__class__.__name__,))
@@ -185,7 +186,7 @@ class TextTypeCollector(object):
                 for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
         structs = {}
         for sa, v in scas:
-            if type(v) in (str, unicode) and '|' in v:
+            if type(v) in (str, str) and '|' in v:
                 v = v.split('|')
             s, a = sa.split('.')
             if type(v) is list:
@@ -205,7 +206,7 @@ class TextTypeCollector(object):
                     structs[s].append(query)
                 else:
                     structs[s] = [query]
-        return [(sname, ' & '.join(subquery)) for sname, subquery in structs.items()]
+        return [(sname, ' & '.join(subquery)) for sname, subquery in list(structs.items())]
 
 
 class TextTypesException(Exception):
@@ -253,6 +254,7 @@ class TextTypes(object):
         subcorp_attr_list_tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
         subcorp_attr_list = collections.OrderedDict(
             zip(subcorp_attr_list_tmp, [None] * len(subcorp_attr_list_tmp))).keys()
+
         subcorpattrs = '|'.join(subcorp_attr_list)
         if len(subcorp_attr_list_tmp) != len(subcorp_attr_list):
             logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
@@ -260,7 +262,6 @@ class TextTypes(object):
         if plugins.runtime.LIVE_ATTRIBUTES.exists:
             ans['bib_attr'] = corpus_info['metadata']['label_attr']
             ans['id_attr'] = corpus_info['metadata']['id_attr']
-
             # We have to ensure that the bibliography item (which uses different values
             # for labels and different values for actual identifiers) is represented
             # as an input box on client-side. Passing list_none with bib_attr element
@@ -302,7 +303,7 @@ class TextTypes(object):
                 logging.getLogger(__name__).warning(
                     'Removed invalid tt cache entry for corpus {0}'.format(self._corpname))
             ans['Blocks'] = tt
-            ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
+            ans['Normslist'] = self._get_normslist(list(struct_calc.keys())[0])
         else:
             ans['Blocks'] = tt
             ans['Normslist'] = []

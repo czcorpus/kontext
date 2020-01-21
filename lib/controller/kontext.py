@@ -13,24 +13,29 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union, Iterable, cast
+from main_menu import AbstractMenuItem
+from argmapping.query import ConcFormArgs
+from manatee import Corpus
+from werkzeug import Request
+from . import Controller
+
 import json
 from functools import partial
 import logging
 import inspect
 import os.path
 import time
-from types import DictType
+from collections import defaultdict
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from controller import Controller, convert_types, exposed
-from controller.errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException,
-                               NotFoundException)
+from . import convert_types, exposed
+from .errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException, NotFoundException)
 import plugins
-import plugins.abstract
 from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
@@ -41,9 +46,11 @@ import scheduled
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
-from controller.plg import PluginApi
+from .plg import PluginApi
 from templating import DummyGlobals
-from collections import defaultdict
+
+JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
+T = TypeVar('T')
 
 
 class LinesGroups(object):
@@ -53,33 +60,32 @@ class LinesGroups(object):
     this class available (i.e. no None value).
     """
 
-    def __init__(self, data):
-        if type(data) is not list:
+    def __init__(self, data: List[Any]) -> None:
+        if not isinstance(data, list):
             raise ValueError('LinesGroups data argument must be a list')
         self.data = data
         self.sorted = False
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data) if self.data else 0
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         return iter(self.data) if self.data else iter([])
 
-    def serialize(self):
+    def serialize(self) -> Dict[str, Any]:
         return {'data': self.data, 'sorted': self.sorted}
 
-    def as_list(self):
+    def as_list(self) -> List[Any]:
         return self.data if self.data else []
 
-    def is_defined(self):
+    def is_defined(self) -> bool:
         return len(self.data) > 0
 
     @staticmethod
-    def deserialize(data):
-        if type(data) is list:
-            data = dict(data=data)
-        ans = LinesGroups(data.get('data', []))
-        ans.sorted = data.get('sorted', False)
+    def deserialize(data: Union[Dict, List[Any]]) -> 'LinesGroups':
+        data_dict = dict(data) if isinstance(data, list) else data
+        ans = LinesGroups(data_dict.get('data', []))
+        ans.sorted = data_dict.get('sorted', False)
         return ans
 
 
@@ -104,13 +110,13 @@ class RequestArgsProxy(object):
         self._forced = defaultdict(lambda: [])
 
     def __iter__(self):
-        return self.keys().__iter__()
+        return list(self.keys()).__iter__()
 
     def __contains__(self, item):
         return self._forced.__contains__(item) or self._form.__contains__(item) or self._args.__contains__(item)
 
     def keys(self):
-        return list(set(self._forced.keys() + self._form.keys() + self._args.keys()))
+        return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))
 
     def getlist(self, k):
         """
@@ -161,23 +167,22 @@ class AsyncTaskStatus(object):
         label (str): user-readable task label
         status (str): one of
     """
-
     CATEGORY_SUBCORPUS = 'subcorpus'
 
-    def __init__(self, ident, label, status, category, args, created=None, error=None):
-        self.ident = ident
-        self.label = label
-        self.status = status
-        self.category = category
-        self.created = created if created else time.time()
-        self.args = args
-        self.error = error
+    def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any], created: Optional[float] = None, error: Optional[str] = None) -> None:
+        self.ident: str = ident
+        self.label: str = label
+        self.status: int = status
+        self.category: str = category
+        self.created: Optional[float] = created if created else time.time()
+        self.args: Dict[str, Any] = args
+        self.error: Optional[str] = error
 
-    def is_finished(self):
+    def is_finished(self) -> bool:
         return self.status in ('FAILURE', 'SUCCESS')
 
     @staticmethod
-    def from_dict(data):
+    def from_dict(data: Dict[str, Any]) -> 'AsyncTaskStatus':
         """
         Creates an instance from the 'dict' type. This is used
         to unserialize instances from session.
@@ -186,7 +191,7 @@ class AsyncTaskStatus(object):
                                category=data['category'], created=data.get('created'), args=data.get('args', {}),
                                error=data.get('error'))
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """
         Transforms an instance to the 'dict' type. This is used
         to serialize instances to session.
@@ -199,7 +204,6 @@ class Kontext(Controller):
     A controller.Controller extension implementing
     KonText-specific requirements.
     """
-
     # main menu items disabled for public users (this is applied automatically during
     # post_dispatch())
     ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
@@ -217,52 +221,51 @@ class Kontext(Controller):
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
-    BASE_ATTR = 'word'  # TODO this value is actually hardcoded throughout the code
+    BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code
 
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
     PARAM_TYPES = dict(inspect.getmembers(GlobalArgs, predicate=lambda x: isinstance(x, Parameter)))
 
-    def __init__(self, request, ui_lang):
-        super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
+    def __init__(self, request: Request, ui_lang: str) -> None:
+        super().__init__(request=request, ui_lang=ui_lang)
         # Note: always use _corp() method to access current corpus even from inside the class
-        self._curr_corpus = None
-        self._corpus_variant = ''  # a prefix for a registry file
+        self._curr_corpus: Optional[Corpus] = None
+        self._corpus_variant: str = ''  # a prefix for a registry file
 
-        self.return_url = None
+        self.return_url: Optional[str] = None
 
         # a CorpusManager instance (created in pre_dispatch() phase)
         # generates (sub)corpus objects with additional properties
-        self.cm = None
+        self.cm: Optional[corplib.CorpusManager] = None
 
-        self.disabled_menu_items = []
+        self.disabled_menu_items: List[str] = []
 
         # menu items - they should not be handled directly
-        self._save_menu = []
+        self._save_menu: List[AbstractMenuItem] = []
 
-        self.subcpath = []
+        self.subcpath: List[str] = []
 
-        self._conc_dir = u''
+        self._conc_dir: str = ''
 
-        self._files_path = settings.get('global', 'static_files_prefix', u'../files')
+        self._files_path: str = settings.get('global', 'static_files_prefix', '../files')
 
         # data of the current manual concordance line selection/categorization
-        self._lines_groups = LinesGroups(data=[])
+        self._lines_groups: LinesGroups = LinesGroups(data=[])
 
-        self._plugin_api = PluginApi(self, self._request, self._cookies)
-        self.get_corpus_info = partial(
-            plugins.runtime.CORPARCH.instance.get_corpus_info, self._plugin_api.user_lang)
+        self._plugin_api: PluginApi = PluginApi(self, self._request, self._cookies)
+        self.get_corpus_info: Callable[[str], Dict[str, Any]] = lambda x: partial(getattr(plugins.runtime.CORPARCH.instance, 'get_corpus_info'), self._plugin_api.user_lang)(x)
 
         # conc_persistence plugin related attributes
-        self._q_code = None  # a key to 'code->query' database
-        self._prev_q_data = None  # data of the previous operation are stored here
-        self._auto_generated_conc_ops = []
+        self._q_code: Optional[str] = None  # a key to 'code->query' database
+        self._prev_q_data: Optional[Dict[str, Any]] = None  # data of the previous operation are stored here
+        self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-    def get_mapping_url_prefix(self):
-        return super(Kontext, self).get_mapping_url_prefix()
+    def get_mapping_url_prefix(self) -> str:
+        return super().get_mapping_url_prefix()
 
-    def _create_action_log(self, user_settings, action_name, err_desc, proc_time=None):
+    def _create_action_log(self, user_settings: Dict[str, Any], action_name: str, err_desc: Tuple[str, str], proc_time: Optional[float] = None) -> Dict[str, JSONVal]:
         """
         Logs user's request by storing URL parameters, user settings and user name
 
@@ -279,14 +282,14 @@ class Kontext(Controller):
         import datetime
 
         logged_values = settings.get('logging', 'values', ())
-        log_data = {}
+        log_data: Dict[str, JSONVal] = {}
 
         if err_desc:
             log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
 
         params = {}
         if self.environ.get('QUERY_STRING'):
-            params.update(dict(self._request.args.items()))
+            params.update(dict(list(self._request.args.items())))
 
         for val in logged_values:
             if val == 'date':
@@ -299,16 +302,18 @@ class Kontext(Controller):
             elif val == 'user':
                 log_data['user'] = self.session_get('user', 'user')
             elif val == 'params':
-                log_data['params'] = dict([(k, v) for k, v in params.items() if v])
+                log_data['params'] = dict([(k, v) for k, v in list(params.items()) if v])
             elif val == 'settings':
-                log_data['settings'] = dict([(k, v) for k, v in user_settings.items() if v])
+                log_data['settings'] = dict([(k, v) for k, v in list(user_settings.items()) if v])
             elif val == 'proc_time' and proc_time is not None:
                 log_data['proc_time'] = proc_time
             elif val.find('environ:') == 0:
-                if 'request' not in log_data:
-                    log_data['request'] = {}
+                try:
+                    request = cast(Dict[str, Any], log_data['request'])
+                except KeyError:
+                    log_data['request'] = request = {}
                 k = val.split(':')[-1]
-                log_data['request'][k] = self.environ.get(k)
+                request[k] = self.environ.get(k)
             elif val == 'pid':
                 log_data['pid'] = os.getpid()
         return log_data
@@ -326,15 +331,16 @@ class Kontext(Controller):
                 'corpora', 'users_subcpath'), str(user_id)))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
-    def _user_has_persistent_settings(self):
+    # missing return statement type check error
+    def _user_has_persistent_settings(self) -> bool:  # type: ignore
         with plugins.runtime.SETTINGS_STORAGE as sstorage:
-            return self.session_get('user', 'id') not in sstorage.get_excluded_users() and not self.user_is_anonymous()
+            return self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')() and not self.user_is_anonymous()
 
-    def get_current_aligned_corpora(self):
-        return [self.args.corpname] + self.args.align
+    def get_current_aligned_corpora(self) -> List[str]:
+        return [getattr(self.args, 'corpname')] + getattr(self.args, 'align')
 
-    def get_available_aligned_corpora(self):
-        return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
+    def get_available_aligned_corpora(self) -> List[str]:
+        return [getattr(self.args, 'corpname')] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
     def _get_valid_settings(self):
         """
@@ -348,7 +354,7 @@ class Kontext(Controller):
             data = self.session_get('settings')
             if not data:
                 data = {}
-        return [x for x in data.items() if x[0] != 'queryselector']
+        return [x for x in list(data.items()) if x[0] != 'queryselector']
 
     def _load_user_settings(self):
         """
@@ -393,7 +399,7 @@ class Kontext(Controller):
         settings of other corpora. Otherwise, no action is performed.
         """
         ans = {}
-        for k, v in options.items():
+        for k, v in list(options.items()):
             # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
             tokens = k.rsplit(':', 1)
             if len(tokens) == 2:
@@ -403,10 +409,10 @@ class Kontext(Controller):
         self.args.__dict__.update(ans)
 
     @staticmethod
-    def _get_save_excluded_attributes():
+    def _get_save_excluded_attributes() -> Tuple[str, ...]:
         return 'corpname', Kontext.SCHEDULED_ACTIONS_KEY
 
-    def _save_options(self, optlist=None, selector=''):
+    def _save_options(self, optlist: Optional[Iterable] = None, selector: str = ''):
         """
         Saves user's options to a storage
 
@@ -428,7 +434,7 @@ class Kontext(Controller):
             if opts is None:
                 opts = {}
             excluded_attrs = self._get_save_excluded_attributes()
-            for k in opts.keys():
+            for k in list(opts.keys()):
                 if k in excluded_attrs:
                     del(opts[k])
             opts.update(tosave)
@@ -439,8 +445,8 @@ class Kontext(Controller):
         # to store (again) even values not used in this particular request)
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
-                options = normalize_opts(settings_storage.load(self.session_get('user', 'id')))
-                settings_storage.save(self.session_get('user', 'id'), options)
+                options = normalize_opts(getattr(settings_storage, 'load')(self.session_get('user', 'id')))
+                getattr(settings_storage, 'save')(self.session_get('user', 'id'), options)
             else:
                 options = normalize_opts(self.session_get('settings'))
                 self._session['settings'] = options
@@ -490,7 +496,7 @@ class Kontext(Controller):
             return []
         return self.cm.subcorp_names(corpname)
 
-    def get_saveable_conc_data(self):
+    def get_saveable_conc_data(self) -> Dict[str, Any]:
         """
         Return values to be stored as a representation
         of user's query (here we mean all the data needed
@@ -500,18 +506,18 @@ class Kontext(Controller):
         if len(self._auto_generated_conc_ops) > 0:
             q_limit = self._auto_generated_conc_ops[0][0]
         else:
-            q_limit = len(self.args.q)
+            q_limit = len(getattr(self.args, 'q'))
         return dict(
             # we don't want to store all the items from self.args.q in case auto generated
             # operations are present (we will store them individually later).
             user_id=self.session_get('user', 'id'),
-            q=self.args.q[:q_limit],
+            q=getattr(self.args, 'q')[:q_limit],
             corpora=self.get_current_aligned_corpora(),
-            usesubcorp=self.args.usesubcorp,
+            usesubcorp=getattr(self.args, 'usesubcorp'),
             lines_groups=self._lines_groups.serialize()
         )
 
-    def acknowledge_auto_generated_conc_op(self, q_idx, query_form_args):
+    def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
         In some cases, KonText automatically (either
         based on user's settings or for an internal reason)
@@ -558,10 +564,10 @@ class Kontext(Controller):
             self._save_query_to_history(q_id, curr_data)
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
-                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx],
+                prev = dict(id=q_id, lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
                             user_id=self.session_get('user', 'id'))
                 curr = dict(lines_groups=lines_groups,
-                            q=self.args.q[:q_idx + 1], lastop_form=op.to_dict(),
+                            q=getattr(self.args, 'q')[:q_idx + 1], lastop_form=op.to_dict(),
                             user_id=self.session_get('user', 'id'))
                 q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
             return q_id
@@ -577,7 +583,7 @@ class Kontext(Controller):
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
-            args += [('q', q) for q in self.args.q]
+            args += [('q', q) for q in getattr(self.args, 'q')]
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
         self.redirect(href(MultiDict(args)))
 
@@ -606,7 +612,7 @@ class Kontext(Controller):
                 tpl_data['Q'] = []
                 tpl_data['conc_persistence_op_id'] = None
         else:
-            tpl_data['Q'] = self.args.q[:]
+            tpl_data['Q'] = getattr(self.args, 'q')[:]
         tpl_data['num_lines_in_groups'] = len(self._lines_groups)
         tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
 
@@ -626,7 +632,7 @@ class Kontext(Controller):
                         fn = fn()
                     if callable(fn):
                         try:
-                            ans = apply(fn, (), action)
+                            ans = fn(*(), **action)
                             if 'message' in ans:
                                 self.add_system_message('message', ans['message'])
                             continue
@@ -644,8 +650,8 @@ class Kontext(Controller):
         values of dependent attributes. This method should ensure that all
         the values are consistent.
         """
-        if self.args.attr_vmode in ('mouseover', 'mixed') and self.args.attr_allpos == 'kw':
-            self.args.attr_allpos = 'all'
+        if getattr(self.args, 'attr_vmode') in ('mouseover', 'mixed') and getattr(self.args, 'attr_allpos') == 'kw':
+            setattr(self.args, 'attr_allpos', 'all')
 
     def _map_args_to_attrs(self, req_args, named_args):
         """
@@ -662,7 +668,7 @@ class Kontext(Controller):
         if 'json' in req_args:
             json_data = json.loads(req_args.getvalue('json'))
             named_args.update(json_data)
-        for k in req_args.keys():
+        for k in list(req_args.keys()):
             if len(req_args.getlist(k)) > 0:
                 key = str(k)
                 val = req_args.getvalue(k)
@@ -738,7 +744,7 @@ class Kontext(Controller):
             if k not in form_proxy:
                 self.PARAM_TYPES[k].update_attr(self.args, k, v)
 
-    def _store_semi_persistent_attrs(self, attr_list):
+    def _store_semi_persistent_attrs(self, attr_list: Tuple[str, ...]):
         """
         Store all the semi-persistent (Parameter.SEMI_PERSISTENT) args listed in attr_list.
 
@@ -747,16 +753,16 @@ class Kontext(Controller):
                              without Parameter.SEMI_PERSISTENT flag will be ignored)
         """
         semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
-        tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
+        tmp: MultiDict[str, Any] = MultiDict(self._session.get('semi_persistent_attrs', {}))
         for attr_name in attr_list:
             if attr_name in semi_persist_attrs:
                 v = getattr(self.args, attr_name)
-                if type(v) in (list, tuple):
+                if isinstance(v, (list, tuple)):
                     tmp.setlist(attr_name, v)
                 else:
                     tmp[attr_name] = v
         # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
-        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
+        self._session['semi_persistent_attrs'] = list(tmp.items(multi=True))
 
     def pre_dispatch(self, action_name, named_args, action_metadata=None):
         """
@@ -772,7 +778,7 @@ class Kontext(Controller):
         def validate_corpus():
             if isinstance(self.corp, fallback_corpus.ErrorCorpus):
                 return self.corp.get_error()
-            info = self.get_corpus_info(self.args.corpname)
+            info = self.get_corpus_info(getattr(self.args, 'corpname'))
             if isinstance(info, BrokenCorpusInfo):
                 return NotFoundException(translate('Corpus \"{0}\" not available'.format(info.name)),
                                          internal_message='Failed to fetch configuration for {0}'.format(info.name))
@@ -802,19 +808,19 @@ class Kontext(Controller):
         if len(corpname) > 0:
             self._apply_corpus_user_settings(corp_options, corpname)
         self._map_args_to_attrs(form, named_args)
-        self.args.corpname = corpname  # always prefer corpname returned by _check_corpus_access()
+        setattr(self.args, 'corpname', corpname)  # always prefer corpname returned by _check_corpus_access()
         self._corpus_variant = corpus_variant
 
         # return url (for 3rd party pages etc.)
         args = {}
-        if self.args.corpname:
-            args['corpname'] = self.args.corpname
+        if getattr(self.args, 'corpname'):
+            args['corpname'] = getattr(self.args, 'corpname')
         if self.get_http_method() == 'GET':
             self.return_url = self.updated_current_url(args)
         else:
             self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
-                                                             for k, v in args.items()]))
+                                                             for k, v in list(args.items())]))
         # by default, each action is public
         access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
@@ -839,7 +845,7 @@ class Kontext(Controller):
         def encode_err(e): return None if e[0] is None else (e[0].__class__.__name__, e[1])
 
         # create and store concordance query key
-        if type(result) is DictType:
+        if type(result) is dict:
             if action_metadata['mutates_conc']:
                 next_query_key = self._store_conc_params()
             else:
@@ -854,7 +860,7 @@ class Kontext(Controller):
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.post_dispatch(self._plugin_api, methodname, action_metadata, log_data)
 
-    def _add_save_menu_item(self, label, save_format=None, hint=None):
+    def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
             self._save_menu.append(
@@ -890,8 +896,7 @@ class Kontext(Controller):
 
         # 2nd option: try currently initialized corpname (e.g. from restored semi-persistent args)
         if not cn:
-            cn = self.args.corpname
-
+            cn = getattr(self.args, 'corpname')
         # 3rd option: try user's last
         if not cn and not self.user_is_anonymous():
             with plugins.runtime.QUERY_STORAGE as qs:
@@ -909,21 +914,19 @@ class Kontext(Controller):
         return cn, redirect
 
     @property
-    def corp_encoding(self):
+    def corp_encoding(self) -> str:
         enc = corpus_get_conf(self.corp, 'ENCODING')
         return enc if enc else 'iso-8859-1'
 
-    def handle_dispatch_error(self, ex):
+    def handle_dispatch_error(self, ex: Exception):
         if isinstance(self.corp, fallback_corpus.ErrorCorpus):
             self._status = 404
-            self.add_system_message('error', _(
-                'Failed to open corpus {0}').format(self.args.corpname))
+            self.add_system_message('error', 'Failed to open corpus {0}'.format(getattr(self.args, 'corpname')))
         else:
             self._status = 500
-            super(Kontext, self).handle_dispatch_error(ex)
 
     @property
-    def corp(self):
+    def corp(self) -> Union[Corpus, fallback_corpus.ErrorCorpus, fallback_corpus.EmptyCorpus]:
         """
         Contains the current corpus. The property always contains a corpus-like object
         (even in case of an error). Possible values:
@@ -936,11 +939,11 @@ class Kontext(Controller):
         This should be always preferred over accessing _curr_corpus attribute.
 
         """
-        if self.args.corpname:
+        if getattr(self.args, 'corpname'):
             try:
-                if not self._curr_corpus or (self.args.usesubcorp and not hasattr(self._curr_corpus, 'subcname')):
-                    self._curr_corpus = self.cm.get_Corpus(self.args.corpname,
-                                                           subcname=self.args.usesubcorp,
+                if not self._curr_corpus or (getattr(self.args, 'usesubcorp') and not hasattr(self._curr_corpus, 'subcname')):
+                    self._curr_corpus = getattr(self.cm, 'get_Corpus')(getattr(self.args, 'corpname'),
+                                                           subcname=getattr(self.args, 'usesubcorp'),
                                                            corp_variant=self._corpus_variant)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
@@ -949,14 +952,14 @@ class Kontext(Controller):
         else:
             return fallback_corpus.EmptyCorpus()
 
-    def permitted_corpora(self):
+    def permitted_corpora(self) -> Dict[str, str]:
         """
         Returns corpora identifiers accessible by the current user.
 
         returns:
         a dict (corpus_id, corpus_variant)
         """
-        return plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user'))
+        return getattr(plugins.runtime.AUTH.instance, 'permitted_corpora')(self.session_get('user'))
 
     def _add_corpus_related_globals(self, result, maincorp):
         """
@@ -966,26 +969,26 @@ class Kontext(Controller):
                     corpora this can be a different one than self.corp
                     (or self.args.corpname) represents.
         """
-        result['corpname'] = self.args.corpname
-        result['align'] = self.args.align
+        result['corpname'] = getattr(self.args, 'corpname')
+        result['align'] = getattr(self.args, 'align')
         result['human_corpname'] = self._human_readable_corpname()
 
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self.corp.size()
 
         if hasattr(self.corp, 'subcname'):
-            self.args.usesubcorp = self.corp.subcname
+            setattr(self.args, 'usesubcorp', self.corp.subcname)
 
-        usesubcorp = self.args.usesubcorp if self.args.usesubcorp else None
+        usesubcorp = getattr(self.args, 'usesubcorp') if getattr(self.args, 'usesubcorp') else None
         result['corpus_ident'] = dict(
-            id=self.args.corpname,
+            id=getattr(self.args, 'corpname'),
             variant=self._corpus_variant,
             name=self._human_readable_corpname(),
             usesubcorp=usesubcorp,
             origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp),
             foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
 
-        if self.args.usesubcorp:
+        if getattr(self.args, 'usesubcorp'):
             result['subcorp_size'] = self.corp.search_size()
         else:
             result['subcorp_size'] = None
@@ -1017,10 +1020,10 @@ class Kontext(Controller):
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
         result['corp_uses_tag'] = 'tag' in corpus_get_conf(
             maincorp, 'ATTRLIST').split(',')  # legacy value
-        result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
-                                              ('lemma', self.args.lemma),
-                                              ('lpos', self.args.lpos),
-                                              ('usesubcorp', self.args.usesubcorp),
+        result['commonurl'] = self.urlencode([('corpname', getattr(self.args, 'corpname')),
+                                              ('lemma', getattr(self.args, 'lemma')),
+                                              ('lpos', getattr(self.args, 'lpos')),
+                                              ('usesubcorp', getattr(self.args, 'usesubcorp')),
                                               ])
         result['interval_chars'] = (
             settings.get('corpora', 'left_interval_char', None),
@@ -1045,11 +1048,11 @@ class Kontext(Controller):
                 if js_file:
                     ans[opt_plugin.name] = js_file
                     if (not (isinstance(opt_plugin.instance, plugins.abstract.CorpusDependentPlugin)) or
-                            opt_plugin.is_enabled_for(self._plugin_api, self.args.corpname)):
+                            opt_plugin.is_enabled_for(self._plugin_api, getattr(self.args, 'corpname'))):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
-    def _get_mapped_attrs(self, attr_names, force_values=None):
+    def _get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> List[Tuple[str, str]]:
         """
         Returns required attributes (= passed attr_names) and their respective values found
         in 'self.args'. Only attributes initiated via class attributes and the Parameter class
@@ -1069,7 +1072,7 @@ class Kontext(Controller):
             v_tmp = get_val(attr)
             if not is_valid(attr, v_tmp):
                 continue
-            if not hasattr(v_tmp, '__iter__'):
+            if type(v_tmp) in (str, float, int, bool) or v_tmp is None:
                 v_tmp = [v_tmp]
             for v in v_tmp:
                 ans.append((attr, v))
@@ -1084,14 +1087,14 @@ class Kontext(Controller):
             logo_alt_img = logo_img
 
         if settings.contains('theme', 'logo_href'):
-            logo_href = unicode(settings.get('theme', 'logo_href'))
+            logo_href = str(settings.get('theme', 'logo_href'))
         else:
             logo_href = self.get_root_url()
 
         if theme_name == 'default':
             logo_title = translate('Click to enter a new query')
         else:
-            logo_title = unicode(logo_href)
+            logo_title = str(logo_href)
 
         theme_favicon = settings.get('theme', 'favicon', None)
         theme_favicon_type = settings.get('theme', 'favicon_type', None)
@@ -1154,8 +1157,8 @@ class Kontext(Controller):
         if result['last_freq_level'] is None:
             result['last_freq_level'] = 1
 
-        if self.args.maincorp:
-            thecorp = corplib.open_corpus(self.args.maincorp)
+        if getattr(self.args, 'maincorp'):
+            thecorp = corplib.open_corpus(getattr(self.args, 'maincorp'))
         else:
             thecorp = self.corp
         if not action_metadata['skip_corpus_init']:
@@ -1165,7 +1168,7 @@ class Kontext(Controller):
             result['uses_corp_instance'] = False
 
         result['supports_password_change'] = self._uses_internal_user_pages()
-        result['undo_q'] = self.urlencode([('q', q) for q in self.args.q[:-1]])
+        result['undo_q'] = self.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
         result['shuffle_min_result_warning'] = settings.get_int(
             'global', 'shuffle_min_result_warning', 100000)
@@ -1199,7 +1202,7 @@ class Kontext(Controller):
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
 
-        result['bib_conf'] = self.get_corpus_info(self.args.corpname).metadata
+        result['bib_conf'] = self.get_corpus_info(getattr(self.args, 'corpname')).metadata
 
         # available languages; used just by UI language switch
         if plugins.runtime.GETLANG.exists:
@@ -1210,7 +1213,7 @@ class Kontext(Controller):
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         # util functions
-        result['to_str'] = lambda s: unicode(s) if s is not None else u''
+        result['to_str'] = lambda s: str(s) if s is not None else ''
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
 
         with plugins.runtime.ISSUE_REPORTING as irp:
@@ -1227,8 +1230,7 @@ class Kontext(Controller):
 
         result['multi_sattr_allowed_structs'] = []
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
-                self.args.corpname)
+            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(getattr(self.args, 'corpname'))
 
         self._attach_plugin_exports(result, direct=False)
 
@@ -1267,19 +1269,19 @@ class Kontext(Controller):
         """
         if self.corp.get_conf('NAME'):
             return corpus_get_conf(self.corp, 'NAME')
-        elif self.args.corpname:
-            return self.args.corpname
+        elif getattr(self.args, 'corpname'):
+            return getattr(self.args, 'corpname')
         else:
             return ''
 
-    def _get_struct_opts(self):
+    def _get_struct_opts(self) -> str:
         """
         Returns structures and structural attributes the current concordance should display.
         Note: current solution is little bit confusing - there are two overlapping parameters
         here: structs & structattrs where the former is the one used in URL and the latter
         stores user's persistent settings (but can be also passed via URL with some limitations).
         """
-        return ','.join(x for x in (self.args.structs, ','.join(self.args.structattrs)) if x)
+        return ','.join(x for x in (getattr(self.args, 'structs'), ','.join(getattr(self.args, 'structattrs'))) if x)
 
     @staticmethod
     def _parse_sorting_param(k):
@@ -1303,21 +1305,21 @@ class Kontext(Controller):
         ans = {}
         bib_mapping = {}
         src_obj = request.args if self.get_http_method() == 'GET' else request.form
-        for p in src_obj.keys():
+        for p in list(src_obj.keys()):
             if p.startswith('sca_'):
                 ans[p[4:]] = src_obj.getlist(p)
 
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, getattr(self.args, 'corpname')):
             corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
-                self.ui_lang, self.args.corpname)
+                self.ui_lang, getattr(self.args, 'corpname'))
             id_attr = corpus_info.metadata.id_attr
             if id_attr in ans:
                 bib_mapping = dict(plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(self._plugin_api,
-                                                                                            self.args.corpname,
+                                                                                            getattr(self.args, 'corpname'),
                                                                                             ans[id_attr]))
         return ans, bib_mapping
 
-    def _export_subcorpora_list(self, corpname, curr_subcorp, out):
+    def _export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
@@ -1338,7 +1340,7 @@ class Kontext(Controller):
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:
-                srch = (x for x in subcorp_list if x['pub'] == self.corp.subcname).next()
+                srch = next((x for x in subcorp_list if x['pub'] == self.corp.subcname))
             except StopIteration:
                 srch = None
             if srch is None:
@@ -1355,7 +1357,7 @@ class Kontext(Controller):
     def _uses_internal_user_pages():
         return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
 
-    def get_async_tasks(self, category=None):
+    def get_async_tasks(self, category: Optional[str] = None) -> List[AsyncTaskStatus]:
         """
         Returns a list of tasks user is explicitly informed about.
 
@@ -1369,11 +1371,11 @@ class Kontext(Controller):
         else:
             ans = []
         if category is not None:
-            return filter(lambda item: item.category == category, ans)
+            return [item for item in ans if item.category == category]
         else:
             return ans
 
-    def _set_async_tasks(self, task_list):
+    def _set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._session['async_tasks'] = [at.to_dict() for at in task_list]
 
     def _store_async_task(self, async_task_status):
@@ -1382,9 +1384,9 @@ class Kontext(Controller):
         self._set_async_tasks(at_list)
 
     @exposed(return_type='json')
-    def concdesc_json(self, _=None):
-        out = {'Desc': []}
-        conc_desc = conclib.get_conc_desc(corpus=self.corp, q=self.args.q,
+    def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:
+        out_list: List[Dict[str, Any]] = []
+        conc_desc = conclib.get_conc_desc(corpus=self.corp, q=getattr(self.args, 'q'),
                                           subchash=getattr(self.corp, 'subchash', None))
 
         def nicearg(arg):
@@ -1405,10 +1407,10 @@ class Kontext(Controller):
             return ', '.join(niceargs)
 
         for o, a, u1, u2, s, opid in conc_desc:
-            u2.append(('corpname', self.args.corpname))
-            if self.args.usesubcorp:
-                u2.append(('usesubcorp', self.args.usesubcorp))
-            out['Desc'].append(dict(
+            u2.append(('corpname', getattr(self.args, 'corpname')))
+            if getattr(self.args, 'usesubcorp'):
+                u2.append(('usesubcorp', getattr(self.args, 'usesubcorp')))
+            out_list.append(dict(
                 op=o,
                 opid=opid,
                 arg=a,
@@ -1416,10 +1418,10 @@ class Kontext(Controller):
                 churl=self.urlencode(u1),
                 tourl=self.urlencode(u2),
                 size=s))
-        return out
+        return {'Desc': out_list}
 
     @exposed(return_type='json', skip_corpus_init=True)
-    def check_tasks_status(self, request):
+    def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
         if backend in('celery', 'konserver'):
             import bgcalc
@@ -1439,9 +1441,9 @@ class Kontext(Controller):
             return dict(data=[])  # other backends are not supported
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
-    def remove_task_info(self, request):
+    def remove_task_info(self, request: Request) -> Dict[str, Any]:
         task_ids = request.form.getlist('tasks')
-        self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
+        self._set_async_tasks([x for x in self.get_async_tasks() if x.ident not in task_ids])
         return self.check_tasks_status(request)
 
     @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message', template='message.html')

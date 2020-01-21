@@ -66,12 +66,12 @@ def mk_short_id(s, min_length):
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
-    x = long('0x' + hashlib.md5(s).hexdigest(), 16)
+    x = int(hashlib.md5(s).hexdigest(), 16)
     ans = []
     while x > 0:
         p = x % len(KEY_ALPHABET)
         ans.append(KEY_ALPHABET[p])
-        x /= len(KEY_ALPHABET)
+        x = int(x / len(KEY_ALPHABET))
     ans = ''.join([str(x) for x in ans])
     max_length = len(ans)
     i = min_length
@@ -81,7 +81,7 @@ def mk_short_id(s, min_length):
 
 
 def generate_uniq_id():
-    return mk_short_id(uuid.uuid1().hex, min_length=DEFAULT_CONC_ID_LENGTH)
+    return mk_short_id(uuid.uuid1().hex.encode(), min_length=DEFAULT_CONC_ID_LENGTH)
 
 
 class Sqlite3ArchBackend(object):

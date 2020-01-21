@@ -17,7 +17,7 @@ def update_1(doc):
     src_elm = doc.find('corpora/conc_calc_backend')
     dst_elm = doc.find('global')
     if src_elm is not None and dst_elm is not None:
-        print(src_elm.attrib['conf'])
+        print((src_elm.attrib['conf']))
         new_elm = etree.SubElement(dst_elm, 'calc_backend')
         new_elm.attrib['conf'] = src_elm.attrib['conf']
         new_elm.text = src_elm.text
@@ -64,7 +64,7 @@ def update_3(doc):
 
     pos = corp_elm.index(new_elm)
     cache_path = os.path.join(os.path.dirname(freqs_cache_dir_elm.text), 'colls-cache')
-    print('\n>>> Please create a directory [%s]\n' % (cache_path,))
+    print(('\n>>> Please create a directory [%s]\n' % (cache_path,)))
     new_elm = etree.Element('colls_cache_dir')
     new_elm.text = cache_path
     new_elm.tail = '\n'
@@ -90,7 +90,7 @@ def update_4(doc):
 
 
 def process_document(xml_doc, single_upd=None):
-    func_name = lambda j: 'update_%d' % j
+    def func_name(j): return 'update_%d' % j
 
     if single_upd is not None:
         fn = getattr(sys.modules[__name__], func_name(single_upd))
@@ -113,7 +113,8 @@ if __name__ == '__main__':
                                                     'to the version 0.9')
     argparser.add_argument('conf_file', metavar='CONF_FILE',
                            help='an XML configuration file')
-    argparser.add_argument('-u', '--update', type=int, help='Perform a single update (identified by a number)')
+    argparser.add_argument('-u', '--update', type=int,
+                           help='Perform a single update (identified by a number)')
     argparser.add_argument('-p', '--print', action='store_const', const=True,
                            help='Print result instead of writing it to a file')
     args = argparser.parse_args()
@@ -128,4 +129,4 @@ if __name__ == '__main__':
         output_path = '%s.new.xml' % args.conf_file.rsplit('.', 1)[0]
         with open(output_path, 'wb') as f:
             f.write(result_xml)
-            print('DONE!\nConverted config written to %s\n' % output_path)
+            print(('DONE!\nConverted config written to %s\n' % output_path))

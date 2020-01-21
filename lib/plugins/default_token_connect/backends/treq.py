@@ -18,7 +18,9 @@
 
 import json
 import logging
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from plugins.default_token_connect.backends.cache import cached
 from plugins.default_token_connect.backends import HTTPBackend
@@ -96,7 +98,7 @@ class TreqBackend(HTTPBackend):
                 ('lemma', lemma_flag), ('caseInsen', '1'), ('hledejCo', lemma)] + [('hledejKde[]', g) for g in groups]
 
     def mk_api_path(self, args):
-        args = ['{0}={1}'.format(k, urllib.quote(v.encode('utf-8'))) for k, v in args]
+        args = ['{0}={1}'.format(k, urllib.parse.quote(v.encode('utf-8'))) for k, v in args]
         return '/api.php?api=true&' + '&'.join(args)
 
     def find_lang_common_groups(self, lang1, lang2):
@@ -127,14 +129,14 @@ class TreqBackend(HTTPBackend):
                                        lemma=args['lemma'])
             connection = self.create_connection()
             try:
-                logging.getLogger(__name__).debug(u'Treq request args: {0}'.format(ta_args))
+                logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
                 connection.request('GET', self.mk_api_path(ta_args))
                 data, status = self.process_response(connection)
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 data['lines'] = data['lines'][:max_items]
             except ValueError:
-                logging.getLogger(__name__).error(u'Failed to parse response: {0}'.format(data))
+                logging.getLogger(__name__).error('Failed to parse response: {0}'.format(data))
                 data = dict(sum=0, lines=[])
             finally:
                 connection.close()

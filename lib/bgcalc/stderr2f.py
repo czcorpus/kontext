@@ -10,7 +10,7 @@ import os
 import sys
 import tempfile
 
-libc = ctypes.CDLL(None)
+libc = ctypes.CDLL('')
 c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
 
 

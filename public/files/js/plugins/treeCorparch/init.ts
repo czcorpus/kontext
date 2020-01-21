@@ -38,6 +38,16 @@ export interface Node {
     corplist?: Immutable.List<Node>
 }
 
+export interface TreeResponseNode {
+    name:string;
+    ident?:string;
+    corplist:Array<TreeResponseNode>;
+}
+
+export interface TreeResponseData extends Kontext.AjaxResponse {
+    corplist:Array<TreeResponseNode>;
+}
+
 /**
  *
  */
@@ -93,19 +103,21 @@ export class TreeWidgetModel extends StatefulModel {
         );
     }
 
-    private importTree(rootNode:any, nodeId:string='a') {
-        rootNode['active'] = false;
-        if (rootNode['corplist']) {
-            rootNode['ident'] = nodeId;
-            this.idMap = this.idMap.set(nodeId, rootNode);
-            rootNode['corplist'] = Immutable.List(
-                rootNode['corplist'].map((node, i) => this.importTree(node, nodeId + '.' + String(i)))
-            );
-
-        } else {
-            rootNode['corplist'] = Immutable.List([]);
+    private importTree(rootNode:TreeResponseNode, nodeId:string='a'):Node {
+        const node = {
+            active: false,
+            name: rootNode.name,
+            ident: rootNode.ident,
+            corplist: Immutable.List<Node>()
+        };
+        this.idMap = this.idMap.set(nodeId, node);
+        if (rootNode.corplist) {
+            node.ident = nodeId;
+            this.idMap = this.idMap.set(nodeId, node);
+            node.corplist = Immutable.List<Node>(
+                rootNode.corplist.map((node, i) => this.importTree(node, nodeId + '.' + String(i))));
         }
-        return rootNode;
+        return node;
     }
 
     dumpNode(rootNode:Node):void {
@@ -124,9 +136,6 @@ export class TreeWidgetModel extends StatefulModel {
             tap((data) => {
                 if (!data.containsErrors) {
                     this.data = this.importTree(data);
-
-                } else {
-                    this.pluginApi.showMessage('error', data.message);
                 }
             })
         );

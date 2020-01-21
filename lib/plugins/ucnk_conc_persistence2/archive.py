@@ -122,7 +122,7 @@ class Archiver(object):
                     dict(key=conc_prefix + item[0])))
             return dict(
                 num_processed=i,
-                error=ex,
+                error=str(ex),
                 dry_run=dry_run,
                 queue_size=self._get_queue_size())
         return dict(
@@ -150,9 +150,9 @@ def _create_archive(conf, dry_run):
         dt = time.strftime('%Y-%m-%d', datetime.now().timetuple())
         backed_up_arch_path = os.path.join(os.path.dirname(
             arch_db_path), arch_filename + '.' + dt + '.db')
-        print('Archive {0} already exists'.format(arch_db_path))
-        print('Please rename the current file to {0} and the run the action again'.format(
-            backed_up_arch_path))
+        print(('Archive {0} already exists'.format(arch_db_path)))
+        print(('Please rename the current file to {0} and the run the action again'.format(
+            backed_up_arch_path)))
         sys.exit(1)
     sql = ('CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer '
            'NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))')
@@ -162,7 +162,7 @@ def _create_archive(conf, dry_run):
         to_db = SQLite3Ops(arch_db_path)
         to_db.execute(sql, ())
         to_db.commit()
-        print('Created a new concordance archive file {0}.'.format(arch_db_path))
+        print(('Created a new concordance archive file {0}.'.format(arch_db_path)))
         print('Please do not forget to set proper ownership and read+write permissions')
         print('for web server user (www-data on Ubuntu)')
         print('When done, please restart KonText Gunicorn server and also worker server (Celery)')
@@ -198,8 +198,8 @@ if __name__ == '__main__':
         try:
             _create_archive(conf=settings, dry_run=args.dry_run)
         except Exception as ex:
-            print('{0}: {1}'.format(ex.__class__.__name__, ex))
+            print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
             sys.exit(1)
     else:
-        print('Unknown action "{0}"'.format(args.action))
+        print(('Unknown action "{0}"'.format(args.action)))
         sys.exit(1)

@@ -21,10 +21,13 @@ All the custom sessions must inherit from werkzeug.contrib.sessions.Session
 and implement the interface of this class.
 """
 
-class AbstractSessions(object):
+import abc
 
+
+class AbstractSessions(abc.ABC):
+
+    @abc.abstractmethod
     def get_cookie_name(self):
         """
         Returns name of a cookie used to store session ID
         """
-        raise NotImplementedError()

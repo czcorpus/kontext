@@ -16,19 +16,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
+import abc
 from plugins.abstract import CorpusDependentPlugin
 
 
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
+    @abc.abstractmethod
     def is_enabled_for(self, plugin_api, corpname):
         """
         Return True if live attributes are enabled for selected corpus
         else return False
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
                         limit_lists=True):
         """
@@ -47,8 +48,9 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         returns:
         a dictionary containing matching attributes and values
         """
-        raise NotImplementedError()
 
+    #TODO missing raise NotImplementedError ?
+    @abc.abstractmethod
     def get_subc_size(self, plugin_api, corpus, attr_map):
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
@@ -58,6 +60,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         attr_map -- a dict containing selected attributes and respective values 
         """
 
+    @abc.abstractmethod
     def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
         """
         Find token numbers for all the provided structural attribute
@@ -72,8 +75,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         returns:
         a list of sizes (in tokens) with an order matching sattr_values
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_supported_structures(self, corpname):
         """
         Return a list of structure names the plug-in
@@ -85,14 +88,14 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         returns:
         a list of structures (e.g. ['doc', 'p'])
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_bibliography(self, plugin_api, corpus, item_id):
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def find_bib_titles(self, plugin_api, corpus_id, id_list):
         """
         For a list of bibliography item IDs (= typically unique document IDs)
@@ -101,4 +104,3 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         Returns a list of pairs (bib_id, bib_title) where bib_id is the original
         provided ID
         """
-        raise NotImplementedError()

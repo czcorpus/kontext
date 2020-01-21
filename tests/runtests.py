@@ -11,12 +11,13 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-from __future__ import absolute_import
+
 import sys
 import os
 import unittest
 
-sys.path.insert(0, os.path.realpath('%s/../lib' % os.path.dirname(os.path.realpath(__file__))))  # application libraries
+sys.path.insert(0, os.path.realpath('%s/../lib' %
+                                    os.path.dirname(os.path.realpath(__file__))))  # application libraries
 
 PLUGIN_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'lib', 'plugins')
 PLUGINS_TESTS_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plugins_tests')
@@ -35,5 +36,3 @@ if __name__ == '__main__':
         sys.exit(1)
     else:
         sys.exit(0)
-
-

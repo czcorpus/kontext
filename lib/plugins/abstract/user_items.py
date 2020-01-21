@@ -24,6 +24,7 @@ user corpus list.
 Expected factory method signature: create_instance(config, db)
 """
 
+import abc
 import hashlib
 
 from controller.errors import UserActionException
@@ -51,7 +52,7 @@ class FavoriteItem(object):
         self.size_info = data.get('size_info', None)
         self.subcorpus_id = data.get('subcorpus_id', None)
         self.subcorpus_orig_id = data.get('subcorpus_orig_id', self.subcorpus_id)
-        self.ident = data.get('id', hashlib.md5(self.sort_key.encode('utf-8')).hexdigest())
+        self.ident = data.get('id', hashlib.md5(self.sort_key.encode()).hexdigest())
 
     @property
     def is_single_corpus(self):
@@ -63,7 +64,7 @@ class FavoriteItem(object):
 
     @property
     def sort_key(self):
-        return u'{0} {1}'.format(' '.join(x['name'] for x in self.corpora), self.subcorpus_id)
+        return '{0} {1}'.format(' '.join(x['name'] for x in self.corpora), self.subcorpus_id)
 
     def to_dict(self):
         return dict(
@@ -77,7 +78,7 @@ class FavoriteItem(object):
         )
 
 
-class AbstractUserItems(object):
+class AbstractUserItems(abc.ABC):
     """
     A 'user_items' (= favorite corpora, subcorpora, aligned corpora)
     plug-in interface.
@@ -88,26 +89,24 @@ class AbstractUserItems(object):
     it.
     """
 
-    def __init__(self):
-        super(AbstractUserItems, self).__init__()
-
     def from_dict(self, data):
         """
         According to provided data it returns a proper
-        implementation of GeneralItem.
+        implementation of GeneralItem. OPTIONAL implementation
 
         arguments:
         data -- a dict
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def serialize(self, obj):
         """
         Exports a GeneralItem instance or a list of GeneralItem instances (both variants
          must be supported) to JSON used for internal storage (i.e. no client-side stuff)
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_user_items(self, plugin_api):
         """
         Returns a list of user items (GeneralItem implementations)
@@ -118,8 +117,8 @@ class AbstractUserItems(object):
         return:
         a list or a compatible structure containing GeneralItem objects
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def add_user_item(self, plugin_api, item):
         """
         Adds (persistently) an item to user's list.
@@ -128,8 +127,8 @@ class AbstractUserItems(object):
         plugin_api --
         item -- an instance of GeneralItem implementation
         """
-        raise NotImplementedError()
 
+    @abc.abstractmethod
     def delete_user_item(self, plugin_api, item_id):
         """
         Removes (in a persistent way) an item from user's list.
@@ -138,4 +137,3 @@ class AbstractUserItems(object):
         plugin_api --
         item_id -- an ID of GeneralItem instance
         """
-        raise NotImplementedError()

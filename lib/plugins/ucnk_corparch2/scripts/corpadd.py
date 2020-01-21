@@ -77,7 +77,7 @@ info applicable for any corpus:
 
 But these values can be also set directly as command line parameters (they overwrite the values from the file).
 """
-from __future__ import absolute_import
+
 import os
 import argparse
 import sys
@@ -105,7 +105,7 @@ class Config(object):
         self.kontext_conf_path = kontext_conf_path
 
     def update_missing(self, data):
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
             if k in data and v is None:
                 setattr(self, k, data[k])
 

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from lxml import etree
 import sys
 
@@ -147,7 +147,7 @@ def update_11(doc):
 
 
 def process_document(xml_doc, single_upd=None):
-    func_name = lambda j: 'update_%d' % j
+    def func_name(j): return 'update_%d' % j
 
     if single_upd is not None:
         fn = getattr(sys.modules[__name__], func_name(single_upd))
@@ -170,7 +170,8 @@ if __name__ == '__main__':
                                                     'to the version 0.8')
     argparser.add_argument('conf_file', metavar='CONF_FILE',
                            help='an XML configuration file')
-    argparser.add_argument('-u', '--update', type=int, help='Perform a single update (identified by a number)')
+    argparser.add_argument('-u', '--update', type=int,
+                           help='Perform a single update (identified by a number)')
     argparser.add_argument('-p', '--print', action='store_const', const=True,
                            help='Print result instead of writing it to a file')
     args = argparser.parse_args()

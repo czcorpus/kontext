@@ -12,17 +12,19 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-
+import abc
 from plugins.abstract import CorpusDependentPlugin
 
 
 class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
 
+    @abc.abstractmethod
     def search_by_token_id(self, corp, corpname, token_id, kwic_len):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def is_enabled_for(self, plugin_api, corpname):
-        raise NotImplementedError()
+        pass
 
 
 class BackendException(Exception):
@@ -54,7 +56,7 @@ class BackendDataParseException(BackendException):
         return 'BackendDataParseException({0})'.format(self._result)
 
 
-class SearchBackend(object):
+class SearchBackend(abc.ABC):
     """
     SearchBackend represents an object able to obtain
     data needed to construct syntax trees. It may be
@@ -82,6 +84,7 @@ class SearchBackend(object):
         except ValueError:
             return []
 
+    @abc.abstractmethod
     def get_data(self, corpus, corpus_id, token_id, kwic_len):
         """
         Return syntax tree data for a specified token and a proper
@@ -95,7 +98,6 @@ class SearchBackend(object):
         Returns (tuple(list_of_nodes, TreeNodeEncoder))
 
         """
-        raise NotImplementedError()
 
     def get_detail_attr_orders(self, corpus_id, corpus):
         """

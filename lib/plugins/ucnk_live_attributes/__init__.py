@@ -43,7 +43,7 @@ from plugins.abstract.live_attributes import AbstractLiveAttributes
 import strings
 from controller import exposed
 from actions import concordance
-import query
+from . import query
 
 
 CACHE_MAIN_KEY = 'liveattrs_cache:%s'
@@ -54,8 +54,7 @@ def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete
     Generates a cache key based on the relevant parameters.
     Returned value is hashed.
     """
-    return md5('%r%r%r%r%r' % (attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr,
-                               limit_lists)).hexdigest()
+    return md5(f'{attr_map}{max_attr_list_size}{aligned_corpora}{autocomplete_attr}{limit_lists}'.encode('utf-8')).hexdigest()
 
 
 def cached(f):
@@ -160,7 +159,7 @@ class LiveAttributes(AbstractLiveAttributes):
         Transform strings representing integer numbers to ints
         """
         if type(data) is dict:
-            for k in data.keys():
+            for k in list(data.keys()):
                 if type(data[k]) is str and data[k].isdigit():
                     data[k] = int(data[k])
         return data
@@ -231,7 +230,7 @@ class LiveAttributes(AbstractLiveAttributes):
                 # (to be able to distinguish between individual ID-identified and
                 # grouped label-identified items)
                 ans[label][1] = '@' + ans[label][2]
-        data[bib_label] = ans.values()
+        data[bib_label] = list(ans.values())
 
     def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
 
@@ -273,14 +272,14 @@ class LiveAttributes(AbstractLiveAttributes):
     def get_subc_size(self, plugin_api, corpus, attr_map):
         db = self.db(plugin_api.user_lang, corpus.corpname)
         attr_where = [corpus.corpname]
-        attr_where_tmpl = [u'corpus_id = ?']
-        for k, vlist in attr_map.items():
+        attr_where_tmpl = ['corpus_id = ?']
+        for k, vlist in list(attr_map.items()):
             tmp = []
             for v in vlist:
                 attr_where.append(v)
-                tmp.append(u'%s = ?' % (self.import_key(k), ))  # TODO escape the 'k'
-            attr_where_tmpl.append(u'({0})'.format(u' OR '.join(tmp)))
-        cur = self.execute_sql(db, u'SELECT SUM(poscount) FROM item WHERE {0}'.format(u' AND '.join(attr_where_tmpl)),
+                tmp.append('%s = ?' % (self.import_key(k), ))  # TODO escape the 'k'
+            attr_where_tmpl.append('({0})'.format(' OR '.join(tmp)))
+        cur = self.execute_sql(db, 'SELECT SUM(poscount) FROM item WHERE {0}'.format(' AND '.join(attr_where_tmpl)),
                                attr_where)
         return cur.fetchone()[0]
 
@@ -317,7 +316,7 @@ class LiveAttributes(AbstractLiveAttributes):
             srch_attrs.add(a)
             expand_attrs.add(a)
         # also make sure that range attributes are expanded to full lists
-        for k, v in attr_map.items():
+        for k, v in list(attr_map.items()):
             if query.is_range_argument(v):
                 expand_attrs.add(self.import_key(k))
 
@@ -346,15 +345,15 @@ class LiveAttributes(AbstractLiveAttributes):
         for row, col_key in data_iterator:
             if type(ans[col_key]) is set:
                 val_ident = row[bib_id] if col_key == bib_label else row[col_key]
-                attr_val = (shorten_val(unicode(row[col_key])),
+                attr_val = (shorten_val(str(row[col_key])),
                             val_ident, row[col_key], 1)  # 1 = grouping
                 tmp_ans[col_key][attr_val] += row['poscount']
             elif type(ans[col_key]) is int:
                 # we rely on proper 'ans' initialization here (in terms of types)
                 ans[col_key] += int(row[col_key])
         # here we append position count information to the respective items
-        for attr, v in tmp_ans.items():
-            for k, c in v.items():
+        for attr, v in list(tmp_ans.items()):
+            for k, c in list(v.items()):
                 ans[attr].add(k + (c,))
         # now each line contains: (shortened_label, identifier, label, num_grouped_items, num_positions)
         # where num_grouped_items is initialized to 1
@@ -369,7 +368,7 @@ class LiveAttributes(AbstractLiveAttributes):
     def _export_attr_values(self, data, aligned_corpora, expand_attrs, collator_locale, max_attr_list_size):
         values = {}
         exported = dict(attr_values=values, aligned=aligned_corpora)
-        for k in data.keys():
+        for k in list(data.keys()):
             if isinstance(data[k], Iterable):
                 if len(data[k]) <= max_attr_list_size or max_attr_list_size is None or k in expand_attrs:
                     out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
@@ -396,7 +395,7 @@ class LiveAttributes(AbstractLiveAttributes):
         else:
             ans = self.execute_sql(
                 db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
-        return [(k, ans[i]) for k, i in col_map.items() if k != 'id']
+        return [(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
 
     def find_bib_titles(self, plugin_api, corpus_id, id_list):
         with plugins.runtime.CORPARCH as ca:

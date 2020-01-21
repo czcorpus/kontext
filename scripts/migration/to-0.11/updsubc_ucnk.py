@@ -27,7 +27,7 @@ if __name__ == '__main__':
     print('')
     subc_root = autoconf.settings.get('corpora', 'users_subcpath')
     conn = MySQLdb.connect(host='skalicka', user='manatee',
-                           passwd=raw_input('password? '),
+                           passwd=input('password? '),
                            db='manatee',
                            use_unicode=True, charset='utf-8')
     cur = conn.cursor()
@@ -40,10 +40,10 @@ if __name__ == '__main__':
         to_path = os.path.join(subc_root, str(user_id))
         if os.path.exists(from_path) and not os.path.exists(to_path):
             try:
-                print('%s ---> %s' % (from_path, to_path))
+                print(('%s ---> %s' % (from_path, to_path)))
                 os.rename(from_path, to_path)
             except Exception as e:
-                print('    ERR: %s' % (e,))
+                print(('    ERR: %s' % (e,)))
         elif os.path.exists(to_path):
-            print('    ERR: path collision: %s  vs. %s' % (from_path, to_path))
+            print(('    ERR: path collision: %s  vs. %s' % (from_path, to_path)))
     print('')

@@ -1,0 +1,21 @@
+[Unit]
+Description=KonText Gunicorn daemon
+#Requires=gunicorn.socket
+After=network.target
+
+[Service]
+PIDFile=/run/gunicorn-kontext/pid
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/kontext/public
+ExecStart=/usr/local/bin/gunicorn --pid /run/gunicorn-kontext/pid --statsd-host=localhost:8125 --statsd-prefix=kontext -c /opt/kontext/conf/gunicorn-conf.py app:application
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+PermissionsStartOnly=true
+ExecStartPre=-/bin/mkdir /var/run/gunicorn-kontext
+ExecStartPre=/bin/chown -R www-data:root /var/run/gunicorn-kontext
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

@@ -16,7 +16,7 @@ from openpyxl import Workbook
 from openpyxl.chart import PieChart, Reference
 
 from plugins.abstract.chart_export import AbstractChartExport
-import StringIO
+import io
 
 
 class ExcelExport(AbstractChartExport):
@@ -37,14 +37,14 @@ class ExcelExport(AbstractChartExport):
             ws.append(row)
 
         pie = PieChart()
-        labels = Reference(ws, min_col=1, min_row=2, max_row=len(data)+1)
-        items = Reference(ws, min_col=2, min_row=1, max_row=len(data)+1)
+        labels = Reference(ws, min_col=1, min_row=2, max_row=len(data) + 1)
+        items = Reference(ws, min_col=2, min_row=1, max_row=len(data) + 1)
         pie.add_data(items, titles_from_data=True)
         pie.set_categories(labels)
         pie.title = title
-        ws.add_chart(pie, 'A{0}'.format(len(data)+3))
+        ws.add_chart(pie, 'A{0}'.format(len(data) + 3))
 
-        output = StringIO.StringIO()
+        output = io.StringIO()
         wb.save(filename=output)
         output.flush()
         return output.getvalue()

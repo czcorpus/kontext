@@ -16,33 +16,41 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
+from typing import Dict, Any, List, Callable, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
+
 
 class IssueReportingAction(object):
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[Any, Any]:
         return self.__dict__
 
 
 class DynamicReportingAction(IssueReportingAction):
 
-    def __init__(self):
-        self.type = 'dynamic'
+    def __init__(self) -> None:
+        self.type: str = 'dynamic'
 
 
 class StaticReportingAction(IssueReportingAction):
 
-    def __init__(self, url, args, label, blank_window):
-        self.url = url
-        self.args = args
-        self.label = label
-        self.blank_window = blank_window
-        self.type = 'static'
+    def __init__(self, url: str, args: Dict[str, str], label: str, blank_window: bool) -> None:
+        self.url: str = url
+        self.args: Dict[str, str] = args
+        self.label: str = label
+        self.blank_window: bool = blank_window
+        self.type: str = 'static'
 
 
-class AbstractIssueReporting(object):
+class AbstractIssueReporting(abc.ABC):
 
-    def export_report_action(self, plugin_api):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def export_report_action(self, plugin_api: 'PluginApi') -> Dict[Any, List[Callable[[Any], Any]]]:
+        pass
 
-    def submit(self, plugin_api, args):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def submit(self, plugin_api: 'PluginApi', args: Dict[str, str]):
+        pass

@@ -27,7 +27,6 @@ To see the format of the "corplist.xml" file please
 see default_corparch/resources/corplist.rng.
 
 """
-
 try:
     from markdown import markdown
 except ImportError:
@@ -170,22 +169,22 @@ class UcnkCorpArch2(RDBMSCorparch):
         user_email = user_info['email']
         username = user_info['username']
 
-        text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
-        text += u'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
-        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, plugin_api.user_id, user_email)
-        text += u'korpus ID: %s\n' % corpus_id
+        text = 'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
+        text += 'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
+        text += 'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, plugin_api.user_id, user_email)
+        text += 'korpus ID: %s\n' % corpus_id
 
         if custom_message:
-            text += u'Doplňující zpráva od uživatele:\n\n'
+            text += 'Doplňující zpráva od uživatele:\n\n'
             text += custom_message + '\n\n'
 
-        text += u'\n---------------------\n'
+        text += '\n---------------------\n'
 
         s = smtplib.SMTP(self.access_req_smtp_server)
 
         for recipient in self.access_req_recipients:
             msg = MIMEText(text, 'plain', 'utf-8')
-            msg['Subject'] = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu'
+            msg['Subject'] = 'Žádost o zpřístupnění korpusu zaslaná z KonTextu'
             msg['From'] = self.access_req_sender
             msg['To'] = recipient
             msg.add_header('Reply-To', user_email)

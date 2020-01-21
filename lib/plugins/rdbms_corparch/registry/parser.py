@@ -18,7 +18,7 @@
 
 import re
 from functools import wraps
-from plugins.rdbms_corparch.registry import Attribute, PosAttribute, Struct, SimpleAttr, RegistryConf
+from . import Attribute, PosAttribute, Struct, SimpleAttr, RegistryConf
 
 
 DEBUG = 0
@@ -45,8 +45,8 @@ def watchable(f):
     @wraps(f)
     def fn(slf, token, obj):
         if DEBUG:
-            print(u'fn: {0}, tok: {1}, curr: {2}'.format(f.__name__, token if len(token) > 0 else '',
-                                                         obj.__class__.__name__ if obj else None))
+            print(('fn: {0}, tok: {1}, curr: {2}'.format(f.__name__, token if len(token) > 0 else '',
+                                                         obj.__class__.__name__ if obj else None)))
         return f(slf, token, obj)
     return fn
 
@@ -93,7 +93,7 @@ class Tokenizer(object):
                         line_ans[-1].append(item)
                     else:
                         line_ans.append(item)
-            tmp = [u' '.join(v) if type(v) is list else v for v in line_ans] + ['$']
+            tmp = [' '.join(v) if type(v) is list else v for v in line_ans] + ['$']
             if len(tmp) > 0:
                 ans.append(tmp)
         return [v for subl in ans for v in subl]
@@ -132,7 +132,7 @@ class Parser(object):
             else:
                 return self.state_1, SimpleAttr(token)
         else:
-            raise RegistrySyntaxError(u'in state 0 cannot process: {0}'.format(token))
+            raise RegistrySyntaxError('in state 0 cannot process: {0}'.format(token))
 
     @watchable
     def state_1(self, token, obj):
@@ -143,7 +143,7 @@ class Parser(object):
                 obj.name = token
             return self.state_2, obj
         else:
-            raise RegistrySyntaxError(u'in state 1 cannot process: {0}'.format(token))
+            raise RegistrySyntaxError('in state 1 cannot process: {0}'.format(token))
 
     @watchable
     def state_2(self, token, obj):

@@ -56,8 +56,7 @@ from lxml import etree
 import copy
 
 import plugins
-from plugins.abstract.corpora import (
-    AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo)
+from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo
 from fallback_corpus import EmptyCorpus
 from controller import exposed
 from actions import corpora
@@ -102,7 +101,7 @@ class CorptreeParser(object):
             data['ident'] = elm.attrib['ident'].lower()
             data['name'] = elm.attrib['name'] if 'name' in elm.attrib else data['ident']
             self._metadata[data['ident']] = self.parse_node_metadata(elm)
-        for child in filter(lambda x: x.tag in ('corplist', 'corpus'), list(elm)):
+        for child in [x for x in list(elm) if x.tag in ('corplist', 'corpus')]:
             if 'corplist' not in data:
                 data['corplist'] = []
             data['corplist'].append(self.parse_node(child))

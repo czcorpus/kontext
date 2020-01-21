@@ -90,7 +90,7 @@ class CustomContentFooterBar(AbstractFootbar):
         if lang not in self._lang_text_map:
             lang = self._default_lang
         with open(self._lang_text_map[lang], mode='rb') as fin:
-            return markdown(fin.read().decode('utf-8'))
+            return markdown(fin.read().decode())
 
 
 def create_instance(conf):

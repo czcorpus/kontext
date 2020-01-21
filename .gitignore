@@ -16,6 +16,7 @@ node_modules/
 venv/
 conf/*
 !conf/config.default.xml
+!conf/gunicorn-conf.sample.py
 !conf/main-menu.sample.json
 public/files/.vscode/
 public/files/dist

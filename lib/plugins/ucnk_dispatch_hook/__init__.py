@@ -45,7 +45,7 @@ class ESBackup(object):
         self._client = SnapshotClient(Elasticsearch(self._url))
 
     def create_snapshot(self, name):
-        logging.getLogger(__name__).info('creating ES snapshot %s'.format(name))
+        logging.getLogger(__name__).info(f'creating ES snapshot {name}')
         body = dict(indices=self._index_name)
         self._client.create(repository=self._repo_name, snapshot=name, body=body)
 

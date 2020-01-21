@@ -21,15 +21,19 @@
 KonText controller and related auxiliary objects
 """
 
+from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from .plg import PluginApi
+
 import os
-from types import MethodType, DictType, ListType, TupleType
+from types import MethodType
 from inspect import isclass
-import Cookie
+import http.cookies
 import imp
-from urllib import unquote, quote
+from urllib.parse import unquote, quote
 import json
 import logging
-import StringIO
 import inspect
 import time
 import re
@@ -50,13 +54,16 @@ import plugins
 import settings
 from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
-from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
+from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException, ImmediateRedirectException)
 
+import http.cookies
+import werkzeug.wrappers
 
-def exposed(access_level=0, template=None, vars=(), page_model=None, func_arg_mapped=False, skip_corpus_init=False,
-            mutates_conc=False, http_method='GET', accept_kwargs=None, apply_semi_persist_args=False,
-            return_type='template'):
+
+def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple = (), page_model: Optional[str] = None, func_arg_mapped: bool = False, skip_corpus_init: bool = False,
+            mutates_conc: bool = False, http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None, apply_semi_persist_args: bool = False,
+            return_type: str = 'template') -> Callable[..., Any]:
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -104,14 +111,14 @@ def _function_defaults(fun):
     if isclass(fun):
         fun = fun.__init__
     try:
-        default_vals = fun.func_defaults or ()
+        default_vals = fun.__defaults__ or ()
     except AttributeError:
         return {}
-    default_varnames = fun.func_code.co_varnames
-    return dict(zip(default_varnames[fun.func_code.co_argcount - len(default_vals):], default_vals))
+    default_varnames = fun.__code__.co_varnames
+    return dict(list(zip(default_varnames[fun.__code__.co_argcount - len(default_vals):], default_vals)))
 
 
-def convert_types(args, defaults, del_nondef=0, selector=0):
+def convert_types(args: Dict[str, Any], defaults: Dict[str, Any], del_nondef: int = 0, selector: int = 0) -> Dict[str, Any]:
     """
     Converts string values as received from GET/POST data into types
     defined by actions' parameters (type is inferred from function's default
@@ -120,19 +127,19 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     The function returns the same object as passed via 'args'
     """
     # TODO - there is a potential conflict between global Parameter types and function defaults
-    corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
-    for full_k, value in args.items():
+    corr_func: Dict[Any, Callable[[Any], Any]] = {type(0): int, type(0.0): float, tuple: lambda x: [x]}  # TODO better typing
+    for full_k, value in list(args.items()):
         if selector:
             k = full_k.split(':')[-1]  # filter out selector
         else:
             k = full_k
         if k.startswith('_') or type(defaults.get(k, None)) is MethodType:
             del args[full_k]
-        elif k in defaults.keys():
+        elif k in list(defaults.keys()):
             default_type = type(defaults[k])
-            if default_type is not TupleType and type(value) is TupleType:
+            if default_type is not tuple and type(value) is tuple:
                 args[k] = value = value[-1]
-            elif default_type is TupleType and type(value) is ListType:
+            elif default_type is tuple and type(value) is list:
                 value = tuple(value)
             if type(value) is not default_type:
                 try:
@@ -150,7 +157,7 @@ def val_to_js(obj):
     return json.dumps(obj).replace('</script>', '<" + "/script>').replace('<script>', '<" + "script>')
 
 
-class KonTextCookie(Cookie.BaseCookie):
+class KonTextCookie(http.cookies.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
     as URI components.
@@ -176,32 +183,31 @@ class Controller(object):
       4) post-dispatch (post_dispatch() method)
       5) building output headers and body
     """
+    NO_OPERATION: str = 'nop'
 
-    NO_OPERATION = 'nop'
-
-    def __init__(self, request, ui_lang):
+    def __init__(self, request: werkzeug.wrappers.Request, ui_lang: str):
         """
         arguments:
         request -- Werkzeug's request object
         ui_lang -- language used by user
         """
-        self._request = request
-        self.environ = self._request.environ  # for backward compatibility
-        self.ui_lang = ui_lang
-        self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
-        self._new_cookies = KonTextCookie()
-        self._headers = {'Content-Type': 'text/html'}
-        self._status = 200
-        self._system_messages = []
-        self._proc_time = None
+        self._request: werkzeug.wrappers.Request = request
+        self.environ: Dict[str, str] = self._request.environ  # for backward compatibility
+        self.ui_lang: str = ui_lang
+        self._cookies: KonTextCookie = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._new_cookies: KonTextCookie = KonTextCookie()
+        self._headers: Dict[str, str] = {'Content-Type': 'text/html'}
+        self._status: int = 200
+        self._system_messages: List[Tuple[str, str]] = []
+        self._proc_time: Optional[float] = None
         # a list of functions which must pass (= return None) before any action is performed
-        self._validators = []
+        self._validators: List[Callable[[], Exception]] = []
         # templating engine
-        self._template_dir = os.path.realpath(os.path.join(
+        self._template_dir: str = os.path.realpath(os.path.join(
             os.path.dirname(__file__), '..', '..', 'templates'))
         tpl_cache_path = settings.get('global', 'template_engine_cache_path', None)
         cache = jinja2.FileSystemBytecodeCache(tpl_cache_path) if tpl_cache_path else None
-        self._template_env = jinja2.Environment(
+        self._template_env: jinja2.Environment = jinja2.Environment(
             loader=jinja2.FileSystemLoader(searchpath=self._template_dir),
             bytecode_cache=cache,
             trim_blocks=True,
@@ -214,15 +220,15 @@ class Controller(object):
             create_action=lambda a, p=None: self.create_url(a, p if p is not None else {})
         )
         ##
-        self.args = Args()
-        self._uses_valid_sid = True
-        self._plugin_api = None  # must be implemented in a descendant
+        self.args: Args = Args()
+        self._uses_valid_sid: bool = True
+        self._plugin_api: Optional[PluginApi] = None  # must be implemented in a descendant
 
         # initialize all the Parameter attributes
         for k, value in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
             setattr(self.args, k, value.unwrap())
 
-    def init_session(self):
+    def init_session(self) -> None:
         """
         Starts/reloads user's web session data. It can be called even
         if there is no 'sessions' plugin installed (in such case, it just
@@ -230,12 +236,15 @@ class Controller(object):
         parts of the application to operate properly)
         """
         with plugins.runtime.AUTH as auth:
+            if auth is None:
+                raise RuntimeError('Auth plugin was not initialized')
+
             if 'user' not in self._session:
                 self._session['user'] = auth.anonymous_user()
 
             if hasattr(auth, 'revalidate'):
                 try:
-                    auth.revalidate(self._plugin_api)
+                    auth.revalidate(self._plugin_api)  # type: ignore
                 except Exception as ex:
                     self._session['user'] = auth.anonymous_user()
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
@@ -243,10 +252,10 @@ class Controller(object):
                                                                'contact system administrator.'))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
-    def _session(self):
+    def _session(self) -> Dict[str, Any]:
         return self._request.session
 
-    def session_get(self, *nested_keys):
+    def session_get(self, *nested_keys: str) -> Any:
         """
         This is just a convenience method to retrieve session's nested values:
         E.g. self._session['user']['car']['name'] can be rewritten
@@ -264,14 +273,14 @@ class Controller(object):
                 return None
         return curr
 
-    def refresh_session_id(self):
+    def refresh_session_id(self) -> None:
         """
         This tells the wrapping WSGI app to create a new session with
         the same data as the current session.
         """
         self._uses_valid_sid = False
 
-    def add_validator(self, func):
+    def add_validator(self, func: Callable) -> None:
         """
         Adds a function which is run after pre_dispatch but before action processing.
         If the function returns an instance of Exception then Controller raises this value.
@@ -283,7 +292,7 @@ class Controller(object):
         """
         self._validators.append(func)
 
-    def add_system_message(self, msg_type, text):
+    def add_system_message(self, msg_type: str, text: str) -> None:
         """
         Adds a system message which will be displayed
         to a user. It is possible to add multiple messages
@@ -295,7 +304,7 @@ class Controller(object):
         """
         self._system_messages.append((msg_type, text))
 
-    def _is_template(self, template):
+    def _is_template(self, template: str) -> bool:
         """
         Tests whether the provided template name corresponds
         to a respective python module (= compiled template).
@@ -309,7 +318,7 @@ class Controller(object):
         except ImportError:
             return False
 
-    def _export_status(self):
+    def _export_status(self) -> str:
         """
         Exports numerical HTTP status into a HTTP header format
         (e.g. 200 -> '200 OK'
@@ -320,10 +329,10 @@ class Controller(object):
         return '%s  %s' % (self._status, s)
 
     @property
-    def corp_encoding(self):
+    def corp_encoding(self) -> str:
         return 'iso-8859-1'
 
-    def add_globals(self, result, methodname, action_metadata):
+    def add_globals(self, result: Dict[str, Any], methodname: str, action_metadata: Dict[str, Any]) -> None:
         """
         This method is expected to fill-in global values needed by output template
         (e.g. each page contains user name or current corpus).
@@ -331,11 +340,11 @@ class Controller(object):
         """
         result['methodname'] = methodname
         deployment_id = settings.get('global', 'deployment_id', None)
-        result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id).hexdigest()[
+        result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id.encode('utf-8')).hexdigest()[
             :6]) if deployment_id else ''
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
 
-    def _get_template_class(self, name):
+    def _get_template_class(self, name: str) -> Any:
         """
         Imports a python module corresponding to the passed template name and
         returns a class representing respective HTML template.
@@ -348,13 +357,13 @@ class Controller(object):
         returns:
         an object representing the class
         """
-        name = name.rsplit('/', 1)
-        if len(name) == 2:
-            template_dir = os.path.join(self._template_dir, name[0])
-            name = name[1]
+        name_split = name.rsplit('/', 1)
+        if len(name_split) == 2:
+            template_dir = os.path.join(self._template_dir, name_split[0])
+            name = name_split[1]
         else:
             template_dir = self._template_dir
-            name = name[0]
+            name = name_split[0]
 
         srch_dirs = [self._template_dir, template_dir]
         try:
@@ -366,15 +375,15 @@ class Controller(object):
         module = imp.load_module(name, tpl_file, pathname, description)
         return getattr(module, name)
 
-    def get_current_url(self):
+    def get_current_url(self) -> str:
         """
         Returns an URL representing current application state
         """
-        action_str = '/'.join(filter(lambda x: x, self.get_current_action()))
-        query = '?' + self.environ.get('QUERY_STRING') if self.environ.get('QUERY_STRING') else ''
+        action_str = '/'.join([x for x in self.get_current_action() if x])
+        query = '?' + self.environ.get('QUERY_STRING', '')
         return self.get_root_url() + action_str + query
 
-    def updated_current_url(self, params):
+    def updated_current_url(self, params: Dict[str, Any]) -> str:
         """
         Modifies current URL using passed parameters.
 
@@ -390,36 +399,37 @@ class Controller(object):
         returns:
         updated URL
         """
-        import urlparse
-        import urllib
+        import urllib.parse
+        import urllib.request
+        import urllib.parse
+        import urllib.error
 
-        parsed_url = list(urlparse.urlparse(self.get_current_url()))
-        old_params = urlparse.parse_qsl(parsed_url[4])
+        parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
+        old_params = dict(urllib.parse.parse_qsl(parsed_url[4]))
         new_params = []
-        for k, v in old_params:
+        for k, v in old_params.items():
             if k in params:
                 new_params.append((k, params[k]))
             else:
                 new_params.append((k, v))
 
-        old_params = dict(old_params)
-        for k, v in params.items():
+        for k, v in list(params.items()):
             if k not in old_params:
                 new_params.append((k, v))
 
-        parsed_url[4] = urllib.urlencode(new_params)
-        return urlparse.urlunparse(parsed_url)
+        parsed_url[4] = urllib.parse.urlencode(new_params)
+        return urllib.parse.urlunparse(parsed_url)
 
-    def get_current_action(self):
+    def get_current_action(self) -> Tuple[str, str]:
         """
         Returns a 2-tuple where:
         1st item = module name (or an empty string if an implicit one is in use)
         2nd item = action method name
         """
-        prefix, action = self.environ.get('PATH_INFO').rsplit('/', 1)
+        prefix, action = self.environ.get('PATH_INFO', '').rsplit('/', 1)
         return prefix.rsplit('/', 1)[-1], action
 
-    def get_root_url(self):
+    def get_root_url(self) -> str:
         """
         Returns the root URL of the application (based on environmental variables). All the action module
         path elements and action names are removed. E.g.:
@@ -429,7 +439,7 @@ class Controller(object):
         Please note that KonText always normalizes PATH_INFO environment
         variable to '/' (see public/app.py).
         """
-        module, _ = self.environ.get('PATH_INFO').rsplit('/', 1)
+        module, _ = self.environ.get('PATH_INFO', '').rsplit('/', 1)
         module = '%s/' % module
         if module.endswith(self.get_mapping_url_prefix()):
             action_module_path = module[:-len(self.get_mapping_url_prefix())]
@@ -447,9 +457,9 @@ class Controller(object):
                                                              self.environ.get('HTTP_HOST'))),
                      settings.get_str('global', 'action_path_prefix', ''),
                      action_module_path)
-        return '/'.join(filter(lambda x: bool(x), map(lambda x: x.strip('/'), url_items))) + '/'
+        return '/'.join([x for x in [x.strip('/') for x in url_items] if bool(x)]) + '/'
 
-    def create_url(self, action, params):
+    def create_url(self, action: str, params: Union[Dict[str, Union[str, int, float, bool]], List[Tuple[str, Any]]]) -> str:
         """
         Generates URL from provided action identifier and parameters.
         Please note that utf-8 compatible keys and values are expected here
@@ -462,26 +472,26 @@ class Controller(object):
         root = self.get_root_url()
 
         def convert_val(x):
-            return str(x) if type(x) not in (str, unicode) else x.encode('utf-8')
+            return x.encode('utf-8') if isinstance(x, str) else str(x)
 
-        if type(params) is dict:
-            params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params.items()])
+        if isinstance(params, dict):
+            params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in params.items())
         else:
-            params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params])
+            params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in params)
 
         if len(params_str) > 0:
-            return '%s%s?%s' % (root, action, params_str)
+            return f'{root}{action}?{params_str}'
         else:
-            return '%s%s' % (root, action)
+            return f'{root}{action}'
 
-    def _validate_http_method(self, action_metadata):
+    def _validate_http_method(self, action_metadata: Dict[str, Any]) -> None:
         hm = action_metadata.get('http_method', 'GET')
-        if type(hm) is not tuple:
+        if not isinstance(hm, tuple):
             hm = (hm,)
         if self.get_http_method() not in hm:
             raise UserActionException(translate('Unknown action'), code=404)
 
-    def _pre_action_validate(self):
+    def _pre_action_validate(self) -> None:
         """
         Runs defined validators before action itself is performed
         (but after pre_dispatch is run).
@@ -491,11 +501,11 @@ class Controller(object):
             err = validator()
             if isinstance(err, UserActionException):
                 logging.getLogger(__name__).error(
-                    u'Pre-action validator {0}: {1}'.format(validator.__name__, err.internal_message))
+                    'Pre-action validator {0}: {1}'.format(validator.__name__, err.internal_message))
                 raise err
             elif isinstance(err, Exception):
                 logging.getLogger(__name__).error(
-                    u'Pre-action validator {0}: {1}'.format(validator.__name__, err))
+                    'Pre-action validator {0}: {1}'.format(validator.__name__, err))
                 raise err
 
     @staticmethod
@@ -519,7 +529,7 @@ class Controller(object):
         convert_types(na, _function_defaults(action), del_nondef=del_nondef)
         return action(**na)
 
-    def call_function(self, func, args, **named_args):
+    def call_function(self, func: Callable, args: Union[List[Any], Tuple[Any]], **named_args: Dict[str, Any]) -> Dict:
         """
         Calls a function with passed arguments but also with attributes of
         'self' used as arguments. Actually the order is following:
@@ -539,7 +549,7 @@ class Controller(object):
         convert_types(na, _function_defaults(func), 1)
         return func(*args, **na)
 
-    def clone_args(self):
+    def clone_args(self) -> Dict[str, Any]:
         """
         Creates a shallow copy of self.args.
         """
@@ -549,7 +559,7 @@ class Controller(object):
                 na[a] = getattr(self.args, a)
         return na
 
-    def _get_method_metadata(self, method_name, attr_name=None):
+    def _get_method_metadata(self, method_name: str, attr_name: Optional[str] = None) -> Union[Any, Dict[str, Any]]:
         """
         Returns metadata attached to method's __dict__ object. This
         is typically written on a higher level via @exposed annotation.
@@ -572,7 +582,7 @@ class Controller(object):
                 ans.update(method_obj.__dict__)
         return ans
 
-    def get_mapping_url_prefix(self):
+    def get_mapping_url_prefix(self) -> str:
         """
         Each action controller must specify a path prefix of PATH_INFO env. variable
         which connects the controller exclusively with matching URLs.
@@ -585,7 +595,7 @@ class Controller(object):
         raise NotImplementedError(
             'Each action controller must implement method get_mapping_url_prefix()')
 
-    def _import_req_path(self):
+    def _import_req_path(self) -> List[str]:
         """
         Parses PATH_INFO into a list of elements
 
@@ -601,12 +611,12 @@ class Controller(object):
         else:
             path = path[len(ac_prefix):]
 
-        path = path.split('/')
-        if len(path) is 0 or path[0] is '':
-            path = [Controller.NO_OPERATION]
-        return path
+        path_split = path.split('/')
+        if not path_split or path_split[0] == '':
+            path_split = [Controller.NO_OPERATION]
+        return path_split
 
-    def redirect(self, url, code=303):
+    def redirect(self, url: str, code: int = 303) -> None:
         """
         Sets Controller to output HTTP redirection headers.
         Please note that the method does not interrupt request
@@ -620,11 +630,9 @@ class Controller(object):
         self._status = code
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
             url = self.get_root_url() + url
-        if type(url) is unicode:
-            url = url.encode('utf-8')
         self._headers['Location'] = url
 
-    def set_not_found(self):
+    def set_not_found(self) -> None:
         """
         Sets Controller to output HTTP 404 Not Found response
         """
@@ -637,11 +645,11 @@ class Controller(object):
             del self._headers['Location']
         self._status = 403
 
-    def get_http_method(self):
+    def get_http_method(self) -> str:
         return self.environ.get('REQUEST_METHOD', '')
 
     @staticmethod
-    def _get_attrs_by_persistence(persistence_types):
+    def _get_attrs_by_persistence(persistence_types: int) -> Tuple[str, ...]:
         """
         Returns list of object's attributes which (along with their values) will be preserved.
         A persistent parameter is the one which meets the following properties:
@@ -652,9 +660,9 @@ class Controller(object):
             return isinstance(m, Parameter) and m.meets_persistence(persistence_types)
 
         attrs = inspect.getmembers(GlobalArgs, predicate=is_valid_parameter)
-        return tuple([x[0] for x in attrs])
+        return tuple(x[0] for x in attrs)
 
-    def _get_items_by_persistence(self, persistence_types):
+    def _get_items_by_persistence(self, persistence_types: int) -> Dict[str, Parameter]:
         """
         Similar to the _get_persistent_attrs() but returns also values.
 
@@ -667,7 +675,7 @@ class Controller(object):
                 ans[k] = getattr(self.args, k)
         return ans
 
-    def _install_plugin_actions(self):
+    def _install_plugin_actions(self) -> None:
         """
         Tests plug-ins whether they provide method 'export_actions' and if so
         then attaches functions they provide to itself (if exported function's required
@@ -675,7 +683,7 @@ class Controller(object):
         """
         for plg in plugins.runtime:
             if callable(getattr(plg.instance, 'export_actions', None)):
-                exported = plg.instance.export_actions()
+                exported = getattr(plg.instance, 'export_actions')()
                 if self.__class__ in exported:
                     for action in exported[self.__class__]:
                         if not hasattr(self, action.__name__):
@@ -685,7 +693,7 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def pre_dispatch(self, action_name, args, action_metadata=None):
+    def pre_dispatch(self, action_name: str, args: Dict[str, Any], action_metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Allows specific operations to be performed before the action itself is processed.
         """
@@ -698,11 +706,11 @@ class Controller(object):
             else:
                 action_metadata['return_type'] = 'text'
                 raise UserActionException(
-                    u'Unknown output format: {0}'.format(self._request.args['format']))
+                    'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return args
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
+    def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str], result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
@@ -714,13 +722,13 @@ class Controller(object):
         result -- method output
         err_desc -- a 2-tuple: possible error thrown from within the action along with its unique id
         """
-        if type(result) is dict:
+        if isinstance(result, dict):
             result['messages'] = result.get('messages', []) + self._system_messages
 
-    def is_action(self, action_name, metadata):
+    def is_action(self, action_name: str, metadata: Dict[str, Any]) -> bool:
         return callable(getattr(self, action_name, None)) and '__exposed__' in metadata
 
-    def _normalize_error(self, err):
+    def _normalize_error(self, err: Exception) -> Exception:
         """
         This method is intended to extract as much details as possible
         from a broad range of errors and rephrase them in a more
@@ -742,37 +750,30 @@ class Controller(object):
         """
         if isinstance(err, UserActionException):
             return err
-        if err.message:
-            if type(err.message) == unicode:
-                text = err.message
-            else:
-                text = str(err.message).decode(self.corp_encoding, errors='replace')
-        else:
-            text = unicode(err)
-            err.message = text  # in case we return the original error
+        text = str(err)
+        setattr(err, 'message', text)  # in case we return the original error
         if 'syntax error' in text.lower():
             srch = re.match(r'.+ position (\d+)', text)
             if srch:
-                text = translate('Query failed: Syntax error at position %s.') % srch.groups()[0]
+                text = translate(f'Query failed: Syntax error at position {srch.groups()[0]}.')
             else:
                 text = translate('Query failed: Syntax error.')
-            new_err = UserActionException(
-                translate('%s Please make sure the query and selected query type are correct.') % text)
+            return UserActionException(
+                translate(f'{text} Please make sure the query and selected query type are correct.'))
         elif 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
-                text = translate('Attribute "%s" not found.') % srch.groups()[0]
+                text = translate(f'Attribute "{srch.groups()[0]}" not found.')
             else:
                 text = translate('Attribute not found.')
-            new_err = UserActionException(text)
-        elif 'EvalQueryException' in text:
-            new_err = UserActionException(
-                translate('Failed to evaluate the query. Please check the syntax and used attributes.'))
-        else:
-            new_err = err
-        return new_err
+            return UserActionException(text)
 
-    def _run_message_action(self, named_args, action_metadata, message_type, message):
+        elif 'EvalQueryException' in text:
+            return UserActionException(
+                translate('Failed to evaluate the query. Please check the syntax and used attributes.'))
+        return err
+
+    def _run_message_action(self, named_args: Dict[str, Any], action_metadata: Dict[str, Any], message_type: str, message: str) -> Tuple[str, Dict[str, Any]]:
         """
         Run a special action displaying a message (typically an error one) to properly
         finish a broken regular action which raised an Exception.
@@ -789,7 +790,7 @@ class Controller(object):
             action_metadata.update(self._get_method_metadata('message'))
         return tpl_path, method_ans
 
-    def _create_user_action_err_result(self, ex, return_type):
+    def _create_user_action_err_result(self, ex: Exception, return_type: str) -> Dict[str, Any]:
         """
         arguments:
         ex -- a risen exception
@@ -808,10 +809,10 @@ class Controller(object):
             return dict()
 
     @staticmethod
-    def _is_allowed_explicit_out_format(f):
+    def _is_allowed_explicit_out_format(f: str) -> bool:
         return f in ('template', 'json', 'xml', 'plain')
 
-    def run(self, path=None):
+    def run(self, path: Optional[List[str]] = None) -> Tuple[str, List[Tuple[str, str]], bool, Union[str, bytes]]:
         """
         This method wraps all the processing of an HTTP request.
 
@@ -825,10 +826,13 @@ class Controller(object):
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
         methodname = path[0]
-        named_args = {}
-        headers = []
-        err = (None, None)
-        action_metadata = self._get_method_metadata(methodname)
+        named_args: Dict[str, Any] = {}
+        headers: List[Tuple[str, str]] = []
+        err: Tuple[Optional[Exception], Optional[str]] = (None, None)
+        action_metadata: Dict[str, Any] = self._get_method_metadata(methodname)
+
+        tmpl: Optional[str]
+        result: Optional[Dict[str, Any]]
         if not action_metadata:
             def null(): pass
             action_metadata = {}
@@ -847,7 +851,7 @@ class Controller(object):
             err = (ex, None)
             self._status = ex.code
             tmpl, result = self._run_message_action(
-                named_args, action_metadata, 'error', ex.message)
+                named_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except ImmediateRedirectException as ex:
             err = (ex, None)
             tmpl, result = None, None
@@ -857,7 +861,7 @@ class Controller(object):
             self._status = ex.code
             msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
-                msg_args, action_metadata, 'error', ex.message)
+                msg_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except werkzeug.exceptions.BadRequest as ex:
             err = (ex, None)
             self._status = ex.code
@@ -866,10 +870,10 @@ class Controller(object):
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
-            err_id = hashlib.sha1(str(uuid.uuid1())).hexdigest()
+            err_id = hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest()
             err = (ex, err_id)
             logging.getLogger(__name__).error(
-                u'{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
+                '{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
             self._status = 500
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)
@@ -882,15 +886,15 @@ class Controller(object):
         self.post_dispatch(methodname, action_metadata, tmpl, result, err)
         # response rendering
         headers += self.output_headers(action_metadata['return_type'])
-        output = StringIO.StringIO()
-        if self._status < 300 or self._status >= 400:
-            self.output_result(methodname, tmpl, result, action_metadata,
-                               return_type=action_metadata['return_type'], outf=output)
-        ans_body = output.getvalue()
-        output.close()
+
+        if (self._status < 300 or self._status >= 400) and (tmpl is not None and result is not None):
+            ans_body = self.output_result(methodname, tmpl, result, action_metadata,
+                                          return_type=action_metadata['return_type'])
+        else:
+            ans_body = ''
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
-    def process_action(self, methodname, named_args):
+    def process_action(self, methodname: str, named_args: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
@@ -920,13 +924,13 @@ class Controller(object):
                                     1:], '{0}.html'.format(methodname))
         return tpl_path, method_ans
 
-    def urlencode(self, key_val_pairs):
+    def urlencode(self, key_val_pairs: List[Tuple[str, Union[str, str, bool, int, float]]]) -> str:
         """
         Recodes values of key-value pairs and encodes them (by urllib.urlencode)
         """
         return werkzeug.urls.url_encode(key_val_pairs)
 
-    def output_headers(self, return_type='template'):
+    def output_headers(self, return_type: str = 'template') -> List[Tuple[str, str]]:
         """
         Generates proper content-type signature and
         creates a cookie to store user's settings
@@ -945,42 +949,48 @@ class Controller(object):
             self._headers['Content-Type'] = 'text/plain'
         # Note: 'template' return type should never overwrite content type here as it is action-dependent
         ans = []
-        for k, v in sorted([x for x in self._headers.items() if bool(x[1])], key=lambda item: item[0]):
-            if type(v) is unicode:
-                v = v.encode('utf-8')
+        for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
             ans.append((k, v))
         # Cookies
-        for cookie_id in self._new_cookies.keys():
+        for cookie_id in list(self._new_cookies.keys()):
             ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
         return ans
 
-    def output_result(self, methodname, template, result, action_metadata, return_type, outf):
+    def output_result(self, methodname: str, template: str, result: Union[Callable, Dict[str, Any], str, bytes], action_metadata: Dict[str, Any], return_type: str) -> Union[str, bytes]:
         """
-        Renders a response body
+        Renders a response body out of a provided data resource along with which can
+        required target data type.
+
+        The data source can be:
+        1) a callable object returning a string or bytes
+        2) a dictionary
+        3) str or bytes
         """
         if callable(result):
-            outf.write(result())
+            return result()
         elif return_type == 'json':
-            json.dump(result, outf)
+            return json.dumps(result)
         elif return_type == 'xml':
             from templating import Type2XML
-            outf.write(Type2XML.to_xml(result))
-        elif return_type == 'plain' and type(result) is not DictType:
-            outf.write(str(result))
-        elif type(result) is DictType:
+            return Type2XML.to_xml(result)
+        elif return_type == 'plain' and not isinstance(result, dict):
+            return result
+        elif isinstance(result, dict):
             self.add_globals(result, methodname, action_metadata)
-            template = self._template_env.get_template(template)
+            template_object = self._template_env.get_template(template)
             for k in self.args.__dict__:
                 if k not in result:
                     result[k] = getattr(self.args, k)
-            outf.write(template.render(result))
+            return template_object.render(result)
+        raise RuntimeError('Unknown source or return type')
 
-    def user_is_anonymous(self):
+    # mypy error: missing return statement
+    def user_is_anonymous(self) -> bool:  # type: ignore
         with plugins.runtime.AUTH as auth:
-            return auth.is_anonymous(self.session_get('user', 'id'))
+            return getattr(auth, 'is_anonymous')(self.session_get('user', 'id'))
 
     @exposed()
-    def nop(self, request, *args):
+    def nop(self, request: werkzeug.wrappers.Request, *args: Any) -> None:
         """
         Represents an empty operation. This is sometimes required
         to keep the controller in a consistent state. E.g. if a redirect
@@ -989,5 +999,5 @@ class Controller(object):
         return None
 
     @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message')
-    def message(self, *args, **kwargs):
+    def message(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         return kwargs

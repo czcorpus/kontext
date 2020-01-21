@@ -77,7 +77,7 @@ class Wordlist(ConcActions):
 
     @staticmethod
     def save_bw_file(bwlist):
-        hash = hashlib.md5(bwlist.encode('utf-8')).hexdigest()
+        hash = hashlib.md5(bwlist).hexdigest()
         fname = hash + '.txt'
         path = os.path.join(settings.get('global', 'user_filter_files_dir'), fname)
         rpath = os.path.realpath(path)
@@ -113,14 +113,14 @@ class Wordlist(ConcActions):
         if paginate:
             wlmaxitems = self.args.wlpagesize * self.args.wlpage + 1
         else:
-            wlmaxitems = sys.maxint
+            wlmaxitems = sys.maxsize
         wlstart = (self.args.wlpage - 1) * self.args.wlpagesize
         result = {
-            'reload_args': {
+            'reload_args': list({
                 'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
                 'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
                 'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
-                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums}.items(),
+                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums}.items()),
             'form_args': dict(
                 wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
                 subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
@@ -149,13 +149,13 @@ class Wordlist(ConcActions):
             if blhash == '' and len(self.args.blacklist) > 0:
                 blhash = self.save_bw_file(self.args.blacklist)
 
-            result['reload_args'] = {
+            result['reload_args'] = list({
                 'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
                 'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
                 'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
                 'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums,
                 'wlhash': wlhash, 'blhash': blhash
-            }.items()
+            }.items())
 
             result_list = self.call_function(corplib.wordlist,
                                              (self.corp,),
@@ -255,7 +255,7 @@ class Wordlist(ConcActions):
         save word list
         """
         from_line = int(from_line)
-        to_line = int(to_line) if to_line else sys.maxint
+        to_line = int(to_line) if to_line else sys.maxsize
         self.args.wlpage = 1
         ans = self.result(wlpat=self.args.wlpat, paginate=False)
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
@@ -276,7 +276,7 @@ class Wordlist(ConcActions):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-word-list.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='wordlist')
-            writer.set_col_types(int, unicode, float)
+            writer.set_col_types(int, str, float)
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
