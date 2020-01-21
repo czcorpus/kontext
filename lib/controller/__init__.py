@@ -22,6 +22,7 @@ KonText controller and related auxiliary objects
 """
 
 from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .plg import PluginApi
 
@@ -53,7 +54,6 @@ import plugins
 import settings
 from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
-from plugins.abstract.auth import AbstractAuth
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException, ImmediateRedirectException)
 

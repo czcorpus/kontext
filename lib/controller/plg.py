@@ -17,6 +17,7 @@ from manatee import Corpus
 from werkzeug import Request
 from werkzeug.contrib.sessions import Session
 from . import KonTextCookie
+# this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .kontext import Kontext
 

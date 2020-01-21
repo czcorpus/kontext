@@ -42,6 +42,7 @@ from .abstract.issue_reporting import AbstractIssueReporting
 from .abstract.dispatch_hook import AbstractDispatchHook
 from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
+# this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
     from controller.plg import PluginApi

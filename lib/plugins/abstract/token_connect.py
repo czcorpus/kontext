@@ -46,6 +46,7 @@ add your frontend or backend (depending on what needs to be customized).
 import abc
 from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
 from manatee import Corpus
+# this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginApi
 

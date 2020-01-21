@@ -18,6 +18,7 @@
 
 import abc
 from typing import Dict, Any, List, Callable, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginApi
 

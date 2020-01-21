@@ -14,6 +14,7 @@
 
 from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
 from werkzeug.contrib.sessions import Session
+# this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginApi
 

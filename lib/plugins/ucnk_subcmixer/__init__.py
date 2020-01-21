@@ -40,7 +40,7 @@ def subcmixer_run_calc(ctrl, request):
                               corpname=request.form['corpname'],
                               aligned_corpora=request.form.getlist('aligned_corpora'),
                               args=json.loads(request.form['expression']))
-    except ResultNotFoundException as ex:
+    except ResultNotFoundException as err:
         ctrl.add_system_message('error', str(err))
         return {}
 
