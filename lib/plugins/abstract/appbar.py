@@ -10,20 +10,26 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import abc
+from typing import Dict, Optional, Any, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
+
 """
 All the application_bar plug-in implementations should inherit from AbstractApplicationBar
 """
 
 
-class AbstractApplicationBar(object):
+class AbstractApplicationBar(abc.ABC):
 
+    @abc.abstractmethod
     def get_fallback_content(self):
         """
         Returns an HTML content usable as a fallback replacement for the standard content
         """
-        raise NotImplementedError()
 
-    def get_styles(self, plugin_api):
+    def get_styles(self, plugin_api: 'PluginApi'):
         """
         Returns a list of dicts {'url': ...} defining external CSS requirements KonText
         must load.
@@ -35,7 +41,7 @@ class AbstractApplicationBar(object):
         """
         return []
 
-    def get_scripts(self, plugin_api):
+    def get_scripts(self, plugin_api: 'PluginApi') -> Optional[Dict[str, Any]]:
         """
         Returns a dict:
             'main': ... url of the main script ...,
@@ -50,7 +56,8 @@ class AbstractApplicationBar(object):
         """
         return None
 
-    def get_contents(self, plugin_api, return_url):
+    @abc.abstractmethod
+    def get_contents(self, plugin_api: 'PluginApi', return_url: str) -> str:
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
 
@@ -58,4 +65,3 @@ class AbstractApplicationBar(object):
         plugin_api -- a controller.PluginApi instance
         return_url -- a URL user returns to in case she uses some of he appbar's links/services
         """
-        raise NotImplementedError()

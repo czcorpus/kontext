@@ -19,6 +19,8 @@ This module wraps application's configuration (as specified in config.xml) and
 provides some additional helper methods.
 """
 
+from typing import Any, Dict
+
 import os
 from lxml import etree
 import json
@@ -28,10 +30,10 @@ class ConfState(object):
     conf_path = None
 
 
-_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
-_meta = {}  # contains data of attributes of XML elements representing configuration values
-_help_links = {}
-_state = ConfState()
+_conf: Dict[str, Any] = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
+_meta: Dict[str, Any] = {}  # contains data of attributes of XML elements representing configuration values
+_help_links: Dict[str, Any] = {}
+_state: ConfState = ConfState()
 
 SECTIONS = (
     'theme', 'global', 'calc_backend', 'job_scheduler', 'mailing', 'logging', 'corpora', 'fcs', 'plugins')
@@ -91,14 +93,14 @@ def get_full(section, key):
     """
     m = get_meta(section, key)
     d = get(section, key)
-    if hasattr(m, '__iter__') and hasattr(d, '__iter__'):
-        return zip(d, m)
+    if type(m) in (list, tuple) and type(d) in (list, tuple):
+        return list(zip(d, m))
     else:
         return d, m
 
 
 def import_bool(v):
-    if not isinstance(v, basestring):
+    if not isinstance(v, str):
         return bool(v)
     return {
         'true': True,
@@ -141,7 +143,7 @@ def get_list(section, key):
     tmp = get(section, key)
     if not tmp:
         return []
-    elif hasattr(tmp, '__iter__'):
+    elif type(tmp) is list:
         return [x for x in tmp]
     else:
         return [tmp]
@@ -237,7 +239,7 @@ def _load_help_links():
 
 
 def get_help_links(lang_id):
-    return dict((k, v.get(lang_id, None)) for k, v in _help_links.items())
+    return dict((k, v.get(lang_id, None)) for k, v in list(_help_links.items()))
 
 
 def load(path):

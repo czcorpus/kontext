@@ -28,7 +28,7 @@ import { validateSubcProps } from '../../models/subcorp/form';
 export interface SubcMixerExpression {
     attrName:string;
     attrValue:string;
-    ratio:string;
+    ratio:Kontext.FormValue<string>;
     baseRatio:string; // a ratio in the original corpus
     zeroFixed:boolean;
 }
@@ -141,16 +141,24 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             },
             'UCNK_SUBCMIXER_SET_RATIO': (state, action) => {
                 const newState = this.copyState(state);
-                try {
+                this.updateRatio(
+                    newState,
+                    action.payload['attrName'],
+                    action.payload['attrValue'],
+                    Kontext.newFormValue(action.payload['ratio'], true)
+                );
+                return newState;
+            },
+            'UCNK_SUBCMIXER_SET_RATIO_VALIDATE': (state, action) => {
+                const newState = this.copyState(state);
+                const val = this.getRatio(newState, action.payload['attrName'], action.payload['attrValue']);
+                if (val) {
                     this.updateRatio(
-                        state,
+                        newState,
                         action.payload['attrName'],
                         action.payload['attrValue'],
-                        action.payload['ratio']
+                        Kontext.updateFormValue(val, {isInvalid: action.payload['isInvalid']})
                     );
-
-                } catch (e) {
-                    this.pluginApi.showMessage('error', e);
                 }
                 return newState;
             },
@@ -178,7 +186,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 return newState;
             },
             'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE': (state, action) => {
-                console.log('>>> DONE');
                 const newState = this.copyState(state);
                 newState.isBusy = false;
                 if (!action.error) {
@@ -192,6 +199,22 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
     sideEffects(state:SubcMixerModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.name) {
+            case 'UCNK_SUBCMIXER_SET_RATIO':
+                console.log('action: ', action);
+                const err = this.validateRatio(action.payload['ratio']);
+                console.log('err: ', err);
+                if (err !== null) {
+                    this.pluginApi.showMessage('error', err);
+                    dispatch({
+                        name: 'UCNK_SUBCMIXER_SET_RATIO_VALIDATE',
+                        payload: {
+                            attrName: action.payload['attrName'],
+                            attrValue: action.payload['attrValue'],
+                            isInvalid: true
+                        }
+                    });
+                }
+            break;
             case 'UCNK_SUBCMIXER_SUBMIT_TASK':
                 this.submitTask(state).subscribe(
                     (data) => {
@@ -265,7 +288,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     private importResults(shares:Immutable.List<SubcMixerExpression>,
             sizeErrorRatio:number, data:Array<[string, number]>):Immutable.List<[string, number, boolean]> {
         const evalDist = (v, idx) => {
-            const userRatio = parseFloat(shares.get(idx).ratio) / 100;
+            const userRatio = parseFloat(shares.get(idx).ratio.value) / 100;
             return Math.abs(v - userRatio) < sizeErrorRatio;
         };
         // We must first merge the tree-copied conditions back to
@@ -330,7 +353,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             if (!sums.hasOwnProperty(item.attrName)) {
                 sums[item.attrName] = 0;
             }
-            sums[item.attrName] += parseFloat(item.ratio || '0');
+            sums[item.attrName] += parseFloat(item.ratio.value || '0');
         });
         for (let k in sums) {
             if (sums[k] !== 100) {
@@ -341,13 +364,12 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         }
         const args = {};
         args['corpname'] = this.pluginApi.getCorpusIdent().id;
-        //args['subcname'] = this.subcFormModel.getSubcName().value;
         args['aligned_corpora'] = state.alignedCorpora.toArray();
         args['expression'] = JSON.stringify(
             state.shares.map(item => ({
                 attrName: item.attrName,
                 attrValue: item.attrValue,
-                ratio: item.ratio ? parseFloat(item.ratio) : null
+                ratio: item.ratio ? parseFloat(item.ratio.value) : null
             })).toJS()
         );
         return this.pluginApi.ajax$<CalculationResponse>(
@@ -390,23 +412,30 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             .toList();
     }
 
-    private updateRatio(state:SubcMixerModelState, attrName:string, attrValue:string, ratio:string):void {
-        if (!isNaN(parseFloat(ratio)) || ratio.lastIndexOf('.') === ratio.length - 1) {
-            const idx = state.shares.findIndex(item => item.attrName === attrName
-                    && item.attrValue === attrValue && item.zeroFixed === false);
-            if (idx > -1) {
-                const curr = state.shares.get(idx);
-                state.shares = state.shares.set(idx, {
-                    attrName: curr.attrName,
-                    attrValue: curr.attrValue,
-                    ratio: ratio,
-                    baseRatio: curr.baseRatio,
-                    zeroFixed: curr.zeroFixed
-                });
-            }
+    private validateRatio(ratio:string):Error|null {
+        if (/^(\d*\.\d+|\d+)$/.exec(ratio)) {
+            return null;
+        }
+        return new Error(this.pluginApi.translate('ucnk_subcm__invalid_value'));
+    }
 
-        } else {
-            throw new Error(this.pluginApi.translate('ucnk_subcm__invalid_value'));
+    private getRatio(state:SubcMixerModelState, attrName:string, attrValue:string):Kontext.FormValue<string>|undefined {
+        const srch = state.shares.find(item => item.attrName === attrName && item.attrValue === attrValue && item.zeroFixed === false);
+        return srch ? srch.ratio : undefined;
+    }
+
+    private updateRatio(state:SubcMixerModelState, attrName:string, attrValue:string, ratio:Kontext.FormValue<string>):void {
+        const idx = state.shares.findIndex(item => item.attrName === attrName
+                && item.attrValue === attrValue && item.zeroFixed === false);
+        if (idx > -1) {
+            const curr = state.shares.get(idx);
+            state.shares = state.shares.set(idx, {
+                attrName: curr.attrName,
+                attrValue: curr.attrValue,
+                ratio: ratio,
+                baseRatio: curr.baseRatio,
+                zeroFixed: curr.zeroFixed
+            });
         }
     }
 
@@ -461,7 +490,10 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             return {
                 attrName: item.attrName,
                 attrValue: item.attrValue,
-                ratio: item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup.get(item.attrName), i).toFixed(1) : '0',
+                ratio: Kontext.newFormValue(
+                    item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup.get(item.attrName), i).toFixed(1) : '0',
+                    true
+                ),
                 baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
                 zeroFixed: !item.isSelected
             }

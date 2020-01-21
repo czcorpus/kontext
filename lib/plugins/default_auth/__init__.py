@@ -18,7 +18,9 @@ A simple authentication module to start with.
 It relies on default_db module which requires no database backend.
 """
 import hashlib
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 import os
 import re
 import uuid
@@ -26,7 +28,6 @@ import time
 import datetime
 import mailing
 from werkzeug.security import pbkdf2_hex
-from controller.errors import ImmediateRedirectException
 from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
 from translation import ugettext as _
 import plugins
@@ -42,7 +43,7 @@ def mk_pwd_hash_default(data):
     iterations = 1000
     keylen = 24
     algo = 'sha512'
-    salt = os.urandom(keylen).encode('hex')
+    salt = str(os.urandom(keylen))
     return mk_pwd_hash(data, salt, iterations, keylen, algo)
 
 
@@ -181,7 +182,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
                 return dict(
                     id=user_data['id'],
                     user=user_data['username'],
-                    fullname=u'{0} {1}'.format(user_data['firstname'], user_data['lastname']),
+                    fullname='{0} {1}'.format(user_data['firstname'], user_data['lastname']),
                     email=user_data.get('email', None))
         return self.anonymous_user()
 
@@ -251,13 +252,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     def get_login_url(self, return_url=None):
         if return_url is not None:
-            return '{0}?continue={1}'.format(self._login_url, urllib.quote(return_url))
+            return '{0}?continue={1}'.format(self._login_url, urllib.parse.quote(return_url))
         else:
             return self._login_url
 
     def get_logout_url(self, return_url=None):
         if return_url is not None:
-            return '{0}?continue={1}'.format(self._logout_url, urllib.quote(return_url))
+            return '{0}?continue={1}'.format(self._logout_url, urllib.parse.quote(return_url))
         else:
             return self._logout_url
 
@@ -322,7 +323,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     def send_confirmation_mail(self, plugin_api, user_email, username, firstname, lastname, token):
         expir_date = datetime.datetime.now() + datetime.timedelta(0, self._confirmation_token_ttl)
-        text = u''
+        text = ''
         text += _('Hello')
         text += ',\n\n'
         text += _('thank you for using KonText at {url}.').format(url=plugin_api.root_url)

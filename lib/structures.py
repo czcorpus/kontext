@@ -41,11 +41,11 @@ class FixedDict(object):
         for item in inspect.getmembers(self.__class__):
             if not item[0].startswith('__') and not callable(getattr(self, item[0], None)):
                 self.__dict__[item[0]] = item[1]
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(self, k, v)
 
     def __iter__(self):
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
             yield k, v
 
     def to_dict(self):

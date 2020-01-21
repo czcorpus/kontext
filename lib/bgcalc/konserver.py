@@ -33,7 +33,7 @@ from functools import wraps, partial
 import logging
 import sys
 import json
-import httplib
+import http.client
 import inspect
 import time
 import os
@@ -82,9 +82,9 @@ class APIConnection(object):
         self._conf = conf
 
     def _create_connection(self):
-        return httplib.HTTPConnection(self._conf.SERVER,
-                                      port=self._conf.PORT,
-                                      timeout=self._conf.HTTP_CONNECTION_TIMEOUT)
+        return http.client.HTTPConnection(self._conf.SERVER,
+                                          port=self._conf.PORT,
+                                          timeout=self._conf.HTTP_CONNECTION_TIMEOUT)
 
     def _get_task(self, task_id):
         connection = self._create_connection()
@@ -257,17 +257,20 @@ class KonserverApp(APIConnection):
             if bind:
                 cls = type('KonserverApp_' + fn_name, (KonserverApp,), {})
 
+                # mypy: all conditional tmp() functions has to have the same signature
                 def tmp(task_id, *args, **kwargs):
                     obj = cls()
                     obj.request = Request(task_id=task_id)
                     return fn(obj, *args, **kwargs)
+
                 tmp.is_bound = True
                 wrapped = tmp
 
             elif base:
                 cls = type(base.__name__ + fn_name, (base,), {})
 
-                def tmp(_, *args, **kwargs):
+                # mypy: all conditional tmp() functions has to have the same signature
+                def tmp(task_id, *args, **kwargs):
                     return fn(*args, **kwargs)
 
                 cls.__call__ = tmp
@@ -300,7 +303,7 @@ class KonserverApp(APIConnection):
             else:
                 mapping = dict((x[1], x[0]) for x in enumerate(inspect.getargspec(fn).args))
             call_args = [None] * len(mapping)
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 if k in args:
                     call_args[mapping[k]] = args[k]
             return call_args
@@ -377,6 +380,10 @@ if __name__ == '__main__':  # here we operate in worker mode
     logger = logging.getLogger('')
     worker_path = os.path.join(os.path.dirname(__file__), '..', '..', 'worker.py')
     worker = imp.load_source('worker', worker_path)
-    setup_logger(worker.settings.get('calc_backend', 'konserver_worker_log'),
-                 worker.settings.get_bool('global', 'debug'), logger)
-    worker.app.listen()
+    # ignoring type checker errors: Module has no attribute...
+    setup_logger(
+        worker.settings.get('calc_backend', 'konserver_worker_log'),  # type: ignore
+        worker.settings.get_bool('global', 'debug'),  # type: ignore
+        logger
+    )
+    worker.app.listen()  # type: ignore

@@ -149,10 +149,10 @@ class DbTest(unittest.TestCase):
             out_checklist.append(checklist_range)
 
             if VERBOSE:
-                print('\nTesting list_get with range specified: {0}'.format(pair))
-                print('redis:  {0}'.format(out_r))
-                print('sqlite: {0}'.format(out_s))
-                print('check:  {0}'.format(checklist_range))
+                print(('\nTesting list_get with range specified: {0}'.format(pair)))
+                print(('redis:  {0}'.format(out_r)))
+                print(('sqlite: {0}'.format(out_s)))
+                print(('check:  {0}'.format(checklist_range)))
 
         self.assertTrue(out_redis == out_sqlite == out_checklist)
 
@@ -262,10 +262,10 @@ class DbTest(unittest.TestCase):
             out_checklist.append(checklist_range)
 
             if VERBOSE:
-                print('\nTesting list_trim with range specified: {0}'.format(pair))
-                print('redis:  {0}'.format(out_r))
-                print('sqlite: {0}'.format(out_s))
-                print('check:  {0}'.format(checklist_range))
+                print(('\nTesting list_trim with range specified: {0}'.format(pair)))
+                print(('redis:  {0}'.format(out_r)))
+                print(('sqlite: {0}'.format(out_s)))
+                print(('check:  {0}'.format(checklist_range)))
 
         self.assertTrue(out_redis == out_sqlite == out_checklist)
 
@@ -311,7 +311,7 @@ class DbTest(unittest.TestCase):
         out_s = self.s.hash_get_all(key)
         if VERBOSE:
             print('\nTesting hash_del:')
-            print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
+            print(('redis: {0}, sqlite: {1}'.format(out_r, out_s)))
         self.assertEqual(out_r, out_s)
 
     def test_hash_get_all(self):
@@ -336,7 +336,7 @@ class DbTest(unittest.TestCase):
         out_s = self.s.hash_get_all(key)
         if VERBOSE:
             print('\nTesting hash_get_all:')
-            print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
+            print(('redis: {0}, sqlite: {1}'.format(out_r, out_s)))
         self.assertEqual(out_r, out_s)
 
     def test_rename(self):
@@ -403,7 +403,7 @@ class DbTest(unittest.TestCase):
             out_s.append(self.s.exists(key))
             if VERBOSE:
                 print('testing set_ttl:')
-                print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
+                print(('redis: {0}, sqlite: {1}'.format(out_r, out_s)))
             self.assertTrue(out_r == out_s == [True, False])
 
     def test_clear_ttl(self):
@@ -428,7 +428,7 @@ class DbTest(unittest.TestCase):
             out_s.append(self.s.exists(key))
             if VERBOSE:
                 print('testing clear_ttl:')
-                print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
+                print(('redis: {0}, sqlite: {1}'.format(out_r, out_s)))
             self.assertTrue(out_r == out_s == [True, True])
 
     def test_get_ttl(self):

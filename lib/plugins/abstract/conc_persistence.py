@@ -16,8 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
+from typing import Dict, Optional, Tuple, Any
 
-class AbstractConcPersistence(object):
+
+class AbstractConcPersistence(abc.ABC):
     """
     Custom conc_persistence plug-in implementations should inherit from this class.
 
@@ -34,23 +37,24 @@ class AbstractConcPersistence(object):
     of a state of respective forms.
     """
 
-    def is_valid_id(self, data_id):
+    @abc.abstractmethod
+    def is_valid_id(self, data_id: str) -> bool:
         """
         Return True if data_id is a valid data identifier else False
 
         arguments:
         data_id -- identifier to be tested
         """
-        raise NotImplementedError()
 
-    def get_conc_ttl_days(self, user_id):
+    @abc.abstractmethod
+    def get_conc_ttl_days(self, user_id: int) -> int:
         """
         Returns how many days a concordance link persist for
         a specified user (typically it is a registered vs. public user).
         """
-        raise NotImplemented()
 
-    def open(self, data_id):
+    @abc.abstractmethod
+    def open(self, data_id: str) -> Dict:
         """
         Load operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -61,9 +65,9 @@ class AbstractConcPersistence(object):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        raise NotImplementedError()
 
-    def store(self, user_id, curr_data, prev_data=None):
+    @abc.abstractmethod
+    def store(self, user_id: int, curr_data: Dict, prev_data: Optional[Dict] = None) -> str:
         """
         Store a current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
@@ -78,9 +82,9 @@ class AbstractConcPersistence(object):
         returns:
         new operation ID if a new record is created or current ID if no new operation is defined
         """
-        raise NotImplementedError()
 
-    def archive(self, user_id, conc_id, revoke=False):
+    @abc.abstractmethod
+    def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
         """
         Make the concordance record persistent. For implementations which
         archive concordances automatically this can be just an empty
@@ -99,9 +103,9 @@ class AbstractConcPersistence(object):
          0: number of updates performed (typically - 0 for no need to update anything, 1 - written archive item
          1: respective data row
         """
-        raise NotImplementedError()
 
-    def is_archived(self, conc_id):
+    @abc.abstractmethod
+    def is_archived(self, conc_id: str) -> bool:
         """
         arguments:
             conc_id -- a concordance hash
@@ -109,4 +113,3 @@ class AbstractConcPersistence(object):
         returns:
             True if the concordance is archived else False
         """
-        raise NotImplementedError()

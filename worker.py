@@ -33,10 +33,7 @@ import os
 import imp
 import sys
 import time
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 CURR_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '%s/lib' % CURR_PATH)

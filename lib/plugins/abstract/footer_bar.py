@@ -16,10 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
+from typing import Optional, TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 
-class AbstractFootbar(object):
 
-    def get_contents(self, plugin_api, return_url=None):
+class AbstractFootbar(abc.ABC):
+
+    @abc.abstractmethod
+    def get_contents(self, plugin_api: 'PluginApi', return_url: Optional[str] = None):
         """
         arguments:
         plugin_api -- an instance of kontext.PluginApi
@@ -28,9 +35,8 @@ class AbstractFootbar(object):
         returns:
         an HTML string
         """
-        raise NotImplementedError()
 
-    def get_css_url(self):
+    def get_css_url(self) -> Optional[str]:
         """
         Return a URL of a custom CSS resource or None if not needed.
         """

@@ -16,6 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import List, Any, Tuple, Dict, Optional
+from .input import InstallJson
+
 import os
 import logging
 from collections import OrderedDict
@@ -29,14 +32,13 @@ class ManateeCorpora(object):
     A caching source of ManateeCorpusInfo instances.
     """
 
-    def __init__(self):
-        self._cache = {}
+    def __init__(self) -> None:
+        self._cache: Dict[str, DefaultManateeCorpusInfo] = {}
 
-    def get_info(self, corpus_id):
+    def get_info(self, corpus_id: str) -> DefaultManateeCorpusInfo:
         try:
             if corpus_id not in self._cache:
-                self._cache[corpus_id] = DefaultManateeCorpusInfo(
-                    manatee.Corpus(corpus_id), corpus_id)
+                self._cache[corpus_id] = DefaultManateeCorpusInfo(manatee.Corpus(corpus_id), corpus_id)
             return self._cache[corpus_id]
         except:
             # probably a misconfigured/missing corpus
@@ -50,35 +52,35 @@ class InstallCorpusInfo(object):
     database.
     """
 
-    def __init__(self, reg_path):
-        self._reg_path = reg_path
+    def __init__(self, reg_path: str) -> None:
+        self._reg_path: str = reg_path
 
-    def get_corpus_size(self, corp_id):
+    def get_corpus_size(self, corp_id: str) -> int:
         c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
         return c.size()
 
-    def get_corpus_name(self, corp_id):
+    def get_corpus_name(self, corp_id: str) -> Optional[str]:
         try:
             c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
             return c.get_conf('NAME').decode(self.get_corpus_encoding(corp_id))
         except:
             return None
 
-    def get_corpus_description(self, corp_id):
+    def get_corpus_description(self, corp_id: str) -> Optional[str]:
         try:
             c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
             return c.get_conf('INFO').decode(self.get_corpus_encoding(corp_id))
         except:
             return None
 
-    def get_corpus_encoding(self, corp_id):
+    def get_corpus_encoding(self, corp_id: str) -> Optional[str]:
         try:
             c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
             return c.get_conf('ENCODING')
         except:
             return None
 
-    def get_data_path(self, corp_id):
+    def get_data_path(self, corp_id: str) -> Optional[str]:
         try:
             c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
             return c.get_conf('PATH').rstrip('/')
@@ -93,7 +95,7 @@ class DatabaseBackend(object):
     data.
     """
 
-    REG_COLS_MAP = OrderedDict(
+    REG_COLS_MAP: Dict[str, str] = OrderedDict(
         NAME='name',
         PATH='path',
         VERTICAL='vertical',
@@ -112,12 +114,12 @@ class DatabaseBackend(object):
         ALIGNSTRUCT='alignstruct',
         ALIGNDEF='aligndef')
 
-    REG_VAR_COLS_MAP = OrderedDict(
+    REG_VAR_COLS_MAP: Dict[str, str] = OrderedDict(
         MAXCONTEXT='maxcontext',
         MAXDETAIL='maxdetail',
         MAXKWIC='maxkwic')
 
-    POS_COLS_MAP = OrderedDict(
+    POS_COLS_MAP: Dict[str, str] = OrderedDict(
         TYPE='type',
         LABEL='label',
         DYNAMIC='dynamic',
@@ -130,7 +132,7 @@ class DatabaseBackend(object):
         MULTIVALUE='multivalue',
         MULTISEP='multisep')
 
-    SATTR_COLS_MAP = OrderedDict(
+    SATTR_COLS_MAP: Dict[str, str] = OrderedDict(
         TYPE='type',
         LOCALE='locale',
         MULTIVALUE='multivalue',
@@ -141,62 +143,62 @@ class DatabaseBackend(object):
         ATTRDOCLABEL='attrdoclabel',
         NUMERIC='rnumeric')
 
-    STRUCT_COLS_MAP = OrderedDict(
+    STRUCT_COLS_MAP: Dict[str, str] = OrderedDict(
         TYPE='type',
         DISPLAYTAG='displaytag',
         DISPLAYBEGIN='displaybegin')
 
-    def contains_corpus(self, corpus_id):
+    def contains_corpus(self, corpus_id: str):
         raise NotImplementedError()
 
-    def load_corpus_articles(self, corpus_id):
+    def load_corpus_articles(self, corpus_id: str) -> Dict[str, Any]:
         raise NotImplementedError()
 
-    def load_all_keywords(self):
+    def load_all_keywords(self) -> Dict[str, str]:
         """
         expected db cols: id, label_cs, label_en, color
         """
         raise NotImplementedError()
 
-    def load_ttdesc(self, desc_id):
+    def load_ttdesc(self, desc_id: int) -> Dict[str, str]:
         """
         """
         raise NotImplementedError()
 
-    def load_corpus(self, corp_id):
+    def load_corpus(self, corp_id: str) -> Dict[str, Any]:
         raise NotImplementedError()
 
-    def load_all_corpora(self, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=-1, favourites=()):
+    def load_all_corpora(self, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None, min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
+                         offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Dict[str, str]:
         """
         """
         raise NotImplementedError()
 
-    def load_featured_corpora(self, user_lang):
+    def load_featured_corpora(self, user_lang: str) -> List[Dict[str, Any]]:
         raise NotImplementedError()
 
-    def load_registry_table(self, corpus_id, variant):
+    def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
         raise NotImplementedError()
 
-    def load_corpus_posattrs(self, corpus_id):
+    def load_corpus_posattrs(self, corpus_id: str) -> List[Dict[str, Any]]:
         raise NotImplementedError()
 
-    def load_corpus_posattr_references(self, corpus_id, posattr_id):
+    def load_corpus_posattr_references(self, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
         raise NotImplementedError()
 
-    def load_corpus_alignments(self, corpus_id):
+    def load_corpus_alignments(self, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
-    def load_corpus_structures(self, corpus_id):
+    def load_corpus_structures(self, corpus_id: str) -> List[Dict[str, Any]]:
         raise NotImplementedError()
 
-    def load_subcorpattrs(self, corpus_id):
+    def load_subcorpattrs(self, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
-    def load_freqttattrs(self, corpus_id):
+    def load_freqttattrs(self, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
-    def load_tckc_providers(self, corpus_id):
+    def load_tckc_providers(self, corpus_id: str) -> List[Dict[str, Any]]:
         raise NotImplementedError()
 
     def load_interval_attrs(self, corpus_id):
@@ -214,19 +216,19 @@ class DatabaseWritableBackend(DatabaseBackend):
     def commit(self):
         raise NotImplementedError()
 
-    def remove_corpus(self, corpus_id):
+    def remove_corpus(self, corpus_id: str):
         raise NotImplementedError()
 
-    def save_corpus_config(self, install_json, registry_dir, corp_size):
+    def save_corpus_config(self, install_json: InstallJson, registry_dir: str, corp_size: int):
         raise NotImplementedError()
 
-    def save_corpus_article(self, text):
+    def save_corpus_article(self, text: str) -> int:
         raise NotImplementedError()
 
-    def attach_corpus_article(self, corpus_id, article_id, role):
+    def attach_corpus_article(self, corpus_id: str, article_id: int, role: str):
         raise NotImplementedError()
 
-    def save_registry_table(self, corpus_id, variant, values):
+    def save_registry_table(self, corpus_id: str, variant: str, values: List[Tuple[str, str]]) -> bool:
         """
         returns:
         True if a record has been actually created
@@ -234,23 +236,23 @@ class DatabaseWritableBackend(DatabaseBackend):
         """
         raise NotImplementedError()
 
-    def save_corpus_posattr(self, corpus_id, name, position, values):
+    def save_corpus_posattr(self, corpus_id: str, name: str, position: int, values: List[Tuple[str, str]]) -> int:
         raise NotImplementedError()
 
-    def update_corpus_posattr_references(self, corpus_id, posattr_id, fromattr_id, mapto_id):
+    def update_corpus_posattr_references(self, corpus_id: str, posattr_id: int, fromattr_id: int, mapto_id: int):
         raise NotImplementedError()
 
-    def save_corpus_alignments(self, corpus_id, aligned_ids):
+    def save_corpus_alignments(self, corpus_id: str, aligned_ids: List[str]):
         raise NotImplementedError()
 
-    def save_corpus_structure(self, corpus_id, name, values):
+    def save_corpus_structure(self, corpus_id: str, name: str, values: List[Tuple[str, str]]):
         raise NotImplementedError()
 
-    def save_corpus_structattr(self, corpus_id, struct_id, name, values):
+    def save_corpus_structattr(self, corpus_id: str, struct_id: int, name: str, values: List[Tuple[str, Any]]):
         raise NotImplementedError()
 
-    def save_subcorpattr(self, corpus_id, struct_name, attr_name, idx):
+    def save_subcorpattr(self, corpus_id: str, struct_name: str, attr_name: str, idx: int):
         raise NotImplementedError()
 
-    def save_freqttattr(self, corpus_id, struct_name, attr_name, idx):
+    def save_freqttattr(self, corpus_id: str, struct_name: str, attr_name: str, idx: int):
         raise NotImplementedError()

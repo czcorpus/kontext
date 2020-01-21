@@ -8,7 +8,7 @@ from controller import exposed
 import conclib
 import plugins
 import settings
-import urlparse
+import urllib.parse
 import logging
 import math
 
@@ -165,7 +165,7 @@ class Actions(Kontext):
         else:
             corpname = default_corp_list[0]
 
-        pr = urlparse.urlparse(req.host_url)
+        pr = urllib.parse.urlparse(req.host_url)
         # None values should be filled in later
         data = {
             'corpname': corpname,
@@ -253,7 +253,7 @@ class Actions(Kontext):
                 import_str = partial(l10n.import_string, from_encoding=corpus.get_conf('ENCODING'))
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
-                data['corpus_desc'] = u'Corpus {0} ({1} tokens)'.format(
+                data['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
                     import_str(corpus.get_conf('NAME')), l10n.simplify_num(corpus.size()))
                 data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
                 data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'

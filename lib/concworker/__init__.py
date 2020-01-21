@@ -20,10 +20,6 @@
 
 import logging
 import time
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 import os
 import sys
 from plugins.abstract import conc_cache
@@ -201,4 +197,4 @@ class ConcCalculation(GeneralWorker):
                     subchash, query, dict(
                         finished=True,
                         curr_wait=sleeptime,
-                        error=e.message if getattr(e, 'message', None) else e.__class__.__name__))
+                        error=str(e) if str(e) else e.__class__.__name__))

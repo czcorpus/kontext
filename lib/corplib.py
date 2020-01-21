@@ -18,12 +18,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import List, Any, Optional, Tuple, Dict, Union, Set
+from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
+from array import array
+
 import os
 import glob
 from hashlib import md5
 from datetime import datetime
 import json
 import logging
+
+
 try:
     from markdown import markdown
     from markdown.extensions import Extension
@@ -46,16 +52,22 @@ import manatee
 from functools import partial
 from translation import ugettext as _
 import plugins
+from functools import cmp_to_key
 
 
-def manatee_version():
+def cmp(a, b):
+    """Python 3 workaround for in-built python 2 cmp() function"""
+    return (a > b) - (a < b)
+
+
+def manatee_version() -> str:
     """
     Returns Manatee version (as a string)
     """
     return manatee.version()
 
 
-def manatee_min_version(ver):
+def manatee_min_version(ver: str) -> bool:
     """
     Tests whether the provided version string represents a newer or
     equal version than the one currently configured.
@@ -63,13 +75,12 @@ def manatee_min_version(ver):
     arguments:
     ver -- a version signature string 'X.Y.Z' (e.g. '2.130.7')
     """
-    ver = int(''.join(map(lambda x: '%03d' % int(x), ver.split('.'))))
-    actual = int(''.join(map(lambda x: '%03d' %
-                             int(x), manatee.version().split('-')[-1].split('.'))))
-    return ver <= actual
+    ver_parsed = int(''.join('%03d' % int(x) for x in ver.split('.')))
+    actual = int(''.join('%03d' % int(x) for x in manatee.version().split('-')[-1].split('.')))
+    return ver_parsed <= actual
 
 
-def corp_mtime(corpus):
+def corp_mtime(corpus: Corpus) -> float:
     reg_mtime = os.path.getmtime(corpus.get_confpath())
     data_path = corpus.get_conf('PATH')
     data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
@@ -80,9 +91,9 @@ def corp_mtime(corpus):
 class PublishedSubcMetadata(object):
 
     def __init__(self, **kw):
-        self.author_id = kw.get('author_id', None)
-        self.author_name = kw.get('author_name', None)
-        self.subcpath = kw.get('subcpath', None)
+        self.author_id: Optional[int] = kw.get('author_id', None)
+        self.author_name: Optional[str] = kw.get('author_name', None)
+        self.subcpath: Optional[str] = kw.get('subcpath', None)
 
     def to_json(self):
         return json.dumps(self.__dict__)
@@ -92,20 +103,18 @@ class PublishedSubcMetadata(object):
         return PublishedSubcMetadata(**json.loads(data))
 
 
-def _list_public_corp_dir(corpname, path, code_prefix, author_prefix):
-    ans = []
+def _list_public_corp_dir(corpname: str, path: str, code_prefix: Optional[str], author_prefix: Optional[str]) -> List[Dict[str, Any]]:
+    ans: List[Dict[str, Any]] = []
     subc_root = os.path.dirname(os.path.dirname(path))
-    for item in glob.glob(path + '/*.subc'):
+    for item in glob.glob(f'{path}/*.subc'):
         full_path = os.path.join(path, item)
         meta, desc = get_subcorp_pub_info(full_path)
         if meta.subcpath is None or meta.author_name is None or not desc:
-            logging.getLogger(__name__).warning(
-                'Missing metainformation for published subcorpus {0}'.format(item))
+            logging.getLogger(__name__).warning(f'Missing metainformation for published subcorpus {item}')
         else:
             try:
                 ident = os.path.splitext(os.path.basename(item))[0]
-                author_rev = ' '.join(reversed(meta.author_name.split(' ')
-                                               if meta.author_name else [])).lower()
+                author_rev = ' '.join(reversed(meta.author_name.split(' '))).lower() if meta.author_name else ''
                 author_prefix = author_prefix.lower() if author_prefix else None
                 if (code_prefix and ident.startswith(code_prefix) or author_prefix and
                         author_rev.startswith(author_prefix)):
@@ -118,17 +127,15 @@ def _list_public_corp_dir(corpname, path, code_prefix, author_prefix):
                         userId=int(meta.subcpath.lstrip(subc_root).split(os.path.sep, 1)[0])
                     ))
             except Exception as ex:
-                logging.getLogger(__name__).warning(
-                    'Broken published subcorpus {0}: {1}'.format(full_path, ex))
+                logging.getLogger(__name__).warning(f'Broken published subcorpus {full_path}: {ex}')
     return ans
 
 
-def list_public_subcorpora(subcpath, author_prefix=None, code_prefix=None, offset=0, limit=20):
-    data = []
+def list_public_subcorpora(subcpath: str, author_prefix: Optional[str] = None, code_prefix: Optional[str] = None, offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
+    data: List[Dict[str, Any]] = []
     for corp in os.listdir(subcpath):
         try:
-            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), code_prefix=code_prefix,
-                                          author_prefix=author_prefix)
+            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), code_prefix, author_prefix)
             if len(data) >= offset + limit:
                 break
         except Exception as ex:
@@ -136,14 +143,14 @@ def list_public_subcorpora(subcpath, author_prefix=None, code_prefix=None, offse
     return data[offset:limit]
 
 
-def open_corpus(*args, **kwargs):
+def open_corpus(*args: Any, **kwargs: Any) -> Corpus:
     """
     Creates a manatee.Corpus instance
     """
     return manatee.Corpus(*args, **kwargs)
 
 
-def create_subcorpus(path, corpus, structname, subquery):
+def create_subcorpus(path: str, corpus: Corpus, structname: str, subquery: str) -> SubCorpus:
     """
     Creates a subcorpus
 
@@ -158,7 +165,7 @@ def create_subcorpus(path, corpus, structname, subquery):
     return manatee.create_subcorpus(path, corpus, structname, subquery)
 
 
-def subcorpus_from_conc(path, conc, struct=None):
+def subcorpus_from_conc(path: str, conc: Concordance, struct: Optional[str] = None) -> SubCorpus:
     """
     Creates a subcorpus from provided concordance. In case
     a struct is provided then only positions located wihtin
@@ -175,18 +182,18 @@ def subcorpus_from_conc(path, conc, struct=None):
     return manatee.create_subcorpus(path, conc.RS(), struct)
 
 
-def is_subcorpus(corp_obj):
+def is_subcorpus(corp_obj: Corpus) -> bool:
     return isinstance(corp_obj, manatee.SubCorpus)
 
 
-def create_str_vector():
+def create_str_vector() -> StrVector:
     """
     Creates a new manatee.StrVector instance
     """
     return manatee.StrVector()
 
 
-def conf_bool(v):
+def conf_bool(v: str) -> bool:
     """
     Tests whether the provided string
     represents an encoded 'true' value ('1', 't', ...)
@@ -194,12 +201,12 @@ def conf_bool(v):
     return v in ('y', 'yes', 'true', 't', '1')
 
 
-def subcorpus_is_published(subcpath):
+def subcorpus_is_published(subcpath: str) -> bool:
     stat = os.lstat(subcpath)
     return stat.st_nlink > 1
 
 
-def get_subcorp_pub_info(spath):
+def get_subcorp_pub_info(spath: str) -> Tuple[PublishedSubcMetadata, Optional[str]]:
     desc = None
     namepath = os.path.splitext(spath)[0] + '.name'
     metadata = PublishedSubcMetadata()
@@ -209,20 +216,20 @@ def get_subcorp_pub_info(spath):
             desc = ''
             for i, line in enumerate(nf):
                 if i == 0:
-                    metadata = PublishedSubcMetadata.from_json(line.decode('utf-8'))
+                    metadata = PublishedSubcMetadata.from_json(line)
                 elif i > 1:
                     desc += line
-    return metadata, desc.decode('utf-8') if desc else None
+    return metadata, desc
 
 
-def rewrite_subc_desc(publicpath, desc):
+def rewrite_subc_desc(publicpath: str, desc: str):
     meta, _ = get_subcorp_pub_info(publicpath)
-    with open(os.path.splitext(publicpath)[0] + '.name', 'w') as fw:
+    with open(os.path.splitext(publicpath)[0] + '.name', 'wb') as fw:
         fw.write(meta.to_json().encode('utf-8') + '\n\n')
         fw.write(desc.encode('utf-8'))
 
 
-def mk_publish_links(subcpath, publicpath, author, desc):
+def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
 
     def rm_silent(p):
         try:
@@ -251,9 +258,9 @@ def mk_publish_links(subcpath, publicpath, author, desc):
             author_id = os.path.basename(os.path.dirname(os.path.dirname(subcpath)))
             meta = PublishedSubcMetadata(
                 subcpath=subcpath, author_id=int(author_id) if author_id else None, author_name=author)
-            namefile.write(meta.to_json().encode('utf-8'))
+            namefile.write(meta.to_json())
             namefile.write('\n\n')
-            namefile.write(desc.encode('utf-8'))
+            namefile.write(desc)
     except Exception as ex:
         rm_silent(symlink_path)
         rm_silent(namefile_path)
@@ -265,22 +272,22 @@ def mk_publish_links(subcpath, publicpath, author, desc):
 
 class CorpusManager(object):
 
-    def __init__(self, subcpath=()):
+    def __init__(self, subcpath: Union[List[str], Tuple[str, ...]] = ()) -> None:
         """
         Args:
             subcpath: a list of paths where user corpora are located
         """
-        self.subcpath = list(subcpath)
-        self._cache = {}
+        self.subcpath: List[str] = list(subcpath)
+        self._cache: Dict[Tuple[str, str, str, Optional[str]], str] = {}
 
-    def get_subc_public_name(self, corpname, subcname):
+    def get_subc_public_name(self, corpname: str, subcname: str) -> Optional[str]:
         if len(self.subcpath) > 0:
             test = os.path.join(self.subcpath[0], corpname, (subcname if subcname else '') + '.pub')
             if os.path.islink(test):
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def _open_subcorpus(self, corpname, subcname, corp, spath, decode_desc):
+    def _open_subcorpus(self, corpname: str, subcname: str, corp: Corpus, spath: str, decode_desc: bool) -> Corpus:
         subc = manatee.SubCorpus(corp, spath)
         subc.corp = corp
         subc.spath = spath
@@ -290,8 +297,8 @@ class CorpusManager(object):
             pass
         subc.corpname = str(corpname)  # never unicode (paths)
         subc.subcname = subcname
-        subc.cm = self
-        subc.subchash = md5(open(spath).read()).hexdigest()
+        with open(spath, 'rb') as subcinfo:
+            subc.subchash = md5(subcinfo.read()).hexdigest()
         subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
         subc.is_published = subcorpus_is_published(spath)
         meta, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
@@ -309,7 +316,7 @@ class CorpusManager(object):
             subc.description = None
         return subc
 
-    def get_Corpus(self, corpname, corp_variant='', subcname='', decode_desc=True):
+    def get_Corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> Corpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -341,8 +348,6 @@ class CorpusManager(object):
                 subcname = public_subcname
             for sp in self.subcpath:
                 spath = os.path.join(sp, corpname, subcname + '.subc')
-                if type(spath) == unicode:
-                    spath = spath.encode('utf-8')
                 if os.path.isfile(spath):
                     subc = self._open_subcorpus(corpname, subcname, corp, spath, decode_desc)
                     self._cache[cache_key] = subc
@@ -352,7 +357,7 @@ class CorpusManager(object):
             self._cache[cache_key] = corp
         return corp
 
-    def _ensure_reg_file(self, rel_path, variant):
+    def _ensure_reg_file(self, rel_path: str, variant: str):
         fullpath = os.path.join(os.environ['MANATEE_REGISTRY'], rel_path)
         if not os.path.isfile(fullpath):
             with plugins.runtime.CORPARCH as ca:
@@ -360,10 +365,10 @@ class CorpusManager(object):
                 if callable(fn):
                     fn(fullpath, variant, proc_aligned=True)
 
-    def findPosAttr(self, corpname, attrname):
+    def findPosAttr(self, corpname: str, attrname: str) -> PosAttr:
         return manatee.findPosAttr(corpname.split(':', 1)[0], attrname)
 
-    def corpconf_pairs(self, corp, label):
+    def corpconf_pairs(self, corp: Corpus, label: str) -> List[Tuple[str, str]]:
         """
         Encodes some specific corpus registry file configuration values
         where a list of pairs is actually flattened (k1, v1, k2, v2,..., kN, vN).
@@ -371,7 +376,7 @@ class CorpusManager(object):
         Returns:
              a list of pairs
         """
-        if type(corp) is basestring:
+        if type(corp) is str:
             corp = self.get_Corpus(corp)
         val = import_string(corp.get_conf(label), from_encoding=corp.get_conf('ENCODING'))
         if len(val) > 2:
@@ -380,33 +385,28 @@ class CorpusManager(object):
             val = ''
         return [(val[i], val[i + 1]) for i in range(0, len(val), 2)]
 
-    def subc_files(self, corpname):
+    def subc_files(self, corpname: str) -> List[str]:
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
-        enc_corpname = corpname.encode('utf-8')
         sp = self.subcpath[0]
         items = []
-        for x in glob.glob(os.path.join(sp, enc_corpname, '*.subc').encode('utf-8')):
-            try:
-                items.append(x.decode('utf-8'))
-            except UnicodeDecodeError:
-                logging.getLogger(__name__).warning(
-                    'Subcorpus filename encoding problem. File: %s' % x)
+        for x in glob.glob(os.path.join(sp, corpname, '*.subc')):
+            items.append(x)
         return sorted(items)
 
-    def subcorp_names(self, corpname):
+    def subcorp_names(self, corpname: str) -> List[Dict[str, Optional[str]]]:
         return [dict(n=os.path.splitext(os.path.basename(s))[0],
                      v=os.path.splitext(os.path.basename(s))[0],
                      pub=self.get_subc_public_name(corpname, os.path.splitext(os.path.basename(s))[0]))
                 for s in self.subc_files(corpname)]
 
 
-def add_block_items(items, attr='class', val='even', block_size=3):
+def add_block_items(items: List[Dict[str, Any]], attr: str = 'class', val: str = 'even', block_size: int = 3) -> List[Dict[str, Any]]:
     for i in [i for i in range(len(items)) if (i / block_size) % 2]:
         items[i][attr] = val
     return items
 
 
-def get_wordlist_length(corp, wlattr, wlpat, wlnums, wlminfreq, words, blacklist, include_nonwords):
+def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, words: str, blacklist: str, include_nonwords: bool) -> int:
     enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
     enc_pattern = enc_string(wlpat.strip())
     attr = corp.get_attr(wlattr)
@@ -431,8 +431,7 @@ def get_wordlist_length(corp, wlattr, wlpat, wlnums, wlminfreq, words, blacklist
     return i
 
 
-def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort,
-                         wlmaxitems):
+def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort, wlmaxitems):
     try:
         gen = attr.regexp2ids(enc_pattern, 0, excl_pattern)
     except TypeError:
@@ -498,8 +497,8 @@ def _get_attrfreq(corp, attr, wlattr, wlnums):
     return attrfreq
 
 
-def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
-             wlsort='', blacklist=None, wlnums='frq', include_nonwords=0):
+def wordlist(corp: Corpus, words: Optional[Set[str]] = None, wlattr: str = '', wlpat: str = '', wlminfreq: int = 5, wlmaxitems: int = 100,
+             wlsort: str = '', blacklist: Optional[Set[str]] = None, wlnums: Optional[str] = 'frq', include_nonwords: int = 0) -> List[Dict[str, Any]]:
     """
     Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
     """
@@ -533,7 +532,7 @@ def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                             for f, w in items])
 
 
-def doc_sizes(corp, struct, attrname, i, normvals):
+def doc_sizes(corp: Corpus, struct: Structure, attrname: str, i: int, normvals: Dict[int, int]) -> int:
     r = corp.filter_query(struct.attr_val(attrname.split('.')[1], i))
     cnt = 0
     while not r.end():
@@ -542,7 +541,7 @@ def doc_sizes(corp, struct, attrname, i, normvals):
     return cnt
 
 
-def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
+def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_list: Union[Tuple[str, ...], List[str]] = (), collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     arguments:
     corp -- manatee.Corpus
@@ -573,7 +572,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
         return []
     attrlines = []
 
-    if shrink_list is False:
+    if not shrink_list:
         shrink_list = ()
 
     for subcorpline in subcorpattrs.split(','):
@@ -626,8 +625,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
                 elif collator_locale:
                     attrval['Values'] = l10n.sort(vals, collator_locale, key=lambda item: item['v'])
                 else:
-                    attrval['Values'] = sorted(vals, cmp=lambda x1, x2: cmp(
-                        x1['v'].lower(), x2['v'].lower()))
+                    attrval['Values'] = sorted(vals, key=cmp_to_key(lambda x1, x2: cmp(
+                        x1['v'].lower(), x2['v'].lower())))
             attrvals.append(attrval)
         attrlines.append({'Line': attrvals})
     return attrlines
@@ -680,13 +679,13 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     return result
 
 
-def subc_freqs(subcorp, attr, minfreq=50, maxfreq=10000, last_id=None):
+def subc_freqs(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq: int = 10000, last_id: Optional[int] = None) -> List[Tuple[int, int]]:
     return [(i, subcorp.count_rest(attr.id2poss(i)))
-            for i in xrange(last_id or attr.id_range())
+            for i in range(last_id or attr.id_range())
             if maxfreq > attr.freq(i) > minfreq]
 
 
-def subc_keywords1(subcorp, attr, minfreq=50, maxfreq=10000):
+def subc_keywords1(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq: int = 10000):
     p = (subcorp.size() - subcorp.search_size()) / float(subcorp.search_size())
     freqs = [(float(f) / (attr.freq(i) - f + 1) * p, f, i)
              for (i, f) in subc_freqs(subcorp, attr, minfreq, maxfreq,
@@ -696,11 +695,11 @@ def subc_keywords1(subcorp, attr, minfreq=50, maxfreq=10000):
     return freqs
 
 
-def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
-                  maxitems=100):
+def subc_keywords(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq: int = 10000, last_id: int = 10000,
+                  maxitems: int = 100) -> List[Tuple[float, float, int, int]]:
     p = (subcorp.size() - subcorp.search_size()) / float(subcorp.search_size())
     candidates = []
-    for i in xrange(last_id or attr.id_range()):
+    for i in range(last_id or attr.id_range()):
         if not (maxfreq > attr.freq(i) > minfreq):
             continue
         freq = subcorp.count_rest(attr.id2poss(i))
@@ -716,11 +715,11 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
     return candidates
 
 
-def subcorp_base_file(corp, attrname):
+def subcorp_base_file(corp: SubCorpus, attrname: str) -> str:
     if hasattr(corp, 'spath'):
-        return corp.spath[:-4].decode('utf-8') + attrname
+        return corp.spath[:-4] + attrname
     else:
-        return corp.get_conf('PATH').decode('utf-8') + attrname
+        return corp.get_conf('PATH') + attrname
 
 
 class MissingSubCorpFreqFile(Exception):
@@ -730,7 +729,7 @@ class MissingSubCorpFreqFile(Exception):
         self._orig_error = orig_error
 
     def __unicode__(self):
-        return u'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
+        return 'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -740,19 +739,19 @@ class MissingSubCorpFreqFile(Exception):
         return self._corpus
 
 
-def frq_db(corp, attrname, nums='frq', id_range=0):
+def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
     import array
-    import exceptions
-    filename = (subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    filename = (subcorp_base_file(corp, attrname) + '.' + nums)
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
         frq = array.array('f')
         try:
-            frq.fromfile(open(filename), id_range)
+            # typechecking error: Argument 1 to "fromfile" of "array" has incompatible type "TextIO"; expected "BinaryIO"
+            frq.fromfile(open(filename), id_range)  # type: ignore
         except IOError as ex:
             raise MissingSubCorpFreqFile(corp, ex)
-        except exceptions.EOFError as ex:
+        except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             raise MissingSubCorpFreqFile(corp, ex)
     else:
@@ -760,8 +759,9 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
             if corp.get_conf('VIRTUAL') and not hasattr(corp, 'spath') and nums == 'frq':
                 raise IOError
             frq = array.array('i')
-            frq.fromfile(open(filename), id_range)
-        except exceptions.EOFError as ex:
+            # typechecking error: Argument 1 to "fromfile" of "array" has incompatible type "TextIO"; expected "BinaryIO"
+            frq.fromfile(open(filename), id_range)  # type: ignore
+        except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             os.remove(filename.rsplit('.', 1)[0] + '.arf')
             os.remove(filename.rsplit('.', 1)[0] + '.frq')
@@ -769,19 +769,20 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
         except IOError:
             try:
                 frq = array.array('l')
-                frq.fromfile(open(filename + '64'), id_range)
+                # typechecking error: Argument 1 to "fromfile" of "array" has incompatible type "TextIO"; expected "BinaryIO"
+                frq.fromfile(open(filename + '64'), id_range)  # type: ignore
             except IOError as ex:
                 if not hasattr(corp, 'spath') and nums == 'frq':
                     a = corp.get_attr(attrname)
-                    frq.fromlist([a.freq(i) for i in xrange(a.id_range())])
+                    frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:
                     raise MissingSubCorpFreqFile(corp, ex)
     return frq
 
 
-def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
-                        wlmaxitems=100, simple_n=100, wlwords=None,
-                        blacklist=None, include_nonwords=0, wlnums='frq'):
+def subc_keywords_onstr(sc: SubCorpus, scref: SubCorpus, attrname: str = 'word', wlminfreq: int = 5, wlpat: str = '.*',
+                        wlmaxitems: int = 100, simple_n: int = 100, wlwords: Optional[List[str]] = None,
+                        blacklist: Optional[List[str]] = None, include_nonwords: int = 0, wlnums: str = 'frq') -> List[Tuple[float, float, float, int, int, int, int, str]]:
     f = frq_db(sc, attrname, wlnums)
     fref = frq_db(scref, attrname, wlnums)
     size = sum(f)

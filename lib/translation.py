@@ -45,22 +45,25 @@ def load_translations(languages):
     """
     global _translations
 
-    gettext.install('kontext', '%s/../locale' % os.path.dirname(__file__), unicode=1)
-    languages = (x.replace('-', '_') for x in languages if x != 'en-US')  # english translation is implicit
+    gettext.install('kontext', '%s/../locale' % os.path.dirname(__file__))
+    languages = (x.replace('-', '_')
+                 for x in languages if x != 'en-US')  # english translation is implicit
     for lang in languages:
         try:
             _translations[lang] = gettext.translation('kontext',
-                                                      localedir='%s/../locale' % os.path.dirname(__file__),
+                                                      localedir='%s/../locale' % os.path.dirname(
+                                                          __file__),
                                                       languages=[lang])
         except IOError as e:
-            logging.getLogger(__name__).warning('Failed to load translations for %s with error: %r' % (lang, e))
+            logging.getLogger(__name__).warning(
+                'Failed to load translations for %s with error: %r' % (lang, e))
 
 
 def get_avail_languages():
     """
     Return a list of installed language codes ('en', 'cs', 'de', ...)
     """
-    return ['en'] + [x[:2] for x in _translations.keys()]
+    return ['en'] + [x[:2] for x in list(_translations.keys())]
 
 
 def activate(lang):
@@ -72,13 +75,13 @@ def activate(lang):
     """
     t = _translations.get(lang)
     if t is not None:
-        _current.ugettext = t.ugettext
+        _current.gettext = t.gettext
     else:
-        _current.ugettext = lambda s: s
+        _current.gettext = lambda s: s
 
 
 def ugettext(s):
     """
     Translates a string according to the current (thread local) translation
     """
-    return _current.ugettext(s)
+    return _current.gettext(s)

@@ -47,7 +47,7 @@ class Subcorpus(Querying):
 
     def prepare_subc_path(self, corpname, subcname, publish):
         if publish:
-            code = hashlib.md5(u'{0} {1} {2}'.format(self.session_get(
+            code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
                 'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
             path = os.path.join(self.subcpath[1], corpname)
             if not os.path.isdir(path):
@@ -68,9 +68,8 @@ class Subcorpus(Querying):
         ).join(' ');
         }
         """
-        return ' '.join(map(lambda item: ('!within' if item['negated'] else 'within') + ' <%s %s />' % (
-            item['structure_name'], item['attribute_cql']),
-            filter(lambda item: bool(item), data)))
+        return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
+            item['structure_name'], item['attribute_cql']) for item in [item for item in data if bool(item)]])
 
     def _create_subcorpus(self, request):
         """
@@ -141,9 +140,6 @@ class Subcorpus(Querying):
         publish_path = self.prepare_subc_path(
             basecorpname, subcname, publish=True) if publish else None
 
-        if type(path) == unicode:
-            path = path.encode('utf-8')
-
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
@@ -160,7 +156,7 @@ class Subcorpus(Querying):
                                     time_limit=TASK_TIME_LIMIT)
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                       label=u'%s:%s' % (basecorpname, subcname),
+                                                       label='%s:%s' % (basecorpname, subcname),
                                                        args=dict(subcname=subcname, corpname=basecorpname)))
                 result = {}
             elif backend == 'multiprocessing':
@@ -185,8 +181,8 @@ class Subcorpus(Querying):
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
                                             translate('Subcorpus created but there was a problem saving a backup copy.'))
-            unfinished_corpora = filter(lambda at: not at.is_finished(),
-                                        self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
+            unfinished_corpora = [at for at in self.get_async_tasks(
+                category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
             return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
         else:
             raise SubcorpusError(translate('Empty subcorpus!'))
@@ -197,7 +193,7 @@ class Subcorpus(Querying):
         try:
             return self._create_subcorpus(request)
         except (SubcorpusError, RuntimeError) as e:
-            raise UserActionException(e.message)
+            raise UserActionException(str(e)) from e
 
     @exposed(access_level=1, apply_semi_persist_args=True)
     def subcorp_form(self, request):
@@ -272,8 +268,8 @@ class Subcorpus(Querying):
         filter_args = dict(show_deleted=bool(int(request.args.get('show_deleted', 0))),
                            corpname=request.args.get('corpname'))
         data = []
-        user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
-            self.session_get('user')).keys()
+        user_corpora = list(plugins.runtime.AUTH.instance.permitted_corpora(
+            self.session_get('user')).keys())
         related_corpora = set()
         for corp in user_corpora:
             for item in self.user_subc_names(corp):
@@ -294,11 +290,11 @@ class Subcorpus(Querying):
                     related_corpora.add(corp)
                 except RuntimeError as e:
                     logging.getLogger(__name__).warn(
-                        u'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
+                        'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
 
         if filter_args['corpname']:
-            data = filter(lambda item: not filter_args['corpname'] or item['corpname'] == filter_args['corpname'],
-                          data)
+            data = [item for item in data if not filter_args['corpname']
+                    or item['corpname'] == filter_args['corpname']]
         elif filter_args['corpname'] is None:
             filter_args['corpname'] = ''  # JS code requires non-null value
 

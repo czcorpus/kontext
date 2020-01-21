@@ -106,7 +106,6 @@ element corpus {
 from collections import OrderedDict
 import copy
 import re
-from functools import partial
 
 try:
     from markdown import markdown
@@ -175,7 +174,7 @@ class CorpusListItem(DictLike):
         self.keywords = [] if keywords is None else keywords
 
     def __unicode__(self):
-        return u'CorpusListItem({0})'.format(self.__dict__)
+        return 'CorpusListItem({0})'.format(self.__dict__)
 
     def __repr__(self):
         return self.__unicode__()
@@ -260,7 +259,8 @@ class DefaultCorplistProvider(CorplistProvider):
 
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         external_keywords = filter_dict.getlist('keyword')
-        external_keywords = self._corparch.map_external_keywords(external_keywords, plugin_api.user_lang)
+        external_keywords = self._corparch.map_external_keywords(
+            external_keywords, plugin_api.user_lang)
         if len(external_keywords) != 0:
             query_substrs = []
             query_keywords = external_keywords + [self.default_label]
@@ -318,7 +318,7 @@ class DefaultCorplistProvider(CorplistProvider):
         for corp in self._corparch.get_list(plugin_api):
             full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
-                keywords = [k for k in full_data['metadata']['keywords'].keys()]
+                keywords = [k for k in list(full_data['metadata']['keywords'].keys())]
                 tests = []
                 found_in = []
 
@@ -435,7 +435,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if self._keywords is None:
             self._load(lang)
         lang_key = self._get_iso639lang(lang)
-        for label_key, item in self._keywords.items():
+        for label_key, item in list(self._keywords.items()):
             if lang_key in item:
                 ans.append((label_key, item[lang_key]))
         return ans
@@ -470,7 +470,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                                 accessible by the current user
         """
         cl = []
-        for item in self._raw_list(plugin_api.user_lang).values():
+        for item in list(self._raw_list(plugin_api.user_lang).values()):
             corp_id, path, web = item['id'], item['path'], item['sentence_struct']
             if user_allowed_corpora is None or corp_id in user_allowed_corpora:
                 try:
@@ -486,8 +486,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 except Exception as e:
                     import logging
                     logging.getLogger(__name__).warn(
-                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
-                                                                               type(e).__name__, e))
+                        'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
+                                                                              type(e).__name__, e))
                     cl.append({
                         'id': corp_id, 'name': corp_id,
                         'path': path, 'desc': '', 'size': None})
@@ -520,14 +520,14 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         for elm in meta_elm:
             if elm.tag == 'desc':
-                if 'ref' in elm.keys():
+                if 'ref' in list(elm.keys()):
                     message_key = elm.attrib['ref']
                     if message_key in self._messages:
                         ans = self._messages[message_key]
                 else:
                     lang_code = elm.attrib['lang']
                     ans[lang_code] = markdown(elm.text)
-                    if 'ident' in elm.keys():
+                    if 'ident' in list(elm.keys()):
                         message_key = elm.attrib['ident']
                         if message_key not in self._messages:
                             self._messages[message_key] = {}
@@ -684,7 +684,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         #    ans.metadata.desc = ''
 
         translated_k = OrderedDict()
-        for keyword, label in ans.metadata.keywords.items():
+        for keyword, label in list(ans.metadata.keywords.items()):
             if type(label) is dict and lang_code in label:
                 translated_k[keyword] = label[lang_code]
             elif type(label) is str:
@@ -736,7 +736,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if self._registry_lang[:2] == plugin_api.user_lang[:2]:
             return text
         else:
-            return u'{0} [{1}]'.format(text, _('translation not available'))
+            return '{0} [{1}]'.format(text, _('translation not available'))
 
     def _export_featured(self, plugin_api):
         permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
@@ -745,7 +745,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             return o['metadata'].get('featured', False)
 
         featured = []
-        for x in self._raw_list(plugin_api.user_lang).values():
+        for x in list(self._raw_list(plugin_api.user_lang).values()):
             if x['id'] in permitted_corpora and is_featured(x):
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
@@ -771,7 +771,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def export(self, plugin_api):
         initial_keywords = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
         external_keywords = plugin_api.request.args.getlist('keyword')
-        mapped_external_keywords = self.map_external_keywords(external_keywords, plugin_api.user_lang)
+        mapped_external_keywords = self.map_external_keywords(
+            external_keywords, plugin_api.user_lang)
         if len(mapped_external_keywords) != 0:
             initial_keywords.extend(mapped_external_keywords)
 
@@ -780,7 +781,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
-            initial_keywords = initial_keywords,
+            initial_keywords=initial_keywords,
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )

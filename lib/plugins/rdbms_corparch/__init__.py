@@ -28,9 +28,9 @@ import plugins
 from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
                                       TokenConnect, KwicConnect, DictLike, TagsetInfo)
 import l10n
-from plugins.rdbms_corparch.backend import ManateeCorpora
-from plugins.rdbms_corparch.backend.sqlite import Backend
-from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
+from .backend import ManateeCorpora
+from .backend.sqlite import Backend
+from .registry import RegModelSerializer, RegistryConf
 
 try:
     from markdown import markdown
@@ -79,7 +79,7 @@ class CorpusListItem(DictLike):
         self.keywords = [] if keywords is None else keywords
 
     def __unicode__(self):
-        return u'CorpusListItem({0})'.format(self.__dict__)
+        return 'CorpusListItem({0})'.format(self.__dict__)
 
     def __repr__(self):
         return self.__unicode__()
@@ -147,10 +147,10 @@ class DeafultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
-        rows = self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
-                                           min_size=min_size, max_size=max_size, requestable=requestable,
-                                           offset=offset, limit=limit + 1, keywords=query_keywords,
-                                           favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values()
+        rows = list(self._corparch.list_corpora(plugin_api, substrs=normalized_query_substrs,
+                                                min_size=min_size, max_size=max_size, requestable=requestable,
+                                                offset=offset, limit=limit + 1, keywords=query_keywords,
+                                                favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values())
         ans = []
         for i, corp in enumerate(rows):
             used_keywords.update(corp.keywords)
@@ -252,9 +252,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.speech_overlap_attr = row['speech_overlap_attr']
             ans.speech_overlap_val = row['speech_overlap_val']
             ans.use_safe_font = row['use_safe_font']
-            ans.metadata.id_attr = row['id_attr'].encode('utf-8') if row['id_attr'] else None
-            ans.metadata.label_attr = row['label_attr'].encode(
-                'utf-8') if row['label_attr'] else None
+            ans.metadata.id_attr = row['id_attr']
+            ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])
             ans.metadata.database = row['database']
             ans.metadata.keywords = [x for x in (
@@ -347,7 +346,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             data = self._backend.load_tckc_providers(corpus_id)
             for row in data:
                 if row['type'] == 'tc':
-                    self._tc_providers[corpus_id].providers.append((row['provider'], row['is_kwic_view']))
+                    self._tc_providers[corpus_id].providers.append(
+                        (row['provider'], row['is_kwic_view']))
                 elif row['type'] == 'kc':
                     self._kc_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id]
@@ -420,7 +420,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         all_keywords = self.all_keywords(plugin_api.user_lang)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
-                        for k, lab in all_keywords.items()]
+                        for k, lab in list(all_keywords.items())]
         return {
             'keywords': exp_keywords,
             'filters': {
@@ -457,7 +457,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             favorite=self._export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
-                            for k, lab in self.all_keywords(plugin_api.user_lang).items()],
+                            for k, lab in list(self.all_keywords(plugin_api.user_lang).items())],
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints,
             max_page_size=self.max_page_size

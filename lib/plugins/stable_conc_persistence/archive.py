@@ -16,9 +16,8 @@
 # 02110-1301, USA.
 
 """
-Note: this is UCNK specific functionality
-
-A script to archive outdated concordance queries from Redis to a SQLite3 database.
+A script to archive outdated concordance queries from Redis to a SQLite3 database. Archived items
+are still transparently available to end-users.
 """
 
 import os
@@ -122,7 +121,7 @@ class Archiver(object):
                     dict(key=conc_prefix + item[0])))
             return dict(
                 num_processed=i,
-                error=ex,
+                error=str(ex),
                 dry_run=dry_run,
                 queue_size=self._get_queue_size())
         return dict(
@@ -136,23 +135,23 @@ def run(conf, num_proc, dry_run):
     from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
-    to_db = SQLite3Ops(conf.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+    to_db = SQLite3Ops(conf.get('plugins')['conc_persistence']['default:archive_db_path'])
 
-    archive_queue_key = conf.get('plugins')['conc_persistence']['ucnk:archive_queue_key']
+    archive_queue_key = conf.get('plugins')['conc_persistence']['default:archive_queue_key']
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
     return archiver.run(num_proc, dry_run)
 
 
 def _create_archive(conf, dry_run):
-    arch_db_path = conf.get('plugins')['conc_persistence']['ucnk:archive_db_path']
+    arch_db_path = conf.get('plugins')['conc_persistence']['default:archive_db_path']
     if os.path.exists(arch_db_path):
         arch_filename = os.path.splitext(os.path.basename(arch_db_path))[0]
         dt = time.strftime('%Y-%m-%d', datetime.now().timetuple())
         backed_up_arch_path = os.path.join(os.path.dirname(
             arch_db_path), arch_filename + '.' + dt + '.db')
-        print('Archive {0} already exists'.format(arch_db_path))
-        print('Please rename the current file to {0} and the run the action again'.format(
-            backed_up_arch_path))
+        print(('Archive {0} already exists'.format(arch_db_path)))
+        print(('Please rename the current file to {0} and the run the action again'.format(
+            backed_up_arch_path)))
         sys.exit(1)
     sql = ('CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer '
            'NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))')
@@ -162,7 +161,7 @@ def _create_archive(conf, dry_run):
         to_db = SQLite3Ops(arch_db_path)
         to_db.execute(sql, ())
         to_db.commit()
-        print('Created a new concordance archive file {0}.'.format(arch_db_path))
+        print(('Created a new concordance archive file {0}.'.format(arch_db_path)))
         print('Please do not forget to set proper ownership and read+write permissions')
         print('for web server user (www-data on Ubuntu)')
         print('When done, please restart KonText Gunicorn server and also worker server (Celery)')
@@ -198,8 +197,8 @@ if __name__ == '__main__':
         try:
             _create_archive(conf=settings, dry_run=args.dry_run)
         except Exception as ex:
-            print('{0}: {1}'.format(ex.__class__.__name__, ex))
+            print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
             sys.exit(1)
     else:
-        print('Unknown action "{0}"'.format(args.action))
+        print(('Unknown action "{0}"'.format(args.action)))
         sys.exit(1)

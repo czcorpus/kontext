@@ -7,6 +7,5 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../lib'))
 
 from plugins.default_auth import mk_pwd_hash_default
 
-random = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(8)])
-print random+"-"+mk_pwd_hash_default(random)
-
+random = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(8)])
+print(random + "-" + mk_pwd_hash_default(random))

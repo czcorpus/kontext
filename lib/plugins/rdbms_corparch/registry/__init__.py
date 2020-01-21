@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
+from functools import cmp_to_key
 
 
 def should_be_quoted(attr, s):
@@ -46,7 +47,7 @@ class SimpleAttr(object):
         self.value = value
 
     def __unicode__(self):
-        return u'({0} => {1})'.format(self.name, self.value)
+        return '({0} => {1})'.format(self.name, self.value)
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -63,7 +64,7 @@ class Attribute(object):
         self.attrs = attrs if attrs else []
 
     def __unicode__(self):
-        return u'Attr({0} -> {1})'.format(self.name, u', '.join(x.__unicode__() for x in self.attrs))
+        return 'Attr({0} -> {1})'.format(self.name, ', '.join(x.__unicode__() for x in self.attrs))
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -87,8 +88,8 @@ class PosAttribute(Attribute):
         self.position = position
 
     def __unicode__(self):
-        return u'PosAttr[{0}]({1} -> {2})'.format(self.position, self.name,
-                                                  u', '.join(x.__unicode__() for x in self.attrs))
+        return 'PosAttr[{0}]({1} -> {2})'.format(self.position, self.name,
+                                                 ', '.join(x.__unicode__() for x in self.attrs))
 
 
 class Struct(object):
@@ -103,7 +104,7 @@ class Struct(object):
         self.attrs = attrs if attrs else []
 
     def __unicode__(self):
-        return u'Struct({0} -> {1})'.format(self.name, self.attrs)
+        return 'Struct({0} -> {1})'.format(self.name, self.attrs)
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -266,9 +267,9 @@ class RegistryConf(object):
         self._items = []
         data = self._backend.load_registry_table(self._corpus_id, variant=self._variant)
         if data is None:
-            raise RecordNotFound(u'Corpus record not found for {0} (variant: {1})'.format(
+            raise RecordNotFound('Corpus record not found for {0} (variant: {1})'.format(
                 self._corpus_id, self._variant if self._variant else '--'))
-        for k, v in dict(data).items():
+        for k, v in list(dict(data).items()):
             if re.match(r'[A-Z_]+', k):
                 self._items.append(SimpleAttr(name=k, value=v))
         self.set_subcorpattrs(self._backend.load_subcorpattrs(self._corpus_id))
@@ -277,7 +278,7 @@ class RegistryConf(object):
 
         for item in self._backend.load_corpus_posattrs(self._corpus_id):
             pa = PosAttribute(name=item['name'], position=item['position'])
-            for k, v in [x for x in dict(item).items() if x[0].upper() == x[0]]:
+            for k, v in [x for x in list(dict(item).items()) if x[0].upper() == x[0]]:
                 pa.new_item(SimpleAttr(k, value=v))
             fromattr, mapto = self._backend.load_corpus_posattr_references(
                 self._corpus_id, item['name'])
@@ -289,11 +290,11 @@ class RegistryConf(object):
 
         for item in self._backend.load_corpus_structures(self._corpus_id):
             st = Struct(name=item['name'])
-            for k, v in [x for x in dict(item).items() if x[0].upper() == x[0]]:
+            for k, v in [x for x in list(dict(item).items()) if x[0].upper() == x[0]]:
                 st.new_item(SimpleAttr(k, value=v))
             for sattr in self._backend.load_corpus_structattrs(self._corpus_id, item['name']):
                 sobj = Attribute(name=sattr['name'])
-                for k, v in [x for x in dict(sattr).items() if x[0].upper() == x[0]]:
+                for k, v in [x for x in list(dict(sattr).items()) if x[0].upper() == x[0]]:
                     sobj.new_item(SimpleAttr(k, value=v))
                 st.new_item(sobj)
             self.add_item(st)
@@ -308,28 +309,28 @@ class RegModelSerializer(object):
 
     def _sprint_simple(self, obj):
         v = obj.value if obj.value is not None else ''
-        return u'{0} {1}'.format(obj.name, u'"{0}"'.format(v) if should_be_quoted(obj.name, v) else v)
+        return '{0} {1}'.format(obj.name, '"{0}"'.format(v) if should_be_quoted(obj.name, v) else v)
 
     def _sprint_posattr(self, obj, plus_indent=''):
         if len(obj.non_empty_items) > 0:
-            values = ''.join(u'{0}{1}\n'.format(self.INDENT + plus_indent,
-                                                self._sprint_simple(x)) for x in obj.non_empty_items if x.value is not None)
-            return u'{0}ATTRIBUTE {1} {{\n{2}{3}}}'.format(plus_indent, obj.name, values, plus_indent)
-        return u'{0}ATTRIBUTE {1}'.format(plus_indent, obj.name)
+            values = ''.join('{0}{1}\n'.format(self.INDENT + plus_indent,
+                                               self._sprint_simple(x)) for x in obj.non_empty_items if x.value is not None)
+            return '{0}ATTRIBUTE {1} {{\n{2}{3}}}'.format(plus_indent, obj.name, values, plus_indent)
+        return '{0}ATTRIBUTE {1}'.format(plus_indent, obj.name)
 
     def _sprint_structattrs(self, items):
         ans = []
         for item in items:
             if isinstance(item, SimpleAttr) and item.value != '' and item.value is not None:
-                ans.append(u'{0}{1}\n'.format(self.INDENT, self._sprint_simple(item)))
+                ans.append('{0}{1}\n'.format(self.INDENT, self._sprint_simple(item)))
             elif isinstance(item, Attribute):
-                ans.append(u'{0}\n'.format(self._sprint_posattr(item, self.INDENT)))
+                ans.append('{0}\n'.format(self._sprint_posattr(item, self.INDENT)))
         return ''.join(ans)
 
     def sprint_struct(self, obj):
         if len(obj.attrs) > 0:
-            return u'STRUCTURE {0} {{\n{1}}}'.format(obj.name, self._sprint_structattrs(obj.attrs))
-        return u'STRUCTURE {0}'.format(obj.name)
+            return 'STRUCTURE {0} {{\n{1}}}'.format(obj.name, self._sprint_structattrs(obj.attrs))
+        return 'STRUCTURE {0}'.format(obj.name)
 
     @staticmethod
     def _cmp_names(x1, x2):
@@ -345,10 +346,10 @@ class RegModelSerializer(object):
             return 0
 
     def serialize(self, conf):
-        ans = u''
+        ans = ''
         if self._add_heading:
             ans += '###### This file was generated automatically by KonText. Please do not edit. ######\n'
-        for item in sorted(conf.simple_items, cmp=self._cmp_names):
+        for item in sorted(conf.simple_items, key=cmp_to_key(self._cmp_names)):
             if item.value is not None:
                 ans += self._sprint_simple(item)
                 ans += '\n'

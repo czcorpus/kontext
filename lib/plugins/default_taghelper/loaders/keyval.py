@@ -44,7 +44,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         possible_values = self.get_possible_values(filter_values)
         # resolving possible filter values for applied filter features
         for filter_key in filter_values:
-            derived_filter = {k: v for k, v in filter_values.items() if k != filter_key}
+            derived_filter = {k: v for k, v in list(filter_values.items()) if k != filter_key}
             possible_values[filter_key] = self.get_possible_values(derived_filter)[filter_key]
 
         return {'keyval_tags': possible_values}
@@ -62,26 +62,22 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
 
         if filter_values is not None:
             # filter OR logic for values of the same category, AND logic across categories
-            variations = list(filter(
-                # all filter keys present for any of its value
-                lambda x: all(
-                    any(
-                        (key, value) in x
-                        for value in values
-                    )
-                    for key, values in filter_values.items()
-                ),
-                self.initial_values
-            ))
+            variations = list([x for x in self.initial_values if all(
+                any(
+                    (key, value) in x
+                    for value in values
+                )
+                for key, values in list(filter_values.items())
+            )])
 
             # we can allow only keyval features, that are supported by all possible filter combinations
             # for this we use set intersection
             possible_keyval_indexed = defaultdict(set)
             for variation in variations:
-                index = tuple(sorted(filter(lambda x: x[0] in filter_values, variation)))
-                values = set(filter(lambda x: x[0] not in filter_values, variation))
+                index = tuple(sorted([x for x in variation if x[0] in filter_values]))
+                values = set([x for x in variation if x[0] not in filter_values])
                 possible_keyval_indexed[index].update(values)
-            possible_keyval = set.intersection(*possible_keyval_indexed.values())
+            possible_keyval = set.intersection(*list(possible_keyval_indexed.values()))
 
             # transformation to dict of lists
             possible_values = defaultdict(list)
@@ -94,4 +90,4 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
                 for key, value in variation:
                     possible_values[key].add(value)
 
-        return {k: list(v) for k, v in possible_values.items()}
+        return {k: list(v) for k, v in list(possible_values.items())}

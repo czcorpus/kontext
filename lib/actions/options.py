@@ -13,7 +13,7 @@
 
 import settings
 from controller import exposed
-from controller.kontext import Kontext, MainMenu
+from controller.kontext import Kontext
 from translation import ugettext as translate
 import corplib
 from argmapping import WidectxArgsMapping

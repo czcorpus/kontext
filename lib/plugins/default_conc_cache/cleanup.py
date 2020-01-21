@@ -21,9 +21,7 @@ alternative compatible modules you can modify imports 'from plugins import ...'
 to your custom values and everything should work well.
 """
 
-import sys
 import os
-import argparse
 import time
 import collections
 import json
@@ -77,7 +75,8 @@ class CacheFiles(object):
                 continue
             for cache_file in os.listdir(corp_full_path):
                 cache_full_path = '%s/%s' % (corp_full_path, cache_file)
-                corpus_key = corpus_dir if not self._subdir else '%s/%s' % (self._subdir, corpus_dir)
+                corpus_key = corpus_dir if not self._subdir else '%s/%s' % (
+                    self._subdir, corpus_dir)
                 ans[corpus_key].append(
                     (cache_full_path,
                      self._curr_time - os.path.getmtime(cache_full_path),
@@ -98,7 +97,7 @@ class CacheCleanup(CacheFiles):
 
     @staticmethod
     def _log_stats(files):
-        for k, v in files.items():
+        for k, v in list(files.items()):
             logging.getLogger(__name__).info(json.dumps({
                 'type': 'file_count',
                 'directory': k,
@@ -137,7 +136,8 @@ class CacheCleanup(CacheFiles):
         self._log_stats(cache_files)
 
         to_del = {}
-        for corpus_id, corpus_cache_files in cache_files.items():  # processing corpus by corpus
+        # processing corpus by corpus
+        for corpus_id, corpus_cache_files in list(cache_files.items()):
             real_file_hashes = set()  # to be able to compare cache map with actual files
             for cache_entry in corpus_cache_files:
                 num_processed += 1
@@ -150,7 +150,7 @@ class CacheCleanup(CacheFiles):
             cache_map = self._db.hash_get_all(cache_key)
             if cache_map:
                 try:
-                    for item_hash, _ in cache_map.items():
+                    for item_hash, _ in list(cache_map.items()):
                         if item_hash in to_del:
                             if not dry_run:
                                 os.unlink(to_del[item_hash])
@@ -161,13 +161,14 @@ class CacheCleanup(CacheFiles):
                         elif item_hash not in real_file_hashes:
                             if not dry_run:
                                 self._db.hash_del(cache_key, item_hash)
-                            logging.getLogger().warn('deleted stale cache map entry [%s][%s]' % (cache_key, item_hash))
+                            logging.getLogger().warn(
+                                'deleted stale cache map entry [%s][%s]' % (cache_key, item_hash))
                 except Exception as ex:
                     logging.getLogger().warn('Failed to process cache map file (will be deleted): %s' % (ex,))
                     self._db.remove(cache_key)
             else:
                 logging.getLogger().error('Cache map [%s] not found' % cache_key)
-                for item_hash, unbound_file in to_del.items():
+                for item_hash, unbound_file in list(to_del.items()):
                     if not dry_run:
                         try:
                             os.unlink(unbound_file)

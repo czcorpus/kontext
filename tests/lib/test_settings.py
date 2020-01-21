@@ -18,6 +18,7 @@
 import os
 import unittest
 import settings
+import imp
 
 conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.default.xml')
 
@@ -25,7 +26,7 @@ conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.
 class SettingsMockedDataTest(unittest.TestCase):
 
     def setUp(self):
-        reload(settings)
+        imp.reload(settings)
         settings._conf = {
             'global': {
                 'foo': 'bar',

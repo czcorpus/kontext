@@ -34,7 +34,7 @@ def import_legacy_record(data):
                 ans.corpora.append(dict(id=item['canonical_id'], name=item['name']))
             except Exception as ex:
                 logging.getLogger(__name__).warning(
-                    u'Failed to import legacy fav. item record component: {0}'.format(ex))
+                    'Failed to import legacy fav. item record component: {0}'.format(ex))
     ans.subcorpus_id = data.get('subcorpus_id', None)
     ans.subcorpus_orig_id = data.get('subcorpus_orig_id', ans.subcorpus_id)
     ans.size = data.get('size', None)
@@ -72,8 +72,8 @@ def set_favorite_item(ctrl, request):
     subcorpus_id = request.form['subcorpus_id']
     subcorpus_orig_id = request.form['subcorpus_orig_id']
     item = FavoriteItem(dict(
-        name=u' || '.join(c['name'] for c in corpora) +
-        (u' / ' + subcorpus_orig_id if subcorpus_orig_id else u''),
+        name=' || '.join(c['name'] for c in corpora) +
+        (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_orig_id=subcorpus_orig_id,
@@ -125,7 +125,7 @@ class UserItems(AbstractUserItems):
     def get_user_items(self, plugin_api):
         ans = []
         if self._auth.anonymous_user()['id'] != plugin_api.user_id:
-            for item_id, item in self._db.hash_get_all(self._mk_key(plugin_api.user_id)).items():
+            for item_id, item in list(self._db.hash_get_all(self._mk_key(plugin_api.user_id)).items()):
                 ans.append(import_record(item))
             ans = l10n.sort(ans, plugin_api.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans

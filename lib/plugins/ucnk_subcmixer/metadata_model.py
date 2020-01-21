@@ -79,9 +79,10 @@ class MetadataModel:
         result a record has a different index then in
         all the records list).
         """
-        sql = 'SELECT m1.id, m1.{cc} FROM {tn} AS m1 '.format(cc=self._db.count_col, tn=self.c_tree.table_name)
+        sql = 'SELECT MIN(m1.id) AS db_id, SUM(m1.{cc}) FROM {tn} AS m1 '.format(
+            cc=self._db.count_col, tn=self.c_tree.table_name)
         args = []
-        sql += ' WHERE m1.corpus_id = ? ORDER BY m1.id'
+        sql += ' WHERE m1.corpus_id = ? GROUP BY {} ORDER BY db_id'.format(self._id_attr)
         args.append(self._db.corpus_id)
         sizes = []
         id_map = {}
@@ -96,7 +97,7 @@ class MetadataModel:
         # Now we process items with no aligned counterparts.
         # In this case we must define a condition which will be
         # fulfilled iff X[i] == 0
-        for k, v in self._id_map.items():
+        for k, v in list(self._id_map.items()):
             if k not in used_ids:
                 for i in range(1, len(self.b)):
                     self.A[i][v] = self.b[i] * 2 if self.b[i] > 0 else 10000
@@ -112,14 +113,16 @@ class MetadataModel:
         used_ids -- a set of ids used in previous nodes
         """
         if node.metadata_condition is not None:
-            sql_items = [u'm1.{0} {1} ?'.format(mc.attr, mc.op) for subl in node.metadata_condition for mc in subl]
+            sql_items = ['m1.{0} {1} ?'.format(mc.attr, mc.op)
+                         for subl in node.metadata_condition for mc in subl]
             sql_args = []
-            sql = u'SELECT m1.id, m1.{cc} FROM {tn} AS m1 '.format(cc=self._db.count_col,
-                                                                   tn=self.c_tree.table_name)
+            sql = 'SELECT MIN(m1.id) AS db_id, SUM(m1.{cc}) FROM {tn} AS m1 '.format(cc=self._db.count_col,
+                                                                                     tn=self.c_tree.table_name)
 
             sql, sql_args = self._db.append_aligned_corp_sql(sql, sql_args)
 
-            sql += u' WHERE {where} AND m1.corpus_id = ?'.format(where=u' AND '.join(sql_items))
+            sql += ' WHERE {where} AND m1.corpus_id = ? GROUP BY {gb} ORDER BY db_id'.format(
+                where=' AND '.join(sql_items), gb=self._id_attr)
             sql_args += [mc.value for subl in node.metadata_condition for mc in subl]  # 'WHERE' args
             sql_args.append(self._db.corpus_id)
             self._db.execute(sql, sql_args)
@@ -147,12 +150,13 @@ class MetadataModel:
         x_min = 0
         x_max = 1
         num_conditions = len(self.b)
-        x = pulp.LpVariable.dicts('x', range(self.num_texts), x_min, x_max)
+        x = pulp.LpVariable.dicts('x', list(range(self.num_texts)), x_min, x_max)
         lp_prob = pulp.LpProblem('Minmax Problem', pulp.LpMaximize)
         lp_prob += pulp.lpSum(x), 'Minimize_the_maximum'
         for i in range(num_conditions):
             label = 'Max_constraint_%d' % i
-            condition = pulp.lpSum([self.A[i][j] * x[j] for j in range(self.num_texts)]) <= self.b[i]
+            condition = pulp.lpSum([self.A[i][j] * x[j]
+                                    for j in range(self.num_texts)]) <= self.b[i]
             lp_prob += condition, label
 
         stat = lp_prob.solve()
@@ -167,7 +171,7 @@ class MetadataModel:
             variables[i] = np.round(v.varValue, decimals=0)
 
         category_sizes = []
-        for c in range(0, self.c_tree.num_categories-1):
+        for c in range(0, self.c_tree.num_categories - 1):
             cat_size = self._get_category_size(variables, c)
             category_sizes.append(cat_size)
         size_assembled = self._get_assembled_size(variables)

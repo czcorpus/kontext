@@ -81,14 +81,17 @@ if __name__ == '__main__':
     import sys
 
     argparser = argparse.ArgumentParser(description="Scheduler")
-    argparser.add_argument('file', metavar="FILE", help="a JSON file containing task(s) specification")
-    argparser.add_argument('-d', '--dry-run', action='store_true', help="allows running without affecting storage data")
+    argparser.add_argument('file', metavar="FILE",
+                           help="a JSON file containing task(s) specification")
+    argparser.add_argument('-d', '--dry-run', action='store_true',
+                           help="allows running without affecting storage data")
     argparser.add_argument('-r', '--recipient', type=str,
                            help="force a single recipient (no matter what JSON conf contains)")
     args = argparser.parse_args()
 
     settings.load('%s/conf/config.xml' % app_path)
-    db_adapter = __import__('plugins.%s' % settings.get('plugins', 'db')['module'], fromlist=['create_instance'])
+    db_adapter = __import__('plugins.%s' % settings.get('plugins', 'db')
+                            ['module'], fromlist=['create_instance'])
     db = db_adapter.create_instance(settings.get('plugins', 'db'))
 
     with open(args.file, 'r') as conf_file:
@@ -106,7 +109,7 @@ if __name__ == '__main__':
 
         updater_module = __import__('updater.%s' % plugin_group, fromlist=['updater'])
         if not hasattr(updater_module, 'Scheduler'):
-            print('\nERROR: Scheduler class not found in module %s\n' % updater_module.__name__)
+            print(('\nERROR: Scheduler class not found in module %s\n' % updater_module.__name__))
             sys.exit(1)
         scheduler = updater_module.Scheduler(db=db,
                                              conf=conf,

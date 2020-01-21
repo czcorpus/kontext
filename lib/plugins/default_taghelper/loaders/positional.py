@@ -19,10 +19,17 @@
 import os
 import time
 import json
+from functools import cmp_to_key
 from collections import defaultdict
 import re
 from lxml import etree
 from plugins.abstract.taghelper import AbstractTagsetInfoLoader
+from translation import ugettext as _
+
+
+def cmp(a, b):
+        """Python 3 workaround for in-built python 2 cmp() function"""
+        return (a>b)-(a<b)
 
 
 class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
@@ -95,7 +102,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
 
         if os.path.exists(path) \
-                and time.time() - os.stat(path).st_ctime > self.cache_clear_interval:
+                and time.time() - os.stat(path).st_ctime > float(self.cache_clear_interval):
             os.unlink(path)
 
         if not os.path.exists(path):
@@ -108,13 +115,13 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             for s in cache_path_items:
                 tst_path += '%s/' % s
                 if not os.path.exists(tst_path):
-                    os.mkdir(tst_path, 0775)
+                    os.mkdir(tst_path, 0o775)
             ans = [set() for i in range(tagset['num_pos'])]
             with open(self.variants_file_path) as fr:
                 for line in fr:
                     line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                     for i in range(tagset['num_pos']):
-                        value = ''.join(map(lambda x: char_replac_tab.get(x, x), line[i]))
+                        value = ''.join([char_replac_tab.get(x, x) for x in line[i]])
                         if line[i] == '-':
                             ans[i].add(('-', ''))
                         elif i < len(tagset['values']):
@@ -126,7 +133,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             for i in range(len(ans)):
                 def cmp_by_seq(x, y): return (cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0]))
                                               if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0)
-                ans_sorted.append(sorted(ans[i], cmp=cmp_by_seq))
+                ans_sorted.append(sorted(ans[i], key=cmp_to_key(cmp_by_seq)))
 
             for i in range(len(ans_sorted)):
                 if len(ans_sorted[i]) == 1 and ans_sorted[i][0] == '-':
@@ -172,7 +179,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         for item in matching_tags:
             for i in range(len(tag_elms)):
                 value = ''.join(
-                    map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, item[i]))
+                    [char_replac_tab[x] if x in char_replac_tab else x for x in item[i]])
                 if item[i] == '-':
                     ans[i].add(('-', ''))
                 elif item[i] in translation_tables[i]:
@@ -190,7 +197,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
 
             def cmp_by_seq(x, y): return cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
                 if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
-            ans[key] = sorted(ans[key], cmp=cmp_by_seq) if ans[key] is not None else None
+            ans[key] = sorted(ans[key], key=cmp_to_key(cmp_by_seq)) if ans[key] is not None else None
         return {'tags': ans, 'labels': []}
 
     def _load_tag_descriptions(self, tagset_name, lang):

@@ -6,13 +6,21 @@ a compatible interface) it is recommended to extend these
 classes to keep the plug-in implementation clear and consistent.
 """
 
+import abc
+from typing import TYPE_CHECKING
+# this is to fix cyclic imports when running the app caused by typing
+if TYPE_CHECKING:
+    from controller.plg import PluginApi
 
-class CorpusDependentPlugin(object):
+
+class CorpusDependentPlugin(abc.ABC):
     """
     This class prescribes methods required by optional plug-ins which
     must remain inactive in case of some corpora.
     """
-    def is_enabled_for(self, plugin_api, corpname):
+
+    @abc.abstractmethod
+    def is_enabled_for(self, plugin_api: 'PluginApi', corpname: str) -> bool:
         """
         arguments:
         corpname -- a name of the corpus
@@ -20,7 +28,6 @@ class CorpusDependentPlugin(object):
         returns:
         True if plug-in supports corpus 'corpname' else False
         """
-        raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(plugin_api, corpname)')
 
 
 class PluginException(Exception):

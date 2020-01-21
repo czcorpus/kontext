@@ -20,14 +20,17 @@
 All the custom getlang plug-in implementations should inherit from AbstractGetLang
 """
 
+import abc
 
-class AbstractGetLang(object):
+
+class AbstractGetLang(abc.ABC):
     """
     This plug-in customizes a way how KonText finds out what language user
     wants for the user interface. E.g. data from cookies/session/local storage can
     be used for this but it is up to this plug-in how to process it.
     """
 
+    @abc.abstractmethod
     def fetch_current_language(self, cookies):
         """
         Return a currently selected language
@@ -39,4 +42,3 @@ class AbstractGetLang(object):
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or None in case no value was found
         """
-        raise NotImplementedError()

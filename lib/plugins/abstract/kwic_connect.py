@@ -16,16 +16,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 from plugins.abstract import CorpusDependentPlugin
 
 
 class AbstractKwicConnect(CorpusDependentPlugin):
 
+    @abc.abstractmethod
     def map_providers(self, provider_ids):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def fetch_data(self, provider_ids, corpora, lemma, lang):
-        raise NotImplementedError()
+        pass
 
     def gives_kwic_hints(self, corpora):
         return [False for _ in corpora]

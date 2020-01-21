@@ -28,14 +28,14 @@ class MultiDict(object):
 
     def __init__(self, data):
         """
-        
+
         arguments:
             data -- a dictionary where value can be a list of values
                     or a single value (in such case, it is converted to
                     a single value list).
         """
         self._data = defaultdict(lambda: [])
-        for k, v in data.items():
+        for k, v in list(data.items()):
             if type(v) is list:
                 self._data[k] = v
             else:

@@ -28,7 +28,7 @@ class EmptyCorpus(object):
         self.author = None
         self.author_id = None
         self.orig_spath = None
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             if hasattr(self, k):
                 setattr(self, k, v)
 
@@ -101,4 +101,3 @@ class ErrorCorpus(EmptyCorpus):
         returns original error
         """
         return self._error
-

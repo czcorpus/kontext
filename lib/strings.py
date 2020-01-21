@@ -33,4 +33,4 @@ def shorten(val, length=8, suffix='...', nice=False):
             s = val[:length]
     else:
         s = val[:length]
-    return u'%s%s' % (s, suff)
+    return '%s%s' % (s, suff)

@@ -33,20 +33,23 @@ internationalisation of KonText:
    processed using the same module.
 """
 
-import os
-import json
+from typing import Dict, Any
+
 import re
+from functools import cmp_to_key
 from threading import local
 try:
     from icu import Locale, Collator
 except ImportError:
     import locale
 
-    class Locale(object):
+    # ignoring mypy error: Name 'Locale' already defined (possibly by an import)
+    class Locale(object):  # type: ignore
         def __init__(self, *args, **kwargs):
             pass
 
-    class Collator(object):
+    # ignoring mypy error: Name 'Collator' already defined (possibly by an import)
+    class Collator(object):  # type: ignore
         def __init__(self, locale):
             self.locale = locale
 
@@ -58,7 +61,7 @@ except ImportError:
             return Collator(locale)
 
 
-_formats = {}  # contains lang_code -> Formatter() pairs
+_formats: Dict[str, Any] = {}  # contains lang_code -> Formatter() pairs
 _current = local()  # thread-local variable stores per-request formatter
 
 
@@ -70,15 +73,12 @@ def import_string(s, from_encoding):
     s -- converted string
     from_encoding -- expected source encoding
     """
-    if type(s) is str:
-        if from_encoding.lower() in ('utf-8', ''):
-            return s.decode('utf-8')
-        else:
-            return s.decode(from_encoding)
-    elif type(s) is unicode:
+    if type(s) is bytes:
+        return s.decode(from_encoding)
+    elif type(s) is str:
         return s
     else:
-        return None  # TODO raise an exception
+        return None
 
 
 def export_string(s, to_encoding):
@@ -89,10 +89,10 @@ def export_string(s, to_encoding):
     s -- converted string
     to_encoding -- target encoding
     """
-    if type(s) is unicode:
+    if type(s) is bytes:
         return s.encode(to_encoding)
     else:
-        return s.decode('utf-8').encode(to_encoding)
+        return s
 
 
 def sort(iterable, loc, key=None, reverse=False):
@@ -106,7 +106,13 @@ def sort(iterable, loc, key=None, reverse=False):
     reverse -- whether the result should be in reversed order (default is False)
     """
     collator = Collator.createInstance(Locale(loc))
-    return sorted(iterable, cmp=collator.compare, key=key, reverse=reverse)
+    if key is None:
+        kf = cmp_to_key(collator.compare)
+    else:
+        def tmp(v1, v2):
+            return collator.compare(key(v1), key(v2))
+        kf = cmp_to_key(tmp)
+    return sorted(iterable, key=kf, reverse=reverse)
 
 
 def time_formatting():

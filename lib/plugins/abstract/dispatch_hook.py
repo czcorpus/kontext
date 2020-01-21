@@ -16,8 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import abc
 
-class AbstractDispatchHook(object):
+
+class AbstractDispatchHook(abc.ABC):
 
     def pre_dispatch(self, plugin_api, action_name, action_metadata, request):
         """
@@ -34,7 +36,6 @@ class AbstractDispatchHook(object):
             action_metadata -- action metadata (added by @inject)
             request -- current request (Werkzeug Request)
         """
-        pass
 
     def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
         """
@@ -55,4 +56,3 @@ class AbstractDispatchHook(object):
                         It's OK to mutate this value as it is already been used by
                         KonText when the func. is called.
         """
-        pass
