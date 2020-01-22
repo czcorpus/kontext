@@ -4,7 +4,7 @@
 
 ## Important note
 
-Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-2/), KonText **version 0.13.x is the last one running in Python 2**. It means that the **next release** (planned for Q1 2020) **will run only in Python 3**. The upgrade won't require any data/configuration change in KonText. The only action needed will be an installation of py3 versions of KonText dependencies and making sure Gunicorn and Celery systemd (or equivalent) configurations point to py3 versions of respective programs (e.g. by removing py2 versions and then installing py3 ones).
+Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-2/), KonText **version 0.13.x is the last one running in Python 2**. It means that the **next release** (planned for Q1 2020) **will run only in Python 3**. For the `master` branch users - the last commit supporting Python 2 is tagged [py2_last_version](https://github.com/czcorpus/kontext/releases/tag/py2_last_version) and the first one supporting Python 3 is tagged  [py3_initial_version](https://github.com/czcorpus/kontext/releases/tag/py3_initial_version). The upgrade won't require any data/configuration change in KonText.  Please refer to [doc/py2to3.md](doc/py2to3.md) file for details.
 
 ## Contents
 
@@ -75,7 +75,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
       * or [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
     * [Werkzeug](http://werkzeug.pocoo.org/) web application library
     * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) template engine
-    * [lxml](http://lxml.de/) library    
+    * [lxml](http://lxml.de/) library
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
@@ -90,10 +90,10 @@ Note: KonText versions up to 0.13.x (incl.) run on Python 2. To use Python 3, 0.
 
 ## Build and installation
 
-KonText provides a [script](scripts/install/install.py) for automatic installation 
+KonText provides a [script](scripts/install/install.py) for automatic installation
 to an existing Ubuntu system. The easiest way to install KonText is to create an LXC/LXD container, clone
 the repository there and run the script. On a decently fast network, the whole process takes only a couple
-of seconds. Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details. 
+of seconds. Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
 
 
 ## Customization and contribution
