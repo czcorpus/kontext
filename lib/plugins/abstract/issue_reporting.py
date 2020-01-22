@@ -47,10 +47,8 @@ class StaticReportingAction(IssueReportingAction):
 
 class AbstractIssueReporting(abc.ABC):
 
-    @abc.abstractmethod
     def export_report_action(self, plugin_api: 'PluginApi') -> Dict[Any, List[Callable[[Any], Any]]]:
         pass
 
-    @abc.abstractmethod
     def submit(self, plugin_api: 'PluginApi', args: Dict[str, str]):
         pass
