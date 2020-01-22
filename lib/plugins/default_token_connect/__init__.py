@@ -39,7 +39,7 @@ import manatee
 
 import plugins
 from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
-from l10n import import_string, corpus_get_conf
+from l10n import corpus_get_conf
 from actions import concordance
 from controller import exposed
 from plugins.default_token_connect.cache_man import CacheMan
@@ -74,7 +74,7 @@ def fetch_posattr(corp, attr, token_id, num_tokens):
     ans = []
     mattr = corp.get_attr(attr)
     for i in range(num_tokens):
-        ans.append(import_string(mattr.pos2str(int(token_id) + i), corp.get_conf('ENCODING')))
+        ans.append(mattr.pos2str(int(token_id) + i))
     return ' '.join(ans)
 
 
@@ -105,7 +105,7 @@ def add_structattr_support(corp, attrs, token_id):
                 if '=' in kv:
                     k, v = kv.split('=')
                     k = refs_mapping.get(k)
-                    data[k] = import_string(v, corp.get_conf('ENCODING'))
+                    data[k] = v
 
     def decorator(fn):
         def wrapper(corp, attr, token_id, num_tokens):

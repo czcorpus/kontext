@@ -76,8 +76,6 @@ class StructNormsCalc(object):
         self._structname = structname
         self._struct = self._corp.get_struct(structname)
         self._subcnorm = subcnorm
-        self._export_string = partial(
-            l10n.export_string, to_encoding=self._corp.get_conf('ENCODING'))
         self._normvals = None
 
     @property
@@ -107,7 +105,7 @@ class StructNormsCalc(object):
 
     def compute_norm(self, attrname, value):
         attr = self._struct.get_attr(attrname)
-        valid = attr.str2id(self._export_string(value))
+        valid = attr.str2id(value)
         r = self._corp.filter_query(self._struct.attr_val(attrname, valid))
         cnt = 0
         while not r.end():
@@ -201,7 +199,6 @@ class TextTypeCollector(object):
                 query = '%s="%s"' % (a, l10n.escape(v))
 
             if query is not None:  # TODO: is the following encoding change always OK?
-                query = l10n.export_string(query, to_encoding=self._corp.get_conf('ENCODING'))
                 if s in structs:
                     structs[s].append(query)
                 else:

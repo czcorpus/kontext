@@ -1,6 +1,5 @@
 # coding=utf-8
 import l10n
-from functools import partial
 from argmapping import Args
 import kwiclib
 from controller.kontext import Kontext
@@ -54,13 +53,12 @@ class Actions(Kontext):
                 break
             resource_info = {}
             c = self.cm.get_Corpus(corpus_id)
-            import_str = partial(l10n.import_string, from_encoding=c.get_conf('ENCODING'))
-            corpus_title = import_str(c.get_conf('NAME'))
+            corpus_title = c.get_conf('NAME')
             resource_info['title'] = corpus_title
             resource_info['landingPageURI'] = c.get_conf('INFOHREF')
             # TODO(jm) - Languages copied (and slightly fixed) from 0.5 - should be checked
             resource_info['language'] = Languages.get_iso_code(c.get_conf('LANGUAGE'))
-            resource_info['description'] = import_str(c.get_conf('INFO'))
+            resource_info['description'] = c.get_conf('INFO')
             resources.append((corpus_id, corpus_title, resource_info))
         return resources
 
@@ -250,11 +248,10 @@ class Actions(Kontext):
                     ['recordPacking', 'x-fcs-endpoint-description']
                 )
                 corpus = self.cm.get_Corpus(corpname)
-                import_str = partial(l10n.import_string, from_encoding=corpus.get_conf('ENCODING'))
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
                 data['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
-                    import_str(corpus.get_conf('NAME')), l10n.simplify_num(corpus.size()))
+                    corpus.get_conf('NAME'), l10n.simplify_num(corpus.size()))
                 data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
                 data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
                                               else False)

@@ -61,16 +61,14 @@ class Corpora(Kontext):
         citation_info = corp_conf_info.get('citation_info', None)
         citation_info = citation_info.to_dict() if citation_info else {}
 
-        import_str = partial(l10n.import_string, from_encoding=corpus.get_conf('ENCODING'))
-
         if corpus.get_conf('NAME'):
             corpus_name = corpus.get_conf('NAME')
         else:
             corpus_name = corpus.corpname
 
         ans = {
-            'corpname': import_str(corpus_name),
-            'description': import_str(corpus.get_info()),
+            'corpname': corpus_name,
+            'description': corpus.get_info(),
             'size': int(corpus.size()),
             'attrlist': [],
             'structlist': [],

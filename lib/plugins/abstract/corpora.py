@@ -122,16 +122,14 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     def __init__(self, corpus, corpus_id) -> None:
         super().__init__()
         self.encoding = corpus.get_conf('ENCODING')
-        import_string = partial(l10n.import_string, from_encoding=self.encoding)
-        self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
-                                  else corpus_id)
-        self.description = import_string(corpus.get_info())
+        self.name = corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus_id
+        self.description = corpus.get_info()
         self.attrs = [x for x in corpus.get_conf('ATTRLIST').split(',') if len(x) > 0]
         self.size = corpus.size()
         attrlist = corpus.get_conf('ATTRLIST').split(',')
         self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
-        self.tagset_doc = import_string(corpus.get_conf('TAGSETDOC'))
-        self.lang = import_string(corpus.get_conf('LANGUAGE'))
+        self.tagset_doc = corpus.get_conf('TAGSETDOC')
+        self.lang = corpus.get_conf('LANGUAGE')
 
 
 class TokenConnect(DictLike):

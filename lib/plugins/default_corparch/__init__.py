@@ -431,10 +431,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 try:
                     corp_info = self.manatee_corpora.get_info(corp_id)
                     cl.append({'id': corp_id,
-                               'name': l10n.import_string(corp_info.name,
-                                                          from_encoding=corp_info.encoding),
-                               'desc': l10n.import_string(corp_info.description,
-                                                          from_encoding=corp_info.encoding),
+                               'name': corp_info.name,
+                               'desc': corp_info.description,
                                'size': corp_info.size,
                                'path': path
                                })

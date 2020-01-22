@@ -25,7 +25,6 @@ import settings
 from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
-from l10n import import_string
 import plugins
 from concworker import GeneralWorker
 import corplib
@@ -420,9 +419,9 @@ def get_full_ref(corp, pos):
              (n, corp.get_attr(n).pos2str(pos)))
             for n in corp.get_conf('FULLREF').split(',') if n != settings.get('corpora', 'speech_segment_struct_attr')]
     data['Refs'] = [{'name': n == '#' and _('Token number') or corp.get_conf(n + '.LABEL') or n,
-                     'val': import_string(v, corpus_encoding)} for n, v in refs]
+                     'val': v} for n, v in refs]
     for n, v in refs:
-        data[n.replace('.', '_')] = import_string(v, corpus_encoding)
+        data[n.replace('.', '_')] = v
     return data
 
 
@@ -460,8 +459,7 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
     region_right = tokens2strclass(cr.region(pos + hitlen,
                                              pos + hitlen + detail_right_ctx))
     for seg in region_left + region_kwic + region_right:
-        seg['str'] = import_string(seg['str'].replace(
-            '===NONE===', ''), from_encoding=corpus_encoding)
+        seg['str'] = seg['str'].replace('===NONE===', '')
     for seg in region_kwic:
         if not seg['class']:
             seg['class'] = 'coll'

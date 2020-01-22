@@ -25,7 +25,6 @@ import itertools
 import math
 
 import manatee
-from l10n import import_string, export_string
 from structures import FixedDict
 from corplib import is_subcorpus
 
@@ -239,9 +238,6 @@ class Kwic(object):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
         self.conc = conc
-        self.corpus_encoding = self.corpus.get_conf('ENCODING')
-        self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
-        self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
     def kwicpage(self, args):
         """
@@ -430,7 +426,6 @@ class Kwic(object):
         last_speech_id = prev_speech_id
 
         for item in line:
-            item['str'] = self.import_string(item['str'])
             fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct_str, speech_struct_str), item['str'])
                          if x != '']
             for fragment in fragments:
@@ -601,7 +596,7 @@ class Kwic(object):
             line_data = dict(toknum=kl.get_pos(),
                              hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
                              kwiclen=kl.get_kwiclen(),
-                             ref=[self.import_string(s) for s in kl.get_ref_list()],
+                             ref=[s for s in kl.get_ref_list()],
                              Kwic=kwicwords,
                              linegroup=linegroup,
                              leftsize=leftsize,
@@ -655,7 +650,7 @@ class Kwic(object):
         ans = []
         for v, p in out:
             try:
-                ans.append({'page': p, 'label': self.import_string(v)})
+                ans.append({'page': p, 'label': v})
             except UnicodeDecodeError:
                 # Without manatee.set_encoding, manatee appears to produce
                 # few extra undecodable items. Ignoring them produces

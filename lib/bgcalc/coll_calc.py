@@ -20,7 +20,6 @@ import time
 import corplib
 import conclib
 from bgcalc import freq_calc
-from l10n import import_string
 import settings
 from structures import FixedDict
 from bgcalc import UnfinishedConcordanceError
@@ -116,7 +115,6 @@ def calculate_colls_bg(coll_args):
         for item in collocs['Items']:
             item['pfilter'] = [('q2', item['pfilter'])]
             item['nfilter'] = [('q2', item['nfilter'])]
-            item['str'] = import_string(item['str'], from_encoding=coll_args.corpus_encoding)
         return dict(data=collocs, processing=0, tasks=[])
     except corplib.MissingSubCorpFreqFile as e:
         ans = {'attrname': coll_args.cattr, 'tasks': []}

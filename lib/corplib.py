@@ -47,7 +47,6 @@ except ImportError:
     def k_markdown(s): return cgi.escape(s)
 
 import l10n
-from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
@@ -378,7 +377,7 @@ class CorpusManager(object):
         """
         if type(corp) is str:
             corp = self.get_Corpus(corp)
-        val = import_string(corp.get_conf(label), from_encoding=corp.get_conf('ENCODING'))
+        val = corp.get_conf(label)
         if len(val) > 2:
             val = val[1:].split(val[0])
         else:
@@ -407,8 +406,7 @@ def add_block_items(items: List[Dict[str, Any]], attr: str = 'class', val: str =
 
 
 def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, words: str, blacklist: str, include_nonwords: bool) -> int:
-    enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
-    enc_pattern = enc_string(wlpat.strip())
+    enc_pattern = wlpat.strip()
     attr = corp.get_attr(wlattr)
     attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
     if not include_nonwords:
@@ -459,7 +457,7 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
     return items
 
 
-def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlmaxitems, wlnums, str_dec_fn):
+def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlmaxitems, wlnums):
     items = []
     for word in words:
         if wlsort == 'f':
@@ -476,9 +474,9 @@ def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlm
             frq = attrfreq[id]
         if word and frq >= wlminfreq and (not blacklist or word not in blacklist):
             if wlnums == 'arf':
-                items.append((round(frq, 1), str_dec_fn(word)))
+                items.append((round(frq, 1), word))
             else:
-                items.append((frq, str_dec_fn(word)))
+                items.append((frq, word))
     return items
 
 
@@ -502,27 +500,24 @@ def wordlist(corp: Corpus, words: Optional[Set[str]] = None, wlattr: str = '', w
     """
     Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
     """
-    dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
-    enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
-
-    blacklist = set(enc_string(w) for w in blacklist) if blacklist else set()
-    words = set(enc_string(w) for w in words) if words else set()
+    blacklist = set(w for w in blacklist) if blacklist else set()
+    words = set(w for w in words) if words else set()
     attr = corp.get_attr(wlattr)
     attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
     if words and wlpat == '.*':  # word list just for given words
         items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, words=words, blacklist=blacklist, wlsort=wlsort,
-                                    wlminfreq=wlminfreq, wlmaxitems=wlmaxitems, wlnums=wlnums, str_dec_fn=dec_string)
+                                    wlminfreq=wlminfreq, wlmaxitems=wlmaxitems, wlnums=wlnums)
     else:  # word list according to pattern
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
             nwre = ''
-        items = _wordlist_by_pattern(attr=attr, enc_pattern=enc_string(wlpat.strip()), excl_pattern=nwre,
+        items = _wordlist_by_pattern(attr=attr, enc_pattern=wlpat.strip(), excl_pattern=nwre,
                                      wlminfreq=wlminfreq, words=words, blacklist=blacklist, wlnums=wlnums,
                                      wlsort=wlsort, wlmaxitems=wlmaxitems, attrfreq=attrfreq)
 
     if not words or wlpat != '.*':
-        items = [(f, dec_string(attr.id2str(i))) for (f, i) in items]
+        items = [(f, attr.id2str(i)) for (f, i) in items]
     if wlsort == 'f':
         items = sorted(items, key=lambda x: x[0], reverse=True)
     else:
@@ -608,14 +603,12 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_li
                             if not multisep in attr.id2str(i)]
                 else:
                     if is_multival:
-                        raw_vals = [import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))
-                                    .split(multisep) for i in range(attr.id_range())]
+                        raw_vals = [attr.id2str(i).split(multisep) for i in range(attr.id_range())]
                         vals = [{'v': x}
                                 for x in sorted(set([s for subl in raw_vals for s in subl]))]
                     else:
 
-                        vals = [{'v': import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))}
-                                for i in range(attr.id_range())]
+                        vals = [{'v': attr.id2str(i)} for i in range(attr.id_range())]
 
                 if hsep:  # hierarchical
                     attrval['hierarchical'] = hsep

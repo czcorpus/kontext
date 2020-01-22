@@ -65,36 +65,6 @@ _formats: Dict[str, Any] = {}  # contains lang_code -> Formatter() pairs
 _current = local()  # thread-local variable stores per-request formatter
 
 
-def import_string(s, from_encoding):
-    """
-    Imports a string from Manatee to KonText
-
-    arguments:
-    s -- converted string
-    from_encoding -- expected source encoding
-    """
-    if type(s) is bytes:
-        return s.decode(from_encoding)
-    elif type(s) is str:
-        return s
-    else:
-        return None
-
-
-def export_string(s, to_encoding):
-    """
-    Exports a string from KonText to Manatee
-
-    arguments:
-    s -- converted string
-    to_encoding -- target encoding
-    """
-    if type(s) is bytes:
-        return s.encode(to_encoding)
-    else:
-        return s
-
-
 def sort(iterable, loc, key=None, reverse=False):
     """
     Creates new sorted list from passed list (or any iterable data) according to the passed locale.
@@ -145,17 +115,13 @@ def camelize(s):
 
 def corpus_get_conf(corp, conf_key):
     """
-    A helper function to retrieve values from corpus registry file using proper
-    encoding conversion.
+    A helper function to retrieve values from corpus registry file.
 
     arguments:
     corp -- a manatee.corpus instance
     conf_key -- a registry configuration value
     """
-    if conf_key != 'ENCODING':
-        return import_string(corp.get_conf(conf_key), from_encoding=corp.get_conf('ENCODING'))
-    else:
-        return corp.get_conf(conf_key)
+    return corp.get_conf(conf_key)
 
 
 def simplify_num(v):
