@@ -36,7 +36,7 @@ from bgcalc import freq_calc, coll_calc
 import plugins
 from kwiclib import Kwic, KwicPageArgs
 import l10n
-from l10n import import_string, corpus_get_conf
+from l10n import corpus_get_conf
 from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
@@ -140,8 +140,7 @@ class Actions(Querying):
         2 - a named subcorpus
         3 - an ad-hoc subcorpus
         """
-        corpus_name = l10n.import_string(self.corp.get_conf('NAME'),
-                                         from_encoding=self.corp.get_conf('ENCODING'))
+        corpus_name = self.corp.get_conf('NAME')
         if contains_within:
             return translate('related to the subset defined by the selected text types')
         elif hasattr(self.corp, 'subcname'):
@@ -665,8 +664,7 @@ class Actions(Querying):
             qbase = 'q'
         texttypes = TextTypeCollector(self.corp, self.args).get_query()
         if texttypes:
-            ttquery = import_string(' '.join(['within <%s %s />' % nq for nq in texttypes]),
-                                    from_encoding=self.corp.get_conf('ENCODING'))
+            ttquery = ' '.join(['within <%s %s />' % nq for nq in texttypes])
         else:
             ttquery = ''
         par_query = ''
@@ -844,7 +842,6 @@ class Actions(Querying):
             else:
                 raise ConcError(translate('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
-        query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
         if int(within):
             wquery = ' within %s:(%s)' % (self.args.maincorp or self.args.corpname, query)
             self.args.q[0] += wquery
@@ -1717,7 +1714,6 @@ class Actions(Querying):
             tt_query = TextTypeCollector(self.corp, request).get_query()
             query = 'aword,[] within %s' % (
                 ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
-            query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
             self.args.q = [query]
             conc = self.call_function(
                 conclib.get_conc, (self.corp, self.session_get('user', 'id')), async=0)

@@ -26,7 +26,7 @@ import logging
 
 import manatee
 import l10n
-from l10n import import_string, export_string, escape
+from l10n import escape
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
 from functools import reduce
@@ -74,13 +74,10 @@ class PyConc(manatee.Concordance):
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
         self.corpus_encoding = corp.get_conf('ENCODING')
-        self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
-        self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
         self._conc_file = None
 
         try:
             if action == 'q':
-                params = self.export_string(params)
                 manatee.Concordance.__init__(
                     self, corp, params, sample_size, full_size)
             elif action == 'a':
@@ -88,7 +85,7 @@ class PyConc(manatee.Concordance):
                 default_attr, query = params.split(',', 1)
                 corp.set_default_attr(default_attr)
                 manatee.Concordance.__init__(
-                    self, corp, self.export_string(query), sample_size, full_size)
+                    self, corp, query, sample_size, full_size)
             elif action == 'l':
                 # load from a file
                 self._conc_file = params
@@ -193,7 +190,7 @@ class PyConc(manatee.Concordance):
     def pn_filter(self, options, ispositive, excludekwic=False):
         lctx, rctx, rank, query = options.split(None, 3)
         collnum = self.numofcolls() + 1
-        self.set_collocation(collnum, self.export_string(query + ';'), lctx, rctx, int(rank),
+        self.set_collocation(collnum, query + ';', lctx, rctx, int(rank),
                              excludekwic)
         self.delete_pnfilter(collnum, ispositive)
 
@@ -226,7 +223,7 @@ class PyConc(manatee.Concordance):
             while not r.end():
                 cnt += normvals[r.peek_beg()]
                 r.next()
-            ans[self.import_string(value)] = cnt
+            ans[value] = cnt
         return ans
 
     def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0,
@@ -268,13 +265,12 @@ class PyConc(manatee.Concordance):
             if '/' in attr:
                 attr = attr[:attr.index('/')]
             lab = self.pycorp.get_conf(attr + '.LABEL')
-            return self.import_string(lab if lab else attr)
+            return lab if lab else attr
 
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
         self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
-        words = [self.import_string(w) for w in words]
         if not len(freqs):
             return {}
         # now we intentionally rewrite norms as filled in by freq_dist()
@@ -313,7 +309,6 @@ class PyConc(manatee.Concordance):
 
             lines = []
             for w, f, nf in zip(words, freqs, norms):
-                w = self.import_string(w)
                 rel_norm_freq = {
                     0: round(f * 1e6 / nf, 2),
                     1: round(f / sumf * 100, 2)
@@ -342,7 +337,6 @@ class PyConc(manatee.Concordance):
         else:
             lines = []
             for w, f, nf in zip(words, freqs, norms):
-                w = self.import_string(w)
                 lines.append(dict(
                     Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
                     freq=f,
@@ -359,7 +353,7 @@ class PyConc(manatee.Concordance):
                 if v in used_vals:
                     continue
                 lines.append(dict(
-                    Word=[{'n': self.import_string(v)}],
+                    Word=[{'n': v}],
                     freq=0,
                     rel=0,
                     norm=0,
@@ -410,8 +404,8 @@ class PyConc(manatee.Concordance):
                 str=colls.get_item(),
                 freq=colls.get_cnt(),
                 Stats=[{'s': '%.3f' % colls.get_bgr(s)} for s in cbgrfns],
-                pfilter=qfilter % ('P', escape(self.import_string(colls.get_item()))),
-                nfilter=qfilter % ('N', escape(self.import_string(colls.get_item())))
+                pfilter=qfilter % ('P', escape(colls.get_item())),
+                nfilter=qfilter % ('N', escape(colls.get_item()))
             ))
             colls.next()
             i += 1

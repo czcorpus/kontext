@@ -429,7 +429,7 @@ class CTCalculation(object):
             raise CTCalculationError(
                 'Exactly two attributes (either positional or structural) can be used')
 
-        words = [tuple(self._conc.import_string(w).split('\t')) for w in words]
+        words = [tuple(w.split('\t')) for w in words]
 
         num_structattrs = self._get_num_structattrs(attrs)
         if num_structattrs == 2:

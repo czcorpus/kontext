@@ -24,7 +24,6 @@ from main_menu import MainMenu
 from translation import ugettext as translate
 import plugins
 import l10n
-from l10n import import_string
 import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings
@@ -121,7 +120,6 @@ class Subcorpus(Querying):
                 tmp = ['<%s %s />' % item for item in tt_query]
                 full_cql = ' within '.join(tmp)
                 full_cql = 'aword,[] within %s' % full_cql
-                full_cql = import_string(full_cql, from_encoding=self.corp_encoding)
                 imp_cql = (full_cql,)
             else:
                 raise FunctionNotSupported(
@@ -132,7 +130,6 @@ class Subcorpus(Querying):
             tmp = ['<%s %s />' % item for item in tt_query]
             full_cql = ' within '.join(tmp)
             full_cql = 'aword,[] within %s' % full_cql
-            full_cql = import_string(full_cql, from_encoding=self.corp_encoding)
             imp_cql = (full_cql,)
 
         basecorpname = self.args.corpname.split(':')[0]

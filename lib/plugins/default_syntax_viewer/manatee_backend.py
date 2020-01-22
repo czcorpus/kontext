@@ -56,7 +56,6 @@ An expected configuration:
 import json
 import manatee
 
-from l10n import import_string
 from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
 
 
@@ -408,7 +407,6 @@ class ManateeBackend(SearchBackend):
             data: a list of strings (Manatee raw format)
             kwic_pos: a tuple (first_kwic_idx, kwic_length)
         """
-        encoding = corpus.get_conf('ENCODING')
         sentence_struct = self._conf.get_sentence_struct(corpus_id)
         conc = manatee.Concordance(corpus, ' '.join(
             '[#%d]' % k for k in range(token_id, token_id + kwic_len)), 1, -1)
@@ -421,8 +419,7 @@ class ManateeBackend(SearchBackend):
         if kl.nextline():
             left_tk = kl.get_left()
             kwic_tk = kl.get_kwic()
-            return dict(data=[import_string(s, from_encoding=encoding)
-                              for s in left_tk + kwic_tk + kl.get_right()],
+            return dict(data=[s for s in left_tk + kwic_tk + kl.get_right()],
                         kwic_pos=(len(left_tk) // 4, len(kwic_tk) // 4))
 
     @staticmethod
