@@ -1,34 +1,33 @@
-# Installation instructions (v 0.11+)
+# Installation instructions (v 0.15+)
 
 ## Contents
 
-* [Install KonText](#install_install_kontext)
-* [Configure KonText (config.xml)](#install_configure_kontext)
-  * [Plug-ins](#install_configure_kontext_plugins)
-* [Building the project](#install_building_the_project)
-* [Deployment](#install_deployment)
-* [Standalone server application](#install_standalone_server_application)
-* [WSGI application within a dedicated web-server](#install_wsgi_application)
-  * [Gunicorn + reverse proxy](#install_gunicorn_plus_proxy)
-  * [uWSGI](#install_uwsgi)
-* [Celery worker](#install_celery_worker)
-  * [Celery configuration](#install_celery_configuration)
-  * [Systemd configuration](#install_celery_systemd_configuration)
-* [Celery Beat](#install_celery_beat)
-  * [Systemd configuration](#install_celery_beat_systemd_configuration)
-* [Managing users](#managing_users)
-* [Managing corpora](#managing_corpora)
+- [Installation instructions (v 0.15+)](#installation-instructions-v-015)
+  - [Contents](#contents)
+  - [Install KonText (Ubuntu)](#install-kontext-ubuntu)
+  - [Deployment of new versions](#deployment-of-new-versions)
+  - [Performance tuning](#performance-tuning)
+    - [WSGI and Celery workers note](#wsgi-and-celery-workers-note)
+    - [uWSGI server](#uwsgi-server)
+  - [Celery Beat](#celery-beat)
+    - [Systemd configuration](#systemd-configuration)
+  - [Managing users](#managing-users)
+    - [Ensuring access to corpora](#ensuring-access-to-corpora)
+  - [Managing corpora](#managing-corpora)
+    - [Install registry file](#install-registry-file)
+    - [Install indexed data](#install-indexed-data)
+    - [Update corplist.xml](#update-corplistxml)
+    - [Update access rights](#update-access-rights)
+    - [Apply changes](#apply-changes)
 
-<a name="install_install_kontext"></a>
 ## Install KonText (Ubuntu)
 
-The easiest way to install and test-run KonText is to install it in an **LXC container** using 
-the <a href="../scripts/install/install.ubuntu.sh">install.ubuntu.sh</a> script provided in this repository
-that performs all the installation and configuration steps that are necessary to run KonText as a standalone 
-server application for testing and development purposes. The installation has been
-tested in Ubuntu 18.04 LTS Bionic Beaver.
+The easiest way to install KonText is to create an **LXC/LXD container** with Ubuntu 18.04 LTS
+OS, clone KonText repository and run [scripts/install/install.py](../scripts/install/install.py)
+script that performs all the installation and configuration steps that are necessary to run KonText
+as a standalone server application.
 
-Set up and start an LXC container (Ubuntu variant):
+**[1]** Set up and start an LXC container:
 
 ```
 sudo apt-get install lxc
@@ -36,13 +35,13 @@ sudo lxc-create -t download -n kontext-container -- -d ubuntu -r bionic -a amd64
 sudo lxc-start -n kontext-container
 ```
 
-Note down the container's IP address:
+**[2]** Note down the container's IP address:
 
 ```
 sudo lxc-info -n kontext-container -iH
 ```
 
-Open the container's shell:
+**[3]** Open the container's shell:
 
 ```
 sudo lxc-attach -n kontext-container
@@ -50,353 +49,115 @@ sudo lxc-attach -n kontext-container
 
 (for more details about lxc containers, see <a href="https://linuxcontainers.org/lxc">https://linuxcontainers.org/lxc</a>)
 
-In the container, git-clone the KonText git repo to a directory of your choice (e.g. */opt/kontext*), set the required 
-permissions and run the install script.
+**[4]** In the container, git-clone the KonText git repo to a directory of your
+choice (e.g. */opt/kontext*), set the required permissions and run the install script.
 
 ```
 sudo apt-get update
 sudo apt-get install -y ca-certificates git
 git clone https://github.com/czcorpus/kontext.git /opt/kontext/
-cd /opt/kontext/scripts/install
-chmod +x install.ubuntu.sh
-./install.ubuntu.sh
+python3 /opt/kontext/scripts/install/install.py
 ```
-(for CentOS, replace *install.ubuntu.sh* with *install.centos.sh*)
 
+By default, the script installs Manatee from the `deb` packages provided by
+the [NLP Center at the Faculty of Informatics, Masaryk University](https://nlp.fi.muni.cz/).
+If you wish to build Manatee from sources and use the ucnk-specific manatee patch, you can
+use the `install.py --patch /path/to/patch` option.
 
-By default, the script installs Manatee and Finlib from the deb packages. If you wish to build from sources and 
-use the ucnk-specific manatee patch, you can use the *install.ubuntu.sh --type ucnk* option.
-
-(for more details about Manatee and Finlib installation, see 
+(for more details about Manatee installation, see
 <a href="https://nlp.fi.muni.cz/trac/noske/wiki/Downloads">https://nlp.fi.muni.cz/trac/noske/wiki/Downloads</a>)
 
-Once the installation is complete, you can start KonText by entering the following command in the installation 
-directory you specified above (*/opt/kontext*):
+For production use, you should use `--gunicorn` option with the `install.py` script
+which installs Gunicorn WSGI server.
+
+**[5]** Once the installation is complete, start KonText by entering the following
+command in the installation directory you specified above (*/opt/kontext*):
 
 ```
-python public/app.py --address 127.0.0.1 --port 8080
+python3 public/app.py --address 127.0.0.1 --port 8080
 ```
 
-(this address and port are configured by the installation script for Nginx web server so it will proxy
-all the external requests to your *app.py*).
+Alternatively, in case you've used `--gunicorn` option, the installation script
+automatically started all the necessary services for you and you don't need
+the embedded WSGI server.
 
-Now open `[container_IP_address]`  in your browser on the host. You should see KonText's first_page and be able to 
-enter a query to search in the sample Susanne corpus.
-
-
-<a name="install_configure_kontext"></a>
-## Configure KonText (config.xml)
-
-Before you can compile and build KonText client-side application and run the server-side, 
-a proper configuration must be ready (especially the *plugins* section).
-
-KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one
-from scratch, use a sample configuration *conf/config.default.xml* as a starting point.
-
-:bulb: You can always check the configuration using *scripts/validate_setup.py*:
-
-```shell
-python scripts/validate_setup.py conf/config.xml
-```
-(use --help for more information)
-
-The configuration file has mostly two-level structure: *sections* and *key-value items*. Values are typically strings
-but in some cases lists of strings are required. Configuration values are documented in *conf/config.rng* 
-(a RelaxNG schema which describes KonText configuration XML)
-
-<a name="install_configure_kontext_plugins"></a>
-### Plug-ins
-
-Configuration section *plugins* is kind of specific as it contains a configuration for custom implementations of
-concrete KonText modules (i.e. it determines which objects are instantiated to serve
-configurable/replaceable functions). To configure plug-ins properly please refer to their *config.rng* schema files.
-
-For more information about plug-ins API and configuration please visit
-[our wiki](https://github.com/czcorpus/kontext/wiki/Plug-in-API).
+**[6] Open `[container_IP_address]`  in your browser on the host. You should see
+KonText's home page and be able to enter a query to search in the sample Susanne corpus.
 
 
-<a name="install_building_the_project"></a>
-## Building the project
+## Deployment of new versions
 
-To be able to build the project you must have:
+To install a newer version:
 
-* a working [NodeJS](https://nodejs.org/en/download/) (version 8.x or newer) installation
-* properly configured plug-ins in *conf/config.xml* (see the section above)
-
-In your KonText directory write:
+**[1]** fetch data from the `origin` repository and merge it:
 
 ```
-npm install; make production
+git fetch origin
+git merge origin/master
 ```
 
-<a name="#install_deployment"></a>
-## Deployment
+(replace `master` with a different branch if you use one)
 
-Once you have your copy of KonText built it is possible to deploy it on a server.
-Currently KonText does not support any deployment automation but the process is simple.
+**[2]** install possible new JS dependencies:
 
 ```
-cp -r {cmpltmpl,conf,lib,locale,package.json,public,scripts,worker.py} destination_directory
+npm install
 ```
 
-You can also take a look at a [helper script](https://github.com/czcorpus/kontext-ucnk-scripts/blob/master/deploy.py)
-which allows you (once you have a simple JSON configuration file) to install newest version from GitHub while keeping
+**[3]** build the project
+
+```
+make production
+```
+
+**[4]** optionally, if you want to deploy to a different directory without
+any unnecessary files:
+
+```
+cp -r {conf,lib,locale,package.json,public,scripts,worker.py} destination_directory
+```
+
+You can also take a look at [helper script](https://github.com/czcorpus/kontext-ucnk-scripts/blob/master/deploy.py)
+which allows you (once you write a simple JSON configuration file) to install newest version from GitHub while keeping
 a backup copy of your previous installation(s).
 
-<a name="install_standalone_server_application"></a>
-## Standalone server application
 
-KonText can serve itself without any external web server but such a setup is recommended only
-for testing and development purposes. The application can be activated by the 
-following command (assuming your working dir is the installation dir):
+## Performance tuning
 
-```shell
-  python public/app.py --address [IP address] --port [TCP port]
-```
-
-(*--address* and *--port* parameters are optional; default serving address is 127.0.0.1:5000)
-
-
-<a name="install_wsgi_application"></a>
-## WSGI application within a dedicated web-server
-
-This is the recommended mode for production deployments.
-
-<a name="install_gunicorn_plus_proxy"></a>
-### Gunicorn + reverse proxy (Apache, Nginx)
-
-This configuration is best suited for production, is easy to configure and
-scales well.
-
-Let's assume you are going to install KonText into */opt/kontext-production*.
-
-First, define your Gunicorn configuration file */opt/kontext-production/conf/gunicorn-conf.py*
-(= common Python module) and place it to the *conf* directory.
-
-```
-import multiprocessing
-
-workers = multiprocessing.cpu_count() * 2 + 1
-bind = "127.0.0.1:8090"
-timeout = 120
-accesslog = "/var/log/kontext/gunicorn.log"
-errorlog = "/var/log/kontext/gunicorn-error.log"
-```
-
-Please note that the number of workers defined above is not always necessarily the best one. For small installations
-with infrequent visits, on a server with many CPU cores, 2-4 workers can be enough. For thousands (to few tens
-of thousands) users a day, 8-10 workers should do the job. The configuration also depends on size of corpora you are 
-going to provide and on applied use-cases - e.g. workshops where a number of users trigger a query at the same time 
-may require a high number of workers even if the total number of daily visits is not very high. 
+The key factor in deciding on how to configure performance-related parameters
+is how fast is your server able to handle a typical query on a typical
+corpus and how many users will be querying the server.
 
 In general the following parameters should be in harmony:
 
-* proxy read timeout (*proxy_read_timeout* in Nginx)
-* Gunicorn timeout (should be less or equal to proxy read timeout)
-* number of Gunicorn (or uWSGI) workers
-  * e.g. if you allow long calculations, you may need to add some workers to be able to handle "normal" traffic  
-* number of Celery workers and their timeouts
+* HTTP proxy
+  * read timeout (*proxy_read_timeout* in Nginx)
+* Gunicorn/uWSGI
+  * timeout (should be less or equal to proxy read timeout)
+  * number of workers (`workers = 10` in `conf/gunicorn-conf.py`)
+* Celery
+  * timeout
+    * hard timeout `CELERYD_OPTS="--time-limit=1800 --concurrency=64"`
+    * soft timeout (`/kontext/calc_backend/task_time_limit` in `conf/config.xml`)
+  * number of workers (again `CELERYD_OPTS=...`)
 
-Then define an Upstart configuration file */etc/init/gunicorn-kontext.conf*:
+### WSGI and Celery workers note
 
-```
-description "gunicorn-kontext"
-start on (filesystem)
-stop on runlevel [016]
-respawn
-setuid www-data
-setgid www-data
-chdir /opt/kontext-production/public
-exec /usr/local/bin/gunicorn app:application -c /opt/kontext-production/conf/gunicorn-conf.py
-```
+For small installations with infrequent visits, 2-4 Gunicorn workers can be enough.
+For thousands (to few tens of thousands) users a day, 16-24 Gunicorn workers should do the job.
+If you expect to have usage peaks (e.g. workshops) it is better to add more
+workers even if some of them may sleep most of the time.
 
-Or in case of systemd create file */etc/systemd/system/gunicorn-kontext.service*:
-
-```
-[Unit]
-Description=KonText Gunicorn daemon
-#Requires=gunicorn.socket
-After=network.target
-
-[Service]
-PIDFile=/run/gunicorn-kontext/pid
-User=www-data
-Group=www-data
-WorkingDirectory=/opt/kontext-production/public
-ExecStart=/usr/local/bin/gunicorn --pid /run/gunicorn-kontext/pid -c /opt/kontext/production/conf/gunicorn-conf.py app:application
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
-PrivateTmp=true
-PermissionsStartOnly=true
-ExecStartPre=-/bin/mkdir /var/run/gunicorn-kontext
-ExecStartPre=/bin/chown -R www-data:root /var/run/gunicorn-kontext
-
-[Install]
-WantedBy=multi-user.target
-```
+In case of Celery, the best number to start with is the same number as
+the number of Gunicorn workers and monitor how the application performs.
+With large corpora, our recommendation would be to use about 1.5 to 2 times the
+number of Gunicorn workers.
 
 
-Then configure Apache:
+### uWSGI server
 
-```
-<VirtualHost *:80>
-  ServerName my-korpus-domain.org
+uWSGI server can be used instead of Gunicorn. For more information please see [uWSGI.md](uWSGI.md).
 
-  ProxyPreserveHost On
-  ProxyPass /files/ !
-  ProxyPass "/" "http://127.0.0.1:8090/" timeout=30
-  ProxyPassReverse "/" "http://127.0.0.1:8090/"
-  RequestHeader set X-Forwarded-Proto "http"
-  SetEnv proxy-initial-not-pooled 1
-  SetEnv force-proxy-request-1.0 1
-  SetEnv proxy-nokeepalive 1
-
-  <Directory "/opt/kontext-production/public">
-          Options -Indexes FollowSymLinks
-          AllowOverride All
-          Order allow,deny
-          Allow from all
-  </Directory>
-</VirtualHost>
-```
-
-Or use Nginx:
-
-```
-upstream app_server {
-    server localhost:8090 fail_timeout=0;
-}
-server {
-    listen 80;
-    location /files/ {
-        alias /path/to/kontext/public/files/;
-    }
-    location / {
-        proxy_set_header Host $http_host;
-        proxy_redirect off;
-        proxy_pass http://app_server;
-        proxy_read_timeout 120;
-    }
-}
-
-```
-
-Now you can start Gunicorn:
-
-```
-service kontext start
-```
-
-or
-
-```
-systemctl start gunicorn-kontext
-```
-
-<a name="install_uwsgi"></a>
-### uWSGI
-
-uWSGI server can be used instead of Gunicorn. For more 
-information please see [uWSGI.md](uWSGI.md).
-
-
-<a name="install_celery_worker"></a>
-## Celery worker
-
-KonText uses a backend worker queue for many computing-intensive tasks (many of them asynchronous). 
-It can run on the same machine as the main application but it can also run on a dedicated server
-(as long as the servers share a disk storage).
-
-Although it is possible to choose a backend calculation server from several 
-variants, for production use, [Celery](http://www.celeryproject.org/) is currently 
-the recommended way to go.
-
-```
-sudo pip install Celery
-```
-
-```
-sudo useradd -r -s /bin/false celery
-adduser celery www-data
-```
-
-<a name="install_celery_configuration"></a>
-### Celery configuration
-
-* in case of *systemd* use path */etc/conf.d/celery*
-* in case of *upstart* use path */etc/default/celeryd*
-
-```
-CELERYD_NODES="worker1"
-
-CELERY_BIN="/usr/local/bin/celery"
-
-CELERY_APP="worker:app"
-
-CELERYD_CHDIR="/opt/kontext-production/"
-
-CELERYD_LOG_FILE="/var/log/celery/%N.log"
-CELERYD_PID_FILE="/var/run/celery/%N.pid"
-
-CELERYD_USER="celery"
-CELERYD_GROUP="www-data"
-
-CELERY_CREATE_DIRS=1
-
-CELERYD_OPTS="--time-limit=480 --concurrency=8"
-```
-
-Also define a KonText-specific configuration in your *config.xml* (*config.default.xml* already
-contains this):
-
-```xml
-<calc_backend>
-    <type>celery</type>
-    <celery_broker_url>redis://10.0.3.149:6379/2</celery_broker_url>
-    <celery_result_backend>redis://10.0.3.149:6379/2</celery_result_backend>
-    <celery_task_serializer>json</celery_task_serializer>
-    <celery_result_serializer>json</celery_result_serializer>
-    <celery_accept_content>
-        <item>json</item>
-    </celery_accept_content>
-    <celery_timezone>Europe/Prague</celery_timezone>
-    <status_service_url />
-</calc_backend>
-```
-
-<a name="install_celery_systemd_configuration"></a>
-### Systemd configuration
-
-File */etc/systemd/system/celeryd.service*:
-
-```ini
-
-[Unit]
-Description=Celery Service
-After=network.target
-
-[Service]
-Type=forking
-User=celery
-Group=www-data
-EnvironmentFile=/etc/conf.d/celery
-WorkingDirectory=/opt/kontext-production
-ExecStart=/bin/sh -ec '${CELERY_BIN} multi start $CELERYD_NODES -A $CELERY_APP --logfile=${CELERYD_LOG_FILE} --pidfile=${CELERYD_PID_FILE} $CELERYD_OPTS'
-ExecStop=/bin/sh '${CELERY_BIN} multi stopwait $CELERYD_NODES --pidfile=${CELERYD_PID_FILE}'
-ExecReload=/bin/sh '${CELERY_BIN} multi restart $CELERYD_NODES -A $CELERY_APP --pidfile=${CELERYD_PID_FILE} --logfile=${CELERYD_LOG_FILE} --loglevel="${CELERYD_LOG_LEVEL}" $CELERYD_OPTS'
-
-[Install]
-WantedBy=multi-user.target
-```
-
-File */usr/lib/tmpfiles.d/celery.conf*:
-
-```
-d /var/run/celery 0755 celery www-data -
-d /var/log/celery 0755 celery www-data -
-```
-
-<a name="install_celery_beat"></a>
 ## Celery Beat
 
 Celery Beat allows cron-like task management within Celery. It is used by
@@ -450,7 +211,6 @@ CELERYBEAT_SCHEDULE = {
 }
 ```
 
-<a name="managing_users"></a>
 ## Managing users
 
 The installation script has installed two users:
@@ -464,8 +224,8 @@ First, a JSON containing new users' credentials must be prepared. See `lib/plugi
 for the required format and data.
 
 *Note 1*: Paswords in the file should be in plaintext. Please note that the file is needed just to install the users and from
-then, it won't be needed by KonText. The installed users' password are stored in a secure form within the database. 
-The best way how to treat the user credentials file is to delete it or encrypt it and archive somewhere once you install 
+then, it won't be needed by KonText. The installed users' password are stored in a secure form within the database.
+The best way how to treat the user credentials file is to delete it or encrypt it and archive somewhere once you install
 the users.
 
 *Note 2*: the script we are going to use will rewrite any existing user if `id` collides. To prevent this,
@@ -483,20 +243,18 @@ Once the list of new users is ready, run:
 python lib/plugins/default_auth/scripts/install.py /path/to/your/users.json
 ```
 
-
-<a name="managing_corpora"></a>
 ## Managing corpora
 
 To install a new corpus, please follow the steps described below.
 
 ### Install registry file
 
-Registry configures a corpus for the Manatee search engine (and also adds some configuration needed by KonText/NoSkE). 
+Registry configures a corpus for the Manatee search engine (and also adds some configuration needed by KonText/NoSkE).
 The file should be located in a directory defined in `conf/config.xml`, element `kontext/corpora/manatee_registry`.
 
 ### Install indexed data
 
-Copy your indexed corpus to a directory specified in `conf/config.xml` (element `kontext/corpora/manatee_registry`).  
+Copy your indexed corpus to a directory specified in `conf/config.xml` (element `kontext/corpora/manatee_registry`).
 The data must be located in the path specified within a respective registry file under the `PATH` key.
 
 ### Update corplist.xml
@@ -519,4 +277,6 @@ Note: The script also allows removing access rights.
 
 ### Apply changes
 
-Once all the steps are done, restart your KonText application and your Celery worker and the corpus should be available.
+To force KonText to recognize your new corpus you can either send a `SIGUSR1`
+signal to a respective master Gunicorn process: `sudo -u www-data kill -s SIGUSR1 [proc num]` or you can restart your KonText
+application `systemctl restart gunicorn-kontext`.
