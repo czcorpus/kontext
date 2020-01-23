@@ -4,7 +4,7 @@ language: python
 services:
   - redis-server
 python:
-  - "2.7"
+  - "3.6"
 env:
   global:
     - PORT=5000
