@@ -2,7 +2,7 @@
 
 ## Important note
 
-Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-2/), KonText **version 0.13.x is the last one running in Python 2**. It means that the **next release** (planned for Q1 2020) **will run only in Python 3**. For the `master` branch users - the last commit supporting Python 2 is tagged [py2_last_version](https://github.com/czcorpus/kontext/releases/tag/py2_last_version) and the first one supporting Python 3 is tagged  [py3_initial_version](https://github.com/czcorpus/kontext/releases/tag/py3_initial_version). To upgrade, pease refer to [doc/py2to3.md](doc/py2to3.md) for details. For new installations, please follow [doc/INSTALL.md](doc/INSTALL.md).
+Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-2/), KonText **version 0.13.x is the last one running in Python 2**. It means that the **next release** (planned for Q1 2020) **will run only in Python 3**. For the `master` branch users - the last commit supporting Python 2 is tagged [py2_last_version](https://github.com/czcorpus/kontext/releases/tag/py2_last_version) and the first one supporting Python 3 is tagged  [py3_initial_version](https://github.com/czcorpus/kontext/releases/tag/py3_initial_version). To upgrade, please refer to [doc/py2to3.md](doc/py2to3.md) for details. For new installations, please follow [doc/INSTALL.md](doc/INSTALL.md).
 
 ## Contents
 
