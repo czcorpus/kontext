@@ -21,7 +21,8 @@ import json
 import os
 import unittest
 
-from plugins.default_auth import mk_pwd_hash_default, mk_pwd_hash, split_pwd_hash, DefaultAuthHandler
+from plugins.default_auth import DefaultAuthHandler
+from plugins.default_auth.tools import mk_pwd_hash_default, mk_pwd_hash, split_pwd_hash
 from plugins.default_auth.mock_redis import MockRedisPlugin, MockRedisCommon
 from translation import load_translations, activate
 

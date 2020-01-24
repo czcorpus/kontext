@@ -17,7 +17,7 @@ import argparse
 import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.default_auth import mk_pwd_hash_default
+from plugins.default_auth.tools import mk_pwd_hash_default
 
 
 def import_user_redis(data):

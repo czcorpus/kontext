@@ -24,7 +24,7 @@ The methods necessary to mock the connection to the redis_db plugin for the need
 import hashlib
 import json
 
-from plugins.default_auth import mk_pwd_hash_default
+from plugins.default_auth.tools import mk_pwd_hash_default
 
 
 class MockRedisCommon:
