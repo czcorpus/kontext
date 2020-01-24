@@ -1,7 +1,6 @@
 from typing import List
 
 import os
-import sys
 import subprocess
 import inspect
 import argparse

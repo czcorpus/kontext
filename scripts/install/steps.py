@@ -11,8 +11,8 @@ import json
 import redis
 import random
 import string
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib'))
-from plugins.default_auth import mk_pwd_hash_default
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib/plugins/default_auth'))
+from tools import mk_pwd_hash_default
 
 WEBSERVER_USER="www-data"
 
