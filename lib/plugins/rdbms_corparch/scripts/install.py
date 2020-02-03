@@ -146,7 +146,7 @@ def create_corp_record(node, db, shared, json_out, variant):
     tagset = node.attrib.get('tagset', None)
     speech_segment_struct, speech_segment_attr = fetch_structattr(
         node.attrib.get('speech_segment', None))
-    default_virt_keyboard = fetch_structattr(node.attrib.get('default_virt_keyboard', None))
+    default_virt_keyboard = node.attrib.get('default_virt_keyboard', None)
     speaker_id_struct, speaker_id_attr = fetch_structattr(node.attrib.get('speaker_id_attr', None))
     speech_overlap_struct, speech_overlap_attr = fetch_structattr(
         node.attrib.get('speech_overlap_attr', None))

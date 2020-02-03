@@ -45,6 +45,7 @@ ALTER TABLE corpora DROP COLUMN bib_id_attr;
 ALTER TABLE corpora DROP COLUMN featured;
 ALTER TABLE corpora DROP COLUMN featured;
 ALTER TABLE corpora DROP COLUMN ttdesc_id;
+ALTER TABLE corpora DROP COLUMN default_virt_keyboard;
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -77,7 +78,8 @@ ALTER TABLE corpora
 	ADD COLUMN featured INTEGER DEFAULT 0,
 	ADD COLUMN ttdesc_id INTEGER,
 	ADD COLUMN description_cs TEXT,
-	ADD COLUMN description_en TEXT;
+	ADD COLUMN description_en TEXT,
+	ADD COLUMN default_virt_keyboard TEXT;
 
 ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
 
