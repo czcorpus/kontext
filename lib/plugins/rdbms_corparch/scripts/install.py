@@ -146,6 +146,7 @@ def create_corp_record(node, db, shared, json_out, variant):
     tagset = node.attrib.get('tagset', None)
     speech_segment_struct, speech_segment_attr = fetch_structattr(
         node.attrib.get('speech_segment', None))
+    default_virt_keyboard = fetch_structattr(node.attrib.get('default_virt_keyboard', None))
     speaker_id_struct, speaker_id_attr = fetch_structattr(node.attrib.get('speaker_id_attr', None))
     speech_overlap_struct, speech_overlap_attr = fetch_structattr(
         node.attrib.get('speech_overlap_attr', None))
@@ -158,11 +159,11 @@ def create_corp_record(node, db, shared, json_out, variant):
 
     cursor = new_cursor(db)
     cursor.execute('INSERT INTO kontext_corpus (id, group_name, version, created, updated, active, web, '
-                   'tagset, collator_locale, speech_overlap_val, use_safe_font, size) '
-                   'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                   'tagset, collator_locale, speech_overlap_val, use_safe_font, size, default_virt_keyboard) '
+                   'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                    (ident, group_name, version, int(curr_time), int(curr_time), 1, web, tagset,
                     collator_locale, speech_overlap_val,
-                    use_safe_font, shared.get_corpus_size(ident)))
+                    use_safe_font, shared.get_corpus_size(ident), default_virt_keyboard))
 
     # dependent structures and attrs
     if speech_segment_struct and speech_segment_attr:
@@ -197,6 +198,7 @@ def create_corp_record(node, db, shared, json_out, variant):
     json_out.current.collator_locale = collator_locale
     json_out.use_safe_font = use_safe_font
     create_metadata_record(db, shared, node, ident, json_out.current)
+    json_out.metadata.default_virt_keyboard = default_virt_keyboard
     parse_tckc(node, db, ident, json_out.current)
 
 

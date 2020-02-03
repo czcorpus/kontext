@@ -19,6 +19,8 @@
 import logging
 import time
 import sqlite3
+
+from . import InstallJson
 from .sqlite import Backend
 
 
@@ -122,7 +124,7 @@ class WritableBackend(Backend):
                 cursor.execute('INSERT INTO corpus_structure (corpus_id, name) VALUES (?, ?)',
                                (corpus_id, name))
 
-    def save_corpus_config(self, install_json, registry_dir, corp_size):
+    def save_corpus_config(self, install_json: InstallJson, registry_dir, corp_size):
         curr_time = time.time()
         cursor = self._db.cursor()
 
@@ -137,11 +139,12 @@ class WritableBackend(Backend):
             install_json.tagset,
             install_json.collator_locale,
             install_json.use_safe_font,
-            corp_size
+            corp_size,
+            install_json.metadata.default_virt_keyboard
         )
         cursor.execute('INSERT INTO kontext_corpus (id, group_name, version, created, updated, active, web, '
-                       'tagset, collator_locale, use_safe_font, size) '
-                       'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                       'tagset, collator_locale, use_safe_font, size, default_virt_keyboard) '
+                       'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                        vals1)
         # articles
         articles = []
