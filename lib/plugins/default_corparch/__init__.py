@@ -534,6 +534,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         corpus_id = node.attrib['ident'].lower()
         web_url = node.attrib['web'] if 'web' in node.attrib else None
         sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
+        default_virt_keyboard = node.attrib['default_virt_keyboard'] if 'default_virt_keyboard' in node.attrib else None
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
@@ -571,6 +572,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 getattr(ref_elm.find('other_bibliography'), 'text', None))
 
         meta_elm = node.find('metadata')
+        ans.metadata.default_virt_keyboard = default_virt_keyboard
         if meta_elm is not None:
             ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
             ans.metadata.label_attr = getattr(meta_elm.find('label_attr'), 'text', None)
