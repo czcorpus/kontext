@@ -346,6 +346,7 @@ class Actions(Querying):
 
         corp_info = self.get_corpus_info(self.args.corpname)
         out['text_types_notes'] = corp_info.metadata.desc
+        out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)

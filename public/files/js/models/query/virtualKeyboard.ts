@@ -54,7 +54,7 @@ export class VirtualKeyboardModel extends StatefulModel {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = null;
-        this.defaultLayout = 'Czech';  // TODO get from settings
+        this.defaultLayout = this.pageModel.getConf('DefaultVirtKeyboard');
 
         this.dispatcher.registerActionListener((action:Action) => {
 
