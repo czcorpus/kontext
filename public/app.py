@@ -241,7 +241,15 @@ class KonTextWsgiApp(WsgiApp):
         if request.session.should_save:
             sessions.save(request.session)
             cookie_path = settings.get_str('global', 'cookie_path_prefix', '/')
-            response.set_cookie(sessions.get_cookie_name(), request.session.sid, path=cookie_path)
+            cookies_same_site = settings.get('global', 'cookies_same_site', None)
+            response.set_cookie(
+                sessions.get_cookie_name(),
+                request.session.sid,
+                path=cookie_path,
+                secure=cookies_same_site is not None,
+                samesite=cookies_same_site
+            )
+
         return response(environ, start_response)
 
 

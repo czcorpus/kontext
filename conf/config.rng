@@ -314,7 +314,6 @@
                         <element name="cookies_same_site">
                             <a:documentation>Set same site cookie strategy</a:documentation>
                             <choice>
-                                <value>None</value>
                                 <value>Lax</value>
                                 <value>Strict</value>
                             </choice>
