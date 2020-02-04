@@ -54,6 +54,9 @@ element corpus {
     attribute ident {
         text  # a corpus identifier (case insensitive)
     }
+    attribute default_virt_keyboard {
+        text  # default language for virtual keybord query input
+    }?
     attribute tagset {
         text  #  an optional positional tagset identifier (used by tag-builder widget)
     }?
@@ -618,6 +621,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans.citation_info.default_ref = node.attrib['repo'] if 'repo' in node.attrib else None
 
+        ans.metadata.default_virt_keyboard = node.attrib.get('default_virt_keyboard', None)
         meta_elm = node.find('metadata')
         if meta_elm is not None:
             ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
