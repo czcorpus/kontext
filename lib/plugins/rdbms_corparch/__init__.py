@@ -260,7 +260,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 row['keywords'].split(',') if row['keywords'] else []) if x]
             ans.metadata.desc = row['ttdesc_id']
             ans.metadata.group_duplicates = bool(row['bib_group_duplicates'])
-            ans.metadata.default_virt_keyboard = row['default_virt_keyboard'] if 'default_virt_keyboard' in row.keys() else None
+            ans.metadata.default_virt_keyboard = row['default_virt_keyboard']
             ans.manatee.encoding = row['encoding']
             ans.manatee.description = row['info']
             ans.manatee.size = row['size']
