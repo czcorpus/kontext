@@ -1806,7 +1806,8 @@ class Actions(Querying):
             SubcorpList=tmp_out['SubcorpList'],
             TextTypesNotes=corpus_info.metadata.desc,
             TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False,
-            structsAndAttrs=self._get_structs_and_attrs()
+            structsAndAttrs=self._get_structs_and_attrs(),
+            DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard
         )
         self._attach_plugin_exports(ans, direct=True)
         self._configure_auth_urls(ans)
