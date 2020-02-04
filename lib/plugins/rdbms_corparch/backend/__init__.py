@@ -168,7 +168,7 @@ class DatabaseBackend(object):
     def load_corpus(self, corp_id: str) -> Dict[str, Any]:
         raise NotImplementedError()
 
-    def load_all_corpora(self, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None, min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
+    def load_all_corpora(self, user_id: int, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None, min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
                          offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Dict[str, str]:
         """
         """
