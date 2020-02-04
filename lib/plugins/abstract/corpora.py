@@ -84,6 +84,7 @@ class CorpusMetadata(DictLike):
         self.keywords: Dict[str, Any] = {}
         self.interval_attrs: List[str] = []
         self.group_duplicates: bool = False
+        self.default_virt_keyboard: Optional[str] = None
 
 
 class CitationInfo(DictLike):

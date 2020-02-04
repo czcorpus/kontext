@@ -31,6 +31,7 @@ class InstallJsonMetadata(object):
         self.desc: Optional[int] = None
         self.keywords: List[str] = []
         self.featured: bool = False
+        self.default_virt_keyboard: Optional[str] = None
 
     def update(self, data: Mapping[str, Any]) -> None:
         for attr in list(self.__dict__.keys()):

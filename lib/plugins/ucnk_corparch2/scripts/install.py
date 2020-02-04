@@ -154,6 +154,7 @@ def create_corp_record(node, db, shared, json_out, variant, create_if_none):
             cursor.execute('INSERT INTO corpora (name) VALUES (%s)', (ident,))
         else:
             return
+    default_virt_keyboard = node.attrib.get('default_virt_keyboard', None)
     web = node.attrib['web'] if 'web' in node.attrib else None
     tagset = node.attrib.get('tagset', None)
     speech_segment_struct, speech_segment_attr = fetch_structattr(
@@ -170,10 +171,10 @@ def create_corp_record(node, db, shared, json_out, variant, create_if_none):
     t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
     cursor.execute('UPDATE corpora SET group_name = %s, version = %s, updated = CURRENT_TIMESTAMP, '
                    'web = %s, tagset = %s, collator_locale = %s, speech_overlap_val = %s, use_safe_font = %s, '
-                   'size = %s, created = %s, updated = %s '
+                   'size = %s, created = %s, updated = %s, default_virt_keyboard = %s '
                    'WHERE name = %s',
                    (group_name, version, web, tagset, collator_locale, speech_overlap_val, use_safe_font,
-                    shared.get_corpus_size(ident), t1, t1, ident))
+                    shared.get_corpus_size(ident), t1, t1, default_virt_keyboard, ident))
 
     # dependent structures and attrs
     if speech_segment_struct and speech_segment_attr:
@@ -208,6 +209,7 @@ def create_corp_record(node, db, shared, json_out, variant, create_if_none):
     json_out.current.collator_locale = collator_locale
     json_out.use_safe_font = use_safe_font
     create_metadata_record(db, shared, node, ident, json_out.current)
+    json_out.metadata.default_virt_keyboard = default_virt_keyboard
     parse_tckc(node, db, ident, json_out.current)
 
 

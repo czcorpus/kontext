@@ -36,6 +36,8 @@ export class VirtualKeyboardModel extends StatefulModel {
 
     private layouts:VirtualKeyboardLayouts;
 
+    private defaultLayout:string;
+
     private currLayout:number;
 
     private externalKeyHit:number;
@@ -51,7 +53,8 @@ export class VirtualKeyboardModel extends StatefulModel {
     constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.currLayout = 0;
+        this.currLayout = null;
+        this.defaultLayout = this.pageModel.getConf('DefaultVirtKeyboard');
 
         this.dispatcher.registerActionListener((action:Action) => {
 
@@ -106,11 +109,12 @@ export class VirtualKeyboardModel extends StatefulModel {
     }
 
     getCurrentLayout():Kontext.VirtualKeyboardLayout {
-        return this.layouts[this.currLayout];
+        return this.layouts[this.getCurrentLayoutIdx()];
     }
 
     getCurrentLayoutIdx():number {
-        return this.currLayout;
+        const layoutIndex = this.currLayout === null ? this.layouts.findIndex(v => v.name === this.defaultLayout) : this.currLayout;
+        return layoutIndex < 0 ? 0 : layoutIndex;
     }
 
     getActiveKey():[number, number] {

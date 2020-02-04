@@ -223,6 +223,7 @@ export namespace AjaxResponse {
         TextTypesNotes:string;
         TextDirectionRTL:boolean;
         pluginData:{[plgName:string]:any}; // here it is impossible to determine a detailed type in a reasonable way
+        DefaultVirtKeyboard:string;
     }
 }
 

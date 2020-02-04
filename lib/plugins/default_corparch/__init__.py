@@ -570,6 +570,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.citation_info.other_bibliography = translate_markup(
                 getattr(ref_elm.find('other_bibliography'), 'text', None))
 
+        ans.metadata.default_virt_keyboard = node.attrib.get('default_virt_keyboard', None)
         meta_elm = node.find('metadata')
         if meta_elm is not None:
             ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)

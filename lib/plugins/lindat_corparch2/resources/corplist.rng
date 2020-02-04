@@ -76,6 +76,11 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                             <text/>
                         </attribute>
                         <optional>
+                            <attribute name="default_virt_keyboard">
+                                <text/>
+                            </attribute>
+                        </optional>
+                        <optional>
                             <attribute name="web">
                                 <text/>
                             </attribute>

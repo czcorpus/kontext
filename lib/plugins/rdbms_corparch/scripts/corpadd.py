@@ -63,7 +63,8 @@ The format is as follows:
             "synchronic"
         ],
         "label_attr": "opus.nazev",
-        "desc": null
+        "desc": null,
+        "default_virt_keyboard": "Czech"
     }
 }
 

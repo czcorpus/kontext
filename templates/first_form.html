@@ -41,6 +41,7 @@ __conf.QueryHistoryPageNumRecords = {{ query_history_page_num_records|to_json }}
 __conf.UseCQLEditor = {{ cql_editor|default(false)|to_json }};
 __conf.StructAttrList = {{ StructAttrList|to_json }};
 __conf.StructList = {{ StructList|to_json }};
+__conf.DefaultVirtKeyboard = {{ default_virt_keyboard|to_json }};
 firstFormPage.init(__conf);
 {% endblock %}
 
