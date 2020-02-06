@@ -310,6 +310,15 @@
                             templates. This improves 'first load' time.</a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="cookies_same_site">
+                            <a:documentation>Set same site cookie strategy</a:documentation>
+                            <choice>
+                                <value>Lax</value>
+                                <value>Strict</value>
+                            </choice>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">

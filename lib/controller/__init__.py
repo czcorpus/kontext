@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 import os
 from types import MethodType
 from inspect import isclass
-import http.cookies
 import imp
 from urllib.parse import unquote, quote
 import json
@@ -57,8 +56,11 @@ from argmapping import Parameter, GlobalArgs, Args
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException, ImmediateRedirectException)
 
-import http.cookies
 import werkzeug.wrappers
+import http.cookies
+
+# this is fix to include `SameSite` as reserved cookie keyword (added in Python 3.8)
+http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
 
 
 def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple = (), page_model: Optional[str] = None, func_arg_mapped: bool = False, skip_corpus_init: bool = False,
@@ -162,7 +164,6 @@ class KonTextCookie(http.cookies.BaseCookie):
     Cookie handler which encodes and decodes strings
     as URI components.
     """
-
     def value_decode(self, val):
         return unquote(val), val
 
@@ -952,8 +953,12 @@ class Controller(object):
         for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
             ans.append((k, v))
         # Cookies
-        for cookie_id in list(self._new_cookies.keys()):
-            ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
+        cookies_same_site = settings.get('global', 'cookies_same_site', None)
+        for cookie in self._new_cookies.values():
+            if cookies_same_site is not None:
+                cookie['Secure'] = True
+                cookie['SameSite'] = cookies_same_site
+            ans.append(('Set-Cookie', cookie.OutputString()))
         return ans
 
     def output_result(self, methodname: str, template: str, result: Union[Callable, Dict[str, Any], str, bytes], action_metadata: Dict[str, Any], return_type: str) -> Union[str, bytes]:
