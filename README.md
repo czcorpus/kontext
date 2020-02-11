@@ -78,7 +78,8 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
 * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske)
-    * versions from *2.83.3* to *2.158.8* are supported (the latest one is highly recommended); unless there is an incompatible change in Manatee, newer versions should work too
+    * versions *2.167.8* and newer are supported by KonText 0.15 and newer
+    * versions from *2.83.3* to *2.158.8* are supported by KonText 0.13 and older
 * a key-value storage
     * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default)
 * (optional) [Celery task queue](http://www.celeryproject.org/) task queue for (asynchronous) background calculations and maintenance tasks
