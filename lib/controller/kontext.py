@@ -34,7 +34,8 @@ from werkzeug.datastructures import MultiDict
 import corplib
 import conclib
 from . import convert_types, exposed
-from .errors import (UserActionException, ForbiddenException, AlignedCorpusForbiddenException, NotFoundException)
+from .errors import (UserActionException, ForbiddenException,
+                     AlignedCorpusForbiddenException, NotFoundException)
 import plugins
 from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
@@ -104,7 +105,7 @@ class RequestArgsProxy(object):
     mapping.
     """
 
-    def __init__(self, form, args):
+    def __init__(self, form: werkzeug.MultiDict, args: werkzeug.MultiDict):
         self._form = form
         self._args = args
         self._forced = defaultdict(lambda: [])
@@ -118,7 +119,7 @@ class RequestArgsProxy(object):
     def keys(self):
         return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))
 
-    def getlist(self, k):
+    def getlist(self, k: str) -> List[str]:
         """
         Returns a list of values matching passed argument
         name. List is returned even if there is a single
@@ -143,10 +144,22 @@ class RequestArgsProxy(object):
         URL arguments have higher priority over POST ones.
         """
         tmp = self.getlist(k)
-        return tmp if len(tmp) > 1 else tmp[0]
+        if len(tmp) == 0:
+            return None
+        elif len(tmp) == 1:
+            return tmp[0]
+        else:
+            return tmp
 
-    def add_forced_arg(self, k, *v):
+    def add_forced_arg(self, k, *v: List[str]) -> List[str]:
+        """
+        add key-value parameter overriding any previous or
+        future changes applied from URL/Form data. The method
+        returns previous values stored under the key k.
+        """
+        curr = self.getlist(k)[:]
         self._forced[k] = self._forced[k] + list(v)
+        return curr
 
 
 class AsyncTaskStatus(object):
@@ -259,7 +272,8 @@ class Kontext(Controller):
 
         # conc_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
-        self._prev_q_data: Optional[Dict[str, Any]] = None  # data of the previous operation are stored here
+        # data of the previous operation are stored here
+        self._prev_q_data: Optional[Dict[str, Any]] = None
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
     def get_mapping_url_prefix(self) -> str:
@@ -445,7 +459,8 @@ class Kontext(Controller):
         # to store (again) even values not used in this particular request)
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
-                options = normalize_opts(getattr(settings_storage, 'load')(self.session_get('user', 'id')))
+                options = normalize_opts(getattr(settings_storage, 'load')
+                                         (self.session_get('user', 'id')))
                 getattr(settings_storage, 'save')(self.session_get('user', 'id'), options)
             else:
                 options = normalize_opts(self.session_get('settings'))
@@ -480,7 +495,10 @@ class Kontext(Controller):
                     form.add_forced_arg('q', self._prev_q_data['q'][:] + url_q[1:])
                     corpora = self._prev_q_data.get('corpora', [])
                     if len(corpora) > 0:
-                        form.add_forced_arg('corpname', corpora[0])
+                        orig_corpora = form.add_forced_arg('corpname', corpora[0])
+                        if len(orig_corpora) > 0 and orig_corpora[0] != corpora[0]:
+                            raise UserActionException(translate(
+                                f'URL argument corpname={orig_corpora[0]} collides with corpus {corpora[0]} stored as part of original concordance'))
                     if len(corpora) > 1:
                         form.add_forced_arg('align', *corpora[1:])
                         form.add_forced_arg('viewmode', 'align')
@@ -808,7 +826,8 @@ class Kontext(Controller):
         if len(corpname) > 0:
             self._apply_corpus_user_settings(corp_options, corpname)
         self._map_args_to_attrs(form, named_args)
-        setattr(self.args, 'corpname', corpname)  # always prefer corpname returned by _check_corpus_access()
+        # always prefer corpname returned by _check_corpus_access()
+        setattr(self.args, 'corpname', corpname)
         self._corpus_variant = corpus_variant
 
         # return url (for 3rd party pages etc.)
@@ -921,7 +940,8 @@ class Kontext(Controller):
     def handle_dispatch_error(self, ex: Exception):
         if isinstance(self.corp, fallback_corpus.ErrorCorpus):
             self._status = 404
-            self.add_system_message('error', 'Failed to open corpus {0}'.format(getattr(self.args, 'corpname')))
+            self.add_system_message('error', 'Failed to open corpus {0}'.format(
+                getattr(self.args, 'corpname')))
         else:
             self._status = 500
 
@@ -943,8 +963,9 @@ class Kontext(Controller):
             try:
                 if not self._curr_corpus or (getattr(self.args, 'usesubcorp') and not hasattr(self._curr_corpus, 'subcname')):
                     self._curr_corpus = getattr(self.cm, 'get_Corpus')(getattr(self.args, 'corpname'),
-                                                           subcname=getattr(self.args, 'usesubcorp'),
-                                                           corp_variant=self._corpus_variant)
+                                                                       subcname=getattr(
+                                                                           self.args, 'usesubcorp'),
+                                                                       corp_variant=self._corpus_variant)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as ex:
@@ -1230,7 +1251,8 @@ class Kontext(Controller):
 
         result['multi_sattr_allowed_structs'] = []
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(getattr(self.args, 'corpname'))
+            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
+                getattr(self.args, 'corpname'))
 
         self._attach_plugin_exports(result, direct=False)
 
@@ -1315,7 +1337,8 @@ class Kontext(Controller):
             id_attr = corpus_info.metadata.id_attr
             if id_attr in ans:
                 bib_mapping = dict(plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(self._plugin_api,
-                                                                                            getattr(self.args, 'corpname'),
+                                                                                            getattr(
+                                                                                                self.args, 'corpname'),
                                                                                             ans[id_attr]))
         return ans, bib_mapping
 
