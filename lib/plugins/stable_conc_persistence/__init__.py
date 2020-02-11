@@ -77,7 +77,25 @@ class StableConcPersistence(AbstractConcPersistence):
     def get_conc_ttl_days(self, user_id):
         return self._ttl_days
 
+    def find_used_corpora(self, query_id):
+        """
+        Because the operations are chained via 'prev_id' and the corpname
+        information is not stored for all the steps, for any n-th step > 1
+        we have to go backwards and find an actual corpname stored in the
+        1st operation.
+        """
+        data = self._load_query(query_id, save_access=False)
+        while data is not None and 'corpname' not in data:
+            data = self._load_query(data.get('prev_id', ''), save_access=False)
+        return data.get('corpora', []) if data is not None else []
+
     def open(self, data_id):
+        ans = self._load_query(data_id, save_access=True)
+        if ans is not None and 'corpora' not in ans:
+            ans['corpora'] = self.find_used_corpora(ans.get('prev_id'))
+        return ans
+
+    def _load_query(self, data_id: str, save_access: bool):
         """
         Loads operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -96,9 +114,10 @@ class StableConcPersistence(AbstractConcPersistence):
                     'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
                 if tmp:
                     data = json.loads(tmp[0])
-                    cursor.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
-                                   (int(round(time.time())), data_id))
-                    arch_db.commit()
+                    if save_access:
+                        cursor.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
+                                       (int(round(time.time())), data_id))
+                        arch_db.commit()
                     break
         return data
 
