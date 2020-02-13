@@ -833,11 +833,17 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
                     <div id="conclines-wrapper">
-                        <linesViews.ConcLines {...this.props}
-                            supportsSyntaxView={this.state.supportsSyntaxView}
-                            onSyntaxViewClick={this._handleSyntaxBoxClick}
-                            tokenConnectClickHandler={this._detailClickHandler}
-                            refsDetailClickHandler={this._refsDetailClickHandler} />
+                        {this.state.concSummary.concSize == 0 && this.state.isWaiting ?
+                            <div className="no-data">
+                                <p>{he.translate('concview__waiting_for_data')}{'\u2026'}</p>
+                                <p><layoutViews.AjaxLoaderImage /></p>
+                            </div> :
+                            <linesViews.ConcLines {...this.props}
+                                supportsSyntaxView={this.state.supportsSyntaxView}
+                                onSyntaxViewClick={this._handleSyntaxBoxClick}
+                                tokenConnectClickHandler={this._detailClickHandler}
+                                refsDetailClickHandler={this._refsDetailClickHandler} />
+                        }
                     </div>
                     <div id="conc-bottom-bar">
                         <div className="info-level">

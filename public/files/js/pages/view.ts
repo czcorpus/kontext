@@ -21,7 +21,8 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import { Action } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
+import { Observable, of as rxOf, interval, zip } from 'rxjs';
+import { expand, mergeMap, takeWhile, delay, concatMap, tap, take } from 'rxjs/operators';
 import { KontextPage } from '../app/main';
 
 import {Kontext, TextTypes} from '../types/common';
@@ -69,7 +70,6 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { mergeMap } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -108,11 +108,9 @@ interface RenderLinesDeps {
  */
 export class ViewPage {
 
-    private static CHECK_CONC_DELAY = 700;
+    private static CHECK_CONC_DECAY = 1.08;
 
-    private static CHECK_CONC_DECAY = 1.1;
-
-    private static CHECK_CONC_MAX_ATTEMPTS = 500;
+    private static CHECK_CONC_MAX_WAIT = 500;
 
     private layoutModel:PageModel;
 
@@ -286,7 +284,7 @@ export class ViewPage {
     }
 
     reloadHits():void {
-        const linesPerPage = this.layoutModel.getConf<number>('numLines');
+        const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
         const applyData = (data:AjaxResponse.ConcStatus) => {
             this.layoutModel.dispatcher.dispatch({
                 name: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
@@ -326,31 +324,38 @@ export class ViewPage {
             };
 
         } else {
-            const loop = (idx:number, delay:number, decay:number) => {
-                window.setTimeout(() => {
-                    this.layoutModel.ajax$(
-                        'GET',
-                        this.layoutModel.createActionUrl('get_cached_conc_sizes'),
-                        this.layoutModel.getConcArgs()
-
-                    ).subscribe(
-                        (data:AjaxResponse.ConcStatus) => {
-                            applyData(data);
-                            if (!data.finished && idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
-                                loop(idx + 1, delay * decay, decay);
-                            }
-                        },
-                        (err) => {
-                            this.layoutModel.dispatcher.dispatch({
-                                name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
-                                payload: {}
-                            });
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                }, delay);
-            }
-            loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
+            rxOf(ViewPage.CHECK_CONC_DECAY).pipe(
+                expand(
+                    (interval) => rxOf(interval * ViewPage.CHECK_CONC_DECAY)
+                ),
+                take(100), // just a safe limit
+                concatMap(v => rxOf(v).pipe(delay(v * 1000))),
+                concatMap(
+                    (interval) => zip(
+                        this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
+                            'GET',
+                            this.layoutModel.createActionUrl('get_cached_conc_sizes'),
+                            this.layoutModel.getConcArgs()
+                        ),
+                        rxOf(interval)
+                    )
+                ),
+                takeWhile(
+                    ([response, interval]) => interval < ViewPage.CHECK_CONC_MAX_WAIT && !response.finished,
+                    true // true => emit also the last item (which already breaks the predicate)
+                ),
+            ).subscribe(
+                ([response,]) => {
+                    applyData(response);
+                },
+                (err) => {
+                    this.layoutModel.dispatcher.dispatch({
+                        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                        payload: {}
+                    });
+                    this.layoutModel.showMessage('error', err);
+                }
+            );
         }
     }
 
@@ -374,7 +379,6 @@ export class ViewPage {
             case 'sortx':
             case 'shuffle':
             case 'reduce':
-                const formArgs = this.layoutModel.getConf<AjaxResponse.ConcFormArgs>('ConcFormsArgs')['__latest__'];
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),

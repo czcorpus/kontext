@@ -19,25 +19,28 @@ import os
 import sys
 import time
 import logging
+from typing import Union
 
 import manatee
 import settings
 from translation import ugettext as _
 from pyconc import PyConc
-from kwiclib import tokens2strclass
+from kwiclib import tokens2strclass, EmptyConc
 import plugins
 from concworker import GeneralWorker
 import corplib
 
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
+CONC_REGISTER_TASK_LIMIT = 5  # task itself should be super-fast
+CONC_REGISTER_WAIT_LIMIT = 20  # client may be forced to wait loger due to other tasks
 
 
 class ConcCalculationControlException(Exception):
     pass
 
 
-def _wait_for_conc(cache_map, q, subchash, minsize):
+def _wait_for_conc(cache_map, q, subchash, minsize, hard_limit) -> bool:
     """
     Called by webserver process (i.e. not by the background worker).
     Waits in a loop until a minimal acceptable cached concordance occurs
@@ -51,13 +54,15 @@ def _wait_for_conc(cache_map, q, subchash, minsize):
     subchash -- a hash of a subcorpus (if any)
     minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
     """
-    hard_limit = 70  # num iterations to wait for at least something
+    t0 = t1 = time.time()
     i = 1
-    while _min_conc_unfinished(cache_map, q, subchash, minsize) and i < hard_limit:
+    while _min_conc_unfinished(cache_map, q, subchash, minsize) and t1 - t0 < hard_limit:
         time.sleep(i * 0.1)
         i += 1
+        t1 = time.time()
     if not os.path.isfile(cache_map.cache_file_path(subchash, q)) and i >= hard_limit:
-        raise ConcCalculationControlException('Hard limit for intermediate concordance exceeded.')
+        return False
+    return True
 
 
 def _min_conc_unfinished(cache_map, q, subchash, minsize):
@@ -97,7 +102,7 @@ def _contains_shuffle_seq(q_ops):
     return False
 
 
-def _cancel_async_task(cache_map, subchash, q):
+def cancel_async_task(cache_map, subchash, q):
     cachefile = cache_map.cache_file_path(subchash, q)
     status = cache_map.get_calc_status(subchash, q)
     backend = settings.get('calc_backend', 'type')
@@ -166,12 +171,11 @@ def _get_cached_conc(corp, subchash, q, minsize):
     for i in range(srch_from, 0, -1):
         cachefile = cache_map.cache_file_path(subchash, q[:i])
         if cachefile:
-            try:
-                _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:i], minsize=minsize)
-            except ConcCalculationControlException as ex:
-                _cancel_async_task(cache_map, subchash, q[:i])
+            ready = _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:i], minsize=minsize, hard_limit=60)
+            if not ready:
+                cancel_async_task(cache_map, subchash, q[:i])
                 logging.getLogger(__name__).warning(
-                    'Removed broken concordance cache record. Original error: %s' % (ex,))
+                    'Removed unfinished concordance cache record due to exceeded time limit')
                 continue
             conccorp = corp
             for qq in reversed(q[:i]):  # find the right main corp, if aligned
@@ -185,7 +189,7 @@ def _get_cached_conc(corp, subchash, q, minsize):
             except (ConcCalculationControlException, manatee.FileAccessError) as ex:
                 logging.getLogger(__name__).error(
                     'Failed to join unfinished calculation: {0}'.format(ex))
-                _cancel_async_task(cache_map, subchash, q[:i])
+                cancel_async_task(cache_map, subchash, q[:i])
                 continue
             ans = (i, conc)
             break
@@ -208,18 +212,18 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         import bgcalc
         app = bgcalc.calc_backend_client(settings)
         ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
-                                                     subchash, q, samplesize, TASK_TIME_LIMIT), time_limit=10)  # register should be fast
-        ans.get()  # = wait for task registration
+                                                     subchash, q, samplesize, TASK_TIME_LIMIT),
+                            time_limit=CONC_REGISTER_TASK_LIMIT)
+        ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     else:
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    try:
-        _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
-    except Exception as e:
-        _cancel_async_task(cache_map, subchash, q)
-        raise e
-    return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
+    conc_avail = _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize, hard_limit=5)
+    if conc_avail:
+        return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
+    else:
+        return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
 
 
 def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
@@ -238,7 +242,7 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
     return conc
 
 
-def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0):
+def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0) -> Union[manatee.Concordance, EmptyConc]:
     """
     corp -- a respective manatee.Corpus object
     user_id -- database user ID
@@ -257,8 +261,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
         return None
     q = tuple(q)
     if not minsize:
-        if len(q) > 1:  # subsequent concordance processing by its methods
-                        # needs whole concordance
+        if len(q) > 1:  # subsequent concordance processing by its methods needs whole concordance
             minsize = -1
         else:
             minsize = fromp * pagesize
@@ -291,6 +294,8 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
         else:
             conc = _get_sync_conc(worker=worker, corp=corp, q=q, save=save, subchash=subchash,
                                   samplesize=samplesize)
+    if isinstance(conc, EmptyConc):
+        return conc
     # save additional concordance actions to cache (e.g. sample)
     for act in range(calc_from, len(q)):
         command, args = q[act][0], q[act][1:]
@@ -302,7 +307,10 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
             cachefile, stored_status = cache_map.add_to_map(subchash, q[:act + 1], conc.size(),
                                                             calc_status=worker.create_new_calc_status())
             if stored_status and not stored_status.finished:
-                _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:act + 1], minsize=-1)
+                ready = _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:act + 1], minsize=-1,
+                                       hard_limit=60)
+                if not ready:
+                    raise ConcCalculationControlException('Wait for concordance operation failed')
             elif not stored_status:
                 conc.save(cachefile)
                 cache_map.update_calc_status(

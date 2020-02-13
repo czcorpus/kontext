@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #}
 {% extends "document.html" %}
-{% block title %}{{ page_title|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
+{% block title %}{{ page_title|default('', true)|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
 
 {% block headers %}
 
@@ -59,6 +59,7 @@ __conf.SampledSize = {{ sampled_size|to_json }};
 __conf.ResultIpm = {{ result_relative_freq|to_json }};
 __conf.ResultArf = {% if result_arf %}{{ result_arf|to_json }}{% else %}null{% endif %};
 __conf.ResultShuffled = {{ result_shuffled|to_json }};
+__conf.ItemsPerPage = {{ items_per_page|to_json }};
 __conf.NumLinesInGroups = {{ num_lines_in_groups|to_json }};
 __conf.LinesGroupsNumbers = {{ lines_groups_numbers|to_json }};
 __conf.SpeakerIdAttr = {{ speaker_id_attr|to_json }};

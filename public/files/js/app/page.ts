@@ -20,6 +20,11 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { ITranslator, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { AjaxError } from 'rxjs/ajax';
+
 import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
 import {CoreViews} from '../types/coreViews';
@@ -44,9 +49,6 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { ITranslator, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 
 
 export enum DownloadType {
@@ -393,6 +395,14 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                     default:
                         outMsg = `${message.status}: ${message.statusText}`
                     break;
+                }
+
+            } else if (message instanceof AjaxError) {
+                if (Array.isArray(message.response['messages'])) {
+                    outMsg = message.response['messages'][0][1];
+
+                } else {
+                    outMsg = message.message;
                 }
 
             } else if (message instanceof Error) {

@@ -320,6 +320,12 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private numItemsInLockedGroups:number;
 
+    /**
+     * Note: do not confuse with isBusy.
+     * The 'unfinishedCalculation' says: we have some data
+     * (typically 1st page) but the process of calculating
+     * data is still running in background.
+     */
     private unfinishedCalculation:boolean;
 
     private concSummary:ConcSummary;
@@ -338,6 +344,10 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private ttModel:TextTypes.ITextTypesModel;
 
+    /**
+     * Note: compare with unfinishedCalculation
+     * If true then the model cannot display any data (yet).
+     */
     private isBusy:boolean;
 
 
@@ -367,7 +377,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
         this.useSafeFont = lineViewProps.useSafeFont;
-        this.isBusy = false;
+        this.isBusy = lineViewProps.Unfinished;
         this.supportsSyntaxView = lineViewProps.supportsSyntaxView;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -416,6 +426,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     );
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+                    const prevConcSize = this.concSummary.concSize;
                     this.unfinishedCalculation = !action.payload['finished'];
                     this.concSummary.concSize = action.payload['concsize'];
                     this.concSummary.fullSize = action.payload['fullsize'];
@@ -429,8 +440,30 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                             isUnfinished: this.isUnfinishedCalculation()
                         }
                     );
+                    if (this.concSummary.concSize > 0) {
+                        if (prevConcSize === 0) {
+                            this.changePage('customPage', 1).subscribe(
+                                (data) => {
+                                    if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
+                                        this.pushHistoryState(this.currentPage);
+                                    }
+                                    this.isBusy = false;
+                                    this.emitChange();
+                                },
+                                (err) => {
+                                    this.isBusy = false;
+                                    this.emitChange();
+                                    this.layoutModel.showMessage('error', err);
+                                }
+                            );
+
+                        } else {
+                            this.isBusy = false;
+                        }
+                    }
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
+                    this.isBusy = false;
                     this.unfinishedCalculation = false;
                     this.concSummary.concSize = 0;
                     this.concSummary.fullSize = 0;

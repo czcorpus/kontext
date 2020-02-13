@@ -66,6 +66,12 @@ class UserActionException(Exception):
         return self._internal_message if self._internal_message else str(self)
 
 
+class BackgroundCalculationException(UserActionException):
+
+    def __init__(self, message, internal_message=None):
+        super().__init__(message, 500, internal_message=internal_message)
+
+
 class NotFoundException(UserActionException):
     """
     Raised in case user requests non-exposed/non-existing action
