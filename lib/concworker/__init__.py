@@ -61,7 +61,7 @@ class GeneralWorker(object):
 
         if q is None:
             q = []
-        ans = dict(finished=False, concsize=None, fullsize=None, relconcsize=None)
+        ans = dict(finished=False, concsize=0, fullsize=0, relconcsize=0)
         if not cachefile:  # AJAX call
             q = tuple(q)
             subchash = getattr(corp, 'subchash', None)

@@ -21,7 +21,7 @@
 KonText controller and related auxiliary objects
 """
 
-from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING
+from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING, TypeVar
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .plg import PluginApi
@@ -58,6 +58,8 @@ from .errors import (UserActionException, NotFoundException, get_traceback, fetc
 
 import werkzeug.wrappers
 import http.cookies
+
+T = TypeVar('T')
 
 # this is fix to include `SameSite` as reserved cookie keyword (added in Python 3.8)
 http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
@@ -530,7 +532,7 @@ class Controller(object):
         convert_types(na, _function_defaults(action), del_nondef=del_nondef)
         return action(**na)
 
-    def call_function(self, func: Callable, args: Union[List[Any], Tuple[Any]], **named_args: Dict[str, Any]) -> Dict:
+    def call_function(self, func: Callable[[Any], T], args: Tuple[Any, ...], **named_args: Dict[str, Any]) -> T:
         """
         Calls a function with passed arguments but also with attributes of
         'self' used as arguments. Actually the order is following:

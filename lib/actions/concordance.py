@@ -23,7 +23,7 @@ import time
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
-from controller.errors import UserActionException
+from controller.errors import UserActionException, BackgroundCalculationException
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
@@ -34,7 +34,7 @@ import conclib
 import corplib
 from bgcalc import freq_calc, coll_calc
 import plugins
-from kwiclib import Kwic, KwicPageArgs
+from kwiclib import Kwic, KwicPageArgs, EmptyConc
 import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
@@ -200,7 +200,7 @@ class Actions(Querying):
                 del self.args.q[i]
             i += 1
         out = self._create_empty_conc_result_dict()
-        conc = None
+        conc = EmptyConc(self.corp, None)
         try:
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
                                       samplesize=corpus_info.sample_size)
@@ -208,16 +208,19 @@ class Actions(Querying):
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
 
-                kwic = Kwic(self.corp, self.args.corpname, conc)
                 kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
                 kwic_args.speech_attr = self._get_speech_segment()
                 kwic_args.labelmap = {}
                 kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
                 kwic_args.structs = self._get_struct_opts()
+
+                kwic = Kwic(self.corp, self.args.corpname, conc)
+
                 out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (), enc=self.corp_encoding)
                 out.update(kwic.kwicpage(kwic_args))
                 out.update(self.get_conc_sizes(conc))
             out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
+            out['items_per_page'] = self.args.pagesize
         except Exception as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
@@ -231,7 +234,7 @@ class Actions(Querying):
                               for w in self.corp.get_conf('ALIGNED').split(',')]
         if self.args.align and not self.args.maincorp:
             self.args.maincorp = self.args.corpname
-        if len(out['Lines']) == 0:
+        if conc.size() == 0 and conc.finished():
             msg = translate(
                 'No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
@@ -395,7 +398,14 @@ class Actions(Querying):
     def get_cached_conc_sizes(self, _):
         from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
-        return self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
+        try:
+            return self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
+        except Exception as ex:
+            cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
+            q = tuple(self.args.q)
+            subchash = getattr(self.corp, 'subchash', None)
+            conclib.cancel_async_task(cache_map, subchash, q)
+            raise BackgroundCalculationException(str(ex))
 
     def get_conc_sizes(self, conc):
         i = 1

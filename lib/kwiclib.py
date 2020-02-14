@@ -77,6 +77,40 @@ def tokens2strclass(tokens):
             for i in range(0, len(tokens), 2)]
 
 
+class EmptyConc:
+
+    def __init__(self, corp, cache_path):
+        self._corp = corp
+        self._cache_path = cache_path
+
+    def corp(self):
+        return self._corp
+
+    def get_conc_file(self):
+        return self._cache_path
+
+    def size(self):
+        return 0
+
+    def fullsize(self):
+        return 0
+
+    def switch_aligned(self, *args, **kw):
+        pass
+
+    def compute_ARF(self):
+        return 0
+
+    def finished(self):
+        return False
+
+
+class EmptyKWiclines:
+
+    def nextline(self):
+        return False
+
+
 class Pagination(object):
     first_page = 1
     prev_page = None
@@ -273,7 +307,7 @@ class Kwic(object):
             pagination.prev_page = fromp - 1
         if self.conc.size() > args.pagesize:
             out.fromp = fromp
-            numofpages = math.ceil((self.conc.size() - 1) / args.pagesize + 1)
+            numofpages = math.ceil(self.conc.size() / args.pagesize) if self.conc.size() > 0 else 1
             if numofpages < 30:
                 out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
@@ -281,6 +315,7 @@ class Kwic(object):
             pagination.last_page = numofpages
         else:
             pagination.last_page = 1
+
         out.concsize = self.conc.size()
 
         if is_subcorpus(self.corpus):
@@ -529,9 +564,12 @@ class Kwic(object):
 
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
-        kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
-                               args.leftctx, args.rightctx,
-                               args.attrs, args.ctxattrs, all_structs, args.refs)
+        if isinstance(self.conc, EmptyConc):
+            kl = EmptyKWiclines()
+        else:
+            kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
+                                   args.leftctx, args.rightctx,
+                                   args.attrs, args.ctxattrs, all_structs, args.refs)
         labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0

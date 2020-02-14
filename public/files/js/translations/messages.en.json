@@ -450,6 +450,7 @@
         "concview__tip_04": "To show/hide this window quickly, use the <e> key",
         "concview__freqs_overview_heading": "Text types overview",
         "concview__translat_not_avail": "Translation not available",
+        "concview__waiting_for_data": "Waiting for data",
         "options__attributes_hd": "Positional attributes",
         "options__structures_hd": "Structures",
         "options__references_hd": "References",
