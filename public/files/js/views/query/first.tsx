@@ -297,7 +297,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe);
+            this.modelSubscriptions.forEach(s => s.unsubscribe());
         }
 
         render() {
