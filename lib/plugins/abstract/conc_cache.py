@@ -32,7 +32,7 @@ import os
 import time
 import math
 
-QueryType = Union[List[str], Tuple[str]]
+QueryType = Tuple[str]
 
 
 class CalcStatusException(Exception):
@@ -41,7 +41,9 @@ class CalcStatusException(Exception):
 
 class CalcStatus(object):
 
-    def __init__(self, task_id: Optional[str] = None) -> None:
+    def __init__(self, task_id: Optional[str] = None, curr_wait: Optional[float] = 100., concsize: Optional[int] = 0,
+                 fullsize: Optional[int] = 0, relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
+                 error: Union[str, BaseException, None] = None, finished: Optional[bool] = False) -> None:
         self.task_id: Optional[str] = task_id
         self.pid: int = os.getpid()
         self.created: int = int(time.time())
@@ -50,13 +52,13 @@ class CalcStatus(object):
         # BackgroundCalc class) starts (the calculation updates curr_wait as it
         # runs), we want to be sure the limit is big enough for BackgroundCalc to
         # be considered alive
-        self.curr_wait: int = 100
-        self.concsize: int = 0
-        self.fullsize: int = 0
-        self.relconcsize: int = 0
-        self.arf = None
-        self.error: Optional[BaseException] = None
-        self.finished: bool = False
+        self.curr_wait = curr_wait
+        self.concsize = concsize
+        self.fullsize = fullsize
+        self.relconcsize = relconcsize
+        self.arf = arf
+        self.error: str = str(error) if isinstance(error, BaseException) else error
+        self.finished = finished
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(self.__dict__)
@@ -75,8 +77,9 @@ class CalcStatus(object):
             return True
         return False
 
-    def update(self, data: Dict[str, Any]) -> 'CalcStatus':
-        for k, v in list(data.items()):
+    def update(self, data: Union[Dict[str, Any], 'CalcStatus']) -> 'CalcStatus':
+        src = data.to_dict() if isinstance(data, CalcStatus) else data
+        for k, v in src.items():
             if hasattr(self, k):
                 setattr(self, k, v)
             else:
@@ -88,7 +91,7 @@ class CalcStatus(object):
 class AbstractConcCache(abc.ABC):
 
     @abc.abstractmethod
-    def get_stored_size(self, subchash: str, q: QueryType) -> int:
+    def get_stored_size(self, subchash: str, q: QueryType) -> Union[int, None]:
         """
         Return stored concordance size.
         The method should return None if no record is found at all.
@@ -118,7 +121,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def cache_file_path(self, subchash: str, q: QueryType) -> str:
+    def cache_file_path(self, subchash: str, q: QueryType) -> Union[str, None]:
         """
         Return a path to a cache file matching provided subcorpus hash and query
         elements. If there is no entry matching (subchash, q) then None must be
@@ -130,12 +133,12 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_to_map(self, subchash: str, query: QueryType, size: int, calc_status: Optional[CalcStatus] = None):
+    def add_to_map(self, subchash: Union[str, None], query: QueryType, size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
         """
         Add or update a cache map entry
 
         ------
-        TODO: the current implementation has serious issues
+        TODO: the current implementation has issues
         regarding hidden arguments and cache status relationships
         user cannot possibly understand. I.e. if a record is
         not present yet then calc_status cannot be None.
@@ -154,7 +157,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def del_entry(self, subchash: str, q: QueryType):
+    def del_entry(self, subchash: Union[str, None], q: QueryType):
         """
         Remove a specific entry with concrete subchash and query.
 
@@ -164,7 +167,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def del_full_entry(self, subchash: str, q: QueryType):
+    def del_full_entry(self, subchash: Union[str, None], q: QueryType):
         """
         Removes all the entries with the same base query no matter
         what other operations the query (e.g. shuffle, filter) contains.
@@ -173,6 +176,10 @@ class AbstractConcCache(abc.ABC):
                     CorpusManager.get_Corpus()
         q -- a list of query elements
         """
+
+    @abc.abstractmethod
+    def update_calc_status(self, subchash: Union[str, None], query: Tuple[str], calc_status: Union[CalcStatus, None]):
+        pass
 
 
 class AbstractCacheMappingFactory(abc.ABC):

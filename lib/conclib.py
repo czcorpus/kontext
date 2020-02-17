@@ -27,13 +27,17 @@ from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass, EmptyConc
 import plugins
+from plugins.abstract.conc_cache import CalcStatus
 from concworker import GeneralWorker
 import corplib
+import bgcalc
 
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 CONC_REGISTER_TASK_LIMIT = 5  # task itself should be super-fast
 CONC_REGISTER_WAIT_LIMIT = 20  # client may be forced to wait loger due to other tasks
+CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
+CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 4000000000
 
 
 class ConcCalculationControlException(Exception):
@@ -78,8 +82,7 @@ def _min_conc_unfinished(cache_map, q, subchash, minsize):
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
         cache_map.del_full_entry(subchash, q)
-        raise ConcCalculationControlException(
-            'Missing status information (invalid cache entry has been removed).')
+        raise ConcCalculationControlException(f'Missing status information for ({subchash}, {q}).')
 
     status.test_error()
     return not status.has_some_result(minsize=minsize)
@@ -109,7 +112,6 @@ def cancel_async_task(cache_map, subchash, q):
     if backend == 'multiprocessing':
         logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')
     elif backend in ('celery', 'konserver') and status:
-        import bgcalc
         try:
             if status.task_id:
                 app = bgcalc.calc_backend_client(settings)
@@ -171,7 +173,8 @@ def _get_cached_conc(corp, subchash, q, minsize):
     for i in range(srch_from, 0, -1):
         cachefile = cache_map.cache_file_path(subchash, q[:i])
         if cachefile:
-            ready = _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:i], minsize=minsize, hard_limit=60)
+            ready = _wait_for_conc(cache_map=cache_map, subchash=subchash,
+                                   q=q[:i], minsize=minsize, hard_limit=5)
             if not ready:
                 cancel_async_task(cache_map, subchash, q[:i])
                 logging.getLogger(__name__).warning(
@@ -179,8 +182,8 @@ def _get_cached_conc(corp, subchash, q, minsize):
                 continue
             conccorp = corp
             for qq in reversed(q[:i]):  # find the right main corp, if aligned
-                if qq.startswith('x-'):
-                    conccorp = manatee.Corpus(qq[2:])
+                if qq.startswith('X'):
+                    conccorp = manatee.Corpus(qq[1:])
                     break
             conc = None
             try:
@@ -194,7 +197,7 @@ def _get_cached_conc(corp, subchash, q, minsize):
             ans = (i, conc)
             break
     logging.getLogger(__name__).debug('get_cached_conc(%s, [%s]) -> %s, %01.4f'
-                                      % (corp.corpname, ','.join(q), 'hit' if ans[1] else 'miss',
+                                      % (corp.corpname, ','.join(q[:ans[0]]), 'hit' if ans[1] else 'miss',
                                          time.time() - start_time))
     return ans
 
@@ -209,7 +212,6 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         from concworker import mp
         mp.create_task(user_id, corp, subchash, q, samplesize).start()
     elif backend in ('celery', 'konserver'):
-        import bgcalc
         app = bgcalc.calc_backend_client(settings)
         ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
                                                      subchash, q, samplesize, TASK_TIME_LIMIT),
@@ -219,11 +221,38 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    conc_avail = _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize, hard_limit=5)
+    conc_avail = _wait_for_conc(cache_map=cache_map, subchash=subchash,
+                                q=q, minsize=minsize, hard_limit=5)
     if conc_avail:
         return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
     else:
         return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
+
+
+def _get_bg_conc(corp, user_id, q, subchash, samplesize, minsize, calc_from):
+    """
+    """
+    backend = settings.get('calc_backend', 'type')
+    if backend in ('celery', 'konserver'):
+        cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+        for i in range(len(q)):
+            status = GeneralWorker().create_new_calc_status()
+            status.finished = False
+            status.concsize = 0
+            cache_map.add_to_map(subchash, q[:i + 1], 0, calc_status=status)
+        app = bgcalc.calc_backend_client(settings)
+        app.send_task('worker.conc_sync_calculate',
+                      (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize,
+                       calc_from),
+                      time_limit=TASK_TIME_LIMIT)
+        conc_avail = _wait_for_conc(cache_map=cache_map, subchash=subchash,
+                                    q=q, minsize=minsize, hard_limit=5)
+        if conc_avail:
+            return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
+        else:
+            return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
+    else:
+        raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
 
 def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
@@ -283,19 +312,24 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
     else:
         calc_from = 1
         async = 0
+
     worker = GeneralWorker()
-    # cache miss or not used
     if not conc:
         calc_from = 1
-        if async and len(q) == 1:  # asynchronous processing
+        # use Manatee asynchronous conc. calculation (= show 1st page once it's avail.)
+        if async and len(q) == 1:
             conc = _get_async_conc(corp=corp, user_id=user_id, q=q, save=save, subchash=subchash,
                                    samplesize=samplesize, fullsize=fullsize, minsize=minsize)
-
+        # move mid-sized aligned corpora or large non-aligned corpora to background
+        elif len(q) > 1 and (q[1][0] == 'X' and corp.size() > CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD or corp.size() > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD):
+            conc = _get_bg_conc(corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
+                                minsize=minsize, calc_from=calc_from)
+            # we don't want to calculate the rest of ops here as it is done by _get_bg_conc itself
+            calc_from = len(q)
+        # do the calc here and return (OK for small to mid sized corpora without alignments)
         else:
             conc = _get_sync_conc(worker=worker, corp=corp, q=q, save=save, subchash=subchash,
                                   samplesize=samplesize)
-    if isinstance(conc, EmptyConc):
-        return conc
     # save additional concordance actions to cache (e.g. sample)
     for act in range(calc_from, len(q)):
         command, args = q[act][0], q[act][1:]
@@ -314,7 +348,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
             elif not stored_status:
                 conc.save(cachefile)
                 cache_map.update_calc_status(
-                    subchash, q[:act + 1], dict(finished=True, concsize=conc.size()))
+                    subchash, q[:act + 1], CalcStatus(finished=True, concsize=conc.size()))
     return conc
 
 

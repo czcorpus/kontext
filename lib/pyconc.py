@@ -158,20 +158,9 @@ class PyConc(manatee.Concordance):
         self.reduce_lines(options)
 
     def command_x(self, options):
-        if options[0] == '-':
-            self.switch_aligned(self.orig_corp.get_conffile())
-            try:
-                self.add_aligned(options[1:])
-            except RuntimeError as e:
-                logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
-                raise EmptyParallelCorporaIntersection(
-                    translate('No alignment available for the selected languages'))
-            self.switch_aligned(options[1:])
-            self.corpname = options[1:]
-        else:
-            self.swap_kwic_coll(int(options))
+        raise NotImplementedError('Command "x" not supported any more')
 
-    def command_X(self, options):  # this is only for manatee >= 2.130.6
+    def command_X(self, options):
         self.add_aligned(options)
         self.filter_aligned(options)
 

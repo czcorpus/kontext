@@ -22,9 +22,10 @@ import logging
 import time
 import os
 import sys
-from plugins.abstract import conc_cache
+from typing import Union, Tuple
 
 import plugins
+from plugins.abstract.conc_cache import CalcStatus, AbstractConcCache
 from conclib import PyConc
 from corplib import CorpusManager, is_subcorpus
 import manatee
@@ -38,7 +39,7 @@ class GeneralWorker(object):
         self._task_id = task_id
 
     def create_new_calc_status(self):
-        return conc_cache.CalcStatus(task_id=self._task_id)
+        return CalcStatus(task_id=self._task_id)
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):
         """
@@ -68,7 +69,9 @@ class GeneralWorker(object):
             cache_map = self._cache_factory.get_mapping(corp)
             cachefile = cache_map.cache_file_path(subchash, q)
             status = cache_map.get_calc_status(subchash, q)
-            if status.error is not None:
+            if not status:
+                raise ConcCalculationStatusException('Concordance calculation not found', None)
+            elif status.error is not None:
                 raise ConcCalculationStatusException('Concordance calculation failed', status.error)
 
         if cachefile and os.path.isfile(cachefile):
@@ -163,7 +166,7 @@ class ConcCalculation(GeneralWorker):
                     time.sleep(sleeptime)
                     sleeptime += 0.1
                     sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
-                    cache_map.update_calc_status(subchash, query, dict(
+                    cache_map.update_calc_status(subchash, query, CalcStatus(
                         curr_wait=sleeptime,
                         finished=sizes['finished'],
                         concsize=sizes['concsize'],
@@ -175,7 +178,7 @@ class ConcCalculation(GeneralWorker):
                 conc.save(tmp_cachefile)  # whole
                 os.rename(tmp_cachefile, initial_args['cachefile'])
                 sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
-                cache_map.update_calc_status(subchash, query, dict(
+                cache_map.update_calc_status(subchash, query, CalcStatus(
                     curr_wait=sleeptime,
                     finished=sizes['finished'],
                     concsize=sizes['concsize'],
@@ -194,7 +197,59 @@ class ConcCalculation(GeneralWorker):
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
             if cache_map is not None:
                 cache_map.update_calc_status(
-                    subchash, query, dict(
+                    subchash, query, CalcStatus(
                         finished=True,
                         curr_wait=sleeptime,
-                        error=str(e) if str(e) else e.__class__.__name__))
+                        error=e))
+
+
+class ConcSyncCalculation(GeneralWorker):
+    """
+    A worker for calculating a concordance synchronously (from Manatee API point of view)
+    but still in background.
+
+    Please note that the worker expects you to create required concordance cache
+    mapping records.
+    """
+
+    def __init__(self, task_id, cache_factory, subc_dirs, corpus_name, subc_name: str, conc_dir: str):
+        super().__init__(task_id, cache_factory)
+        self.corpus_manager = CorpusManager(subcpath=subc_dirs)
+        corpus_manager = CorpusManager(subcpath=subc_dirs)
+        self.corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
+        setattr(self.corpus_obj, '_conc_dir', conc_dir)
+        self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
+
+    def _mark_calc_states_err(self, subchash: Union[str, None], query: Tuple[str], from_idx: int, err: BaseException):
+        for i in range(from_idx, len(query)):
+            self.cache_map.update_calc_status(
+                subchash, query[:i + 1], CalcStatus(error=err, finished=True))
+
+    def __call__(self,  subchash, query: Tuple[str], samplesize: int, calc_from: int):
+        try:
+            conc = self.compute_conc(self.corpus_obj, query, samplesize)
+            conc.sync()  # wait for the computation to finish
+            conc.save(self.cache_map.cache_file_path(subchash, query[:1]))
+            self.cache_map.update_calc_status(
+                subchash, query[:1], CalcStatus(finished=True, concsize=conc.size()))
+        except Exception as ex:
+            logging.getLogger(__name__).error(ex)
+            self._mark_calc_states_err(subchash, query, 0, ex)
+            return
+
+        # save additional concordance actions to cache (e.g. sample)
+        for act in range(calc_from, len(query)):
+            try:
+                command, args = query[act][0], query[act][1:]
+                conc.exec_command(command, args)
+                if command in 'gae':  # user specific/volatile actions, cannot save
+                    raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
+                cachefile = self.cache_map.cache_file_path(subchash, query[:act + 1])
+                # TODO if stored_status then something went wrong
+                conc.save(cachefile)
+                self.cache_map.update_calc_status(
+                    subchash, query[:act + 1], CalcStatus(finished=True, concsize=conc.size()))
+            except Exception as ex:
+                self._mark_calc_states_err(subchash, query, act, ex)
+                logging.getLogger(__name__).error(ex)
+                return

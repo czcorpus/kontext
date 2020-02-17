@@ -215,6 +215,16 @@ def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash
     return task(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
 
 
+@app.task(bind=True)
+def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize, calc_from):
+    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
+    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
+    conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
+    task = concworker.ConcSyncCalculation(task_id=self.request.id, cache_factory=None, subc_dirs=(subc_path, pub_path),
+                                          corpus_name=corpus_name, subc_name=subc_name, conc_dir=conc_dir)
+    return task(subchash, query, samplesize, calc_from)
+
+
 # ----------------------------- COLLOCATIONS ----------------------------------
 
 class CollsTask(app.Task):

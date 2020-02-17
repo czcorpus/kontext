@@ -200,6 +200,8 @@ class Actions(Querying):
                 del self.args.q[i]
             i += 1
         out = self._create_empty_conc_result_dict()
+        out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
+        out['items_per_page'] = self.args.pagesize
         conc = EmptyConc(self.corp, None)
         try:
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
@@ -219,9 +221,7 @@ class Actions(Querying):
                 out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (), enc=self.corp_encoding)
                 out.update(kwic.kwicpage(kwic_args))
                 out.update(self.get_conc_sizes(conc))
-            out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-            out['items_per_page'] = self.args.pagesize
-        except Exception as ex:
+        except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
 
@@ -287,6 +287,7 @@ class Actions(Querying):
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
             self._plugin_api, self.args.corpname)
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
+        logging.getLogger(__name__).debug('FINISHED ? @@@ {}'.format(out['finished']))
         out['running_calc'] = not out['finished'] and self.args.async and self.args.save and not out['sampled_size']
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:

@@ -634,6 +634,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         adHocIpm:number;
         subCorpName:string;
         origSubcorpName:string;
+        hasLines:boolean;
         isWaiting:boolean;
     }> {
 
@@ -672,6 +673,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 adHocIpm: lineViewModel.getAdHocIpm(),
                 subCorpName: lineViewModel.getSubCorpName(),
                 origSubcorpName: lineViewModel.getCurrentSubcorpusOrigName(),
+                hasLines: lineViewModel.getLines().size > 0,
                 isWaiting: lineViewModel.getIsBusy()
             };
         }
@@ -833,7 +835,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
                     <div id="conclines-wrapper">
-                        {this.state.concSummary.concSize == 0 && this.state.isWaiting ?
+                        {!this.state.hasLines && this.state.isWaiting ?
                             <div className="no-data">
                                 <p>{he.translate('concview__waiting_for_data')}{'\u2026'}</p>
                                 <p><layoutViews.AjaxLoaderImage /></p>

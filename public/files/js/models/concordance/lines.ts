@@ -433,7 +433,6 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     this.concSummary.ipm = action.payload['relconcsize'];
                     this.concSummary.arf = action.payload['arf'];
                     this.pagination.lastPage = action.payload['availPages'];
-                    this.emitChange();
                     this.synchronize(
                         action.name,
                         {
@@ -461,6 +460,8 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                             this.isBusy = false;
                         }
                     }
+                    console.log('updated ', action.payload, ', is busy: ', this.isBusy)
+                    this.emitChange();
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
                     this.isBusy = false;

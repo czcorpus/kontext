@@ -23,6 +23,7 @@ from functools import partial
 import re
 import itertools
 import math
+import logging
 
 import manatee
 from structures import FixedDict
@@ -86,6 +87,10 @@ class EmptyConc:
     def corp(self):
         return self._corp
 
+    @property
+    def orig_corp(self):
+        return self._corp
+
     def get_conc_file(self):
         return self._cache_path
 
@@ -96,6 +101,12 @@ class EmptyConc:
         return 0
 
     def switch_aligned(self, *args, **kw):
+        pass
+
+    def add_aligned(self, *args, **kw):
+        pass
+
+    def get_aligned(self, corps_with_colls):
         pass
 
     def compute_ARF(self):
@@ -295,7 +306,9 @@ class Kwic(object):
         pagination = Pagination()
         pagination.first_page = 1
         out.Lines = self.kwiclines(args.create_kwicline_args())
+        logging.getLogger(__name__).debug('add aligns BEFORE....')
         self.add_aligns(out, args.create_kwicline_args(speech_segment=None))
+        logging.getLogger(__name__).debug('... add aligns AFTER')
 
         if len(out.CorporaColumns) == 0:
             out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]
