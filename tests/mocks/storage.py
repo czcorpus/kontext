@@ -99,6 +99,3 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def set_ttl(self, key, ttl):
         pass
-
-    def fork(self):
-        return self

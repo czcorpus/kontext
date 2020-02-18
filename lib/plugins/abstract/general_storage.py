@@ -221,17 +221,6 @@ class KeyValueStorage(abc.ABC):
         key -- data access key
         """
 
-    @abc.abstractmethod
-    def fork(self) -> 'KeyValueStorage':
-        """
-        Return a new instance of the plug-in with the same connection
-        parameters.
-
-        This method is used only in case multiprocessing is configured
-        for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used,
-        it is never called).
-        """
-
     def get_instance(self, plugin_id):
         """
         Return the current instance of the plug-in

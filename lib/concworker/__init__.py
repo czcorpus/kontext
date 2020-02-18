@@ -25,7 +25,7 @@ import sys
 from typing import Union, Tuple
 
 import plugins
-from plugins.abstract.conc_cache import CalcStatus, AbstractConcCache
+from plugins.abstract.conc_cache import CalcStatus
 from conclib import PyConc
 from corplib import CorpusManager, is_subcorpus
 import manatee

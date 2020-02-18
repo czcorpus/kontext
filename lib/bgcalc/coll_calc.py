@@ -24,6 +24,7 @@ import settings
 from structures import FixedDict
 from bgcalc import UnfinishedConcordanceError
 from translation import ugettext as _
+import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
@@ -167,17 +168,11 @@ def calculate_colls(coll_args):
 
         coll_args.cache_path = cache_path
         coll_args.num_fetch_items = num_fetch_items
-
-        backend = settings.get('calc_backend', 'type')
-        if backend in ('celery', 'konserver'):
-            import bgcalc
-            app = bgcalc.calc_backend_client(settings)
-            res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
-                                time_limit=TASK_TIME_LIMIT)
-            # worker task caches the value AFTER the result is returned (see worker.py)
-            ans = res.get()
-        elif backend == 'multiprocessing':
-            ans = calculate_colls_mp(coll_args)
+        app = bgcalc.calc_backend_client(settings)
+        res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
+                            time_limit=TASK_TIME_LIMIT)
+        # worker task caches the value AFTER the result is returned (see worker.py)
+        ans = res.get()
     else:
         ans = dict(data=collocs, processing=0)
     result = dict(
@@ -189,23 +184,6 @@ def calculate_colls(coll_args):
         Items=ans['data']['Items'][collstart:collend - 1]
     )
     return result
-
-
-def calculate_colls_mp(coll_args):
-    """
-    Background calculation of collocations
-    using 'multiprocessing' package.
-    """
-    import multiprocessing
-
-    def cache_results(cache_path, data):
-        with open(cache_path, 'wb') as f:
-            pickle.dump(data, f)
-
-    ans = calculate_colls_bg(coll_args)
-    if len(ans['Items']) >= settings.get_int('corpora', 'colls_cache_min_lines', 10):  # cache only if its worth it
-        multiprocessing.Process(target=cache_results, args=(coll_args.cache_path, ans,)).start()
-    return ans
 
 
 def clean_colls_cache():

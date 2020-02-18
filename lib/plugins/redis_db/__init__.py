@@ -43,21 +43,6 @@ class RedisDb(KeyValueStorage):
         self.redis = redis.StrictRedis(host=self._host, port=self._port, db=self._db)
         self._scan_chunk_size = 50
 
-    def fork(self):
-        """
-        Return a new instance of the plug-in with the same connection
-        parameters.
-
-        This method is used only in case multiprocessing is configured
-        for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used, it is
-        never called).
-        """
-        return RedisDb({
-            'default:host': self._host,
-            'default:port': self._port,
-            'default:id': self._db
-        })
-
     def rename(self, key, new_key):
         return self.redis.rename(key, new_key)
 

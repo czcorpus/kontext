@@ -84,19 +84,6 @@ class DefaultDb(KeyValueStorage):
                        (path, data, -1))
         self._conn().commit()
 
-    def fork(self):
-        """
-        Return a new instance of the plug-in with the same connection
-        parameters.
-
-        This method is used only in case multiprocessing is configured
-        for asynchronous tasks (i.e. in case 'celery' or 'konserver' is used,
-        it is never called).
-        """
-        return DefaultDb({
-            'default:db_path': self.conf.get('default:db_path')
-        })
-
     def rename(self, key, new_key):
         self._delete_expired(key)
         cursor = self._conn().cursor()

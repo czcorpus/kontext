@@ -195,11 +195,3 @@ class AbstractCacheMappingFactory(abc.ABC):
         returns:
         an AbstractConcCache compatible instance
         """
-
-    @abc.abstractmethod
-    def fork(self) -> 'AbstractCacheMappingFactory':
-        """
-        Create a new instance with forked db plug-in. This is
-        used only in case 'multiprocessing' is defined for
-        background/asynchronous tasks.
-        """

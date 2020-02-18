@@ -174,9 +174,6 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
     def get_mapping(self, corpus):
         return DefaultCacheMapping(self._cache_dir, corpus, self._db)
 
-    def fork(self):
-        return CacheMappingFactory(self._cache_dir, self._db.fork())
-
     def export_tasks(self):
         """
         Export tasks for Celery worker(s)

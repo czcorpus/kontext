@@ -28,6 +28,7 @@ import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings
 import argmapping
+import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
@@ -143,28 +144,16 @@ class Subcorpus(Querying):
                 corplib.mk_publish_links(path, publish_path, self.session_get(
                     'user', 'fullname'), description)
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
-            backend = settings.get('calc_backend', 'type')
-            if backend in ('celery', 'konserver'):
-                import bgcalc
-                app = bgcalc.calc_backend_client(settings)
-                res = app.send_task('worker.create_subcorpus',
-                                    (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                                     tt_query, imp_cql, self.session_get('user', 'fullname'), description),
-                                    time_limit=TASK_TIME_LIMIT)
-                self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
-                                                       category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                       label='%s:%s' % (basecorpname, subcname),
-                                                       args=dict(subcname=subcname, corpname=basecorpname)))
-                result = {}
-            elif backend == 'multiprocessing':
-                from bgcalc import subc_calc
-                import functools
-                import multiprocessing
-                worker = subc_calc.CreateSubcorpusTask(user_id=self.session_get('user', 'id'),
-                                                       corpus_id=self.args.corpname)
-                multiprocessing.Process(target=functools.partial(
-                    worker.run, tt_query, imp_cql, path, publish_path, description)).start()
-                result = {}
+            app = bgcalc.calc_backend_client(settings)
+            res = app.send_task('worker.create_subcorpus',
+                                (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
+                                 tt_query, imp_cql, self.session_get('user', 'fullname'), description),
+                                time_limit=TASK_TIME_LIMIT)
+            self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
+                                                   category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
+                                                   label='%s:%s' % (basecorpname, subcname),
+                                                   args=dict(subcname=subcname, corpname=basecorpname)))
+            result = {}
         else:
             raise UserActionException(translate('Nothing specified!'))
         if result is not False:
