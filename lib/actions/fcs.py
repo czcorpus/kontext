@@ -5,6 +5,7 @@ import kwiclib
 from controller.kontext import Kontext
 from controller import exposed
 import conclib
+from conclib.search import get_conc
 import plugins
 import settings
 import urllib.parse
@@ -125,7 +126,7 @@ class Actions(Kontext):
         try:
             anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
             q = ['q' + rq]
-            conc = conclib.get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
+            conc = get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
         except Exception as e:
             raise Exception(10, repr(e), 'Query syntax error')
 

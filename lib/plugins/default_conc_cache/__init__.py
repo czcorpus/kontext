@@ -1,4 +1,6 @@
-# Copyright (c) 2016 Institute of the Czech National Corpus
+# Copyright (c) 2016 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,7 +33,7 @@ element conc_cache {
 """
 import os
 import hashlib
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 import manatee
 
 import plugins
@@ -42,7 +44,7 @@ from plugins.abstract.general_storage import KeyValueStorage
 CachedConcInfo = Tuple[int, CalcStatus, str]
 
 
-def _uniqname(subchash: Union[str, None], query: Tuple[str]):
+def _uniqname(subchash: Optional[str], query: Tuple[str, ...]):
     """
     Returns an unique hash based on subcorpus identifier/hash and a CQL query
 
@@ -79,7 +81,7 @@ class DefaultCacheMapping(AbstractConcCache):
         if val:
             if type(val[1]) is not dict:
                 return None
-            return val[0], CalcStatus().update(val[1]), val[2]
+            return val[0], CalcStatus(**val[1]), val[2]
         return None
 
     def _set_entry(self, subchash, q, data: CachedConcInfo):
@@ -89,11 +91,11 @@ class DefaultCacheMapping(AbstractConcCache):
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE % self._corpus.corpname
 
-    def get_stored_calc_status(self, subchash: Union[str, None], q: Tuple[str]) -> Union[CalcStatus, None]:
+    def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[CalcStatus, None]:
         val = self._get_entry(subchash, q)
         return val[1] if val else None
 
-    def get_stored_size(self, subchash: Union[str, None], q: Tuple[str]) -> Union[int, None]:
+    def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
         val = self._get_entry(subchash, q)
         return val[0] if val else None
 
@@ -108,16 +110,16 @@ class DefaultCacheMapping(AbstractConcCache):
     def _cache_dir_path(self) -> str:
         return os.path.normpath('%s/%s' % (self._cache_root_dir, self._corpus.corpname))
 
-    def _create_cache_file_path(self, subchash: Union[str, None], q: Tuple[str]) -> str:
+    def _create_cache_file_path(self, subchash: Optional[str], q: Tuple[str, ...]) -> str:
         return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(subchash, q)))
 
-    def cache_file_path(self, subchash, q) -> Union[str, None]:
+    def cache_file_path(self, subchash, q) -> Optional[str]:
         val = self._get_entry(subchash, q)
         if val:
             return self._create_cache_file_path(subchash, q)
         return None
 
-    def add_to_map(self, subchash: Union[str, None], query: Tuple[str], size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
+    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
         """
         TODO: the current implementation has serious issues
         regarding hidden arguments and cache status relationships
@@ -134,26 +136,23 @@ class DefaultCacheMapping(AbstractConcCache):
             self._set_entry(subchash, query, (size, calc_status, _uniqname(subchash, query[:1])))
         return self._create_cache_file_path(subchash, query), stored_calc_status
 
-    def get_calc_status(self, subchash: Union[str, None], query: Tuple[str]) -> Union[CalcStatus, None]:
+    def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[CalcStatus, None]:
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             return stored_data[1]
         return None
 
-    def update_calc_status(self, subchash: Union[str, None], query: Tuple[str], calc_status: Union[CalcStatus, None]):
+    def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             storedsize, stored_calc_status, q0hash = stored_data
-            if calc_status is not None:
-                stored_calc_status.update(calc_status)
-            else:
-                stored_calc_status = CalcStatus()
+            stored_calc_status.update(**kw)
             self._set_entry(subchash, query, (storedsize, stored_calc_status, q0hash))
 
-    def del_entry(self, subchash: Union[str, None], q: Tuple[str]):
+    def del_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
-    def del_full_entry(self, subchash: Union[str, None], q: Tuple[str]):
+    def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         for k, stored in list(self._db.hash_get_all(self._mk_key()).items()):
             if _uniqname(subchash, q[:1]) == stored[2]:  # stored[2] = q0hash
                 # original record's key must be used (k ~ entry_key match can be partial)

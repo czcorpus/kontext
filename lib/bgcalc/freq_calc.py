@@ -26,7 +26,7 @@ from structures import FixedDict
 
 import manatee
 import corplib
-import conclib
+from conclib.search import get_conc
 import settings
 import plugins
 import bgcalc
@@ -52,7 +52,6 @@ class FreqCalsArgs(FixedDict):
     collator_locale = None
     subcname = None
     subcpath = None
-    minsize = None
     fromp = None  # ??
     pagesize = None  # ??
     fpage = None  # ??
@@ -192,7 +191,7 @@ def build_arf_db_status(corp, attrname):
 
 class FreqCalcCache(object):
 
-    def __init__(self, corpname, subcname, user_id, subcpath, minsize=None, q=None, fromp=0, pagesize=0,
+    def __init__(self, corpname, subcname, user_id, subcpath, q=None, fromp=0, pagesize=0,
                  save=0, samplesize=0):
         """
         Creates a new freq calculator with fixed concordance parameters.
@@ -200,7 +199,6 @@ class FreqCalcCache(object):
         self._corpname = corpname
         self._subcname = subcname
         self._user_id = user_id
-        self._minsize = minsize
         self._q = q
         self._fromp = fromp
         self._pagesize = pagesize
@@ -239,9 +237,8 @@ def calc_freqs_bg(args):
 
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = cm.get_Corpus(args.corpname, subcname=args.subcname)
-    conc = conclib.get_conc(corp=corp, user_id=args.user_id, minsize=args.minsize, q=args.q,
-                            fromp=args.fromp, pagesize=args.pagesize, asnc=0, save=args.save,
-                            samplesize=args.samplesize)
+    conc = get_conc(corp=corp, user_id=args.user_id, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
+                    asnc=0, save=args.save, samplesize=args.samplesize)
     if not conc.finished():
         raise UnfinishedConcordanceError(
             _('Cannot calculate yet - source concordance not finished. Please try again later.'))
@@ -258,7 +255,7 @@ def calculate_freqs(args):
     (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
     """
     cache = FreqCalcCache(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
-                          minsize=args.minsize, q=args.q, fromp=args.fromp, pagesize=args.pagesize, save=args.save,
+                          q=args.q, fromp=args.fromp, pagesize=args.pagesize, save=args.save,
                           samplesize=args.samplesize)
     calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
                                         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
@@ -326,7 +323,6 @@ class CTFreqCalcArgs(FixedDict):
     collator_locale = None
     subcname = None
     subcpath = None
-    minsize = None
     ctminfreq = None
     ctminfreq_type = None
     fcrit = None
@@ -413,8 +409,8 @@ class CTCalculation(object):
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
         self._corp = cm.get_Corpus(self._args.corpname, subcname=self._args.subcname)
-        self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
-                                      q=self._args.q, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0)
+        self._conc = get_conc(corp=self._corp, user_id=self._args.user_id, q=self._args.q,
+                              fromp=0, pagesize=0, asnc=0, save=0, samplesize=0)
         result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
                                          limit_type=self._args.ctminfreq_type)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)

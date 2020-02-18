@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2015 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -32,7 +32,7 @@ import os
 import time
 import math
 
-QueryType = Tuple[str]
+QueryType = Tuple[str, ...]
 
 
 class CalcStatusException(Exception):
@@ -41,18 +41,14 @@ class CalcStatusException(Exception):
 
 class CalcStatus(object):
 
-    def __init__(self, task_id: Optional[str] = None, curr_wait: Optional[float] = 100., concsize: Optional[int] = 0,
-                 fullsize: Optional[int] = 0, relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
+    def __init__(self, task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
+                 last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
+                 relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
                  error: Union[str, BaseException, None] = None, finished: Optional[bool] = False) -> None:
         self.task_id: Optional[str] = task_id
-        self.pid: int = os.getpid()
-        self.created: int = int(time.time())
-        self.last_upd: int = self.created
-        # in case we check status before any calculation (represented by the
-        # BackgroundCalc class) starts (the calculation updates curr_wait as it
-        # runs), we want to be sure the limit is big enough for BackgroundCalc to
-        # be considered alive
-        self.curr_wait = curr_wait
+        self.pid = pid if pid else os.getpid()
+        self.created = created if created else int(time.time())
+        self.last_upd = last_upd if last_upd else self.created
         self.concsize = concsize
         self.fullsize = fullsize
         self.relconcsize = relconcsize
@@ -63,27 +59,25 @@ class CalcStatus(object):
     def to_dict(self) -> Dict[str, Any]:
         return dict(self.__dict__)
 
-    def test_error(self):
+    def test_error(self, time_limit: int) -> Optional[BaseException]:
         if self.error is not None:
-            raise CalcStatusException(self.error)
-        if math.ceil(self.last_upd + self.curr_wait) < math.floor(time.time()):
-            raise CalcStatusException('Wait limit for initial data exceeded')
+            return CalcStatusException(self.error)
+        t1 = time.time()
+        if not self.finished and t1 - self.last_upd > time_limit:
+            return CalcStatusException(f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
+                                       f', limit: {time_limit})')
+        return None
 
     def has_some_result(self, minsize: int) -> bool:
-        if minsize == -1:
-            if self.finished:  # whole conc
-                return True
-        elif self.concsize >= minsize or self.finished:
-            return True
-        return False
+        return minsize == -1 and self.finished or self.concsize >= minsize
 
-    def update(self, data: Union[Dict[str, Any], 'CalcStatus']) -> 'CalcStatus':
-        src = data.to_dict() if isinstance(data, CalcStatus) else data
-        for k, v in src.items():
+    def update(self, **kw) -> 'CalcStatus':
+        for k, v in kw.items():
             if hasattr(self, k):
-                setattr(self, k, v)
+                v_norm = str(v) if isinstance(v, BaseException) else v
+                setattr(self, k, v_norm)
             else:
-                raise CalcStatusException('Unknow calc. attribute: %s' % (k,))
+                raise AssertionError(f'Unknown {self.__class__.__name__}  attribute: {k}')
         self.last_upd = int(time.time())
         return self
 
@@ -121,7 +115,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def cache_file_path(self, subchash: str, q: QueryType) -> Union[str, None]:
+    def cache_file_path(self, subchash: str, q: QueryType) -> Optional[str]:
         """
         Return a path to a cache file matching provided subcorpus hash and query
         elements. If there is no entry matching (subchash, q) then None must be
@@ -133,7 +127,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_to_map(self, subchash: Union[str, None], query: QueryType, size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
+    def add_to_map(self, subchash: Optional[str], query: QueryType, size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
         """
         Add or update a cache map entry
 
@@ -157,7 +151,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def del_entry(self, subchash: Union[str, None], q: QueryType):
+    def del_entry(self, subchash: Optional[str], q: QueryType):
         """
         Remove a specific entry with concrete subchash and query.
 
@@ -167,7 +161,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def del_full_entry(self, subchash: Union[str, None], q: QueryType):
+    def del_full_entry(self, subchash: Optional[str], q: QueryType):
         """
         Removes all the entries with the same base query no matter
         what other operations the query (e.g. shuffle, filter) contains.
@@ -178,7 +172,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_calc_status(self, subchash: Union[str, None], query: Tuple[str], calc_status: Union[CalcStatus, None]):
+    def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
         pass
 
 

@@ -19,10 +19,8 @@
 from typing import List
 
 import os
-from functools import partial
 from sys import stderr
 import re
-import logging
 
 import manatee
 import l10n
@@ -75,7 +73,6 @@ class PyConc(manatee.Concordance):
         self.orig_corp = orig_corp or self.pycorp
         self.corpus_encoding = corp.get_conf('ENCODING')
         self._conc_file = None
-
         try:
             if action == 'q':
                 manatee.Concordance.__init__(

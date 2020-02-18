@@ -19,15 +19,14 @@
 from typing import Any, List, Mapping, Dict, Tuple, Union
 
 from collections import defaultdict
-from functools import partial
 import re
 import itertools
 import math
-import logging
 
 import manatee
 from structures import FixedDict
 from corplib import is_subcorpus
+from conclib.empty import EmptyConc
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -76,44 +75,6 @@ def tokens2strclass(tokens):
     """
     return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
             for i in range(0, len(tokens), 2)]
-
-
-class EmptyConc:
-
-    def __init__(self, corp, cache_path):
-        self._corp = corp
-        self._cache_path = cache_path
-
-    def corp(self):
-        return self._corp
-
-    @property
-    def orig_corp(self):
-        return self._corp
-
-    def get_conc_file(self):
-        return self._cache_path
-
-    def size(self):
-        return 0
-
-    def fullsize(self):
-        return 0
-
-    def switch_aligned(self, *args, **kw):
-        pass
-
-    def add_aligned(self, *args, **kw):
-        pass
-
-    def get_aligned(self, corps_with_colls):
-        pass
-
-    def compute_ARF(self):
-        return 0
-
-    def finished(self):
-        return False
 
 
 class EmptyKWiclines:
@@ -306,9 +267,7 @@ class Kwic(object):
         pagination = Pagination()
         pagination.first_page = 1
         out.Lines = self.kwiclines(args.create_kwicline_args())
-        logging.getLogger(__name__).debug('add aligns BEFORE....')
         self.add_aligns(out, args.create_kwicline_args(speech_segment=None))
-        logging.getLogger(__name__).debug('... add aligns AFTER')
 
         if len(out.CorporaColumns) == 0:
             out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]

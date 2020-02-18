@@ -27,14 +27,18 @@ from controller.errors import UserActionException, BackgroundCalculationExceptio
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
+from concworker.base import GeneralWorker
+from concworker import cancel_async_task
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from argmapping import ConcArgsMapping
 import settings
 import conclib
+from conclib.empty import EmptyConc
+from conclib.search import get_conc
 import corplib
 from bgcalc import freq_calc, coll_calc
 import plugins
-from kwiclib import Kwic, KwicPageArgs, EmptyConc
+from kwiclib import Kwic, KwicPageArgs
 import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
@@ -204,9 +208,9 @@ class Actions(Querying):
         out['items_per_page'] = self.args.pagesize
         conc = EmptyConc(self.corp, None)
         try:
-            conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                                    fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.async,
-                                    save=self.args.save, samplesize=corpus_info.sample_size)
+            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.async,
+                            save=self.args.save, samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -288,7 +292,6 @@ class Actions(Querying):
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
             self._plugin_api, self.args.corpname)
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
-        logging.getLogger(__name__).debug('FINISHED ? @@@ {}'.format(out['finished']))
         out['running_calc'] = not out['finished'] and self.args.async and self.args.save and not out['sampled_size']
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:
@@ -398,7 +401,6 @@ class Actions(Querying):
 
     @exposed(return_type='json')
     def get_cached_conc_sizes(self, _):
-        from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
         try:
             return GeneralWorker().get_cached_conc_sizes(corp=self.corp, q=self.args.q)
@@ -406,7 +408,7 @@ class Actions(Querying):
             cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
             q = tuple(self.args.q)
             subchash = getattr(self.corp, 'subchash', None)
-            conclib.cancel_async_task(cache_map, subchash, q)
+            cancel_async_task(cache_map, subchash, q)
             raise BackgroundCalculationException(str(ex))
 
     def get_conc_sizes(self, conc):
@@ -424,9 +426,9 @@ class Actions(Querying):
                 return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
                             finished=conc.finished())
         if sampled_size:
-            orig_conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
-                                         q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
-                                         asnc=self.args.async, save=self.args.save)
+            orig_conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
+                                 q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
+                                 asnc=self.args.async, save=self.args.save)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 
@@ -693,7 +695,8 @@ class Actions(Querying):
                 par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
                 nopq.append(al_corpname)
-        self.args.q = [qbase + self._compile_query() + ' ' + ttquery + ' ' + par_query]
+        self.args.q = [
+            ' '.join(x for x in [qbase + self._compile_query(), ttquery, par_query] if x)]
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
                           fc_lemword.split(),
@@ -951,7 +954,6 @@ class Actions(Querying):
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
         args.user_id = self.session_get('user', 'id')
-        args.minsize = None
         args.q = self.args.q
         args.fromp = self.args.fromp
         args.pagesize = self.args.pagesize
@@ -1051,9 +1053,9 @@ class Actions(Querying):
             freq = calc_result['conc_size'] - errs - corrs
             if freq > 0 and err_block > -1 and corr_block > -1:
                 pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
-                cc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
-                                      q=self.args.q + [pfilter[0][1]], fromp=self.args.fromp,
-                                      pagesize=self.args.pagesize, asnc=self.args.async, save=self.args.save)
+                cc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
+                              q=self.args.q + [pfilter[0][1]], fromp=self.args.fromp,
+                              pagesize=self.args.pagesize, asnc=self.args.async, save=self.args.save)
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
                 if freq != calc_result['conc_size']:
@@ -1215,7 +1217,6 @@ class Actions(Querying):
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
         args.user_id = self.session_get('user', 'id')
-        args.minsize = None
         args.q = self.args.q
         args.ctminfreq = int(request.args.get('ctminfreq', '1'))
         args.ctminfreq_type = request.args.get('ctminfreq_type')
@@ -1282,7 +1283,6 @@ class Actions(Querying):
         calc_args.subcpath = self.subcpath
         calc_args.user_id = self.session_get('user', 'id')
         calc_args.q = self.args.q
-        calc_args.minsize = None  # TODO ??
         calc_args.save = self.args.save
         calc_args.samplesize = 0  # TODO (check also freqs)
         calc_args.cattr = self.args.cattr
@@ -1447,10 +1447,9 @@ class Actions(Querying):
             corpus_info = self.get_corpus_info(self.args.corpname)
             self._apply_viewmode(corpus_info['sentence_struct'])
 
-            conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
-                                    minsize=self.args.minsize, q=self.args.q, fromp=self.args.fromp,
-                                    pagesize=self.args.pagesize, asnc=self.args.async, save=self.args.save,
-                                    samplesize=corpus_info.sample_size)
+            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
+                            q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
+                            asnc=self.args.async, save=self.args.save, samplesize=corpus_info.sample_size)
             self._apply_linegroups(conc)
             kwic = Kwic(self.corp, self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -1731,10 +1730,8 @@ class Actions(Querying):
             query = 'aword,[] within %s' % (
                 ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
             self.args.q = [query]
-            conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), minsize=self.args.minsize,
-                                    q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
-                                    asnc=0, save=self.args.ave)
-            conc.sync()
+            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0, save=self.args.save)
             return dict(total=conc.fullsize() if conc else None)
 
     @exposed(return_type='json', http_method='POST')
