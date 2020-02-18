@@ -54,7 +54,7 @@ import settings
 from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
-                               CorpusForbiddenException, ImmediateRedirectException)
+                     CorpusForbiddenException, ImmediateRedirectException)
 
 import werkzeug.wrappers
 import http.cookies
@@ -131,7 +131,8 @@ def convert_types(args: Dict[str, Any], defaults: Dict[str, Any], del_nondef: in
     The function returns the same object as passed via 'args'
     """
     # TODO - there is a potential conflict between global Parameter types and function defaults
-    corr_func: Dict[Any, Callable[[Any], Any]] = {type(0): int, type(0.0): float, tuple: lambda x: [x]}  # TODO better typing
+    # TODO better typing
+    corr_func: Dict[Any, Callable[[Any], Any]] = {type(0): int, type(0.0): float, tuple: lambda x: [x]}
     for full_k, value in list(args.items()):
         if selector:
             k = full_k.split(':')[-1]  # filter out selector
@@ -166,6 +167,7 @@ class KonTextCookie(http.cookies.BaseCookie):
     Cookie handler which encodes and decodes strings
     as URI components.
     """
+
     def value_decode(self, val):
         return unquote(val), val
 
@@ -531,26 +533,6 @@ class Controller(object):
             del_nondef = 1
         convert_types(na, _function_defaults(action), del_nondef=del_nondef)
         return action(**na)
-
-    def call_function(self, func: Callable[[Any], T], args: Tuple[Any, ...], **named_args: Dict[str, Any]) -> T:
-        """
-        Calls a function with passed arguments but also with attributes of
-        'self' used as arguments. Actually the order is following:
-        1) get attributes of 'self'
-        2) update result by **named_args
-
-        !!! For the sake of sanity, this should be avoided as much as possible
-        because it completely hides what is actually passed to the function.
-
-        arguments:
-        func -- a callable to be called
-        args -- positional arguments
-        **named_args -- named arguments of the callable
-        """
-        na = self.clone_args()
-        na.update(named_args)
-        convert_types(na, _function_defaults(func), 1)
-        return func(*args, **na)
 
     def clone_args(self) -> Dict[str, Any]:
         """

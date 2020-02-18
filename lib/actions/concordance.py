@@ -204,8 +204,9 @@ class Actions(Querying):
         out['items_per_page'] = self.args.pagesize
         conc = EmptyConc(self.corp, None)
         try:
-            conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
-                                      samplesize=corpus_info.sample_size)
+            conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                                    fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.async,
+                                    save=self.args.save, samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -218,7 +219,7 @@ class Actions(Querying):
 
                 kwic = Kwic(self.corp, self.args.corpname, conc)
 
-                out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (), enc=self.corp_encoding)
+                out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
                 out.update(kwic.kwicpage(kwic_args))
                 out.update(self.get_conc_sizes(conc))
         except TypeError as ex:
@@ -400,7 +401,7 @@ class Actions(Querying):
         from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
         try:
-            return self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
+            return GeneralWorker().get_cached_conc_sizes(corp=self.corp, q=self.args.q)
         except Exception as ex:
             cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
             q = tuple(self.args.q)
@@ -423,8 +424,9 @@ class Actions(Querying):
                 return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
                             finished=conc.finished())
         if sampled_size:
-            orig_conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
-                                           q=self.args.q[:i])
+            orig_conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
+                                         q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
+                                         asnc=self.args.async, save=self.args.save)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 
@@ -1049,9 +1051,9 @@ class Actions(Querying):
             freq = calc_result['conc_size'] - errs - corrs
             if freq > 0 and err_block > -1 and corr_block > -1:
                 pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
-                cc = self.call_function(conclib.get_conc,
-                                        (self.corp, self.session_get('user', 'id')),
-                                        q=self.args.q + [pfilter[0][1]])
+                cc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
+                                      q=self.args.q + [pfilter[0][1]], fromp=self.args.fromp,
+                                      pagesize=self.args.pagesize, asnc=self.args.async, save=self.args.save)
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
                 if freq != calc_result['conc_size']:
@@ -1390,7 +1392,8 @@ class Actions(Querying):
         p_attrs = self.args.attrs.split(',')
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
-        data = self.call_function(conclib.get_detail_context, (self.corp, pos), attrs=attrs)
+        data = conclib.get_detail_context(
+            corp=self.corp, pos=pos, attrs=attrs, structs=self.args.structs)
         if int(getattr(self.args, 'detail_left_ctx', 0)) >= int(data['maxdetail']):
             data['expand_left_args'] = None
         if int(getattr(self.args, 'detail_right_ctx', 0)) >= int(data['maxdetail']):
@@ -1404,8 +1407,7 @@ class Actions(Querying):
         """
         display a full reference
         """
-        pos = int(request.args.get('pos', '0'))
-        return self.call_function(conclib.get_full_ref, (self.corp, pos))
+        return conclib.get_full_ref(corp=self.corp, pos=int(request.args.get('pos', '0')))
 
     @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/saveconc.html',
              return_type='plain')
@@ -1445,8 +1447,10 @@ class Actions(Querying):
             corpus_info = self.get_corpus_info(self.args.corpname)
             self._apply_viewmode(corpus_info['sentence_struct'])
 
-            conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id'),
-                                                         corpus_info.sample_size))
+            conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
+                                    minsize=self.args.minsize, q=self.args.q, fromp=self.args.fromp,
+                                    pagesize=self.args.pagesize, asnc=self.args.async, save=self.args.save,
+                                    samplesize=corpus_info.sample_size)
             self._apply_linegroups(conc)
             kwic = Kwic(self.corp, self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -1727,8 +1731,9 @@ class Actions(Querying):
             query = 'aword,[] within %s' % (
                 ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
             self.args.q = [query]
-            conc = self.call_function(
-                conclib.get_conc, (self.corp, self.session_get('user', 'id')), async=0)
+            conc = conclib.get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), minsize=self.args.minsize,
+                                    q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
+                                    asnc=0, save=self.args.ave)
             conc.sync()
             return dict(total=conc.fullsize() if conc else None)
 

@@ -32,7 +32,7 @@ class UnfinishedConcordanceError(Exception):
     This error is used whenever a concordance
     used by some background calculation is
     not completed yet (i.e. this applies only
-    in case async=1).
+    in case asnc=1).
     """
     pass
 

@@ -125,7 +125,7 @@ class Actions(Kontext):
         try:
             anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
             q = ['q' + rq]
-            conc = conclib.get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, async=0)
+            conc = conclib.get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
         except Exception as e:
             raise Exception(10, repr(e), 'Query syntax error')
 
@@ -311,7 +311,7 @@ class Actions(Kontext):
             data['message'] = ('error', repr(e))
             try:
                 data['code'], data['details'], data['msg'] = e
-            except ValueError:
+            except (ValueError, TypeError):
                 data['code'], data['details'] = 1, repr(e)
                 data['msg'] = 'General system error'
 
@@ -329,7 +329,6 @@ class Actions(Kontext):
                 custom_hdr_inject = fr.read()
         else:
             custom_hdr_inject = None
-
         return dict(fcs_provider_heading=settings.get('fcs', 'provider_heading', 'KonText FCS Data Provider'),
                     fcs_provider_website=settings.get('fcs', 'provider_website', None),
                     fcs_template_css_url=settings.get_list('fcs', 'template_css_url'),

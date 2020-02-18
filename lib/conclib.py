@@ -199,12 +199,11 @@ def _get_cached_conc(corp, subchash, q, minsize):
     return ans
 
 
-def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, minsize):
+def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
     """
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used ----- TODO remove it
     """
-    backend = settings.get('calc_backend', 'type')
     app = bgcalc.calc_backend_client(settings)
     ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
                                                  subchash, q, samplesize, TASK_TIME_LIMIT),
@@ -222,27 +221,23 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
 def _get_bg_conc(corp, user_id, q, subchash, samplesize, minsize, calc_from):
     """
     """
-    backend = settings.get('calc_backend', 'type')
-    if backend in ('celery', 'konserver'):
-        cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-        for i in range(len(q)):
-            status = GeneralWorker().create_new_calc_status()
-            status.finished = False
-            status.concsize = 0
-            cache_map.add_to_map(subchash, q[:i + 1], 0, calc_status=status)
-        app = bgcalc.calc_backend_client(settings)
-        app.send_task('worker.conc_sync_calculate',
-                      (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize,
-                       calc_from),
-                      time_limit=TASK_TIME_LIMIT)
-        conc_avail = _wait_for_conc(cache_map=cache_map, subchash=subchash,
-                                    q=q, minsize=minsize, hard_limit=5)
-        if conc_avail:
-            return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
-        else:
-            return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+    for i in range(len(q)):
+        status = GeneralWorker().create_new_calc_status()
+        status.finished = False
+        status.concsize = 0
+        cache_map.add_to_map(subchash, q[:i + 1], 0, calc_status=status)
+    app = bgcalc.calc_backend_client(settings)
+    app.send_task('worker.conc_sync_calculate',
+                  (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize,
+                   calc_from),
+                  time_limit=TASK_TIME_LIMIT)
+    conc_avail = _wait_for_conc(cache_map=cache_map, subchash=subchash,
+                                q=q, minsize=minsize, hard_limit=5)
+    if conc_avail:
+        return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
     else:
-        raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
+        return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
 
 
 def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
@@ -261,7 +256,7 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
     return conc
 
 
-def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0) -> Union[manatee.Concordance, EmptyConc]:
+def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0) -> Union[manatee.Concordance, EmptyConc]:
     """
     corp -- a respective manatee.Corpus object
     user_id -- database user ID
@@ -271,8 +266,8 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
          (e.g. ['aword,[] within <doc id="foo" />', 'p0 ...'])
     fromp -- a page offset
     pagesize -- a page size (in lines, related to 'fromp')
-    async -- if 1 then KonText spawns an asynchronous process to calculate the concordance
-             and will provide results as they are ready
+    asnc -- if 1 then KonText spawns an asynchronous process to calculate the concordance
+            and will provide results as they are ready
     save -- specifies whether to use a caching mechanism
     samplesize -- ?
     """
@@ -301,15 +296,15 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
                 fullsize = c.fullsize()
     else:
         calc_from = 1
-        async = 0
+        asnc = 0
 
     worker = GeneralWorker()
     if not conc:
         calc_from = 1
         # use Manatee asynchronous conc. calculation (= show 1st page once it's avail.)
-        if async and len(q) == 1:
-            conc = _get_async_conc(corp=corp, user_id=user_id, q=q, save=save, subchash=subchash,
-                                   samplesize=samplesize, fullsize=fullsize, minsize=minsize)
+        if asnc and len(q) == 1:
+            conc = _get_async_conc(corp=corp, user_id=user_id, q=q, subchash=subchash,
+                                   samplesize=samplesize, minsize=minsize)
         # move mid-sized aligned corpora or large non-aligned corpora to background
         elif len(q) > 1 and (q[1][0] == 'X' and corp.size() > CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD or corp.size() > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD):
             conc = _get_bg_conc(corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
@@ -445,7 +440,6 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
 
 
 def get_full_ref(corp, pos):
-    corpus_encoding = corp.get_conf('ENCODING')
     data = {}
     refs = [(n == '#' and ('#', str(pos)) or
              (n, corp.get_attr(n).pos2str(pos)))
@@ -460,7 +454,6 @@ def get_full_ref(corp, pos):
 def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40,
                        attrs=None, structs='', detail_ctx_incr=60):
     data = {}
-    corpus_encoding = corp.get_conf('ENCODING')
     wrapdetail = corp.get_conf('WRAPDETAIL')
     if wrapdetail:
         data['wrapdetail'] = '<%s>' % wrapdetail

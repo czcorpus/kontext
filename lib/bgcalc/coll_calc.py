@@ -106,7 +106,7 @@ def calculate_colls_bg(coll_args):
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         corplib.frq_db(corp, coll_args.cattr)
         conc = conclib.get_conc(corp=corp, user_id=coll_args.user_id, minsize=coll_args.minsize, q=coll_args.q,
-                                fromp=0, pagesize=0, async=0, save=coll_args.save, samplesize=coll_args.samplesize)
+                                fromp=0, pagesize=0, asnc=0, save=coll_args.save, samplesize=coll_args.samplesize)
         if not conc.finished():
             raise UnfinishedConcordanceError(
                 _('Cannot calculate yet - source concordance not finished. Please try again later.'))

@@ -240,7 +240,7 @@ def calc_freqs_bg(args):
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = cm.get_Corpus(args.corpname, subcname=args.subcname)
     conc = conclib.get_conc(corp=corp, user_id=args.user_id, minsize=args.minsize, q=args.q,
-                            fromp=args.fromp, pagesize=args.pagesize, async=0, save=args.save,
+                            fromp=args.fromp, pagesize=args.pagesize, asnc=0, save=args.save,
                             samplesize=args.samplesize)
     if not conc.finished():
         raise UnfinishedConcordanceError(
@@ -414,7 +414,7 @@ class CTCalculation(object):
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
         self._corp = cm.get_Corpus(self._args.corpname, subcname=self._args.subcname)
         self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
-                                      q=self._args.q, fromp=0, pagesize=0, async=0, save=0, samplesize=0)
+                                      q=self._args.q, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0)
         result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
                                          limit_type=self._args.ctminfreq_type)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
