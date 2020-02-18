@@ -460,7 +460,6 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                             this.isBusy = false;
                         }
                     }
-                    console.log('updated ', action.payload, ', is busy: ', this.isBusy)
                     this.emitChange();
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
