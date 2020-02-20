@@ -343,7 +343,7 @@ class Kontext(Controller):
         if not self.user_is_anonymous():
             self.subcpath.insert(0, os.path.join(settings.get(
                 'corpora', 'users_subcpath'), str(user_id)))
-        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
+        self._conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
 
     # missing return statement type check error
     def _user_has_persistent_settings(self) -> bool:  # type: ignore

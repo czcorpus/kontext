@@ -1,4 +1,6 @@
-# Copyright (c) 2016 Institute of the Czech National Corpus
+# Copyright (c) 2016 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,13 +33,18 @@ element conc_cache {
 """
 import os
 import hashlib
+from typing import Union, Tuple, Optional
+import manatee
 
 import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
 from plugins import inject
+from plugins.abstract.general_storage import KeyValueStorage
+
+CachedConcInfo = Tuple[int, CalcStatus, str]
 
 
-def _uniqname(subchash, query):
+def _uniqname(subchash: Optional[str], query: Tuple[str, ...]):
     """
     Returns an unique hash based on subcorpus identifier/hash and a CQL query
 
@@ -64,31 +71,31 @@ class DefaultCacheMapping(AbstractConcCache):
 
     KEY_TEMPLATE = 'conc_cache:%s'
 
-    def __init__(self, cache_dir, corpus, db):
+    def __init__(self, cache_dir: str, corpus: manatee.Corpus, db: KeyValueStorage):
         self._cache_root_dir = cache_dir
         self._corpus = corpus
         self._db = db
 
-    def _get_entry(self, subchash, q):
+    def _get_entry(self, subchash, q) -> Union[CachedConcInfo, None]:
         val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
         if val:
             if type(val[1]) is not dict:
                 return None
-            return [val[0], CalcStatus().update(val[1]), val[2]]
+            return val[0], CalcStatus(**val[1]), val[2]
         return None
 
-    def _set_entry(self, subchash, q, data):
+    def _set_entry(self, subchash, q, data: CachedConcInfo):
         tmp = [data[0], data[1].to_dict(), data[2]]
         self._db.hash_set(self._mk_key(), _uniqname(subchash, q), tmp)
 
-    def _mk_key(self):
+    def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE % self._corpus.corpname
 
-    def get_stored_calc_status(self, subchash, q):
+    def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[CalcStatus, None]:
         val = self._get_entry(subchash, q)
         return val[1] if val else None
 
-    def get_stored_size(self, subchash, q):
+    def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
         val = self._get_entry(subchash, q)
         return val[0] if val else None
 
@@ -100,19 +107,19 @@ class DefaultCacheMapping(AbstractConcCache):
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
-    def _cache_dir_path(self):
+    def _cache_dir_path(self) -> str:
         return os.path.normpath('%s/%s' % (self._cache_root_dir, self._corpus.corpname))
 
-    def _create_cache_file_path(self, subchash, q):
+    def _create_cache_file_path(self, subchash: Optional[str], q: Tuple[str, ...]) -> str:
         return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(subchash, q)))
 
-    def cache_file_path(self, subchash, q):
+    def cache_file_path(self, subchash, q) -> Optional[str]:
         val = self._get_entry(subchash, q)
         if val:
             return self._create_cache_file_path(subchash, q)
         return None
 
-    def add_to_map(self, subchash, query, size, calc_status=None):
+    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
         """
         TODO: the current implementation has serious issues
         regarding hidden arguments and cache status relationships
@@ -123,32 +130,29 @@ class DefaultCacheMapping(AbstractConcCache):
         if stored_data:
             storedsize, stored_calc_status, q0hash = stored_data
             if storedsize < size:
-                self._set_entry(subchash, query, [size, stored_calc_status, q0hash])
+                self._set_entry(subchash, query, (size, stored_calc_status, q0hash))
         else:
             stored_calc_status = None
-            self._set_entry(subchash, query, [size, calc_status, _uniqname(subchash, query[:1])])
+            self._set_entry(subchash, query, (size, calc_status, _uniqname(subchash, query[:1])))
         return self._create_cache_file_path(subchash, query), stored_calc_status
 
-    def get_calc_status(self, subchash, query):
+    def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[CalcStatus, None]:
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             return stored_data[1]
         return None
 
-    def update_calc_status(self, subchash, query, calc_status):
+    def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             storedsize, stored_calc_status, q0hash = stored_data
-            if calc_status is not None:
-                stored_calc_status.update(calc_status)
-            else:
-                stored_calc_status = CalcStatus()
-            self._set_entry(subchash, query, [storedsize, stored_calc_status, q0hash])
+            stored_calc_status.update(**kw)
+            self._set_entry(subchash, query, (storedsize, stored_calc_status, q0hash))
 
-    def del_entry(self, subchash, q):
+    def del_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
-    def del_full_entry(self, subchash, q):
+    def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         for k, stored in list(self._db.hash_get_all(self._mk_key()).items()):
             if _uniqname(subchash, q[:1]) == stored[2]:  # stored[2] = q0hash
                 # original record's key must be used (k ~ entry_key match can be partial)
@@ -168,9 +172,6 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
 
     def get_mapping(self, corpus):
         return DefaultCacheMapping(self._cache_dir, corpus, self._db)
-
-    def fork(self):
-        return CacheMappingFactory(self._cache_dir, self._db.fork())
 
     def export_tasks(self):
         """

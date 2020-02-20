@@ -18,12 +18,13 @@ import os
 import time
 
 import corplib
-import conclib
+from conclib.search import get_conc
 from bgcalc import freq_calc
 import settings
 from structures import FixedDict
 from bgcalc import UnfinishedConcordanceError
 from translation import ugettext as _
+import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
@@ -43,7 +44,6 @@ class CollCalcArgs(FixedDict):
     collpage = None
     citemsperpage = None
     line_offset = None
-    minsize = 0
     save = 0
     samplesize = 0
     cattr = None
@@ -61,13 +61,12 @@ class CollCalcCache(object):
 
     MANATEE_DEFAULT_NUM_FETCH_LINES = 50
 
-    def __init__(self, corpname, subcname, subcpath, user_id, q, minsize=None, save=0, samplesize=0):
+    def __init__(self, corpname, subcname, subcpath, user_id, q, save=0, samplesize=0):
         self._corpname = corpname
         self._subcname = subcname
         self._subcpath = subcpath
         self._user_id = user_id
         self._q = q
-        self._minsize = minsize
         self._save = save
         self._samplesize = samplesize
 
@@ -104,8 +103,8 @@ def calculate_colls_bg(coll_args):
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         corplib.frq_db(corp, coll_args.cattr)
-        conc = conclib.get_conc(corp=corp, user_id=coll_args.user_id, minsize=coll_args.minsize, q=coll_args.q,
-                                fromp=0, pagesize=0, async=0, save=coll_args.save, samplesize=coll_args.samplesize)
+        conc = get_conc(corp=corp, user_id=coll_args.user_id, q=coll_args.q,
+                        fromp=0, pagesize=0, asnc=0, save=coll_args.save, samplesize=coll_args.samplesize)
         if not conc.finished():
             raise UnfinishedConcordanceError(
                 _('Cannot calculate yet - source concordance not finished. Please try again later.'))
@@ -148,7 +147,7 @@ def calculate_colls(coll_args):
         collend = collstart + int(coll_args.citemsperpage) + 1
 
     cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
-                          user_id=coll_args.user_id, q=coll_args.q, minsize=coll_args.minsize, save=coll_args.save,
+                          user_id=coll_args.user_id, q=coll_args.q, save=coll_args.save,
                           samplesize=coll_args.samplesize)
     collocs, cache_path = cache.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
                                     cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
@@ -167,17 +166,11 @@ def calculate_colls(coll_args):
 
         coll_args.cache_path = cache_path
         coll_args.num_fetch_items = num_fetch_items
-
-        backend = settings.get('calc_backend', 'type')
-        if backend in ('celery', 'konserver'):
-            import bgcalc
-            app = bgcalc.calc_backend_client(settings)
-            res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
-                                time_limit=TASK_TIME_LIMIT)
-            # worker task caches the value AFTER the result is returned (see worker.py)
-            ans = res.get()
-        elif backend == 'multiprocessing':
-            ans = calculate_colls_mp(coll_args)
+        app = bgcalc.calc_backend_client(settings)
+        res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),),
+                            time_limit=TASK_TIME_LIMIT)
+        # worker task caches the value AFTER the result is returned (see worker.py)
+        ans = res.get()
     else:
         ans = dict(data=collocs, processing=0)
     result = dict(
@@ -189,23 +182,6 @@ def calculate_colls(coll_args):
         Items=ans['data']['Items'][collstart:collend - 1]
     )
     return result
-
-
-def calculate_colls_mp(coll_args):
-    """
-    Background calculation of collocations
-    using 'multiprocessing' package.
-    """
-    import multiprocessing
-
-    def cache_results(cache_path, data):
-        with open(cache_path, 'wb') as f:
-            pickle.dump(data, f)
-
-    ans = calculate_colls_bg(coll_args)
-    if len(ans['Items']) >= settings.get_int('corpora', 'colls_cache_min_lines', 10):  # cache only if its worth it
-        multiprocessing.Process(target=cache_results, args=(coll_args.cache_path, ans,)).start()
-    return ans
 
 
 def clean_colls_cache():

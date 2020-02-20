@@ -20,7 +20,7 @@
 
 class ConcCalculationStatusException(Exception):
 
-    def __init__(self, msg, orig_error):
+    def __init__(self, msg, orig_error=None):
         super(ConcCalculationStatusException, self).__init__('{0}: {1}'.format(msg, orig_error))
         self._orig_error = orig_error
 

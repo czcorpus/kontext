@@ -1113,23 +1113,27 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.viewModels.lineViewModel
         );
+
+        const showFreqInfo = this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
+                this.layoutModel.getConf<Array<string>>('ConcDashboardModules').indexOf('freqs') > -1;
         this.viewModels.dashboardModel = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
-                showFreqInfo: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
-                                    this.layoutModel.getConf<Array<string>>('ConcDashboardModules').indexOf('freqs') > -1,
+                showFreqInfo: showFreqInfo,
                 hasKwicConnect: this.layoutModel.pluginIsActive('kwic_connect')
             }
         );
-        this.viewModels.ttDistModel = new TextTypesDistModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.viewModels.lineViewModel,
-            {
-                ttCrit: this.layoutModel.getConf<TTCrit>('TTCrit')
-            }
-        );
+        if (showFreqInfo) {
+            this.viewModels.ttDistModel = new TextTypesDistModel(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                this.viewModels.lineViewModel,
+                {
+                    ttCrit: this.layoutModel.getConf<TTCrit>('TTCrit')
+                }
+            );
+        }
         return lineViewProps;
     }
 

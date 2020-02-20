@@ -107,7 +107,6 @@ class Wordlist(ConcActions):
             self.args.wlpat = '.*'
         if '.' in self.args.wlattr:
             orig_wlnums = self.args.wlnums
-            # TODO get rid of this retarded hidden deps rewriting (see the self.call_function piece of shit)
             self.args.wlnums = self._wlnums2structattr(self.args.wlnums)
 
         if paginate:
@@ -140,8 +139,8 @@ class Wordlist(ConcActions):
             if blhash != '':
                 black_words = self.load_bw_file(blhash)
 
-            whitelist = [w for w in re.split('\s+', white_words.strip()) if w]
-            blacklist = [w for w in re.split('\s+', black_words.strip()) if w]
+            whitelist = [w for w in re.split(r'\s+', white_words.strip()) if w]
+            blacklist = [w for w in re.split(r'\s+', black_words.strip()) if w]
 
             if wlhash == '' and len(self.args.wlwords) > 0:
                 wlhash = self.save_bw_file(self.args.wlwords)
@@ -157,11 +156,11 @@ class Wordlist(ConcActions):
                 'wlhash': wlhash, 'blhash': blhash
             }.items())
 
-            result_list = self.call_function(corplib.wordlist,
-                                             (self.corp,),
-                                             wlmaxitems=wlmaxitems,
-                                             words=whitelist,
-                                             blacklist=blacklist)[wlstart:]
+            result_list = corplib.wordlist(corp=self.corp, words=whitelist, wlattr=self.args.wlattr,
+                                           wlpat=self.args.wlpat, wlminfreq=self.args.wlminfreq,
+                                           wlmaxitems=wlmaxitems, wlsort=self.args.wlsort, blacklist=blacklist,
+                                           wlnums=self.args.wlnums,
+                                           include_nonwords=self.args.include_nonwords)[wlstart:]
             result['Items'] = result_list
             if len(result_list) < self.args.wlpagesize + 1:
                 result['lastpage'] = 1

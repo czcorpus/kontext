@@ -30,8 +30,10 @@ class ConfState(object):
     conf_path = None
 
 
-_conf: Dict[str, Any] = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
-_meta: Dict[str, Any] = {}  # contains data of attributes of XML elements representing configuration values
+# contains parsed data, it should not be accessed directly (use set, get, get_*)
+_conf: Dict[str, Any] = {}
+# contains data of attributes of XML elements representing configuration values
+_meta: Dict[str, Any] = {}
 _help_links: Dict[str, Any] = {}
 _state: ConfState = ConfState()
 
@@ -143,7 +145,7 @@ def get_list(section, key):
     tmp = get(section, key)
     if not tmp:
         return []
-    elif type(tmp) is list:
+    elif type(tmp) in (list, tuple):
         return [x for x in tmp]
     else:
         return [tmp]

@@ -66,6 +66,7 @@ translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization
 
 import concworker
+import concworker.base
 import bgcalc
 from bgcalc import (freq_calc, subc_calc, coll_calc)
 
@@ -182,7 +183,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
-    reg_fn = concworker.TaskRegistration(task_id=self.request.id)
+    reg_fn = concworker.base.TaskRegistration(task_id=self.request.id)
     subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
@@ -213,6 +214,16 @@ def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash
     subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     return task(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
+
+
+@app.task(bind=True)
+def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
+    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
+    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
+    conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
+    task = concworker.ConcSyncCalculation(task_id=self.request.id, cache_factory=None, subc_dirs=(subc_path, pub_path),
+                                          corpus_name=corpus_name, subc_name=subc_name, conc_dir=conc_dir)
+    return task(subchash, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------

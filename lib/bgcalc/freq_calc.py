@@ -26,9 +26,10 @@ from structures import FixedDict
 
 import manatee
 import corplib
-import conclib
+from conclib.search import get_conc
 import settings
 import plugins
+import bgcalc
 from bgcalc import UnfinishedConcordanceError
 from bgcalc.celery import is_celery_user_error
 from translation import ugettext as _
@@ -51,7 +52,6 @@ class FreqCalsArgs(FixedDict):
     collator_locale = None
     subcname = None
     subcpath = None
-    minsize = None
     fromp = None  # ??
     pagesize = None  # ??
     fpage = None  # ??
@@ -173,35 +173,16 @@ def build_arf_db(corp, attrname):
             return curr_status
 
     subc_path = prepare_arf_calc_paths(corp, attrname)
-    backend = settings.get('calc_backend', 'type')
-    if backend in ('celery', 'konserver'):
-        import bgcalc
-        app = bgcalc.calc_backend_client(settings)
-        task_ids = []
-        for m in ('frq', 'arf', 'docf'):
-            logfilename_m = create_log_path(base_path, m)
-            write_log_header(corp, logfilename_m)
-            res = app.send_task('worker.compile_{0}'.format(m),
-                                (corp.corpname, subc_path, attrname, logfilename_m),
-                                time_limit=TASK_TIME_LIMIT)
-            task_ids.append(res.id)
-        return task_ids
-
-    elif backend == 'multiprocessing':
-        import subprocess
-
-        for m in ('frq', 'arf', 'docf'):
-            logfilename_m = create_log_path(base_path, m)
-            open(logfilename_m, 'w').write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
-            log = " 2>> '%s'" % logfilename_m
-            if subc_path:
-                cmd = "mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
-                                                         subc_path.decode('utf-8'), log.decode('utf-8'))
-                cmd = cmd.encode('utf-8')
-            else:
-                cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
-            subprocess.call(cmd % 'frq', shell=True)
-        return []
+    app = bgcalc.calc_backend_client(settings)
+    task_ids = []
+    for m in ('frq', 'arf', 'docf'):
+        logfilename_m = create_log_path(base_path, m)
+        write_log_header(corp, logfilename_m)
+        res = app.send_task('worker.compile_{0}'.format(m),
+                            (corp.corpname, subc_path, attrname, logfilename_m),
+                            time_limit=TASK_TIME_LIMIT)
+        task_ids.append(res.id)
+    return task_ids
 
 
 def build_arf_db_status(corp, attrname):
@@ -210,7 +191,7 @@ def build_arf_db_status(corp, attrname):
 
 class FreqCalcCache(object):
 
-    def __init__(self, corpname, subcname, user_id, subcpath, minsize=None, q=None, fromp=0, pagesize=0,
+    def __init__(self, corpname, subcname, user_id, subcpath, q=None, fromp=0, pagesize=0,
                  save=0, samplesize=0):
         """
         Creates a new freq calculator with fixed concordance parameters.
@@ -218,7 +199,6 @@ class FreqCalcCache(object):
         self._corpname = corpname
         self._subcname = subcname
         self._user_id = user_id
-        self._minsize = minsize
         self._q = q
         self._fromp = fromp
         self._pagesize = pagesize
@@ -257,9 +237,8 @@ def calc_freqs_bg(args):
 
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = cm.get_Corpus(args.corpname, subcname=args.subcname)
-    conc = conclib.get_conc(corp=corp, user_id=args.user_id, minsize=args.minsize, q=args.q,
-                            fromp=args.fromp, pagesize=args.pagesize, async=0, save=args.save,
-                            samplesize=args.samplesize)
+    conc = get_conc(corp=corp, user_id=args.user_id, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
+                    asnc=0, save=args.save, samplesize=args.samplesize)
     if not conc.finished():
         raise UnfinishedConcordanceError(
             _('Cannot calculate yet - source concordance not finished. Please try again later.'))
@@ -276,23 +255,18 @@ def calculate_freqs(args):
     (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
     """
     cache = FreqCalcCache(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
-                          minsize=args.minsize, q=args.q, fromp=args.fromp, pagesize=args.pagesize, save=args.save,
+                          q=args.q, fromp=args.fromp, pagesize=args.pagesize, save=args.save,
                           samplesize=args.samplesize)
     calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
                                         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
                                         collator_locale=args.collator_locale)
     if calc_result is None:
-        backend = settings.get('calc_backend', 'type')
-        if backend in ('celery', 'konserver'):
-            import bgcalc
-            args.cache_path = cache_path
-            app = bgcalc.calc_backend_client(settings)
-            res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),),
-                                time_limit=TASK_TIME_LIMIT)
-            # worker task caches the value AFTER the result is returned (see worker.py)
-            calc_result = res.get()
-        if backend == 'multiprocessing':
-            calc_result = calculate_freqs_mp(args)
+        args.cache_path = cache_path
+        app = bgcalc.calc_backend_client(settings)
+        res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),),
+                            time_limit=TASK_TIME_LIMIT)
+        # worker task caches the value AFTER the result is returned (see worker.py)
+        calc_result = res.get()
 
     data = calc_result['freqs']
     conc_size = calc_result['conc_size']
@@ -339,34 +313,6 @@ def clean_freqs_cache():
     return dict(total_files=len(all_files), num_removed=num_removed, num_error=num_error)
 
 
-def calculate_freqs_mp(args):
-    """
-    Calculate frequencies via multiprocessing package. Please note
-    that this is not suitable for Gunicorn-based installations as forking
-    new processes may confuse its process pool in a quite bad way. In such case
-    it is highly recommended to use 'celery' based calculation which is
-    fully decoupled from the webserver process.
-    """
-    import multiprocessing
-
-    def cache_results(data):
-        with open(data['cache_path'], 'wb') as f:
-            pickle.dump(data['data'], f)
-
-    fc = FreqCalcCache(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id,
-                       minsize=args.minsize, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
-                       save=args.save, samplesize=args.samplesize, subcpath=args.subcpath)
-    ans, cache_ans = fc.calc_freqs(flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
-                                   rel_mode=args.rel_mode, fcrit=args.fcrit,
-                                   ftt_include_empty=args.ftt_include_empty,
-                                   collator_locale=args.collator_locale,
-                                   fmaxitems=args.fmaxitems, fpage=args.fpage,
-                                   line_offset=args.line_offset)
-    if cache_ans:
-        multiprocessing.Process(target=cache_results, args=(cache_ans,)).start()
-    return ans
-
-
 # ------------------ Contingency table freq. distribution --------------
 
 
@@ -377,7 +323,6 @@ class CTFreqCalcArgs(FixedDict):
     collator_locale = None
     subcname = None
     subcpath = None
-    minsize = None
     ctminfreq = None
     ctminfreq_type = None
     fcrit = None
@@ -464,8 +409,8 @@ class CTCalculation(object):
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
         self._corp = cm.get_Corpus(self._args.corpname, subcname=self._args.subcname)
-        self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
-                                      q=self._args.q, fromp=0, pagesize=0, async=0, save=0, samplesize=0)
+        self._conc = get_conc(corp=self._corp, user_id=self._args.user_id, q=self._args.q,
+                              fromp=0, pagesize=0, asnc=0, save=0, samplesize=0)
         result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
                                          limit_type=self._args.ctminfreq_type)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
@@ -475,22 +420,14 @@ def calculate_freqs_ct(args):
     """
     note: this is called by webserver
     """
-    backend = settings.get('calc_backend', 'type')
-    if backend in ('celery', 'konserver'):
-        import bgcalc
-        try:
-            app = bgcalc.calc_backend_client(settings)
-            res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),),
-                                time_limit=TASK_TIME_LIMIT)
-            calc_result = res.get()
-        except Exception as ex:
-            if is_celery_user_error(ex):
-                raise UserActionException(str(ex)) from ex
-            else:
-                raise ex
-    elif backend == 'multiprocessing':
-        raise NotImplementedError(
-            'Multi-processing backend is not yet supported for freq_ct calculation')
-    else:
-        raise ValueError('Invalid backend')
+    try:
+        app = bgcalc.calc_backend_client(settings)
+        res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),),
+                            time_limit=TASK_TIME_LIMIT)
+        calc_result = res.get()
+    except Exception as ex:
+        if is_celery_user_error(ex):
+            raise UserActionException(str(ex)) from ex
+        else:
+            raise ex
     return calc_result

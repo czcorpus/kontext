@@ -19,7 +19,6 @@
 from typing import Any, List, Mapping, Dict, Tuple, Union
 
 from collections import defaultdict
-from functools import partial
 import re
 import itertools
 import math
@@ -27,6 +26,7 @@ import math
 import manatee
 from structures import FixedDict
 from corplib import is_subcorpus
+from conclib.empty import EmptyConc
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -75,34 +75,6 @@ def tokens2strclass(tokens):
     """
     return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
             for i in range(0, len(tokens), 2)]
-
-
-class EmptyConc:
-
-    def __init__(self, corp, cache_path):
-        self._corp = corp
-        self._cache_path = cache_path
-
-    def corp(self):
-        return self._corp
-
-    def get_conc_file(self):
-        return self._cache_path
-
-    def size(self):
-        return 0
-
-    def fullsize(self):
-        return 0
-
-    def switch_aligned(self, *args, **kw):
-        pass
-
-    def compute_ARF(self):
-        return 0
-
-    def finished(self):
-        return False
 
 
 class EmptyKWiclines:

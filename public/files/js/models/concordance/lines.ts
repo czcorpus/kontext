@@ -31,7 +31,7 @@ import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 import {transformVmode} from '../options/structsAttrs';
 import { Action, IFullActionControl } from 'kombo';
-import { throwError, Observable } from 'rxjs';
+import { throwError, Observable, interval, Subscription } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
 export interface ServerTextChunk {
@@ -345,10 +345,11 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     private ttModel:TextTypes.ITextTypesModel;
 
     /**
-     * Note: compare with unfinishedCalculation
-     * If true then the model cannot display any data (yet).
+     * Note: substitutes "isBusy". Also compare with unfinishedCalculation.
      */
-    private isBusy:boolean;
+    private busyTimer:Subscription;
+
+    private busyWaitSecs:number;
 
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
@@ -377,7 +378,8 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
         this.useSafeFont = lineViewProps.useSafeFont;
-        this.isBusy = lineViewProps.Unfinished;
+        this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
+        this.busyWaitSecs = 0;
         this.supportsSyntaxView = lineViewProps.supportsSyntaxView;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -433,7 +435,6 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     this.concSummary.ipm = action.payload['relconcsize'];
                     this.concSummary.arf = action.payload['arf'];
                     this.pagination.lastPage = action.payload['availPages'];
-                    this.emitChange();
                     this.synchronize(
                         action.name,
                         {
@@ -447,23 +448,24 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                                     if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
                                         this.pushHistoryState(this.currentPage);
                                     }
-                                    this.isBusy = false;
+                                    this.busyTimer = this.stopBusyTimer(this.busyTimer);
                                     this.emitChange();
                                 },
                                 (err) => {
-                                    this.isBusy = false;
+                                    this.busyTimer = this.stopBusyTimer(this.busyTimer);
                                     this.emitChange();
                                     this.layoutModel.showMessage('error', err);
                                 }
                             );
 
                         } else {
-                            this.isBusy = false;
+                            this.busyTimer = this.stopBusyTimer(this.busyTimer);
                         }
                     }
+                    this.emitChange();
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
-                    this.isBusy = false;
+                    this.busyTimer = this.stopBusyTimer(this.busyTimer);
                     this.unfinishedCalculation = false;
                     this.concSummary.concSize = 0;
                     this.concSummary.fullSize = 0;
@@ -474,15 +476,15 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     this.emitChange();
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
-                    this.isBusy = true;
+                    this.busyTimer = this.runBusyTimer(this.busyTimer);
                     this.emitChange();
                     this.calculateAdHocIpm().subscribe(
                         (data) => {
-                            this.isBusy = false;
+                            this.busyTimer = this.stopBusyTimer(this.busyTimer);
                             this.emitChange();
                         },
                         (err) => {
-                            this.isBusy = false;
+                            this.busyTimer = this.stopBusyTimer(this.busyTimer);
                             this.emitChange();
                             console.error(err);
                             this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
@@ -505,8 +507,35 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                         }
                     );
                 break;
+                case 'CONCORDANCE_DATA_WAIT_TIME_INC':
+                    this.busyWaitSecs = action.payload['idx'];
+                    this.emitChange();
+                break;
             }
         });
+    }
+
+    private runBusyTimer(currTimer:Subscription):Subscription {
+        if (currTimer) {
+            currTimer.unsubscribe();
+        }
+        return interval(1000).subscribe(
+            (idx) => {
+                this.dispatcher.dispatch({
+                    name: 'CONCORDANCE_DATA_WAIT_TIME_INC',
+                    payload: {
+                        idx: idx
+                    }
+                });
+            }
+        )
+    }
+
+    private stopBusyTimer(subs:Subscription):null {
+        if (subs !== null) {
+            subs.unsubscribe();
+        }
+        return null;
     }
 
     private changeColVisibility(corpusId:string, status:boolean):void {
@@ -890,7 +919,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getIsBusy():boolean {
-        return this.isBusy;
+        return this.busyTimer !== null;
     }
 
     // TODO pick a good heuristics here
@@ -902,6 +931,10 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
             return 10;
         }
         return 1;
+    }
+
+    getNumWaitingSecs():number {
+        return this.busyWaitSecs;
     }
 }
 

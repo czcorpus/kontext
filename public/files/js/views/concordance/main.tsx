@@ -85,6 +85,15 @@ export interface MainViews {
 }
 
 
+function secs2hms(v:number) {
+    const h = Math.floor(v / 3600);
+    const m = Math.floor((v % 3600) / 60);
+    const s = v % 60;
+    const lz = (v:number) => v < 10 ? `0${v.toFixed()}` : v.toFixed();
+    return `${lz(h)}:${lz(m)}:${lz(s)}`;
+}
+
+
 export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     concDetailModel, refsDetailModel, usageTipsModel,
     ttDistModel, dashboardModel}:MainModuleArgs):MainViews
@@ -634,7 +643,9 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         adHocIpm:number;
         subCorpName:string;
         origSubcorpName:string;
+        hasLines:boolean;
         isWaiting:boolean;
+        numWaitingSecs:number;
     }> {
 
         private modelSubscriptions:Array<Subscription>;
@@ -672,7 +683,9 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 adHocIpm: lineViewModel.getAdHocIpm(),
                 subCorpName: lineViewModel.getSubCorpName(),
                 origSubcorpName: lineViewModel.getCurrentSubcorpusOrigName(),
-                isWaiting: lineViewModel.getIsBusy()
+                hasLines: lineViewModel.getLines().size > 0,
+                isWaiting: lineViewModel.getIsBusy(),
+                numWaitingSecs: lineViewModel.getNumWaitingSecs()
             };
         }
 
@@ -833,9 +846,10 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
                     <div id="conclines-wrapper">
-                        {this.state.concSummary.concSize == 0 && this.state.isWaiting ?
+                        {!this.state.hasLines && this.state.isWaiting ?
                             <div className="no-data">
-                                <p>{he.translate('concview__waiting_for_data')}{'\u2026'}</p>
+                                <p>{he.translate('concview__waiting_for_data')}</p>
+                                <p>({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}{secs2hms(this.state.numWaitingSecs)})</p>
                                 <p><layoutViews.AjaxLoaderImage /></p>
                             </div> :
                             <linesViews.ConcLines {...this.props}
