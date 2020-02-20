@@ -27,14 +27,14 @@ from controller.errors import UserActionException, BackgroundCalculationExceptio
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
-from concworker.base import GeneralWorker
-from concworker import cancel_async_task
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from argmapping import ConcArgsMapping
 import settings
 import conclib
 from conclib.empty import EmptyConc
 from conclib.search import get_conc
+from conclib.calc.base import GeneralWorker
+from conclib.calc import cancel_async_task
 import corplib
 from bgcalc import freq_calc, coll_calc
 import plugins
