@@ -139,7 +139,7 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
     else:
         minsize = fromp * pagesize  # happy case for a user
     subchash = getattr(corp, 'subchash', None)
-    conc = None
+    conc = EmptyConc(corp=corp, finished=True)
     fullsize = -1
     # try to locate concordance in cache
     if save:
