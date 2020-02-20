@@ -27,11 +27,11 @@ import plugins
 from plugins.abstract.conc_cache import CalcStatus
 from conclib.pyconc import PyConc
 from conclib.empty import EmptyConc
+from conclib.calc.base import GeneralWorker
+from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent
+from conclib.calc.errors import ConcCalculationStatusException
 import bgcalc
 import manatee
-from concworker.base import GeneralWorker
-from concworker import find_cached_conc_base, wait_for_conc, del_silent
-from concworker.errors import ConcCalculationStatusException
 
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)

@@ -30,8 +30,8 @@ from corplib import CorpusManager, is_subcorpus, corp_mtime as corplib_corp_mtim
 from conclib.empty import EmptyConc
 import manatee
 from conclib.pyconc import PyConc
-from concworker.base import GeneralWorker
-from concworker.errors import ConcCalculationStatusException
+from conclib.calc.base import GeneralWorker
+from conclib.calc.errors import ConcCalculationStatusException
 import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
@@ -65,7 +65,6 @@ def del_silent(path: str):
 
 
 def cancel_async_task(cache_map: AbstractConcCache, subchash: Optional[str], q: Tuple[str, ...]):
-    logging.getLogger(__name__).debug(f'cancel_async_task for {q}')
     cachefile = cache_map.cache_file_path(subchash, q)
     status = cache_map.get_calc_status(subchash, q)
     if status:
