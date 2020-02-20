@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 
-import imp
+from importlib.machinery import SourceFileLoader
 
 
 _backend_app = None
@@ -41,11 +41,11 @@ def _init_backend_app(conf, fn_prefix):
     app_type = conf.get('calc_backend', 'type')
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
-        import celery
         from bgcalc.celery import Config
+        import celery
 
         if app_conf:
-            cconf = imp.load_source('celeryconfig', app_conf)
+            cconf = SourceFileLoader('celeryconfig', app_conf).load_module()
         else:
             cconf = Config()
             cconf.BROKER_URL = conf.get('calc_backend', 'celery_broker_url')
@@ -59,7 +59,7 @@ def _init_backend_app(conf, fn_prefix):
         from bgcalc.konserver import KonserverApp, Config
 
         if app_conf:
-            kconf = imp.load_source('konserverconfig', app_conf)
+            kconf = SourceFileLoader('konserverconfig', app_conf).load_module()
         else:
             kconf = Config()
             kconf.SERVER = conf.get('calc_backend', 'konserver_server')
