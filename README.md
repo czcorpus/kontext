@@ -82,10 +82,9 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * versions from *2.83.3* to *2.158.8* are supported by KonText 0.13 and older
 * a key-value storage
     * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default)
-* (optional) [Celery task queue](http://www.celeryproject.org/) task queue for (asynchronous) background calculations and maintenance tasks
+* [Celery task queue](http://www.celeryproject.org/) task queue for (asynchronous) background calculations and maintenance tasks
 
 Note: KonText versions up to 0.13.x (incl.) run on Python 2. To use Python 3, 0.15.x and newer versions of KonText must be used.
-
 
 ## Build and installation
 
