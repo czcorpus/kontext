@@ -56,7 +56,7 @@ export class VirtualKeyboardModel extends StatefulModel {
         this.currLayout = null;
         this.defaultLayout = this.pageModel.getConf('DefaultVirtKeyboard');
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
 
             switch (action.name) {
                 case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':
@@ -80,28 +80,6 @@ export class VirtualKeyboardModel extends StatefulModel {
                 break;
             }
         });
-    }
-
-    private findMatchingKeyboard(lang:string):number {
-        const ans = [];
-        const walkThru = (fn:(item:string)=>boolean) => {
-            for (let i = 0; i < this.layouts.length; i += 1) {
-                for (let code of this.layouts[i].codes || ['en_US']) {
-                    if (fn((code || '').replace('-', '_').toLowerCase())) {
-                        ans.push(i);
-                    }
-                }
-            }
-        };
-        const normLang = lang.toLowerCase();
-        walkThru(item => item === normLang);
-        walkThru(item => item.substr(0, 2) === normLang.substr(0, 2));
-        if (ans.length > 0) {
-            return ans[0];
-
-        } else {
-            throw new Error('Unable to find matching keyboard layout');
-        }
     }
 
     getLayoutNames():Kontext.ListOfPairs {

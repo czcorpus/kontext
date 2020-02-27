@@ -212,20 +212,20 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         // user of this model.
         this.autoCompleteSupport = false;
 
-        this.dispatcher.registerActionListener((action:Action, dispatch:SEDispatcher) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
                     this.changeValueSelection(action.payload['attrName'], action.payload['itemIdx']);
-                    this.notifySelectionChange(dispatch);
+                    this.notifySelectionChange();
                     break;
                 case 'TT_SELECT_ALL_CHECKBOX_CLICKED':
                     this.applySelectAll(action.payload['attrName']);
-                    this.notifySelectionChange(dispatch);
+                    this.notifySelectionChange();
                 case 'TT_RANGE_BUTTON_CLICKED':
                     this.applyRange(action.payload['attrName'], action.payload['fromVal'],
                             action.payload['toVal'], action.payload['strictInterval'],
                             action.payload['keepCurrent']);
-                    this.notifySelectionChange(dispatch);
+                    this.notifySelectionChange();
                     break;
                 case 'TT_TOGGLE_RANGE_MODE':
                     this.setRangeMode(action.payload['attrName'], !this.getRangeModes().get(action.payload['attrName']));
@@ -278,7 +278,7 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     this.setTextInputAttrValue(action.payload['attrName'], action.payload['ident'],
                             action.payload['label'], action.payload['append']);
                     this.emitChange();
-                    this.notifySelectionChange(dispatch);
+                    this.notifySelectionChange();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
                     this.handleAttrTextInputChange(action.payload['attrName'], action.payload['value']);
@@ -323,12 +323,12 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
                     this.selectionHistory = this.selectionHistory.pop();
                     this.attributes = this.selectionHistory.last();
                     this.emitChange();
-                    this.notifySelectionChange(dispatch);
+                    this.notifySelectionChange();
                 break;
                 case 'TT_RESET_STATE':
                     this.reset();
                     this.emitChange();
-                    this.notifySelectionChange(dispatch);
+                    this.notifySelectionChange();
                 break;
                 case 'TT_LOCK_SELECTED':
                     this.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
@@ -356,8 +356,8 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         });
     }
 
-    notifySelectionChange(dispatch:SEDispatcher):void {
-        dispatch({
+    notifySelectionChange():void {
+        this.dispatcher.dispatch({
             name: 'TT_SELECTION_CHANGED',
             payload: {
                 attributes: this.getAttributes(),

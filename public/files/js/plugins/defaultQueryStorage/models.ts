@@ -89,7 +89,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
                     this.queryType = action.payload['value'];

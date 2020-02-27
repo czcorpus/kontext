@@ -86,7 +86,7 @@ export class SubcorpFormModel extends StatefulModel {
         this.description = {value: '', isRequired: false, isInvalid: false};
         this.isBusy = false;
         this.alignedCorpora = Immutable.List<TextTypes.AlignedLanguageItem>();
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
                     this.inputMode = action.payload['value'];

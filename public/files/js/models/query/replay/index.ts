@@ -150,7 +150,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
             this._editIsLocked = v > 0;
         });
 
-        this.dispatcher.registerActionListener(action => {
+        this.dispatcherRegister(action => {
                 switch (action.name) {
                     case 'EDIT_QUERY_OPERATION':
                         this.editedOperationIdx = action.payload['operationIdx'];

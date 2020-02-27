@@ -88,12 +88,10 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         this.actionMatch = {
             'QUERY_INPUT_ADD_ALIGNED_CORPUS': (state, action) => {
                 const newState = this.copyState(state);
-                console.log('add ', action.payload);
                 return newState;
             },
             'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': (state, action) => {
                 const newState = this.copyState(state);
-                console.log('remove ', action.payload);
                 return newState;
             },
             'TT_SELECTION_CHANGED': (state, action) => {
@@ -200,9 +198,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     sideEffects(state:SubcMixerModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.name) {
             case 'UCNK_SUBCMIXER_SET_RATIO':
-                console.log('action: ', action);
                 const err = this.validateRatio(action.payload['ratio']);
-                console.log('err: ', err);
                 if (err !== null) {
                     this.pluginApi.showMessage('error', err);
                     dispatch({

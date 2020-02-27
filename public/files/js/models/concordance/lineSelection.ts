@@ -97,7 +97,7 @@ export class LineSelectionModel extends StatefulModel {
         this._isBusy = false;
         this.emailDialogCredentials = null;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'LINE_SELECTION_SELECT_LINE':
                     let val = action.payload['value'];

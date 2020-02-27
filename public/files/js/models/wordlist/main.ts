@@ -129,7 +129,7 @@ export class WordlistResultModel extends StatefulModel {
             }
         });
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'WORDLIST_RESULT_VIEW_CONC':
                     const args = new MultiDict();

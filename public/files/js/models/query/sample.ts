@@ -56,7 +56,7 @@ export class ConcSampleModel extends StatefulModel {
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'SAMPLE_FORM_SET_RLINES':
                     const v = action.payload['value'];

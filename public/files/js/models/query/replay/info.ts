@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable'; 
+import * as Immutable from 'immutable';
 import { UNSAFE_SynchronizedModel } from '../../base';
 import { Kontext } from '../../../types/common';
 import { PageModel } from '../../../app/page';
@@ -64,7 +64,7 @@ export class QueryInfoModel extends UNSAFE_SynchronizedModel {
         super(dispatcher);
         this.pageModel = pageModel;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'CLEAR_QUERY_OVERVIEW_DATA':
                     this.currentQueryOverview = null;

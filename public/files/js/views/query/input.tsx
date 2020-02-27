@@ -874,10 +874,6 @@ export function init({
         }
 
         componentDidMount() {
-            // TODO here it looks like we listen just for cql editor model
-            // but actually we listen also for queryModel (which is triggered
-            // by the very same events) and, more importantly - we read values
-            // from queryModel which makes a nice ANTIpattern.
             this.modelSubscriptions = [
                 cqlEditorModel.addListener(this._handleModelChange),
                 queryModel.addListener(this._handleModelChange)

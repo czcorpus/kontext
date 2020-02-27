@@ -232,7 +232,7 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'OVERVIEW_CLOSE':
                     this.currentInfoType = null;

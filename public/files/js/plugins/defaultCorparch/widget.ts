@@ -169,6 +169,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private trashTimerSubsc:Subscription;
 
+    private ident:string;
+
     constructor({dispatcher, pluginApi, corpusIdent, corpSelection, anonymousUser, searchEngine,
             dataFav, dataFeat, onItemClick, corporaLabels}:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
@@ -205,6 +207,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
         this.corpSelection = corpSelection;
+        this.ident = (Math.random() * 1000).toFixed();
     }
 
     reduce(state:CorplistWidgetModelState, action:Action):CorplistWidgetModelState {

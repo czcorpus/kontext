@@ -298,6 +298,10 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
         componentWillUnmount() {
             this.modelSubscriptions.forEach(s => s.unsubscribe());
+            this._handleSubmit = undefined;
+            this._handleContextFormVisibility = undefined;
+            this._handleTextTypesFormVisibility = undefined;
+            this._keyEventHandler = undefined;
         }
 
         render() {

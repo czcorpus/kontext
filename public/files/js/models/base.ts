@@ -40,6 +40,8 @@ export class StatefulModel implements IEventEmitter {
 
     public static CHANGE_EVENT:string = 'change';
 
+    private subscription:Subscription;
+
     constructor(dispatcher:IFullActionControl) {
         this.dispatcher = dispatcher;
         this.changeTicks = new Subject();
@@ -47,7 +49,7 @@ export class StatefulModel implements IEventEmitter {
     }
 
     dispatcherRegister(fn:(action:Action)=>void):void {
-        this.dispatcher.registerActionListener(fn);
+        this.subscription = this.dispatcher.registerActionListener(fn);
     }
 
     /**
@@ -66,6 +68,11 @@ export class StatefulModel implements IEventEmitter {
     emitChange():void {
         this.changeTicks.next();
     }
+
+    unregister():void {
+        this.subscription.unsubscribe();
+    }
+
 }
 
 

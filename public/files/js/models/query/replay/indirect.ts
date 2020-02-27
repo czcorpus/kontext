@@ -46,7 +46,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel implements IQueryRe
         this.currEncodedOperations = importEncodedOperations(currentOperations);
         this.currQueryOverivew = Immutable.List<Kontext.QueryOperation>(currentOperations);
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'REDIRECT_TO_EDIT_QUERY_OPERATION':
                     window.location.replace(

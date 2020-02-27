@@ -152,7 +152,7 @@ export class MainMenuModel extends StatefulModel implements Kontext.IMainMenuMod
         this.data = importMenuData(initialData);
         this._isBusy = false;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             if (action.name === 'MAIN_MENU_SET_VISIBLE_SUBMENU') {
                 this.visibleSubmenu = action.payload['value'];
                 this.emitChange();

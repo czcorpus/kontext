@@ -42,7 +42,7 @@ import { Action, IFullActionControl } from 'kombo';
 import { PluginInterfaces } from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
-import { tap } from 'rxjs/operators';
+import { tap, share } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -129,7 +129,8 @@ export class FirstFormPage {
 
 
     private initCorplistComponent():React.ComponentClass {
-        return corplistComponent(this.layoutModel.pluginApi()).createWidget(
+        const plg = corplistComponent(this.layoutModel.pluginApi());
+        return plg.createWidget(
             'first_form',
             this.queryModel,
             {
@@ -137,15 +138,26 @@ export class FirstFormPage {
                     return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
                         tap(
                             () => {
-                                // all the components must be deleted to prevent memory leaks
-                                // and unwanted action handlers from previous instance
+                                // all the models must be unregistered and components must
+                                // be unmounted to prevent memory leaks and unwanted action handlers
+                                // from previous instance
+                                plg.disposeWidget();
+                                this.queryModel.unregister();
+                                this.cqlEditorModel.unregister();
+                                this.queryHintModel.unregister();
+                                this.textTypesModel.unregister();
+                                this.queryContextModel.unregister();
+                                this.withinBuilderModel.unregister();
+                                this.virtualKeyboardModel.unregister();
+                                this.layoutModel.unregisterAllModels();
                                 this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
                                 this.layoutModel.unmountReactComponent(window.document.getElementById('query-form-mount'));
                                 this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
                                 this.init();
                             }
-                        )
-                    )
+                        ),
+                        share()
+                    );
                 }
             }
         );
@@ -312,6 +324,7 @@ export class FirstFormPage {
                 this.layoutModel.dispatcher,
                 this.layoutModel
             );
+
             this.virtualKeyboardModel = new VirtualKeyboardModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel

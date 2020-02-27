@@ -195,7 +195,7 @@ export class ConcDetailModel extends StatefulModel {
         this.isBusy = false;
         this.tokenConnectIsBusy = false;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'CONCORDANCE_EXPAND_KWIC_DETAIL':
                     this.expaningSide = action.payload['position'];
@@ -826,7 +826,7 @@ export class RefsDetailModel extends StatefulModel {
         this.data = Immutable.List<RefsColumn>();
         this.isBusy = false;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'CONCORDANCE_SHOW_REF_DETAIL':
                     this.isBusy = true;

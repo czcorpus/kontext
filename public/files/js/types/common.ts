@@ -233,6 +233,7 @@ export namespace Kontext {
         disableMenuItem(itemId:string, subItemId?:string):void;
         enableMenuItem(itemId:string, subItemId?:string):void;
         getVisibleSubmenu():string;
+        unregister():void;
 
         /**
          * Register an action which is run before listeners

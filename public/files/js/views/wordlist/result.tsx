@@ -374,7 +374,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
 
         componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe);
+            this.modelSubscriptions.forEach(s => s.unsubscribe());
         }
 
         render() {

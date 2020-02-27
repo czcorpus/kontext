@@ -232,13 +232,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * @param subcorpus - an optional subcorpus
      */
     switchCorpus(corpora:Array<string>, subcorpus?:string):Observable<any> {
-        return this.appNavig.switchCorpus(corpora, subcorpus).pipe(
-            tap(
-                () => {
-                    return this.init(() => undefined);
-                }
-            )
-        );
+        return this.appNavig.switchCorpus(corpora, subcorpus);
     }
 
     /**
@@ -625,7 +619,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
             (args:Kontext.GeneralProps) => {
                 const ans = new Observable((observer) => {
-                    this.dispatcher.registerActionListener((action, dispatch) => {
+                    this.dispatcher.registerActionListener((action) => {
                         if (action.name === CorpusViewOptionsActionName.LoadDataDone) {
                             observer.next();
                             observer.complete();
@@ -728,6 +722,16 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             return ans;
         }
         return null;
+    }
+
+    unregisterAllModels():void {
+        this.asyncTaskChecker.unregister();
+        this.corpusInfoModel.unregister();
+        this.messageModel.unregister();
+        this.userInfoModel.unregister();
+        this.corpViewOptionsModel.unregister();
+        this.mainMenuModel.unregister();
+        this.generalViewOptionsModel.unregister();
     }
 
     /**

@@ -47,7 +47,7 @@ export class WithinBuilderModel extends StatefulModel {
         this.currAttrIdx = 0;
         const self = this;
 
-        this.dispatcher.registerActionListener(function (action:Action) {
+        this.dispatcherRegister(function (action:Action) {
             switch (action.name) {
                 case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
                     self.loadAttrs().subscribe(

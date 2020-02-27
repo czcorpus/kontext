@@ -89,7 +89,7 @@ export class GeneralViewOptionsModel extends StatefulModel implements ViewOption
         this.submitResponseHandlers = Immutable.List<()=>void>();
         this.isBusy = false;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE':
                     this.pageSize.value = action.payload['value'];

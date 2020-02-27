@@ -38,7 +38,7 @@ export class FirstHitsModel extends StatefulModel {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.docStructValues = Immutable.Map<string, string>();
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'FILTER_FIRST_HITS_SUBMIT':
                     this.submitForm(action.payload['opKey']);

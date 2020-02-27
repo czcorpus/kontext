@@ -37,6 +37,8 @@ export class Plugin {
 
     protected pluginApi:IPluginApi;
 
+    private model:CorplistWidgetModel;
+
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
     }
@@ -63,7 +65,7 @@ export class Plugin {
             10,
         );
 
-        const model = new CorplistWidgetModel({
+        this.model = new CorplistWidgetModel({
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
             corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
@@ -75,16 +77,19 @@ export class Plugin {
             onItemClick: options.itemClickAction,
             corporaLabels: corporaLabels
         });
-        this.pluginApi.registerSwitchCorpAwareObject(model);
+        this.pluginApi.registerSwitchCorpAwareObject(this.model);
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
-            widgetModel: model,
+            widgetModel: this.model,
             corpusSelection: corpSel
         });
         // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     }
 
+    disposeWidget():void {
+        this.model.unregister();
+    }
 
     /**
      *

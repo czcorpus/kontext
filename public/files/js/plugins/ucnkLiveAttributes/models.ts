@@ -314,7 +314,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
         upd:(orig:TextTypes.AlignedLanguageItem)=>TextTypes.AlignedLanguageItem
     ):boolean {
         const srchIdx = state.alignedCorpora.findIndex(v => v.value === corpname);
-        console.log('srchIdx: ', srchIdx);
         if (srchIdx > -1) {
             const item = state.alignedCorpora.get(srchIdx);
             state.alignedCorpora = state.alignedCorpora.set(srchIdx, upd(item));

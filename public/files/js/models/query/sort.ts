@@ -140,7 +140,7 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
         this.sposValues = Immutable.Map<string, string>(props.spos);
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'SORT_SET_ACTIVE_STORE':
                     this.isActiveActionValues = this.isActiveActionValues.set(
@@ -335,7 +335,7 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
 
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'ML_SORT_FORM_SUBMIT':
                     this.submit(action.payload['sortId']);

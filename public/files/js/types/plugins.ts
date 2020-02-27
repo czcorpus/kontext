@@ -293,8 +293,18 @@ export namespace PluginInterfaces {
         }
 
         export interface IPlugin {
+
+            /**
+             * Create a corpus selection widget used on the query page
+             */
             createWidget(targetAction:string, corpSel:ICorpSelection,
                     options:Kontext.GeneralProps):React.ComponentClass<{}>;
+
+            /**
+             * This is needed when corpus change is performed.
+             */
+            disposeWidget():void;
+
             initCorplistPageComponents(initialData:any):ICorplistPage;
         }
 
