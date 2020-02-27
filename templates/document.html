@@ -110,7 +110,6 @@ __conf.queryOverview = {{ query_overview|default([], true)|to_json }};
 __conf.numQueryOps = {%if query_overview is defined %}{{ query_overview|length }}{% else %}0{% endif %};
 __conf.ShuffleMinResultWarning = {{ shuffle_min_result_warning|to_json }};
 __conf.multilevelFreqDistMaxLevels = {{ multilevel_freq_dist_max_levels|to_json }};
-__conf.multiSattrAllowedStructs = {{ multi_sattr_allowed_structs|to_json }};
 __conf.canSendMail = {{ can_send_mail|to_json }};
 __conf.issueReportingAction = {{ issue_reporting_action|to_json }};
 __conf.uiTestingFlag = {{ ui_testing_flag|to_json }};

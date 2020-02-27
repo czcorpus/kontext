@@ -1249,11 +1249,6 @@ class Kontext(Controller):
         result['conc_url_ttl_days'] = plugins.runtime.CONC_PERSISTENCE.instance.get_conc_ttl_days(
             self.session_get('user', 'id'))
 
-        result['multi_sattr_allowed_structs'] = []
-        with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
-                getattr(self.args, 'corpname'))
-
         self._attach_plugin_exports(result, direct=False)
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(

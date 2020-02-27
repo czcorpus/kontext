@@ -49,31 +49,15 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         a dictionary containing matching attributes and values
         """
 
-    #TODO missing raise NotImplementedError ?
+    # TODO missing raise NotImplementedError ?
     @abc.abstractmethod
     def get_subc_size(self, plugin_api, corpus, attr_map):
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
-        
+
         plugin_api --
         corpus -- a manatee.Corpus instance
         attr_map -- a dict containing selected attributes and respective values 
-        """
-
-    @abc.abstractmethod
-    def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
-        """
-        Find token numbers for all the provided structural attribute
-        value pairs.
-
-        arguments:
-        corpname -- a corpus identifier
-        sattr1 -- the first structural attribute (e.g. 'doc.genre')
-        sattr2 -- the second structural attribute (e.g' 'doc.pubyear')
-        sattr_values -- a list of value pairs (e.g.: [('fiction', '1980'), ('fiction', '1981'),...])
-        
-        returns:
-        a list of sizes (in tokens) with an order matching sattr_values
         """
 
     @abc.abstractmethod

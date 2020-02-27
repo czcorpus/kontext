@@ -93,7 +93,6 @@ export interface CTFormInputs {
 export interface CTFormProperties extends CTFormInputs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
-    multiSattrAllowedStructs:Array<string>;
 }
 
 /**
@@ -135,8 +134,6 @@ export class Freq2DFormModel extends StatefulModel {
 
     private availStructAttrList:Immutable.List<Kontext.AttrItem>;
 
-    private multiSattrAllowedStructs:Immutable.List<string>;
-
     private attr1:string;
 
     private attr2:string;
@@ -160,7 +157,6 @@ export class Freq2DFormModel extends StatefulModel {
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
         this.attr1 = props.ctattr1;
         this.attr2 = props.ctattr2;
         this.minFreq = props.ctminfreq;
@@ -173,10 +169,6 @@ export class Freq2DFormModel extends StatefulModel {
             switch (action.name) {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
                     this.setDimensionAttr(action.payload['dimension'], action.payload['value']);
-                    const err1 = this.validateAttrs();
-                    if (err1) {
-                        this.pageModel.showMessage('error', err1);
-                    }
                     this.emitChange();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE':
@@ -211,17 +203,13 @@ export class Freq2DFormModel extends StatefulModel {
                 break;
                 case 'FREQ_CT_SUBMIT':
                     const err3 = this.validateMinFreq();
-                    const err4 = this.validateAttrs();
-                    if (!err3 && !err4) {
+                    if (!err3) {
                         this.submitForm();
                         // leaves the page here
 
                     } else {
                         if (err3) {
                             this.pageModel.showMessage('error', err3);
-                        }
-                        if (err4) {
-                            this.pageModel.showMessage('error', err4);
                         }
                         this.emitChange();
                     }
@@ -252,22 +240,6 @@ export class Freq2DFormModel extends StatefulModel {
             return [srchIdx, AlignTypes.RIGHT];
         }
         return  [6, AlignTypes.LEFT];
-    }
-
-    private validateAttrs():Error {
-        if (isStructAttr(this.attr1) && isStructAttr(this.attr2)
-                && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
-                || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
-            return new Error(
-                this.multiSattrAllowedStructs.size > 0 ?
-                    this.pageModel.translate('freq__ct_only_some_sattr_allowed_{allowed_sattrs}',
-                                             {allowed_sattrs: this.multiSattrAllowedStructs.join(', ')}) :
-                    this.pageModel.translate('freq__ct_two_sattrs_not_allowed')
-                );
-
-        } else {
-            return null;
-        }
     }
 
     private setDimensionAttr(dimNum:Dimensions, v:string):void {
