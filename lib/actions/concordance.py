@@ -729,12 +729,7 @@ class Actions(Querying):
                           fc_pos_type)
         for al_corpname in self.args.align:
             if al_corpname in nopq and not int(getattr(self.args, 'include_empty_' + al_corpname, '0')):
-                if corplib.manatee_min_version('2.130.6'):
-                    self.args.q.append('X%s' % al_corpname)
-                else:
-                    self.args.q.append('x-%s' % al_corpname)
-                    self.args.q.append('p0 0 1 []')
-                    self.args.q.append('x-%s' % self.args.corpname)
+                self.args.q.append('X%s' % al_corpname)
 
     @exposed(template='view.html', page_model='view', mutates_conc=True, http_method=('GET', 'POST'))
     def first(self, request):
@@ -807,7 +802,7 @@ class Actions(Querying):
     @exposed(http_method='POST', template='view.html', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
-        self.args.q.append('x-{0}'.format(maincorp))
+        self.args.q.append('X{0}'.format(maincorp))
         ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
         self.add_conc_form_args(ksargs)
         return self.view()
