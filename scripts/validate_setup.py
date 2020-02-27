@@ -11,14 +11,30 @@ from types import GeneratorType
 from lxml import etree
 import json
 import platform
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../lib'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../scripts'))
 import settings
-
+from validate_xml import find_plugins, validate_main_config
 
 TESTS = []
 SCORE = []
 APP_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+MIN_MANATEE_VERSION = '2.167.8'
+
+
+class Bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+    @staticmethod
+    def colorize(s, color):
+        return color + s + '\033[0m'
 
 
 class UnsupportedValue(Exception):
@@ -189,15 +205,17 @@ def test(*description):
                         status_desc = str(err)
                     else:
                         status_desc = 'Test failed'
-                    status_desc = '[ERROR]\n    %s' % (status_desc, )
+                    status_desc = '[ ' + Bcolors.colorize('ERROR',
+                                                          Bcolors.FAIL) + ' ]\n    %s' % (status_desc, )
                     SCORE.append(False)
                 elif status is None:
-                    status_desc = '[SKIPPED]'
+                    status_desc = '[ ' + Bcolors.colorize('SKIPPED', Bcolors.WARNING) + ' ]'
                 else:
-                    status_desc = '[OK]'
+                    status_desc = '[ ' + Bcolors.colorize('OK', Bcolors.OKGREEN) + ' ]'
                     SCORE.append(True)
                 desc = description[i] if i < len(description) else '...'
-                messages.append(desc + ' ' + status_desc)
+                messages.append(Bcolors.colorize('#', Bcolors.OKBLUE) +
+                                ' ' + desc + ' ' + status_desc)
                 i += 1
             return messages
         TESTS.append(out_fn)
@@ -207,19 +225,33 @@ def test(*description):
 # -------------------------------------------------------------------------
 
 
-@test('Test config.xml conforms config.rng')
+@test('config.xml conforms config.rng')
 def test_0_validate_xml(finfo):
     schema = etree.parse(os.path.join(APP_PATH, 'conf/config.rng'))
     conf = etree.parse(finfo.config_path)
     relax = etree.RelaxNG(schema)
     try:
         relax.assertValid(conf)
-        return True, None
+        yield True, None
     except etree.DocumentInvalid as e:
-        return False, e
+        yield False, e
 
 
-@test('Test <upload_cache_dir> is present',
+@test('plug-ins XML configurations conform respective schemata')
+def test_0_validate_plugin_xml(finfo):
+    conf = etree.parse(finfo.config_path)
+    plugins = find_plugins(conf)
+    err2 = None
+    for elm, schema_path in plugins:
+        s, err2 = validate_main_config(elm, schema_path)
+        if err2:
+            yield False, s
+            break
+    if not err2:
+        yield True, None
+
+
+@test('<upload_cache_dir> is present',
       '...and has right permissions',
       '...and owner/group')
 def test_1(finfo):
@@ -229,40 +261,44 @@ def test_1(finfo):
     yield finfo.test_owner_and_group(upload_cache_dir, owner=finfo.webserver_user)
 
 
-@test('Manatee path is correct (or empty and Manatee module is importable)')
+@test('Manatee path is correct (or empty and Manatee module is importable)',
+      '... and Manatee has proper version')
 def test_4(finfo):
     mp = settings.get('global', 'manatee_path')
     if mp:
-        return finfo.file_exists(os.path.join(mp, 'manatee.py'))
+        yield finfo.file_exists(os.path.join(mp, 'manatee.py'))
     else:
         try:
-            import manatee
-            return True, None
+            import corplib   # corplib imports manatee
+            yield True, None
+            ver_ok = corplib.manatee_min_version(MIN_MANATEE_VERSION)
+            yield ver_ok, None if ver_ok else Exception(f'The version must be at least {MIN_MANATEE_VERSION}')
+
         except Exception as e:
-            return False, e
+            yield False, e
 
 
-@test('Test gettext translations are set-up and present')
+@test('gettext translations are set-up and present')
 def test_5(finfo):
     translations = settings.get_list('global', 'translations')
     for tr in translations:
-        if tr != 'en_US':
-            yield finfo.file_exists(os.path.join(APP_PATH, 'locale/%s/LC_MESSAGES/kontext.mo' % tr))
+        if tr != 'en-US':
+            yield finfo.file_exists(os.path.join(APP_PATH, f'locale/{tr.replace("-", "_")}/LC_MESSAGES/kontext.mo'))
 
 
-@test('Test <calc_backend> is set-up properly')
+@test('<calc_backend> is set-up properly')
 def test_6(finfo):
     bck_type = settings.get('calc_backend', 'type')
     conf = settings.get('calc_backend', 'conf')
     if conf:  # otherwise user uses direct configuration which is taken care of by RelaxNG validation
         if bck_type in ('celery', 'konserver'):
             return finfo.file_exists(os.path.join(conf))
-        elif bck_type != 'multiprocessing':
+        else:
             return False, UnsupportedValue('/global/calc_backend', bck_type)
     return True, None
 
 
-@test('Test <periodic_tasks> is set-up properly')
+@test('<periodic_tasks> is set-up properly')
 def test_6(finfo):
     bck_type = settings.get('periodic_tasks', 'type')
     conf = settings.get('periodic_tasks', 'conf')
@@ -274,22 +310,22 @@ def test_6(finfo):
 
 
 # TODO - test writeability
-@test('Test logging path exists',
-      'Test logging path has proper permissions')
+@test('logging path exists',
+      'logging path has proper permissions')
 def test_7(finfo):
     path = settings.get('logging', 'path')
     yield finfo.dir_exists(os.path.dirname(path))
     yield finfo.test_owner_and_group(os.path.dirname(path), owner=finfo.webserver_user, group=None)
 
 
-@test('Test Manatee registry directory exists')
+@test('Manatee registry directory exists')
 def test_8(finfo):
     return finfo.dir_exists(settings.get('corpora', 'manatee_registry'))
 
 
-@test('Test user sub-corpora directory exists',
-      'Test the directory has a proper owner and group',
-      'Test the directory has a proper permissions')
+@test('user sub-corpora directory exists',
+      '... and the directory has a proper owner and group',
+      '... and the directory has a proper permissions')
 def test_9(finfo):
     path = settings.get('corpora', 'users_subcpath')
     yield finfo.dir_exists(path)
@@ -297,24 +333,24 @@ def test_9(finfo):
     yield finfo.permissions(path, match='2775')
 
 
-@test('Test <freqs_precalc_dir> exists',
-      '...test proper ownership')
+@test('<freqs_precalc_dir> exists',
+      '... and has proper ownership')
 def test_11(finfo):
     path = settings.get('corpora', 'freqs_precalc_dir')
     yield finfo.dir_exists(path)
     yield finfo.test_owner_and_group(path, owner=finfo.webserver_user, group=finfo.webserver_group)
 
 
-@test('Test <freqs_cache_dir> exists',
-      '...test proper ownership')
+@test('<freqs_cache_dir> exists',
+      '... and has proper ownership')
 def test_12(finfo):
     path = settings.get('corpora', 'freqs_cache_dir')
     yield finfo.dir_exists(path)
     yield finfo.test_owner_and_group(path, owner=finfo.webserver_user, group=finfo.webserver_group)
 
 
-@test('Test <colls_cache_dir> exists',
-      '...test proper ownership')
+@test('<colls_cache_dir> exists',
+      '... ans has proper ownership')
 def test_13(finfo):
     path = settings.get('corpora', 'colls_cache_dir')
     yield finfo.dir_exists(path)
@@ -323,15 +359,15 @@ def test_13(finfo):
 # --- plug-ins ------------------------------------
 
 
-@test('Test [db] plug-in is present',
-      '...test a respective module is set and exists')
+@test('[db] plug-in is present',
+      '... and a respective module is set and exists')
 def test_14(finfo):
     conf = settings.get('plugins', 'db')
     return _test_plugin_common('db', conf)
 
 
-@test('Test [redis] module (if applicable)',
-      'Test Redis connection')
+@test('[redis] module (if applicable)',
+      '... and has working server connection')
 def test_14_b(finfo):
     conf = settings.get('plugins', 'db')
     if conf.get('module') == 'redis_db':
@@ -350,56 +386,56 @@ def test_14_b(finfo):
         yield None, None
 
 
-@test('Test [auth] plug-in is present',
-      '...test a respective module is set and exists')
+@test('[auth] plug-in is present',
+      '... and a respective module is set and exists')
 def test_15(finfo):
     conf = settings.get('plugins', 'auth')
     return _test_plugin_common('auth', conf)
 
 
-@test('Test [sessions] is present',
-      '...test a respective module is set and exists')
+@test('[sessions] is present',
+      '... and a respective module is set and exists')
 def test_16(finfo):
     conf = settings.get('plugins', 'sessions')
     return _test_plugin_common('sessions', conf)
 
 
-@test('Test [settings_storage] is present',
-      '...test a respective module is set and exists')
+@test('[settings_storage] is present',
+      '... and a respective module is set and exists')
 def test_17(finfo):
     conf = settings.get('plugins', 'settings_storage')
     return _test_plugin_common('settings_storage', conf)
 
 
-@test('Test [conc_persistence] is present',
-      '...test a respective module is set and exists')
+@test('[conc_persistence] is present',
+      '... and a respective module is set and exists')
 def test_18(finfo):
     conf = settings.get('plugins', 'conc_persistence')
     return _test_plugin_common('conc_persistence', conf)
 
 
-@test('Test [conc_cache] is present',
-      '...test a respective module is set and exists')
+@test('[conc_cache] is present',
+      '... and a respective module is set and exists')
 def test_19(finfo):
     conf = settings.get('plugins', 'conc_cache')
     return _test_plugin_common('conc_cache', conf)
 
 
-@test('Test [user_items] is present',
-      '...test a respective module is set and exists')
+@test('[user_items] is present',
+      '... and a respective module is set and exists')
 def test_21(finfo):
     conf = settings.get('plugins', 'user_items')
     return _test_plugin_common('user_items', conf)
 
 
-@test('Test [menu_items] is present',
-      '...test a respective module is set and exists')
+@test('[menu_items] is present',
+      '... and a respective module is set and exists')
 def test_22(finfo):
     conf = settings.get('plugins', 'menu_items')
     return _test_plugin_common('menu_items', conf)
 
 
-@test('Test [menu_items] data JSON file exists (if applicable)',
+@test('[menu_items] data JSON file exists (if applicable)',
       '... and is loadable')
 def test_22_b(finfo):
     conf = settings.get('plugins', 'menu_items')
@@ -441,6 +477,11 @@ if __name__ == '__main__':
         print('')
         print(('\n'.join(test(finfo))))
     print('\n--------------------------------------')
-    print(('Total number of tests: {0}'.format(len(SCORE))))
-    print(('Number of failed tests: {0}'.format(len([x for x in SCORE if x is False]))))
+    total_errs = len([x for x in SCORE if x is False])
+    print('Total number of tests: {0}'.format(len(SCORE)))
+    status = Bcolors.colorize(
+        'ERROR', Bcolors.FAIL) if total_errs > 0 else Bcolors.colorize('OK', Bcolors.OKGREEN)
+    print('Summary: {}'.format(status))
+    if total_errs > 0:
+        print('{} error(s)'.format(total_errs))
     print('')
