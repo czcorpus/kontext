@@ -19,6 +19,7 @@
     - [Update corplist.xml](#update-corplistxml)
     - [Update access rights](#update-access-rights)
     - [Apply changes](#apply-changes)
+  - [Troubleshooting](#troubleshooting)
 
 ## Install KonText (Ubuntu)
 
@@ -280,3 +281,31 @@ Note: The script also allows removing access rights.
 To force KonText to recognize your new corpus you can either send a `SIGUSR1`
 signal to a respective master Gunicorn process: `sudo -u www-data kill -s SIGUSR1 [proc num]` or you can restart your KonText
 application `systemctl restart gunicorn-kontext`.
+
+
+## Troubleshooting
+
+### Check your configuration
+
+After a configuration change, it is always a good idea to validate your setup:
+
+```bash
+python3 scripts/validate_setup.py conf/config.xml
+```
+
+The script tests not just XML configuration validity but also actual existence 
+of essential files/dirs and services.
+
+### Check application logs
+
+In case your Gunicorn or Celery services fail to start, check systemd log:
+
+```bash
+journalctl -xe
+```
+
+There are several logs which may be quite helpful when debugging different issues:
+
+1. KonText application log (configured in `conf/config.xml`)
+1. Gunicorn error log (configured in `conf/gunicorn-conf.py`)
+1. Celery log (configured in `/etc/conf.d/celery`)

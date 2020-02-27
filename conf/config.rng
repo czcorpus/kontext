@@ -20,9 +20,13 @@
         <a:documentation>An atomic configuration element representing a key=&gt;value pair.</a:documentation>
         <element>
             <anyName/>
-            <attribute name="extension-by">
-                <text />
-            </attribute>
+             <!-- for legacy reasons - optional must be here; oterwise we prefer
+             'extension-by' to be always present -->
+            <optional>
+                <attribute name="extension-by">
+                    <text />
+                </attribute>
+            </optional>
             <text />
         </element>
     </define>
@@ -31,9 +35,13 @@
         <a:documentation>An element containing a list of atomic configuration elements</a:documentation>
         <element>
             <anyName />
-            <attribute name="extension-by">
-                <text />
-            </attribute>
+             <!-- for legacy reasons - optional must be here; oterwise we prefer
+             'extension-by' to be always present -->
+            <optional>
+                <attribute name="extension-by">
+                    <text />
+                </attribute>
+            </optional>
             <oneOrMore>
                 <element>
                     <anyName />
@@ -96,7 +104,7 @@
                             <text />
                         </element>
                         <element name="logo_inline_css">
-                            <a:documentation>custom inline logo CSS (e.g. width &amp; height)</a:documentation>
+                            <a:documentation>custom inline logo CSS (e.g. width &amp;amp; height)</a:documentation>
                             <text />
                         </element>
                         <optional>
@@ -422,7 +430,7 @@
                         </element>
                         <element name="smtp_port">
                             <a:documentation>
-                                If omitted, port 25 is used
+                                Typically, one of 25, 465, 587 is used.
                             </a:documentation>
                             <data type="positiveInteger" />
                         </element>
@@ -432,12 +440,14 @@
                         <element name="sender">
                             <text />
                         </element>
-                        <element name="auth_username">
-                            <text />
-                        </element>
-                        <element name="auth_password">
-                            <text />
-                        </element>
+                        <optional>
+                            <element name="auth_username">
+                                <text />
+                            </element>
+                            <element name="auth_password">
+                                <text />
+                            </element>
+                        </optional>
                     </interleave>
                 </element>
             </optional>
@@ -637,18 +647,6 @@
                     <element name="auth">
                         <a:documentation>Authentication plug-in configuration</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="anonymous_user_id">
-                            <data type="nonNegativeInteger" />
-                        </element>
-                        <element name="auth_cookie_name">
-                            <text />
-                        </element>
-                        <element name="login_url">
-                            <text />
-                        </element>
-                        <element name="logout_url">
-                            <text />
-                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="application_bar">
