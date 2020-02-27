@@ -232,38 +232,6 @@ class LiveAttributes(AbstractLiveAttributes):
                 ans[label][1] = '@' + ans[label][2]
         data[bib_label] = list(ans.values())
 
-    def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
-
-        def convert_empty(s):
-            return s if s != '' else None
-
-        def mk_eq_expr(sattr, v, args):
-            if v != '':
-                args.append(v)
-                return '{0} = ?'.format(sattr)
-            else:
-                return '{0} is NULL'.format(sattr)
-
-        db = self.db('en_US', corpname)  # we don't care about info localization here
-        where_sql = []
-        where_args = []
-        sattr1, sattr2 = sattr1.replace('.', '_'), sattr2.replace('.', '_')
-        for pair in sattr_values:
-            expr1 = mk_eq_expr(sattr1, pair[0], where_args)
-            expr2 = mk_eq_expr(sattr2, pair[1], where_args)
-            where_sql.append('{0} AND {1}'.format(expr1, expr2))
-        cursor = self.execute_sql(db, 'SELECT {0}, {1}, SUM(poscount) FROM item WHERE {2} GROUP BY {0}, {1}'.format(
-                                  sattr1, sattr2, ' OR '.join(where_sql)), where_args)
-        mapping = {}
-        for row in cursor.fetchall():
-            if row[0] not in mapping:
-                mapping[row[0]] = {}
-            mapping[row[0]][row[1]] = row[2]
-        ans = []
-        for item in sattr_values:
-            ans.append(mapping.get(convert_empty(item[0]), {}).get(convert_empty(item[1]), 0))
-        return ans
-
     def get_supported_structures(self, corpname):
         corpus_info = self.corparch.get_corpus_info('en_US', corpname)
         id_attr = corpus_info.metadata.id_attr

@@ -881,7 +881,6 @@ export class ViewPage {
             ctattr2: ctFormInputs.ctattr2,
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
-            multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type
         };

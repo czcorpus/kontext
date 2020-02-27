@@ -347,13 +347,6 @@ class CTCalculation(object):
         norms2_dict = self._conc.get_attr_values_sizes(sattr)
         return [norms2_dict.get(x[sattr_idx], 0) for x in words]
 
-    def _calc_2sattr_norms(self, words, sattr1, sattr2):
-        if plugins.runtime.LIVE_ATTRIBUTES.exists:
-            return plugins.runtime.LIVE_ATTRIBUTES.instance.get_sattr_pair_sizes(self._corp.corpname, sattr1, sattr2,
-                                                                                 words)
-        else:
-            return [1e6] * len(words)
-
     def ct_dist(self, crit, limit_type, limit=1):
         """
         Calculate join distribution (contingency table).
@@ -378,7 +371,7 @@ class CTCalculation(object):
 
         num_structattrs = self._get_num_structattrs(attrs)
         if num_structattrs == 2:
-            norms = self._calc_2sattr_norms(words, attrs[0], attrs[1])
+            norms = [1e6] * len(words)  # this is not really needed
         elif num_structattrs == 1:
             sattr_idx = 0 if '.' in attrs[0] else 1
             norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
