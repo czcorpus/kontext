@@ -164,6 +164,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </dd>
                         <dt>{he.translate('global__website')}:</dt>
                         <dd>{renderWebLink()}</dd>
+                        <dt>{he.translate('global__keywords')}:</dt>
+                        <dd>{Object.entries(props.data.keywords).map(([k, v]) => <span>{v}</span>)}</dd>
                         <dt>{he.translate('global__corpus_info_metadata_heading')}:</dt>
                         <dd>
                             <table className="structs-and-attrs">

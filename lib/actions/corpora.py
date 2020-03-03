@@ -73,7 +73,8 @@ class Corpora(Kontext):
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
-            'citation_info': citation_info
+            'citation_info': citation_info,
+            'keywords': dict(corp_conf_info['metadata']['keywords'])
         }
         try:
             ans['attrlist'] = [{'name': item, 'size': int(corpus.get_attr(item).id_range())}
