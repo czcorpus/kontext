@@ -144,6 +144,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
 
+        const renderKeywords = () => {
+            if (Object.keys(props.data.keywords).length > 0) {
+                return Object.entries(props.data.keywords).map(([k, v]) => <span className="keyword">{v}</span>);
+            } else {
+                return "-";
+            }
+        };
+
         if (props.isWaiting) {
             return (
                 <div id="corpus-details-box">
@@ -165,10 +173,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <dt>{he.translate('global__website')}:</dt>
                         <dd>{renderWebLink()}</dd>
                         <dt>{he.translate('global__keywords')}:</dt>
-                        <dd>{
-                            Object.entries(props.data.keywords).length === 0 ? "-" :
-                            Object.entries(props.data.keywords).map(([k, v]) => <span className="keyword">{v}</span>)
-                        }</dd>
+                        <dd>{renderKeywords()}</dd>
                         <dt>{he.translate('global__corpus_info_metadata_heading')}:</dt>
                         <dd>
                             <table className="structs-and-attrs">
