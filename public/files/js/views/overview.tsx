@@ -145,10 +145,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const renderKeywords = () => {
-            if (Object.keys(props.data.keywords).length > 0) {
-                return Object.entries(props.data.keywords).map(([k, v]) => <span className="keyword">{v}</span>);
+            if (props.data.keywords.length > 0) {
+                return props.data.keywords.map(kw =>
+                    <span key={kw.name} className="keyword" style={{backgroundColor: kw.color}}>{kw.name}</span>
+                );
             } else {
-                return "-";
+                return '-';
             }
         };
 

@@ -371,7 +371,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             description: null,
             size: null,
             web_url: null,
-            keywords: {}
+            keywords: []
         };
     }
 
