@@ -175,6 +175,7 @@ export interface CorpusInfoResponse {
     structlist:Array<{name:string; size:number}>;
     web_url:string;
     citation_info:CitationInfo;
+    keywords:Array<{name:string; color:string}>;
 }
 
 export interface CorpusInfo extends CorpusInfoResponse {

@@ -144,6 +144,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
 
+        const renderKeywords = () => {
+            if (props.data.keywords.length > 0) {
+                return props.data.keywords.map(kw =>
+                    <span key={kw.name} className="keyword" style={{backgroundColor: kw.color}}>{kw.name}</span>
+                );
+            } else {
+                return '-';
+            }
+        };
+
         if (props.isWaiting) {
             return (
                 <div id="corpus-details-box">
@@ -164,6 +174,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </dd>
                         <dt>{he.translate('global__website')}:</dt>
                         <dd>{renderWebLink()}</dd>
+                        <dt>{he.translate('global__keywords')}:</dt>
+                        <dd>{renderKeywords()}</dd>
                         <dt>{he.translate('global__corpus_info_metadata_heading')}:</dt>
                         <dd>
                             <table className="structs-and-attrs">

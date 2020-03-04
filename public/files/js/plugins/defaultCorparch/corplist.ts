@@ -370,7 +370,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             corpname: null,
             description: null,
             size: null,
-            web_url: null
+            web_url: null,
+            keywords: []
         };
     }
 
