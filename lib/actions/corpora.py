@@ -66,10 +66,11 @@ class Corpora(Kontext):
         else:
             corpus_name = corpus.corpname
 
+        keywords = corp_conf_info['metadata']['keywords'].items() if isinstance(corp_conf_info['metadata']['keywords'], dict) else corp_conf_info['metadata']['keywords']
         with plugins.runtime.CORPARCH as corparch_plugin:
-            keywords = [
+            keywords_response = [
                 {'name': name, 'color': corparch_plugin.get_label_color(ident)}
-                for (ident, name) in corp_conf_info['metadata']['keywords'].items()
+                for ident, name in keywords
             ]
 
         ans = {
@@ -80,7 +81,7 @@ class Corpora(Kontext):
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
             'citation_info': citation_info,
-            'keywords': keywords
+            'keywords': keywords_response
         }
         try:
             ans['attrlist'] = [{'name': item, 'size': int(corpus.get_attr(item).id_range())}
