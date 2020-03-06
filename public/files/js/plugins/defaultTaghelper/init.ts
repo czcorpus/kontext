@@ -110,14 +110,14 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
         models.forEach(
             (model, key) => {
-                model.suspend((action) => {
+                model.suspend({}, (action, syncObj) => {
                     if (action.name === 'TAGHELPER_SET_ACTIVE_TAG' && key === action.payload['value']) {
-                        return true;
+                        return null;
 
                     } else if (action.name === 'QUERY_INPUT_SET_ACTIVE_WIDGET' && key === tagsets[0].ident) {
-                        return true;
+                        return null;
                     }
-                    return false;
+                    return syncObj;
                 });
             }
         );

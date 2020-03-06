@@ -182,7 +182,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             break;
             case 'TAGHELPER_SET_ACTIVE_TAG':
                 if (this.ident !== action.payload['value']) {
-                    this.suspend((nextAction) => this.ident === nextAction.payload['value']);
+                    this.suspend({}, (nextAction, syncObj) => this.ident === nextAction.payload['value'] ? null : syncObj);
                 }
             break;
         }

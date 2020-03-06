@@ -215,7 +215,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             break;
             case 'TAGHELPER_SET_ACTIVE_TAG':
                 if (this.ident !== action.payload['value']) {
-                    this.suspend((action) => this.ident === action.payload['value']);
+                    this.suspend({}, (action, syncObj) => this.ident === action.payload['value'] ? null : syncObj);
                 }
             break;
         }
