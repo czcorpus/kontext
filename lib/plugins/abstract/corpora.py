@@ -38,28 +38,25 @@ files.
 """
 
 import abc
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginApi
-
 import json
-from functools import partial
-
-import l10n
 
 
 class DictLike(object):
-    def __getitem__(self, item):
+
+    def __getitem__(self, item: str):
         return getattr(self, item)
 
-    def __contains__(self, item):
+    def __contains__(self, item: str):
         return hasattr(self, item)
 
     def __repr__(self):
-        return 'DictLike {0}'.format(self.__dict__)
+        return 'DictLike {}'.format(self.__dict__)
 
-    def get(self, key, default=None):
+    def get(self, key: str, default=None):
         return getattr(self, key, default)
 
     def to_json(self):
@@ -68,7 +65,7 @@ class DictLike(object):
     def to_dict(self):
         return CorpInfoEncoder().default(self)
 
-    def from_dict(self, data):
+    def from_dict(self, data: Dict[str, Any]) -> 'DictLike':
         self.__dict__.update(data)
         return self
 
@@ -81,7 +78,7 @@ class CorpusMetadata(DictLike):
         self.id_attr: Optional[str] = None
         self.sort_attrs: bool = False
         self.desc: Dict[str, Any] = {}
-        self.keywords: Dict[str, Any] = {}
+        self.keywords: List[Tuple[str, str]] = []
         self.interval_attrs: List[str] = []
         self.group_duplicates: bool = False
         self.default_virt_keyboard: Optional[str] = None

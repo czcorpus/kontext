@@ -18,6 +18,8 @@ from main_menu import AbstractMenuItem
 from argmapping.query import ConcFormArgs
 from manatee import Corpus
 from werkzeug import Request
+import werkzeug.urls
+from werkzeug.datastructures import MultiDict
 from . import Controller
 
 import json
@@ -28,16 +30,13 @@ import os.path
 import time
 from collections import defaultdict
 
-import werkzeug.urls
-from werkzeug.datastructures import MultiDict
-
 import corplib
 import conclib
 from . import convert_types, exposed
 from .errors import (UserActionException, ForbiddenException,
                      AlignedCorpusForbiddenException, NotFoundException)
 import plugins
-from plugins.abstract.corpora import BrokenCorpusInfo
+from plugins.abstract.corpora import BrokenCorpusInfo, CorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
@@ -268,13 +267,16 @@ class Kontext(Controller):
         self._lines_groups: LinesGroups = LinesGroups(data=[])
 
         self._plugin_api: PluginApi = PluginApi(self, self._request, self._cookies)
-        self.get_corpus_info: Callable[[str], Dict[str, Any]] = lambda x: partial(getattr(plugins.runtime.CORPARCH.instance, 'get_corpus_info'), self._plugin_api.user_lang)(x)
 
         # conc_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
         # data of the previous operation are stored here
         self._prev_q_data: Optional[Dict[str, Any]] = None
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
+
+    def get_corpus_info(self, corp: str) -> CorpusInfo:
+        with plugins.runtime.CORPARCH as plg:
+            return plg.get_corpus_info(self.ui_lang, corp)
 
     def get_mapping_url_prefix(self) -> str:
         return super().get_mapping_url_prefix()
