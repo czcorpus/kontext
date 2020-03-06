@@ -69,7 +69,7 @@ class Corpora(Kontext):
         with plugins.runtime.CORPARCH as corparch_plugin:
             keywords = [
                 {'name': name, 'color': corparch_plugin.get_label_color(ident)}
-                for (ident, name) in corp_conf_info['metadata']['keywords'].items()
+                for (ident, name) in corp_conf_info.metadata.keywords
             ]
 
         ans = {
@@ -86,7 +86,7 @@ class Corpora(Kontext):
             ans['attrlist'] = [{'name': item, 'size': int(corpus.get_attr(item).id_range())}
                                for item in corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
-            logging.getLogger(__name__).warn('%s' % e)
+            logging.getLogger(__name__).warning('%s' % e)
             ans['attrlist'] = {'error': translate('Failed to load')}
         ans['structlist'] = [{'name': item, 'size': int(corpus.get_struct(item).size())}
                              for item in corpus.get_conf('STRUCTLIST').split(',')]

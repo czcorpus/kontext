@@ -21,12 +21,13 @@ import copy
 from collections import OrderedDict, defaultdict
 import os
 import logging
+from typing import Dict, List, Tuple
 
 from controller import exposed
 import actions.user
 import plugins
 from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
-                                      TokenConnect, KwicConnect, DictLike, TagsetInfo)
+                                      TokenConnect, KwicConnect, DictLike, TagsetInfo, CorpusInfo)
 import l10n
 from .backend import ManateeCorpora
 from .backend.sqlite import Backend
@@ -204,7 +205,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._max_num_hints = int(max_num_hints)
         self._max_page_size = int(max_page_size)
         self._registry_lang = registry_lang
-        self._corpus_info_cache = {}
+        self._corpus_info_cache: Dict[str, CorpusInfo] = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
         self._descriptions = defaultdict(lambda: {})
@@ -297,7 +298,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_api, row)
         return ans
 
-    def get_l10n_keywords(self, id_list, lang_code):
+    def get_l10n_keywords(self, id_list, lang_code) -> List[Tuple[str, str]]:
         all_keywords = self.all_keywords(lang_code)
         ans = []
         for keyword_id in id_list:
@@ -307,7 +308,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                 ans.append((keyword_id, keyword_id))
         return ans
 
-    def _localize_corpus_info(self, data, lang_code):
+    def _localize_corpus_info(self, data: CorpusInfo, lang_code) -> CorpusInfo:
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant

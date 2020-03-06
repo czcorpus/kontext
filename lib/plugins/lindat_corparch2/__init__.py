@@ -109,6 +109,7 @@ element corpus {
 from collections import OrderedDict
 import copy
 import re
+import logging
 
 try:
     from markdown import markdown
@@ -284,8 +285,7 @@ class DefaultCorplistProvider(CorplistProvider):
 
         ans = {'rows': []}
         permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
-        used_keywords = set()
-        all_keywords_map = dict(self._corparch.all_keywords(plugin_api.user_lang))
+
         if filter_dict.get('minSize'):
             min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
         else:
@@ -316,15 +316,16 @@ class DefaultCorplistProvider(CorplistProvider):
             return None
 
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-
+        all_keywords_map = dict(self._corparch.all_keywords(plugin_api.user_lang))
         normalized_query_substrs = [s.lower() for s in query_substrs]
+        used_keywords = set()
+
         for corp in self._corparch.get_list(plugin_api):
             full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
-                keywords = [k for k in list(full_data['metadata']['keywords'].keys())]
+                keywords = [k for k, _ in full_data.metadata.keywords]
                 tests = []
                 found_in = []
-
                 tests.extend([k in keywords for k in query_keywords])
                 for s in normalized_query_substrs:
                     # the name must be tested first to prevent the list 'found_in'
@@ -485,10 +486,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                                'path': path
                                })
                 except Exception as e:
-                    import logging
-                    logging.getLogger(__name__).warn(
-                        'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
-                                                                              type(e).__name__, e))
+                    logging.getLogger(__name__).warning(
+                        f'Failed to fetch info about {corp_info.name} with error {type(e).__name__} ({e})')
                     cl.append({
                         'id': corp_id, 'name': corp_id,
                         'path': path, 'desc': '', 'size': None})
@@ -569,11 +568,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for k in root.findall('./keywords/item'):
             keyword = k.text.strip()
             if keyword in self._keywords:
-                if self._keywords[keyword]:
-                    ans[keyword] = self._keywords[keyword]
-                else:
-                    ans[keyword] = keyword
-        return ans
+                ans[keyword] = keyword
+        return list(ans.items())
 
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
@@ -629,7 +625,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
             ans.metadata.sort_attrs = True if meta_elm.find(
                 self.SORT_ATTRS_KEY) is not None else False
-            #ans.metadata.desc = self._parse_meta_desc(meta_elm)
+            # ans.metadata.desc = self._parse_meta_desc(meta_elm)
             ans.metadata.desc = self._manatee_corpora.get_info(ans.id).description
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
@@ -651,6 +647,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         self.customize_corpus_info(ans, node)
         data.append(ans)
+        return ans
 
     def _parse_corplist_node(self, root, path, lang, data):
         """
@@ -670,8 +667,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             elif item.tag == 'corpus':
                 self._process_corpus_node(item, path, data)
 
-    @staticmethod
-    def _localize_corpus_info(data, lang_code):
+    def _localize_corpus_info(self, data, lang_code):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -679,18 +675,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         """
         ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
-        #desc = ans.metadata.desc
+        # desc = ans.metadata.desc
         # if lang_code in desc:
         #    ans.metadata.desc = desc[lang_code]
         # else:
         #    ans.metadata.desc = ''
 
-        translated_k = OrderedDict()
-        for keyword, label in list(ans.metadata.keywords.items()):
-            if type(label) is dict and lang_code in label:
-                translated_k[keyword] = label[lang_code]
-            elif type(label) is str:
-                translated_k[keyword] = label
+        translated_k = []
+        for keyword, label in ans.metadata.keywords:
+            translations = self._keywords.get(keyword, {})
+            translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
         return ans
 

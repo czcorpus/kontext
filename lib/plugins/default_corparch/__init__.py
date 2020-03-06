@@ -304,7 +304,7 @@ class DeafultCorplistProvider(CorplistProvider):
                 if favourite_only and fav_id(corp['id']) is None:
                     continue
 
-                keywords = [k for k in list(full_data['metadata']['keywords'].keys())]
+                keywords = [k for k, _ in full_data.metadata.keywords]
                 tests = []
                 found_in = []
 
@@ -521,11 +521,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for k in root.findall('./keywords/item'):
             keyword = k.text.strip()
             if keyword in self._keywords:
-                if self._keywords[keyword]:
-                    ans[keyword] = self._keywords[keyword]
-                else:
-                    ans[keyword] = keyword
-        return ans
+                ans[keyword] = keyword
+        return list(ans.items())
 
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
@@ -619,8 +616,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             elif item.tag == 'corpus':
                 self._process_corpus_node(item, path, data)
 
-    @staticmethod
-    def _localize_corpus_info(data, lang_code):
+    def _localize_corpus_info(self, data, lang_code):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -634,12 +630,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         else:
             ans.metadata.desc = ''
 
-        translated_k = OrderedDict()
-        for keyword, label in list(ans.metadata.keywords.items()):
-            if type(label) is dict and lang_code in label:
-                translated_k[keyword] = label[lang_code]
-            elif type(label) is str:
-                translated_k[keyword] = label
+        translated_k = []
+        for keyword, label in ans.metadata.keywords:
+            translations = self._keywords.get(keyword, {})
+            translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
         return ans
 
@@ -759,5 +753,5 @@ def create_instance(conf, auth, user_items):
                          tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
-                                                                           None),
+                                                                           20),
                          registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
