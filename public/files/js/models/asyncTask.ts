@@ -75,7 +75,7 @@ export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTas
         this.asyncTaskCheckerInterval = null;
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
                     this.deleteFinishedTaskInfo().subscribe(

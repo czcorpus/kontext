@@ -40,7 +40,7 @@ export class QueryContextModel extends StatefulModel {
             fc_pos_type: 'all'
         });
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM':
                     this.formData = this.formData.set(action.payload['name'], action.payload['value']);

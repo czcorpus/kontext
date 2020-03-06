@@ -177,6 +177,8 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
      */
     private shuffleForbidden:boolean = false;
 
+    ident:string;
+
 
     // ----------------------
 
@@ -187,6 +189,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
             queryContextModel:QueryContextModel,
             props:QueryFormProperties) {
         super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
+        this.ident = (Math.random() * 100).toFixed();
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
         this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(props.subcorpList);
@@ -212,7 +215,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         this.currentAction = 'first_form';
         this.supportedWidgets = this.determineSupportedWidgets();
 
-        this.dispatcher.registerActionListener(action => {
+        this.dispatcherRegister(action => {
             switch (action.name) {
                 case 'CQL_EDITOR_DISABLE':
                     this.emitChange();
@@ -354,6 +357,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                 this.queryTypes = this.queryTypes.set(corp, props.data.queryTypes.get(props.prevCorpora.get(i)) || '');
                 this.matchCaseValues = this.matchCaseValues.set(corp, props.data.matchCases.get(props.prevCorpora.get(i)) || false);
             });
+            this.corpora = props.currCorpora;
             this.queries = this.queries.filter((_, k) => props.currCorpora.includes(k)).toMap();
             this.queryTypes = this.queryTypes.filter((_, k) => props.currCorpora.includes(k)).toMap();
             this.matchCaseValues = this.matchCaseValues.filter((_, k) => props.currCorpora.includes(k)).toMap();

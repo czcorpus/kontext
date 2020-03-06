@@ -54,7 +54,7 @@ export class CorpusAccessRequestModel extends StatefulModel {
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'CORPUS_ACCESS_REQ_SUBMITTED':
                     this.askForAccess(action.payload['corpusId'], action.payload['corpusName'], action.payload['customMessage']).subscribe(

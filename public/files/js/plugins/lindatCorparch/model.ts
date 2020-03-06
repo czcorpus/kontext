@@ -149,7 +149,7 @@ export class TreeWidgetModel extends StatefulModel {
         };
         this.sortedCorplist = Immutable.List<Node>();
 
-        this.dispatcher.registerActionListener(
+        this.dispatcherRegister(
             (action:Action) => {
                 switch (action.name) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':

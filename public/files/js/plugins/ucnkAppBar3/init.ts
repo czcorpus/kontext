@@ -33,7 +33,7 @@ export class AppBarModel extends StatefulModel {
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher);
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     try {

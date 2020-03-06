@@ -38,7 +38,7 @@ export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
         this.layoutModel = layoutModel;
         this.userData = null;
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'USER_INFO_REQUESTED':
                     this.loadUserInfo().subscribe(

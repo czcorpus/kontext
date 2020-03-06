@@ -56,7 +56,7 @@ export class SwitchMainCorpModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.maincorpValues = Immutable.Map<string, string>(data);
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'SWITCH_MC_FORM_SUBMIT':
                     window.location.href = this.getSubmitUrl(action.payload['operationId']);

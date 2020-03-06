@@ -60,7 +60,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
         this.availSubcorpora = Immutable.List<Kontext.SubcorpListItem>(availSubcorpora);
         this.corpora = Immutable.List<string>(corpora);
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'QUERY_INPUT_SELECT_SUBCORP':
                     if (action.payload['pubName']) {

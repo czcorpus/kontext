@@ -115,7 +115,7 @@ export class SubcorpListModel extends StatefulModel {
             }
         });
 
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case 'SUBCORP_LIST_SORT_LINES':
                     this.sortItems(action.payload['colName'], action.payload['reverse']).subscribe(

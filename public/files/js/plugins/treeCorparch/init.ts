@@ -77,7 +77,7 @@ export class TreeWidgetModel extends StatefulModel {
         this.queryModel = queryModel;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
                 switch (action.name) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
                         let item = this.idMap.get(action.payload['nodeId']);
@@ -231,6 +231,8 @@ class Plugin {
 
     private pluginApi:IPluginApi;
 
+    private treeModel:TreeWidgetModel;
+
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
     }
@@ -245,7 +247,7 @@ class Plugin {
      * @param options A configuration of the widget
      */
     createWidget(targetAction:string, queryModel:FirstQueryFormModel, options:Kontext.GeneralProps):React.ComponentClass {
-        const treeModel = new TreeWidgetModel(
+        this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             queryModel,
@@ -254,10 +256,13 @@ class Plugin {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            treeModel
+            this.treeModel
         ).CorptreeWidget;
     }
 
+    disposeWidget():void {
+        this.treeModel.unregister();
+    }
 
     initCorplistPageComponents():CorplistPage {
         return new CorplistPage(this.pluginApi, new DummyQueryModel());

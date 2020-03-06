@@ -151,7 +151,7 @@ export abstract class QueryFormModel extends StatefulModel {
         this.useCQLEditor = payload.useCQLEditor;
         this.queries = Immutable.Map<string, string>();
 
-        this.dispatcher.registerActionListener(action => {
+        this.dispatcherRegister(action => {
             switch (action.name) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
                     this.setActiveWidget(action.payload['sourceId'], action.payload['value']);

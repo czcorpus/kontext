@@ -76,6 +76,8 @@ export class Plugin {
 
     protected pluginApi:IPluginApi;
 
+    private treeModel:TreeWidgetModel;
+
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
     }
@@ -84,7 +86,7 @@ export class Plugin {
     createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
             options:Kontext.GeneralProps):React.ComponentClass<{}> {
 
-        const treeStore = new TreeWidgetModel(
+        this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             (corpusIdent: string) => {
@@ -94,9 +96,13 @@ export class Plugin {
         const viewsLib = widgetViewInit(
                 this.pluginApi.dispatcher(),
                 this.pluginApi.getComponentHelpers(),
-                treeStore
+                this.treeModel
         );
         return viewsLib.CorptreeWidget;
+    }
+
+    disposeWidget():void {
+        this.treeModel.unregister();
     }
 
     initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {

@@ -133,7 +133,7 @@ export class TextTypesDistModel extends StatefulModel {
         this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
         this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
         this.isBusy = this.concLineModel.isUnfinishedCalculation();
-        this.dispatcher.registerActionListener((action:Action) => {
+        this.dispatcherRegister((action:Action) => {
             switch (action.name) {
                 case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
                     this.blockedByAsyncConc = action.payload['isUnfinished'];

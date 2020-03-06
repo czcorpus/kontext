@@ -54,7 +54,7 @@ export interface KeyboardModuleArgs {
     virtualKeyboardModel:VirtualKeyboardModel
 }
 
-export function init({dispatcher, he, queryModel, virtualKeyboardModel}:KeyboardModuleArgs):KeyboardViews {
+export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):KeyboardViews {
 
     // -------------------- <Key /> ----------------------------
 
