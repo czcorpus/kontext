@@ -15,9 +15,26 @@
         "interface-name": [
             false
         ],
-	"quotemark": [true, "single"],
-	"no-reference": false,
-	"prefer-const": false
+        "quotemark": [true, "single"],
+        "no-reference": false,
+        "prefer-const": false,
+
+        "max-classes-per-file": false,
+        "no-string-literal": false,
+        "no-empty-interface": false,
+        "no-namespace": false,
+        "no-console": false,
+        "only-arrow-functions": false,
+        "tripple-equals": false,
+        "radix": false,
+        "forin": false,
+        "prefer-for-of": false,
+
+        "no-shadowed-variable": false,
+        "no-empty": false,
+        "callable-types": false,
+        "no-shadowed-name": false,
+        "no-angle-bracket-type-assertion": false
     },
     "rulesDirectory": [],
     "exclude": ["**/node_modules/**/*"]

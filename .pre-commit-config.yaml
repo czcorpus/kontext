@@ -5,15 +5,13 @@
         args:
         - -i
         - --max-line-length=100
-#-   repo: git://github.com/awebdeveloper/pre-commit-tslint/
-#    sha: 0.0.2
-#    hooks:
-#    -   id: tslint
-#        additional_dependencies:
-#        - tslint@5.0.0
-#        - typescript@1.8.10
-#        args:
-#        - --fix
+-   repo: git://github.com/awebdeveloper/pre-commit-tslint/
+    sha: 0.0.2
+    hooks:
+    -   id: tslint
+        additional_dependencies:
+        - tslint@6.1.0
+        - typescript@3.7.3
 -   repo: git://github.com/kosarko/pre-commit-lesshint/
     sha: 2056fd7056d194aa7d21d0b189a6760c8053be9d
     hooks:
