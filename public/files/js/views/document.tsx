@@ -221,9 +221,10 @@ export function init(
             }
         }
 
-        _handleKeyPress(evt) {
+        _handleKeyPress(evt:React.KeyboardEvent) {
             if (evt.keyCode === KeyCodes.ESC) {
                  this._closeClickHandler();
+                 evt.stopPropagation();
             }
             if (typeof this.props.keyPressHandler === 'function') {
                 this.props.keyPressHandler(evt);
