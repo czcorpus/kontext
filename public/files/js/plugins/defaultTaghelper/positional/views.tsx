@@ -193,28 +193,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         }
     }
 
-    // ------------------------------ <TagDisplay /> ----------------------------
-
-    const TagDisplay:React.SFC<{
-        onEscKey:()=>void;
-        generatedQuery:string;
-    }> = (props) => {
-
-
-        const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
-            evt.preventDefault();
-            evt.stopPropagation();
-            if (typeof props.onEscKey === 'function' && evt.keyCode === KeyCodes.ESC) {
-                props.onEscKey();
-            }
-        };
-
-        return <input type="text" className="postag-display-box" value={props.generatedQuery}
-                    onKeyDown={keyEventHandler} readOnly
-                    ref={item => item ? item.focus() : null} />;
-    };
-
-
     // ------------------------------ <TagBuilder /> ----------------------------
 
     const TagBuilder:React.SFC<TagHelperModelState> = (props) => {
@@ -236,7 +214,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         return (
             <div>
-                <TagDisplay generatedQuery={props.generatedQuery} onEscKey={escKeyHandler} />
+                <input type="text" className="postag-display-box" value={props.generatedQuery} readOnly />;
                 <PositionList
                     positions={props.positions}
                     stateId={props.stateId}

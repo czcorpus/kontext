@@ -212,13 +212,13 @@ export function init(
         const children = views.entrySeq().map(tagset => {
             const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
             return <TagBuilderBound
-                key={tagset[0]}
-                activeView={tagset[1]}
-                sourceId={props.sourceId}
-                actionPrefix={props.actionPrefix}
-                range={props.range}
-                onInsert={props.onInsert}
-                onEscKey={props.onEscKey} />
+                        key={tagset[0]}
+                        activeView={tagset[1]}
+                        sourceId={props.sourceId}
+                        actionPrefix={props.actionPrefix}
+                        range={props.range}
+                        onInsert={props.onInsert}
+                        onEscKey={props.onEscKey} />;
         });
 
         return (

@@ -58,7 +58,9 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         return os.path.exists(self.variants_file_path)
 
     def get_possible_values(self, filter_values=None):
-        ''' Filter possible feature values from initial_values according to user selection'''
+        """
+        Filter possible feature values from initial_values according to user selection
+        """
 
         if filter_values is not None:
             # filter OR logic for values of the same category, AND logic across categories
