@@ -41,6 +41,5 @@ export function init(conf:Kontext.Conf):void {
                 });
             });
         }
-        layoutModel.addUiTestingFlag();
     });
 }

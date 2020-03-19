@@ -95,10 +95,7 @@ class QueryHistoryPage {
                 document.getElementById('query-history-mount'),
                 {}
             );
-
             this.initCorpnameLink();
-            this.layoutModel.addUiTestingFlag();
-
         });
     }
 }

@@ -331,8 +331,6 @@ export class CollPage {
             });
             this.initAnalysisViews();
             this.initQueryOpNavigation();
-
-            this.layoutModel.addUiTestingFlag();
         });
     }
 }

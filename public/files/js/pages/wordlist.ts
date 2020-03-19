@@ -260,7 +260,6 @@ export class WordlistPage extends StatefulModel  {
                 },
                 ''
             );
-            this.layoutModel.addUiTestingFlag();
         });
     }
 }

@@ -176,15 +176,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             this.setState({activeRow: isActive ? null : clickedRow});
         }
 
-        _mkid(i) {
-            return this.props.stateId + String(i);
-        }
-
         render() {
             return (
                 <ul className="defaultTaghelper_PositionList">
                     {this.props.positions.map(
-                        (item, i) => <PositionLine key={this._mkid(i)} position={item}
+                        (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
                                                     lineIdx={i} clickHandler={this._lineClickHandler}
                                                     isActive={i === this.state.activeRow}
                                                     checkboxHandler={this.props.checkboxHandler} />)}

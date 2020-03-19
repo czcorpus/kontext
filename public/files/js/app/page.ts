@@ -127,7 +127,6 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
         this.userSettings = userSettings;
         this.dispatcher = dispatcher;
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
-        this.addUiTestingFlag = this.addUiTestingFlag.bind(this);
     }
 
     /**
@@ -156,10 +155,15 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * @param reactClass
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
+     * @param callback a function called once the component is rendered
      */
     renderReactComponent<T>(reactClass:React.ComponentClass<T>|React.SFC<T>,
-            target:HTMLElement, props?:T):void {
-        ReactDOM.render(React.createElement<T>(reactClass, props), target);
+            target:HTMLElement, props?:T, callback?:()=>void):void {
+        ReactDOM.render(
+            React.createElement<T>(reactClass, props),
+            target,
+            callback
+        );
     }
 
     /**
@@ -323,16 +327,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
         }
     }
 
-    /**
-     *
-     */
-    initNotifications() {
-        if (this.getConf<boolean>('popupServerMessages')) {
-            this.renderReactComponent(
-                this.layoutViews.Messages,
-                <HTMLElement>document.querySelector('#content .messages-mount')
-            );
-        }
+    dispatchServerMessages() {
         (this.getConf<Array<[string, string]>>('notifications') || []).forEach((msg) => {
             this.dispatcher.dispatch({
                 name: 'MESSAGE_ADD',
@@ -342,6 +337,20 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 }
             });
         });
+    }
+
+    /**
+     *
+     */
+    initNotifications() {
+        if (this.getConf<boolean>('popupServerMessages')) {
+            this.renderReactComponent(
+                this.layoutViews.Messages,
+                <HTMLElement>document.querySelector('#content .messages-mount'),
+                undefined,
+                () => this.dispatchServerMessages()
+            );
+        }
     }
 
     /**
@@ -677,15 +686,6 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
         return this.l10n.getHelpLink(ident);
     }
 
-    /**
-     * note: this fn is (and must be) bound to 'this' in constructor
-     */
-    addUiTestingFlag():void {
-        if (this.getConf('uiTestingFlag')) {
-            document.body.setAttribute('data-kontext-init', '');
-        }
-    }
-
     getAuthPlugin():PluginInterfaces.Auth.IPlugin {
         return this.authPlugin;
     }
@@ -741,7 +741,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * expected to be synchronous. Any implicit asynchronous initialization
      * should be performed as a side effect of a respective model.
      */
-    init(pageInitFn:()=>void):void {
+    init(pageInitFn:()=>void, popupMessages:boolean=true):void {
         try {
             this.asyncTaskChecker = new AsyncTaskChecker(
                 this.dispatcher,
@@ -793,7 +793,9 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             this.initMainMenu();
             this.initOverviewArea();
             this.bindLangSwitch();
-            this.initNotifications();
+            if (popupMessages) {
+                this.initNotifications();
+            }
             this.initViewOptions(
                 this.mainMenuModel,
                 this.generalViewOptionsModel,
