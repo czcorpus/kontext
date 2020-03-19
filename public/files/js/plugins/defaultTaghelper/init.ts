@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as Immutable from 'immutable';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TagHelperModel, PositionOptions, TagHelperModelState} from './positional/models';
-import {UDTagBuilderModel, FilterRecord, FeatureSelectProps} from './keyval/models';
-import {init as viewInit} from './views';
-import {init as ppTagsetViewInit} from './positional/views';
-import {init as udTagsetViewInit} from './keyval/views';
+import { PluginInterfaces, IPluginApi} from '../../types/plugins';
+import { TagHelperModel, PositionOptions } from './positional/models';
+import { UDTagBuilderModel, FilterRecord } from './keyval/models';
+import { init as viewInit } from './views';
+import { init as ppTagsetViewInit } from './positional/views';
+import { init as udTagsetViewInit } from './keyval/views';
 
-import { StatelessModel, Action, SEDispatcher } from 'kombo';
+import { StatelessModel } from 'kombo';
 import { TagBuilderBaseState } from './common';
 
 declare var require:any;
