@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {PositionValue, PositionOptions, TagHelperModelState} from './models';
-import {Kontext, KeyCodes} from '../../../types/common';
+import {Kontext } from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
 
 
@@ -42,7 +42,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                 checkboxHandler:CheckboxHandler;
             }> = (props) => {
 
-        const checkboxHandler = (evt) => {
+        const checkboxHandler = (evt:React.ChangeEvent<HTMLInputElement>) => {
             props.checkboxHandler(
                 props.lineIdx,
                 props.data['id'],
@@ -176,15 +176,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             this.setState({activeRow: isActive ? null : clickedRow});
         }
 
-        _mkid(i) {
-            return this.props.stateId + String(i);
-        }
-
         render() {
             return (
                 <ul className="defaultTaghelper_PositionList">
                     {this.props.positions.map(
-                        (item, i) => <PositionLine key={this._mkid(i)} position={item}
+                        (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
                                                     lineIdx={i} clickHandler={this._lineClickHandler}
                                                     isActive={i === this.state.activeRow}
                                                     checkboxHandler={this.props.checkboxHandler} />)}
@@ -192,28 +188,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             );
         }
     }
-
-    // ------------------------------ <TagDisplay /> ----------------------------
-
-    const TagDisplay:React.SFC<{
-        onEscKey:()=>void;
-        generatedQuery:string;
-    }> = (props) => {
-
-
-        const keyEventHandler = (evt:React.KeyboardEvent<{}>) => {
-            evt.preventDefault();
-            evt.stopPropagation();
-            if (typeof props.onEscKey === 'function' && evt.keyCode === KeyCodes.ESC) {
-                props.onEscKey();
-            }
-        };
-
-        return <input type="text" className="postag-display-box" value={props.generatedQuery}
-                    onKeyDown={keyEventHandler} readOnly
-                    ref={item => item ? item.focus() : null} />;
-    };
-
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
@@ -236,7 +210,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         return (
             <div>
-                <TagDisplay generatedQuery={props.generatedQuery} onEscKey={escKeyHandler} />
+                <input type="text" className="postag-display-box" value={props.generatedQuery} readOnly />
                 <PositionList
                     positions={props.positions}
                     stateId={props.stateId}

@@ -221,9 +221,10 @@ export function init(
             }
         }
 
-        _handleKeyPress(evt) {
+        _handleKeyPress(evt:React.KeyboardEvent) {
             if (evt.keyCode === KeyCodes.ESC) {
                  this._closeClickHandler();
+                 evt.stopPropagation();
             }
             if (typeof this.props.keyPressHandler === 'function') {
                 this.props.keyPressHandler(evt);
@@ -235,9 +236,11 @@ export function init(
             const isInteractiveActive = (elm:HTMLElement) =>
                 ['INPUT', 'SELECT', 'BUTTON', 'A', 'LABEL', 'TEXTAREA'].indexOf(elm.nodeName) > -1 ||
                 elm.getAttribute('tabindex') !== null;
-            if (this.props.onAreaClick && !isInteractiveActive(targetElm)) {
+            if (!isInteractiveActive(targetElm)) {
                 this.closeBtnRef.current.focus();
-                this.props.onAreaClick();
+                if (this.props.onAreaClick) {
+                    this.props.onAreaClick();
+                }
             }
         }
 
