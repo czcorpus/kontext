@@ -55,21 +55,18 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         );
         this.pluginApi = pluginApi;
         this.autoRemoveMessages = autoRemoveMessages;
-    }
-
-    reduce(state:MessageModelState, action:Action):MessageModelState {
-        let newState;
-        switch (action.name) {
-            case 'MESSAGE_ADD':
-                newState = this.copyState(state);
+        this.actionMatch = {
+            'MESSAGE_ADD': (state, action) => {
+                const newState = this.copyState(state);
                 this.addMessage(
                     newState,
                     action.payload['messageType'],
                     action.payload['messageText']
-                )
-            break;
-            case 'MESSAGE_DECREASE_TTL':
-                newState = this.copyState(state);
+                );
+                return newState;
+            },
+            'MESSAGE_DECREASE_TTL': (state, action) => {
+                const newState = this.copyState(state);
                 newState.messages = newState.messages.map(msg => {
                     return {
                         messageId: msg.messageId,
@@ -78,16 +75,15 @@ export class MessageModel extends StatelessModel<MessageModelState> {
                         ttl: msg.ttl -= MessageModel.TIME_TICK,
                         timeFadeout: msg.timeFadeout
                     }
-                }).filter(msg => msg.ttl > 0);
-            break;
-            case 'MESSAGE_CLOSED':
-                newState = this.copyState(state);
+                }).filter(msg => msg.ttl > 0).toList();
+                return newState;
+            },
+            'MESSAGE_CLOSED': (state, action) => {
+                const newState = this.copyState(state);
                 this.removeMessage(newState, action.payload['messageId']);
-            break;
-            default:
-                newState = state;
-        }
-        return newState;
+                return newState;
+            }
+        };
     }
 
     sideEffects(state:MessageModelState, action:Action, dispatch:SEDispatcher):void {

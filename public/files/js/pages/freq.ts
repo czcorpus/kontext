@@ -435,9 +435,6 @@ class FreqPage {
             this.initQueryOpNavigation();
             this.initFreqResult();
             this.setupBackButtonListening();
-
-            this.layoutModel.addUiTestingFlag();
-
         });
     }
 }

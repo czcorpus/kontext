@@ -353,7 +353,6 @@ export class FirstFormPage {
             new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
 
             this.layoutModel.restoreModelsDataAfterSwitch();
-            this.layoutModel.addUiTestingFlag();
         });
     }
 }

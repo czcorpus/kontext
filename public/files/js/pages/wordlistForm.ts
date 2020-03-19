@@ -141,7 +141,6 @@ class WordlistFormPage {
                 {}
             );
             this.layoutModel.restoreModelsDataAfterSwitch();
-            this.layoutModel.addUiTestingFlag();
         });
     }
 }

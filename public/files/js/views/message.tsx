@@ -19,10 +19,9 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../types/common';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Kontext } from '../types/common';
 import { MessageModel, MessageModelState } from '../models/common/layout';
-import { Subscription } from 'rxjs';
 
 
 export interface MessageViewProps {
@@ -33,7 +32,7 @@ export interface MessageViewProps {
 }
 
 export interface MessageViews {
-    MessagePageHelp:React.ComponentClass<MessageViewProps>;
+    MessagePageHelp:React.ComponentClass<MessageViewProps, MessageModelState>;
 }
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:MessageModel):MessageViews {
@@ -60,67 +59,44 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ---------------------- <MessagePageHelp /> ------------------------------------
 
-    class MessagePageHelp extends React.Component<MessageViewProps, MessageModelState> {
+    const MessagePageHelp:React.SFC<MessageViewProps & MessageModelState> = (props) => {
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = model.getState();
-            this.handleCorporaClick = this.handleCorporaClick.bind(this);
-            this.handleStoreChange = this.handleStoreChange.bind(this);
-        }
-
-        private handleCorporaClick():void {
+        const handleCorporaClick = () => {
             window.location.href = he.createActionLink('corpora/corplist');
-        }
+        };
 
-        private handleStoreChange(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = model.addListener(this.handleStoreChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <div className="MessagePageHelp">
-                    <div className="messages">
-                        {this.state.messages.map(message => {
-                            return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;
-                        })}
-                    </div>
-                    <h2>{he.translate('global__where_to_continue')}:</h2>
-                    <ul className="links">
-                        {this.props.lastUsedCorpus.corpname ?
-                            <li>
-                                <a href={he.createActionLink('first_form', [['corpname', this.props.lastUsedCorpus.corpname]])}>
-                                    {he.translate('global__select_last_used_corpus_{corpname}', {corpname: this.props.lastUsedCorpus.human_corpname})}
-                                </a>
-                            </li> :
-                            null
-                        }
-                        <li>
-                            <a onClick={this.handleCorporaClick}>{he.translate('global__view_avail_corpora')}</a>
-                        </li>
-                        {this.props.issueReportingView && !this.props.anonymousUser ?
-                            <li><this.props.issueReportingView {...this.props.widgetProps} /></li> :
-                            null
-                        }
-                    </ul>
+        return (
+            <div className="MessagePageHelp">
+                <div className="messages">
+                    {props.messages.map(message => {
+                        return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;
+                    })}
                 </div>
-            );
-        }
-    }
+                <h2>{he.translate('global__where_to_continue')}:</h2>
+                <ul className="links">
+                    {props.lastUsedCorpus.corpname ?
+                        <li>
+                            <a href={he.createActionLink('first_form', [['corpname', props.lastUsedCorpus.corpname]])}>
+                                {he.translate('global__select_last_used_corpus_{corpname}', {corpname: props.lastUsedCorpus.human_corpname})}
+                            </a>
+                        </li> :
+                        null
+                    }
+                    <li>
+                        <a onClick={handleCorporaClick}>{he.translate('global__view_avail_corpora')}</a>
+                    </li>
+                    {props.issueReportingView && !props.anonymousUser ?
+                        <li><props.issueReportingView {...props.widgetProps} /></li> :
+                        null
+                    }
+                </ul>
+            </div>
+        );
+    };
 
 
     return {
-        MessagePageHelp: MessagePageHelp
+        MessagePageHelp: BoundWithProps<MessageViewProps, MessageModelState>(MessagePageHelp, model)
     };
 
 }

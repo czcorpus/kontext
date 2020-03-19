@@ -1193,7 +1193,6 @@ export class ViewPage {
             if (this.layoutModel.getConf<boolean>('Unfinished')) {
                 this.reloadHits();
             }
-            this.layoutModel.addUiTestingFlag
             this.renderLines(
                 {
                     ttModel: ttModel,

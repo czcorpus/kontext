@@ -39,6 +39,5 @@ export function init(conf:Kontext.Conf):void {
         document.getElementById('go-to-query').addEventListener('click', () => {
             window.location.href = layoutModel.createActionUrl('first_form');
         });
-        layoutModel.addUiTestingFlag();
     });
 }
