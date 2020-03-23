@@ -236,9 +236,14 @@ export function init(
             const isInteractiveActive = (elm:HTMLElement) =>
                 ['INPUT', 'SELECT', 'BUTTON', 'A', 'LABEL', 'TEXTAREA'].indexOf(elm.nodeName) > -1 ||
                 elm.getAttribute('tabindex') !== null;
-            if (this.props.onAreaClick && !isInteractiveActive(targetElm)) {
-                this.closeBtnRef.current.focus();
-                this.props.onAreaClick();
+            if (!isInteractiveActive(targetElm)) {
+                const sel = window.getSelection();
+                if (sel.anchorOffset === sel.focusOffset) { // <- prevents Firefox from resetting the selection
+                    this.closeBtnRef.current.focus();
+                }
+                if (this.props.onAreaClick) {
+                    this.props.onAreaClick();
+                }
             }
         }
 
