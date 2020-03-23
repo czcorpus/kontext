@@ -237,7 +237,10 @@ export function init(
                 ['INPUT', 'SELECT', 'BUTTON', 'A', 'LABEL', 'TEXTAREA'].indexOf(elm.nodeName) > -1 ||
                 elm.getAttribute('tabindex') !== null;
             if (!isInteractiveActive(targetElm)) {
-                this.closeBtnRef.current.focus();
+                const sel = window.getSelection();
+                if (sel.anchorOffset === sel.focusOffset) { // <- prevents Firefox from resetting the selection
+                    this.closeBtnRef.current.focus();
+                }
                 if (this.props.onAreaClick) {
                     this.props.onAreaClick();
                 }
