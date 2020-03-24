@@ -176,6 +176,11 @@ class KonTextCookie(http.cookies.BaseCookie):
         return strval, quote(strval)
 
 
+@jinja2.contextfilter
+def translat_filter(context, s):
+    return ugettext(s)
+
+
 class Controller(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
@@ -221,7 +226,7 @@ class Controller(object):
             to_json=val_to_js,
             shorten=strings.shorten,
             camelize=l10n.camelize,
-            _=ugettext,
+            _=translat_filter,
             create_action=lambda a, p=None: self.create_url(a, p if p is not None else {})
         )
         ##
