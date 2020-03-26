@@ -23,6 +23,7 @@ KonText controller and related auxiliary objects
 
 import os
 from types import MethodType, DictType, ListType, TupleType
+from xml.sax.saxutils import escape
 from inspect import isclass
 import Cookie
 import imp
@@ -216,6 +217,7 @@ class Controller(object):
             shorten=strings.shorten,
             camelize=l10n.camelize,
             _=translat_filter,
+            xmle=escape,
             create_action=lambda a, p=None: self.create_url(a, p if p is not None else {})
         )
         ##

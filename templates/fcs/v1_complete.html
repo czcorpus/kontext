@@ -7,9 +7,8 @@
         </diag:diagnostic>
     </sru:diagnostics>
 {%- endmacro -%}
-
 <?xml version='1.0' encoding='utf-8'?>
-<?xml-stylesheet href="./fcs2html" type="text/xsl"?>
+<?xml-stylesheet href="{{ root_url }}/fcs/fcs2html" type="text/xsl"?>
 {% if operation == 'explain' %}
 <sru:explainResponse xmlns:sru="http://www.loc.gov/zing/srw/">
     <sru:version>{{ version }}</sru:version>
@@ -127,7 +126,7 @@
                 <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" ref="{{ corpname }}">
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
-                            {{ left }}<hits:Hit>{{ word }}</hits:Hit> {{ right }}
+                            {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}
                         </hits:Result>
                     </fcs:DataView>
                 </fcs:Resource>
