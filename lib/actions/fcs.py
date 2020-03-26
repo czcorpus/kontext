@@ -12,6 +12,7 @@ import urlparse
 import logging
 import math
 
+
 _logger = logging.getLogger(__name__)
 
 
@@ -132,7 +133,9 @@ class Actions(Kontext):
             raise Exception(10, repr(e), 'Query syntax error')
 
         kwic = kwiclib.Kwic(corp, corpname, conc)
-        kwic_args = kwiclib.KwicPageArgs(Args(), base_attr=Kontext.BASE_ATTR)
+        args = Args()
+        args.structs = ''
+        kwic_args = kwiclib.KwicPageArgs(args, base_attr=Kontext.BASE_ATTR)
         kwic_args.fromp = fromp
         kwic_args.pagesize = max_rec
         kwic_args.leftctx = '-{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
@@ -140,7 +143,7 @@ class Actions(Kontext):
         page = kwic.kwicpage(kwic_args)  # convert concordance
 
         local_offset = (start - 1) % max_rec
-        if start > conc.size():
+        if start - 1 > conc.size():
             raise Exception(61, 'startRecord', 'First record position out of range')
         rows = [
             (
