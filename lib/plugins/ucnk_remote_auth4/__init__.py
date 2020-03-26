@@ -117,7 +117,8 @@ class CentralAuth(AbstractRemoteAuth):
     def _fetch_toolbar_api_response(self, args):
         connection = self._create_connection()
         try:
-            connection.request('GET', self._toolbar_conf.path + '?' + urllib.parse.urlencode(args))
+            connection.request('POST', self._toolbar_conf.path, urllib.parse.urlencode(args),
+                               {'Content-Type': 'application/x-www-form-urlencoded'})
             response = connection.getresponse()
             if response and response.status == 200:
                 return response.read().decode('utf-8')
