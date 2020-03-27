@@ -21,6 +21,7 @@ from typing import List
 import os
 from sys import stderr
 import re
+import logging
 
 import manatee
 import l10n
@@ -155,7 +156,18 @@ class PyConc(manatee.Concordance):
         self.reduce_lines(options)
 
     def command_x(self, options):
-        raise NotImplementedError('Command "x" not supported any more')
+        if options[0] == '-':
+            self.switch_aligned(self.orig_corp.get_conffile())
+            try:
+                self.add_aligned(options[1:])
+            except RuntimeError as e:
+                logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
+                raise EmptyParallelCorporaIntersection(
+                    translate('No alignment available for the selected languages'))
+            self.switch_aligned(options[1:])
+            self.corpname = options[1:]
+        else:
+            self.swap_kwic_coll(int(options))
 
     def command_X(self, options):
         self.add_aligned(options)
