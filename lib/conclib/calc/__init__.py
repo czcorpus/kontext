@@ -187,14 +187,19 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
                 _, finished = _check_result(
                     cache_map=cache_map, subchash=subchash, q=q[:i], minsize=minsize)
                 if finished:
-                    conc = PyConc(corp, 'l', cache_path, orig_corp=corp)
+                    mcorp = corp
+                    for qq in reversed(q[:i]):  # find the right main corp, if aligned
+                        if qq.startswith('x-'):
+                            mcorp = manatee.Corpus(qq[2:])
+                            break
+                    conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
-                logging.getLogger(__name__).error(f'Failed to join unfinished calculation for {q[:i]}: {ex}')
+                logging.getLogger(__name__).error(f'Failed to use cached concordance for {q[:i]}: {ex}')
                 cancel_async_task(cache_map, subchash, q[:i])
                 continue
             ans = (i, conc)
             break
-    logging.getLogger(__name__).debug(f'get_cached_conc({corp.corpname}, [{", ".join(q)}]), '
+    logging.getLogger(__name__).debug(f'get_cached_conc({corp.get_conffile()}, [{", ".join(q)}]), '
                                       f'conc: {conc.__class__.__name__}, '
                                       f'missing ops start idx: {i if i < len(q) else "none"}, '
                                       f'time: {(time.time() - start_time):.4f}')
