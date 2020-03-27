@@ -114,7 +114,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
         hideable:boolean;
-        cols:Immutable.List<{n:string; visible:boolean;}>;
+        cols:Immutable.List<{n:string; label:string; visible:boolean}>;
 
     }> = (props) => {
 
@@ -138,7 +138,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             }
         };
 
-        const renderCol = (corpInfo) => {
+        const renderCol = (corpInfo:{n:string; label:string; visible:boolean}) => {
             const colSpan = props.viewMode === 'kwic' ? 3 : 1;
 
             const htmlClass = corpInfo.visible ? 'concordance-col-heading' : 'concordance-col-heading-hidden';

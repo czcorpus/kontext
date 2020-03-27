@@ -802,11 +802,7 @@ class Actions(Querying):
     @exposed(http_method='POST', template='view.html', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
-        q = 'x-{0}'.format(maincorp)
-        if len(self.args.q) > 1 and self.args.q[-2] == q:  # returning back to an existing 'maincorp'
-            self.args.q.pop()
-        else:
-            self.args.q.append('x-{0}'.format(maincorp))
+        self.args.q.append('x-{0}'.format(maincorp))
         ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
         self.add_conc_form_args(ksargs)
         return self.view()
