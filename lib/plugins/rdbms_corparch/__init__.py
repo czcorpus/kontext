@@ -208,7 +208,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._corpus_info_cache: Dict[str, CorpusInfo] = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
-        self._descriptions = defaultdict(lambda: {})
+        self._tt_desc_i18n = defaultdict(lambda: {})
         self._tc_providers = {}
         self._kc_providers = {}
         self._mc = ManateeCorpora()
@@ -241,7 +241,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _corp_info_from_row(self, row):
+    def _corp_info_from_row(self, row, lang):
         if row:
             ans = self.create_corpus_info()
             ans.id = row['id']
@@ -253,6 +253,8 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.speech_overlap_attr = row['speech_overlap_attr']
             ans.speech_overlap_val = row['speech_overlap_val']
             ans.use_safe_font = row['use_safe_font']
+            ans._description_cs = row['description_cs']
+            ans._description_en = row['description_en']
             ans.metadata.id_attr = row['id_attr']
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])
@@ -263,7 +265,6 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.metadata.group_duplicates = bool(row['bib_group_duplicates'])
             ans.metadata.default_virt_keyboard = row['default_virt_keyboard']
             ans.manatee.encoding = row['encoding']
-            ans.manatee.description = row['info']
             ans.manatee.size = row['size']
             ans.manatee.lang = row['language']
             ans.manatee.name = row['name']
@@ -278,11 +279,12 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         return text
 
     def corpus_list_item_from_row(self, plugin_api, row):
+        desc = row['description_cs'] if plugin_api.user_lang == 'cs_CZ' else row['description_en']
         keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else []) if x]
         return CorpusListItem(id=row['id'],
                               corpus_id=row['id'],
                               name=row['name'],
-                              description=self._export_untranslated_label(plugin_api, row['info']),
+                              description=self._export_untranslated_label(plugin_api, desc),
                               size=row['size'],
                               featured=row['featured'],
                               path=None,
@@ -316,11 +318,12 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         """
         ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
-        if ans.metadata.desc is not None and lang_code in self._descriptions:
-            ans.metadata.desc = self._descriptions[lang_code][ans.metadata.desc]
+        if ans.metadata.desc is not None and lang_code in self._tt_desc_i18n:
+            ans.metadata.desc = self._tt_desc_i18n[lang_code][ans.metadata.desc]
         else:
             ans.metadata.desc = ''
         ans.metadata.keywords = self.get_l10n_keywords(ans.metadata.keywords, lang_code)
+        ans.description = ans.localized_desc(lang_code)
         return ans
 
     @staticmethod
@@ -354,10 +357,10 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                     self._kc_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id]
 
-    def _fetch_corpus_info(self, corpus_id):
+    def _fetch_corpus_info(self, corpus_id: str, user_lang: str):
         if corpus_id not in self._corpus_info_cache:
             row = self._backend.load_corpus(corpus_id)
-            corp = self._corp_info_from_row(row)
+            corp = self._corp_info_from_row(row, user_lang)
             if corp:
                 corp.tagsets = [TagsetInfo().from_dict(row2)
                                 for row2 in self._backend.load_corpus_tagsets(corpus_id)]
@@ -369,10 +372,10 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                         corp.citation_info.article_ref.append(markdown(art['entry']))
                     elif art['role'] == 'other':
                         corp.citation_info.other_bibliography = markdown(art['entry'])
-                if row['ttdesc_id'] not in self._descriptions:
+                if row['ttdesc_id'] not in self._tt_desc_i18n:
                     for drow in self._backend.load_ttdesc(row['ttdesc_id']):
-                        self._descriptions['cs'][row['ttdesc_id']] = drow['text_cs']
-                        self._descriptions['en'][row['ttdesc_id']] = drow['text_en']
+                        self._tt_desc_i18n['cs'][row['ttdesc_id']] = drow['text_cs']
+                        self._tt_desc_i18n['en'][row['ttdesc_id']] = drow['text_en']
         return self._corpus_info_cache.get(corpus_id, None)
 
     def get_corpus_info(self, user_lang, corp_name):
@@ -383,7 +386,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             try:
                 # get rid of path-like corpus ID prefix
                 corp_name = corp_name.lower()
-                corp_info = self._fetch_corpus_info(corp_name)
+                corp_info = self._fetch_corpus_info(corp_name, user_lang)
                 if corp_info is not None:
                     if user_lang is not None:
                         ans = self._localize_corpus_info(corp_info, lang_code=user_lang)
@@ -412,9 +415,10 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
     def _export_favorite(self, plugin_api):
         ans = []
         for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
+            corp_info = self._fetch_corpus_info(item.main_corpus_id, plugin_api.user_lang)
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_api, self._mc.get_info(item.main_corpus_id).description)
+                plugin_api, corp_info.description)
             ans.append(tmp)
         return ans
 

@@ -162,11 +162,22 @@ class CorpusInfo(DictLike):
     All the possible implementations are expected to
     be user-independent. I.e. all the information must
     apply for all the users.
+
+    In terms of l10n, this is kind of a hybrid as it
+    is expected that it stores localized information
+    but at the same time, for some items (description)
+    it must also store i18n values so we can create
+    localized copies for different languages.
+    (see _localize_corpus_info in different corparch
+    plug-ins).
     """
 
     def __init__(self) -> None:
         self.id: Optional[str] = None
         self.name: Optional[str] = None
+        self.description: Optional[str] = None  # filled in during localization
+        self._description_cs: Optional[str] = None
+        self._description_en: Optional[str] = None
         self.path: Optional[str] = None
         self.web: Optional[str] = None
         self.sentence_struct: Optional[str] = None
@@ -185,6 +196,12 @@ class CorpusInfo(DictLike):
         self.token_connect: TokenConnect = TokenConnect()
         self.kwic_connect: KwicConnect = KwicConnect()
         self.manatee: ManateeCorpusInfo = ManateeCorpusInfo()
+
+    def localized_desc(self, lang) -> str:
+        if lang.split('_')[0] == 'cs':
+            return self._description_cs
+        else:
+            return self._description_en
 
 
 class BrokenCorpusInfo(CorpusInfo):

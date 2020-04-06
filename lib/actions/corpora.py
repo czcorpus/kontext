@@ -74,7 +74,7 @@ class Corpora(Kontext):
 
         ans = {
             'corpname': corpus_name,
-            'description': corpus.get_info(),
+            'description': corp_conf_info.description,
             'size': int(corpus.size()),
             'attrlist': [],
             'structlist': [],

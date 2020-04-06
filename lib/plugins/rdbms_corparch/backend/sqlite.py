@@ -67,9 +67,9 @@ class Backend(DatabaseBackend):
             '  AS id_attr, '
             '(CASE WHEN c.speech_segment_attr IS NOT NULL THEN c.speech_segment_struct || \'.\' || '
             '  c.speech_segment_attr ELSE NULL END) AS speech_segment, '
-            'c.bib_group_duplicates, '
+            'c.bib_group_duplicates, c.description_cs, c.description.en, ',
             'tc.id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
-            'c.size, rc.info, rc.name, rc.rencoding AS encoding, rc.language, '
+            'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
             'c.default_virt_keyboard as default_virt_keyboard '
             'FROM kontext_corpus AS c '
             'LEFT JOIN kontext_ttdesc AS tc ON tc.id = c.ttdesc_id '
@@ -91,7 +91,9 @@ class Backend(DatabaseBackend):
             values_cond = [1, user_id]
         if substrs is not None:
             for substr in substrs:
-                where_cond.append('(rc.name LIKE ? OR c.id LIKE ? OR rc.info LIKE ?)')
+                where_cond.append(
+                    '(rc.name LIKE ? OR c.id LIKE ? OR c.description_cs LIKE ? OR c.description_en LIKE ?)')
+                values_cond.append('%{0}%'.format(substr))
                 values_cond.append('%{0}%'.format(substr))
                 values_cond.append('%{0}%'.format(substr))
                 values_cond.append('%{0}%'.format(substr))
@@ -119,7 +121,7 @@ class Backend(DatabaseBackend):
                'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                'NULL AS reference_other, NULL AS ttdesc_id, '
                'COUNT(kc.keyword_id) AS num_match_keys, '
-               'c.size, rc.info, ifnull(rc.name, c.id) AS name, rc.rencoding AS encoding, rc.language,'
+               'c.size, ifnull(rc.name, c.id) AS name, rc.rencoding AS encoding, rc.language,'
                '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                'WHERE kcx.corpus_id = c.id) AS keywords '
                'FROM kontext_corpus AS c '

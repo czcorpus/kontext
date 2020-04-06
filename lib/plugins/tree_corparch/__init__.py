@@ -164,8 +164,7 @@ class TreeCorparch(AbstractCorporaArchive):
                 return item
         return None
 
-    @staticmethod
-    def _localize_corpus_info(data, lang_code):
+    def _localize_corpus_info(self, data, lang_code):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -175,6 +174,7 @@ class TreeCorparch(AbstractCorporaArchive):
         lang_code = lang_code.split('_')[0]
         desc = ans.metadata.desc
         ans.metadata.desc = desc[lang_code] if lang_code in desc else ''
+        ans.description = self._manatee_corpora.get_info(ans.id).description
         return ans
 
     def setup(self, controller_obj):
