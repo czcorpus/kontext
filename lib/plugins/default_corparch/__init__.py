@@ -635,6 +635,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             translations = self._keywords.get(keyword, {})
             translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
+        ans.description = self.manatee_corpora.get_info(ans.id).description
         return ans
 
     def get_corpus_info(self, user_lang, corp_name):

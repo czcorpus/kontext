@@ -195,14 +195,15 @@ class Backend(DatabaseBackend):
             '    c.speech_overlap_struct) AS speech_overlap_attr, '
             'c.speech_overlap_val, c.use_safe_font, '
             'c.requestable, c.featured, c.text_types_db AS `database`, '
+            'c.description_cs, c.description_en, '
             'IF (c.bib_label_attr IS NOT NULL, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) '
             '  AS label_attr, '
             'IF (c.bib_id_attr IS NOT NULL, CONCAT(c.bib_id_struct, \'.\', c.bib_id_attr), NULL) AS id_attr, '
             'IF (c.speech_segment_attr IS NOT NULL, CONCAT(c.speech_segment_struct, \'.\', c.speech_segment_attr), '
             '  NULL) AS speech_segment, '
-            'bib_group_duplicates, '
+            'c.bib_group_duplicates, c.description_cs, c.description_en, '
             'c.ttdesc_id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
-            'c.size, rc.info, rc.name, rc.rencoding AS encoding, rc.language, '
+            'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
             'c.default_virt_keyboard as default_virt_keyboard '
             'FROM corpora AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
@@ -221,11 +222,15 @@ class Backend(DatabaseBackend):
         values_cond2 = [user_id, 1]  # the first item belongs to setting a special @ variable
         if substrs is not None:
             for substr in substrs:
-                where_cond1.append('(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
+                where_cond1.append(
+                    '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
                 values_cond1.append('%{0}%'.format(substr))
                 values_cond1.append('%{0}%'.format(substr))
                 values_cond1.append('%{0}%'.format(substr))
-                where_cond2.append('(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
+                values_cond1.append('%{0}%'.format(substr))
+                where_cond2.append(
+                    '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
+                values_cond2.append('%{0}%'.format(substr))
                 values_cond2.append('%{0}%'.format(substr))
                 values_cond2.append('%{0}%'.format(substr))
                 values_cond2.append('%{0}%'.format(substr))
@@ -261,7 +266,7 @@ class Backend(DatabaseBackend):
         sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, collator_locale, '
                'speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val, use_safe_font, featured, '
                '`database`, label_attr, id_attr, reference_default, reference_other, ttdesc_id, num_match_keys, size, '
-               'info, name, encoding, language, g_name, version, keywords FROM (')
+               'name, encoding, language, g_name, version, keywords, description_cs, description_en FROM (')
         where = []
         if requestable:
             where.extend(values_cond1)
@@ -270,8 +275,9 @@ class Backend(DatabaseBackend):
                 'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                 'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                 'NULL AS reference_other, NULL AS ttdesc_id, '
+                'c.description_cs, c.description_en, '
                 'COUNT(kc.keyword_id) AS num_match_keys, '
-                'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
+                'c.size, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
                 'c.group_name AS g_name, c.version AS version, '
                 '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                 'WHERE kcx.corpus_name = c.name) AS keywords '
@@ -288,8 +294,9 @@ class Backend(DatabaseBackend):
             'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
             'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
             'NULL AS reference_other, NULL AS ttdesc_id, '
+            'c.description_cs, c.description_en, '
             'COUNT(kc.keyword_id) AS num_match_keys, '
-            'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
+            'c.size, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
             'c.group_name AS g_name, c.version AS version, '
             '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
             'WHERE kcx.corpus_name = c.name) AS keywords '
