@@ -239,7 +239,8 @@ export namespace Kontext {
          * Register an action which is run before listeners
          * are notified. This is used to allow other models
          * to prepare themselves before their views are
-         * shown.
+         * shown. Please note that StatelessModel has a more
+         * general mechanism to solve this (suspend()).
          */
         addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
 
