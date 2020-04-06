@@ -361,8 +361,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <section>
-                <div className="struct-groups checkbox-area">                
-                    {props.availRefs.map(item => 
+                <div className="struct-groups checkbox-area">
+                    {props.availRefs.map(item =>
                         <div key={item.n} className="group">
                             <label className="struct">
                                 <input type="checkbox" name="setrefs" value={item.n}
@@ -465,7 +465,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         <layoutViews.TabView
                             className="FieldsetsTabs"
                             items={items}>
-                            
+
                             <AttributesCheckboxes
                                 attrList={props.attrList}
                                 hasSelectAll={props.hasSelectAllAttrs}
@@ -510,30 +510,27 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
-    const StructAttrsViewOptions:React.SFC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => {
-
-        return (
-            <div className="StructAttrsViewOptions">
-                <StructsAndAttrsForm
-                        fixedAttr={props.fixedAttr}
-                        attrList={props.attrList}
-                        hasSelectAllAttrs={props.selectAllAttrs}
-                        availStructs={props.structList}
-                        structAttrs={props.structAttrs}
-                        hasSelectAllStruct={props.selectAllStruct}
-                        availRefs={props.refList}
-                        refAttrs={props.refAttrs}
-                        hasSelectAllRefs={props.selectAllRef}
-                        hasLoadedData={props.hasLoadedData}
-                        attrsVmode={props.extendedVmode}
-                        showConcToolbar={props.showConcToolbar}
-                        isWaiting={props.isBusy}
-                        userIsAnonymous={props.userIsAnonymous}
-                        lockedPosAttrNotSelected={props.attrList.find(v => v.locked).selected}
-                        corpusUsesRTLText={props.corpusUsesRTLText} />
-            </div>
-        );
-    }
+    const StructAttrsViewOptions:React.SFC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => (
+        <div className="StructAttrsViewOptions">
+            <StructsAndAttrsForm
+                    fixedAttr={props.fixedAttr}
+                    attrList={props.attrList}
+                    hasSelectAllAttrs={props.selectAllAttrs}
+                    availStructs={props.structList}
+                    structAttrs={props.structAttrs}
+                    hasSelectAllStruct={props.selectAllStruct}
+                    availRefs={props.refList}
+                    refAttrs={props.refAttrs}
+                    hasSelectAllRefs={props.selectAllRef}
+                    hasLoadedData={props.hasLoadedData}
+                    attrsVmode={props.extendedVmode}
+                    showConcToolbar={props.showConcToolbar}
+                    isWaiting={props.isBusy}
+                    userIsAnonymous={props.userIsAnonymous}
+                    lockedPosAttrNotSelected={(props.attrList.find(v => v.locked) || {selected: false}).selected}
+                    corpusUsesRTLText={props.corpusUsesRTLText} />
+        </div>
+    );
 
     return {
         StructAttrsViewOptions: BoundWithProps(StructAttrsViewOptions, viewOptionsModel)

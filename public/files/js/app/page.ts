@@ -623,24 +623,6 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             viewOptionsModel: corpViewOptionsModel,
             mainMenuModel: mainMenuModel
         });
-
-        this.mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
-            (args:Kontext.GeneralProps) => {
-                const ans = new Observable((observer) => {
-                    this.dispatcher.registerActionListener((action) => {
-                        if (action.name === CorpusViewOptionsActionName.LoadDataDone) {
-                            observer.next();
-                            observer.complete();
-                        }
-                    });
-                });
-                this.dispatcher.dispatch({
-                    name: CorpusViewOptionsActionName.LoadData
-                });
-                return ans;
-            }
-        );
         this.mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
             (args:Kontext.GeneralProps) => this.generalViewOptionsModel.loadData()

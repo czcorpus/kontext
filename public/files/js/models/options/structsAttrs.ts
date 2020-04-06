@@ -23,7 +23,8 @@ import * as Immutable from 'immutable';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../util';
 import { Action, IFullActionControl, StatelessModel, SEDispatcher } from 'kombo';
-import { tap } from 'rxjs/operators';
+import { tap, concatMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 
 export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.AttrViewMode => {
@@ -68,8 +69,8 @@ export interface CorpusViewOptionsModelState {
 
 
 export enum ActionName {
-    LoadData = 'VIEW_OPTIONS_LOAD_DATA',
     LoadDataDone = 'VIEW_OPTIONS_LOAD_DATA_DONE',
+    DataReady = 'VIEW_OPTIONS_DATA_READY',
     UpdateAttrVisibility = 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
     ToggleAttribute = 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
     ToggleAllAttributes = 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
@@ -119,14 +120,19 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         this.updateHandlers = Immutable.List<()=>void>();
 
         this.actionMatch = {
-            [ActionName.LoadData]: (state, action) => {
+            'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS': (state, action) => {
                 const newState = this.copyState(state);
                 newState.isBusy = true;
                 return newState;
             },
             [ActionName.LoadDataDone]: (state, action) => {
                 const newState = this.copyState(state);
-                this.initFromPageData(newState, action.payload['data']);
+                this.importData(newState, action.payload['data']);
+                newState.isBusy = false;
+                return newState;
+            },
+            [ActionName.DataReady]: (state, action) => {
+                const newState = this.copyState(state);
                 newState.isBusy = false;
                 return newState;
             },
@@ -190,11 +196,52 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
 
     sideEffects(state:CorpusViewOptionsModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.name) {
-            case ActionName.LoadData:
-                this.loadData(dispatch);
-            break;
             case ActionName.SaveSettings:
                 this.saveSettings(state, dispatch);
+            break;
+            case 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS':
+                if (!state.hasLoadedData) {
+                    this.suspendWithTimeout(20000, {}, (action , syncData) => {
+                        return null;
+
+                    }).pipe(
+                        concatMap(
+                            (v) => this.loadData()
+                        )
+                    ).subscribe(
+                        (data:ViewOptions.LoadOptionsResponse) => {
+                            dispatch({
+                                name: ActionName.LoadDataDone,
+                                payload: {
+                                    data: {
+                                        AttrList: data.AttrList,
+                                        FixedAttr: data.fixed_attr,
+                                        CurrentAttrs: data.CurrentAttrs,
+                                        AvailStructs: data.Availstructs,
+                                        StructAttrs: data.structattrs,
+                                        CurrStructAttrs: data.curr_structattrs,
+                                        AvailRefs: data.Availrefs,
+                                        AttrAllpos: data.attr_allpos,
+                                        AttrVmode: data.attr_vmode,
+                                        ShowConcToolbar: data.use_conc_toolbar
+                                    }
+                                }
+                            });
+                        },
+                        (err:Error) => {
+                            this.layoutModel.showMessage('error', err);
+                            dispatch({
+                                name: ActionName.LoadDataDone,
+                                error: err
+                            });
+                        }
+                    );
+
+                } else {
+                    dispatch({
+                        name: ActionName.DataReady
+                    });
+                }
             break;
         }
     }
@@ -550,7 +597,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
 
-    initFromPageData(state:CorpusViewOptionsModelState, data:ViewOptions.PageData):void {
+    importData(state:CorpusViewOptionsModelState, data:ViewOptions.PageData):void {
         state.attrList = Immutable.List(data.AttrList.map(item => {
             return {
                 label: item.label,
@@ -603,7 +650,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         }).toList();
 
         state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
-
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
         state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);
@@ -612,41 +658,13 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.showConcToolbar = data.ShowConcToolbar;
     }
 
-    private loadData(dispatch:SEDispatcher):void {
+    private loadData():Observable<ViewOptions.LoadOptionsResponse> {
         const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
-        this.layoutModel.ajax$(
+        return this.layoutModel.ajax$<ViewOptions.LoadOptionsResponse>(
             'GET',
             this.layoutModel.createActionUrl('options/viewattrs', args),
             {}
-
-        ).subscribe(
-            (data:ViewOptions.LoadOptionsResponse) => {
-                dispatch({
-                    name: ActionName.LoadDataDone,
-                    payload: {
-                        data: {
-                            AttrList: data.AttrList,
-                            FixedAttr: data.fixed_attr,
-                            CurrentAttrs: data.CurrentAttrs,
-                            AvailStructs: data.Availstructs,
-                            StructAttrs: data.structattrs,
-                            CurrStructAttrs: data.curr_structattrs,
-                            AvailRefs: data.Availrefs,
-                            AttrAllpos: data.attr_allpos,
-                            AttrVmode: data.attr_vmode,
-                            ShowConcToolbar: data.use_conc_toolbar
-                        }
-                    }
-                });
-            },
-            (err:Error) => {
-                this.layoutModel.showMessage('error', err);
-                dispatch({
-                    name: ActionName.LoadDataDone,
-                    error: err
-                });
-            }
         );
     }
 
