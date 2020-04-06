@@ -614,9 +614,6 @@ class Actions(Querying):
             return re.sub(r'[\n\r]+', ' ', cql).strip()
 
     def _compile_query(self, qtype=None, cname=''):
-        if self._is_err_corpus():
-            from controller.errors import FunctionNotSupported
-            raise FunctionNotSupported()
         return self._compile_basic_query(qtype, cname=cname)
 
     def _set_first_query(self, fc_lemword_window_type='',
