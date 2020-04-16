@@ -198,11 +198,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         const splitTokens = () => {
             const ans = [];
             props.data.text.forEach((s, i) => {
-                ans.push(' ');
+                if (i > 0) {ans.push(' ')}
                 ans.push(<mark className={props.supportsTokenConnect ? 'active' : null}
                                key={`${props.position}:${props.idx}:${i}`} data-tokenid={mkTokenId(i)}>{s}</mark>);
             });
-            ans.push(' ');
             return ans;
         };
 
@@ -284,10 +283,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         return <>
             <td className={exportTextElmClass(props.corpname, 'lc')}
                     onClick={handleTokenClick}>
-                {props.output.left.map((item, i, itemList) =>
+                {props.output.left.flatMap((item, i, itemList) => [
                         <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item} chunkOffsets={props.output.leftOffsets}
                                     kwicTokenNum={props.output.tokenNumber} lineIdx={props.lineIdx}
-                                    supportsTokenConnect={props.supportsTokenConnect} />)}
+                                    supportsTokenConnect={props.supportsTokenConnect} />,
+                        ' '
+                ])}
             </td>
             <td className={exportTextElmClass(props.corpname, 'kw')}
                     onClick={handleKwicClick.bind(null, props.corpname,
@@ -301,10 +302,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             </td>
             <td className={exportTextElmClass(props.corpname, 'rc')} onClick={handleTokenClick}>
                 <>
-                {props.output.right.map((item, i, itemList) =>
+                {props.output.right.flatMap((item, i, itemList) => [
+                    ' ',
                     <RightChunk key={`rc-${i}`} item={item} i={i} itemList={itemList} chunkOffsets={props.output.rightOffsets}
                             kwicTokenNum={props.output.tokenNumber} prevBlockClosed={props.output.kwic.get(-1)}
-                            lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect} />)}
+                            lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect} />
+                ])}
                 </>
             </td>
         </>
@@ -492,10 +495,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             return (
                 <td className={this._exportTextElmClass(corpname, 'par')}>
                     <span onClick={handleTokenClick}>
-                        {corpusOutput.left.map((item, i, itemList) =>
+                        {corpusOutput.left.flatMap((item, i, itemList) => [
                                 <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item}
                                         chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
-                                        lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />)}
+                                        lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />,
+                                        ' '
+                                ])}
                     </span>
                     <span onClick={this._handleKwicClick.bind(this, corpname,
                                     corpusOutput.tokenNumber, this.props.lineIdx)}>
@@ -506,10 +511,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         }
                     </span>
                     <span onClick={handleTokenClick}>
-                        {corpusOutput.right.map((item, i, itemList) =>
+                        {corpusOutput.right.flatMap((item, i, itemList) => [
+                            ' ',
                             <RightChunk key={`rc-${i}`} i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
                                     kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
-                                    lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />)}
+                                    lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />
+                        ])}
                     </span>
                 </td>
             );
