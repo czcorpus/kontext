@@ -8,7 +8,7 @@ master branch, KonText runs only within a Python 3 environment (versions 3.6 and
 First of all, make sure you've downloaded a proper version of Manatee-open (e.g. `manatee-open-2.167.8` and newer)
 along with proper [Python 3 API](https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_2.167.8-1ubuntu1_amd64.deb).
 In case you compile Manatee open from sources, please select proper `PYTHON=/path/to/py3/binary` when running
-`./configure`. You can test the installation e.g. by running `python3 -c "import manatee`.
+`./configure`. You can test the installation e.g. by running `python3 -c "import manatee"`.
 
 Depending on your operating system configuration, you may need to uninstall `Gunicorn` and `Celery` and install their
 Python 3 versions to make sure the proper binaries are located in operating system's search path.
@@ -16,7 +16,7 @@ Python 3 versions to make sure the proper binaries are located in operating syst
 Then install other KonText dependencies using pip3: `pip3 install -r requirements.txt`. In case you prefer
 system package manager, make sure you are using python3 versions of the packages.
 
-Once you're done just start your `Gunicorn` and `Celery` services again and everything should be running.
+Once you're done, just start your `Gunicorn` and `Celery` services again and everything should be running.
 
 ## Possible issues
 
