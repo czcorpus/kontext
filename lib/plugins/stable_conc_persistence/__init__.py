@@ -136,10 +136,10 @@ class StableConcPersistence(AbstractConcPersistence):
                     r1.get('lines_groups') != r2.get('lines_groups'))
 
         if prev_data is None or records_differ(curr_data, prev_data):
+            if prev_data is not None:
+                curr_data['prev_id'] = prev_data[ID_KEY]
             data_id = generate_stable_id(curr_data)
             curr_data[ID_KEY] = data_id
-            if prev_data is not None:
-                curr_data['prev_id'] = prev_data['id']
             data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self.ttl)
