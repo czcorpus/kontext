@@ -442,6 +442,7 @@ class MenuGenerator(object):
             EventTriggeringItem(MainMenu.FILTER('each-first'),
                                 te('First hits in documents'),
                                 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES')
+            .enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0)
         )
 
         # ----------------------------------- menu-frequency ----------------------------
