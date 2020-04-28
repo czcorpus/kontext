@@ -35,7 +35,7 @@ def stderr_redirector(stream):
         # Copy contents of temporary file to the given stream
         tfile.flush()
         tfile.seek(0, io.SEEK_SET)
-        stream.write(tfile.read())
+        stream.write(tfile.read().decode('utf-8'))
     finally:
         tfile.close()
         os.close(saved_stderr_fd)

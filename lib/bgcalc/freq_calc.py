@@ -85,7 +85,7 @@ def corp_freqs_cache_path(corp, attrname):
     a path encoded as an 8-bit string (i.e. unicode paths are encoded)
     """
     if hasattr(corp, 'spath'):
-        path_ne, _ = os.path.splitext(corp.spath.decode('utf-8'))
+        path_ne, _ = os.path.splitext(corp.spath)
         ans = path_ne + '.' + attrname
     else:
         cache_dir = os.path.abspath(settings.get('corpora', 'freqs_precalc_dir'))
@@ -95,7 +95,7 @@ def corp_freqs_cache_path(corp, attrname):
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir)
         ans = os.path.join(cache_dir, attrname)
-    return ans.encode('utf-8')
+    return ans
 
 
 def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
@@ -108,7 +108,7 @@ def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     attrname -- name of a positional or structure's attribute
     logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
     """
-    outfilename = corplib.subcorp_base_file(corp, attrname).encode('utf-8')
+    outfilename = corplib.subcorp_base_file(corp, attrname)
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return None
     elif hasattr(corp, 'spath'):
@@ -118,7 +118,7 @@ def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
 
 
 def create_log_path(base_path, calc_type):
-    return '%s.%s.build' % (base_path, calc_type)
+    return f'{base_path}.{calc_type}.build'
 
 
 def get_log_last_line(path):
