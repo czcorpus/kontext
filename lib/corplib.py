@@ -740,8 +740,7 @@ def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) ->
     if nums == 'arf':
         frq = array.array('f')
         try:
-            # typechecking error: Argument 1 to "fromfile" of "array" has incompatible type "TextIO"; expected "BinaryIO"
-            frq.fromfile(open(filename), id_range)  # type: ignore
+            frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
         except IOError as ex:
             raise MissingSubCorpFreqFile(corp, ex)
         except EOFError as ex:
@@ -752,8 +751,7 @@ def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) ->
             if corp.get_conf('VIRTUAL') and not hasattr(corp, 'spath') and nums == 'frq':
                 raise IOError
             frq = array.array('i')
-            # typechecking error: Argument 1 to "fromfile" of "array" has incompatible type "TextIO"; expected "BinaryIO"
-            frq.fromfile(open(filename), id_range)  # type: ignore
+            frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
         except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             os.remove(filename.rsplit('.', 1)[0] + '.arf')
@@ -762,8 +760,7 @@ def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) ->
         except IOError:
             try:
                 frq = array.array('l')
-                # typechecking error: Argument 1 to "fromfile" of "array" has incompatible type "TextIO"; expected "BinaryIO"
-                frq.fromfile(open(filename + '64'), id_range)  # type: ignore
+                frq.fromfile(open(filename + '64', 'rb'), id_range)  # type: ignore
             except IOError as ex:
                 if not hasattr(corp, 'spath') and nums == 'frq':
                     a = corp.get_attr(attrname)
