@@ -463,6 +463,7 @@
         "options__vmode_switch_mouseover_all": "only on token mouse-over",
         "options__vmode_switch_visible_all": "in text for all the tokens",
         "options__vmode_switch_mixed": "in text for KWIC, on mouse-over for others",
+        "options__vmode_switch_visible_2line": "on a separate line below the main text",
         "options__vmode_switch_indicator_desc": "This icon is displayed in the header of the concordance window to indicate viewing mode.",
         "options__general_options_heading": "General view options",
         "options__concordance_fieldset_heading": "Concordance",

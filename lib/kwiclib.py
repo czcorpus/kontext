@@ -189,7 +189,7 @@ class KwicPageArgs(object):
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
-        if self.attr_vmode in ('mouseover', 'mixed'):
+        if self.attr_vmode in ('mouseover', 'mixed', 'multiline'):
             self.ctxattrs = self.attrs
 
     def _import_val(self, k, v):
@@ -572,7 +572,7 @@ class Kwic(object):
             rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
-            if args.attr_vmode == 'mouseover':
+            if args.attr_vmode == 'mouseover' or args.attr_vmode == 'multiline':
                 postproc_tokens = leftwords + kwicwords + rightwords
             elif args.attr_vmode == 'mixed':
                 postproc_tokens = leftwords + rightwords
@@ -583,7 +583,7 @@ class Kwic(object):
                 if item.get('class') == 'attr':
                     # TODO configurable delimiter
                     # a list is used for future compatibility
-                    prev['mouseover'] = [item['str'].strip('/')]
+                    prev['tail_posattrs'] = [item['str'].strip('/')]
                     item['str'] = ''
                 prev = item
 

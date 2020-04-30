@@ -463,6 +463,7 @@
         "options__vmode_switch_mouseover_all": "ino przi najechaniu myszōm na symbol",
         "options__vmode_switch_visible_all": "we tekście, do wszyjskich symboli",
         "options__vmode_switch_mixed": "w tekście do KWIC, przi najechaniu myszōm do inkszych",
+        "options__vmode_switch_visible_2line": "on a separate line below the main text",
         "options__vmode_switch_indicator_desc": "Ta ikōna sie pokazuje we nŏgōwku ôkna kōnkordancyje, żeby pokŏzać tryb widoku.",
         "options__general_options_heading": "Ôgōlne sztelōnki widoku",
         "options__concordance_fieldset_heading": "Kōnkordancyjŏ",

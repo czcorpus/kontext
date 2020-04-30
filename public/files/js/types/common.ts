@@ -656,21 +656,41 @@ export namespace ViewOptions {
         selected: boolean;
     }
 
+    export enum PosAttrViewScope {
+        ALL = 'all',
+        KWIC = 'kw'
+    }
+
+    export enum PosAttrViewMode {
+        MIXED = 'mixed',
+        VISIBLE = 'visible',
+        MULTILINE = 'multiline',
+        MOUSEOVER = 'mouseover'
+    }
+
+    /**
+     * This type represents values combined
+     * from PosAttrViewScope and PosAttrViewMode
+     * so we can easily manage them internally.
+     * From historical/NoSkE-compatibility reasons
+     * we still keep the redundant separate values too.
+     */
     export enum AttrViewMode {
         VISIBLE_ALL = 'visible-all',
         VISIBLE_KWIC = 'visible-kwic',
+        VISIBLE_MULTILINE = 'visible-multiline',
         MOUSEOVER = 'mouseover'
     }
 
     export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
 
     export interface PageData {
-        AttrList: Array<AttrDesc>;
-        FixedAttr: string;
-        AttrAllpos: string;
-        AttrVmode: string;
-        CurrentAttrs: Array<string>;
-        AvailStructs: Array<{sel:string; label:string; n:string}>;
+        AttrList:Array<AttrDesc>;
+        FixedAttr:string;
+        AttrAllpos:ViewOptions.PosAttrViewScope;
+        AttrVmode:ViewOptions.PosAttrViewMode;
+        CurrentAttrs:Array<string>;
+        AvailStructs:Array<{sel:string; label:string; n:string}>;
         StructAttrs:{[attr:string]:Array<string>};
         CurrStructAttrs:Array<string>;
         AvailRefs:Array<{n:string; sel:string; label:string}>;

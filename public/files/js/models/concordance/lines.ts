@@ -40,7 +40,7 @@ export interface ServerTextChunk {
     open_link?:{speech_path:string};
     close_link?:{speech_path:string};
     continued?:boolean;
-    mouseover?:Array<string>;
+    tail_posattrs?:Array<string>;
 }
 
 export interface ServerPagination {
@@ -94,9 +94,15 @@ export interface ViewConfiguration {
      */
     ViewMode:string;
 
-    AttrAllpos:string;
+    /**
+     * Where we should display additional positional attributes
+     */
+    AttrAllpos:ViewOptions.PosAttrViewScope;
 
-    AttrViewMode:string;
+    /**
+     * How we should display additional positional attributes
+     */
+    AttrViewMode:ViewOptions.PosAttrViewMode;
 
     ShowLineNumbers:boolean;
 
@@ -213,7 +219,7 @@ export interface ViewConfiguration {
 /**
  *
  */
-function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
+function importLines(data:Array<ServerLineData>, attrViewMode:ViewOptions.AttrViewMode):Immutable.List<Line> {
     let ans:Array<Line> = [];
 
     function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
@@ -225,7 +231,7 @@ function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            mouseover: item.mouseover || []
+            tailPosAttrs: item.tail_posattrs || []
         };
     }
 
@@ -294,9 +300,9 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private viewMode:string;
 
-    private attrAllpos:string;
+    private attrAllpos:ViewOptions.PosAttrViewScope;
 
-    private attrViewMode:string;
+    private attrViewMode:ViewOptions.PosAttrViewMode;
 
     private showLineNumbers:boolean;
 
@@ -373,7 +379,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;
-        this.lines = importLines(initialData);
+        this.lines = importLines(initialData, transformVmode(this.attrViewMode, this.attrAllpos));
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
@@ -653,7 +659,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private importData(data:Kontext.AjaxResponse):void {
         try {
-            this.lines = importLines(data['Lines']);
+            this.lines = importLines(data['Lines'], this.getViewAttrsVmode());
             this.numItemsInLockedGroups = data['num_lines_in_groups'];
             this.pagination = data['pagination'];
             this.unfinishedCalculation = data['running_calc'];

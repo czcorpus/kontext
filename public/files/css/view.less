@@ -875,6 +875,22 @@ a.speech-link:hover {
     tr.active {
         background-color: RGBA(138, 195, 218, 0.6);
     }
+
+    td.lc > span, td.rc > span, td.kw > strong, td > em, td.par > span > span, td.par > span > strong {
+        display: inline-flex;
+        flex-direction: column;
+        text-align: center;
+
+        span.tail {
+            color: @color-light-text;
+            font-size: 0.9em;
+            font-style: normal;
+        }
+    }
+
+    td.kw > strong:not(:first-child) {
+        padding-left: 0.2em;
+    }
 }
 
 .jump-to {

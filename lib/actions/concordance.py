@@ -914,6 +914,7 @@ class Actions(Querying):
         """
         display a frequency list
         """
+        time.sleep(6)
         self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
                                     MainMenu.CONCORDANCE('query-overview'))
 

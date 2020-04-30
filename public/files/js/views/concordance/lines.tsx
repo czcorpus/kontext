@@ -20,16 +20,16 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import {calcTextColorFromBg, color2str, importColor} from '../../util';
-import {init as lineExtrasViewsInit} from './lineExtras';
+import { IActionDispatcher } from 'kombo';
+import { Kontext, ViewOptions } from '../../types/common';
+import { calcTextColorFromBg, color2str, importColor } from '../../util';
+import { init as lineExtrasViewsInit } from './lineExtras';
 import { ConcLineModel, CorpColumn } from '../../models/concordance/lines';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../models/concordance/detail';
-import {LineSelValue} from '../../models/concordance/lineSelection';
-import {KWICSection } from '../../models/concordance/line';
-import {Line, TextChunk} from '../../types/concordance';
+import { LineSelValue } from '../../models/concordance/lineSelection';
+import { KWICSection } from '../../models/concordance/line';
+import { Line, TextChunk } from '../../types/concordance';
 import { Subscription } from 'rxjs';
 
 
@@ -64,6 +64,7 @@ interface ConcLinesState {
     emptyRefValPlaceholder:string;
     corporaColumns:Immutable.List<CorpColumn>;
     viewMode:string;
+    attrViewMode:ViewOptions.AttrViewMode;
     supportsTokenConnect:boolean;
     showLineNumbers:boolean;
 }
@@ -177,9 +178,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         supportsTokenConnect:boolean;
         data: {
             className:string;
-            mouseover:Array<string>;
+            tailPosAttrs:Array<string>;
             text:Array<string>;
-        }
+        };
+        attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
 
@@ -199,8 +201,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             const ans = [];
             props.data.text.forEach((s, i) => {
                 if (i > 0) {ans.push(' ')}
-                ans.push(<mark className={props.supportsTokenConnect ? 'active' : null}
-                               key={`${props.position}:${props.idx}:${i}`} data-tokenid={mkTokenId(i)}>{s}</mark>);
+                ans.push(<React.Fragment key={`${props.position}:${props.idx}:${i}`}>
+                    <mark className={props.supportsTokenConnect ? 'active' : null} data-tokenid={mkTokenId(i)}>{s}</mark>
+                    {props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
+                        <span className="tail">{props.data.tailPosAttrs[i]}</span> : null}
+                </React.Fragment>)
             });
             return ans;
         };
@@ -209,14 +214,18 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 he.translate('concview__click_to_see_external_token_info') : '';
         const tokenConnectInfo2 = props.supportsTokenConnect ?
                 `(${he.translate('concview__click_to_see_external_token_info')})` : '';
-        const metadata = (props.data.mouseover || []);
+        const metadata = (props.data.tailPosAttrs || []);
         const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenConnectInfo2}` : tokenConnectInfo1;
-
         if (props.data.className && props.data.text) {
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
                     <em key={mkKey()} className={props.data.className} title={title}>
-                        {props.data.text.join(' ')}
+                        {props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
+                        <>
+                            <span>{props.data.text.join(' ')}</span>
+                            <span className="tail">{props.data.tailPosAttrs.join(' ')}</span>
+                        </> :
+                        props.data.text.join(' ')}
                     </em>
                 );
 
@@ -224,7 +233,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 const s = props.data.text.join(' ');
                 return (
                     <span key={mkKey()} className={s !== '' ? props.data.className : null} title={title}>
-                        {s || ' '}
+                        {
+                            props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
+                                s ?
+                                    <>
+                                        <span>{s}</span>
+                                        <span className="tail">{props.data.tailPosAttrs.join(' ')}</span>
+                                    </> :
+                                    <span> </span> :
+                                s || ' '
+                        }
                     </span>
                 );
             }
@@ -248,6 +266,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         lineIdx:number;
         output:KWICSection;
         kwicLength:number;
+        attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
 
     }> = (props) => {
@@ -286,7 +305,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 {props.output.left.flatMap((item, i, itemList) => [
                         <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item} chunkOffsets={props.output.leftOffsets}
                                     kwicTokenNum={props.output.tokenNumber} lineIdx={props.lineIdx}
-                                    supportsTokenConnect={props.supportsTokenConnect} />,
+                                    supportsTokenConnect={props.supportsTokenConnect}
+                                    attrViewMode={props.attrViewMode} />,
                         ' '
                 ])}
             </td>
@@ -296,7 +316,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 <>
                 {props.output.kwic.map((item, i, itemList) =>
                         <KwicChunk key={`kc-${i}`} i={i} item={item} itemList={itemList} prevBlockClosed={props.output.left.get(-1)}
-                                hasKwic={hasKwic} lineIdx={props.lineIdx} />)
+                                hasKwic={hasKwic} lineIdx={props.lineIdx} attrViewMode={props.attrViewMode} />)
                 }
                 </>
             </td>
@@ -306,7 +326,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     ' ',
                     <RightChunk key={`rc-${i}`} item={item} i={i} itemList={itemList} chunkOffsets={props.output.rightOffsets}
                             kwicTokenNum={props.output.tokenNumber} prevBlockClosed={props.output.kwic.get(-1)}
-                            lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect} />
+                            lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect}
+                            attrViewMode={props.attrViewMode} />
                 ])}
                 </>
             </td>
@@ -323,6 +344,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         chunkOffsets:Immutable.List<number>;
         kwicTokenNum:number;
         supportsTokenConnect:boolean;
+        attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
 
@@ -337,7 +359,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 null
             }
             <NonKwicText data={props.item} idx={props.i} position="l" chunkOffset={-1 * props.chunkOffsets.get(props.i)}
-                            kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect} />
+                            kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect}
+                            attrViewMode={props.attrViewMode} />
             {props.item.closeLink ?
                 <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
@@ -354,9 +377,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         item:TextChunk;
         prevBlockClosed:TextChunk;
         hasKwic:boolean;
+        attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
-        const mouseover = (props.item.mouseover || []).join(', ');
+        const mouseover = (props.item.tailPosAttrs || []).join(', ');
         const prevClosed = props.i > 0 ? props.itemList.get(props.i - 1) : props.prevBlockClosed;
 
         const renderFirst = () => {
@@ -373,8 +397,19 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         const renderSecond = () => {
             if (props.hasKwic) {
-                return <strong className={props.item.className} title={mouseover}>
-                    {props.item.text.join(' ')} </strong>;
+                return (
+                    <strong className={props.item.className} title={mouseover}>
+                        {props.item.text
+                            .map<[string, string]>((s, i) => [s, props.item.tailPosAttrs[i]])
+                            .filter(([s,]) => s !== '')
+                            .map(([s, tail], i) => (
+                                props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
+                                    <React.Fragment key={`${s}:i`}><span>{s}</span><span className="tail">{tail}</span></React.Fragment> :
+                                    s
+                            ))
+                        }
+                    </strong>
+                );
 
             } else if (!props.item.text) { // TODO test array length??
                 return <span>&lt;--not translated--&gt;</span>
@@ -401,6 +436,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         prevBlockClosed:TextChunk;
         lineIdx:number;
         supportsTokenConnect:boolean;
+        attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
 
@@ -425,7 +461,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 null
             }
             <NonKwicText data={props.item} idx={props.i} position="r" chunkOffset={props.chunkOffsets.get(props.i)}
-                        kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect} />
+                        kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect}
+                        attrViewMode={props.attrViewMode} />
             {props.item.closeLink ?
                 <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
@@ -442,6 +479,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         supportsTokenConnect:boolean;
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
+        attrViewMode:ViewOptions.AttrViewMode;
         lineSelMode:string; // TODO enum
         cols:Immutable.List<{n:string; visible:boolean;}>;
         catTextColor:string;
@@ -498,7 +536,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         {corpusOutput.left.flatMap((item, i, itemList) => [
                                 <LeftChunk key={`lc-${i}`} i={i} itemList={itemList} item={item}
                                         chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
-                                        lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />,
+                                        lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
+                                        attrViewMode={this.props.attrViewMode} />,
                                         ' '
                                 ])}
                     </span>
@@ -507,7 +546,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         {corpusOutput.kwic.map((item, i, itemList) =>
                                 <KwicChunk key={`kc-${i}`} i={i} itemList={itemList} item={item}
                                         prevBlockClosed={corpusOutput.left.get(-1)} hasKwic={hasKwic}
-                                        lineIdx={this.props.lineIdx} />)
+                                        lineIdx={this.props.lineIdx}
+                                        attrViewMode={this.props.attrViewMode} />)
                         }
                     </span>
                     <span onClick={handleTokenClick}>
@@ -515,7 +555,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                             ' ',
                             <RightChunk key={`rc-${i}`} i={i} item={item} itemList={itemList} chunkOffsets={corpusOutput.rightOffsets}
                                     kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={corpusOutput.kwic.get(-1)}
-                                    lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect} />
+                                    lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
+                                    attrViewMode={this.props.attrViewMode} />
                         ])}
                     </span>
                 </td>
@@ -525,14 +566,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         _renderText(corpusOutput, corpusIdx) {
             const corpname = this.props.cols.get(corpusIdx).n;
             if (this.props.viewMode === 'kwic') {
-                return <TextKwicMode corpname={corpname}
+                return <TextKwicMode
+                            corpname={corpname}
                             mainCorp={this.props.mainCorp}
                             corpsWithKwic={this.props.corpsWithKwic}
                             supportsTokenConnect={this.props.supportsTokenConnect}
                             lineIdx={this.props.lineIdx}
                             output={corpusOutput}
                             kwicLength={this.props.data.kwicLength}
-                            tokenConnectClickHandler={this.props.tokenConnectClickHandler} />;
+                            tokenConnectClickHandler={this.props.tokenConnectClickHandler}
+                            attrViewMode={this.props.attrViewMode} />;
 
             } else {
                 return this._renderTextParMode(corpname, corpusOutput);
@@ -679,6 +722,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 emptyRefValPlaceholder: lineModel.getEmptyRefValPlaceholder(),
                 corporaColumns: lineModel.getCorporaColumns(),
                 viewMode: lineModel.getViewMode(),
+                attrViewMode: lineModel.getViewAttrsVmode(),
                 supportsTokenConnect: concDetailModel.supportsTokenConnect(),
                 showLineNumbers: lineModel.getShowLineNumbers()
             };
@@ -721,6 +765,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                          data={item}
                          cols={this.state.corporaColumns}
                          viewMode={this.state.viewMode}
+                         attrViewMode={this.state.attrViewMode}
                          baseCorpname={this.props.baseCorpname}
                          mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
