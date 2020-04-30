@@ -463,6 +463,7 @@
         "options__vmode_switch_mouseover_all": "pouze při najetí kurzorem na tokeny",
         "options__vmode_switch_visible_all": "v textu pro všechny tokeny",
         "options__vmode_switch_mixed": "v textu pro KWIC, při najetí kurzorem nad token pro ostatní",
+        "options__vmode_switch_visible_2line": "na odděleném řádku pod hlavním textem",
         "options__vmode_switch_indicator_desc": "Tato ikona se zobrazuje v hlavičce okna s konkordancemi a indikuje aktuální režim zobrazení.",
         "options__general_options_heading": "Obecné volby zobrazení",
         "options__concordance_fieldset_heading": "Konkordance",

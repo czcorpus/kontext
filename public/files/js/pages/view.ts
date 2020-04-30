@@ -25,7 +25,7 @@ import { Observable, of as rxOf, interval, zip } from 'rxjs';
 import { expand, mergeMap, takeWhile, delay, concatMap, tap, take } from 'rxjs/operators';
 import { KontextPage } from '../app/main';
 
-import {Kontext, TextTypes} from '../types/common';
+import {Kontext, TextTypes, ViewOptions} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, DownloadType} from '../app/page';
 import {PluginInterfaces} from '../types/plugins';
@@ -1010,8 +1010,8 @@ export class ViewPage {
         const lineViewProps:ViewConfiguration = {
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
-            AttrAllpos: this.layoutModel.getConf<string>('AttrAllpos'),
-            AttrViewMode: this.layoutModel.getConf<string>('AttrViewMode'),
+            AttrAllpos: this.layoutModel.getConf<ViewOptions.PosAttrViewScope>('AttrAllpos'),
+            AttrViewMode: this.layoutModel.getConf<ViewOptions.PosAttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
             CorporaColumns: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns').map(v =>

@@ -27,15 +27,18 @@ import { tap, concatMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
 
-export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.AttrViewMode => {
-    if (vmode === 'visible' && attrAllPos === 'all') {
+export const transformVmode = (vmode:string, attrAllPos:ViewOptions.PosAttrViewScope):ViewOptions.AttrViewMode => {
+    if (vmode === ViewOptions.PosAttrViewMode.MULTILINE && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
+        return ViewOptions.AttrViewMode.VISIBLE_MULTILINE;
+
+    } else if (vmode === ViewOptions.PosAttrViewMode.VISIBLE && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
         return ViewOptions.AttrViewMode.VISIBLE_ALL;
 
-    } else if (vmode === 'mixed' && attrAllPos === 'all' ||
-            vmode === 'visible' && attrAllPos === 'kw' /* legacy compatibility variant */) {
+    } else if (vmode === ViewOptions.PosAttrViewMode.MIXED && attrAllPos === ViewOptions.PosAttrViewScope.ALL ||
+            vmode === ViewOptions.PosAttrViewMode.VISIBLE && attrAllPos === ViewOptions.PosAttrViewScope.KWIC /* legacy compatibility variant */) {
         return ViewOptions.AttrViewMode.VISIBLE_KWIC;
 
-    } else if (vmode === 'mouseover' && attrAllPos === 'all') {
+    } else if (vmode === ViewOptions.PosAttrViewMode.MOUSEOVER && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
         return ViewOptions.AttrViewMode.MOUSEOVER;
 
     } else {
@@ -47,24 +50,24 @@ export const transformVmode = (vmode:string, attrAllPos:string):ViewOptions.Attr
 
 export interface CorpusViewOptionsModelState {
 
-    attrList: Immutable.List<ViewOptions.AttrDesc>;
-    selectAllAttrs: boolean;
-    structList: Immutable.List<ViewOptions.StructDesc>;
-    structAttrs: ViewOptions.AvailStructAttrs;
-    selectAllStruct: boolean,
-    fixedAttr: string | null;
-    showConcToolbar: boolean;
-    refList: Immutable.List<ViewOptions.RefDesc>;
-    refAttrs: Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
-    selectAllRef: boolean;
-    hasLoadedData: boolean;
-    attrVmode: string;
-    extendedVmode: ViewOptions.AttrViewMode;
-    attrAllpos: string; // kw/all
-    isBusy: boolean;
-    userIsAnonymous: boolean;
-    corpusIdent: Kontext.FullCorpusIdent;
-    corpusUsesRTLText: boolean;
+    attrList:Immutable.List<ViewOptions.AttrDesc>;
+    selectAllAttrs:boolean;
+    structList:Immutable.List<ViewOptions.StructDesc>;
+    structAttrs:ViewOptions.AvailStructAttrs;
+    selectAllStruct:boolean,
+    fixedAttr:string|null;
+    showConcToolbar:boolean;
+    refList:Immutable.List<ViewOptions.RefDesc>;
+    refAttrs:Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>;
+    selectAllRef:boolean;
+    hasLoadedData:boolean;
+    attrVmode:ViewOptions.PosAttrViewMode;
+    extendedVmode:ViewOptions.AttrViewMode;
+    attrAllpos:ViewOptions.PosAttrViewScope;
+    isBusy:boolean;
+    userIsAnonymous:boolean;
+    corpusIdent:Kontext.FullCorpusIdent;
+    corpusUsesRTLText:boolean;
 }
 
 
@@ -107,9 +110,9 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 refAttrs: Immutable.Map<string, Immutable.List<ViewOptions.RefAttrDesc>>(),
                 selectAllRef: false,
                 hasLoadedData: false,
-                attrVmode: 'mixed',
-                attrAllpos: 'all',
-                extendedVmode: transformVmode('mixed', 'all'),
+                attrVmode: ViewOptions.PosAttrViewMode.MIXED,
+                attrAllpos: ViewOptions.PosAttrViewScope.ALL,
+                extendedVmode: transformVmode(ViewOptions.PosAttrViewMode.MIXED, ViewOptions.PosAttrViewScope.ALL),
                 isBusy: false,
                 userIsAnonymous: userIsAnonymous,
                 corpusIdent: corpusIdent,
@@ -252,21 +255,28 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
 
     private setAttrVisibilityMode(state:CorpusViewOptionsModelState, value:ViewOptions.AttrViewMode):void {
         switch (value) {
+            case ViewOptions.AttrViewMode.VISIBLE_MULTILINE:
+                state.attrVmode = ViewOptions.PosAttrViewMode.MULTILINE;
+                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
+                state.extendedVmode = value;
+            break;
             case ViewOptions.AttrViewMode.VISIBLE_ALL:
-                state.attrVmode = 'visible';
-                state.attrAllpos = 'all';
+                state.attrVmode = ViewOptions.PosAttrViewMode.VISIBLE;
+                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
                 state.extendedVmode = value;
             break;
             case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                state.attrVmode = 'mixed';
-                state.attrAllpos = 'all';
+                state.attrVmode = ViewOptions.PosAttrViewMode.MIXED;
+                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
                 state.extendedVmode = value;
             break;
             case ViewOptions.AttrViewMode.MOUSEOVER:
-                state.attrVmode = 'mouseover';
-                state.attrAllpos = 'all';
+                state.attrVmode = ViewOptions.PosAttrViewMode.MOUSEOVER;
+                state.attrAllpos = ViewOptions.PosAttrViewScope.KWIC;
                 state.extendedVmode = value;
             break;
+            default:
+                throw new Error('Unknown view mode');
         }
     }
 
@@ -653,7 +663,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
         state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);
-        state.attrAllpos = state.attrVmode !== 'mouseover' ? data.AttrAllpos : 'all';
+        state.attrAllpos = state.attrVmode !== 'mouseover' ? data.AttrAllpos : ViewOptions.PosAttrViewScope.ALL;
         state.hasLoadedData = true;
         state.showConcToolbar = data.ShowConcToolbar;
     }

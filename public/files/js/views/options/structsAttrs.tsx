@@ -138,10 +138,10 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <ul>
                     <li>
                         <label>
-                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_ALL}
-                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
                                     onChange={handleSelectChangeFn} />
-                            <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
+                            <span>{helpers.translate('options__vmode_switch_visible_2line')}</span>
                         </label>
                     </li>
                     <li>
@@ -158,6 +158,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     checked={props.attrsVmode === ViewOptions.AttrViewMode.MOUSEOVER}
                                     onChange={handleSelectChangeFn} />
                             <span>{helpers.translate('options__vmode_switch_mouseover_all')}</span>
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_ALL}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
                         </label>
                     </li>
                 </ul>
