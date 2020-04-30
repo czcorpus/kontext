@@ -30,7 +30,7 @@ if [[ "x$BUILDBACKEND" == "xdocker" ]]; then
     minisep "Starting kontext in docker"
     date
 
-    IMAGE=registry.gitlab.com/misutka/docker-kontext-base:v2.158.8
+    IMAGE=registry.gitlab.com/misutka/docker-kontext-base:master
     time docker pull $IMAGE
     docker run --name kontext -d -p ${PORT}:5000 --rm \
         -v $FS:/opt/kontext/log/ \
