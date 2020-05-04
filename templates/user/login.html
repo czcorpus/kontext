@@ -1,7 +1,5 @@
-#*
-Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
-                   Institute of the Czech National Corpus
-Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+{#
+Copyright (c) 2013 Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -16,27 +14,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+#}
 
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% extends "document.html" %}
 
-#def title
-KonText - $_("Word List Form")#slurp
-#end def
+{% block title %}
+{{ "Login options"|_ }}
+{% endblock %}
 
-#def bodyonload
-__conf.wltype = "$wltype";
-__conf.SubcorpList = $to_json($SubcorpList);
-__conf.AttrList = $to_json($AttrList);
-__conf.StructAttrList = $to_json($StructAttrList);
-wordlistFormPage.init(__conf);
-#end def
+{% block bodyonload %}
+loginPage.init(__conf);
+{% endblock %}
 
-#def main
+
+{% block main %}
 <section>
-    <h2>$_("Word list")</h2>
-    <div id="wordlist-form-mount"></div>
+    <h2>{{ "Login options"|_ }}</h2>
+    <p>
+        <a id="try-login" class="util-button">{{ "Sign in"|_ }}</a>
+    </p>
+    <p>
+        <a id="go-to-query" class="util-button">{{ "Continue as anonymous user"|_ }}</a>
+    </p>
 </section>
-#end def
+{% endblock %}

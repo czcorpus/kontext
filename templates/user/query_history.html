@@ -1,4 +1,4 @@
-#*
+{#-
 Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
                    Institute of the Czech National Corpus
 Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
@@ -16,31 +16,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
 
-#encoding UTF-8
-#from translation import ugettext as _
-#from cmpltmpl.document import document
+{% extends "document.html" %}
 
-#extends document
+{% block title %}KonText - {{ 'Recent queries'|_ }}{% endblock %}
 
-#def title
-KonText - $_('Recent queries')
-#end def
-
-#def bodyonload
-__conf.Data = $to_json($data);
-__conf.FromDate = $to_json($from_date);
-__conf.ToDate = $to_json($to_date);
-__conf.Offset = $to_json($offset);
-__conf.Limit = $to_json($limit);
-__conf.PageSize = $to_json($page_num_records);
+{% block bodyonload %}
+__conf.Data = {{ data|to_json }};
+__conf.FromDate = {{ from_date|to_json }};
+__conf.ToDate = {{ to_date|to_json }};
+__conf.Offset = {{ offset|to_json }};
+__conf.Limit = {{ limit|to_json }};
+__conf.PageSize = {{ page_num_records|to_json }};
 queryHistoryPage.init(__conf);
-#end def
+{% endblock %}
 
-#block main
+{% block main %}
 <section>
-    <h2>$_('Recent queries')</h2>
+    <h2>{{ 'Recent queries'|_ }}</h2>
     <div id="query-history-mount"></div>
 </section>
-#end block
+{% endblock %}

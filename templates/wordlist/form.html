@@ -1,4 +1,4 @@
-#*
+{#-
 Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
                    Institute of the Czech National Corpus
 Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
@@ -16,33 +16,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
 
-#from translation import ugettext as _
-#from cmpltmpl.document import document
+{% extends "document.html" %}
 
-#extends document
+{% block title%}KonText - {{ "Word List Form"|_ }}{% endblock %}
 
-#def title
-KonText - $corpname - $_("Create Subcorpus")#slurp
-#end def
+{% block bodyonload %}
+__conf.wltype = {{ wltype|default(none, true)|to_json }};
+__conf.SubcorpList = {{ SubcorpList|to_json }};
+__conf.AttrList = {{ AttrList|to_json }};
+__conf.StructAttrList = {{ StructAttrList|to_json }};
+wordlistFormPage.init(__conf);
+{% endblock %}
 
-#def bodyonload
-__conf.textTypesData = $to_json($text_types_data);
-__conf.SelectedTextTypes = $to_json($selected_text_types);
-__conf.HasSubcmixer = $to_json($has_subcmixer);
-__conf.CorpusIdAttr = $to_json($id_attr);
-__conf.Method = $to_json($method);
-__conf.AlignedCorpora = $to_json($aligned_corpora);
-subcorpFormPage.init(__conf);
-#end def
-
-#def main
-#filter WebSafe
+{% block main %}
 <section>
-<h2>$_('New subcorpus')</h2>
-    <div id="subcorp-form-mount"></div>
+    <h2>{{ "Word list"|_ }}</h2>
+    <div id="wordlist-form-mount"></div>
 </section>
-
-#end filter
-#end def
+{% endblock %}

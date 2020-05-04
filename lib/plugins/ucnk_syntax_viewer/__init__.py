@@ -91,7 +91,7 @@ class UcnkManateeBackend(mbk.ManateeBackend):
 
         if conf.root_node:
             parsed_data = [conf.root_node] + parsed_data
-        self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs)
+        self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs, conf.parent_type)
         tb = mbk.TreeBuilder()
         tree_data = tb.process(conf, parsed_data)
         template = UcnkTreeTemplate(tree_id, tree_data, raw_data['kwic_pos'], tree_configs)

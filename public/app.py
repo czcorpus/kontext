@@ -27,6 +27,7 @@ import os
 import wsgiref.util
 import logging
 import locale
+import signal
 
 from werkzeug.http import parse_accept_header
 from werkzeug.wrappers import Request, Response
@@ -189,6 +190,14 @@ class KonTextWsgiApp(WsgiApp):
         os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
+
+        def signal_handler(signal, frame):
+            for p in plugins.runtime:
+                fn = getattr(p.instance, 'on_soft_reset', None)
+                if callable(fn):
+                    fn()
+
+        signal.signal(signal.SIGUSR1, signal_handler)
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)

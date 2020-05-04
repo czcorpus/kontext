@@ -223,7 +223,7 @@ class Wordlist(ConcActions):
             result['lastpage'] = None
             return result
 
-    @exposed(template='freqs.tmpl', page_model='freq', http_method='POST', mutates_conc=True)
+    @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_conc=True)
     def struct_result(self, _):
         if self.args.fcrit:
             self._make_wl_query()
@@ -249,7 +249,7 @@ class Wordlist(ConcActions):
                            ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
                            ml3attr=self.args.wlposattr3)
 
-    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savewl.tmpl', return_type='plain')
+    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savewl.html', return_type='plain')
     def savewl(self, from_line=1, to_line='', usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
         save word list
@@ -267,6 +267,12 @@ class Wordlist(ConcActions):
                 saved_filename,)
             out_data = ans
             out_data['pattern'] = self.args.wlpat
+            out_data['from_line'] = from_line
+            out_data['to_line'] = to_line
+            out_data['usesubcorp'] = usesubcorp
+            out_data['saveformat'] = saveformat
+            out_data['colheaders'] = colheaders
+            out_data['heading'] = heading
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-word-list.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='wordlist')

@@ -39,7 +39,7 @@ class User(Kontext):
     def _is_anonymous_id(user_id):
         return plugins.runtime.AUTH.instance.is_anonymous(user_id)
 
-    @exposed(skip_corpus_init=True, template='user/login.tmpl', http_method='POST')
+    @exposed(skip_corpus_init=True, template='user/login.html', http_method='POST')
     def login(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         if request.method == 'GET':
@@ -61,7 +61,7 @@ class User(Kontext):
                 self.refresh_session_id()
                 return ans
 
-    @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True, page_model='login', http_method='POST')
+    @exposed(access_level=1, template='user/login.html', skip_corpus_init=True, page_model='login', http_method='POST')
     def logoutx(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         plugins.runtime.AUTH.instance.logout(self._session)
@@ -71,7 +71,7 @@ class User(Kontext):
         self.redirect(self.create_url('first_form', {}))
         return {}
 
-    @exposed(access_level=0, template='user/administration.tmpl', skip_corpus_init=True, page_model='userSignUp',
+    @exposed(access_level=0, template='user/administration.html', skip_corpus_init=True, page_model='userSignUp',
              http_method='GET')
     def sign_up_form(self, request):
         ans = dict(credentials_form={}, username_taken=False, user_registered=False)
@@ -114,7 +114,7 @@ class User(Kontext):
                 self._plugin_api, request.args['username'])
             return dict(available=available if available and valid else False, valid=valid)
 
-    @exposed(access_level=0, skip_corpus_init=True, http_method='GET', template='user/token_confirm.tmpl',
+    @exposed(access_level=0, skip_corpus_init=True, http_method='GET', template='user/token_confirm.html',
              page_model='userTokenConfirm')
     def sign_up_confirm_email(self, request):
         with plugins.runtime.AUTH as auth:
@@ -234,7 +234,7 @@ class User(Kontext):
             else:
                 return {'user': {'username': user_info['username']}}
 
-    @exposed(return_type='template', template='user/administration.tmpl', page_model='userProfile',
+    @exposed(return_type='template', template='user/administration.html', page_model='userProfile',
              skip_corpus_init=True, access_level=1)
     def profile(self, request):
         if not self._uses_internal_user_pages():

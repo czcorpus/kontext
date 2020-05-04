@@ -1,0 +1,217 @@
+{#-
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-#}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>{% block title %}KonText - an advanced corpus search interface{% endblock %}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% if theme.favicon -%}
+<link rel="icon" type="{{ theme.favicon_type }}" href="{{ theme.favicon }}" />
+{% endif %}
+{%- for font in theme.online_fonts -%}
+<link href='{{ font }}' rel='stylesheet' type='text/css'>
+{%- endfor -%}
+
+<link rel="stylesheet" type="text/css" href="{{ files_path }}/dist/common.css{{ deployment_suff }}" />
+<link rel="stylesheet" type="text/css" href="{{ files_path }}/dist/{{ page_model }}.css{{ deployment_suff }}" />
+{% for item in app_bar_css %}
+<link rel="stylesheet" type="text/css" href="{{ item.url }}" />
+{% endfor %}
+{%- if footer_bar_css -%}
+<link rel="stylesheet" type="text/css" href="{{ footer_bar_css }}" />
+{%- endif -%}
+<noscript>
+    <link rel="stylesheet" type="text/css" href="{{ files_path }}/css/main-menu.css" />
+</noscript>
+<script type="text/javascript">
+if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=function(s){return''+s}},DateTimeFormat:function(){this.format=function(s){return s.toString()}},PluralRules:function(){this.select=function(s){return'one'}},Collator:function(){this.compare=function(a,b){return a.localeCompare(b)}}}}
+</script>
+{% if use_phantom_polyfills -%}
+<script src="https://cdn.polyfill.io/v2/polyfill.js?features=Intl.~locale.en,Intl.~locale.cs"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.min.js"></script>
+{% endif -%}
+<!-- plug-ins dependencies -->
+{% for abjs in app_bar_js %}
+<script type="text/javascript" src="{{ abjs }}"></script>
+{% endfor %}
+<!-- --------------------- -->
+{% if current_action != 'compatibility' %}
+<script type="text/javascript">
+if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
+        (window.navigator.userAgent.indexOf('MSIE') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1)) {
+    window.location.href = "{{ root_url }}compatibility";
+}
+</script>
+{% endif %}
+
+{%- block js_load -%}
+<script type="text/javascript" src="{{ files_path }}/dist/common.js{{ deployment_suff }}"></script>
+<script type="text/javascript" src="{{ files_path }}/dist/{{ page_model }}.js{{ deployment_suff }}"></script>
+{%- endblock -%}
+{%- block headers %}{% endblock -%}
+
+{%- block js_init -%}
+<script type="text/javascript">
+var __conf = {};
+__conf.page = {};
+__conf.activePlugins = {{ active_plugins|to_json }};  {# here we mean 'active on client side' #}
+__conf.messageAutoHideInterval = {{ message_auto_hide_interval|default(5000, true) }};
+__conf.rootURL = {{ root_url|to_json }};
+__conf.rootPath = {{ root_url|to_json }};
+__conf.staticPath = {{ files_path|to_json }};
+__conf.corpusIdent = {{ corpus_ident|to_json }};
+__conf.baseAttr = {{ base_attr|to_json }};
+__conf.tagAttr = {% if corp_uses_tag is defined %}"tag"{% else %}null{% endif %};
+__conf.currentAction = {{ current_action|to_json }};
+__conf.anonymousUser = {% if _anonymous %}true{% else %}false{% endif %};
+__conf.anonymousUserConcLoginPrompt = {{ anonymous_user_conc_login_prompt|to_json}};
+__conf.userFullname = {{ user_info.fullname|to_json }};
+__conf.loginUrl = {{ login_url|to_json }};
+__conf.compiledQuery = {{ Q|to_json }};
+__conf.concPersistenceOpId = {{ conc_persistence_op_id|to_json }};
+__conf.currentArgs = {{ Globals.export()|to_json }};
+__conf.concUrlTTLDays = {{ conc_url_ttl_days|to_json }};
+__conf.concExplicitPersistenceUI = {{ explicit_conc_persistence_ui|to_json }};
+__conf.uiLang = {{ uiLang|to_json }};
+__conf.isDebug = {%if debug %}true{% else %}false{% endif %};
+__conf.alignedCorpora = {{ aligned_corpora|default([], true)|to_json }}
+__conf.availableAlignedCorpora = {{ Aligned|default([], true)|to_json }};
+__conf.pluginData = {{ plugin_data|to_json  }};
+__conf.notifications = {{ messages|to_json }};
+__conf.popupServerMessages = {{ popup_server_messages|to_json }};
+__conf.queryTypesHints = {
+    iqueryrow : {{"Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well."|_|to_json}}
+};
+__conf.ttIntervalChars = {{ interval_chars|default([], true)|to_json }};
+__conf.structsAndAttrs = {{ structs_and_attrs|default({}, true)|to_json }};
+__conf.menuData = {{ menu_data|to_json }};
+__conf.asyncTasks = {{ async_tasks|to_json }};
+__conf.ShowConcToolbar = {{ use_conc_toolbar|to_json }};
+__conf.queryOverview = {{ query_overview|default([], true)|to_json }};
+__conf.numQueryOps = {%if query_overview is defined %}{{ query_overview|length }}{% else %}0{% endif %};
+__conf.ShuffleMinResultWarning = {{ shuffle_min_result_warning|to_json }};
+__conf.multilevelFreqDistMaxLevels = {{ multilevel_freq_dist_max_levels|to_json }};
+__conf.multiSattrAllowedStructs = {{ multi_sattr_allowed_structs|to_json }};
+__conf.canSendMail = {{ can_send_mail|to_json }};
+__conf.issueReportingAction = {{ issue_reporting_action|to_json }};
+__conf.uiTestingFlag = {{ ui_testing_flag|to_json }};
+__conf.helpLinks = {{ help_links|to_json }};
+__conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
+__conf.LoginUrl = {{ login_url|to_json }};
+__conf.LogoutUrl = {{ logout_url|to_json }};
+__conf.webSocketUrl =  {{ websocket_url|to_json }};
+__conf.TextDirectionRTL = {{ righttoleft|default(false, true)|to_json }};
+__conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
+</script>
+{% endblock %}
+</head>
+<body>
+
+
+{% block AppBar %}
+<div id="common-bar">
+{% if app_bar %} {{ app_bar }} {% endif %}
+<div id="user-pane-mount"></div>
+</div>
+{% endblock %}
+
+{% block Header %}
+<header id="topbar">
+    <div class="navig-wrapper">
+        <div id="menu-bar">
+            <a id="logo-wrapper" href="{{ theme.logo_href }}"><img id="logo-image" class="over-img"
+                src="{{ theme.logo_path  }}"
+                alt="Kontext logo"
+                title="{{ theme.logo_title }}"
+                style="{{ theme.logo_inline_css }}"
+                data-alt-img="{{ theme.logo_mouseover_path }}" /></a>
+            <div id="main-menu-mount">
+                <ul id="menu-level-1">
+                {% for menu_item in static_menu %}<li class="{% if menu_item.disabled %}disabled{% endif %}"><a class="trigger"
+                    {% if menu_item.action %}href={{root_url}}{{menu_item.action}}{% endif %}>{{menu_item.label}}</a></li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+        <section class="corpus-and-query">
+            <div id="query-overview-mount"></div>
+            <div id="general-overview-mount"></div>
+            <div id="view-options-mount"></div>
+        </section>
+        <section class="analysis">
+            <div id="analysis-forms-mount"></div>
+        </section>
+    </div>
+</header>
+{% endblock %}
+
+
+<div id="content">
+    <div class="messages-mount"></div>
+    {% block concordance %}{% endblock %}
+    {% block main %}{% endblock %}
+</div>
+
+{% block Footer %}
+<footer {% if footer_bar %}class="custom-footer"{% endif %}>
+    {% if debug %}
+    <div class="debug-warning">
+    {{ 'debugging mode'|_ }}
+    </div>
+    {% endif %}
+
+    {% if footer_bar %}
+    {{ footer_bar }}
+    {% else %}
+        {% if avail_languages|length > 0 %}
+        <div id="switch-language-box">{{ "user interface languages"|_ }}:
+            <form id="language-switch-form" action="{{ root_url }}user/switch_language" method="POST">
+                {% for lang in avail_languages %}
+                    <button class="switch" type="submit" name="language" value="{{ lang[0] }}">{{ lang[1].get('label', lang[0]) }}</button>
+                    {% if not loop.last %}|{% endif %}
+                {% endfor %}
+            </form>
+        </div>
+        {% endif %}
+        <div>
+            <div id="copyright-info">
+                &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
+                &copy; <a href="http://www.sketchengine.co.uk/">Lexical Computing Ltd.</a>,
+                &copy; <a href="http://nlp.fi.muni.cz/">NLP Centre FI MU</a>
+            </div>
+            <div id="app-version">
+                {{ "version"|_ }} <strong>{{ _version[1] }}</strong>, {{ "uses"|_ }} manatee-<span>{{ _version[0] }}</span>
+            </div>
+
+            {% if issue_reporting_action %}
+            <div id="error-reporting-mount"></div>
+            {% endif %}
+        </div>
+    {% endif %}
+</footer>
+{% endblock %}
+
+<script type="text/javascript">
+{%block bodyonload %}{% endblock %}
+</script>
+
+</body>
+</html>

@@ -246,12 +246,14 @@ export class ConcDetailModel extends StatefulModel {
                     ).subscribe(
                         () => {
                             this.isBusy = false;
+                            this.tokenConnectIsBusy = false;
                             this.linesModel.setLineFocus(action.payload['lineIdx'], true);
                             this.linesModel.emitChange();
                             this.emitChange();
                         },
                         (err) => {
                             this.isBusy = false;
+                            this.tokenConnectIsBusy = false;
                             this.emitChange();
                             this.layoutModel.showMessage('error', err);
                         }
@@ -270,10 +272,12 @@ export class ConcDetailModel extends StatefulModel {
 
                     ).subscribe(
                         () => {
+                            this.tokenConnectIsBusy = false;
                             this.emitChange();
                         },
                         (err) => {
                             this.emitChange();
+                            this.tokenConnectIsBusy = false;
                             this.layoutModel.showMessage('error', err);
                         }
                     );
@@ -655,7 +659,6 @@ export class ConcDetailModel extends StatefulModel {
                             renders: data.renders
                         };
                         this.lineIdx = lineIdx;
-                        this.tokenConnectIsBusy = false;
                     }
                 }
             ),

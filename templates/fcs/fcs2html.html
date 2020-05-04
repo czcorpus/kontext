@@ -19,26 +19,26 @@
     <xsl:template match="/">
 <html>
   <head>
-        <title>${fcs_provider_heading}</title>
+        <title>{{ fcs_provider_heading }}</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        #for $css_url in $fcs_template_css_url
-        <link rel="stylesheet" href="${css_url}" />
-        #end for
-        ${fcs_custom_hdr_inject}
+        {% for css_url in fcs_template_css_url %}
+        <link rel="stylesheet" href="{{ css_url }}" />
+        {% endfor %}
+        {{ fcs_custom_hdr_inject }}
   </head>
   <body>
 
   <div style="min-height:70px">
   <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="navbar-header">
-      <a class="navbar-brand" href="${fcs_provider_website}">${fcs_provider_heading}</a>
+      <a class="navbar-brand" href="{{ fcs_provider_website }}">{{ fcs_provider_heading }}</a>
     </div>
 
    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
        <ul class="nav navbar-nav">
-           <li class=""><a href="?version=1.2&amp;operation=explain&amp;stylesheet=${root_url}fcs/fcs2html">Explain</a></li>
-           <li class=""><a href="?version=1.2&amp;operation=scan&amp;scanClause=fcs.resource=root&amp;stylesheet=${root_url}fcs/fcs2html">Scan</a></li>
-           <li class=""><a href="?version=1.2&amp;operation=searchRetrieve&amp;query=test&amp;stylesheet=${root_url}fcs/fcs2html">Search for "test"</a></li>
+           <li class=""><a href="?version=1.2&amp;operation=explain&amp;stylesheet={{ root_url }}fcs/fcs2html">Explain</a></li>
+           <li class=""><a href="?version=1.2&amp;operation=scan&amp;scanClause=fcs.resource=root&amp;stylesheet={{ root_url }}fcs/fcs2html">Scan</a></li>
+           <li class=""><a href="?version=1.2&amp;operation=searchRetrieve&amp;query=test&amp;stylesheet={{ root_url }}fcs/fcs2html">Search for "test"</a></li>
            <li class=""><a href="?operation=searchRetrieve&amp;version=1.2&amp;query=%22test%22&amp;startRecord=1&amp;maximumRecords=10&amp;recordSchema=http%3A%2F%2Fclarin.eu%2Ffcs%2F1.0">Search for "test" as Aggregator</a></li>
        </ul>
 
@@ -46,7 +46,7 @@
         <li><a href="http://weblicht.sfs.uni-tuebingen.de/Aggregator/">Aggregator</a></li>
         <li><a href="http://weblicht.sfs.uni-tuebingen.de/Aggregator/stats">Aggregator stats</a></li>
         <li><a href="https://trac.clarin.eu/wiki/FCS-specification">FCS documentation</a></li>
-        <li><a href="${root_url}first_form">Web GUI</a></li>
+        <li><a href="{{ root_url }}first_form">Web GUI</a></li>
         <li style="width:100px">SRU <span class="badge">v<xsl:value-of select="/*/sru:version"/></span></li>
       </ul>
 
@@ -124,19 +124,19 @@
 
     <xsl:template name="escape-xml">
         <xsl:param name="text"/>
-        <xsl:if test="\$text != ''">
-            <xsl:variable name="head" select="substring(\$text, 1, 1)"/>
-            <xsl:variable name="tail" select="substring(\$text, 2)"/>
+        <xsl:if test="$text != ''">
+            <xsl:variable name="head" select="substring($text, 1, 1)"/>
+            <xsl:variable name="tail" select="substring($text, 2)"/>
             <xsl:choose>
-                <xsl:when test="\$head = '&amp;'">&amp;amp;</xsl:when>
-                <xsl:when test="\$head = '&lt;'">&amp;lt;</xsl:when>
-                <xsl:when test="\$head = '&gt;'">&amp;gt;</xsl:when>
-                <xsl:when test="\$head = '&quot;'">&amp;quot;</xsl:when>
-                <xsl:when test="\$head = &quot;&apos;&quot;">&amp;apos;</xsl:when>
-                <xsl:otherwise><xsl:value-of select="\$head"/></xsl:otherwise>
+                <xsl:when test="$head = '&amp;'">&amp;amp;</xsl:when>
+                <xsl:when test="$head = '&lt;'">&amp;lt;</xsl:when>
+                <xsl:when test="$head = '&gt;'">&amp;gt;</xsl:when>
+                <xsl:when test="$head = '&quot;'">&amp;quot;</xsl:when>
+                <xsl:when test="$head = &quot;&apos;&quot;">&amp;apos;</xsl:when>
+                <xsl:otherwise><xsl:value-of select="$head"/></xsl:otherwise>
             </xsl:choose>
             <xsl:call-template name="escape-xml">
-                <xsl:with-param name="text" select="\$tail"/>
+                <xsl:with-param name="text" select="$tail"/>
             </xsl:call-template>
         </xsl:if>
     </xsl:template>

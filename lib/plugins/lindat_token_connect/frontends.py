@@ -31,6 +31,7 @@ class VallexFrontend(AbstractFrontend):
         response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
         return response
 
+
 class PDTVallexFrontend(AbstractFrontend):
 
     def __init__(self, conf):
@@ -41,6 +42,7 @@ class PDTVallexFrontend(AbstractFrontend):
         response.renderer = 'pdt-vallex-json'
         response.contents = json.loads(data.strip().strip('<pre>').strip('</pre>'))
         return response
+
 
 class ENGVallexFrontend(AbstractFrontend):
 

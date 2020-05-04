@@ -1,4 +1,4 @@
-#*
+{#-
 Copyright (c) 2013 Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
@@ -14,29 +14,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
+{% extends "document.html" %}
 
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% block title %}KonText - $_("List of my subcorpora")#slurp{% endblock %}
 
-#def title
-KonText - $_("List of my subcorpora")#slurp
-#end def
-
-#def bodyonload
-__conf.SubcorpList = $to_json($subcorp_list);
-__conf.ProcessedSubcorpora = $to_json($processed_subc);
-__conf.SortKey = $to_json($sort_key);
-__conf.RelatedCorpora = $to_json($related_corpora);
-__conf.Filter = $to_json($filter);
-__conf.UsesSubcRestore = $to_json($uses_subc_restore);
+{% block bodyonload %}
+__conf.SubcorpList = {{ subcorp_list|to_json }};
+__conf.ProcessedSubcorpora = {{ processed_subc|to_json }};
+__conf.SortKey = {{ sort_key|to_json }};
+__conf.RelatedCorpora = {{ related_corpora|to_json }};
+__conf.Filter = {{ filter|to_json }};
+__conf.UsesSubcRestore = {{ uses_subc_restore|to_json }};
 subcorpListPage.init(__conf);
-#end def
+{% endblock %}
 
-#def main
+{% block main %}
 <section id="my-subcorpora">
-    <h2>$_('My subcorpora')</h2>
+    <h2>{{ 'My subcorpora'|_ }}</h2>
     <div id="my-subcorpora-mount"></di>
 </section>
-#end def
+{% endblock %}

@@ -20,8 +20,6 @@ conf/*
 public/files/.vscode/
 public/files/dist
 public/files/js/.compiled
-cmpltmpl/*
-!cmpltmpl/__init__.py
 public/files/themes/*
 !public/files/themes/default
 !public/files/themes/lindat

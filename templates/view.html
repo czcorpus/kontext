@@ -1,0 +1,116 @@
+{#
+Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#}
+{% extends "document.html" %}
+{% block title %}{{ page_title|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
+
+{% block headers %}
+
+{%if righttoleft %}
+<style>
+#conclines .lc, #conclines .kw, #conclines .rc, #conclines  .rtl, #conclines .par {
+    unicode-bidi: embed;
+    direction: rtl;
+}
+#conclines .strc {
+    direction: ltr;
+}
+.QueryOpInfo .args {
+   unicode-bidi: embed;
+}
+</style>
+{% endif %}
+{% endblock %}
+
+{% block bodyonload %}
+__conf.replicableQuery = {%if replicable_query %}true{% else %}false{% endif %};
+__conf.concLineMaxGroupNum = {{ conc_line_max_group_num|to_json }};
+__conf.WideCtxGlobals = {{ widectx_globals|to_json }};
+__conf.CorporaColumns = {{ CorporaColumns|to_json }};
+__conf.KWICCorps = {{ KWICCorps|to_json }};
+__conf.ViewMode = {{ viewmode|default(none, true)|to_json }};
+__conf.AttrAllpos = {{ attr_allpos|default(none, true)|to_json }};
+__conf.AttrViewMode = {{ attr_vmode|default(none, true)|to_json }};
+__conf.ShowLineNumbers = {% if line_numbers %}true{% else %}false{% endif %};
+__conf.Pagination = {{ pagination|to_json }};
+__conf.FromPage = {% if fromp %}{{ fromp|to_json }}{% else %}0{% endif %};
+__conf.Lines = {{ Lines|to_json }};
+__conf.SortIdx = {{ Sort_idx|to_json }};
+__conf.ConcSize = {{ concsize|to_json }};
+__conf.ConcCacheKey = {{ conc_cache_key|to_json }};
+__conf.FullSize = {{ fullsize|to_json }};
+__conf.SampledSize = {{ sampled_size|to_json }};
+__conf.ResultIpm = {{ result_relative_freq|to_json }};
+__conf.ResultArf = {% if result_arf %}{{ result_arf|to_json }}{% else %}null{% endif %};
+__conf.ResultShuffled = {{ result_shuffled|to_json }};
+__conf.NumLinesInGroups = {{ num_lines_in_groups|to_json }};
+__conf.LinesGroupsNumbers = {{ lines_groups_numbers|to_json }};
+__conf.SpeakerIdAttr = {{ speaker_id_attr|to_json }};
+__conf.SpeechOverlapAttr = {{ speech_overlap_attr|to_json }};
+__conf.SpeechOverlapVal = {{ speech_overlap_val|to_json }};
+__conf.SpeechAttrs = {{ speech_attrs|to_json }};
+__conf.SpeechSegment = {{ speech_segment|to_json }};
+__conf.StructCtx = {{ struct_ctx|to_json }};
+__conf.ConcUseSafeFont = {{ conc_use_safe_font|to_json }};
+__conf.ChartExportFormats = {{ chart_export_formats|to_json }};
+__conf.TTCrit = {{ ttcrit|to_json }};
+{#- query form #}
+__conf.textTypesData = {{ text_types_data|to_json }};
+__conf.Wposlist = {{ Wposlist|to_json }};
+__conf.ConcFormsArgs = {{ conc_forms_args|to_json }};
+__conf.NumQueryOpSteps = {{ query_overview|length }};
+__conf.ConcFormsInitialArgs = {{ conc_forms_initial_args|to_json }};
+__conf.SubcorpList = {{ SubcorpList|to_json }};
+__conf.CurrentSubcorp = {{ usesubcorp|default(none, true)|to_json }};
+__conf.ShuffleConcByDefault = {{ shuffle|default(false, true)|to_json }};
+__conf.Lposlist = {{ Lposlist|to_json }};
+__conf.ForcedAttr = {{ force_cql_default_attr|default(none, true)|to_json }};
+__conf.DefaultAttr = {{ default_attr|to_json }};
+__conf.AttrList = {{ AttrList|default([], true)|to_json }};
+__conf.StructAttrList = {{ StructAttrList|default([], true)|to_json }};
+__conf.StructList = {{ StructList|default([], true)|to_json }};
+__conf.InputLanguages = {{ input_languages|to_json }};
+__conf.FreqFormProps = {{ freq_form_args|to_json }};
+__conf.CTFreqFormProps = {{ ctfreq_form_args|to_json }};
+__conf.CollFormProps = {{ coll_form_args|to_json }};
+__conf.FastAdHocIpm = {{ fast_adhoc_ipm|to_json }};
+__conf.ConcDashboardModules = {{ conc_dashboard_modules|to_json }};
+__conf.UseCQLEditor = {% if cql_editor %}true{% else %}false{% endif %};
+__conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
+{#- end query form -#}
+__conf.QueryHistoryPageNumRecords = {{ query_history_page_num_records|to_json }};
+
+{%if running_calc %}
+__conf.numLines = {{ Lines|length }};
+__conf.Unfinished = true;
+{% else %}
+__conf.Unfinished = false;
+{% endif %}
+viewPage.init(__conf);
+{% endblock %}
+
+
+{% block concordance %}
+<a id="download-link" style="display:none"></a>
+<div id="conc-dashboard-mount">
+    <div id="conc-top-bar"><div class="info-level">-</div></div>
+    <img class="root-loader" src="{{ files_path }}/img/ajax-loader.gif" title="{{ "Loading..."|_ }}" alt="{{ "Loading..."|_ }}" />
+    <div id="conc-bottom-bar">-</div>
+</div>
+{% endblock %}

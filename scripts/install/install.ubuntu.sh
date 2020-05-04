@@ -4,7 +4,7 @@
 # ----------------------------------------
 
 WEBSERVER_USER="www-data"
-MANATEE_VER=2.158.8
+MANATEE_VER=2.167.8
 # run the install script from the installation root directory
 INSTALL_DIR="$(dirname $(dirname $(readlink -f $(dirname "$0" ))))"
 echo "Fullpath to the current KonText installation directory: $INSTALL_DIR"
@@ -50,7 +50,7 @@ npm install -g webpack
 
 # install general & manatee prerequisites
 apt-get install -y openssh-server net-tools nginx redis-server build-essential openssl libssl-dev pkg-config wget
-apt-get install -y python python-dev python-pip python-lxml python-cheetah python-simplejson
+apt-get install -y python python-dev python-pip python-lxml python-jinja2 python-simplejson
 apt-get install -y libltdl7 libpcre3 libpcre++-dev libxml2-dev libxslt-dev libltdl-dev
 
 pip install redis gunicorn celery
@@ -126,9 +126,9 @@ case ${INSTALL_TYPE} in
     *)
         # default: install from binary packages
         cd /usr/local/bin
-        wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open_${MANATEE_VER}-1ubuntu1_amd64.deb
-        wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-python_${MANATEE_VER}-1ubuntu1_amd64.deb
-        wget https://corpora.fi.muni.cz/noske/deb/1604/manatee-open/manatee-open-susanne_${MANATEE_VER}-1ubuntu1_amd64.deb
+        wget https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_${MANATEE_VER}-1ubuntu1_amd64.deb
+        wget https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python_${MANATEE_VER}-1ubuntu1_amd64.deb
+        wget https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_${MANATEE_VER}-1ubuntu1_amd64.deb
         dpkg -i manatee-open_${MANATEE_VER}-1ubuntu1_amd64.deb
         dpkg -i manatee-open-python_${MANATEE_VER}-1ubuntu1_amd64.deb
         dpkg -i manatee-open-susanne_${MANATEE_VER}-1ubuntu1_amd64.deb

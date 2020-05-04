@@ -1,7 +1,8 @@
-#*
-Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+{#-
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2019 Charles University, Faculty of Arts,
                    Institute of the Czech National Corpus
-Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+Copyright (c) 2019 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -16,29 +17,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
 
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% if saveformat == 'text' %}
+{% if heading %}
+# Collocations
+# Corpus: {{ human_corpname }}
+{% if usesubcorp %}
+# Subcorpus: {{ usesubcorp }}
+{% endif %}
 
-#def title
-$_("User profile")#slurp
-#end def
+{% for d in Desc %}
+# {{ d.op }}:  $d.arg $d.size
+{% endfor %}
+{% endif %}
+{% for h in Head %}
+| {{ h.n -}}
+{% endfor %}
 
-#def bodyonload
-__conf.CredentialsForm = $to_json($credentials_form);
-#if not $user_registered
-__conf.UsernameTaken = $to_json($username_taken);
-userSignUpPage.init(__conf);
-#else
-userProfilePage.init(__conf);
-#end if
-#end def
+------------------------------------------------------------
+{% for i in Items %}
+{{ i.str }} {{ i.freq -}}
+{% for ss in i.Stats %}
+{{ ss.s -}}
+{% endfor %}
 
-#def main
-<section>
-    <h2>$_("User")</h2>
-    <div id="user-administration-mount"></div>
-</section>
-#end def
+{% endfor %}
+
+{% endif %}
+

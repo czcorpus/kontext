@@ -1,5 +1,7 @@
-#*
-Copyright (c) 2013 Institute of the Czech National Corpus
+{#-
+Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -14,25 +16,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
 
-#from cmpltmpl.document import document
-#extends document
+{% extends "document.html" %}
 
-#def title
-KonText - error
-#end def
+{% block title %}{{ "User profile"|_ }}{% endblock %}
 
-#def bodyonload
-__conf.LastUsedCorp = $to_json($last_used_corp);
-messagePage.init(__conf);
-#end def
+{% block bodyonload %}
+__conf.CredentialsForm = {{ credentials_form|to_json }};
+{% if not user_registered %}
+__conf.UsernameTaken = {{ username_taken|to_json }};
+userSignUpPage.init(__conf);
+{% else %}
+userProfilePage.init(__conf);
+{% endif %}
+{% endblock %}
 
-#def main
-<section class="exclusive">
-<h2 class="panic">
-   <img src="${files_path}/img/crisis.svg" alt="error" style="width: 0.8em" />
-</h2>
-<div id="root-mount"></div>
+{% block main %}
+<section>
+    <h2>{{ "User"|_ }}</h2>
+    <div id="user-administration-mount"></div>
 </section>
-#end def
+{% endblock %}

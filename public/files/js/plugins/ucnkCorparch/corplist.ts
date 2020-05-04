@@ -54,24 +54,23 @@ export class CorpusAccessRequestModel extends StatefulModel {
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
-    }
-
-    onAction(action:Action):void {
-        switch (action.name) {
-            case 'CORPUS_ACCESS_REQ_SUBMITTED':
-                this.askForAccess(action.payload['corpusId'], action.payload['corpusName'], action.payload['customMessage']).subscribe(
-                    null,
-                    (error) => {
-                        this.pluginApi.showMessage('error', error);
-                    },
-                    () => {
-                        this.pluginApi.showMessage('info',
-                            this.pluginApi.translate('ucnkCorparch__your_message_sent'));
-                            this.emitChange();
-                    },
-                );
-            break;
-        }
+        this.dispatcher.registerActionListener((action:Action) => {
+            switch (action.name) {
+                case 'CORPUS_ACCESS_REQ_SUBMITTED':
+                    this.askForAccess(action.payload['corpusId'], action.payload['corpusName'], action.payload['customMessage']).subscribe(
+                        null,
+                        (error) => {
+                            this.pluginApi.showMessage('error', error);
+                        },
+                        () => {
+                            this.pluginApi.showMessage('info',
+                                this.pluginApi.translate('ucnkCorparch__your_message_sent'));
+                                this.emitChange();
+                        },
+                    );
+                break;
+            }
+        });
     }
 
     private askForAccess(corpusId:string, corpusName:string, customMessage:string):Observable<Kontext.AjaxResponse> {

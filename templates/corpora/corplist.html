@@ -1,5 +1,5 @@
-#*
-Copyright (c) 2003-2009  Pavel Rychly
+{#-
+Copyright (c) 2014 Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -14,35 +14,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
+{% extends "document.html" %}
 
-#from translation import ugettext as _
+{% block title %}KonText - {{ 'Available corpora'|_ }}{% endblock %}
+
+{% block bodyonload %}
+corplistPage.init(
+    __conf,
+    {{ corplist_data|to_json }}
+);
+{% endblock %}
 
 
-#if $saveformat == 'text' ## Text format
-  #if $heading
-\# Collocations
-\# Corpus: $human_corpname
-#if $usesubcorp
-\# Subcorpus: $usesubcorp
-#end if
+{% block main %}
+<section class="corplist">
+    <h2>{{ 'Available corpora'|_ }}</h2>
 
-    #for $d in $Desc
-\# $d.op:  $d.arg $d.size
-    #end for
+    <form class="filter" action="corplist">
+    </form>
 
-  #end if
-  #for $h in $Head
-| $h.n	#slurp
-  #end for
+    <div id="corplist"></div>
 
-------------------------------------------------------------
-#for $i in $Items
-$i.str	$i.freq	#slurp
-  #for $ss in $i.Stats
-$ss.s	#slurp
-  #end for
-
-#end for
-#end if
-
+</section>
+{% endblock %}

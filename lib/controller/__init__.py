@@ -37,19 +37,21 @@ from functools import partial
 import types
 import hashlib
 import uuid
+import jinja2
 
 import werkzeug.urls
 import werkzeug.http
 import werkzeug.exceptions
-from Cheetah.Template import Template
 
+from translation import ugettext
+import l10n
+import strings
 import plugins
 import settings
 from translation import ugettext as translate
 from argmapping import Parameter, GlobalArgs, Args
 from controller.errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                                CorpusForbiddenException, ImmediateRedirectException)
-from templating import CheetahResponseFile
 
 
 def exposed(access_level=0, template=None, vars=(), page_model=None, func_arg_mapped=False, skip_corpus_init=False,
@@ -62,7 +64,7 @@ def exposed(access_level=0, template=None, vars=(), page_model=None, func_arg_ma
 
     arguments:
     access_level -- 0,1,... (0 = public user, 1 = logged in user)
-    template -- a Cheetah template source path
+    template -- a Jinja2 template source path
     vars -- deprecated; do not use
     page_model -- a JavaScript page module
     func_arg_mapped -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
@@ -144,6 +146,10 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     return args
 
 
+def val_to_js(obj):
+    return json.dumps(obj).replace('</script>', '<" + "/script>').replace('<script>', '<" + "script>')
+
+
 class KonTextCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
@@ -190,8 +196,24 @@ class Controller(object):
         self._proc_time = None
         # a list of functions which must pass (= return None) before any action is performed
         self._validators = []
+        # templating engine
         self._template_dir = os.path.realpath(os.path.join(
-            os.path.dirname(__file__), '..', '..', 'cmpltmpl'))
+            os.path.dirname(__file__), '..', '..', 'templates'))
+        tpl_cache_path = settings.get('global', 'template_engine_cache_path', None)
+        cache = jinja2.FileSystemBytecodeCache(tpl_cache_path) if tpl_cache_path else None
+        self._template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(searchpath=self._template_dir),
+            bytecode_cache=cache,
+            trim_blocks=True,
+            lstrip_blocks=True)
+        self._template_env.filters.update(
+            to_json=val_to_js,
+            shorten=strings.shorten,
+            camelize=l10n.camelize,
+            _=ugettext,
+            create_action=lambda a, p=None: self.create_url(a, p if p is not None else {})
+        )
+        ##
         self.args = Args()
         self._uses_valid_sid = True
         self._plugin_api = None  # must be implemented in a descendant
@@ -895,7 +917,7 @@ class Controller(object):
         tpl_path = action_metadata['template']
         if not tpl_path:
             tpl_path = os.path.join(self.get_mapping_url_prefix()[
-                                    1:], '{0}.tmpl'.format(methodname))
+                                    1:], '{0}.html'.format(methodname))
         return tpl_path, method_ans
 
     def urlencode(self, key_val_pairs):
@@ -947,12 +969,11 @@ class Controller(object):
             outf.write(str(result))
         elif type(result) is DictType:
             self.add_globals(result, methodname, action_metadata)
-            if template.endswith('.tmpl'):
-                template_class = self._get_template_class(template[:-5])
-                tpl_ans = template_class(searchList=[result, self.args])
-            else:
-                tpl_ans = Template(template, searchList=[result, self.args])
-            tpl_ans.respond(CheetahResponseFile(outf))
+            template = self._template_env.get_template(template)
+            for k in self.args.__dict__:
+                if k not in result:
+                    result[k] = getattr(self.args, k)
+            outf.write(template.render(result))
 
     def user_is_anonymous(self):
         with plugins.runtime.AUTH as auth:

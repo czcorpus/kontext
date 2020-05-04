@@ -87,18 +87,6 @@ class StateGlobals(object):
             self._data[k] = [v]
 
 
-class CheetahResponseFile(object):
-    """
-    Provides utf-8 compatible output for Cheetah renderer
-    """
-
-    def __init__(self, outfile):
-        self._outfile = codecs.getwriter('utf-8')(outfile)
-
-    def response(self):
-        return self._outfile
-
-
 class Type2XML(object):
 
     @staticmethod

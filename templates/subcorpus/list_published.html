@@ -1,5 +1,5 @@
-#*
-Copyright (c) 2013 Institute of the Czech National Corpus
+{#-
+Copyright (c) 2018 Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -14,29 +14,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*#
+-#}
+{% extends "document.html" %}
 
-#from translation import ugettext as _
-#from cmpltmpl.document import document
-#extends document
+{% block title %}KonText - {{ "Find a published subcorpus"|_ }}{% endblock %}
 
-#def title
-$_("Login options")#slurp
-#end def
+{% block bodyonload %}
+__conf.Data = {{ data|to_json }};
+__conf.MinAuthorPrefix = {{ min_author_prefix|to_json }};
+__conf.MinCodePrefix = {{ min_code_prefix|to_json }};
+pubSubcorpListPage.init(__conf);
+{% endblock %}
 
-#def bodyonload
-loginPage.init(__conf);
-#end def
-
-
-#def main
+{% block main %}
 <section>
-    <h2>$_("Login options")</h2>
-    <p>
-        <a id="try-login" class="util-button">$_('Sign in')</a>
-    </p>
-    <p>
-        <a id="go-to-query" class="util-button">$_('Continue as anonymous user')</a>
-    </p>
+    <h2>{{ 'Find a published subcorpus'|_ }}</h2>
+    <div id="published-subcorpora-mount"></di>
 </section>
-#end def
+{% endblock %}
