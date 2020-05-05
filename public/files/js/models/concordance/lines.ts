@@ -29,7 +29,7 @@ import {KWICSection} from './line';
 import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
-import {transformVmode} from '../options/structsAttrs';
+import { transformVmode, ActionName as ViewOptionsActionName} from '../options/structsAttrs';
 import { Action, IFullActionControl } from 'kombo';
 import { throwError, Observable, interval, Subscription } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
@@ -86,6 +86,22 @@ export interface CorpColumn {
 }
 
 export interface ViewConfiguration {
+
+    /**
+     * A positional attribute representing the original text.
+     * In KonText this is locked to the 'word'.
+     */
+    basePosAttr:string;
+
+    /**
+     * A positional attribute used to create main text flow.
+     * In most cases it is the same value as 'basePosAttr' but
+     * for some corpora it can make sense to switch to a different
+     * one (e.g. when dealing with different layers within spoken corpora)
+     */
+    baseViewAttr:string;
+
+    activePosAttrs:Array<string>;
 
     anonymousUser:boolean;
 
@@ -219,20 +235,37 @@ export interface ViewConfiguration {
 /**
  *
  */
-function importLines(data:Array<ServerLineData>, attrViewMode:ViewOptions.AttrViewMode):Immutable.List<Line> {
+function importLines(data:Array<ServerLineData>, attrViewMode:ViewOptions.AttrViewMode, mainAttrIdx:number):Immutable.List<Line> {
     let ans:Array<Line> = [];
 
     function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
-        return {
-            id: id,
-            className: item.class,
-            text: item.str.trim().split(' '),
-            openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-            closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
-            continued: item.continued,
-            showAudioPlayer: false,
-            tailPosAttrs: item.tail_posattrs || []
-        };
+        if (mainAttrIdx === -1) {
+            return {
+                id: id,
+                className: item.class,
+                text: item.str.trim().split(' '),
+                openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
+                closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
+                continued: item.continued,
+                showAudioPlayer: false,
+                tailPosAttrs: item.tail_posattrs || []
+            };
+
+        } else {
+            const tailPosattrs = item.tail_posattrs || [];
+            const text = tailPosattrs[mainAttrIdx];
+            tailPosattrs.splice(mainAttrIdx, 1, item.str.trim());
+            return {
+                id: id,
+                className: item.class,
+                text: [text],
+                openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
+                closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
+                continued: item.continued,
+                showAudioPlayer: false,
+                tailPosAttrs: tailPosattrs
+            };
+        }
     }
 
     data.forEach((item:ServerLineData, i:number) => {
@@ -357,6 +390,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private busyWaitSecs:number;
 
+    private baseViewAttr:string;
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
@@ -379,7 +413,8 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;
-        this.lines = importLines(initialData, transformVmode(this.attrViewMode, this.attrAllpos));
+        this.baseViewAttr = lineViewProps.baseViewAttr;
+        this.lines = importLines(initialData, transformVmode(this.attrViewMode, this.attrAllpos), this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
@@ -517,6 +552,10 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     this.busyWaitSecs = action.payload['idx'];
                     this.emitChange();
                 break;
+                case ViewOptionsActionName.SaveSettingsDone:
+                    this.baseViewAttr = action.payload['baseViewAttr'];
+                    this.updateOnCorpViewOptsChange();
+                break;
             }
         });
     }
@@ -559,7 +598,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         }
     }
 
-    updateOnCorpViewOptsChange():void {
+    private updateOnCorpViewOptsChange():void {
         this.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
         this.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
 
@@ -659,7 +698,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private importData(data:Kontext.AjaxResponse):void {
         try {
-            this.lines = importLines(data['Lines'], this.getViewAttrsVmode());
+            this.lines = importLines(data['Lines'], this.getViewAttrsVmode(), this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
             this.numItemsInLockedGroups = data['num_lines_in_groups'];
             this.pagination = data['pagination'];
             this.unfinishedCalculation = data['running_calc'];

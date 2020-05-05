@@ -68,6 +68,8 @@ export interface CorpusViewOptionsModelState {
     userIsAnonymous:boolean;
     corpusIdent:Kontext.FullCorpusIdent;
     corpusUsesRTLText:boolean;
+    baseViewAttr:string;
+    basePosAttr:string;
 }
 
 
@@ -83,16 +85,15 @@ export enum ActionName {
     ToggleReference = 'VIEW_OPTIONS_TOGGLE_REFERENCE',
     ToogleAllReferenceAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
     ToggleAllReferences = 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
+    SetBaseViewAttr = 'VIEW_OPTIONS_SET_BASE_VIEW_ATTR',
     SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
     SaveSettingsDone = 'VIEW_OPTIONS_SAVE_SETTINGS_DONE'
 }
 
 
-export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsModelState> implements ViewOptions.ICorpViewOptionsModel {
+export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsModelState> {
 
     private readonly layoutModel:PageModel;
-
-    private updateHandlers:Immutable.List<(data:ViewOptions.SaveViewAttrsOptionsResponse)=>void>;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             userIsAnonymous:boolean) {
@@ -116,12 +117,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 isBusy: false,
                 userIsAnonymous: userIsAnonymous,
                 corpusIdent: corpusIdent,
-                corpusUsesRTLText: layoutModel.getConf<boolean>('TextDirectionRTL')
+                corpusUsesRTLText: layoutModel.getConf<boolean>('TextDirectionRTL'),
+                basePosAttr: layoutModel.getConf<string>('baseAttr'),
+                baseViewAttr: layoutModel.getConf<string>('baseViewAttr') || layoutModel.getConf<string>('baseAttr')
             }
         );
         this.layoutModel = layoutModel;
-        this.updateHandlers = Immutable.List<()=>void>();
-
         this.actionMatch = {
             'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS': (state, action) => {
                 const newState = this.copyState(state);
@@ -152,6 +153,9 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             [ActionName.ToggleAllAttributes]: (state, action) => {
                 const newState = this.copyState(state);
                 this.toggleAllAttributes(newState);
+                if (!newState.attrList.slice(1).find(v => v.selected)) {
+                    newState.baseViewAttr = newState.attrList.get(0).n;
+                }
                 return newState;
             },
             [ActionName.ToggleStructure]: (state, action) => {
@@ -182,6 +186,18 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             [ActionName.ToggleAllReferences]: (state, action) => {
                 const newState = this.copyState(state);
                 this.toggleAllReferences(newState);
+                return newState;
+            },
+            [ActionName.SetBaseViewAttr]: (state, action) => {
+                const newState = this.copyState(state);
+                newState.baseViewAttr = action.payload['value'];
+                const idx = newState.attrList.findIndex(v => v.n === newState.baseViewAttr);
+                if (idx > -1 && !newState.attrList.get(idx).selected) {
+                    newState.attrList = newState.attrList.set(
+                        idx,
+                        {...newState.attrList.get(idx), selected: true}
+                    );
+                }
                 return newState;
             },
             [ActionName.SaveSettings]: (state, action) => {
@@ -226,7 +242,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                                         AvailRefs: data.Availrefs,
                                         AttrAllpos: data.attr_allpos,
                                         AttrVmode: data.attr_vmode,
-                                        ShowConcToolbar: data.use_conc_toolbar
+                                        ShowConcToolbar: data.use_conc_toolbar,
+                                        BaseViewAttr: data.base_viewattr
                                     }
                                 }
                             });
@@ -247,10 +264,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 }
             break;
         }
-    }
-
-    addOnSave(fn:(data:ViewOptions.SaveViewAttrsOptionsResponse)=>void):void {
-        this.updateHandlers = this.updateHandlers.push(fn);
     }
 
     private setAttrVisibilityMode(state:CorpusViewOptionsModelState, value:ViewOptions.AttrViewMode):void {
@@ -311,7 +324,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                             .toArray(),
                             setrefs: state.refAttrs.valueSeq().reduce((acc, val) => acc = [...acc, ...val.filter(item => item.selected).toArray()], []).map(item => item.n),
             setattr_allpos: state.attrAllpos,
-            setattr_vmode: state.attrVmode
+            setattr_vmode: state.attrVmode,
+            base_viewattr: state.baseViewAttr
         };
 
         return ans;
@@ -329,7 +343,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
 
         ).pipe(
             tap(
-                (data) => {
+                () => {
                     if (state.attrAllpos === 'all') {
                         this.layoutModel.replaceConcArg('ctxattrs', [formArgs['setattrs'].join(',')]);
 
@@ -340,17 +354,20 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
                     this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
                     this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
+                    this.layoutModel.replaceConcArg('base_viewattr', [formArgs['base_viewattr']]);
                     this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
                     this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
-                    this.updateHandlers.forEach(fn => fn(data));
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )
         ).subscribe(
-            (_) => {
+            (data) => {
                 dispatch({
                     name: ActionName.SaveSettingsDone,
-                    payload: {}
+                    payload: {
+                        widectxGlobals: data.widectx_globals,
+                        baseViewAttr: state.baseViewAttr
+                    }
                 });
                 this.layoutModel.showMessage('info', this.layoutModel.translate('options__options_saved'));
             },
@@ -666,6 +683,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.attrAllpos = state.attrVmode !== 'mouseover' ? data.AttrAllpos : ViewOptions.PosAttrViewScope.ALL;
         state.hasLoadedData = true;
         state.showConcToolbar = data.ShowConcToolbar;
+        state.baseViewAttr = data.BaseViewAttr;
     }
 
     private loadData():Observable<ViewOptions.LoadOptionsResponse> {

@@ -116,7 +116,7 @@ export class MultiDict implements Kontext.IMultiDict {
         return ans;
     }
 
-    getFirst(key:string):string {
+    head(key:string):string {
         return this._data[key] !== undefined ? this._data[key][0] : undefined;
     }
 

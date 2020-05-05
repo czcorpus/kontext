@@ -159,7 +159,7 @@ export class TextTypesDistModel extends StatefulModel {
     private performDataLoad():void {
         if (!this.blockedByAsyncConc && this.getConcSize() > 0) {
             const args = this.layoutModel.getConcArgs();
-            if (this.lastArgs !== args.getFirst('q')) {
+            if (this.lastArgs !== args.head('q')) {
                 this.isBusy = true;
                 this.emitChange();
                 this.loadData(args).subscribe(
@@ -187,7 +187,7 @@ export class TextTypesDistModel extends StatefulModel {
             if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
                 args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
-                this.lastArgs = args.getFirst('q');
+                this.lastArgs = args.head('q');
                 return this.layoutModel.ajax$<Response.Reduce>(
                     'GET',
                     this.layoutModel.createActionUrl('reduce'),

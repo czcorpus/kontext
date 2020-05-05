@@ -99,6 +99,7 @@ ConcArgsMapping = (
     'attrs',
     'attr_vmode',
     'attr_allpos',
+    'base_viewattr',  # attribute used in a text flow
     'ctxattrs',
     'structs',
     'refs'
@@ -224,6 +225,7 @@ class GlobalArgs(object):
     attrs = Parameter[str]('word', persistent=Parameter.PERSISTENT)
     ctxattrs = Parameter[str]('word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter[str]('kw')
+    base_viewattr = Parameter[str]('word', persistent=Parameter.PERSISTENT)
     attr_vmode = Parameter[str]('mouseover', persistent=Parameter.PERSISTENT)
     allpos = Parameter[str]('kw')
     structs = Parameter[str]('', persistent=Parameter.PERSISTENT)

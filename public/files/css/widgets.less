@@ -498,6 +498,32 @@ fieldset.FieldsetOutputOptions {
 
         div.checkbox-area {
 
+            > div {
+                padding: 0em;
+            }
+
+            .flex {
+                display: flex;
+                flex-direction: row;
+                justify-content: start;
+                margin-bottom: 1.6em;
+
+                > div:not(:first-child) {
+                    margin-left: 1em;
+                    padding-left: 0.7em;
+                    border-style: solid;
+                    border-color: @color-frame-fieldset;
+                    border-width: 0 0 0 1px;
+                }
+            }
+
+            .MainViewAttributeRadio {
+                input[type="radio"] {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+
             ul {
                 margin: 0;
                 padding: 0;
@@ -506,6 +532,7 @@ fieldset.FieldsetOutputOptions {
                 li {
                     margin: 0 0 0 1em;
                     padding: 0.1em 0;
+                    line-height: 1.5em;
 
                     input[type=checkbox] {
                         margin-right: 0.4em;
@@ -515,11 +542,17 @@ fieldset.FieldsetOutputOptions {
                 }
             }
 
-            h3.label {
+            h2.label {
                 text-align: left;
-                font-size: 1.2em;
-                margin-top: 1.2em;
-                margin-bottom: 0.4em;
+                font-size: 1.35em;
+                font-weight: bold;
+                margin: 1.2em 0 0.6em 0;
+            }
+
+            h3 {
+                font-size: 1.05em;
+                margin-top: 0;
+                margin-bottom: 0.3em;
             }
 
             p.warning {
