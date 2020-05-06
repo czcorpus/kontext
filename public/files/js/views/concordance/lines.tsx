@@ -77,6 +77,11 @@ export interface LinesViews {
 const ATTR_SEPARATOR = ' / ';
 
 
+function canUseMultiLineAttrs(mode:ViewOptions.AttrViewMode, tailAttrs:Array<string>):boolean {
+    return mode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && tailAttrs.length > 0;
+}
+
+
 export function init({dispatcher, he, lineModel, lineSelectionModel,
                 concDetailModel}:LinesModuleArgs):LinesViews {
 
@@ -203,7 +208,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         if (props.data.className && props.data.text) {
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
-                    <em className={props.data.className} title={props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? null :tailAttrs}>
+                    <em className={`${props.data.className}${canUseMultiLineAttrs(props.attrViewMode, metadata) ? ' ml' : ''}`}
+                            title={props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? null :tailAttrs}>
                         {props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
                         <>
                             <span>{props.data.text.join(' ')}</span>
@@ -233,7 +239,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         } else {
             return (
-                <span title={tailAttrs}>
+                <span title={props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? null : tailAttrs}
+                    className={canUseMultiLineAttrs(props.attrViewMode, props.data.tailPosAttrs) ? 'ml' : null}>
                 {props.data.text.map((s, i) => (
                     <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
                         {i > 0 ? ' ' : null}
@@ -389,7 +396,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         const renderSecond = () => {
             if (props.hasKwic) {
                 return (
-                    <strong className={props.item.className} title={mouseover}>
+                    <strong className={`${props.item.className}${canUseMultiLineAttrs(props.attrViewMode, props.item.tailPosAttrs) ? ' ml' : ''}`} title={mouseover}>
                         {props.item.text
                             .map<[string, string]>((s, i) => [s, props.item.tailPosAttrs[i]])
                             .filter(([s,]) => s !== '')
