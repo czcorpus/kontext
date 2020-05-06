@@ -148,6 +148,10 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             [ActionName.ToggleAttribute]: (state, action) => {
                 const newState = this.copyState(state);
                 this.toggleAttribute(newState, action.payload['idx']);
+                const attr = newState.attrList.get(action.payload['idx']);
+                if (!attr.selected && attr.n === state.baseViewAttr) {
+                    newState.baseViewAttr = newState.attrList.get(0).n;
+                }
                 return newState;
             },
             [ActionName.ToggleAllAttributes]: (state, action) => {
