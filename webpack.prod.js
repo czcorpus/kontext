@@ -71,7 +71,7 @@ module.exports = (env) => merge(common.wpConf(env), {
 			}
 		}),
 		new UglifyJSPlugin({
-			sourceMap: true,
+			sourceMap: false,
 			parallel: 4 // we assume that even consumer cpus contain 4+ cores
 		}),
 		new webpack.DefinePlugin({
