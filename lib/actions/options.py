@@ -77,7 +77,7 @@ class Options(Kontext):
                                 'sel': 'selected' if n in structlist else '',
                                 'label': corp.get_conf(n + '.LABEL')}
                                for n in availstruct if n and n != '#']
-
+        out['base_viewattr'] = self.args.base_viewattr
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.args.refs.split(',') if self.args.refs else []
         structattrs = defaultdict(list)
@@ -119,7 +119,7 @@ class Options(Kontext):
                                 setrefs=setrefs,
                                 setstructattrs=setstructattrs)
         self._save_options(['attrs', 'attr_vmode', 'attr_allpos', 'ctxattrs', 'structs',
-                            'refs', 'structattrs'], self.args.corpname)
+                            'refs', 'structattrs', 'base_viewattr'], self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_mapped_attrs(
                 WidectxArgsMapping, dict(structs=self._get_struct_opts())))

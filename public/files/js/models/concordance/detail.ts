@@ -18,6 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Action, IFullActionControl } from 'kombo';
+import { Observable, of as rxOf, forkJoin } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
+import * as Immutable from 'immutable';
+
 import {MultiDict, importColor} from '../../util';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
@@ -26,10 +31,7 @@ import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
-import * as Immutable from 'immutable';
-import { Action, IFullActionControl } from 'kombo';
-import { Observable, of as rxOf, forkJoin } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { ActionName as ViewOptionsActionName } from '../options/structsAttrs';
 
 /**
  *
@@ -419,6 +421,10 @@ export class ConcDetailModel extends StatefulModel {
                         this.emitChange();
                     }
                 break;
+                case ViewOptionsActionName.SaveSettingsDone:
+                    this.wideCtxGlobals = action.payload['widectxGlobals'];
+                    this.emitChange();
+                break;
             }
         });
     }
@@ -585,10 +591,6 @@ export class ConcDetailModel extends StatefulModel {
         return mergeOverlaps(tmp);
     }
 
-    setWideCtxGlobals(data:Array<[string, string]>):void {
-        this.wideCtxGlobals = data;
-    }
-
     /**
      *
      */
@@ -691,7 +693,7 @@ export class ConcDetailModel extends StatefulModel {
         }
 
         if (structs) {
-            args.set('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));
+            args.set('structs', (args.head('structs') || '').split(',').concat(structs).join(','));
         }
 
         if (expand === 'left') {

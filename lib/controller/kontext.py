@@ -370,7 +370,7 @@ class Kontext(Controller):
             data = self.session_get('settings')
             if not data:
                 data = {}
-        return [x for x in list(data.items()) if x[0] != 'queryselector']
+        return [x for x in data.items() if x[0] != 'queryselector']
 
     def _load_user_settings(self):
         """
@@ -415,7 +415,7 @@ class Kontext(Controller):
         settings of other corpora. Otherwise, no action is performed.
         """
         ans = {}
-        for k, v in list(options.items()):
+        for k, v in options.items():
             # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
             tokens = k.rsplit(':', 1)
             if len(tokens) == 2:
@@ -1164,7 +1164,9 @@ class Kontext(Controller):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
-        It is called after an action is processed but before any output starts
+        It is called after an action is processed but before any output starts.
+        Please note that self.args mapping is not exported here even though some of the values
+        from self.args are used here in specific ways.
         """
         super(Kontext, self).add_globals(result, methodname, action_metadata)
         result['corpus_ident'] = {}

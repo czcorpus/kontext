@@ -74,6 +74,8 @@ export interface LinesViews {
     ConcLines:React.ComponentClass<ConcLinesProps>;
 }
 
+const ATTR_SEPARATOR = ' / ';
+
 
 export function init({dispatcher, he, lineModel, lineSelectionModel,
                 concDetailModel}:LinesModuleArgs):LinesViews {
@@ -178,36 +180,18 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         supportsTokenConnect:boolean;
         data: {
             className:string;
-            tailPosAttrs:Array<string>;
-            text:Array<string>;
+            text:Array<string>; // array => multiple words per 'pseudo-position'
+            tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
         };
         attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
-
-        const hasClass = (cls) => {
+        const hasClass = (cls:string) => {
             return props.data.className.indexOf(cls) > -1;
         };
 
-        const mkKey = () => {
-            return `${props.position}:${props.idx}`;
-        };
-
-        const mkTokenId = (i) => {
+        const mkTokenId = (i:number) => {
             return props.kwicTokenNum + props.chunkOffset + i;
-        };
-
-        const splitTokens = () => {
-            const ans = [];
-            props.data.text.forEach((s, i) => {
-                if (i > 0) {ans.push(' ')}
-                ans.push(<React.Fragment key={`${props.position}:${props.idx}:${i}`}>
-                    <mark className={props.supportsTokenConnect ? 'active' : null} data-tokenid={mkTokenId(i)}>{s}</mark>
-                    {props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
-                        <span className="tail">{props.data.tailPosAttrs[i]}</span> : null}
-                </React.Fragment>)
-            });
-            return ans;
         };
 
         const tokenConnectInfo1 = props.supportsTokenConnect ?
@@ -215,15 +199,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         const tokenConnectInfo2 = props.supportsTokenConnect ?
                 `(${he.translate('concview__click_to_see_external_token_info')})` : '';
         const metadata = (props.data.tailPosAttrs || []);
-        const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenConnectInfo2}` : tokenConnectInfo1;
+        const tailAttrs = metadata.length > 0 ? `${metadata.join(ATTR_SEPARATOR)} ${tokenConnectInfo2}` : tokenConnectInfo1;
         if (props.data.className && props.data.text) {
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
-                    <em key={mkKey()} className={props.data.className} title={title}>
+                    <em className={props.data.className} title={props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? null :tailAttrs}>
                         {props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
                         <>
                             <span>{props.data.text.join(' ')}</span>
-                            <span className="tail">{props.data.tailPosAttrs.join(' ')}</span>
+                            <span className="tail">{tailAttrs}</span>
                         </> :
                         props.data.text.join(' ')}
                     </em>
@@ -232,13 +216,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             } else {
                 const s = props.data.text.join(' ');
                 return (
-                    <span key={mkKey()} className={s !== '' ? props.data.className : null} title={title}>
+                    <span className={s !== '' ? props.data.className : null} title={tailAttrs}>
                         {
                             props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
                                 s ?
                                     <>
                                         <span>{s}</span>
-                                        <span className="tail">{props.data.tailPosAttrs.join(' ')}</span>
+                                        <span className="tail">{props.data.tailPosAttrs.join(ATTR_SEPARATOR)}</span>
                                     </> :
                                     <span> </span> :
                                 s || ' '
@@ -249,8 +233,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         } else {
             return (
-                <span key={mkKey()} title={title}>
-                    {splitTokens()}
+                <span title={tailAttrs}>
+                {props.data.text.map((s, i) => (
+                    <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
+                        {i > 0 ? ' ' : null}
+                        <mark className={props.supportsTokenConnect ? 'active' : null} data-tokenid={mkTokenId(i)}>{s}</mark>
+                    </React.Fragment>
+                ))}
+                {props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
+                            <span className="tail">{props.data.tailPosAttrs.join(ATTR_SEPARATOR)}</span> : null}
                 </span>
             );
         }
@@ -380,7 +371,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
-        const mouseover = (props.item.tailPosAttrs || []).join(', ');
+        const mouseover = (props.item.tailPosAttrs || []).join(ATTR_SEPARATOR);
         const prevClosed = props.i > 0 ? props.itemList.get(props.i - 1) : props.prevBlockClosed;
 
         const renderFirst = () => {

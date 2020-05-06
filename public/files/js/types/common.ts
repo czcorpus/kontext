@@ -23,6 +23,7 @@ import { IEventEmitter } from 'kombo';
 import {CoreViews} from './coreViews';
 import { ObservablePrerequisite } from '../models/mainMenu';
 import { Observable } from 'rxjs';
+import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 
 /**
  *
@@ -361,7 +362,7 @@ export namespace Kontext {
     export interface LayoutModel {
         corpusInfoModel:ICorpusInfoModel,
         userInfoModel:IUserInfoModel,
-        corpusViewOptionsModel:ViewOptions.ICorpViewOptionsModel,
+        corpusViewOptionsModel:CorpusViewOptionsModel,
         generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;
         asyncTaskInfoModel:IAsyncTaskModel,
         mainMenuModel:IMainMenuModel;
@@ -403,7 +404,7 @@ export namespace Kontext {
      * It is mostly used to carry URL arguments.
      */
     export interface IMultiDict {
-        getFirst(key:string):string;
+        head(key:string):string;
         getList(key:string):Array<string>;
         set(key:string, value:number|boolean|string):void;
         replace(key:string, values:Array<string>):void;
@@ -695,6 +696,7 @@ export namespace ViewOptions {
         CurrStructAttrs:Array<string>;
         AvailRefs:Array<{n:string; sel:string; label:string}>;
         ShowConcToolbar:boolean;
+        BaseViewAttr:string;
     }
 
     export interface LoadOptionsResponse extends Kontext.AjaxResponse {
@@ -705,6 +707,7 @@ export namespace ViewOptions {
         fixed_attr:string;
         attr_allpos:string;
         attr_vmode:string;
+        base_viewattr:string;
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};
         CurrentAttrs:Array<string>;
@@ -712,10 +715,6 @@ export namespace ViewOptions {
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
         widectx_globals:Array<[string, string]>;
-    }
-
-    export interface ICorpViewOptionsModel {
-       addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
     }
 
     export interface IGeneralViewOptionsModel extends IEventEmitter {

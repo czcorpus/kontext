@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
-import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../models/options/structsAttrs';
+import { CorpusViewOptionsModel, CorpusViewOptionsModelState, ActionName } from '../../models/options/structsAttrs';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
@@ -52,6 +52,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         label:string;
         n:string;
         isSelected:boolean;
+        isLocked:boolean;
 
     }> = (props) => {
 
@@ -70,7 +71,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <label>
                     <input type="checkbox" name="setattrs" value={props.n}
                             checked={props.isSelected ? true : false}
-                            onChange={handleClick} />
+                            onChange={handleClick} disabled={props.isLocked} />
                     {props.label}
                 </label>
             </li>
@@ -132,9 +133,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <div className="AttributesTweaks">
-                <h3 className="label">
+                <h2 className="label">
                     {helpers.translate('options__attr_apply_header')}
-                </h3>
+                </h2>
                 <ul>
                     <li>
                         <label>
@@ -173,14 +174,48 @@ export function init({dispatcher, helpers, viewOptionsModel,
         );
     };
 
+    // ---------------------- <MainViewAttributeRadio /> ----------------------------
+
+    const MainViewAttributeRadio:React.SFC<{
+        attrList:Immutable.List<ViewOptions.AttrDesc>;
+        value:string;
+
+    }> = (props) => {
+
+        const handleChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch({
+                name: ActionName.SetBaseViewAttr,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <div className="MainViewAttributeRadio">
+                <ul>
+                    {props.attrList.map((item, i) => (
+                        <li key={`${i}:${item.n}`}>
+                            <label>
+                                <input type="radio" name="mainViewAttr" value={item.n} onChange={handleChange} checked={item.n === props.value} />
+                                {item.label}
+                            </label>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    };
+
     // ---------------------------- <AttributesCheckboxes /> ----------------------
 
     const AttributesCheckboxes:React.SFC<{
         attrList:Immutable.List<ViewOptions.AttrDesc>;
+        basePosAttr:string;
+        baseViewAttr:string;
         hasSelectAll:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
-        lockedPosAttrNotSelected:boolean;
 
     }> = (props) => {
 
@@ -193,30 +228,29 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <div className="AttributesCheckboxes checkbox-area">
-                <ul>
-                {props.attrList.map((item, i) => {
-                    return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
-                                        isSelected={item.selected} />;
-                })}
-                </ul>
-                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
-                {props.lockedPosAttrNotSelected ?
-                    <p className="warning">
-                        <img className="icon"
-                                src={helpers.createStaticUrl('img/warning-icon.svg')}
-                                alt={helpers.translate('global__warning_icon')} />
-                        {helpers.translate('options__remove_word_warning')}
-                    </p> :
-                    null
-                }
-                <hr />
-                <AttributesTweaks attrsVmode={props.attrsVmode}
-                        showConcToolbar={props.showConcToolbar} />
+                <h2 className="label">{helpers.translate('global__attrsel_group_pos_attrs')}</h2>
+                <div className="flex">
+                    <div>
+                        <h3>{helpers.translate('options__display_attributes')}</h3>
+                        <ul>
+                        {props.attrList.map((item, i) => {
+                            return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
+                                                isSelected={item.selected} isLocked={item.n === props.basePosAttr} />;
+                        })}
+                        </ul>
+                        <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                    </div>
+                    <div>
+                        <h3>{helpers.translate('options__display_use_for_text')}</h3>
+                        <MainViewAttributeRadio attrList={props.attrList} value={props.baseViewAttr} />
+                    </div>
+                </div>
+                    <AttributesTweaks attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
             </div>
         );
     };
 
-     // ---------------------------- <GeneralAttrList /> ----------------------
+    // ---------------------------- <GeneralAttrList /> ----------------------
 
      const AttrList:React.SFC<{
         ident:string;
@@ -439,6 +473,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasLoadedData:boolean;
         fixedAttr:string;
         attrList:Immutable.List<ViewOptions.AttrDesc>;
+        baseViewAttr:string;
+        basePosAttr:string;
         availStructs:Immutable.List<ViewOptions.StructDesc>;
         hasSelectAllAttrs:boolean;
         showConcToolbar:boolean;
@@ -450,10 +486,10 @@ export function init({dispatcher, helpers, viewOptionsModel,
         hasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
-        lockedPosAttrNotSelected:boolean;
         corpusUsesRTLText:boolean;
 
     }> = (props) => {
+
         if (props.hasLoadedData) {
             const items = Immutable.List([
                 {
@@ -476,10 +512,11 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
                             <AttributesCheckboxes
                                 attrList={props.attrList}
+                                basePosAttr={props.basePosAttr}
+                                baseViewAttr={props.baseViewAttr}
                                 hasSelectAll={props.hasSelectAllAttrs}
                                 attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar}
-                                lockedPosAttrNotSelected={props.lockedPosAttrNotSelected} />
+                                showConcToolbar={props.showConcToolbar} />
 
                             <StructsAndAttrsCheckboxes
                                 availStructs={props.availStructs}
@@ -523,6 +560,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
             <StructsAndAttrsForm
                     fixedAttr={props.fixedAttr}
                     attrList={props.attrList}
+                    basePosAttr={props.basePosAttr}
+                    baseViewAttr={props.baseViewAttr}
                     hasSelectAllAttrs={props.selectAllAttrs}
                     availStructs={props.structList}
                     structAttrs={props.structAttrs}
@@ -535,7 +574,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     showConcToolbar={props.showConcToolbar}
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}
-                    lockedPosAttrNotSelected={(props.attrList.find(v => v.locked) || {selected: false}).selected}
                     corpusUsesRTLText={props.corpusUsesRTLText} />
         </div>
     );

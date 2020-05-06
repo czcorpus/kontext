@@ -21,8 +21,8 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import { Action } from 'kombo';
-import { Observable, of as rxOf, interval, zip } from 'rxjs';
-import { expand, mergeMap, takeWhile, delay, concatMap, tap, take } from 'rxjs/operators';
+import { Observable, of as rxOf, zip } from 'rxjs';
+import { expand, mergeMap, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { KontextPage } from '../app/main';
 
 import {Kontext, TextTypes, ViewOptions} from '../types/common';
@@ -1008,6 +1008,9 @@ export class ViewPage {
             isShuffled: this.layoutModel.getConf<boolean>('ResultShuffled')
         };
         const lineViewProps:ViewConfiguration = {
+            basePosAttr: this.layoutModel.getConf<string>('baseAttr'),
+            baseViewAttr: this.layoutModel.getConcArgs().head('base_viewattr'),
+            activePosAttrs: this.layoutModel.getConcArgs().head('attrs').split(','),
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
             AttrAllpos: this.layoutModel.getConf<ViewOptions.PosAttrViewScope>('AttrAllpos'),
@@ -1076,10 +1079,6 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             s => this.layoutModel.translate(s)
         );
-        this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
-            (_) => this.viewModels.lineViewModel.updateOnCorpViewOptsChange());
-        this.layoutModel.getModels().corpusViewOptionsModel.addOnSave(
-            (data) => this.viewModels.concDetailModel.setWideCtxGlobals(data.widectx_globals));
         this.viewModels.lineSelectionModel = new LineSelectionModel(
                 this.layoutModel,
                 this.layoutModel.dispatcher,

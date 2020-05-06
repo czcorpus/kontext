@@ -583,7 +583,7 @@ class Kwic(object):
                 if item.get('class') == 'attr':
                     # TODO configurable delimiter
                     # a list is used for future compatibility
-                    prev['tail_posattrs'] = [item['str'].strip('/')]
+                    prev['tail_posattrs'] = item['str'].strip('/').split('/')
                     item['str'] = ''
                 prev = item
 
