@@ -218,7 +218,7 @@ class GlobalArgs(object):
     tag = Parameter[str]('')
     default_attr = Parameter[Optional[str]](None)
     save = Parameter[int](1)
-    async = Parameter[int](1)
+    asnc = Parameter[int](1)
     qmcase = Parameter[int](0)
     include_empty = Parameter[int](0)
     rlines = Parameter[str]('250')
