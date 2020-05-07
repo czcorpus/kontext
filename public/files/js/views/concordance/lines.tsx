@@ -398,7 +398,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 return (
                     <strong className={`${props.item.className}${canUseMultiLineAttrs(props.attrViewMode, props.item.tailPosAttrs) ? ' ml' : ''}`} title={mouseover}>
                         {props.item.text
-                            .map<[string, string]>((s, i) => [s, props.item.tailPosAttrs[i]])
+                            .map<[string, string]>((s,) => [s, props.item.tailPosAttrs.join(ATTR_SEPARATOR)])
                             .filter(([s,]) => s !== '')
                             .map(([s, tail], i) => (
                                 props.attrViewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE ?
