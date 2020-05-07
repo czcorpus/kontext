@@ -14,12 +14,12 @@
 
 
 class Config(object):
-    BROKER_URL = None
-    CELERY_RESULT_BACKEND = None
-    CELERY_TASK_SERIALIZER = 'json'
-    CELERY_RESULT_SERIALIZER = 'json'
-    CELERY_ACCEPT_CONTENT = ['json']
-    CELERY_TIMEZONE = None
+    broker_url = None
+    result_backend = None
+    task_serializer = 'json'
+    result_serializer = 'json'
+    accept_content = ['json']
+    timezone = None
 
 
 def is_celery_error(err):

@@ -48,13 +48,15 @@ def _init_backend_app(conf, fn_prefix):
             cconf = SourceFileLoader('celeryconfig', app_conf).load_module()
         else:
             cconf = Config()
-            cconf.BROKER_URL = conf.get('calc_backend', 'celery_broker_url')
-            cconf.CELERY_RESULT_BACKEND = conf.get('calc_backend', 'celery_result_backend')
-            cconf.CELERY_TASK_SERIALIZER = conf.get('calc_backend', 'celery_task_serializer')
-            cconf.CELERY_RESULT_SERIALIZER = conf.get('calc_backend', 'celery_result_serializer')
-            cconf.CELERY_ACCEPT_CONTENT = conf.get('calc_backend', 'celery_accept_content')
-            cconf.CELERY_TIMEZONE = conf.get('calc_backend', 'celery_timezone')
-        return celery.Celery('bgcalc', config_source=cconf)
+            cconf.broker_url = conf.get('calc_backend', 'celery_broker_url')
+            cconf.result_backend = conf.get('calc_backend', 'celery_result_backend')
+            cconf.task_serializer = conf.get('calc_backend', 'celery_task_serializer')
+            cconf.result_serializer = conf.get('calc_backend', 'celery_result_serializer')
+            cconf.accept_content = conf.get('calc_backend', 'celery_accept_content')
+            cconf.timezone = conf.get('calc_backend', 'celery_timezone')
+        app = celery.Celery('bgcalc')
+        app.config_from_object(cconf)
+        return app
     elif app_type == 'konserver':
         from bgcalc.konserver import KonserverApp, Config
 
