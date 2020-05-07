@@ -164,7 +164,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     }> = (props) => {
         const term = he.getHelpLink('term_coll_' + props.code);
-        return <th className="measure">
+        return <th className="row-hd">
             {
                 term ?
                 <layoutViews.Abbreviation
@@ -207,7 +207,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         return (
             <table className="CollMetricsSelection">
-                <tbody>
+                <thead>
                     <tr>
                         <td />
                         <th>
@@ -217,6 +217,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             {he.translate('coll__sort_by_th')}
                         </th>
                     </tr>
+                </thead>
+                <tbody>
                     {props.availCbgrfns.map((item, k) => {
                         return (
                             <tr key={`v_${k}`} className={props.cbgrfns.includes(k) ? 'selected' : null}>
@@ -227,7 +229,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                             checked={props.cbgrfns.includes(k)}
                                             readOnly={true} />
                                 </td>
-                                <td className={props.csortfn === k ? 'sort-sel is-sort' : 'sort-sel'}
+                                <td className={props.csortfn === k ? 'unique-sel is-selected' : 'unique-sel'}
                                         onClick={handleCheckboxClick(k)}>
                                     <input type="radio" value={k}
                                             checked={props.csortfn === k}
