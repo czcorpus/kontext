@@ -47,7 +47,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <PosAttributeItem /> ----------------------
 
-    const PosAttributeItem:React.SFC<{
+    const TDPosAttributeItem:React.SFC<{
         idx:number;
         label:string;
         n:string;
@@ -67,9 +67,11 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
         return (
-            <input type="checkbox" name="setattrs" value={props.n}
-                    checked={props.isSelected ? true : false}
-                    onChange={handleClick} disabled={props.isLocked} />
+            <td className={`display-chk${props.isLocked ? ' disabled' : ''}`} onClick={props.isLocked ? null : handleClick} >
+                <input type="checkbox" name="setattrs" value={props.n}
+                        checked={props.isSelected ? true : false}
+                        disabled={props.isLocked} />
+            </td>
         );
     };
 
@@ -113,14 +115,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <ul>
                     <li>
                         <label>
-                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
-                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
-                                    onChange={handleSelectChangeFn} />
-                            <span>{helpers.translate('options__vmode_switch_visible_2line')}</span>
-                        </label>
-                    </li>
-                    <li>
-                        <label>
                             <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_KWIC}
                                     checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC}
                                     onChange={handleSelectChangeFn} />
@@ -141,6 +135,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
                                     onChange={handleSelectChangeFn} />
                             <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
+                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
+                                    onChange={handleSelectChangeFn} />
+                            <span>{helpers.translate('options__vmode_switch_visible_2line')}</span>
                         </label>
                     </li>
                 </ul>
@@ -168,11 +170,11 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
 
-        const handleChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        const handlePrimaryAttrSel = (attr:string) => (evt:React.MouseEvent) => {
             dispatcher.dispatch({
                 name: ActionName.SetBaseViewAttr,
                 payload: {
-                    value: evt.target.value
+                    value: attr
                 }
             });
         };
@@ -194,12 +196,10 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 <th className="row-hd attr">
                                     {item.label}
                                 </th>
-                                <td className="display-chk">
-                                    <PosAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
-                                            isSelected={item.selected} isLocked={item.n === props.basePosAttr} />
-                                </td>
-                                <td className="unique-sel">
-                                    <input type="radio" name="mainViewAttr" value={item.n} onChange={handleChange} checked={item.n === props.baseViewAttr} />
+                                <TDPosAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
+                                        isSelected={item.selected} isLocked={item.n === props.basePosAttr} />
+                                <td className="unique-sel" onClick={handlePrimaryAttrSel(item.n)}>
+                                    <input type="radio" name="mainViewAttr" value={item.n} checked={item.n === props.baseViewAttr} />
                                 </td>
                             </tr>
                         ))}
