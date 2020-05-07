@@ -45,9 +45,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     const layoutViews = helpers.getLayoutViews();
 
-    // ---------------------------- <LiAttributeItem /> ----------------------
+    // ---------------------------- <PosAttributeItem /> ----------------------
 
-    const LiAttributeItem:React.SFC<{
+    const PosAttributeItem:React.SFC<{
         idx:number;
         label:string;
         n:string;
@@ -67,33 +67,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
         return (
-            <li>
-                <label>
-                    <input type="checkbox" name="setattrs" value={props.n}
-                            checked={props.isSelected ? true : false}
-                            onChange={handleClick} disabled={props.isLocked} />
-                    {props.label}
-                </label>
-            </li>
-        );
-    };
-
-    // ---------------------------- <LiFixedAttributeItem /> ----------------------
-
-    const LiFixedAttributeItem:React.SFC<{
-        n:string;
-        label:string;
-
-    }> = (props) => {
-
-        return (
-            <li>
-                <input type="hidden" name="setattrs" value={props.n} />
-                <label>
-                    <input type="checkbox" value={props.n} disabled checked />
-                    {props.label}
-                </label>
-            </li>
+            <input type="checkbox" name="setattrs" value={props.n}
+                    checked={props.isSelected ? true : false}
+                    onChange={handleClick} disabled={props.isLocked} />
         );
     };
 
@@ -101,15 +77,16 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     const SelectAll:React.SFC<{
         isSelected:boolean;
+        label?:string;
         onChange:(evt:React.ChangeEvent<{}>)=>void;
 
     }> = (props) => {
 
         return (
-            <label className="select-all">
+            <label>
                 <input className="select-all" type="checkbox"
                         onChange={props.onChange} checked={props.isSelected} />
-                {helpers.translate('global__select_all')}
+                {props.label ? props.label : helpers.translate('global__select_all')}
             </label>
         );
     };
@@ -133,9 +110,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <div className="AttributesTweaks">
-                <h2 className="label">
-                    {helpers.translate('options__attr_apply_header')}
-                </h2>
                 <ul>
                     <li>
                         <label>
@@ -174,39 +148,6 @@ export function init({dispatcher, helpers, viewOptionsModel,
         );
     };
 
-    // ---------------------- <MainViewAttributeRadio /> ----------------------------
-
-    const MainViewAttributeRadio:React.SFC<{
-        attrList:Immutable.List<ViewOptions.AttrDesc>;
-        value:string;
-
-    }> = (props) => {
-
-        const handleChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch({
-                name: ActionName.SetBaseViewAttr,
-                payload: {
-                    value: evt.target.value
-                }
-            });
-        };
-
-        return (
-            <div className="MainViewAttributeRadio">
-                <ul>
-                    {props.attrList.map((item, i) => (
-                        <li key={`${i}:${item.n}`}>
-                            <label>
-                                <input type="radio" name="mainViewAttr" value={item.n} onChange={handleChange} checked={item.n === props.value} />
-                                {item.label}
-                            </label>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        );
-    };
-
     // ---------------------------- <AttributesCheckboxes /> ----------------------
 
     const AttributesCheckboxes:React.SFC<{
@@ -226,26 +167,55 @@ export function init({dispatcher, helpers, viewOptionsModel,
             });
         };
 
+
+        const handleChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch({
+                name: ActionName.SetBaseViewAttr,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
         return (
-            <div className="AttributesCheckboxes checkbox-area">
-                <h2 className="label">{helpers.translate('global__attrsel_group_pos_attrs')}</h2>
-                <div className="flex">
-                    <div>
-                        <h3>{helpers.translate('options__display_attributes')}</h3>
-                        <ul>
-                        {props.attrList.map((item, i) => {
-                            return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
-                                                isSelected={item.selected} isLocked={item.n === props.basePosAttr} />;
-                        })}
-                        </ul>
-                        <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
-                    </div>
-                    <div>
-                        <h3>{helpers.translate('options__display_use_for_text')}</h3>
-                        <MainViewAttributeRadio attrList={props.attrList} value={props.baseViewAttr} />
-                    </div>
-                </div>
-                    <AttributesTweaks attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
+            <div className="AttributesCheckboxes">
+                <h2 className="label">{helpers.translate('options__which_attrs_show_hd')}</h2>
+                <table className="attr-selection">
+                    <thead>
+                        <tr>
+                            <th />
+                            <th>{helpers.translate('options__display_attributes')}</th>
+                            <th>{helpers.translate('options__display_use_for_text')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {props.attrList.map((item, i) => (
+                            <tr key={`${i}:${item.n}`}>
+                                <th className="row-hd attr">
+                                    {item.label}
+                                </th>
+                                <td className="display-chk">
+                                    <PosAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
+                                            isSelected={item.selected} isLocked={item.n === props.basePosAttr} />
+                                </td>
+                                <td className="unique-sel">
+                                    <input type="radio" name="mainViewAttr" value={item.n} onChange={handleChange} checked={item.n === props.baseViewAttr} />
+                                </td>
+                            </tr>
+                        ))}
+                        <tr className="func">
+                            <td />
+                            <td className="select-whole-col">
+                                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                            </td>
+                            <td />
+                        </tr>
+                    </tbody>
+                </table>
+                <h2 className="label">
+                    {helpers.translate('options__attr_apply_header')}
+                </h2>
+                <AttributesTweaks attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
             </div>
         );
     };
@@ -261,22 +231,24 @@ export function init({dispatcher, helpers, viewOptionsModel,
     }> = (props) => {
 
         return (
-            <div>
-                <ul>
-                    {props.items.map((item, i) => {
-                        return (
-                            <li key={i}>
-                                <label>
-                                    <input type="checkbox" name="structattrs" value={`${props.ident}.${item.n}`}
-                                        checked={item.selected} onChange={() => props.handleClick(item.n)} />
-                                    {'label' in item ? item.label : item.n}
-                                </label>
-                            </li>
-                        );
-                    })}
-                </ul>
+            <>
+                <div className="AttrList">
+                    <ul>
+                        {props.items.map((item, i) => {
+                            return (
+                                <li key={i}>
+                                    <label>
+                                        <input type="checkbox" name="structattrs" value={`${props.ident}.${item.n}`}
+                                            checked={item.selected} onChange={() => props.handleClick(item.n)} />
+                                        {'label' in item ? item.label : item.n}
+                                    </label>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
                 <SelectAll onChange={() => props.handleAllClick(props.ident)} isSelected={props.hasSelectAll} />
-            </div>
+            </>
         );
     };
 
@@ -335,7 +307,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                         {helpers.translate('options__rtl_text_warning')}
                     </p> :
                     null}
-                <div className="struct-groups checkbox-area">
+                <div className="struct-groups">
                     {props.availStructs.map((item) => (
                         <div key={item.n} className="group">
                             <label className="struct">
@@ -353,7 +325,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     ))}
                 </div>
                 <div className="select-all-structs-and-groups">
-                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                    <hr />
+                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll}
+                        label={helpers.translate('options__select_all_in_all_structs')} />
                 </div>
             </section>
         );
@@ -403,7 +377,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <section>
-                <div className="struct-groups checkbox-area">
+                <div className="struct-groups">
                     {props.availRefs.map(item =>
                         <div key={item.n} className="group">
                             <label className="struct">
@@ -421,7 +395,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     )}
                 </div>
                 <div className="select-all-structs-and-groups">
-                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                    <hr />
+                    <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll}
+                        label={helpers.translate('options__select_all_in_all_structs')} />
                 </div>
             </section>
         );

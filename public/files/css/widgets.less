@@ -496,86 +496,32 @@ fieldset.FieldsetOutputOptions {
 
     .StructsAndAttrsForm {
 
-        div.checkbox-area {
-
-            > div {
-                padding: 0em;
-            }
-
-            .flex {
-                display: flex;
-                flex-direction: row;
-                justify-content: start;
-                margin-bottom: 1.6em;
-
-                > div:not(:first-child) {
-                    margin-left: 1em;
-                    padding-left: 0.7em;
-                    border-style: solid;
-                    border-color: @color-frame-fieldset;
-                    border-width: 0 0 0 1px;
-                }
-            }
-
-            .MainViewAttributeRadio {
-                input[type="radio"] {
-                    display: inline-block;
-                    vertical-align: middle;
-                }
-            }
-
-            ul {
-                margin: 0;
-                padding: 0;
-                list-style-type: none;
-
-                li {
-                    margin: 0 0 0 1em;
-                    padding: 0.1em 0;
-                    line-height: 1.5em;
-
-                    input[type=checkbox] {
-                        margin-right: 0.4em;
-                        display: inline-block;
-                        vertical-align: middle;
-                    }
-                }
-            }
-
-            h2.label {
-                text-align: left;
-                font-size: 1.35em;
-                font-weight: bold;
-                margin: 1.2em 0 0.6em 0;
-            }
-
-            h3 {
-                font-size: 1.05em;
-                margin-top: 0;
-                margin-bottom: 0.3em;
-            }
-
-            p.warning {
-                max-width: 80%;
-                white-space: normal;
-
-                img.icon {
-                    display: inline-block;
-                    vertical-align: middle;
-                    padding-right: 0.4em;
-                    width: 1em;
-                    margin-bottom: 0.1em;
-                }
-            }
-        }
 
         .struct-groups {
 
             display: flex;
             align-items: flex-start;
+            align-items: stretch;
 
             div.group {
                 padding-left: 0.7em;
+                display: flex;
+                flex-direction: column;
+
+                .AttrList {
+                    flex-grow: 1;
+
+                    ul {
+                        margin-top: 0.2em;
+                        list-style-type: none;
+                        margin-left: 0;
+                        padding-left: 1.7em;
+
+                        li label input {
+                            vertical-align: middle;
+                        }
+                    }
+                }
             }
 
             div.group:not(:last-child) {
@@ -597,7 +543,12 @@ fieldset.FieldsetOutputOptions {
         }
 
         .select-all-structs-and-groups {
+            margin-top: 1.5em;
             text-align: center;
+
+            input {
+                vertical-align: middle;
+            }
         }
 
         .button-replace {
@@ -1132,6 +1083,9 @@ table.MLSingleLevelFields {
 
 .AttributesTweaks {
 
+    margin-left: 1.5em;
+    margin-bottom: 1.2em;
+
     h3 {
         margin-bottom: 0.4em;
     }
@@ -1161,13 +1115,14 @@ table.MLSingleLevelFields {
     margin-bottom: 2em;
 }
 
-table.CollMetricsSelection {
+table.CollMetricsSelection,
+.AttributesCheckboxes table.attr-selection {
     margin-left: 2em;
     border-spacing: 0;
     border-collapse: collapse;
 
     td.display-chk,
-    td.sort-sel {
+    td.unique-sel {
         cursor: pointer;
 
         input {
@@ -1175,16 +1130,18 @@ table.CollMetricsSelection {
         }
     }
 
-    tr:nth-child(1) th,
-    tr:nth-child(1) td {
+    thead tr th,
+    thead tr td,
+    tbody tr.func th,
+    tbody tr.func td {
         border: none;
     }
 
-    tr:nth-child(1) th {
+    thead tr th {
         color: @color-light-text;
     }
 
-    th, td {
+    tr th, td {
         border: 1px solid @color-light-text;
         padding: 0.3em 1em 0.3em 0.6em;
     }
@@ -1197,8 +1154,34 @@ table.CollMetricsSelection {
         text-align: center;
     }
 
-    tr td.sort-sel {
+    tr td.unique-sel {
         text-align: center;
+    }
+
+    th.row-hd {
+        text-align: left;
+        font-weight: normal;
+    }
+
+    td.select-whole-col {
+        padding-top: 0.4em;
+        vertical-align: middle;
+
+        input[type="checkbox"] {
+            vertical-align: middle;
+        }
+    }
+}
+
+.AttributesCheckboxes {
+
+    table.attr-selection {
+
+        margin-bottom: 1.3em;
+
+        th.attr {
+            color: @color-logo-pink;
+        }
     }
 }
 
