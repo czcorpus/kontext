@@ -71,7 +71,7 @@ class Backend(DatabaseBackend):
             'tc.id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
             'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
             'c.default_virt_keyboard as default_virt_keyboard, '
-            'c.default_base_viewattr, '
+            'c.default_view_opts, '
             'FROM kontext_corpus AS c '
             'LEFT JOIN kontext_ttdesc AS tc ON tc.id = c.ttdesc_id '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_id = c.id '

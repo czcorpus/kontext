@@ -22,6 +22,7 @@ from collections import OrderedDict, defaultdict
 import os
 import logging
 from typing import Dict, List, Tuple
+import json
 
 from controller import exposed
 import actions.user
@@ -255,7 +256,10 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.use_safe_font = row['use_safe_font']
             ans._description_cs = row['description_cs']
             ans._description_en = row['description_en']
-            ans.default_base_viewattr = row['default_base_viewattr']
+            try:
+                ans.default_view_opts = json.loads(row['default_view_opts']) if row['default_view_opts'] else {}
+            except Exception as ex:
+                logging.getLogger(__name__).warning(f'Failed to load default view opts for {ans.id}: {ex}')
             ans.metadata.id_attr = row['id_attr']
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])

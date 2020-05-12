@@ -80,7 +80,7 @@ ALTER TABLE corpora
 	ADD COLUMN description_cs TEXT,
 	ADD COLUMN description_en TEXT,
 	ADD COLUMN default_virt_keyboard TEXT,
-	ADD COLUMN default_base_viewattr VARCHAR(255);
+	ADD COLUMN default_view_opts TEXT;
 
 ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
 
@@ -300,7 +300,6 @@ ALTER TABLE corpora ADD CONSTRAINT corpora_speech_overlap_attr_fkey FOREIGN KEY 
 ALTER TABLE corpora ADD CONSTRAINT corpora_bib_label_structattr_fkey FOREIGN KEY (name, bib_label_struct, bib_label_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name);
 ALTER TABLE corpora ADD CONSTRAINT corpora_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES  corpus_structattr(corpus_name, structure_name, name);
 ALTER TABLE corpora ADD CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc(id);
-
 
 
 /* THIS PROCEDURE IS A MOCK REPLACEMENT TO SIMULATE PRODUCTION ENVIRONMENT */

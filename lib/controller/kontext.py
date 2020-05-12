@@ -413,6 +413,7 @@ class Kontext(Controller):
         settings of other corpora. Otherwise, no action is performed.
         """
         ans = {}
+        ans.update(self.get_corpus_info(corpname).default_view_opts)
         for k, v in options.items():
             # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
             tokens = k.rsplit(':', 1)
@@ -420,14 +421,6 @@ class Kontext(Controller):
                 if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                     ans[tokens[1]] = v
         convert_types(options, self.clone_args(), selector=1)
-
-        if 'base_viewattr' not in ans:
-            ans['base_viewattr'] = self.get_corpus_info(corpname).default_base_viewattr
-            view_attrs = ans['attrs'].split(',') if 'attrs' in ans else [Kontext.BASE_ATTR]
-            if ans['base_viewattr'] not in view_attrs:
-                view_attrs.append(ans['base_viewattr'])
-                ans['attrs'] = ','.join(view_attrs)
-
         self.args.__dict__.update(ans)
 
     @staticmethod
