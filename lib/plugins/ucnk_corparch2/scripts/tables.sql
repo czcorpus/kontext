@@ -79,7 +79,8 @@ ALTER TABLE corpora
 	ADD COLUMN ttdesc_id INTEGER,
 	ADD COLUMN description_cs TEXT,
 	ADD COLUMN description_en TEXT,
-	ADD COLUMN default_virt_keyboard TEXT;
+	ADD COLUMN default_virt_keyboard TEXT,
+	ADD COLUMN default_base_viewattr VARCHAR(255);
 
 ALTER TABLE corpora ADD CONSTRAINT corpora_name_uniq UNIQUE (name);
 

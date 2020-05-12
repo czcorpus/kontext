@@ -1,0 +1,1 @@
+ALTER TABLE kontext_corpus ADD column default_base_viewattr TEXT;

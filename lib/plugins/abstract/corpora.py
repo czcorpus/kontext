@@ -196,6 +196,7 @@ class CorpusInfo(DictLike):
         self.token_connect: TokenConnect = TokenConnect()
         self.kwic_connect: KwicConnect = KwicConnect()
         self.manatee: ManateeCorpusInfo = ManateeCorpusInfo()
+        self.default_base_viewattr: str = 'word'
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

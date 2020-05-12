@@ -1,0 +1,1 @@
+ALTER TABLE corpora ADD column default_base_viewattr VARCHAR(255);

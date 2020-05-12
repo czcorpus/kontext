@@ -594,6 +594,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if kwic_connect_elm is not None:
             ans.kwic_connect.providers = [p.text for p in kwic_connect_elm.findall('provider')]
 
+        ans.default_base_viewattr = node.attrib.get('default_base_viewattr', 'word')
+
         self.customize_corpus_info(ans, node)
         data.append(ans)
         return ans
