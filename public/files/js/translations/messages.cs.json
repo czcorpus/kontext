@@ -346,7 +346,7 @@
         "query__type_hint_phrase": "vyhledá zadanou posloupnost slovních tvarů. Je možné použít regulární výrazy.",
         "query__type_hint_word": "Vyhledá přesně zadaný slovní tvar. Je možné použít regulární výrazy.",
         "query__type_hint_char": "Vyhledá po sobě následující znaky v rámci jednoho slova. Rozlišují se malá a velká písmena a je možné použít regulární výrazy.",
-        "query__type_hint_cql": "Komplexní dotazovací jazyk umožňující práci s veškerou anotací, která je pro daný korpus dostupná. Např. následující dotaz vyhledá dvě po sobě jdoucí pozice (slova) se zadanými hodnotami atributů a vyskytující se v jediné větě: <code>[atribut1=&quot;hodnota1&quot; &amp; atribut2=&quot;hodnota1&quot;] [atribut3=&quot;hodnota3&quot;] within &lt;s/&gt;</code>. Pro hodnoty atributů lze použít regulární výrazy.",
+        "query__type_hint_cql": "Komplexní dotazovací jazyk umožňující práci s veškerou anotací, která je pro daný korpus dostupná. Např. následující dotaz vyhledá dvě po sobě jdoucí pozice (slova) se zadanými hodnotami atributů a vyskytující se v jediné větě: <code>[atribut1=&quot;hodnota1&quot; &amp; atribut2=&quot;hodnota2&quot;] [atribut3=&quot;hodnota3&quot;] within &lt;s/&gt;</code>. Pro hodnoty atributů lze použít regulární výrazy.",
         "query__used_first_hits_struct": "Použitá struktura",
         "query__structure": "Struktura",
         "query__structattr": "Strukturní atribut",
