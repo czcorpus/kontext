@@ -20,6 +20,7 @@ import re
 import json
 from collections import defaultdict
 import time
+from typing import Dict, Any
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
@@ -164,7 +165,7 @@ class Actions(Querying):
         return attrpart + ctx
 
     @staticmethod
-    def _create_empty_conc_result_dict():
+    def _create_empty_conc_result_dict() -> Dict[str, Any]:
         """
         Create a minimal concordance result data required by the client-side app to operate properly.
         """

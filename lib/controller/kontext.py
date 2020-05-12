@@ -372,7 +372,7 @@ class Kontext(Controller):
                 data = {}
         return [x for x in data.items() if x[0] != 'queryselector']
 
-    def _load_user_settings(self):
+    def _load_user_settings(self, options: Dict[str, Any], corp_options: Dict[str, Any]):
         """
         Loads user settings via settings_storage plugin. The settings are divided
         into two groups:
@@ -382,8 +382,6 @@ class Kontext(Controller):
         returns:
         2-tuple of dicts ([general settings], [corpus dependent settings])
         """
-        options = {}
-        corp_options = {}
         for k, v in self._get_valid_settings():
             if ':' not in k:
                 options[k] = v
@@ -422,6 +420,14 @@ class Kontext(Controller):
                 if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                     ans[tokens[1]] = v
         convert_types(options, self.clone_args(), selector=1)
+
+        if 'base_viewattr' not in ans:
+            ans['base_viewattr'] = self.get_corpus_info(corpname).default_base_viewattr
+            view_attrs = ans['attrs'].split(',') if 'attrs' in ans else [Kontext.BASE_ATTR]
+            if ans['base_viewattr'] not in view_attrs:
+                view_attrs.append(ans['base_viewattr'])
+                ans['attrs'] = ','.join(view_attrs)
+
         self.args.__dict__.update(ans)
 
     @staticmethod
@@ -811,7 +817,9 @@ class Kontext(Controller):
         if action_metadata['apply_semi_persist_args']:
             self._apply_semi_persistent_args(form)
 
-        options, corp_options = self._load_user_settings()
+        options = {}
+        corp_options = {}
+        self._load_user_settings(options, corp_options)
         self._scheduled_actions(options)
         # only general setting can be applied now because
         # we do not know final corpus name yet
@@ -827,6 +835,7 @@ class Kontext(Controller):
         # because the corpus name is already known
         if len(corpname) > 0:
             self._apply_corpus_user_settings(corp_options, corpname)
+        # now we apply args from URL (highest priority)
         self._map_args_to_attrs(form, named_args)
         # always prefer corpname returned by _check_corpus_access()
         setattr(self.args, 'corpname', corpname)

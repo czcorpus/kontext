@@ -255,6 +255,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             ans.use_safe_font = row['use_safe_font']
             ans._description_cs = row['description_cs']
             ans._description_en = row['description_en']
+            ans.default_base_viewattr = row['default_base_viewattr']
             ans.metadata.id_attr = row['id_attr']
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])
