@@ -147,10 +147,9 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             },
             [ActionName.ToggleAttribute]: (state, action) => {
                 const newState = this.copyState(state);
-                this.toggleAttribute(newState, action.payload['idx']);
                 const attr = newState.attrList.get(action.payload['idx']);
-                if (!attr.selected && attr.n === state.baseViewAttr) {
-                    newState.baseViewAttr = newState.attrList.get(0).n;
+                if (!attr.selected || attr.n !== state.baseViewAttr) {
+                    this.toggleAttribute(newState, action.payload['idx']);
                 }
                 return newState;
             },
@@ -265,6 +264,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     dispatch({
                         name: ActionName.DataReady
                     });
+                }
+            break;
+            case ActionName.ToggleAttribute:
+                const attr = state.attrList.get(action.payload['idx']);
+                if (attr.selected && attr.n === state.baseViewAttr) {
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('options__cannot_remove_attribute_set_as_main'));
                 }
             break;
         }

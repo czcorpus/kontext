@@ -67,10 +67,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
         };
 
         return (
-            <td className={`display-chk${props.isLocked ? ' disabled' : ''}`} onClick={props.isLocked ? null : handleClick} >
+            <td className={`display-chk`} onClick={handleClick} >
                 <input type="checkbox" name="setattrs" value={props.n}
-                        checked={props.isSelected ? true : false}
-                        disabled={props.isLocked} />
+                        checked={props.isSelected ? true : false} onChange={()=>undefined} />
             </td>
         );
     };
