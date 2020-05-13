@@ -879,12 +879,17 @@ a.speech-link:hover {
     td.lc > span.ml, td.rc > span.ml, td.kw > strong.ml, td > em.ml, td.par > span > span.ml, td.par > span > strong.ml {
         display: inline-flex;
         flex-direction: column;
+        justify-content: start;
         text-align: center;
 
         span.tail {
             color: @color-light-text;
             font-size: 0.9em;
             font-style: normal;
+        }
+
+        span.tail.attr {
+            font-weight: normal;
         }
     }
 

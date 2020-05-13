@@ -270,7 +270,6 @@ function importLines(data:Array<ServerLineData>, attrViewMode:ViewOptions.AttrVi
 
     data.forEach((item:ServerLineData, i:number) => {
         let line:Array<KWICSection> = [];
-
         line.push(new KWICSection(
             item.toknum,
             item.linenum,

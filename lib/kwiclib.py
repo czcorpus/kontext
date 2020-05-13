@@ -501,6 +501,19 @@ class Kwic(object):
     def speech_segment_has_audio(self, s):
         return s and s[1]
 
+    def postproc_text_chunk(self, tokens):
+        prev = {}
+        ans = []
+        for item in tokens:
+            if item.get('class') == 'attr':
+                # TODO configurable delimiter
+                # a list is used for future compatibility
+                prev['tail_posattrs'] = item['str'].strip('/').split('/')
+            else:
+                ans.append(item)
+            prev = item
+        return ans
+
     def kwiclines(self, args):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
@@ -572,20 +585,9 @@ class Kwic(object):
             rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
-            if args.attr_vmode == 'mouseover' or args.attr_vmode == 'multiline':
-                postproc_tokens = leftwords + kwicwords + rightwords
-            elif args.attr_vmode == 'mixed':
-                postproc_tokens = leftwords + rightwords
-            else:
-                postproc_tokens = []
-            prev = {}
-            for item in postproc_tokens:
-                if item.get('class') == 'attr':
-                    # TODO configurable delimiter
-                    # a list is used for future compatibility
-                    prev['tail_posattrs'] = item['str'].strip('/').split('/')
-                    item['str'] = ''
-                prev = item
+            leftwords = self.postproc_text_chunk(leftwords)
+            kwicwords = self.postproc_text_chunk(kwicwords)
+            rightwords = self.postproc_text_chunk(rightwords)
 
             if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)

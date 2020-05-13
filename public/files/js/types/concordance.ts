@@ -21,6 +21,13 @@
 import * as Immutable from 'immutable';
 
 
+export interface ConcToken {
+    className:string;
+    text:Array<string>; // array => multiple words per 'pseudo-position'
+    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
+}
+
+
 export class TextChunk {
     id:string;
     className:string;
