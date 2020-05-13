@@ -487,6 +487,7 @@
         "options__display_use_for_text": "Primary",
         "options__select_all_in_all_structs": "Select all in all structures",
         "options__which_attrs_show_hd": "Attributes to display",
+        "options__cannot_remove_attribute_set_as_main": "Cannot remove attribute currently set as the main one",
         "subcform__create_subcorpus": "Create subcorpus",
         "subcform__mode_attr_list": "Attribute list",
         "subcform__mode_raw_within": "Custom 'within' condition",
