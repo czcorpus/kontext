@@ -535,7 +535,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private hasSelectedAllStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
-        return state.structAttrs.get(structIdent).every(item => item.selected);
+        return state.structAttrs.has(structIdent) && state.structAttrs.get(structIdent).every(item => item.selected);
     }
 
     private hasSelectedAllStructs(state:CorpusViewOptionsModelState):boolean {
@@ -652,7 +652,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
         state.structList = Immutable.List(
             data.AvailStructs
-                .filter(item => state.structAttrs.has(item.n))
                 .map(item => ({
                     label: item.label,
                     n: item.n,
@@ -661,6 +660,11 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
                 }))
         );
+        data.AvailStructs.forEach(struct => {
+            if (!state.structAttrs.has(struct.n)) {
+                state.structAttrs = state.structAttrs.set(struct.n, Immutable.List());
+            }
+        });
 
         state.refAttrs = Immutable.List(data.AvailRefs).groupBy(value => value.n.split('.')[0].replace('=', '')).map(item => item.map(value => {
             return {
