@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-All the custom sessions must inherit from werkzeug.contrib.sessions.Session
+All the custom sessions must inherit from secure_cookie.session.Session
 and implement the interface of this class.
 """
 

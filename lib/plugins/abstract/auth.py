@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
-from werkzeug.contrib.sessions import Session
+from secure_cookie.session import Session
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginApi

@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 """
-A session handler compatible with werkzeug.contrib.sessions.SessionStore.
+A session handler compatible with secure_cookie.session.SessionStore.
 It uses a general_storage.KeyValueStorage as its backend (currently default_db and redis_db modules).
 
 The plug-in implements
@@ -49,7 +49,7 @@ import uuid
 import hashlib
 import random
 
-from werkzeug.contrib.sessions import SessionStore, Session
+from secure_cookie.session import SessionStore, Session
 
 import plugins
 from plugins import inject

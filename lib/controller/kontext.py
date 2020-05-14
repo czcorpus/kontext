@@ -104,7 +104,7 @@ class RequestArgsProxy(object):
     mapping.
     """
 
-    def __init__(self, form: werkzeug.MultiDict, args: werkzeug.MultiDict):
+    def __init__(self, form: werkzeug.datastructures.MultiDict, args: werkzeug.datastructures.MultiDict):
         self._form = form
         self._args = args
         self._forced = defaultdict(lambda: [])
