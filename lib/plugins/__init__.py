@@ -18,7 +18,7 @@
 
 from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING
 from types import ModuleType
-from werkzeug.contrib.sessions import Session
+from secure_cookie.session import Session
 from .abstract.general_storage import KeyValueStorage
 from .abstract.settings_storage import AbstractSettingsStorage
 from .abstract.conc_persistence import AbstractConcPersistence

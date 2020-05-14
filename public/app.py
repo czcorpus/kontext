@@ -279,9 +279,9 @@ if settings.is_debug_mode():
     application = DebuggedApplication(application)
     # profiling
     if settings.debug_level() == settings.DEBUG_AND_PROFILE:
-        from werkzeug.contrib.profiler import ProfilerMiddleware, MergeStream
-        stream = MergeStream(sys.stdout, open(settings.get('global', 'profile_log_path'), 'w'))
-        application = ProfilerMiddleware(application, stream)
+        from werkzeug.middleware.profiler import ProfilerMiddleware
+        application = ProfilerMiddleware(application, sys.stdout)
+        application = ProfilerMiddleware(application, open(settings.get('global', 'profile_log_path'), 'w'))
 
 
 if __name__ == '__main__':
