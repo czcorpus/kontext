@@ -574,7 +574,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
         state.structList = Immutable.List(
             data.AvailStructs
-                .filter(item => state.structAttrs.has(item.n))
                 .map(item => ({
                     label: item.label,
                     n: item.n,
@@ -583,6 +582,11 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     selectAllAttrs: this.hasSelectedAllStructAttrs(state, item.n),
                 }))
         );
+        data.AvailStructs.forEach(struct => {
+            if (!state.structAttrs.has(struct.n)) {
+                state.structAttrs = state.structAttrs.set(struct.n, Immutable.List());
+            }
+        });
 
         state.refAttrs = Immutable.List(data.AvailRefs).groupBy(value => value.n.split('.')[0].replace('=', '')).map(item => item.map(value => {
             return {
@@ -601,9 +605,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 locked: false,
             }
         }).toList();
- 
-        state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
 
+        state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
         state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);
