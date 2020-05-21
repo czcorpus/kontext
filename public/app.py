@@ -281,12 +281,14 @@ if settings.is_debug_mode():
     if settings.debug_level() == settings.DEBUG_AND_PROFILE:
         from werkzeug.middleware.profiler import ProfilerMiddleware
         application = ProfilerMiddleware(application, sys.stdout)
-        application = ProfilerMiddleware(application, open(settings.get('global', 'profile_log_path'), 'w'))
+        profile_log_path = settings.get('global', 'profile_log_path')
+        if profile_log_path:
+            application = ProfilerMiddleware(application, open(profile_log_path), 'w')
 
 
 if __name__ == '__main__':
     from werkzeug.serving import run_simple
-    from werkzeug.wsgi import SharedDataMiddleware
+    from werkzeug.middleware.shared_data import SharedDataMiddleware
     import argparse
 
     DEFAULT_PORT = 5000
