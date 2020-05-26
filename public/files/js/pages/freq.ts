@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as Immutable from 'immutable';
 import {Kontext, TextTypes} from '../types/common';
 import {PluginInterfaces} from '../types/plugins';
 import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
@@ -243,7 +244,7 @@ class FreqPage {
                     formType: Kontext.ConcFormTypes.QUERY,
                     actionPrefix: '',
                     allowCorpusSelection: false,
-                    tagHelperView: null,
+                    tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
                     queryStorageView: null,
                     liveAttrsView: null,
                     liveAttrsCustomTT: null,

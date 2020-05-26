@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
-import { Kontext, KeyCodes } from '../../types/common';
+import { Kontext } from '../../types/common';
 import { AppendQueryInputAction, SetQueryInputAction } from '../../models/query/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
@@ -29,7 +29,7 @@ export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
-    views:Immutable.Map<string, any>) {
+    widgetViews:Immutable.Map<string, any>) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -101,13 +101,17 @@ export function init(
             if (evt.target.value === 'reset') {
                 dispatcher.dispatch({
                     name: 'TAGHELPER_RESET',
-                    payload: {}
+                    payload: {
+                        sourceId: props.sourceId
+                    }
                 });
 
             } else if (evt.target.value === 'undo') {
                 dispatcher.dispatch({
                     name: 'TAGHELPER_UNDO',
-                    payload: {}
+                    payload: {
+                        sourceId: props.sourceId
+                    }
                 });
 
             } else if (evt.target.value === 'insert') {
@@ -135,7 +139,9 @@ export function init(
                 }
                 dispatcher.dispatch({
                     name: 'TAGHELPER_RESET',
-                    payload: {}
+                    payload: {
+                        sourceId: props.sourceId
+                    }
                 });
                 if (typeof props.onInsert === 'function') {
                     props.onInsert();
@@ -165,12 +171,13 @@ export function init(
         componentDidMount() {
             dispatcher.dispatch({
                 name: 'TAGHELPER_GET_INITIAL_DATA',
-                payload: {}
+                payload: {
+                    sourceId: this.props.sourceId
+                }
             });
         }
 
         render() {
-
             return (
                 <div>
                     <this.props.activeView {...this.props} />
@@ -203,13 +210,13 @@ export function init(
             });
         };
 
-        const tagsetTabs = views.keySeq().map(tagset => {
+        const tagsetTabs = widgetViews.keySeq().map(tagset => {
             return {
                 id: tagset,
                 label: tagset,}
         }).toList();
 
-        const children = views.entrySeq().map(tagset => {
+        const children = widgetViews.entrySeq().map(tagset => {
             const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
             return <TagBuilderBound
                         key={tagset[0]}

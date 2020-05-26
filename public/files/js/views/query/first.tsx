@@ -57,7 +57,7 @@ export interface QueryFormProps {
     formType:Kontext.ConcFormTypes.QUERY;
     actionPrefix:string;
     allowCorpusSelection:boolean;
-    tagHelperView:PluginInterfaces.TagHelper.View;
+    tagHelperViews:Immutable.Map<string, PluginInterfaces.TagHelper.View>;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
@@ -331,7 +331,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 defaultAttr={this.state.defaultAttrValues.get(primaryCorpname)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrls.get(primaryCorpname)}
-                                tagHelperView={this.props.tagHelperView}
+                                tagHelperView={this.props.tagHelperViews.get(primaryCorpname)}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
                                 actionPrefix={this.props.actionPrefix}
@@ -359,7 +359,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 queryStorageView={this.props.queryStorageView}
                                 hasLemmaAttr={this.state.hasLemmaAttr}
                                 useCQLEditor={this.state.useCQLEditor}
-                                tagHelperView={this.props.tagHelperView}
+                                tagHelperViews={this.props.tagHelperViews}
                                 onEnterKey={this._handleSubmit} />
                         : null
                     }

@@ -23,6 +23,7 @@ import * as Immutable from 'immutable';
 import {PositionValue, PositionOptions, TagHelperModelState} from './models';
 import {Kontext, KeyCodes} from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
+import { ConcSortModel } from '../../../models/query/sort';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
@@ -119,13 +120,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const PositionLine:React.SFC<{
                 clickHandler:(lineIdx:number, isActive:boolean)=>void;
                 lineIdx:number;
-                isActive:boolean;
                 position:PositionOptions;
                 checkboxHandler:CheckboxHandler;
             }> = (props) => {
 
         const clickHandler = () => {
-            props.clickHandler(props.lineIdx, props.isActive);
+            props.clickHandler(props.lineIdx, props.position.isActive);
         };
 
         const getAvailableChildren = () => {
@@ -133,7 +133,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         };
 
         let linkClass = 'switch-link';
-        if (props.isActive) {
+        if (props.position.isActive) {
             linkClass += ' active';
 
         } else if (props.position['locked']) {
@@ -146,9 +146,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                     <span className="pos-num">{props.lineIdx + 1})</span> {props.position['label']}
                     <span className="status-text">[ {getAvailableChildren().size} ]</span>
                 </a>
-                {props.isActive ?
+                {props.position.isActive ?
                 <ValueList positionValues={getAvailableChildren()}
-                            isLocked={props.position.locked}
+                            isLocked={props.position.isLocked}
                             lineIdx={props.lineIdx}
                             checkboxHandler={props.checkboxHandler} /> : null }
             </li>
@@ -157,36 +157,30 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <PositionList /> ----------------------------
 
-    class PositionList extends React.Component<{
-                stateId:string;
-                positions:Immutable.List<PositionOptions>;
-                checkboxHandler:CheckboxHandler;
-            },
-            {
-                activeRow:number;
-            }> {
+    const PositionList:React.SFC<{
+        sourceId:string;
+        positions:Immutable.List<PositionOptions>;
+        checkboxHandler:CheckboxHandler;
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._lineClickHandler = this._lineClickHandler.bind(this);
-            this.state = {activeRow: null};
-        }
+        const lineClickHandler = (idx:number) => () => {
+            dispatcher.dispatch({
+                name: 'TAGHELPER_TOGGLE_ACTIVE_POSITION',
+                payload: {
+                    sourceId: props.sourceId,
+                    idx: idx
+                }
+            });
+        };
 
-        _lineClickHandler(clickedRow, isActive) {
-            this.setState({activeRow: isActive ? null : clickedRow});
-        }
-
-        render() {
-            return (
-                <ul className="defaultTaghelper_PositionList">
-                    {this.props.positions.map(
-                        (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
-                                                    lineIdx={i} clickHandler={this._lineClickHandler}
-                                                    isActive={i === this.state.activeRow}
-                                                    checkboxHandler={this.props.checkboxHandler} />)}
-                </ul>
-            );
-        }
+        return (
+            <ul className="defaultTaghelper_PositionList">
+                {props.positions.map(
+                    (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
+                                                lineIdx={i} clickHandler={lineClickHandler(i)}
+                                                checkboxHandler={props.checkboxHandler} />)}
+            </ul>
+        );
     }
 
     // ------------------------------ <TagBuilder /> ----------------------------
@@ -197,6 +191,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             dispatcher.dispatch({
                 name: 'TAGHELPER_CHECKBOX_CHANGED',
                 payload: {
+                    sourceId: props.corpname,
                     position: lineIdx,
                     value: value,
                     checked: checked
@@ -210,10 +205,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         return (
             <div>
-                <input type="text" className="postag-display-box" value={props.generatedQuery} readOnly />;
+                <input type="text" className="postag-display-box" value={props.generatedQuery} readOnly />
                 <PositionList
                     positions={props.positions}
-                    stateId={props.stateId}
+                    sourceId={props.corpname}
                     checkboxHandler={checkboxHandler} />
             </div>
         );
