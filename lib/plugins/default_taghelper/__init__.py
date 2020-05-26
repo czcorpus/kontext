@@ -125,7 +125,7 @@ class Taghelper(AbstractTaghelper):
 
     def export(self, plugin_api):
         tagsets = {}
-        for corp in ([plugin_api.current_corpus.corpname] + plugin_api.aligned_corpora):
+        for corp in ([plugin_api.current_corpus.corpname] + plugin_api.available_aligned_corpora):
             info = self._corparch.get_corpus_info(
                 plugin_api.user_lang, corp)
             for tagset in info.tagsets:
