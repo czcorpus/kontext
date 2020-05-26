@@ -103,6 +103,13 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
     class FeatureSelect extends React.Component<FeatureSelectProps> {
 
+        constructor(props) {
+            super(props);
+            this.handleCheckboxChange = this.handleCheckboxChange.bind(this);
+            this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
+            this.handleCategorySelect = this.handleCategorySelect.bind(this);
+        }
+
         handleCheckboxChange(event) {
             if (event.target.checked) {
                 dispatcher.dispatch({

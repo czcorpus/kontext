@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-import pickle
+import json
 from collections import defaultdict
 
 from plugins.abstract.taghelper import AbstractTagsetInfoLoader
@@ -34,7 +34,10 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
 
     def _initialize_tags(self):
         with open(self.variants_file_path, 'r') as f:
-            self.initial_values = pickle.load(f)
+            self.initial_values = json.load(f)
+            for item in self.initial_values:
+                for i, v in enumerate(item):
+                    item[i] = tuple(v)
 
     def get_variant(self, filter_values, lang):
         if self.initial_values is None:
@@ -76,10 +79,10 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
             # for this we use set intersection
             possible_keyval_indexed = defaultdict(set)
             for variation in variations:
-                index = tuple(sorted([x for x in variation if x[0] in filter_values]))
+                index = tuple(sorted(x for x in variation if x[0] in filter_values))
                 values = set([x for x in variation if x[0] not in filter_values])
                 possible_keyval_indexed[index].update(values)
-            possible_keyval = set.intersection(*list(possible_keyval_indexed.values()))
+            possible_keyval = set.intersection(*possible_keyval_indexed.values())
 
             # transformation to dict of lists
             possible_values = defaultdict(list)
