@@ -210,11 +210,13 @@ export function init(
             });
         };
 
-        const tagsetTabs = widgetViews.keySeq().map(tagset => {
-            return {
-                id: tagset,
-                label: tagset,}
-        }).toList();
+        const tagsetTabs = widgetViews.keySeq()
+            .map(
+                tagset => ({
+                    id: tagset,
+                    label: tagset
+                })
+            ).toList();
 
         const children = widgetViews.entrySeq().map(tagset => {
             const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);

@@ -337,7 +337,10 @@ export class FirstFormPage {
             const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
             ttAns.queryStorageView = qsPlugin.getWidgetView();
 
-            const tagBuilderCorpora = [this.layoutModel.getCorpusIdent().id, ...this.layoutModel.getConf<Array<string>>('alignedCorpora')];
+            const tagBuilderCorpora = [
+                this.layoutModel.getCorpusIdent().id,
+                ...this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora').map(v => v.n)
+            ];
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             ttAns.tagHelperViews = Immutable.Map(
                 (this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagBuilderCorpora : [])
