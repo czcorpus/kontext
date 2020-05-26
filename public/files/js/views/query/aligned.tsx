@@ -52,7 +52,7 @@ export interface AlignedCorporaProps {
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     hasLemmaAttr:Immutable.Map<string, boolean>;
     useCQLEditor:boolean;
-    tagHelperView:PluginInterfaces.TagHelper.View;
+    tagHelperViews:Immutable.Map<string, PluginInterfaces.TagHelper.View>;
     onEnterKey:()=>void;
 }
 
@@ -213,7 +213,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         defaultAttr={props.defaultAttrValues.get(item)}
                         attrList={props.attrList}
                         tagsetDocUrl={props.tagsetDocUrls.get(item)}
-                        tagHelperView={props.tagHelperView}
+                        tagHelperView={props.tagHelperViews.get(item)}
                         pcqPosNegValue={props.pcqPosNegValues.get(item)}
                         includeEmptyValue={props.includeEmptyValues.get(item)}
                         inputLanguage={props.inputLanguages.get(item)}

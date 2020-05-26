@@ -45,7 +45,6 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         let views:Immutable.OrderedMap<string, any> = Immutable.Map();
         let models:Immutable.OrderedMap<string, StatelessModel<TagBuilderBaseState>> = Immutable.Map();
         for (const tagsetInfo of tagsets) {
-
             switch (tagsetInfo.type) {
                 case 'positional':
                     const positions = Immutable.List<PositionOptions>();
@@ -63,8 +62,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                             rawPattern: '.*',
                             generatedQuery: `${tagsetInfo.featAttr}=".*"`,
                             isBusy: false,
-                            canUndo: false,
-                            stateId: ''
+                            canUndo: false
                         },
                         tagsetInfo.ident
                     ));

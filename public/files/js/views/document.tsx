@@ -745,7 +745,7 @@ export function init(
     };
 
     const TabView:CoreViews.TabView.Component = (props) => {
-        if (props.items.size===1) {
+        if (props.items.size === 1) {
             return <div>{props.children[0]}</div>
         } else {
             const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);

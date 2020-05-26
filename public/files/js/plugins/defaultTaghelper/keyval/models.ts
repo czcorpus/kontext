@@ -23,6 +23,7 @@ import { TagBuilderBaseState } from '../common';
 
 
 export interface FeatureSelectProps {
+    sourceId:string;
     error:Error|null;
     allFeatures:Immutable.Map<string, Immutable.List<string>>;
     availableFeatures:Immutable.Map<string, Immutable.List<string>>;
@@ -81,88 +82,113 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
     private readonly pluginApi:IPluginApi;
 
-    private ident:string;
+    private readonly ident:string;
+
+    private readonly sourceId:string;
 
     constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.ident = ident;
+        this.sourceId = initialState.corpname;
         this.actionMatch = {
             'TAGHELPER_SELECT_CATEGORY': (state, action) => {
-                const newState = this.copyState(state);
-                newState.showCategory = action.payload['value'];
-                return newState;
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    newState.showCategory = action.payload['value'];
+                    return newState;
+                }
+                return state;
             },
             'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    newState.isBusy = true;
+                    return newState;
+                }
             },
             'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
-                const newState = this.copyState(state);
-                if (!action.error) {
-                    newState.allFeatures = Immutable.fromJS(action.payload['result']);
-                    newState.availableFeatures = newState.allFeatures;
-                    newState.showCategory = newState.allFeatures.keySeq().sort().first()
-                } else {
-                    newState.error = action.error;
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    if (!action.error) {
+                        newState.allFeatures = Immutable.fromJS(action.payload['result']);
+                        newState.availableFeatures = newState.allFeatures;
+                        newState.showCategory = newState.allFeatures.keySeq().sort().first()
+                    } else {
+                        newState.error = action.error;
+                    }
+                    newState.isBusy = false;
+                    return newState;
                 }
-                newState.isBusy = false;
-                return newState;
+                return state;
             },
             'TAGHELPER_GET_FILTERED_DATA_DONE': (state, action) => {
-                const newState = this.copyState(state);
-                if (!action.error) {
-                    newState.availableFeatures = Immutable.fromJS(action.payload['result']);
-                } else {
-                    newState.error = action.error;
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    if (!action.error) {
+                        newState.availableFeatures = Immutable.fromJS(action.payload['result']);
+                    } else {
+                        newState.error = action.error;
+                    }
+                    newState.isBusy = false;
+                    return newState;
                 }
-                newState.isBusy = false;
-                return newState;
+                return state;
             },
             'TAGHELPER_ADD_FILTER': (state, action) => {
-                const newState = this.copyState(state);
-                const filter = new FilterRecord(action.payload);
-                const filterFeatures = newState.filterFeaturesHistory.last();
-                newState.isBusy = true;
-                if (filterFeatures.every(x => !x.equals(filter))) {
-                    const newFilterFeatures = filterFeatures.push(filter);
-                    newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(newFilterFeatures);
-                    newState.canUndo = true;
-                    newState.generatedQuery = composeQuery(newState);
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    const filter = new FilterRecord(action.payload);
+                    const filterFeatures = newState.filterFeaturesHistory.last();
+                    newState.isBusy = true;
+                    if (filterFeatures.every(x => !x.equals(filter))) {
+                        const newFilterFeatures = filterFeatures.push(filter);
+                        newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(newFilterFeatures);
+                        newState.canUndo = true;
+                        newState.generatedQuery = composeQuery(newState);
+                    }
+                    return newState;
                 }
-                return newState;
+                return state;
             },
             'TAGHELPER_REMOVE_FILTER': (state, action) => {
-                const newState = this.copyState(state);
-                const filter = new FilterRecord(action.payload);
-                const filterFeatures = newState.filterFeaturesHistory.last();
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    const filter = new FilterRecord(action.payload);
+                    const filterFeatures = newState.filterFeaturesHistory.last();
 
-                const newFilterFeatures = filterFeatures.filterNot((value) => value.equals(filter));
-                newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(Immutable.List(newFilterFeatures))
-                newState.canUndo = true;
-                newState.isBusy = true;
-                newState.generatedQuery = composeQuery(newState);
+                    const newFilterFeatures = filterFeatures.filterNot((value) => value.equals(filter));
+                    newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(Immutable.List(newFilterFeatures))
+                    newState.canUndo = true;
+                    newState.isBusy = true;
+                    newState.generatedQuery = composeQuery(newState);
 
-                return newState;
+                    return newState;
+                }
+                return state;
             },
             'TAGHELPER_UNDO': (state, action) => {
-                const newState = this.copyState(state);
-                newState.filterFeaturesHistory = newState.filterFeaturesHistory.delete(-1);
-                if (newState.filterFeaturesHistory.size===1) {
-                    newState.canUndo = false;
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    newState.filterFeaturesHistory = newState.filterFeaturesHistory.delete(-1);
+                    if (newState.filterFeaturesHistory.size===1) {
+                        newState.canUndo = false;
+                    }
+                    newState.isBusy = true;
+                    newState.generatedQuery = composeQuery(newState);
+                    return newState;
                 }
-                newState.isBusy = true;
-                newState.generatedQuery = composeQuery(newState);
-                return newState;
+                return state;
             },
             'TAGHELPER_RESET': (state, action) => {
-                const newState = this.copyState(state);
-                newState.filterFeaturesHistory = Immutable.List([Immutable.List([])]);
-                newState.availableFeatures = newState.allFeatures;
-                newState.canUndo = false;
-                newState.generatedQuery = composeQuery(newState);
-                return newState;
+                if (action.payload['sourceId'] === this.sourceId) {
+                    const newState = this.copyState(state);
+                    newState.filterFeaturesHistory = Immutable.List([Immutable.List([])]);
+                    newState.availableFeatures = newState.allFeatures;
+                    newState.canUndo = false;
+                    newState.generatedQuery = composeQuery(newState);
+                    return newState;
+                }
             }
         };
     }
@@ -170,50 +196,58 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
-                if (state.filterFeaturesHistory.size === 1) {
-                    getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
+                if (action.payload['sourceId'] === this.sourceId && state.filterFeaturesHistory.size === 1) {
+                    this.getFilteredFeatures(state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
                 }
             break;
 
             case 'TAGHELPER_ADD_FILTER':
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
-                getFilteredFeatures(this.pluginApi, state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+                if (action.payload['sourceId'] === this.sourceId) {
+                    this.getFilteredFeatures(state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+                }
             break;
             case 'TAGHELPER_SET_ACTIVE_TAG':
-                if (this.ident !== action.payload['value']) {
+                if (action.payload['sourceId'] === this.sourceId && this.ident !== action.payload['value']) {
                     this.suspend({}, (nextAction, syncObj) => this.ident === nextAction.payload['value'] ? null : syncObj);
                 }
             break;
         }
     }
 
-}
+    private getFilteredFeatures(state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone:string, useFilter:boolean) {
+        const baseArgs:Array<[string, string]> = [['corpname', state.corpname], ['tagset', state.tagsetName]];
+        const queryArgs:Array<[string, string]> = state.filterFeaturesHistory.last().map(x => x.getKeyval()).toArray();
 
-function getFilteredFeatures(pluginApi:IPluginApi, state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone:string, useFilter:boolean) {
-    const baseArgs:Array<[string, string]> = [['corpname', state.corpname], ['tagset', state.tagsetName]];
-    const queryArgs:Array<[string, string]> = state.filterFeaturesHistory.last().map(x => x.getKeyval()).toArray();
+        this.pluginApi.ajax$(
+            'GET',
+            this.pluginApi.createActionUrl(
+                'corpora/ajax_get_tag_variants',
+                useFilter ? baseArgs.concat(queryArgs) : baseArgs
+            ),
+            {}
 
-    pluginApi.ajax$(
-        'GET',
-        pluginApi.createActionUrl(
-            'corpora/ajax_get_tag_variants',
-            useFilter ? baseArgs.concat(queryArgs) : baseArgs
-        ),
-        {}
+        ).subscribe(
+            (result) => {
+                dispatch({
+                    name: actionDone,
+                    payload: {
+                        sourceId: this.sourceId,
+                        result: result['keyval_tags']
+                    }
+                });
+            },
+            (error) => {
+                dispatch({
+                    name: actionDone,
+                    error: error,
+                    payload: {
+                        sourceId: this.sourceId
+                    }
+                });
+            }
+        )
+    }
 
-    ).subscribe(
-        (result) => {
-            dispatch({
-                name: actionDone,
-                payload: {result: result['keyval_tags']}
-            });
-        },
-        (error) => {
-            dispatch({
-                name: actionDone,
-                error: error
-            });
-        }
-    )
 }

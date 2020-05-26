@@ -124,9 +124,13 @@ class Taghelper(AbstractTaghelper):
         return {corpora.Corpora: [ajax_get_tag_variants]}
 
     def export(self, plugin_api):
-        info = self._corparch.get_corpus_info(
-            plugin_api.user_lang, plugin_api.current_corpus.corpname)
-        return dict(corp_tagsets=[x.to_dict() for x in info.tagsets])
+        tagsets = {}
+        for corp in ([plugin_api.current_corpus.corpname] + plugin_api.aligned_corpora):
+            info = self._corparch.get_corpus_info(
+                plugin_api.user_lang, corp)
+            for tagset in info.tagsets:
+                tagsets[tagset.tagset_name] = tagset
+        return dict(corp_tagsets=[x.to_dict() for x in tagsets.values()])
 
 
 @plugins.inject(plugins.runtime.CORPARCH)

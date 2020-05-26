@@ -205,7 +205,7 @@ export class FirstFormPage {
             liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
             liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
             attributes: this.textTypesModel.getAttributes(),
-            tagHelperView: null,
+            tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
             queryStorageView: null,
             allowCorpusSelection: null,
             actionPrefix: null
@@ -330,20 +330,29 @@ export class FirstFormPage {
                 this.layoutModel
             );
             this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
-
-            const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
-            const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
+
             const ttAns = this.createTTViews();
-            ttAns.tagHelperView = this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ?
-                    tagHelperPlg.getWidgetView(
-                        this.layoutModel.getCorpusIdent().id,
-                        this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
-                    ) :
-                    null;
+
+            const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
             ttAns.queryStorageView = qsPlugin.getWidgetView();
+
+            const tagBuilderCorpora = [this.layoutModel.getCorpusIdent().id, ...this.layoutModel.getConf<Array<string>>('alignedCorpora')];
+            const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
+            ttAns.tagHelperViews = Immutable.Map(
+                (this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagBuilderCorpora : [])
+                .map(corpus => [
+                        corpus,
+                        tagHelperPlg.getWidgetView(
+                            corpus,
+                            this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                        )
+                ])
+            );
+
             ttAns.allowCorpusSelection = true;
             ttAns.actionPrefix = '';
+
             this.initQueryModel();
             const corparchWidget = this.initCorplistComponent();
             this.attachQueryForm(ttAns, corparchWidget);

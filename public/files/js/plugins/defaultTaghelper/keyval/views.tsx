@@ -107,7 +107,11 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             if (event.target.checked) {
                 dispatcher.dispatch({
                     name: 'TAGHELPER_ADD_FILTER',
-                    payload: {name: event.target.name, value: event.target.value}
+                    payload: {
+                        sourceId: this.props.sourceId,
+                        name: event.target.name,
+                        value: event.target.value
+                    }
                 });
             } else {
                 this.handleRemoveFilter(event);
@@ -117,14 +121,21 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         handleRemoveFilter(event) {
             dispatcher.dispatch({
                 name: 'TAGHELPER_REMOVE_FILTER',
-                payload: {name: event.target.name, value: event.target.value}
+                payload: {
+                    sourceId: this.props.sourceId,
+                    name: event.target.name,
+                    value: event.target.value
+                }
             });
         };
 
         handleCategorySelect(event) {
             dispatcher.dispatch({
                 name: 'TAGHELPER_SELECT_CATEGORY',
-                payload: {value: event.target.value}
+                payload: {
+                    sourceId: this.props.sourceId,
+                    value: event.target.value
+                }
             });
         }
 
