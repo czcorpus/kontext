@@ -1389,7 +1389,7 @@ class Actions(Querying):
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
         data = conclib.get_detail_context(
-            corp=self.corp, pos=pos, attrs=attrs, structs=self.args.structs)
+            corp=self.corp, pos=pos, attrs=attrs, structs=self.args.structs, hitlen=self.args.hitlen)
         if int(getattr(self.args, 'detail_left_ctx', 0)) >= int(data['maxdetail']):
             data['expand_left_args'] = None
         if int(getattr(self.args, 'detail_right_ctx', 0)) >= int(data['maxdetail']):
