@@ -208,12 +208,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         if (props.data.className === 'strc') {
             return <span className="strc">{props.data.text.join(' ')}</span>
 
-        } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER || props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
-            return (
-                <>
-                    <mark data-tokenid={props.tokenId} className={mkClass()}>{props.data.text.join(' ')}</mark>
-                </>
-            );
+        } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
+                props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
+            const title = props.data.tailPosAttrs.length > 0 ? props.data.tailPosAttrs.join(ATTR_SEPARATOR) : null;
+            return <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>{props.data.text.join(' ')}</mark>;
 
         } else {
             return (
@@ -221,10 +219,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     <mark data-tokenid={props.tokenId} className={mkClass()}>
                         {props.data.text.join(' ')}
                     </mark>
-                    <span className="tail attr" style={props.viewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && props.data.tailPosAttrs.length === 0 ? {display: 'none'} : null}>
-                        {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
-                        {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
-                    </span>
+                    {props.data.tailPosAttrs.length > 0 ?
+                        <span className="tail attr" style={props.viewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && props.data.tailPosAttrs.length === 0 ? {display: 'none'} : null}>
+                            {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
+                            {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
+                        </span> :
+                        null
+                    }
                 </>
             );
         }
@@ -243,6 +244,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
+
         const hasClass = (cls:string) => {
             return props.data.className.indexOf(cls) > -1;
         };
@@ -274,7 +276,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         } else {
             return (
             <>
-                {props.data.text.map((s) => ({text: [s], className: '', tailPosAttrs: []})).map((data, i) => (
+                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []})).map((data, i) => (
                     <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
                         {i > 0 ? ' ' : ''}
                         <span className={getViewModeClass(props.attrViewMode)}>
@@ -381,7 +383,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         attrViewMode:ViewOptions.AttrViewMode;
 
     }> = (props) => {
-
         return <>
             {props.i > 0 && props.itemList.get(props.i - 1).closeLink ?
                 <extras.AudioLink t="+" lineIdx={props.lineIdx}
