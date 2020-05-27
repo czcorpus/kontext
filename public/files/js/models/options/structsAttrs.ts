@@ -289,12 +289,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             break;
             case ViewOptions.AttrViewMode.VISIBLE_KWIC:
                 state.attrVmode = ViewOptions.PosAttrViewMode.MIXED;
-                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
+                state.attrAllpos = ViewOptions.PosAttrViewScope.KWIC;
                 state.extendedVmode = value;
             break;
             case ViewOptions.AttrViewMode.MOUSEOVER:
                 state.attrVmode = ViewOptions.PosAttrViewMode.MOUSEOVER;
-                state.attrAllpos = ViewOptions.PosAttrViewScope.KWIC;
+                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
                 state.extendedVmode = value;
             break;
             default:

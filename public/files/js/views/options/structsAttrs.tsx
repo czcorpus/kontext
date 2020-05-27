@@ -198,7 +198,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 <TDPosAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
                                         isSelected={item.selected} isLocked={item.n === props.basePosAttr} />
                                 <td className="unique-sel" onClick={handlePrimaryAttrSel(item.n)}>
-                                    <input type="radio" name="mainViewAttr" value={item.n} checked={item.n === props.baseViewAttr} />
+                                    <input type="radio" name="mainViewAttr" checked={item.n === props.baseViewAttr} onChange={()=>undefined} />
                                 </td>
                             </tr>
                         ))}
