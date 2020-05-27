@@ -112,7 +112,8 @@ WidectxArgsMapping = (
     'attr_allpos',
     'ctxattrs',
     'structs',
-    'refs'
+    'refs',
+    'hitlen'
 )
 
 
@@ -252,6 +253,7 @@ class GlobalArgs(object):
     align = Parameter[List[str]]([], persistent=Parameter.SEMI_PERSISTENT)
     maincorp = Parameter[str]('')  # used only in case of parallel corpora - specifies primary corp.
     refs = Parameter[Optional[str]](None)  # None means "not initialized" while '' means "user wants no refs"
+    hitlen = Parameter[int](1)
 
     shuffle = Parameter[int](0, persistent=Parameter.PERSISTENT)
 
