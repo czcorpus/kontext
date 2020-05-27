@@ -275,13 +275,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             return (
             <>
                 {props.data.text.map((s) => ({text: [s], className: '', tailPosAttrs: []})).map((data, i) => (
-                    <>
+                    <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
                         {i > 0 ? ' ' : ''}
-                        <span key={`${props.position}:${props.idx}:${i}`} className={getViewModeClass(props.attrViewMode)}>
+                        <span className={getViewModeClass(props.attrViewMode)}>
                             <Token tokenId={mkTokenId(i)} data={data} viewMode={props.attrViewMode} isKwic={false}
                                     supportsTokenConnect={props.supportsTokenConnect} />
                         </span>
-                    </>
+                    </React.Fragment>
                 ))}
             </>
             );
