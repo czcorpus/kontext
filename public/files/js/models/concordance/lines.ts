@@ -18,21 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import * as Immutable from 'immutable';
+import { Action, IFullActionControl } from 'kombo';
+import { throwError, Observable, interval, Subscription } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
+
 import {Kontext, TextTypes, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {StatefulModel, UNSAFE_SynchronizedModel} from '../base';
 import {PageModel} from '../../app/page';
-import * as Immutable from 'immutable';
 import {KWICSection} from './line';
 import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 import { transformVmode, ActionName as ViewOptionsActionName} from '../options/structsAttrs';
-import { Action, IFullActionControl } from 'kombo';
-import { throwError, Observable, interval, Subscription } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
 
 export interface ServerTextChunk {
     class:string;
@@ -235,7 +236,7 @@ export interface ViewConfiguration {
 /**
  *
  */
-function importLines(data:Array<ServerLineData>, attrViewMode:ViewOptions.AttrViewMode, mainAttrIdx:number):Immutable.List<Line> {
+function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Immutable.List<Line> {
     let ans:Array<Line> = [];
 
     function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
@@ -253,7 +254,7 @@ function importLines(data:Array<ServerLineData>, attrViewMode:ViewOptions.AttrVi
 
         } else {
             const tailPosattrs = item.tail_posattrs || [];
-            const text = tailPosattrs[mainAttrIdx];
+            const text = item.class === 'strc' ?  item.str : tailPosattrs[mainAttrIdx];
             tailPosattrs.splice(mainAttrIdx, 1, item.str.trim());
             return {
                 id: id,
@@ -413,7 +414,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;
         this.baseViewAttr = lineViewProps.baseViewAttr;
-        this.lines = importLines(initialData, transformVmode(this.attrViewMode, this.attrAllpos), this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
+        this.lines = importLines(initialData, this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
@@ -697,7 +698,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private importData(data:Kontext.AjaxResponse):void {
         try {
-            this.lines = importLines(data['Lines'], this.getViewAttrsVmode(), this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
+            this.lines = importLines(data['Lines'], this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
             this.numItemsInLockedGroups = data['num_lines_in_groups'];
             this.pagination = data['pagination'];
             this.unfinishedCalculation = data['running_calc'];
