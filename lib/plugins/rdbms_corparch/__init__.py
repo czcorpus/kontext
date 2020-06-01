@@ -139,7 +139,9 @@ class DeafultCorplistProvider(CorplistProvider):
             ans = []
             for phrase in phrases:
                 phrase = phrase.lower()
-                if phrase not in corp.name.lower() and phrase in corp.description.lower():
+                name = corp.name.lower() if corp.name is not None else ''
+                desc = corp.description.lower() if corp.description is not None else ''
+                if phrase not in name and phrase in desc:
                     ans.append('defaultCorparch__found_in_desc')
                     break
             return ans
