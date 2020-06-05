@@ -642,17 +642,21 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      */
     private initIssueReporting():boolean {
         if (this.pluginIsActive('issue_reporting')) {
-            const plugin = issueReportingPlugin(this.pluginApi())
-            this.renderReactComponent(
-                plugin.getWidgetView(),
-                document.getElementById('error-reporting-mount'),
-                this.getConf<Kontext.GeneralProps>('issueReportingAction')
-            );
-            return true;
+            const mount = document.getElementById('error-reporting-mount');
+            if (mount) {
+                const plugin = issueReportingPlugin(this.pluginApi())
+                this.renderReactComponent(
+                    plugin.getWidgetView(),
+                    document.getElementById('error-reporting-mount'),
+                    this.getConf<Kontext.GeneralProps>('issueReportingAction')
+                );
+                return true;
 
-        } else {
-            return false;
+            } else {
+                console.warn('Cannot init issue reporting plug-in as footer-bar plug-in does not provide a mount point');
+            }
         }
+        return false;
     }
 
     isNotEmptyPlugin(plugin:any):boolean {

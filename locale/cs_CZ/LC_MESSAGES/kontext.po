@@ -530,3 +530,6 @@ msgstr "Potvrzovací klíč nebyl nalezen"
 
 msgid "Invalid page number"
 msgstr "Špatné číslo stránky"
+
+msgid "View on GitHub"
+msgstr "Prohlédnout na GitHubu"
