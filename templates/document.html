@@ -171,39 +171,52 @@ __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
 
 {% block Footer %}
 <footer {% if footer_bar %}class="custom-footer"{% endif %}>
-    {% if debug %}
-    <div class="debug-warning">
-    {{ 'debugging mode'|_ }}
-    </div>
-    {% endif %}
-
     {% if footer_bar %}
-    {{ footer_bar }}
-    {% else %}
-        {% if avail_languages|length > 0 %}
-        <div id="switch-language-box">{{ "user interface languages"|_ }}:
-            <form id="language-switch-form" action="{{ root_url }}user/switch_language" method="POST">
-                {% for lang in avail_languages %}
-                    <button class="switch" type="submit" name="language" value="{{ lang[0] }}">{{ lang[1].get('label', lang[0]) }}</button>
-                    {% if not loop.last %}|{% endif %}
-                {% endfor %}
-            </form>
+        {{ footer_bar }}
+        {% if debug %}
+        <div class="debug-warning">
+        {{ 'debugging mode'|_ }}
         </div>
-        {% endif %}
-        <div>
-            <div id="copyright-info">
-                &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
-                &copy; <a href="http://www.sketchengine.co.uk/">Lexical Computing Ltd.</a>,
-                &copy; <a href="http://nlp.fi.muni.cz/">NLP Centre FI MU</a>
-            </div>
-            <div id="app-version">
-                {{ "version"|_ }} <strong>{{ _version[1] }}</strong>, {{ "uses"|_ }} manatee-<span>{{ _version[0] }}</span>
-            </div>
-
+         {% endif %}
+    {% else %}
+        <div class="actions">
             {% if issue_reporting_action %}
             <div id="error-reporting-mount"></div>
             {% endif %}
+            {% if issue_reporting_action %}<span class="separ">|</span>{% endif %}
+            <div>
+                <a href="https://www.github.com/czcorpus/kontext" target="_blank" rel="noopener">{{ "View on GitHub"|_ }}</a>
+            </div>
+            {% if avail_languages|length > 0 %}
+            <span class="separ">|</span>
+            <div id="switch-language-box">{{ "user interface languages"|_ }}:
+                <form id="language-switch-form" action="{{ root_url }}user/switch_language" method="POST">
+                    {% for lang in avail_languages %}
+                        <button class="switch" type="submit" name="language" value="{{ lang[0] }}">{{ lang[1].get('label', lang[0]) }}</button>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </form>
+            </div>
         </div>
+        <div class="info">
+            <div id="copyright-info">
+            &copy; <a href="http://www.korpus.cz/" target="_blank" rel="noopener">Institute of the Czech National Corpus</a>
+            </div>
+            <span class="separ">|</span>
+            <div>
+                {{ "version"|_ }} <strong>{{ _version[1] }}</strong>
+            </div>
+            <span class="separ">|</span>
+            <div>
+                {{ "uses"|_ }} <a href="https://nlp.fi.muni.cz/trac/noske" target="_blank" rel="noopener">manatee-<span>{{ _version[0] }}</span></a>
+            </div>
+            {% if debug %}
+            <span class="separ">|</span>
+            <div class="debug-warning">
+            {{ 'debugging mode'|_ }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     {% endif %}
 </footer>
 {% endblock %}
