@@ -196,7 +196,9 @@ __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
                     {% endfor %}
                 </form>
             </div>
+            {% endif %}
         </div>
+
         <div class="info">
             <div id="copyright-info">
             &copy; <a href="http://www.korpus.cz/" target="_blank" rel="noopener">Institute of the Czech National Corpus</a>
@@ -216,7 +218,6 @@ __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
             </div>
             {% endif %}
         </div>
-        {% endif %}
     {% endif %}
 </footer>
 {% endblock %}
