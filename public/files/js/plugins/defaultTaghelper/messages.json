@@ -2,7 +2,7 @@
   "en-US": {
       "taghelper__create_tag_heading": "Create/edit a tag",
       "taghelper__insert_btn": "Insert",
-      "taghelper__unfulfilled": "Unfulfilled",
+      "taghelper__unfulfilled": "Unspecified",
       "taghelper__reset": "Reset",
       "taghelper__undo": "Undo",
       "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported.",
@@ -13,7 +13,7 @@
   "cs-CZ": {
       "taghelper__create_tag_heading": "Vytvořit/upravit tag",
       "taghelper__insert_btn": "Vložit",
-      "taghelper__unfulfilled": "Nevyplněno",
+      "taghelper__unfulfilled": "Neurčeno",
       "taghelper__reset": "Obnovit",
       "taghelper__undo": "Krok zpět",
       "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány.",
@@ -24,7 +24,7 @@
   "szl": {
       "taghelper__create_tag_heading": "Create/edit a tag",
       "taghelper__insert_btn": "Wraź",
-      "taghelper__unfulfilled": "Niywypołniōne",
+      "taghelper__unfulfilled": "Unspecified",
       "taghelper__reset": "Ôdnōw",
       "taghelper__undo": "Cŏfnij",
       "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane.",
