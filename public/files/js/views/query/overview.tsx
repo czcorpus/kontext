@@ -19,20 +19,23 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {init as saveViewInit} from './save';
-import {init as basicOverviewInit} from './basicOverview';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import { ExtendedQueryOperation, IQueryReplayModel } from '../../models/query/replay/common';
-import { QueryReplayModel } from '../../models/query/replay';
-import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
-import {ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps} from './miscActions';
-import {QueryFormLiteProps, QueryFormProps} from './first';
-import {FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
-import { PluginInterfaces } from '../../types/plugins';
-import {SortFormProps} from './sort';
 import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { List } from 'cnc-tskit';
+
+import { init as saveViewInit } from './save';
+import { init as basicOverviewInit } from './basicOverview';
+import { Kontext } from '../../types/common';
+import { ExtendedQueryOperation } from '../../models/query/replay/common';
+import { QueryReplayModelState, QueryReplayModel } from '../../models/query/replay';
+import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../models/query/replay/indirect';
+import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../models/query/save';
+import { Actions, ActionName } from '../../models/query/actions';
+import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from './miscActions';
+import { QueryFormLiteProps, QueryFormProps } from './first';
+import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
+import { PluginInterfaces } from '../../types/plugins';
+import { SortFormProps } from './sort';
 
 /*
 Important note regarding variable naming conventions:
@@ -62,7 +65,7 @@ export interface OverviewModuleArgs {
         ShuffleForm:React.ComponentClass<ShuffleFormProps>;
         SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
     };
-    queryReplayModel:IQueryReplayModel;
+    queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
     mainMenuModel:Kontext.IMainMenuModel;
     querySaveAsModel:QuerySaveAsFormModel;
     corparchModel:PluginInterfaces.Corparch.ICorpSelection;
@@ -87,7 +90,6 @@ export interface QueryToolbarProps {
 
 interface QueryToolbarState {
     activeItem:{actionName:string};
-    lastOpSize:number;
 }
 
 
@@ -105,13 +107,6 @@ export interface NonViewPageQueryToolbarProps {
     filterFirstDocHitsFormProps?:FirstHitsFormProps;
     sortFormProps?:SortFormProps;
 }
-
-
-interface NonViewPageQueryToolbarState {
-    ops:Immutable.List<ExtendedQueryOperation>;
-    queryOverview:Immutable.List<Kontext.QueryOperation>;
-}
-
 
 export interface OverviewViews {
     QueryToolbar:React.ComponentClass<QueryToolbarProps>;
@@ -182,10 +177,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     }> = (props) => {
 
         const handleRadioInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_SET_STOP_AFTER_IDX',
+            dispatcher.dispatch<Actions.QuerySetStopAfterIdx>({
+                name: ActionName.QuerySetStopAfterIdx,
                 payload: {
-                    operationIdx: props.operationIdx,
                     value: evt.target.value === 'continue' ? null : props.operationIdx
                 }
             });
@@ -236,6 +230,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         closeClickHandler:()=>void;
 
     }> = (props) => {
+
         const renderEditorComponent = () => {
             if (props.isLoading) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
@@ -389,7 +384,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <QueryOverview /> --------------------------------
 
-    class QueryOverview extends React.Component<{
+    interface QueryOverviewProps {
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
@@ -400,85 +395,37 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         filterFirstDocHitsFormProps:FirstHitsFormProps;
         switchMcFormProps:SwitchMainCorpFormProps;
         shuffleFormProps:ShuffleFormProps;
-    },
-    {
-        replayIsRunning:boolean;
-        ops:Immutable.List<ExtendedQueryOperation>;
-        editOpIdx:number;
-        editOpKey:string;
-        isLoading:boolean;
-        queryOverview:Immutable.List<Kontext.QueryOperation>;
-        modeRunFullQuery:boolean;
-        editIsLocked:boolean;
-    }> {
+    }
 
-        private modelSubscription:Subscription;
+    const QueryOverview:React.SFC<QueryOverviewProps & QueryReplayModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleEditClick = this._handleEditClick.bind(this);
-            this._handleEditorClose = this._handleEditorClose.bind(this);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
-            this.state = {
-                replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
-                ops: queryReplayModel.getCurrEncodedOperations(),
-                editOpIdx: null,
-                editOpKey: null,
-                isLoading: false,
-                queryOverview: (queryReplayModel as QueryReplayModel).getCurrentQueryOverview(),
-                modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),
-                editIsLocked: (queryReplayModel as QueryReplayModel).editIsLocked()
-            };
-        }
 
-        _handleEditClick(idx) {
-            dispatcher.dispatch({
-                name: 'EDIT_QUERY_OPERATION',
-                payload: {operationIdx: idx}
+        const handleEditClick = (idx:number, opId:string) => () => {
+            dispatcher.dispatch<Actions.EditQueryOperation>({
+                name: ActionName.EditQueryOperation,
+                payload: {
+                    operationIdx: idx,
+                    sourceId: getSourceId(idx, opId)
+                }
             });
-        }
+        };
 
-        _handleEditorClose() {
-            this.setState({
-                replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
-                ops: queryReplayModel.getCurrEncodedOperations(),
-                editOpIdx: null,
-                editOpKey: null,
-                isLoading: false,
-                queryOverview: null,
-                modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),
-                editIsLocked: (queryReplayModel as QueryReplayModel).editIsLocked()
-            });
-        }
-
-        _modelChangeListener() {
-            const latestEditOpIdx = (queryReplayModel as QueryReplayModel).getEditedOperationIdx();
-            this.setState({
-                replayIsRunning: (queryReplayModel as QueryReplayModel).getBranchReplayIsRunning(),
-                ops: queryReplayModel.getCurrEncodedOperations(),
-                editOpIdx: latestEditOpIdx,
-                editOpKey: (queryReplayModel as QueryReplayModel).opIdxToCachedQueryKey(latestEditOpIdx),
-                isLoading: false,
-                queryOverview: (queryReplayModel as QueryReplayModel).getCurrentQueryOverview(),
-                modeRunFullQuery: (queryReplayModel as QueryReplayModel).getRunFullQuery(),
-                editIsLocked: (queryReplayModel as QueryReplayModel).editIsLocked()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryReplayModel.addListener(this._modelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        _getEditorProps(opIdx, opId):AnyEditorProps {
+        const getSourceId = (opIdx:number, opId:string):string|undefined => {
             if (['a', 'q'].indexOf(opId) > -1) {
-                return this.props.queryFormProps;
+                return props.queryFormProps.corpname;
 
             } else if (['p', 'P', 'n', 'N'].indexOf(opId) > -1) {
-                return this.props.filterFormProps;
+                return props.filterFormProps.filterId;
+            }
+            return undefined;
+        };
+
+        const getEditorProps = (opIdx:number, opId:string):AnyEditorProps => {
+            if (['a', 'q'].indexOf(opId) > -1) {
+                return props.queryFormProps;
+
+            } else if (['p', 'P', 'n', 'N'].indexOf(opId) > -1) {
+                return props.filterFormProps;
 
             } else if (opId === 'f') {
                 return {
@@ -487,8 +434,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     lastOpSize: null,
                     operationIdx: opIdx,
                     shuffleSubmitFn: () => {
-                        dispatcher.dispatch({
-                            name: 'BRANCH_QUERY',
+                        dispatcher.dispatch<Actions.BranchQuery>({
+                            name: ActionName.BranchQuery,
                             payload: {
                                 operationIdx: opIdx
                             }
@@ -502,8 +449,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     operationIdx: opIdx,
                     opKey: null,
                     submitFn: () => {
-                        dispatcher.dispatch({
-                            name: 'BRANCH_QUERY',
+                        dispatcher.dispatch<Actions.BranchQuery>({
+                            name: ActionName.BranchQuery,
                             payload: {
                                 operationIdx: opIdx
                             }
@@ -512,55 +459,64 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                 }
 
             } else if (opId === 'F') {
-                return this.props.filterFirstDocHitsFormProps;
+                return props.filterFirstDocHitsFormProps;
 
             } else if (opId === 'x') {
-                return this.props.switchMcFormProps;
+                return props.switchMcFormProps;
 
             } else {
                 return null;
             }
-        }
+        };
 
-        render() {
-            return (
-                <div>
-                    {this.state.queryOverview ?
-                            <basicOverviewViews.QueryOverviewTable data={this.state.queryOverview}
-                                onEditClick={this._handleEditClick} /> :
-                            null}
-                    {this.state.replayIsRunning ? <QueryReplayView /> : null}
+        const handleEditorClose = () => {
+            dispatcher.dispatch<Actions.QueryOverviewEditorClose>({
+                name:  ActionName.QueryOverviewEditorClose
+            });
+        };
 
-                    <ul id="query-overview-bar">
-                        {this.props.humanCorpname ?
-                                <layoutViews.CorpnameInfoTrigger
-                                        corpname={this.props.corpname}
-                                        humanCorpname={this.props.humanCorpname}
-                                        usesubcorp={this.props.usesubcorp}
-                                        origSubcorpName={this.props.origSubcorpName}
-                                        foreignSubcorp={this.props.foreignSubcorp} />
-                                : null}
-                        {this.state.ops.map((item, i) => {
-                            return <QueryOpInfo
-                                        key={`op_${i}`}
-                                        idx={i}
-                                        editOpKey={this.state.editOpKey}
-                                        item={item}
-                                        clickHandler={this._handleEditClick.bind(this, i)}
-                                        hasOpenEditor={this.state.editOpIdx === i && !this.state.replayIsRunning}
-                                        editorProps={this.state.editOpIdx === i ? this._getEditorProps(i, item.opid) : null}
-                                        closeEditorHandler={this._handleEditorClose}
-                                        isLoading={this.state.isLoading}
-                                        modeRunFullQuery={this.state.modeRunFullQuery}
-                                        numOps={this.state.ops.size}
-                                        shuffleMinResultWarning={this.props.shuffleFormProps.shuffleMinResultWarning}
-                                        editIsLocked={this.state.editIsLocked} />;
-                        })}
-                    </ul>
-                </div>
-            );
-        }
+        return (
+            <div>
+                {props.currentQueryOverview ?
+                        <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
+                            onEditClick={handleEditClick(0, '')} /> :
+                        null}
+                {props.branchReplayIsRunning ? <QueryReplayView /> : null}
+
+                <ul id="query-overview-bar">
+                    {props.humanCorpname ?
+                            <layoutViews.CorpnameInfoTrigger
+                                    corpname={props.corpname}
+                                    humanCorpname={props.humanCorpname}
+                                    usesubcorp={props.usesubcorp}
+                                    origSubcorpName={props.origSubcorpName}
+                                    foreignSubcorp={props.foreignSubcorp} />
+                            : null}
+                    {List.map(
+                        (item, i) => {
+                        return <QueryOpInfo
+                                    key={`op_${i}`}
+                                    idx={i}
+                                    editOpKey={props.replayOperations[i]}
+                                    item={item}
+                                    clickHandler={handleEditClick(i, item.opid)}
+                                    hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
+                                    editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
+                                    closeEditorHandler={handleEditorClose}
+                                    isLoading={props.branchReplayIsRunning}
+                                    modeRunFullQuery={props.stopAfterOpIdx === null}
+                                    numOps={props.currEncodedOperations.length}
+                                    shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
+                                    editIsLocked={props.editIsLocked} />;
+                        },
+                        props.currEncodedOperations
+                    )}
+                </ul>
+            </div>
+        );
     }
+
+    const BoundQueryOverview = BoundWithProps<QueryOverviewProps, QueryReplayModelState|IndirectQueryReplayModelState>(QueryOverview, queryReplayModel);
 
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------
@@ -571,7 +527,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         usesubcorp:string;
         origSubcorpName:string;
         foreignSubcorp:boolean;
-        ops:Immutable.List<ExtendedQueryOperation>;
+        ops:Array<ExtendedQueryOperation>;
 
     }> = (props) => {
 
@@ -608,7 +564,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     closeEditorHandler={()=>undefined}
                                     isLoading={false}
                                     modeRunFullQuery={false}
-                                    numOps={props.ops.size}
+                                    numOps={props.ops.length}
                                     shuffleMinResultWarning={null}
                                     editIsLocked={true} />;
                     })}
@@ -619,20 +575,21 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <AppendOperationOverlay /> --------------------------------
 
-    /**
-     * A component wrapping a new operation form to be
-     * added to the query chain.
-     */
-    const AppendOperationOverlay:React.SFC<{
+    interface AppendOperationOverlayProps {
         menuActiveItem:{actionName:string};
         filterFormProps:FilterFormProps;
         shuffleFormProps:ShuffleFormProps;
         switchMcFormProps:SwitchMainCorpFormProps;
         filterSubHitsFormProps:SubHitsFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
-        lastOpSize:number;
+    }
 
-    }> = (props) => {
+    /**
+     * A component wrapping a new operation form to be
+     * added to the query chain.
+     */
+    const AppendOperationOverlay:React.SFC<AppendOperationOverlayProps & {currEncodedOperations:Array<ExtendedQueryOperation>}
+    > = (props) => {
         const handleCloseClick = () => {
             dispatcher.dispatch({
                 name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
@@ -650,7 +607,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     return <viewDeps.SampleForm sampleId="__new__" formType={Kontext.ConcFormTypes.SAMPLE} />;
                 case 'MAIN_MENU_APPLY_SHUFFLE':
                     return <viewDeps.ShuffleForm {...props.shuffleFormProps}
-                                lastOpSize={props.lastOpSize}
+                                lastOpSize={props.currEncodedOperations.length > 0 ?
+                                    props.currEncodedOperations[props.currEncodedOperations.length - 1].size : 0}
                                 formType={Kontext.ConcFormTypes.SHUFFLE} />;
                 case 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE':
                     return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
@@ -691,6 +649,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             </layoutViews.ModalOverlay>
         );
     };
+
+    const BoundAppendOperationOverlay = BoundWithProps<AppendOperationOverlayProps, QueryReplayModelState|IndirectQueryReplayModelState>(AppendOperationOverlay, queryReplayModel);
 
     // ------------------------ <PersistentConcordanceForm /> --------------------------------
 
@@ -806,9 +766,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         _fetchModelState() {
             return {
-                activeItem: mainMenuModel.getActiveItem(),
-                lastOpSize: queryReplayModel.getCurrEncodedOperations().size > 0 ?
-                        queryReplayModel.getCurrEncodedOperations().get(-1).size : 0
+                activeItem: mainMenuModel.getActiveItem()
             };
         }
 
@@ -834,8 +792,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
             ];
             if (this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1) {
-                return <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem}
-                            lastOpSize={this.state.lastOpSize} />
+                return <BoundAppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem} />;
 
             } else {
                 return null;
@@ -857,7 +814,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         render() {
             return (
                 <div>
-                    <QueryOverview {...this.props} />
+                    <BoundQueryOverview {...this.props} />
                     {this._renderOperationForm()}
                     {this._renderSaveForm()}
                 </div>
@@ -868,51 +825,24 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
-    class NonViewPageQueryToolbar extends React.Component<NonViewPageQueryToolbarProps, NonViewPageQueryToolbarState> {
+    const NonViewPageQueryToolbar:React.SFC<NonViewPageQueryToolbarProps & QueryReplayModelState> = (props) => {
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                ops: queryReplayModel.getCurrEncodedOperations(),
-                queryOverview: queryReplayModel.getCurrentQueryOverview()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryReplayModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <div>
-                    <RedirectingQueryOverview {...this.props} ops={this.state.ops} />
-                    {this.state.queryOverview !== null ?
-                        <basicOverviewViews.QueryOverviewTable data={this.state.queryOverview}
-                                onEditClick={()=>undefined} /> :
-                    null}
-                </div>
-            );
-        }
+        return (
+            <div>
+                <RedirectingQueryOverview {...props} ops={props.currEncodedOperations} />
+                {props.currentQueryOverview !== null ?
+                    <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
+                            onEditClick={()=>undefined} /> :
+                null}
+            </div>
+        );
     };
+
+    const BoundNonViewPageQueryToolbar = BoundWithProps<NonViewPageQueryToolbarProps, QueryReplayModelState|IndirectQueryReplayModelState>(NonViewPageQueryToolbar, queryReplayModel);
 
 
     return {
         QueryToolbar: QueryToolbar,
-        NonViewPageQueryToolbar: NonViewPageQueryToolbar
+        NonViewPageQueryToolbar: BoundNonViewPageQueryToolbar
     };
 }

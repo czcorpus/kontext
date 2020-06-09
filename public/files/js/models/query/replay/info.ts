@@ -18,26 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import { UNSAFE_SynchronizedModel } from '../../base';
 import { Kontext } from '../../../types/common';
 import { PageModel } from '../../../app/page';
-import { IFullActionControl, Action } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+import { List } from 'cnc-tskit';
 import { Observable } from 'rxjs';
+import { ActionName, Actions } from '../actions';
+import { QueryOverviewResponseRow } from './common';
+import { map } from 'rxjs/operators';
 
 
 interface QueryOverviewResponse extends Kontext.AjaxConcResponse {
     Desc:Array<QueryOverviewResponseRow>;
 }
 
-
-interface QueryOverviewResponseRow {
-    op:string;
-    opid:string;
-    churl:string;
-    tourl:string;
-    nicearg:string;
-    size:number;
+export interface QueryInfoModelState {
+    currentQueryOverview:Array<Kontext.QueryOperation>|null;
 }
 
 /**
@@ -50,52 +46,66 @@ interface QueryOverviewResponseRow {
  * returning to the 'view' page in case user wants to use
  * some of its functions.
  */
-export class QueryInfoModel extends UNSAFE_SynchronizedModel {
+export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessModel<T> {
 
-    /**
-     * This is a little bit independent from the rest. It just
-     * contains data required to render tabular query overview.
-     */
-    private currentQueryOverview:Immutable.List<Kontext.QueryOperation>;
+    protected readonly pageModel:PageModel;
 
-    protected pageModel:PageModel;
-
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
-        super(dispatcher);
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initState:T) {
+        super(dispatcher, initState);
         this.pageModel = pageModel;
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'CLEAR_QUERY_OVERVIEW_DATA':
-                    this.currentQueryOverview = null;
-                    this.emitChange();
-                break;
-                case 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO':
-                    this.loadQueryOverview().subscribe(
-                        (data) => {
-                            this.currentQueryOverview = Immutable.List<Kontext.QueryOperation>(data.Desc);
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.pageModel.showMessage('error', err);
-                        }
-                    );
-            break;
+
+        this.addActionHandler<Actions.ClearQueryOverviewData>(
+            ActionName.ClearQueryOverviewData,
+            (state, action) => {
+                state.currentQueryOverview = null;
             }
-        });
+        );
+
+        this.addActionHandler<Actions.MainMenuOverviewShowQueryInfoDone>(
+            ActionName.MainMenuOverviewShowQueryInfoDone,
+            (state, action) => {
+                state.currentQueryOverview = action.payload.Desc
+            }
+        )
+
+        this.addActionHandler<Actions.MainMenuOverviewShowQueryInfo>(
+            ActionName.MainMenuOverviewShowQueryInfo,
+            (state, action) => {
+
+            },
+            (state, action, dispatch) => {
+                this.loadQueryOverview().subscribe(
+                    (data) => {
+                        dispatch<Actions.MainMenuOverviewShowQueryInfoDone>({
+                            name: ActionName.MainMenuOverviewShowQueryInfoDone,
+                            payload: {
+                                Desc: data
+                            }
+                        });
+                    },
+                    (err) => {
+                        this.pageModel.showMessage('error', err);
+                    }
+                )
+            }
+        );
     }
 
-    private loadQueryOverview():Observable<QueryOverviewResponse> {
+    private loadQueryOverview():Observable<Array<Kontext.QueryOperation>> {
         return this.pageModel.ajax$<QueryOverviewResponse>(
             'GET',
             this.pageModel.createActionUrl('concdesc_json'),
             this.pageModel.getConcArgs(),
             {}
-        );
-    }
-
-    getCurrentQueryOverview():Immutable.List<Kontext.QueryOperation> {
-        return this.currentQueryOverview;
+        ).pipe(
+            map(
+                data => List.map(
+                    v => ({...v, arg: ''}),
+                    data.Desc
+                )
+            )
+        )
     }
 }
 

@@ -19,12 +19,14 @@
  */
 
 import { of as rxOf, Subscription } from 'rxjs';
-import {Kontext, KeyCodes} from '../../types/common';
 import * as React from 'react';
-import {CQLEditorModel, CQLEditorModelState} from '../../models/query/cqleditor/model';
-import {SetQueryInputAction, MoveCursorInputAction} from '../../models/query/common';
-import {QueryFormModel} from '../../models/query/common';
-import { IActionDispatcher } from 'kombo';
+import { Kontext } from '../../types/common';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Keyboard } from 'cnc-tskit';
+
+import { CQLEditorModel, CQLEditorModelState } from '../../models/query/cqleditor/model';
+import { SetQueryInputAction, MoveCursorInputAction } from '../../models/query/common';
+import { QueryFormModel } from '../../models/query/common';
 
 
 export interface CQLEditorProps {
@@ -80,7 +82,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt) {
-            if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
                 dispatcher.dispatch<MoveCursorInputAction>({
                     name: 'QUERY_INPUT_MOVE_CURSOR',
                     payload: {
@@ -93,13 +95,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleKeyDown(evt) {
-            if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
                     this.state.downArrowTriggersHistory &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
-            } else if (evt.keyCode === KeyCodes.ESC) {
+            } else if (evt.keyCode === Keyboard.Code.ESC) {
                 this.props.onEsc();
             }
         }
@@ -145,22 +147,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.Component<CQLEditorProps, CQLEditorModelState> {
+    class CQLEditor extends React.PureComponent<CQLEditorProps & CQLEditorModelState> {
 
-        private modelSubscription:Subscription;
-
-        constructor(props:CQLEditorProps) {
+        constructor(props) {
             super(props);
-            this.state = editorModel.getState();
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
             this.inputKeyDownHandler = this.inputKeyDownHandler.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
-        }
-
-        private handleModelChange(state:CQLEditorModelState) {
-            this.setState(state);
         }
 
         private extractText(root:Node) {
@@ -263,7 +257,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 name: 'TAGHELPER_PRESET_PATTERN',
                                 payload: {
                                     sourceId: this.props.sourceId,
-                                    pattern: this.state.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                                    pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                                 }
                             },
                             {
@@ -284,7 +278,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt:React.KeyboardEvent) {
-            if (KeyCodes.isArrowKey(evt.keyCode) || evt.keyCode === KeyCodes.HOME || evt.keyCode === KeyCodes.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 dispatcher.dispatch<MoveCursorInputAction>({
@@ -299,25 +293,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyDownHandler(evt:React.KeyboardEvent) {
-            if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.state.downArrowTriggersHistory.get(this.props.sourceId) &&
+                    this.props.downArrowTriggersHistory.get(this.props.sourceId) &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
-            } else if (evt.keyCode === KeyCodes.ESC) {
+            } else if (evt.keyCode === Keyboard.Code.ESC) {
                 this.props.onEsc();
             }
         }
 
         private ffKeyDownHandler(evt:KeyboardEvent) {
-            if (evt.keyCode === KeyCodes.BACKSPACE || evt.keyCode === KeyCodes.DEL) {
+            if (evt.keyCode === Keyboard.Code.BACKSPACE || evt.keyCode === Keyboard.Code.DEL) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const rawSrc = src.map(v => v[0]).join('');
 
                 if (rawAnchorIdx === rawFocusIdx) {
-                    const query = evt.keyCode === KeyCodes.BACKSPACE ?
+                    const query = evt.keyCode === Keyboard.Code.BACKSPACE ?
                             rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                             rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
 
@@ -326,8 +320,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         payload: {
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
                             insertRange: null
                         }
                     });
@@ -339,8 +333,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         payload: {
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
                             insertRange: null
                         }
                     });
@@ -352,15 +346,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         payload: {
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                            rawFocusIdx: evt.keyCode === KeyCodes.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
                             insertRange: null
                         }
                     });
                 }
                 evt.preventDefault();
 
-            } else if (evt.keyCode === KeyCodes.ENTER && evt.shiftKey) {
+            } else if (evt.keyCode === Keyboard.Code.ENTER && evt.shiftKey) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
@@ -379,7 +373,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 });
                 evt.preventDefault();
 
-            } else if (evt.keyCode === KeyCodes.END) {
+            } else if (evt.keyCode === Keyboard.Code.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
@@ -395,29 +389,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
-        shouldComponentUpdate(nextProps, nextState) {
-            return this.state.rawAnchorIdx.get(this.props.sourceId) !== nextState.rawAnchorIdx.get(this.props.sourceId) ||
-                    this.state.rawFocusIdx.get(this.props.sourceId) !== nextState.rawFocusIdx.get(this.props.sourceId) ||
-                    this.state.rawCode.get(this.props.sourceId) !== nextState.rawCode.get(this.props.sourceId) ||
-                    this.state.richCode.get(this.props.sourceId) !== nextState.richCode.get(this.props.sourceId) ||
-                    // we want non-strict comparison below because message map is initialized as empty
-                    // but even  editor interaction without generated message writes a [corp]=>null which
-                    // changes the object
-                    this.state.message.get(this.props.sourceId) != nextState.message.get(this.props.sourceId) ||
-                    this.state.isEnabled !== nextState.isEnabled;
-        }
-
         componentDidUpdate(prevProps, prevState) {
-            if (this.state.rawAnchorIdx !== null && this.state.rawFocusIdx !== null) {
+            if (this.props.rawAnchorIdx !== null && this.props.rawFocusIdx !== null) {
                 this.reapplySelection(
-                    this.state.rawAnchorIdx.get(this.props.sourceId),
-                    this.state.rawFocusIdx.get(this.props.sourceId)
+                    this.props.rawAnchorIdx.get(this.props.sourceId),
+                    this.props.rawFocusIdx.get(this.props.sourceId)
                 );
             }
         }
 
         componentDidMount() {
-            this.modelSubscription = editorModel.addListener(this.handleModelChange);
             if (this.props.takeFocus && this.props.inputRef.current) {
                 this.props.inputRef.current.focus();
             }
@@ -425,10 +406,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (he.browserInfo.isFirefox()) {
                 this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
+
+            dispatcher.dispatch({
+                name: 'CQL_EDITOR_INITIALIZE'
+            });
         }
 
         componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
             if (he.browserInfo.isFirefox()) {
                 this.props.inputRef.current.removeEventListener('keydown', this.ffKeyDownHandler);
             }
@@ -443,14 +427,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
                                 ref={this.props.inputRef}
-                                dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId) || ''}}
+                                dangerouslySetInnerHTML={{__html: this.props.richCode.get(this.props.sourceId) || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
                         {
-                            this.state.cqlEditorMessage ?
+                            this.props.cqlEditorMessage ?
                             <div className="cql-editor-message"
-                                    dangerouslySetInnerHTML={{__html: this.state.message.get(this.props.sourceId)}} /> : null
+                                    dangerouslySetInnerHTML={{__html: this.props.message.get(this.props.sourceId)}} /> : null
                         }
                     </div>
                 </div>
@@ -458,9 +442,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
+    const BoundEditor = BoundWithProps<CQLEditorProps, CQLEditorModelState>(CQLEditor, editorModel);
+
 
     return {
-        CQLEditor: CQLEditor,
+        CQLEditor: BoundEditor,
         CQLEditorFallback: CQLEditorFallback
     };
 

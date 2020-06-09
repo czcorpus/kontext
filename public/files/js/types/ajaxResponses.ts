@@ -116,6 +116,10 @@ export namespace AjaxResponse {
         tagset_docs:{[corpname:string]:boolean};
     }
 
+    export function isQueryFormArgs(args:ConcFormArgs):args is QueryFormArgs {
+        return args['curr_query_types'] !== undefined && args['curr_queries'] !== undefined;
+    }
+
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
 
     export interface FilterFormArgs extends ConcFormArgs {
@@ -134,6 +138,10 @@ export namespace AjaxResponse {
         within:number; // used when switching to an aligned corp without specific query (set to 1)
         has_lemma:boolean;
         tagset_doc:string;
+    }
+
+    export function isFilterFormArgs(args:ConcFormArgs):args is FilterFormArgs {
+        return args['query_type'] !== undefined && args['pnfilter'] !== undefined && args['filfl'] !== undefined;
     }
 
     export interface FilterFormArgsResponse extends FilterFormArgs, Kontext.AjaxResponse {}

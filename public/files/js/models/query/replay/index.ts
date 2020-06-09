@@ -18,22 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Observable, of as rxOf } from 'rxjs';
-import { concatMap, tap, map, filter } from 'rxjs/operators';
-import {AjaxResponse} from '../../../types/ajaxResponses';
-import {Kontext} from '../../../types/common';
-import {PageModel} from '../../../app/page';
-import {FirstQueryFormModel} from '../first';
-import {FilterFormModel} from '../filter';
-import {ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel} from '../sort';
-import {ConcSampleModel} from '../sample';
-import {SwitchMainCorpModel} from '../switchmc';
-import {TextTypesModel} from '../../textTypes/main';
-import {FirstHitsModel} from '../../query/firstHits';
-import { IFullActionControl } from 'kombo';
+import { concatMap, tap, map } from 'rxjs/operators';
+import { SEDispatcher, IActionDispatcher } from 'kombo';
+import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
+
+import { AjaxResponse } from '../../../types/ajaxResponses';
+import { Kontext } from '../../../types/common';
+import { PageModel } from '../../../app/page';
+import { FirstQueryFormModel } from '../first';
+import { FilterFormModel } from '../filter';
+import { ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel } from '../sort';
+import { ConcSampleModel } from '../sample';
+import { SwitchMainCorpModel } from '../switchmc';
+import { TextTypesModel } from '../../textTypes/main';
+import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
-import { ExtendedQueryOperation, IQueryReplayModel, importEncodedOperations, QueryPipelineResponse, QueryPipelineResponseItem } from './common';
+import { Actions, ActionName } from '../actions';
+import { ExtendedQueryOperation, importEncodedOperations, QueryPipelineResponse } from './common';
 
 
 /*
@@ -70,35 +72,13 @@ export interface ReplayModelDeps {
     firstHitsModel:FirstHitsModel;
 }
 
-/**
- * QueryReplayModel reads operations stored in the breadcrumb-like navigation
- * and query operation data stored on server (handled by conc_persistence plug-in)
- * and generates a new query "pipeline" with a single step updated by a user
- * via a respective form (query, filter, sort,...). Then it submits all the
- * server requests one-by-one (while updating query operation ID) and the final
- * request is used to redirect client to see the result.
- */
-export class QueryReplayModel extends QueryInfoModel implements IQueryReplayModel {
+export interface QueryReplayModelState {
 
-    private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
+    currentQueryOverview:Array<Kontext.QueryOperation>|null;
 
-    private replayOperations:Immutable.List<string>;
+    currEncodedOperations:Array<ExtendedQueryOperation>;
 
-    private queryModel:FirstQueryFormModel;
-
-    private filterModel:FilterFormModel;
-
-    private sortModel:ConcSortModel;
-
-    private mlConcSortModel:MultiLevelConcSortModel;
-
-    private sampleModel:ConcSampleModel;
-
-    private switchMcModel:SwitchMainCorpModel;
-
-    private textTypesModel:TextTypesModel;
-
-    private firstHitsModel:FirstHitsModel;
+    replayOperations:Array<string>;
 
     /**
      * Contains args used by different input forms involved in the current query operations.
@@ -111,27 +91,90 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
      *             key yet. But after the action is processed, KonText stores the action
      *             and passes the new ID (key) to response arguments.
      */
-    private concArgsCache:Immutable.Map<string, AjaxResponse.ConcFormArgs>;
+    concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
 
-    private branchReplayIsRunning:boolean;
+    branchReplayIsRunning:boolean;
 
-    private editedOperationIdx:number;
+    editedOperationIdx:number;
 
     /**
      * Specifies an operation idx after which the query replay
      * stops. If null then whole pipeline is replayed.
      */
-    private stopAfterOpIdx:number;
+    stopAfterOpIdx:number;
 
-    private _editIsLocked:boolean;
+    editIsLocked:boolean;
+}
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
+/**
+ * Because server operations do not know a newly created query ID (it is handled
+ * in controller's post dispatche when a concrete action is already finished)
+ * it uses a special value '__latest__' to mark arguments which have been just created.
+ * But unlike the server, we know the ID so we update the '__latest__' pseudo-key by
+ * the real one. This makes further processing a little bit easier.
+ */
+function syncCache(state:QueryReplayModelState, pageModel:PageModel):void {
+    const opKey = getCurrentQueryKey(pageModel);
+    if (Dict.hasKey('__latest__', state.concArgsCache) && opKey !== undefined) {
+        const tmp = state.concArgsCache['__latest__'];
+        tmp.op_key = opKey;
+        delete state.concArgsCache['__latest__'];
+        state.concArgsCache[opKey] = tmp;
+        state.replayOperations[state.replayOperations.length - 1] = opKey;
+    }
+}
+
+function getCurrentQueryKey(pageModel:PageModel):string {
+    const compiledQuery = pageModel.getConf<Array<string>>('compiledQuery') || [];
+    const lastOp = compiledQuery[compiledQuery.length - 1] || '';
+    return lastOp.substr(0, 1) === '~' ? lastOp.substr(1) : undefined;
+}
+
+/**
+ * QueryReplayModel reads operations stored in the breadcrumb-like navigation
+ * and query operation data stored on server (handled by conc_persistence plug-in)
+ * and generates a new query "pipeline" with a single step updated by a user
+ * via a respective form (query, filter, sort,...). Then it submits all the
+ * server requests one-by-one (while updating query operation ID) and the final
+ * request is used to redirect client to see the result.
+ */
+export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
+
+    private readonly queryModel:FirstQueryFormModel;
+
+    private readonly filterModel:FilterFormModel;
+
+    private readonly sortModel:ConcSortModel;
+
+    private readonly mlConcSortModel:MultiLevelConcSortModel;
+
+    private readonly sampleModel:ConcSampleModel;
+
+    private readonly switchMcModel:SwitchMainCorpModel;
+
+    private readonly textTypesModel:TextTypesModel;
+
+    private readonly firstHitsModel:FirstHitsModel;
+
+
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, replayModelDeps:ReplayModelDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
-        super(dispatcher, pageModel);
-        this.pageModel = pageModel;
-        this.currEncodedOperations = importEncodedOperations(currentOperations);
-        this.replayOperations = Immutable.List<string>(currentOperations.map(item => null));
-        this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(concArgsCache);
+        const state = {
+            currentQueryOverview: null,
+            currEncodedOperations: importEncodedOperations(currentOperations),
+            replayOperations: List.map(_ => null, currentOperations),
+            concArgsCache: {...concArgsCache},
+            branchReplayIsRunning: false,
+            editedOperationIdx: null,
+            stopAfterOpIdx: null,
+            editIsLocked: pageModel.getConf<number>('NumLinesInGroups') > 0
+        };
+        syncCache(state, pageModel);
+        super(
+            dispatcher,
+            pageModel,
+            state
+        );
         this.queryModel = replayModelDeps.queryModel;
         this.filterModel = replayModelDeps.filterModel;
         this.sortModel = replayModelDeps.sortModel;
@@ -140,96 +183,119 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
         this.switchMcModel = replayModelDeps.switchMcModel;
         this.textTypesModel = replayModelDeps.textTypesModel;
         this.firstHitsModel = replayModelDeps.firstHitsModel;
-        this.branchReplayIsRunning = false;
-        this.editedOperationIdx = null;
-        this.stopAfterOpIdx = null;
-        this.syncCache();
 
-        this._editIsLocked = this.pageModel.getConf<number>('NumLinesInGroups') > 0;
         this.pageModel.addConfChangeHandler<number>('NumLinesInGroups', (v) => {
-            this._editIsLocked = v > 0;
+            if (v > 0) {
+                dispatcher.dispatch<Actions.LockQueryPipeline>({
+                    name: ActionName.LockQueryPipeline
+                });
+            }
         });
 
-        this.dispatcherRegister(action => {
-                switch (action.name) {
-                    case 'EDIT_QUERY_OPERATION':
-                        this.editedOperationIdx = action.payload['operationIdx'];
-                        this.emitChange();
-                        this.syncFormData(action.payload['operationIdx']).subscribe(
-                            () => {
-                                this.emitChange();
-                            },
-                            (err) => {
-                                this.editedOperationIdx = null;
-                                this.emitChange();
-                                this.pageModel.showMessage('error', err);
+        this.addActionHandler<Actions.LockQueryPipeline>(
+            ActionName.LockQueryPipeline,
+            (state, action) => {
+                state.editIsLocked = true;
+            }
+        );
+
+        this.addActionHandler<Actions.EditQueryOperation>(
+            ActionName.EditQueryOperation,
+            (state, action) => {
+                state.editedOperationIdx = action.payload.operationIdx;
+            },
+            (state, action, dispatch) => {
+                this.syncFormData(state, action.payload.operationIdx).subscribe(
+                    ([data, sourceId]) => {
+                        dispatch<Actions.EditQueryOperationDone>({
+                            name: ActionName.EditQueryOperationDone,
+                            payload: {
+                                operationIdx: action.payload.operationIdx,
+                                sourceId: sourceId,
+                                data: data
                             }
-                        );
-                    break;
-                    case 'BRANCH_QUERY':
-                        this.editedOperationIdx = null;
-                        this.branchQuery(action.payload['operationIdx']).subscribe(
-                            (_) => {
-                                this.branchReplayIsRunning = false;
-                                this.emitChange();
-                            },
-                            (err) => {
-                                this.branchReplayIsRunning = false;
-                                this.emitChange();
-                                this.pageModel.showMessage('error', err);
-                            }
-                        );
-                    break;
-                    case 'QUERY_SET_STOP_AFTER_IDX':
-                        this.stopAfterOpIdx = action.payload['value'];
-                        this.emitChange();
-                    break;
-                    case 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO':
-                        this.editedOperationIdx = null;
-                        this.emitChange();
-                    break;
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.EditQueryOperationDone>({
+                            name: ActionName.EditQueryOperationDone,
+                            error: err
+                        });
+                        this.pageModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.EditQueryOperationDone>(
+            ActionName.EditQueryOperationDone,
+            (state, action) => {
+                if (action.error) {
+                    state.editedOperationIdx = null;
+
+                } else {
+                    state.concArgsCache[action.payload.data.op_key] = action.payload.data;
+                    state.replayOperations[action.payload.operationIdx] = action.payload.data.op_key;
                 }
-        });
+            }
+        );
+
+        this.addActionHandler<Actions.BranchQuery>(
+            ActionName.BranchQuery,
+            (state, action) => {
+                state.editedOperationIdx = null;
+                state.branchReplayIsRunning = true;
+            },
+            (state, action, dispatch) => {
+                this.branchQuery(state, dispatch, action.payload.operationIdx).subscribe(
+                    null,
+                    err => {
+                        this.pageModel.showMessage('error', err);
+                        dispatch({
+                            name: ActionName.BranchQueryDone,
+                            error: err
+                        });
+                    }
+                )
+            }
+        );
+
+        this.addActionHandler<Actions.BranchQueryDone>(
+            ActionName.BranchQueryDone,
+            (state, action) => {
+                state.branchReplayIsRunning = false;
+                state.replayOperations = action.payload.replayOperations;
+                state.concArgsCache = action.payload.concArgsCache;
+            }
+        );
+
+        this.addActionHandler<Actions.QuerySetStopAfterIdx>(
+            ActionName.QuerySetStopAfterIdx,
+            (state, action) => {
+                state.stopAfterOpIdx = action.payload.value
+            }
+        );
+
+        this.addActionHandler<Actions.QueryOverviewEditorClose>(
+            ActionName.QueryOverviewEditorClose,
+            (state, action) => {
+                state.editedOperationIdx = null;
+                state.branchReplayIsRunning = false;
+                state.currentQueryOverview = null;
+            }
+        );
     }
 
     private getActualCorpname():string {
         return this.pageModel.getCorpusIdent().id;
     }
 
-    private getCurrentQueryKey():string {
-        const compiledQuery = this.pageModel.getConf<Array<string>>('compiledQuery') || [];
-        const lastOp = compiledQuery[compiledQuery.length - 1] || '';
-        return lastOp.substr(0, 1) === '~' ? lastOp.substr(1) : undefined;
-    }
-
-    /**
-     * Because server operations do not know a newly created query ID (it is handled
-     * in controller's post dispatche when a concrete action is already finished)
-     * it uses a special value '__latest__' to mark arguments which have been just created.
-     * But unlike the server, we know the ID so we update the '__latest__' pseudo-key by
-     * the real one. This makes further processing a little bit easier.
-     */
-    private syncCache():void {
-        const opKey = this.getCurrentQueryKey();
-        if (this.concArgsCache.has('__latest__') && opKey !== undefined) {
-            const tmp = this.concArgsCache.get('__latest__');
-            tmp.op_key = opKey;
-            this.concArgsCache = this.concArgsCache.delete('__latest__').set(opKey, tmp);
-            this.replayOperations = this.replayOperations.set(this.replayOperations.size - 1, opKey);
-        }
-    }
-
     /**
      * Transform query operation idx (i.e. its position in a respective
      * query pipeline) into a related key of stored form data (conc_persistence plug-in).
      */
-    opIdxToCachedQueryKey(idx:number):string {
-        if (this.replayOperations.get(idx) !== null) {
-            return this.replayOperations.get(idx);
-
-        } else {
-            return undefined;
-        }
+    private opIdxToCachedQueryKey(replayOps:Array<string>, idx:number):string|undefined {
+        return replayOps[idx] || undefined;
     }
 
     /**
@@ -247,9 +313,9 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
      * @param numOps a total number of operations in the query pipeline
      * @param formType a form type used to enter data to this operation (query, filter, sort)
      */
-    private createOperation(opIdx:number, opKey:string, changedOpIdx:number, numOps:number,
-            formType:string):Observable<Kontext.AjaxConcResponse|null> {
-        const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ? this.syncFormData(opIdx) : rxOf(null);
+    private createOperation({state, opIdx, opKey, changedOpIdx, numOps, formType}:{state:QueryReplayModelState, opIdx:number,
+            opKey:string, changedOpIdx:number, numOps:number, formType:string}):Observable<Kontext.AjaxConcResponse|null> {
+        const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ? this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
             return rxOf([]).pipe(
                 tap(
@@ -273,7 +339,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                         const url = this.queryModel.getSubmitUrl();
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 url,
                                 {
                                     format: 'json',
@@ -297,7 +363,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                         const url = this.filterModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$(
-                                'GET',
+                                HTTP.Method.GET,
                                 url,
                                 {format: 'json'}
                             );
@@ -327,7 +393,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                         }
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 activeModel.getSubmitUrl(opKey),
                                 {format: 'json'}
                             );
@@ -348,7 +414,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                         const url = this.sampleModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 url,
                                 {format: 'json'}
                             );
@@ -370,7 +436,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                     (targetUrl) => {
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
                             );
@@ -394,7 +460,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                     (url) => {
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 url,
                                 {format: 'json'}
                             );
@@ -419,7 +485,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                         const targetUrl = this.pageModel.createActionUrl('filter_subhits', this.pageModel.getConcArgs().items());
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
                             );
@@ -444,7 +510,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                         const targetUrl = this.firstHitsModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
                             );
@@ -465,7 +531,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
         } else if (formType === 'locked') { // locked op uses compiled query (i.e. no form data)
             return new Observable<string>((observer) => {
                     const args = this.pageModel.getConcArgs();
-                    args.add('q', this.currEncodedOperations.get(opIdx).opid + this.currEncodedOperations.get(opIdx).arg);
+                    args.add('q', state.currEncodedOperations[opIdx].opid + state.currEncodedOperations[opIdx].arg);
                     observer.next(this.pageModel.createActionUrl('view', args.items()));
                     observer.complete();
 
@@ -474,7 +540,7 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
                     (targetUrl) => {
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
-                                'GET',
+                                HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
                             );
@@ -509,40 +575,57 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
      * containing a side-effect local action (typically - the last operation contains something
      * like observable.pipe(tap(foo)=>sideEffect(foo)).
      */
-    private branchQuery(changedOpIdx:number):Observable<Array<string>> {
-        this.branchReplayIsRunning = true;
-        this.emitChange(); // => start the animation "replaying the query"
-
+    private branchQuery(state:QueryReplayModelState, dispatch:SEDispatcher, changedOpIdx:number):Observable<Kontext.AjaxConcResponse|null> {
         const args = this.pageModel.getConcArgs();
-
         return this.pageModel.ajax$<QueryPipelineResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pageModel.createActionUrl('load_query_pipeline'),
             args
 
         ).pipe(
-            tap(
+            map(
                 (data) => {
-                    this.replayOperations = Immutable.List<string>(data.ops.map(item => item.id))
-                    this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(
-                                data.ops.map(item =>[item.id, item.form_args]));
+                    const newCache = pipe(
+                        data.ops,
+                        List.map(item =>tuple(item.id, item.form_args)),
+                        Dict.fromEntries()
+                    );
+                    return tuple(data, newCache);
+                }
+            ),
+            tap(
+                ([data, newCache]) => { // now we store some stuff to the state but we cannot use the values within the stream!
+                    dispatch<Actions.BranchQueryDone>({
+                        name: ActionName.BranchQueryDone,
+                        payload: {
+                            replayOperations: List.map(item => item.id, data.ops),
+                            concArgsCache: newCache
+                        }
+                    });
                 }
             ),
             concatMap(
-                (operations) => rxOf(...operations.ops.map<[QueryPipelineResponseItem, number]>(op => [op, operations.ops.length]))
-            ),
-            filter(
-                (_, i) => i <= this.stopAfterOpIdx || this.stopAfterOpIdx === null
+                ([data, newCache]) => {
+                    const appliedOps = List.filter(
+                        (_, i) => i <= state.stopAfterOpIdx || state.stopAfterOpIdx === null,
+                        data.ops
+                    );
+                    return rxOf(...List.map(op => tuple(op, appliedOps.length, newCache), appliedOps))
+                }
             ),
             concatMap(
-                ([opItem, numOps], i) => this.createOperation(
-                    i, opItem.id, changedOpIdx, numOps, this.concArgsCache.get(opItem.id).form_type)
-            ),
-            map(
-                (data) => data !== null && data.Q ? data.Q || [] : []
+                ([opItem, numOps, newCache], opIdx) => this.createOperation({
+                    state,
+                    opIdx,
+                    opKey: opItem.id,
+                    changedOpIdx,
+                    numOps,
+                    formType: newCache[opItem.id].form_type
+                })
             ),
             tap(
-                (newQVal) => {
+                (data:Kontext.AjaxConcResponse|null) => {
+                    const newQVal = data !== null && data.Q ? data.Q || [] : [];
                     this.pageModel.replaceConcArg('q', newQVal);
                 }
             )
@@ -558,47 +641,26 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
      * @param opIdx an index of the operation in a respective query pipeline
      * @returns updated query store wrapped in a promise
      */
-    private syncQueryForm(opIdx:number):Observable<AjaxResponse.QueryFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncQueryForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.QueryFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return (queryKey !== undefined ?
             // cache hit
-            this.queryModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.QueryFormArgs)) :
+            this.queryModel.syncFrom(rxOf(state.concArgsCache[queryKey] as AjaxResponse.QueryFormArgs)) :
             this.queryModel.syncFrom(
                 this.pageModel.ajax$<AjaxResponse.QueryFormArgsResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
+                        last_key: getCurrentQueryKey(this.pageModel),
                         idx: opIdx
                     }
-
-                ).pipe(
-                    tap(
-                        (data) => {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        }
-                    )
                 )
             )
 
         ).pipe(
             concatMap(
                 (data) => this.textTypesModel.syncFrom(rxOf(data))
-            ),
-            map(
-                (data) => {
-                    this.synchronize(
-                        'EDIT_QUERY_OPERATION',
-                        {
-                            sourceId: this.getActualCorpname(),
-                            query: data.curr_queries[this.getActualCorpname()],
-                            queryType: data.curr_query_types[this.getActualCorpname()]
-                        }
-                    );
-                    return data;
-                }
             )
         );
     }
@@ -607,255 +669,172 @@ export class QueryReplayModel extends QueryInfoModel implements IQueryReplayMode
      * Synchronize filter form with position [opIdx] in a
      * respective query pipeline.
      */
-    private syncFilterForm(opIdx:number):Observable<AjaxResponse.FilterFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncFilterForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.FilterFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return (queryKey !== undefined ?
             // cache hit
-            this.filterModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.FilterFormArgs)) :
+            this.filterModel.syncFrom(rxOf(state.concArgsCache[queryKey] as AjaxResponse.FilterFormArgs)) :
             this.filterModel.syncFrom(
                 this.pageModel.ajax$<AjaxResponse.FilterFormArgsResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
+                        last_key: getCurrentQueryKey(this.pageModel),
                         idx: opIdx
                     }
-
-                ).pipe(
-                    tap(
-                        (data) => {
-                            this.concArgsCache = this.concArgsCache.set(
-                                data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        }
-                    )
                 )
             )
-        ).pipe(
-            tap(
-                (data) => {
-                    this.synchronize(
-                        'EDIT_QUERY_OPERATION',
-                        {
-                            sourceId: data.op_key,
-                            query: data.query,
-                            queryType: data.query_type
-                        }
-                    );
-                }
-            )
         );
+        /* TODO !!!!!!!!!!!!!!
+        tap(
+            (data) => {
+                this.synchronize(
+                    'EDIT_QUERY_OPERATION',
+                    {
+                        sourceId: data.op_key,
+                        query: data.query,
+                        queryType: data.query_type
+                    }
+                );
+            }
+        )
+        */
     }
 
-    /**
-     * @todo
-     */
-    private syncSortForm(opIdx:number):Observable<AjaxResponse.SortFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncSortForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.SortFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
-            this.sortModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.SortFormArgs)).pipe(
+            this.sortModel.syncFrom(rxOf(state.concArgsCache[queryKey] as AjaxResponse.SortFormArgs)).pipe(
                     concatMap(data => this.mlConcSortModel.syncFrom(rxOf(data)))) :
             this.sortModel.syncFrom(
                 this.pageModel.ajax$<AjaxResponse.SortFormArgsResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
+                        last_key: getCurrentQueryKey(this.pageModel),
                         idx: opIdx
                     }
                 ).pipe(
-                    tap(
-                        (data) => {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        }
-                    ),
                     concatMap(
-                        (data) => {
-                            const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
-                            return this.mlConcSortModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.SortFormArgs));
-                        }
+                        data => this.mlConcSortModel.syncFrom(rxOf(data as AjaxResponse.SortFormArgs))
                     )
                 ));
     }
 
-    private syncSampleForm(opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncSampleForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
-            this.sampleModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.SampleFormArgs)) :
+            this.sampleModel.syncFrom(rxOf(state.concArgsCache[queryKey] as AjaxResponse.SampleFormArgs)) :
             this.sampleModel.syncFrom(
                 this.pageModel.ajax$<AjaxResponse.SampleFormArgsResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
+                        last_key: getCurrentQueryKey(this.pageModel),
                         idx: opIdx
                     }
-
-                ).pipe(
-                    tap(
-                        (data) => {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        }
-                    )
                 )
             );
     }
 
-    private syncShuffleForm(opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncShuffleForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
-            rxOf(this.concArgsCache.get(queryKey)) :
+            rxOf(state.concArgsCache[queryKey]) :
             this.pageModel.ajax$<AjaxResponse.ConcFormArgsResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                 {
                     corpname: this.getActualCorpname(),
-                    last_key: this.getCurrentQueryKey(),
+                    last_key: getCurrentQueryKey(this.pageModel),
                     idx: opIdx
                 }
 
-            ).pipe(
-                tap(
-                    (data) => {
-                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                    }
-                )
             );
     }
 
-    private syncSubhitsForm(opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncSubhitsForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
-            rxOf(this.concArgsCache.get(queryKey)) :
+            rxOf(state.concArgsCache[queryKey]) :
             this.pageModel.ajax$<AjaxResponse.ConcFormArgsResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                 {
                     corpname: this.getActualCorpname(),
-                    last_key: this.getCurrentQueryKey(),
+                    last_key: getCurrentQueryKey(this.pageModel),
                     idx: opIdx
                 }
-
-            ).pipe(
-                tap(
-                    (data) => {
-                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
-                    }
-                )
             );
     }
 
-    private syncFirstHitsForm(opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncFirstHitsForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
-            this.firstHitsModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.FirstHitsFormArgs)) :
+            this.firstHitsModel.syncFrom(rxOf(state.concArgsCache[queryKey] as AjaxResponse.FirstHitsFormArgs)) :
             this.firstHitsModel.syncFrom(
                 this.pageModel.ajax$<AjaxResponse.FirstHitsFormArgs>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
+                        last_key: getCurrentQueryKey(this.pageModel),
                         idx: opIdx
                     }
 
-                ).pipe(
-                    tap(
-                        (data) => {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                            return data;
-                        }
-                    )
                 )
             );
     }
 
-    private syncSwitchMcForm(opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+    private syncSwitchMcForm(state:QueryReplayModelState, opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+        const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
-            this.switchMcModel.syncFrom(rxOf(this.concArgsCache.get(queryKey) as AjaxResponse.SwitchMainCorpArgs)) :
+            this.switchMcModel.syncFrom(rxOf(state.concArgsCache[queryKey] as AjaxResponse.SwitchMainCorpArgs)) :
             this.switchMcModel.syncFrom(
                 this.pageModel.ajax$<AjaxResponse.SwitchMainCorpArgs>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
+                        last_key: getCurrentQueryKey(this.pageModel),
                         idx: opIdx
                     }
-                ).pipe(
-                    tap(
-                        (data) => {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        }
-                    )
                 )
             );
     }
 
-    private syncFormData(opIdx:number):Observable<AjaxResponse.ConcFormArgs|null> {
-        const formType = this.currEncodedOperations.get(opIdx).formType;
+    private syncFormData(state:QueryReplayModelState, opIdx:number):Observable<[AjaxResponse.ConcFormArgs|null, string]> {
+        const formType = state.currEncodedOperations[opIdx].formType;
 
-        if (this.concArgsCache.size === 0) {
+        if (Dict.size(state.concArgsCache) === 0) {
             return rxOf(null);
 
         } else if (formType === Kontext.ConcFormTypes.QUERY) {
-            return this.syncQueryForm(opIdx);
+            return this.syncQueryForm(state, opIdx).pipe(map(v => tuple(v, this.getActualCorpname())));
 
         } else if (formType === Kontext.ConcFormTypes.FILTER) {
-            return this.syncFilterForm(opIdx);
+            return this.syncFilterForm(state, opIdx).pipe(map(v => tuple(v, v.op_key)));
 
         } else if (formType === Kontext.ConcFormTypes.SORT) {
-            return this.syncSortForm(opIdx);
+            return this.syncSortForm(state, opIdx).pipe(map(v => tuple(v, '')));
 
         } else if (formType === Kontext.ConcFormTypes.SAMPLE) {
-            return this.syncSampleForm(opIdx);
+            return this.syncSampleForm(state, opIdx).pipe(map(v => tuple(v, '')));
 
         } else if (formType === Kontext.ConcFormTypes.SHUFFLE) {
-            return this.syncShuffleForm(opIdx);
+            return this.syncShuffleForm(state, opIdx).pipe(map(v => tuple(v, '')));
 
         } else if (formType === Kontext.ConcFormTypes.SWITCHMC) {
-            return this.syncSwitchMcForm(opIdx);
+            return this.syncSwitchMcForm(state, opIdx).pipe(map(v => tuple(v, '')));
 
         } else if (formType === Kontext.ConcFormTypes.SUBHITS) {
-            return this.syncSubhitsForm(opIdx);
+            return this.syncSubhitsForm(state, opIdx).pipe(map(v => tuple(v, '')));
 
         } else if (formType === Kontext.ConcFormTypes.FIRSTHITS) {
-            return this.syncFirstHitsForm(opIdx);
+            return this.syncFirstHitsForm(state, opIdx).pipe(map(v => tuple(v, '')));;
         }
-    }
-
-    getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation> {
-        return this.currEncodedOperations;
-    }
-
-    getBranchReplayIsRunning():boolean {
-        return this.branchReplayIsRunning;
-    }
-
-    getEditedOperationIdx():number {
-        return this.editedOperationIdx;
-    }
-
-    getRunFullQuery():boolean {
-        return this.stopAfterOpIdx === null;
-    }
-
-    editIsLocked():boolean {
-        return this._editIsLocked;
-    }
-
-    getNumOperations():number {
-        return this.currEncodedOperations.size;
     }
 }
