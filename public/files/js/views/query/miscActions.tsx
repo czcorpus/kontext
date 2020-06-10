@@ -20,11 +20,13 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
-import {ConcSampleModel} from '../../models/query/sample';
-import {SwitchMainCorpModel} from '../../models/query/switchmc';
-import {IActionDispatcher} from 'kombo';
+import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+
+import { Kontext, KeyCodes } from '../../types/common';
+import { ConcSampleModel } from '../../models/query/sample';
+import { SwitchMainCorpModel } from '../../models/query/switchmc';
+import { ActionName, Actions } from '../../models/query/actions';
 
 
 export interface SampleFormViews {
@@ -112,8 +114,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _handleSubmitEvent(evt) {
             if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
                 if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch({
-                        name: 'BRANCH_QUERY',
+                    dispatcher.dispatch<Actions.BranchQuery>({
+                        name: ActionName.BranchQuery,
                         payload: {operationIdx: this.props.operationIdx}
                     });
 
@@ -261,8 +263,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _handleSubmitEvent(evt) {
             if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
                 if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch({
-                        name: 'BRANCH_QUERY',
+                    dispatcher.dispatch<Actions.BranchQuery>({
+                        name: ActionName.BranchQuery,
                         payload: {operationIdx: this.props.operationIdx}
                     });
 

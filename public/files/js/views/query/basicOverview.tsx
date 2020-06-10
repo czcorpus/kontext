@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
 import { Subscription } from 'rxjs';
+import { IActionDispatcher } from 'kombo';
+import { Kontext } from '../../types/common';
+
+import { PluginInterfaces } from '../../types/plugins';
+import { ActionName, Actions } from '../../models/query/actions';
 
 
 export interface EmptyQueryOverviewBarProps {
@@ -33,7 +34,7 @@ export interface EmptyQueryOverviewBarProps {
 
 
 export interface QueryOverviewTableProps {
-    data:Immutable.List<Kontext.QueryOperation>
+    data:Array<Kontext.QueryOperation>
     onEditClick:(idx:number)=>void;
 }
 
@@ -116,20 +117,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const QueryOverviewTable:React.SFC<QueryOverviewTableProps> = (props) => {
 
         const handleCloseClick = () => {
-            dispatcher.dispatch({
-                name: 'CLEAR_QUERY_OVERVIEW_DATA',
-                payload: {}
+            dispatcher.dispatch<Actions.ClearQueryOverviewData>({
+                name: ActionName.ClearQueryOverviewData
             });
         };
 
-        const handleEditClickFn = (idx) => {
-            return () => {
-                dispatcher.dispatch({
-                    name: 'CLEAR_QUERY_OVERVIEW_DATA',
-                    payload: {}
-                }); // this is synchronous
-                props.onEditClick(idx);
-            };
+        const handleEditClickFn = (idx:number) => () => {
+            dispatcher.dispatch<Actions.ClearQueryOverviewData>({
+                name: ActionName.ClearQueryOverviewData
+            });
+            props.onEditClick(idx);
         };
 
         return (

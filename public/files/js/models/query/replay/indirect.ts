@@ -18,12 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { QueryInfoModel } from './info';
-import { IQueryReplayModel, ExtendedQueryOperation, importEncodedOperations } from './common';
+import { ExtendedQueryOperation, importEncodedOperations } from './common';
 import { Kontext } from '../../../types/common';
-import { IFullActionControl, Action } from 'kombo';
+import { IActionDispatcher } from 'kombo';
 import { PageModel } from '../../../app/page';
+import { Actions, ActionName } from '../actions';
+
+
+export interface IndirectQueryReplayModelState {
+    currentQueryOverview:Array<Kontext.QueryOperation>|null;
+    currEncodedOperations:Array<ExtendedQueryOperation>;
+}
 
 /**
  * IndirectQueryReplayModel is a replacement for QueryReplayModel
@@ -33,39 +39,28 @@ import { PageModel } from '../../../app/page';
  * 'view' page and open a respective operation form in case
  * user clicks a item.
  */
-export class IndirectQueryReplayModel extends QueryInfoModel implements IQueryReplayModel {
+export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplayModelState> {
 
-    private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
-
-    private currQueryOverivew:Immutable.List<Kontext.QueryOperation>;
-
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel,
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
-        super(dispatcher, pageModel);
-        this.pageModel = pageModel;
-        this.currEncodedOperations = importEncodedOperations(currentOperations);
-        this.currQueryOverivew = Immutable.List<Kontext.QueryOperation>(currentOperations);
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'REDIRECT_TO_EDIT_QUERY_OPERATION':
-                    window.location.replace(
-                        this.pageModel.createActionUrl(
-                            'view',
-                            this.pageModel.getConcArgs().items()
-                        ) + '#edit_op/operationIdx=' + action.payload['operationIdx']
-                    );
-                break;
-            }
+        super(dispatcher, pageModel, {
+            currEncodedOperations: importEncodedOperations(currentOperations),
+            currentQueryOverview: [...currentOperations]
         });
-    }
 
-    getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation> {
-        return this.currEncodedOperations;
-    }
 
-    getCurrentQueryOverview():Immutable.List<Kontext.QueryOperation> {
-        return null;
+        this.addActionHandler<Actions.RedirectToEditQueryOperation>(
+            ActionName.RedirectToEditQueryOperation,
+            null,
+            (state, action, dispatch) => {
+                window.location.replace(
+                    this.pageModel.createActionUrl(
+                        'view',
+                        this.pageModel.getConcArgs().items()
+                    ) + '#edit_op/operationIdx=' + action.payload['operationIdx']
+                );
+            }
+        );
     }
 
 }

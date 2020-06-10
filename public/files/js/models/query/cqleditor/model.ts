@@ -18,12 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, typedProps} from '../../../types/common';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../../app/page';
-import {AttrHelper} from './attrs';
-import {highlightSyntax} from './parser';
-import { IActionDispatcher, StatelessModel, Action } from 'kombo';
+import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
+
+import { Kontext, typedProps } from '../../../types/common';
+import { PageModel } from '../../../app/page';
+import { AttrHelper } from './attrs';
+import { highlightSyntax } from './parser';
+import { Actions, ActionName } from '../actions';
+import { AjaxResponse } from '../../../types/ajaxResponses';
 
 /**
  *
@@ -46,6 +49,8 @@ export interface CQLEditorModelState {
 
     cqlEditorMessage:Immutable.Map<string, string>;
 
+    isReady:boolean;
+
 }
 
 interface CQLEditorSetRawQueryProps {
@@ -64,7 +69,6 @@ export interface CQLEditorModelInitArgs {
     structAttrList:Array<Kontext.AttrItem>;
     structList:Array<string>;
     tagAttr:string;
-    actionPrefix:string;
     isEnabled:boolean;
     currQueries?:{[sourceId:string]:string};
 }
@@ -79,13 +83,11 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
 
     private attrHelper:AttrHelper;
 
-    private actionPrefix:string;
-
     private hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
 
 
     constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
-                    actionPrefix, isEnabled, currQueries}:CQLEditorModelInitArgs) {
+                    isEnabled, currQueries}:CQLEditorModelInitArgs) {
         const attrHelper = new AttrHelper(attrList, structAttrList, structList, tagAttr);
         super(
             dispatcher,
@@ -108,22 +110,23 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                 rawFocusIdx: Immutable.Map<string, number>(),
                 cqlEditorMessage: Immutable.Map<string, string>(),
                 isEnabled: isEnabled,
+                isReady: false,
                 downArrowTriggersHistory: Immutable.Map<string, boolean>()
             }
         );
         this.attrHelper = attrHelper;
         this.pageModel = pageModel;
-        this.actionPrefix = actionPrefix;
         this.hintListener = (state, sourceId, msg) => {
             state.message = state.message.set(sourceId, msg);
         }
-    }
-
-    reduce(state:CQLEditorModelState, action:Action):CQLEditorModelState {
-        let newState:CQLEditorModelState;
-        switch (action.name) {
-            case 'CQL_EDITOR_ENABLE':
-                newState = this.copyState(state);
+        this.actionMatch = {
+            'CQL_EDITOR_INITIALIZE_DONE': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isReady = true;
+                return newState;
+            },
+            'CQL_EDITOR_ENABLE': (state, action) => {
+                const newState = this.copyState(state);
                 newState.isEnabled = true;
                 newState.rawCode.forEach((query, sourceId) => {
                     newState.richCode = newState.richCode.set(
@@ -137,13 +140,15 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                         )
                     );
                 });
-            break;
-            case 'CQL_EDITOR_DISABLE':
-                newState = this.copyState(state);
+                return newState;
+            },
+            'CQL_EDITOR_DISABLE': (state, action) => {
+                const newState = this.copyState(state);
                 newState.isEnabled = false;
-            break;
-            case this.actionPrefix + 'QUERY_INPUT_MOVE_CURSOR':
-                newState = this.copyState(state);
+                return newState;
+            },
+            'QUERY_INPUT_MOVE_CURSOR': (state, action) => {
+                const newState = this.copyState(state);
                 newState.rawAnchorIdx = newState.rawAnchorIdx.set(
                     action.payload['sourceId'],
                     action.payload['rawAnchorIdx']
@@ -159,9 +164,10 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                         action.payload['sourceId']
                     )
                 );
-            break;
-            case this.actionPrefix + 'QUERY_INPUT_SET_QUERY': {
-                newState = this.copyState(state);
+                return newState;
+            },
+            'QUERY_INPUT_SET_QUERY': (state, action) => {
+                const newState = this.copyState(state);
                 const args = typedProps<CQLEditorSetRawQueryProps>(action.payload);
                 if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
                     newState.rawAnchorIdx = newState.rawAnchorIdx.set(args.sourceId, args.rawAnchorIdx || args.query.length);
@@ -177,10 +183,10 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                     this.moveCursorToPos(
                         newState, args.sourceId, newState.rawCode.get(args.sourceId).length);
                 }
-            }
-            break;
-            case this.actionPrefix + 'QUERY_INPUT_APPEND_QUERY':
-                newState = this.copyState(state);
+                return newState;
+            },
+            'QUERY_INPUT_APPEND_QUERY': (state, action) => {
+                const newState = this.copyState(state);
                 this.setRawQuery(
                     newState,
                     <string>action.payload['sourceId'],
@@ -191,9 +197,10 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                     ]
                 );
                 this.moveCursorToEnd(newState, action.payload['sourceId']);
-            break;
-            case this.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR': {
-                newState = this.copyState(state);
+                return newState;
+            },
+            'QUERY_INPUT_REMOVE_LAST_CHAR': (state, action) => {
+                const newState = this.copyState(state);
                 const queryLength = newState.rawCode.get(action.payload['sourceId']).length;
                 this.setRawQuery(
                     newState,
@@ -202,26 +209,56 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
                     [queryLength - 1, queryLength]
                 );
                 this.moveCursorToEnd(newState, action.payload['sourceId']);
-            }
-            break;
-            case '@EDIT_QUERY_OPERATION':
-                newState = this.copyState(state);
-                if (action.payload['queryType'] === 'cql') {
+                return newState;
+            },
+            [ActionName.EditQueryOperationDone]: (state, action:Actions.EditQueryOperationDone) => {
+                const data = action.payload.data;
+                if (AjaxResponse.isQueryFormArgs(data) && data.curr_query_types[action.payload.sourceId] === 'cql') {
+                    const newState = this.copyState(state);
                     this.setRawQuery(
                         newState,
-                        action.payload['sourceId'],
-                        action.payload['query'],
+                        action.payload.sourceId,
+                        data.curr_queries[action.payload.sourceId],
                         null
                     );
+                    return newState;
+
+                } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'cql') {
+                    const newState = this.copyState(state);
+                    this.setRawQuery(
+                        newState,
+                        action.payload.sourceId,
+                        data.query,
+                        null
+                    );
+                    return newState;
                 }
+                return state;
+            },
+            'CORPUS_SWITCH_MODEL_RESTORE': (state, action) => {
+                return this.restoreFromCorpSwitch(state, action.payload as Kontext.CorpusSwitchActionProps<CQLEditorModelState>);
+            },
+            'QUERY_OVERVIEW_EDITOR_CLOSE': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isReady = false;
+                return newState;
+            }
+        };
+
+        this.actionMatch['FILTER_QUERY_INPUT_MOVE_CURSOR'] = this.actionMatch['QUERY_INPUT_MOVE_CURSOR'];
+        this.actionMatch['FILTER_QUERY_INPUT_SET_QUERY'] = this.actionMatch['QUERY_INPUT_SET_QUERY'];
+        this.actionMatch['FILTER_QUERY_INPUT_APPEND_QUERY'] = this.actionMatch['QUERY_INPUT_APPEND_QUERY'];
+        this.actionMatch['FILTER_QUERY_INPUT_REMOVE_LAST_CHAR'] = this.actionMatch['QUERY_INPUT_REMOVE_LAST_CHAR'];
+    }
+
+    sideEffects(state:CQLEditorModelState, action:Action, dispatch:SEDispatcher) {
+        switch (action.name) {
+            case 'CQL_EDITOR_INITIALIZE':
+                dispatch({
+                    name: 'CQL_EDITOR_INITIALIZE_DONE'
+                });
             break;
-            case 'CORPUS_SWITCH_MODEL_RESTORE':
-                newState = this.restoreFromCorpSwitch(state, action.payload as Kontext.CorpusSwitchActionProps<CQLEditorModelState>);
-            break;
-            default:
-                newState = state;
         }
-        return newState;
     }
 
     csExportState():CQLEditorModelState {
@@ -229,7 +266,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
     }
 
     csGetStateKey():string {
-        return `rich-cql-editor-${this.actionPrefix}`;
+        return `rich-cql-editor`;
     }
 
     /**

@@ -91,7 +91,6 @@ export class QueryModels {
     saveAsFormModel:QuerySaveAsFormModel;
     firstHitsModel:FirstHitsModel;
     cqlEditorModel:CQLEditorModel;
-    filterCqlEditorModel:CQLEditorModel;
 }
 
 interface RenderLinesDeps {
@@ -378,7 +377,10 @@ export class ViewPage {
             case 'filter':
             case 'sortx':
             case 'shuffle':
-            case 'reduce':
+            case 'reduce': {
+                const state = this.queryModels.queryReplayModel.getState(); // TODO antipattern
+                const numOps = state.currEncodedOperations.length > 0 ?
+                                    state.currEncodedOperations[state.currEncodedOperations.length - 1].size : 0;
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
@@ -386,7 +388,7 @@ export class ViewPage {
                         modalAction: {
                             name: 'EDIT_QUERY_OPERATION',
                             payload: {
-                                operationIdx: this.queryModels.queryReplayModel.getNumOperations() - 1
+                                operationIdx: numOps - 1
                             }
                         }
                     },
@@ -401,6 +403,7 @@ export class ViewPage {
                     },
                     window.document.title
                 );
+            }
             break;
             default:
                 this.layoutModel.getHistory().replaceState(
@@ -494,7 +497,6 @@ export class ViewPage {
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            actionPrefix: '',
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
         });
 
@@ -553,17 +555,6 @@ export class ViewPage {
             filterFormProps
         );
 
-        this.queryModels.filterCqlEditorModel = new CQLEditorModel({
-            dispatcher: this.layoutModel.dispatcher,
-            pageModel: this.layoutModel,
-            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            actionPrefix: 'FILTER_',
-            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
-        });
-
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
             this.queryModels.filterModel.emitChange();
             this.layoutModel.dispatchSideEffect(
@@ -590,7 +581,7 @@ export class ViewPage {
             this.queryModels.withinBuilderModel,
             this.queryModels.virtualKeyboardModel,
             firstHitsModel,
-            this.queryModels.filterCqlEditorModel
+            this.queryModels.cqlEditorModel
         );
     }
 

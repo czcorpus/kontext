@@ -18,23 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import { IEventEmitter } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { AjaxResponse } from '../../../types/ajaxResponses';
+import { List } from 'cnc-tskit';
+
+
+export interface QueryOverviewResponseRow {
+    op:string;
+    opid:string;
+    churl:string;
+    tourl:string;
+    nicearg:string;
+    size:number;
+}
 
 /**
  *
  */
 export interface ExtendedQueryOperation extends Kontext.QueryOperation {
     formType:string;
-}
-
-export interface IQueryReplayModel extends IEventEmitter {
-
-    getCurrEncodedOperations():Immutable.List<ExtendedQueryOperation>;
-
-    getCurrentQueryOverview():Immutable.List<Kontext.QueryOperation>;
 }
 
 
@@ -92,9 +94,9 @@ function mapOpIdToFormType(opId:string):string {
     }
 }
 
-export function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>):Immutable.List<ExtendedQueryOperation> {
-    return Immutable.List<ExtendedQueryOperation>(currentOperations.map(item => {
-        return {
+export function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>):Array<ExtendedQueryOperation> {
+    return List.map(
+        item => ({
             op: item.op,
             opid: item.opid,
             nicearg: item.nicearg,
@@ -103,6 +105,7 @@ export function importEncodedOperations(currentOperations:Array<Kontext.QueryOpe
             churl: item.churl,
             size: item.size,
             formType: mapOpIdToFormType(item.opid)
-        };
-    }));
+        }),
+        currentOperations
+    );
 }

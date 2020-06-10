@@ -21,22 +21,24 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {init as inputInit} from './input';
-import {init as alignedInit} from './aligned';
-import {init as contextInit} from './context';
-import {init as ttViewsInit} from '../textTypes';
-import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
-import {FirstQueryFormModel} from '../../models/query/first';
-import {WidgetsMap} from '../../models/query/common';
-import {UsageTipsModel} from '../../models/usageTips';
-import {TextTypesModel} from '../../models/textTypes/main';
-import {WithinBuilderModel} from '../../models/query/withinBuilder';
-import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
-import {QueryContextModel} from '../../models/query/context';
-import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import { Subscription } from 'rxjs';
+import { IActionDispatcher } from 'kombo';
+
+import { init as inputInit } from './input';
+import { init as alignedInit } from './aligned';
+import { init as contextInit } from './context';
+import { init as ttViewsInit } from '../textTypes';
+import { Kontext, KeyCodes } from '../../types/common';
+import { PluginInterfaces } from '../../types/plugins';
+import { FirstQueryFormModel } from '../../models/query/first';
+import { WidgetsMap } from '../../models/query/common';
+import { UsageTipsModel } from '../../models/usageTips';
+import { TextTypesModel } from '../../models/textTypes/main';
+import { WithinBuilderModel } from '../../models/query/withinBuilder';
+import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
+import { QueryContextModel } from '../../models/query/context';
+import { CQLEditorModel } from '../../models/query/cqleditor/model';
+import { ActionName, Actions } from '../../models/query/actions';
 
 
 export interface MainModuleArgs {
@@ -466,8 +468,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey) {
                     if (this.props.operationIdx !== undefined) {
-                        dispatcher.dispatch({
-                            name: 'BRANCH_QUERY',
+                        dispatcher.dispatch<Actions.BranchQuery>({
+                            name: ActionName.BranchQuery,
                             payload: {operationIdx: this.props.operationIdx}
                         });
 
@@ -491,8 +493,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch({
-                    name: 'BRANCH_QUERY',
+                dispatcher.dispatch<Actions.BranchQuery>({
+                    name: ActionName.BranchQuery,
                     payload: {operationIdx: this.props.operationIdx}
                 });
 

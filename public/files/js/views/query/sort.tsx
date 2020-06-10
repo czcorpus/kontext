@@ -20,10 +20,13 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import {ConcSortModel, MultiLevelConcSortModel} from '../../models/query/sort';
 import { Subscription } from 'rxjs';
+import { IActionDispatcher } from 'kombo';
+
+import { Kontext } from '../../types/common';
+import { ConcSortModel, MultiLevelConcSortModel } from '../../models/query/sort';
+import { Actions, ActionName } from '../../models/query/actions';
+
 
 export interface SortModuleArgs {
     dispatcher:IActionDispatcher;
@@ -607,8 +610,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleFormSubmit() {
             if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch({
-                    name: 'BRANCH_QUERY',
+                dispatcher.dispatch<Actions.BranchQuery>({
+                    name: ActionName.BranchQuery,
                     payload: {operationIdx: this.props.operationIdx}
                 });
 
