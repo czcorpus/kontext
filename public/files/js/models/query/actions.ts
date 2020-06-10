@@ -35,7 +35,11 @@ export enum ActionName {
     QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
     RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
     QueryOverviewEditorClose = 'QUERY_OVERVIEW_EDITOR_CLOSE',
-    LockQueryPipeline = 'LOCK_QUERY_PIPELINE'
+    LockQueryPipeline = 'LOCK_QUERY_PIPELINE',
+    QueryInputUnhitVirtualKeyboardKey = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_KEY',
+    QueryInputHitVirtualKeyboardKey = 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
+    QueryInputSetVirtualKeyboardLayout = 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
+    QueryInputLoadVirtualKeyboardLayout = 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS'
 }
 
 export namespace Actions {
@@ -106,4 +110,27 @@ export namespace Actions {
     }> {
         name:ActionName.LockQueryPipeline;
     }
+
+    export interface QueryInputUnhitVirtualKeyboardKey extends Action<{
+    }> {
+        name:ActionName.QueryInputUnhitVirtualKeyboardKey;
+    }
+
+    export interface QueryInputHitVirtualKeyboardKey extends Action<{
+        keyCode:number;
+    }> {
+        name:ActionName.QueryInputHitVirtualKeyboardKey;
+    }
+
+    export interface QueryInputSetVirtualKeyboardLayout extends Action<{
+        idx:number;
+    }> {
+        name:ActionName.QueryInputSetVirtualKeyboardLayout;
+    }
+
+    export interface QueryInputLoadVirtualKeyboardLayout extends Action<{
+    }> {
+        name:ActionName.QueryInputLoadVirtualKeyboardLayout;
+    }
+
 }
