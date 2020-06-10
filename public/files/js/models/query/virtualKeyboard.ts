@@ -22,15 +22,18 @@ import {Kontext} from '../../types/common';
 import {PageModel} from '../../app/page';
 import {ActionName, Actions} from './actions';
 import { IFullActionControl, StatelessModel } from 'kombo';
+import { List } from 'cnc-tskit';
 
 declare var require:(ident:string)=>any; // Webpack
 const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');
 
 
-interface VirtualKeyboardState {
-    externalKeyHit:number;
-    currLayout:number;
+export interface VirtualKeyboardState {
+    shiftOn:boolean;
+    capsOn:boolean;
     layouts:VirtualKeyboardLayouts;
+    activeKey:[number, number];
+    currentLayoutIdx:number;
 }
 
 
@@ -40,8 +43,6 @@ export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
 
     private pageModel:PageModel;
-
-    private defaultLayout:string;
 
     private keyCodes:Array<Array<number>> = [
         [192, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 189, 187, 8],
@@ -53,24 +54,48 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
         super(dispatcher, {
-            externalKeyHit: null,
-            currLayout: null,
-            layouts: null
+            shiftOn: false,
+            capsOn: false,
+            layouts: kbLayouts,
+            activeKey: null,
+            currentLayoutIdx: List.findIndex(v => v.name === pageModel.getConf('DefaultVirtKeyboard'), kbLayouts)
         });
         this.pageModel = pageModel;
-        this.defaultLayout = this.pageModel.getConf('DefaultVirtKeyboard');
+
+        this.addActionHandler<Actions.QueryInputToggleVirtualKeyboardShift>(
+            ActionName.QueryInputToggleVirtualKeyboardShift,
+            (state, action) => {
+                state.shiftOn = !state.shiftOn;
+                state.capsOn = false;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryInputUnhitVirtualKeyboardShift>(
+            ActionName.QueryInputUnhitVirtualKeyboardShift,
+            (state, action) => {
+                state.shiftOn = false;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryInputToggleVirtualKeyboardCaps>(
+            ActionName.QueryInputToggleVirtualKeyboardCaps,
+            (state, action) => {
+                state.capsOn = !state.capsOn;
+                state.shiftOn = false;
+            }
+        );
 
         this.addActionHandler<Actions.QueryInputUnhitVirtualKeyboardKey>(
             ActionName.QueryInputUnhitVirtualKeyboardKey,
-            (newState, action) => {
-                newState.externalKeyHit = null;
+            (state, action) => {
+                state.activeKey = null;
             }
         );
 
         this.addActionHandler<Actions.QueryInputHitVirtualKeyboardKey>(
             ActionName.QueryInputHitVirtualKeyboardKey,
-            (newState, action) => {
-                newState.externalKeyHit = action.payload['keyCode'];
+            (state, action) => {
+                state.activeKey = this.getActiveKey(action.payload.keyCode);
             },
             (state, action, dispatch) => {
                 let timeout;
@@ -84,42 +109,16 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
 
         this.addActionHandler<Actions.QueryInputSetVirtualKeyboardLayout>(
             ActionName.QueryInputSetVirtualKeyboardLayout,
-            (newState, action) => {
-                newState.currLayout = action.payload.idx;
-            }
-        );
-
-        this.addActionHandler<Actions.QueryInputLoadVirtualKeyboardLayout>(  // TODO this a legacy action (now we have kb bundled)
-            ActionName.QueryInputLoadVirtualKeyboardLayout,
-            (newState, action) => {
-                newState.layouts = kbLayouts;
+            (state, action) => {
+                state.currentLayoutIdx = action.payload.idx;
             }
         );
     }
 
-    getLayoutNames():Kontext.ListOfPairs {
-        return this.getState().layouts.map<[string, string]>(item => [item.name, item.label]);
-    }
-
-    getCurrentLayout():Kontext.VirtualKeyboardLayout {
-        return this.getState().layouts[this.getCurrentLayoutIdx()];
-    }
-
-    getCurrentLayoutIdx():number {
-        const state = this.getState();
-        const layoutIndex = state.currLayout === null ? state.layouts.findIndex(v => v.name === this.defaultLayout) : state.currLayout;
-        return layoutIndex < 0 ? 0 : layoutIndex;
-    }
-
-    getActiveKey():[number, number] {
-        const state = this.getState();
-        for (let i = 0; i < this.keyCodes.length; i += 1) {
-            for (let j = 0; j < this.keyCodes[i].length; j += 1) {
-                if (this.keyCodes[i][j] === state.externalKeyHit) {
-                    return [i, j];
-                }
-            }
-        }
-        return [null, null];
+    getActiveKey(keyCode:number):[number, number] {
+        const rowIdx = List.findIndex(row => row.includes(keyCode), this.keyCodes);
+        if (rowIdx === -1) return null;
+        const collIdx = List.findIndex(key => key === keyCode, this.keyCodes[rowIdx]);
+        return [rowIdx, collIdx];
     }
 }
