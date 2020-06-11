@@ -20,41 +20,32 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {QueryFormModel, AppendQueryInputAction} from '../../models/query/common';
-import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
-import { Subscription } from 'rxjs';
+import { VirtualKeyboardModel, VirtualKeyboardState } from '../../models/query/virtualKeyboard';
+import { ActionName, Actions } from '../../models/query/actions';
+import { List } from 'cnc-tskit';
 
 
-export interface KeyboardProps {
+export interface VirtualKeyboardProps {
     actionPrefix:string;
     sourceId:string;
     inputLanguage:string;
 }
 
 
-export interface KeyboardState {
-    shiftOn:boolean;
-    capsOn:boolean;
-    layout:Kontext.VirtualKeyboardLayout;
-    layoutNames:Kontext.ListOfPairs;
-    currentLayoutIdx:number;
-    triggeredKey:[number, number];
+export interface VirtualKeyboardViews {
+    VirtualKeyboard:React.ComponentClass<VirtualKeyboardProps>;
 }
 
-
-export interface KeyboardViews {
-    Keyboard:React.ComponentClass<KeyboardProps>;
-}
-
-export interface KeyboardModuleArgs {
+export interface VirtualKeyboardModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     queryModel:QueryFormModel;
-    virtualKeyboardModel:VirtualKeyboardModel
+    virtualKeyboardModel:VirtualKeyboardModel;
 }
 
-export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):KeyboardViews {
+export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModuleArgs):VirtualKeyboardViews {
 
     // -------------------- <Key /> ----------------------------
 
@@ -268,16 +259,14 @@ export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):
 
         return (
             <div className="key-row">
-            {props.data.map(selectKeyType)}
+                {List.map(selectKeyType, props.data)}
             </div>
         );
     };
 
     // -------------------- <Keyboard /> ----------------------------
 
-    class Keyboard extends React.Component<KeyboardProps, KeyboardState> {
-
-        private modelSubscription:Subscription;
+    class VirtualKeyboard extends React.Component<VirtualKeyboardProps & VirtualKeyboardState, {}> {
 
         constructor(props) {
             super(props);
@@ -286,15 +275,6 @@ export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):
             this._handleCaps = this._handleCaps.bind(this);
             this._handleBackspace = this._handleBackspace.bind(this);
             this._handleLayoutChange = this._handleLayoutChange.bind(this);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
-            this.state = {
-                shiftOn: false,
-                capsOn: false,
-                layout: null,
-                currentLayoutIdx: null,
-                triggeredKey: null,
-                layoutNames: null
-            };
         }
 
         _handleClick(v) {
@@ -305,26 +285,25 @@ export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):
                     query: v,
                     prependSpace: false,
                     closeWhenDone: false,
-                    triggeredKey: this.state.triggeredKey
+                    triggeredKey: this.props.activeKey
                 }
             });
-            const newState = he.cloneState(this.state);
-            newState.shiftOn = false;
-            this.setState(newState);
+
+            dispatcher.dispatch<Actions.QueryInputUnhitVirtualKeyboardShift>({
+                name: ActionName.QueryInputUnhitVirtualKeyboardShift
+            });
         }
 
         _handleShift() {
-            const newState = he.cloneState(this.state);
-            newState.shiftOn = !this.state.shiftOn;
-            newState.capsOn = false;
-            this.setState(newState);
+            dispatcher.dispatch<Actions.QueryInputToggleVirtualKeyboardShift>({
+                name: ActionName.QueryInputToggleVirtualKeyboardShift
+            });
         }
 
         _handleCaps() {
-            const newState = he.cloneState(this.state);
-            newState.shiftOn = false;
-            newState.capsOn = !this.state.capsOn;
-            this.setState(newState);
+            dispatcher.dispatch<Actions.QueryInputToggleVirtualKeyboardCaps>({
+                name: ActionName.QueryInputToggleVirtualKeyboardCaps
+            });
         }
 
         _handleBackspace() {
@@ -334,41 +313,25 @@ export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):
                     sourceId: this.props.sourceId
                 }
             });
-            const newState = he.cloneState(this.state);
-            newState.shiftOn = false;
-            this.setState(newState);
+
+            dispatcher.dispatch<Actions.QueryInputUnhitVirtualKeyboardShift>({
+                name: ActionName.QueryInputUnhitVirtualKeyboardShift
+            });
         }
 
         _handleLayoutChange(evt) {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
+            dispatcher.dispatch<Actions.QueryInputSetVirtualKeyboardLayout>({
+                name: ActionName.QueryInputSetVirtualKeyboardLayout,
                 payload: {idx: evt.target.value}
             });
         }
 
-        _modelChangeListener() {
-            this.setState({
-                shiftOn: this.state.shiftOn,
-                capsOn: this.state.capsOn,
-                layout: virtualKeyboardModel.getCurrentLayout(),
-                layoutNames: virtualKeyboardModel.getLayoutNames(),
-                currentLayoutIdx: virtualKeyboardModel.getCurrentLayoutIdx(),
-                triggeredKey: virtualKeyboardModel.getActiveKey()
-            });
+        getCurrentLayoutIdx():number {
+            return this.props.currentLayoutIdx > 0 ? this.props.currentLayoutIdx : 0;
         }
 
-        componentDidMount() {
-            this.modelSubscription = virtualKeyboardModel.addListener(this._modelChangeListener);
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS',
-                payload: {
-                    inputLanguage: this.props.inputLanguage
-                }
-            });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
+        getCurrentLayout():Kontext.VirtualKeyboardLayout {
+            return this.props.layouts[this.getCurrentLayoutIdx()];
         }
 
         _renderContents() {
@@ -376,24 +339,24 @@ export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):
                 <div>
                     <div className="layout-selection">
                         <h3>{he.translate('query__kb_layout')}:</h3>
-                        <select onChange={this._handleLayoutChange} value={this.state.currentLayoutIdx}>
-                        {this.state.layoutNames.map((item, i) => {
-                            return <option key={i} value={i} title={item[1]}>{item[0]}</option>;
-                        })}
+                        <select onChange={this._handleLayoutChange} value={this.props.currentLayoutIdx > 0 ? this.props.currentLayoutIdx : 0}>
+                        {List.map((item, i) => {
+                            return <option key={i} value={i} title={item.label}>{item.name}</option>;
+                        }, this.props.layouts)}
                         </select>
                     </div>
-                    {this.state.layout.keys.map((item, i) => {
-                        const passTriggerIdx =  i === this.state.triggeredKey[0] ? this.state.triggeredKey[1] : null;
+                    {List.map((item, i) => {
+                        const passTriggerIdx = this.props.activeKey && i === this.props.activeKey[0] ? this.props.activeKey[1] : null;
                         return <KeysRow key={`row${i}`}
                                     data={item}
                                     handleClick={this._handleClick}
-                                    shiftOn={this.state.shiftOn}
+                                    shiftOn={this.props.shiftOn}
                                     handleShift={this._handleShift}
-                                    capsOn={this.state.capsOn}
+                                    capsOn={this.props.capsOn}
                                     handleCaps={this._handleCaps}
                                     handleBackspace={this._handleBackspace}
                                     passTriggerIdx={passTriggerIdx} />;
-                    })}
+                    }, this.getCurrentLayout().keys)}
                 </div>
             );
         }
@@ -401,16 +364,13 @@ export function init({dispatcher, he, virtualKeyboardModel}:KeyboardModuleArgs):
         render() {
             return (
                 <div className="virtual-keyboard-buttons">
-                    {this.state.layout && this.state.layoutNames ?
-                        this._renderContents()
-                        : <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />
-                    }
+                    {this._renderContents()}
                 </div>
             );
         }
     }
 
     return {
-        Keyboard: Keyboard
+        VirtualKeyboard: BoundWithProps(VirtualKeyboard, virtualKeyboardModel)
     };
 }

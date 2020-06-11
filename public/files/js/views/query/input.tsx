@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {IActionDispatcher} from 'kombo';
-import {init as keyboardInit} from './keyboard';
+import {init as keyboardInit} from './virtualKeyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
@@ -31,6 +31,7 @@ import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usa
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import { Subscription } from 'rxjs';
+import { Actions, ActionName } from '../../models/query/actions';
 
 
 export interface InputModuleArgs {
@@ -498,8 +499,8 @@ export function init({
     }> = (props) => {
 
         const keyHandler = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
+            dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardKey>({
+                name: ActionName.QueryInputHitVirtualKeyboardKey,
                 payload: {
                     keyCode: evt.keyCode
                 }
@@ -512,7 +513,7 @@ export function init({
                     customStyle={{marginTop: '3.5em'}}
                     takeFocus={true}
                     keyPressHandler={keyHandler}>
-                <keyboardViews.Keyboard sourceId={props.sourceId}
+                <keyboardViews.VirtualKeyboard sourceId={props.sourceId}
                         inputLanguage={props.inputLanguage}
                         actionPrefix={props.actionPrefix} />
             </layoutViews.PopupBox>
