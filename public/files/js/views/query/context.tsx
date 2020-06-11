@@ -25,10 +25,10 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
-import { QueryContextModel } from '../../models/query/context';
-import { Subscription } from 'rxjs';
+import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
+import { Actions, ActionName } from '../../models/query/actions';
 
 
 export interface SpecifyContextFormProps {
@@ -56,8 +56,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const changeHandler = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
                     name: props.inputName,
                     value: evt.target.value
@@ -86,8 +86,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const changeHandler = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
                     name: evt.target.name,
                     value: evt.target.value
@@ -166,8 +166,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
                     name: evt.target.name,
                     value: evt.target.value
@@ -215,8 +215,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
                     name: evt.target.name,
                     value: evt.target.value
@@ -228,8 +228,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             const values = Array.prototype
                 .filter.call(evt.target.options, item => item.selected)
                 .map(item => item.value);
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
                     name: evt.target.name,
                     value: values
@@ -275,29 +275,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    class SpecifyContextForm extends React.Component<SpecifyContextFormProps, {data: Immutable.Map<string, any>}> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this.state = {
-                data: queryContextModel.getData()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState({data: queryContextModel.getData()});
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryContextModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class SpecifyContextForm extends React.Component<SpecifyContextFormProps & QueryContextModelState> {
 
         render() {
             return (
@@ -309,27 +287,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <LemmaFilter
                         hasLemmaAttr={this.props.hasLemmaAttr}
                         lemmaWindowSizes={this.props.lemmaWindowSizes}
-                        fc_lemword_window_type={this.state.data.get('fc_lemword_window_type')}
-                        fc_lemword_wsize={this.state.data.get('fc_lemword_wsize')}
-                        fc_lemword={this.state.data.get('fc_lemword')}
-                        fc_lemword_type={this.state.data.get('fc_lemword_type')}
-                         />
-                    {this.props.wPoSList && this.props.wPoSList.size > 0
-                        ? <PoSFilter
-                                posWindowSizes={this.props.posWindowSizes}
-                                wPoSList={this.props.wPoSList}
-                                fc_pos_window_type={this.state.data.get('fc_pos_window_type')}
-                                fc_pos_wsize={this.state.data.get('fc_pos_wsize')}
-                                fc_pos={this.state.data.get('fc_pos')}
-                                fc_pos_type={this.state.data.get('fc_pos_type')}
-                                />
-                        : null}
+                        fc_lemword_window_type={this.props.formData.fc_lemword_window_type}
+                        fc_lemword_wsize={this.props.formData.fc_lemword_wsize}
+                        fc_lemword={this.props.formData.fc_lemword}
+                        fc_lemword_type={this.props.formData.fc_lemword_type}
+                    />
+                    {this.props.wPoSList && this.props.wPoSList.size > 0 ?
+                        <PoSFilter
+                            posWindowSizes={this.props.posWindowSizes}
+                            wPoSList={this.props.wPoSList}
+                            fc_pos_window_type={this.props.formData.fc_pos_window_type}
+                            fc_pos_wsize={this.props.formData.fc_pos_wsize}
+                            fc_pos={this.props.formData.fc_pos}
+                            fc_pos_type={this.props.formData.fc_pos_type}
+                        /> :
+                        null
+                    }
                 </div>
             );
         }
     }
 
     return {
-        SpecifyContextForm: SpecifyContextForm
+        SpecifyContextForm: BoundWithProps(SpecifyContextForm, queryContextModel)
     };
 }

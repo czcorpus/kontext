@@ -18,45 +18,51 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {StatefulModel} from '..//base';
-import * as Immutable from 'immutable';
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
+import { Actions, ActionName } from './actions';
 
 
-export class QueryContextModel extends StatefulModel {
+export interface QueryContextModelState {
+    formData:QueryContextArgs;
+}
 
-    private formData:Immutable.Map<string, any>;
+interface QueryContextArgs {
+    fc_lemword_window_type:string;
+    fc_lemword_wsize:string;
+    fc_lemword:string;
+    fc_lemword_type:string;
+    fc_pos_window_type:string;
+    fc_pos_wsize:string;
+    fc_pos:string;
+    fc_pos_type:string;
+}
+
+
+export class QueryContextModel extends StatelessModel<QueryContextModelState> {
 
     constructor(dispatcher:IFullActionControl) {
-        super(dispatcher);
-        this.formData = Immutable.Map<string, any>({
-            fc_lemword_window_type: 'both',
-            fc_lemword_wsize: '1',
-            fc_lemword: '',
-            fc_lemword_type: 'all',
-            fc_pos_window_type: 'left',
-            fc_pos_wsize: '1',
-            fc_pos: [],
-            fc_pos_type: 'all'
-        });
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM':
-                    this.formData = this.formData.set(action.payload['name'], action.payload['value']);
-
-                    this.emitChange();
-                break;
+        super(dispatcher, {
+            formData: {
+                fc_lemword_window_type: 'both',
+                fc_lemword_wsize: '1',
+                fc_lemword: '',
+                fc_lemword_type: 'all',
+                fc_pos_window_type: 'left',
+                fc_pos_wsize: '1',
+                fc_pos: '',
+                fc_pos_type: 'all'
             }
         });
+
+        this.addActionHandler<Actions.QueryInputSelectContextFormItem>(
+            ActionName.QueryInputSelectContextFormItem,
+            (state, action) => {
+                state.formData[action.payload.name] = action.payload.value;
+            }
+        );
     }
 
-    exportForm():{[name:string]:any} {
-        return this.formData.toJS();
+    getContextArgs() {
+        return this.getState().formData;
     }
-
-    getData():Immutable.Map<string, any> {
-        return this.formData;
-    }
-
 }

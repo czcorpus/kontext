@@ -553,7 +553,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         });
 
         // query context
-        const contextArgs = this.queryContextModel.exportForm();
+        const contextArgs = this.queryContextModel.getContextArgs();
         for (let k in contextArgs) {
             if (Object.prototype.toString.call(contextArgs[k]) === '[object Array]') {
                 args.replace(k, contextArgs[k]);
