@@ -18,16 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
-import {MultiDict} from '../../util';
-import {highlightSyntaxStatic} from '../../models/query/cqleditor/parser';
-import { Action } from 'kombo';
 import { tap, concatMap, map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { Action } from 'kombo';
+
+import { Kontext } from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { StatefulModel } from '../../models/base';
+import { MultiDict } from '../../multidict';
+import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
+
 
 
 export interface InputBoxHistoryItem {

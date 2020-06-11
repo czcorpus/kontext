@@ -37,7 +37,7 @@
     "immutable": "^3.8.2",
     "rxjs": "^6.5.5",
     "kombo": "^0.75.2",
-    "cnc-tskit": "0.14.0",
+    "cnc-tskit": "0.15.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   }

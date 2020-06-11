@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import {StatefulModel, validateGzNumber} from '../base';
 import {PageModel} from '../../app/page';
 import {WordlistFormModel} from './form';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 

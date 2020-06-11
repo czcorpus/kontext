@@ -21,7 +21,7 @@
 import {Kontext, TextTypes} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as React from 'react';
-import {calcTextColorFromBg, importColor, color2str} from '../../util';
+import {calcTextColorFromBg, importColor, color2str} from '../../multidict';
 import {init as ctFlatResultFactory} from './ctFlatResult';
 import {init as ctViewOptsFactory} from './ctViewOpts';
 import {Freq2DFlatViewModel} from '../../models/freqs/flatCtable';

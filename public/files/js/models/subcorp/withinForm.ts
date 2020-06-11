@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {PageModel} from '../../app/page';
 import { InputMode } from './common';
 import {SubcorpFormModel} from './form';
-import { MultiDict } from '../../util';
+import { MultiDict } from '../../multidict';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
 

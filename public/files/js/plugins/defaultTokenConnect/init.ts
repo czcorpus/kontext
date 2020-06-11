@@ -20,7 +20,7 @@
 
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as initView, Views as DefaultTokenConnectRenderers} from './view';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import * as Immutable from 'immutable';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';

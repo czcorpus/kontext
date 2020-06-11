@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/page';
 import {CollFormModel} from '../../models/coll/collForm';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';

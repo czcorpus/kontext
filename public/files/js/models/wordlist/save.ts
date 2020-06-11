@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {PageModel} from '../../app/page';
 import {StatefulModel} from '../../models/base';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 
 

@@ -22,7 +22,7 @@ import {TextTypes} from '../../types/common';
 import {PageModel, DownloadType} from '../../app/page';
 import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';

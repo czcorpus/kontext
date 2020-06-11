@@ -25,7 +25,7 @@ import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
-import {MultiDict} from '../util';
+import {MultiDict} from '../multidict';
 
 
 /**

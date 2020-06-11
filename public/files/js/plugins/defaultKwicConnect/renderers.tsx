@@ -20,7 +20,7 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import { Kontext } from '../../types/common';
-import { MultiDict } from '../../util';
+import { MultiDict } from '../../multidict';
 import { IActionDispatcher } from 'kombo';
 
 

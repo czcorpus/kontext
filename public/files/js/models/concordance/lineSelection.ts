@@ -19,7 +19,7 @@
  */
 
 import {Kontext} from '../../types/common';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {StatefulModel} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/page';

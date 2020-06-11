@@ -26,7 +26,7 @@ import { tap, map } from 'rxjs/operators';
 import {Kontext, TextTypes, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PluginInterfaces} from '../../types/plugins';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {StatefulModel, UNSAFE_SynchronizedModel} from '../base';
 import {PageModel} from '../../app/page';
 import {KWICSection} from './line';

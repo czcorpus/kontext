@@ -20,7 +20,7 @@
 
 import { IPluginApi } from '../types/plugins';
 import { Kontext } from '../types/common';
-import { MultiDict } from '../util';
+import { MultiDict } from '../multidict';
 import { CommonViews } from '../views/common';
 import { CoreViews } from '../types/coreViews';
 import { Observable } from 'rxjs';

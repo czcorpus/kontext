@@ -22,7 +22,7 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {validateNumber, setFormItemInvalid} from '../../models/base';

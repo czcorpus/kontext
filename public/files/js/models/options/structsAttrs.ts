@@ -21,7 +21,7 @@
 import { Kontext, ViewOptions } from '../../types/common';
 import * as Immutable from 'immutable';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../util';
+import { MultiDict } from '../../multidict';
 import { Action, IFullActionControl, StatelessModel, SEDispatcher } from 'kombo';
 import { tap, concatMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';

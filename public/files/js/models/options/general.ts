@@ -22,7 +22,7 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {StatefulModel, validateGzNumber} from '../base';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { tap, map } from 'rxjs/operators';
 import { Observable } from 'rxjs';

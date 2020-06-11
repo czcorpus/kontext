@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {ConcLineModel} from './lines';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';

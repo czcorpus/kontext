@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl } from 'kombo';
 import {IPluginApi} from '../../types/plugins';
-import {puid} from '../../util';
+import {puid} from '../../multidict';
 import * as Immutable from 'immutable';
 
 
