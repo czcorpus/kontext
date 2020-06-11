@@ -24,6 +24,7 @@ import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {QueryFormModel, AppendQueryInputAction} from '../../models/query/common';
 import { VirtualKeyboardModel, VirtualKeyboardState } from '../../models/query/virtualKeyboard';
 import { ActionName, Actions } from '../../models/query/actions';
+import { List } from 'cnc-tskit';
 
 
 export interface VirtualKeyboardProps {
@@ -258,7 +259,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
         return (
             <div className="key-row">
-                {props.data.map(selectKeyType)}
+                {List.map(selectKeyType, props.data)}
             </div>
         );
     };
@@ -339,12 +340,12 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
                     <div className="layout-selection">
                         <h3>{he.translate('query__kb_layout')}:</h3>
                         <select onChange={this._handleLayoutChange} value={this.props.currentLayoutIdx > 0 ? this.props.currentLayoutIdx : 0}>
-                        {this.props.layouts.map((item, i) => {
+                        {List.map((item, i) => {
                             return <option key={i} value={i} title={item.label}>{item.name}</option>;
-                        })}
+                        }, this.props.layouts)}
                         </select>
                     </div>
-                    {this.getCurrentLayout().keys.map((item, i) => {
+                    {List.map((item, i) => {
                         const passTriggerIdx = this.props.activeKey && i === this.props.activeKey[0] ? this.props.activeKey[1] : null;
                         return <KeysRow key={`row${i}`}
                                     data={item}
@@ -355,7 +356,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
                                     handleCaps={this._handleCaps}
                                     handleBackspace={this._handleBackspace}
                                     passTriggerIdx={passTriggerIdx} />;
-                    })}
+                    }, this.getCurrentLayout().keys)}
                 </div>
             );
         }
