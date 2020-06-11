@@ -21,7 +21,7 @@
 import { Observable, interval as rxInterval } from 'rxjs';
 import {Kontext} from '../types/common';
 import {PageModel, DownloadType} from '../app/page';
-import {MultiDict} from '../util';
+import {MultiDict} from '../multidict';
 import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as wordlistResultViewInit} from '../views/wordlist/result';
 import {init as wordlistSaveViewInit} from '../views/wordlist/save';

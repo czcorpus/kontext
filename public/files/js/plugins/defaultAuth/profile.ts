@@ -23,7 +23,7 @@ import { Observable, of as rxOf } from 'rxjs';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { concatMap } from 'rxjs/operators';
 
 

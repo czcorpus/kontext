@@ -23,7 +23,7 @@ import {Kontext} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';

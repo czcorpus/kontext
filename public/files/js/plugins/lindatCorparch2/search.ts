@@ -20,7 +20,7 @@
 
 import * as Immutable from 'immutable';
 import {IPluginApi} from '../../types/plugins';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {Kontext} from '../../types/common';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';

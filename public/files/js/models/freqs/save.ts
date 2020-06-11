@@ -22,7 +22,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
 import { Action, IFullActionControl } from 'kombo';

@@ -16,64 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from './types/common';
+import { Kontext } from './types/common';
 
-/**
- * Transform a dict to a list of pairs. In case
- * a value is Array<T> then it is expanded as a list
- * of pairs with the same first value.
- */
-export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
-    const ans = [];
-    for (let k in d) {
-        if (d.hasOwnProperty(k)) {
-            if (Array.isArray(d[k])) {
-                (<Array<T>>d[k]).forEach((item) => {
-                    ans.push(k, item);
-                });
-
-            } else {
-                ans.push([k, d[k]]);
-            }
-        }
-    }
-    return ans;
-}
-
-/**
- * Update a general key-value object with an incoming one.
- * The function does not modify its parameters and returns
- * a new object with shallow copies of original values where
- * applicable (objects).
- *
- * @param myProps target properties
- * @param incomingProps incoming properties (these will rewrite
- *        the target in case of a property collision)
- */
-export function updateProps<T>(myProps:T,
-        incomingProps:{[K in keyof T]?:T[K]}):T {
-    const ans:any = {};
-    for (let p in myProps) {
-        if (myProps.hasOwnProperty(p)) {
-            ans[p] = myProps[p];
-        }
-    }
-    for (let p in incomingProps) {
-        if (incomingProps.hasOwnProperty(p)) {
-            ans[p] = incomingProps[p];
-        }
-    }
-    return ans;
-}
-
-
-export function nTimes<T>(v:T, n:number):Array<T> {
-    const ans:Array<T> = [];
-    for (let i = 0; i < n; i += 1) {
-        ans.push(v);
-    }
-    return ans;
-}
 
 
 /**

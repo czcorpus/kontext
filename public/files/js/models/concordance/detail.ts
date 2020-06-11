@@ -23,7 +23,7 @@ import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import * as Immutable from 'immutable';
 
-import {MultiDict, importColor} from '../../util';
+import {MultiDict, importColor} from '../../multidict';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';

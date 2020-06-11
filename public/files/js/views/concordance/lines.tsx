@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import { IActionDispatcher } from 'kombo';
 import { Kontext, ViewOptions } from '../../types/common';
-import { calcTextColorFromBg, color2str, importColor } from '../../util';
+import { calcTextColorFromBg, color2str, importColor } from '../../multidict';
 import { init as lineExtrasViewsInit } from './lineExtras';
 import { ConcLineModel, CorpColumn } from '../../models/concordance/lines';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';

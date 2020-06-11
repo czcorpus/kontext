@@ -25,7 +25,7 @@ import * as Immutable from 'immutable';
 import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 
 /**

@@ -24,7 +24,7 @@ import {Kontext, ViewOptions} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import {TextTypesModel} from '../textTypes/main';
 import {QueryContextModel} from './context';
 import {PluginInterfaces} from '../../types/plugins';

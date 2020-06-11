@@ -24,7 +24,7 @@ import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {FreqFormInputs} from './freqForms';
 import {FreqResultsSaveModel} from './save';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';

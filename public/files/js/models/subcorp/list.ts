@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 
 import {PageModel} from '../../app/page';
 import {StatefulModel} from '../base';
-import { MultiDict } from '../../util';
+import { MultiDict } from '../../multidict';
 import { AsyncTaskStatus } from '../asyncTask';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, throwError, of as rxOf } from 'rxjs';

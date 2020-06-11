@@ -21,7 +21,7 @@
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
 import {PageModel} from '../../app/page';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 
 /**

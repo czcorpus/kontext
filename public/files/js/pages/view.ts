@@ -25,51 +25,52 @@ import { Observable, of as rxOf, zip } from 'rxjs';
 import { expand, mergeMap, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { KontextPage } from '../app/main';
 
-import {Kontext, TextTypes, ViewOptions} from '../types/common';
-import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel, DownloadType} from '../app/page';
-import {PluginInterfaces} from '../types/plugins';
-import {parseUrlArgs} from '../app/navigation';
-import {MultiDict, updateProps, nTimes} from '../util';
+import { Kontext, TextTypes, ViewOptions } from '../types/common';
+import { AjaxResponse } from '../types/ajaxResponses';
+import { PageModel, DownloadType } from '../app/page';
+import { PluginInterfaces } from '../types/plugins';
+import { parseUrlArgs } from '../app/navigation';
+import { MultiDict } from '../multidict';
 import * as conclines from '../conclines';
-import {init as concViewsInit, ViewPageModels, MainViews as ConcViews} from '../views/concordance/main';
-import {LineSelectionModel} from '../models/concordance/lineSelection';
-import {ConcDetailModel, RefsDetailModel} from '../models/concordance/detail';
-import {ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel} from '../models/concordance/lines';
-import {QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs} from '../models/query/first';
-import {UsageTipsModel} from '../models/usageTips';
-import {CQLEditorModel} from '../models/query/cqleditor/model';
-import {QueryReplayModel, LocalQueryFormData} from '../models/query/replay';
-import {FilterFormModel, FilterFormProperties, fetchFilterFormArgs} from '../models/query/filter';
-import {ConcSampleModel, SampleFormProperties, fetchSampleFormArgs} from '../models/query/sample';
-import {SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs} from '../models/query/switchmc';
-import {QuerySaveAsFormModel} from '../models/query/save';
-import {TextTypesModel} from '../models/textTypes/main';
-import {WithinBuilderModel} from '../models/query/withinBuilder';
-import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
-import {QueryContextModel} from '../models/query/context';
-import {ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../models/query/sort';
-import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
-import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
-import {FirstHitsModel} from '../models/query/firstHits';
-import {Freq2DFormModel, CTFormInputs, CTFormProperties} from '../models/freqs/ctFreqForm';
-import {ConcSaveModel} from '../models/concordance/save';
-import {ConcDashboard} from '../models/concordance/dashboard';
-import {TextTypesDistModel, TTCrit} from '../models/concordance/ttDistModel';
-import {init as queryFormInit, MainViews as QueryMainViews} from '../views/query/first';
-import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
-import {init as queryOverviewInit, OverviewViews as QueryOverviewViews} from '../views/query/overview';
-import {init as sortFormInit, SortViews} from '../views/query/sort';
-import {init as sampleFormInit, SampleFormViews} from '../views/query/miscActions';
-import {init as analysisFrameInit, FormsViews as AnalysisFrameViews} from '../views/analysis';
-import {init as collFormInit, FormsViews as CollFormsViews} from '../views/coll/forms';
-import {init as freqFormInit, FormsViews as FreqFormViews} from '../views/freqs/forms';
-import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
+import { init as concViewsInit, ViewPageModels, MainViews as ConcViews } from '../views/concordance/main';
+import { LineSelectionModel } from '../models/concordance/lineSelection';
+import { ConcDetailModel, RefsDetailModel } from '../models/concordance/detail';
+import { ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel } from '../models/concordance/lines';
+import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs } from '../models/query/first';
+import { UsageTipsModel } from '../models/usageTips';
+import { CQLEditorModel } from '../models/query/cqleditor/model';
+import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
+import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
+import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
+import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs } from '../models/query/switchmc';
+import { QuerySaveAsFormModel } from '../models/query/save';
+import { TextTypesModel } from '../models/textTypes/main';
+import { WithinBuilderModel } from '../models/query/withinBuilder';
+import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
+import { QueryContextModel } from '../models/query/context';
+import { ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs, importMultiLevelArg } from '../models/query/sort';
+import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import { FirstHitsModel } from '../models/query/firstHits';
+import { Freq2DFormModel, CTFormInputs, CTFormProperties } from '../models/freqs/ctFreqForm';
+import { ConcSaveModel } from '../models/concordance/save';
+import { ConcDashboard } from '../models/concordance/dashboard';
+import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
+import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
+import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
+import { init as queryOverviewInit, OverviewViews as QueryOverviewViews } from '../views/query/overview';
+import { init as sortFormInit, SortViews } from '../views/query/sort';
+import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActions';
+import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
+import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
+import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
+import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
+import { List } from 'cnc-tskit';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -569,7 +570,7 @@ export class ViewPage {
                 if (args['within'] === 1) {
                     this.layoutModel.replaceConcArg('maincorp', [args['maincorp']]);
                 }
-                return this.queryModels.filterModel.syncFrom(rxOf(updateProps(this.concFormsInitialArgs.filter, args)));
+                return this.queryModels.filterModel.syncFrom(rxOf({...this.concFormsInitialArgs.filter, ...args}));
             }
         );
 
@@ -620,12 +621,12 @@ export class ViewPage {
         this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SORT',
             (args:Kontext.GeneralProps) => this.queryModels.sortModel.syncFrom(
-                rxOf(updateProps(this.concFormsInitialArgs.sort, args))
+                rxOf({...this.concFormsInitialArgs.sort, ...args})
 
             ).pipe(
                 mergeMap(
                     () => this.queryModels.multiLevelConcSortModel.syncFrom(
-                        rxOf(updateProps(this.concFormsInitialArgs.sort, args))
+                        rxOf({...this.concFormsInitialArgs.sort, ...args})
                     )
                 )
             )
@@ -655,7 +656,7 @@ export class ViewPage {
         this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_SAMPLE',
             (args:Kontext.GeneralProps) => this.queryModels.sampleModel.syncFrom(
-                rxOf(updateProps(this.concFormsInitialArgs.sample, args))
+                rxOf({...this.concFormsInitialArgs.sample, ...args})
             )
         );
         this.miscQueryOpsViews = sampleFormInit(
@@ -684,7 +685,7 @@ export class ViewPage {
             'MAIN_MENU_SHOW_SWITCHMC',
             (args:Kontext.GeneralProps) => {
                 return this.queryModels.switchMcModel.syncFrom(
-                    rxOf(updateProps(this.concFormsInitialArgs.switchmc, args))
+                    rxOf({...this.concFormsInitialArgs.switchmc, ...args})
                 )
             }
         );
@@ -698,7 +699,7 @@ export class ViewPage {
         this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
             'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
             (args:Kontext.GeneralProps) => this.queryModels.firstHitsModel.syncFrom(
-                rxOf(updateProps(this.concFormsInitialArgs.firsthits, args))
+                rxOf({...this.concFormsInitialArgs.firsthits, ...args})
             )
         );
     }
@@ -846,10 +847,10 @@ export class ViewPage {
             flimit: freqFormInputs.flimit,
             freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
-            mlxattr: nTimes(attrs[0].n, initFreqLevel),
-            mlxicase: nTimes(false, initFreqLevel),
-            mlxctx: nTimes('0>0', initFreqLevel),  // = "Node'"
-            alignType: nTimes('left', initFreqLevel),
+            mlxattr: List.repeat(() => attrs[0].n, initFreqLevel),
+            mlxicase: List.repeat(() => false, initFreqLevel),
+            mlxctx: List.repeat(() => '0>0', initFreqLevel),  // = "Node'"
+            alignType: List.repeat(() => 'left', initFreqLevel),
         }
         this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,

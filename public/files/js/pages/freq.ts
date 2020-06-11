@@ -19,31 +19,32 @@
  */
 
 import * as Immutable from 'immutable';
-import {Kontext, TextTypes} from '../types/common';
-import {PluginInterfaces} from '../types/plugins';
-import {AjaxResponse, FreqResultResponse} from '../types/ajaxResponses';
-import {PageModel, DownloadType} from '../app/page';
-import {MultiDict, dictToPairs, nTimes} from '../util';
-import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
-import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
-import {Freq2DTableModel} from '../models/freqs/ctable';
-import {Freq2DFlatViewModel} from '../models/freqs/flatCtable';
-import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
-import {QuerySaveAsFormModel} from '../models/query/save';
-import {fetchQueryFormArgs} from '../models/query/first';
-import {init as freqFormFactory} from '../views/freqs/forms';
-import {init as collFormFactory} from '../views/coll/forms';
-import {init as analysisFrameInit} from '../views/analysis';
-import {init as queryOverviewInit} from '../views/query/overview';
-import {init as resultViewFactory} from '../views/freqs/main';
-import {init as ctResultViewInit} from '../views/freqs/ctResult';
-import {FreqDataRowsModel} from '../models/freqs/dataRows';
-import {FreqCTResultsSaveModel} from '../models/freqs/save';
-import {ConfIntervals, DataPoint} from '../charts/confIntervals';
-import {TextTypesModel} from '../models/textTypes/main';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
+import { Kontext, TextTypes } from '../types/common';
+import { PluginInterfaces } from '../types/plugins';
+import { AjaxResponse, FreqResultResponse } from '../types/ajaxResponses';
+import { PageModel, DownloadType } from '../app/page';
+import { MultiDict } from '../multidict';
+import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import { Freq2DTableModel } from '../models/freqs/ctable';
+import { Freq2DFlatViewModel } from '../models/freqs/flatCtable';
+import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { QuerySaveAsFormModel } from '../models/query/save';
+import { fetchQueryFormArgs } from '../models/query/first';
+import { init as freqFormFactory } from '../views/freqs/forms';
+import { init as collFormFactory } from '../views/coll/forms';
+import { init as analysisFrameInit } from '../views/analysis';
+import { init as queryOverviewInit } from '../views/query/overview';
+import { init as resultViewFactory } from '../views/freqs/main';
+import { init as ctResultViewInit } from '../views/freqs/ctResult';
+import { FreqDataRowsModel } from '../models/freqs/dataRows';
+import { FreqCTResultsSaveModel } from '../models/freqs/save';
+import { ConfIntervals, DataPoint } from '../charts/confIntervals';
+import { TextTypesModel } from '../models/textTypes/main';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
+import { List, Dict } from 'cnc-tskit';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -94,10 +95,10 @@ class FreqPage {
             ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
             freq_sort: 'freq',
-            mlxattr: freqFormInputs.mlxattr || nTimes(attrs[0].n, initFreqLevel),
-            mlxicase: freqFormInputs.mlxicase || nTimes(false, initFreqLevel),
-            mlxctx: freqFormInputs.mlxctx || nTimes('0>0', initFreqLevel),
-            alignType: freqFormInputs.alignType || nTimes('left', initFreqLevel),
+            mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
+            mlxicase: freqFormInputs.mlxicase || List.repeat(() => false, initFreqLevel),
+            mlxctx: freqFormInputs.mlxctx || List.repeat(() => '0>0', initFreqLevel),
+            alignType: freqFormInputs.alignType || List.repeat(() => 'left', initFreqLevel),
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
@@ -403,7 +404,7 @@ class FreqPage {
                 const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
                 switch (activeItem.actionName) {
                     case 'MAIN_MENU_SHOW_FILTER':
-                        const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
+                        const filterArgs = new MultiDict(Dict.toEntries(activeItem.actionArgs));
                         window.location.replace(
                             this.layoutModel.createActionUrl(
                                 'view',

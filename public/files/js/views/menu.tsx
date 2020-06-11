@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../types/common';
 import {IActionDispatcher} from 'kombo';
-import { MultiDict } from '../util';
+import { MultiDict } from '../multidict';
 import {isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
         DynamicSubmenuItem} from '../models/mainMenu';
 import { Subscription } from 'rxjs';

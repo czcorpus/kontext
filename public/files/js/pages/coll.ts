@@ -17,24 +17,25 @@
  */
 
 import * as Immutable from 'immutable';
-import {Kontext, TextTypes} from '../types/common';
-import {PluginInterfaces} from '../types/plugins';
-import {PageModel, DownloadType} from '../app/page';
-import {KontextPage} from '../app/main';
-import {MultiDict, dictToPairs, nTimes} from '../util';
-import {CollFormModel, CollFormInputs} from '../models/coll/collForm';
-import {MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
-import {CTFormProperties, CTFormInputs, Freq2DFormModel} from '../models/freqs/ctFreqForm';
-import {QuerySaveAsFormModel} from '../models/query/save';
-import {CollResultModel, CollResultData, CollResultHeading} from '../models/coll/result';
-import {init as analysisFrameInit} from '../views/analysis';
-import {init as collFormInit} from '../views/coll/forms';
-import {init as collResultViewInit, CollResultViewProps} from '../views/coll/result';
-import {init as freqFormInit} from '../views/freqs/forms';
-import {init as queryOverviewInit} from '../views/query/overview';
-import {TextTypesModel} from '../models/textTypes/main';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
+import { Kontext, TextTypes } from '../types/common';
+import { PluginInterfaces } from '../types/plugins';
+import { PageModel, DownloadType } from '../app/page';
+import { KontextPage } from '../app/main';
+import { MultiDict } from '../multidict';
+import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { QuerySaveAsFormModel } from '../models/query/save';
+import { CollResultModel, CollResultData, CollResultHeading } from '../models/coll/result';
+import { init as analysisFrameInit } from '../views/analysis';
+import { init as collFormInit } from '../views/coll/forms';
+import { init as collResultViewInit, CollResultViewProps } from '../views/coll/result';
+import { init as freqFormInit } from '../views/freqs/forms';
+import { init as queryOverviewInit } from '../views/query/overview';
+import { TextTypesModel } from '../models/textTypes/main';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
+import { List, Dict } from 'cnc-tskit';
 
 
 declare var require:any;
@@ -82,10 +83,10 @@ export class CollPage {
             flimit: freqFormInputs.flimit,
             freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
-            mlxattr: nTimes(attrs[0].n, initFreqLevel),
-            mlxicase: nTimes(false, initFreqLevel),
-            mlxctx: nTimes('0>0', initFreqLevel),  // = "Node'"
-            alignType: nTimes('left', initFreqLevel)
+            mlxattr: List.repeat(() => attrs[0].n, initFreqLevel),
+            mlxicase: List.repeat(() => false, initFreqLevel),
+            mlxctx: List.repeat(() => '0>0', initFreqLevel),  // = "Node'"
+            alignType: List.repeat(() => 'left', initFreqLevel)
         }
 
         this.mlFreqModel = new MLFreqFormModel(
@@ -302,7 +303,7 @@ export class CollPage {
                 const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
                 switch (activeItem.actionName) {
                     case 'MAIN_MENU_SHOW_FILTER':
-                        const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
+                        const filterArgs = new MultiDict(Dict.toEntries(activeItem.actionArgs));
                         window.location.replace(
                             this.layoutModel.createActionUrl(
                                 'view',

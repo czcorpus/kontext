@@ -19,7 +19,7 @@
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {MultiDict} from '../../util';
+import {MultiDict} from '../../multidict';
 import * as common from './common';
 import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';

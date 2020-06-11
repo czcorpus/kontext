@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {calcTextColorFromBg, color2str} from '../../../util';
+import {calcTextColorFromBg, color2str} from '../../../multidict';
 import { Speech, ConcDetailModel } from '../../../models/concordance/detail';
 import { Subscription } from 'rxjs';
 import { IActionDispatcher } from 'kombo';

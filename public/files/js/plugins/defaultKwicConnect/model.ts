@@ -20,10 +20,10 @@
 
 import * as Immutable from 'immutable';
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
-import { Kontext } from "../../types/common";
-import {Response as TTDistResponse} from '../../models/concordance/ttDistModel';
-import { MultiDict } from '../../util';
-import {IConcLinesProvider} from '../../types/concordance';
+import { Kontext } from '../../types/common';
+import { Response as TTDistResponse } from '../../models/concordance/ttDistModel';
+import { MultiDict } from '../../multidict';
+import { IConcLinesProvider } from '../../types/concordance';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { concatMap, concat } from 'rxjs/operators';

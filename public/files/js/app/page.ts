@@ -33,7 +33,7 @@ import {init as commonViewsFactory, CommonViews} from '../views/common';
 import {init as menuViewsFactory} from '../views/menu';
 import {init as overviewAreaViewsFactory} from '../views/overview';
 import {init as viewOptionsFactory} from '../views/options/main';
-import {MultiDict} from '../util';
+import {MultiDict} from '../multidict';
 import * as docModels from '../models/common/layout';
 import {UserInfo} from '../models/user/info';
 import {CorpusViewOptionsModel, ActionName as CorpusViewOptionsActionName} from '../models/options/structsAttrs';

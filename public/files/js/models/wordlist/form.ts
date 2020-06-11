@@ -24,7 +24,7 @@ import { Observable, Observer, of as rxOf } from 'rxjs';
 import {Kontext} from '../../types/common';
 import {validateGzNumber} from '../base';
 import {PageModel} from '../../app/page';
-import {MultiDict, puid} from '../../util';
+import {MultiDict, puid} from '../../multidict';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 

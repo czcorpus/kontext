@@ -23,7 +23,7 @@
 
 import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
-import { MultiDict } from '../util';
+import { MultiDict } from '../multidict';
 import { PageModel, DownloadType } from '../app/page';
 import { of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';

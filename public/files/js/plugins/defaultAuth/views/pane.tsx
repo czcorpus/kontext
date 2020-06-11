@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import {Kontext} from '../../../types/common';
-import {MultiDict} from '../../../util';
+import {MultiDict} from '../../../multidict';
 import {UserStatusModel} from '../init';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';

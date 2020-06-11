@@ -21,7 +21,7 @@ import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {IActionDispatcher} from 'kombo';
-import {isTouchDevice} from '../util';
+import {isTouchDevice} from '../multidict';
 import {MessageModel, MessageModelState} from '../models/common/layout';
 import { Subscription } from 'rxjs';
 
