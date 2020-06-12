@@ -29,6 +29,7 @@ import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
 import { Actions, ActionName } from '../../models/query/actions';
+import { pipe, List } from 'cnc-tskit';
 
 
 export interface SpecifyContextFormProps {
@@ -208,7 +209,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         posWindowSizes:Immutable.List<number>;
         fc_pos_window_type:string;
         fc_pos_wsize:string;
-        fc_pos:string;
+        fc_pos:string[];
         wPoSList:Immutable.List<{v:string; n:string}>;
         fc_pos_type:string;
 
@@ -225,9 +226,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleMultiSelectChange = (evt) => {
-            const values = Array.prototype
-                .filter.call(evt.target.options, item => item.selected)
-                .map(item => item.value);
+            const values = pipe(
+                evt.target.options as Array<React.OptionHTMLAttributes<any>>,
+                List.filter(item => item.selected),
+                List.map(item => item.value)
+            );
             dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
                 name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
