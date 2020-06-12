@@ -33,7 +33,7 @@ interface QueryContextArgs {
     fc_lemword_type:string;
     fc_pos_window_type:string;
     fc_pos_wsize:string;
-    fc_pos:string;
+    fc_pos:string[];
     fc_pos_type:string;
 }
 
@@ -49,7 +49,7 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
                 fc_lemword_type: 'all',
                 fc_pos_window_type: 'left',
                 fc_pos_wsize: '1',
-                fc_pos: '',
+                fc_pos: [],
                 fc_pos_type: 'all'
             }
         });
