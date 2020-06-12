@@ -33,31 +33,23 @@ import { Kontext } from './types/common';
  */
 export class MultiDict implements Kontext.IMultiDict {
 
-    private _data:any;
+    private readonly _data:{[key:string]:Array<string>};
 
-    constructor(data?:Kontext.ListOfPairs) {
+    constructor(data?:Array<[string, string|number|boolean]>) {
         this._data = {};
         if (data !== undefined) {
             for (let i = 0; i < data.length; i += 1) {
-                let k = data[i][0];
-                let v = data[i][1];
+                const [k, v] = data[i];
                 if (this._data[k] === undefined) {
                     this._data[k] = [];
                 }
-                this._data[k].push(v);
-                this[k] = v;
+                this._data[k].push(v + '');
             }
         }
     }
 
     size():number {
-        let ans = 0;
-        for (let p in this._data) {
-            if (this._data.hasOwnProperty(p)) {
-                ans += 1;
-            }
-        }
-        return ans;
+        return Object.keys(this._data).length;
     }
 
     head(key:string):string {
@@ -74,8 +66,7 @@ export class MultiDict implements Kontext.IMultiDict {
      * first.
      */
     set(key:string, value:number|boolean|string):void {
-        this[key] = value;
-        this._data[key] = [value];
+        this._data[key] = [value + ''];
     }
 
     /**
@@ -83,10 +74,9 @@ export class MultiDict implements Kontext.IMultiDict {
      * associated with the specified key
      * with a provided list of values.
      */
-    replace(key:string, values:Array<string>):void {
+    replace(key:string, values:Array<string|number|boolean>):void {
         if (values.length > 0) {
-            this[key] = values[0];
-            this._data[key] = values || [];
+            this._data[key] = values.map(v => v + '');
 
         } else {
             this.remove(key);
@@ -94,7 +84,6 @@ export class MultiDict implements Kontext.IMultiDict {
     }
 
     remove(key:string):void {
-        delete this[key];
         delete this._data[key];
     }
 
@@ -104,12 +93,12 @@ export class MultiDict implements Kontext.IMultiDict {
      * but the 'multi-value' mode appends the
      * value to the list of existing ones.
      */
-    add(key:string, value:any):void {
+    add(key:string, value:number|string|boolean):void {
         this[key] = value;
         if (this._data[key] === undefined) {
             this._data[key] = [];
         }
-        this._data[key].push(value);
+        this._data[key].push(value + '');
     }
 
     /**
@@ -118,10 +107,8 @@ export class MultiDict implements Kontext.IMultiDict {
     items():Array<[string, string]> {
         let ans = [];
         for (let p in this._data) {
-            if (this._data.hasOwnProperty(p)) {
-                for (let i = 0; i < this._data[p].length; i += 1) {
-                    ans.push([p, this._data[p][i]]);
-                }
+            for (let i = 0; i < this._data[p].length; i += 1) {
+                ans.push([p, this._data[p][i]]);
             }
         }
         return ans;
@@ -133,7 +120,7 @@ export class MultiDict implements Kontext.IMultiDict {
      * values you should use items() instead.
      */
     toDict():{[key:string]:string} {
-        let ans:{[key:string]:any} = {}; // TODO: type mess here
+        const ans:{[key:string]:string} = {}; // TODO: type mess here
         for (let k in this._data) {
             if (this._data.hasOwnProperty(k)) {
                 ans[k] = this._data[k][0];
