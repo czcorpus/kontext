@@ -29,6 +29,7 @@ export enum ActionName {
     MainMenuOverviewShowQueryInfo = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO',
     MainMenuOverviewShowQueryInfoDone = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE',
     EditQueryOperation = 'EDIT_QUERY_OPERATION',
+    EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
     BranchQueryDone = 'BRANCH_QUERY_DONE',
@@ -69,6 +70,12 @@ export namespace Actions {
         sourceId:string;
     }> {
         name:ActionName.EditQueryOperation
+    }
+
+    export interface EditLastQueryOperation extends Action<{
+        sourceId:string;
+    }> {
+        name:ActionName.EditLastQueryOperation
     }
 
     export interface EditQueryOperationDone extends Action<{

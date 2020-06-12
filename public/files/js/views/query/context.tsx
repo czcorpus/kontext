@@ -215,27 +215,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
 
-        const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
-                payload: {
-                    name: evt.target.name,
-                    value: evt.target.value
+        const handleMultiSelectChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            const sel = [];
+            for (let i = 0; i < evt.target.length; i++) {
+                const opt = evt.target[i] as HTMLOptionElement;
+                if (opt.selected) {
+                    sel.push(opt.value);
                 }
-            });
-        };
-
-        const handleMultiSelectChange = (evt) => {
-            const values = pipe(
-                evt.target.options as Array<React.OptionHTMLAttributes<any>>,
-                List.filter(item => item.selected),
-                List.map(item => item.value)
-            );
+            }
             dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
                 name: ActionName.QueryInputSelectContextFormItem,
                 payload: {
                     name: evt.target.name,
-                    value: values
+                    value: sel
                 }
             });
         };
@@ -278,37 +270,35 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    class SpecifyContextForm extends React.Component<SpecifyContextFormProps & QueryContextModelState> {
+    const SpecifyContextForm:React.SFC<SpecifyContextFormProps & QueryContextModelState> = (props) => {
 
-        render() {
             return (
                 <div>
-                    <h3>{this.props.hasLemmaAttr
+                    <h3>{props.hasLemmaAttr
                         ? he.translate('query__lemma_filter')
                         : he.translate('query__word_form_filter')}
                     </h3>
                     <LemmaFilter
-                        hasLemmaAttr={this.props.hasLemmaAttr}
-                        lemmaWindowSizes={this.props.lemmaWindowSizes}
-                        fc_lemword_window_type={this.props.formData.fc_lemword_window_type}
-                        fc_lemword_wsize={this.props.formData.fc_lemword_wsize}
-                        fc_lemword={this.props.formData.fc_lemword}
-                        fc_lemword_type={this.props.formData.fc_lemword_type}
+                        hasLemmaAttr={props.hasLemmaAttr}
+                        lemmaWindowSizes={props.lemmaWindowSizes}
+                        fc_lemword_window_type={props.formData.fc_lemword_window_type}
+                        fc_lemword_wsize={props.formData.fc_lemword_wsize}
+                        fc_lemword={props.formData.fc_lemword}
+                        fc_lemword_type={props.formData.fc_lemword_type}
                     />
-                    {this.props.wPoSList && this.props.wPoSList.size > 0 ?
+                    {props.wPoSList && props.wPoSList.size > 0 ?
                         <PoSFilter
-                            posWindowSizes={this.props.posWindowSizes}
-                            wPoSList={this.props.wPoSList}
-                            fc_pos_window_type={this.props.formData.fc_pos_window_type}
-                            fc_pos_wsize={this.props.formData.fc_pos_wsize}
-                            fc_pos={this.props.formData.fc_pos}
-                            fc_pos_type={this.props.formData.fc_pos_type}
+                            posWindowSizes={props.posWindowSizes}
+                            wPoSList={props.wPoSList}
+                            fc_pos_window_type={props.formData.fc_pos_window_type}
+                            fc_pos_wsize={props.formData.fc_pos_wsize}
+                            fc_pos={props.formData.fc_pos}
+                            fc_pos_type={props.formData.fc_pos_type}
                         /> :
                         null
                     }
                 </div>
             );
-        }
     }
 
     return {

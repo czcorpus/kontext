@@ -238,7 +238,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         constructor(props) {
             super(props);
-            this.state = profileModel.getState();
+            this.state = profileModel.getInitialState();
             this._handleModelChange = this._handleModelChange.bind(this);
         }
 

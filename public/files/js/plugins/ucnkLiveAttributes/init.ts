@@ -19,7 +19,7 @@
  */
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TextTypesModel} from '../../models/textTypes/main';
-import liveAttrsModel = require('./models');
+import * as liveAttrsModel from './models';
 import * as Immutable from 'immutable';
 import {init as viewInit, Views} from './view';
 
@@ -100,17 +100,22 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         textTypesModel.exportSelections.bind(textTypesModel)
     );
 
+    let numSelectionSteps = 0;
+    store.addListener((state) => {
+        numSelectionSteps = state.selectionSteps.size;
+    })
+
     // we must capture (= decide whether they should really be passed to the action queue)
     // as we have no control on how the action is triggered in a core KonText component
     // (which we cannot modify as plug-in developers here).
 
     pluginApi.dispatcher().captureAction(
         'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-        _ => store.getState().selectionSteps.size === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
+        _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
     pluginApi.dispatcher().captureAction(
         'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-        _ => store.getState().selectionSteps.size === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
+        _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
 
     return new LiveAttributesPlugin(pluginApi, store, alignedCorpora.size > 0);

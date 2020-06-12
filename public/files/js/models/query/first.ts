@@ -20,19 +20,24 @@
 
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
-import {Kontext, ViewOptions} from '../../types/common';
-import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
-import {TextTypesModel} from '../textTypes/main';
-import {QueryContextModel} from './context';
-import {PluginInterfaces} from '../../types/plugins';
-import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { List, Dict } from 'cnc-tskit';
+
+import { Kontext, ViewOptions } from '../../types/common';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { TextTypesModel } from '../textTypes/main';
+import { QueryContextModel, QueryContextModelState } from './context';
+import { PluginInterfaces } from '../../types/plugins';
+import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery } from './common';
+import { QueryContextArgs } from './context';
+
+
+type ExportedQueryContextArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
 
 
 export interface QueryFormUserEntries {
@@ -180,6 +185,8 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
 
     ident:string;
 
+    private queryContextArgs:ExportedQueryContextArgs;
+
 
     // ----------------------
 
@@ -215,6 +222,22 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         this.setUserValues(props);
         this.currentAction = 'first_form';
         this.supportedWidgets = this.determineSupportedWidgets();
+
+        this.queryContextModel.addListener((state) => {
+            this.queryContextArgs = {};
+            if (state.formData.fc_lemword) {
+                this.queryContextArgs.fc_lemword = state.formData.fc_lemword;
+                this.queryContextArgs.fc_lemword_type = state.formData.fc_lemword_type;
+                this.queryContextArgs.fc_lemword_window_type = state.formData.fc_lemword_window_type;
+                this.queryContextArgs.fc_lemword_wsize = state.formData.fc_lemword_wsize;
+            }
+            if (state.formData.fc_pos.length > 0) {
+                this.queryContextArgs.fc_pos = state.formData.fc_pos;
+                this.queryContextArgs.fc_pos_type = state.formData.fc_pos_type;
+                this.queryContextArgs.fc_pos_window_type = state.formData.fc_pos_window_type;
+                this.queryContextArgs.fc_pos_wsize = state.formData.fc_pos_wsize;
+            }
+        })
 
         this.dispatcherRegister(action => {
             switch (action.name) {
@@ -553,10 +576,11 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
             args.set(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
         });
 
+
         // query context
-        Dict.forEach<string, string>(
+        Dict.forEach(
             (value, key) => args.replace(key, [value]),
-            this.queryContextModel.getContextArgs()
+            this.queryContextArgs as {}
         );
 
         // text types

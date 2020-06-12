@@ -20,10 +20,9 @@ import {Kontext, KeyCodes} from '../types/common';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {isTouchDevice} from '../multidict';
 import {MessageModel, MessageModelState} from '../models/common/layout';
-import { Subscription } from 'rxjs';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -547,47 +546,25 @@ export function init(
                 {props.children}
             </div>
         );
-    }
+    };
 
     // ------------------------------ <Messages /> -----------------------------
 
-    class Messages extends React.Component<CoreViews.Messages.Props, MessageModelState> {
+    const Messages:React.SFC<CoreViews.Messages.Props & MessageModelState> = (props) => {
 
-        private modelSubscription:Subscription;
+        if (props.messages.size > 0) {
+            return (
+                <div className="messages">
+                    {props.messages.map((item, i) => (
+                        <Message key={`msg:${i}`} {...item} />
+                    ))}
+                </div>
+            );
 
-        constructor(props) {
-            super(props);
-            this._changeListener = this._changeListener.bind(this);
-            this.state = messageModel.getState();
+        } else {
+            return null;
         }
-
-        _changeListener(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = messageModel.addListener(this._changeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            if (this.state.messages.size > 0) {
-                return (
-                    <div className="messages">
-                        {this.state.messages.map((item, i) => (
-                            <Message key={`msg:${i}`} {...item} />
-                        ))}
-                    </div>
-                );
-
-            } else {
-                return null;
-            }
-        }
-    }
+    };
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
@@ -790,7 +767,7 @@ export function init(
         CloseableFrame: CloseableFrame,
         InlineHelp: InlineHelp,
         Abbreviation: Abbreviation,
-        Messages: Messages,
+        Messages: BoundWithProps<CoreViews.Message.Props, MessageModelState>(Messages, messageModel),
         CorpnameInfoTrigger: CorpnameInfoTrigger,
         ImgWithHighlight: ImgWithHighlight,
         ImgWithMouseover: ImgWithMouseover,

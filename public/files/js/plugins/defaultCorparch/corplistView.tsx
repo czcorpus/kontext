@@ -210,7 +210,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = listModel.getState();
+            this.state = listModel.getInitialState();
         }
 
         _modelChangeHandler(state) {
@@ -582,7 +582,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         constructor(props) {
             super(props);
             this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = listModel.getState();
+            this.state = listModel.getInitialState();
         }
 
         _modelChangeHandler(state) {

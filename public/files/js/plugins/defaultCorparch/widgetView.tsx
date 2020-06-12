@@ -620,7 +620,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
         constructor(props) {
             super(props);
-            this.state = widgetModel.getState();
+            this.state = widgetModel.getInitialState();
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
             this._handleModelChange = this._handleModelChange.bind(this);

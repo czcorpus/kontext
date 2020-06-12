@@ -23,9 +23,9 @@ import {AjaxResponse} from '../../types/ajaxResponses';
 import {StatefulModel} from '../base';
 import {IPluginApi} from '../../types/plugins';
 import * as Immutable from 'immutable';
-import rangeSelector = require('./rangeSelector');
+import * as rangeSelector from './rangeSelector';
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
-import { Action, SEDispatcher, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
