@@ -17,13 +17,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+import { Observable, of as rxOf } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import {PageModel} from '../../app/page';
-import {StatefulModel} from '../../models/base';
-import {MultiDict} from '../../multidict';
-import { Action, IFullActionControl } from 'kombo';
+import { Kontext } from '../../types/common';
+import { SaveData } from '../../app/navigation';
+import { PageModel } from '../../app/page';
+import { Action, IFullActionControl, StatelessModel } from 'kombo';
+import { Actions, ActionName } from '../wordlist/actions';
+import { MultiDict } from '../../multidict';
 
 
 export interface WordlistSaveModelArgs {
@@ -31,145 +33,193 @@ export interface WordlistSaveModelArgs {
     layoutModel:PageModel;
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;
-    wordlistArgsProviderFn:()=>MultiDict;
+}
+
+export interface WordlistSaveModelState {
+    formIsActive:boolean;
+    toLine:Kontext.FormValue<string>;
+    saveFormat:SaveData.Format;
+    includeHeading:boolean;
+    includeColHeaders:boolean;
+    quickSaveRowLimit:number;
 }
 
 
-export class WordlistSaveModel extends StatefulModel {
+export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private formIsActive:boolean;
+    private readonly saveLinkFn:(file:string, url:string)=>void;
 
-    private toLine:Kontext.FormValue<string>;
 
-    private saveFormat:SaveData.Format;
-
-    private includeHeading:boolean;
-
-    private includeColHeaders:boolean;
-
-    private quickSaveRowLimit:number;
-
-    private saveLinkFn:(file:string, url:string)=>void;
-
-    private wordlistArgsProviderFn:()=>MultiDict;
-
-    constructor({
-            dispatcher, layoutModel, quickSaveRowLimit,
-            saveLinkFn, wordlistArgsProviderFn}:WordlistSaveModelArgs) {
-        super(dispatcher);
+    constructor({dispatcher, layoutModel, quickSaveRowLimit, saveLinkFn}:WordlistSaveModelArgs) {
+        super(
+            dispatcher,
+            {
+                toLine: {value: '', isInvalid: false, isRequired: true},
+                saveFormat: SaveData.Format.CSV,
+                includeHeading: false,
+                includeColHeaders: false,
+                formIsActive: false,
+                quickSaveRowLimit: quickSaveRowLimit
+            }
+        );
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
-        this.wordlistArgsProviderFn = wordlistArgsProviderFn;
-        this.toLine = {value: '', isInvalid: false, isRequired: true};
-        this.saveFormat = SaveData.Format.CSV;
-        this.includeHeading = false;
-        this.includeColHeaders = false;
-        this.formIsActive = false;
-        this.quickSaveRowLimit = quickSaveRowLimit;
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-            case 'MAIN_MENU_SHOW_SAVE_FORM':
-                this.formIsActive = true;
-                this.emitChange();
-            break;
-            case 'WORDLIST_SAVE_FORM_HIDE':
-                this.formIsActive = false;
-                this.emitChange();
-            break;
-            case 'WORDLIST_SAVE_FORM_SET_TO_LINE':
-                this.toLine.value = action.payload['value'];
-                this.emitChange();
-            break;
-            case 'WORDLIST_SAVE_FORM_SET_FORMAT':
-                this.saveFormat = action.payload['value'];
-                this.emitChange();
-            break;
-            case 'WORDLIST_SAVE_SET_INCLUDE_HEADING':
-                this.includeHeading = action.payload['value'];
-                this.emitChange();
-            break;
-            case 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS':
-                this.includeColHeaders = action.payload['value'];
-                this.emitChange();
-            break;
-            case 'WORDLIST_SAVE_FORM_SUBMIT':
-                const err = this.validateForm();
-                if (err) {
-                    this.layoutModel.showMessage('error', err);
-
-                } else {
-                    this.submit();
-                    this.formIsActive = false;
-                }
-                this.emitChange();
-            break;
-            case 'MAIN_MENU_DIRECT_SAVE':
-                if (window.confirm(this.layoutModel.translate(
-                    'global__quicksave_limit_warning_{format}{lines}',
-                    {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
-                ))) {
-                    this.saveFormat = action.payload['saveformat'];
-                    this.toLine.value = `${this.quickSaveRowLimit}`;
-                    this.submit();
-                    this.toLine.value = '';
-                    this.emitChange();
-                }
-            break;
+        this.addActionHandler(
+            'MAIN_MENU_SHOW_SAVE_FORM',
+            (state, action) => {
+                state.formIsActive = true;
             }
-        });
+        );
+
+        this.addActionHandler<Actions.WordlistSaveFormHide>(
+            ActionName.WordlistSaveFormHide,
+            (state, action) => {
+                state.formIsActive = false;
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistSaveFormSetMaxLine>(
+            ActionName.WordlistSaveFormSetMaxLine,
+            (state, action) => {
+                state.toLine.value = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistSaveFormSetFormat>(
+            ActionName.WordlistSaveFormSetFormat,
+            (state, action) => {
+                state.saveFormat = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistSaveSetIncludeHeading>(
+            ActionName.WordlistSaveSetIncludeHeading,
+            (state, action) => {
+                state.includeHeading = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistSaveSetIncludeColHeaders>(
+            ActionName.WordlistSaveSetIncludeColHeaders,
+            (state, action) => {
+                state.includeColHeaders = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistSaveFormSubmit>(
+            ActionName.WordlistSaveFormSubmit,
+            (state, action) => {
+
+            },
+            (state, action, dispatch) => {
+                const err = this.validateForm(state);
+                this.suspend({}, (action, syncData) => {
+                    if (action.name === ActionName.WordlistFormSubmitReady) {
+                        return null;
+                    }
+                    return syncData;
+                }).pipe(
+                    concatMap(
+                        action => {
+                            const payload = (action as Actions.WordlistFormSubmitReady).payload;
+                            return this.submit(state, payload.args);
+                        }
+                    )
+                ).subscribe(
+                    data => {
+
+                    },
+                    err => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+
+        this.addActionHandler<Actions.WordlistSaveFormSubmitDone>(
+            ActionName.WordlistSaveFormSubmitDone,
+            (state, action) => {
+                state.formIsActive = false;
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            'MAIN_MENU_DIRECT_SAVE',
+            (state, action) => {
+                state.saveFormat = action.payload['saveformat'];
+                state.toLine.value = `${state.quickSaveRowLimit}`;
+                state.toLine.value = '';
+            },
+            (state, action, dispatch) => {
+                this.suspend({}, (action, syncData) => {
+                    if (action.name === ActionName.WordlistFormSubmitReady) {
+                        return null;
+                    }
+                    return syncData;
+                }).pipe(
+                    concatMap(
+                        action => {
+                            const payload = (action as Actions.WordlistFormSubmitReady).payload;
+                            if (window.confirm(this.layoutModel.translate(
+                                    'global__quicksave_limit_warning_{format}{lines}',
+                                    {format: action.payload['saveformat'], lines: state.quickSaveRowLimit}))) {
+                                return this.submit(state, payload.args);
+
+                            } else {
+                                return rxOf({});
+                            }
+                        }
+                    )
+                ).subscribe(
+                    data => {
+
+                    },
+                    err => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
     }
 
-    private validateForm():Error|null {
-        if (this.toLine.value === '' || !isNaN(parseInt(this.toLine.value))) {
-            this.toLine.isInvalid = false;
+    private validateForm(state:WordlistSaveModelState):Error|null {
+        if (state.toLine.value === '' || !isNaN(parseInt(state.toLine.value))) {
+            state.toLine.isInvalid = false;
             return null;
 
         } else {
-            this.toLine.isInvalid = true;
+            state.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
     }
 
-    private submit():void {
-        const args = this.wordlistArgsProviderFn();
-        args.remove('format');
-        args.set('saveformat', this.saveFormat);
-        args.set('from_line', '1');
-        args.set('to_line', this.toLine.value);
-        if (this.saveFormat === SaveData.Format.CSV || this.saveFormat === SaveData.Format.XLSX) {
-            args.set('colheaders', this.includeColHeaders ? '1' : '0');
-            args.remove('heading');
+    private submit(state:WordlistSaveModelState, submitArgs:MultiDict):Observable<{}> {
+        submitArgs.remove('format');
+        submitArgs.set('saveformat', state.saveFormat);
+        submitArgs.set('from_line', '1');
+        submitArgs.set('to_line', state.toLine.value);
+        if (state.saveFormat === SaveData.Format.CSV || state.saveFormat === SaveData.Format.XLSX) {
+            submitArgs.set('colheaders', state.includeColHeaders ? '1' : '0');
+            submitArgs.remove('heading');
 
         } else {
-            args.set('heading', this.includeHeading ? '1' : '0');
-            args.remove('colheaders');
+            submitArgs.set('heading', state.includeHeading ? '1' : '0');
+            submitArgs.remove('colheaders');
         }
         this.saveLinkFn(
-            `word-list.${SaveData.formatToExt(this.saveFormat)}`,
-            this.layoutModel.createActionUrl('wordlist/savewl', args.items())
+            `word-list.${SaveData.formatToExt(state.saveFormat)}`,
+            this.layoutModel.createActionUrl('wordlist/savewl', submitArgs.items())
         );
-    }
-
-    getFormIsActive():boolean {
-        return this.formIsActive;
-    }
-
-    getToLine():Kontext.FormValue<string> {
-        return this.toLine;
-    }
-
-    getSaveFormat():SaveData.Format {
-        return this.saveFormat;
-    }
-
-    getIncludeHeading():boolean {
-        return this.includeHeading;
-    }
-
-    getIncludeColHeaders():boolean {
-        return this.includeColHeaders;
+        // TODO
+        return rxOf({});
     }
 }

@@ -111,28 +111,10 @@ export class FirstFormPage {
         return this.layoutModel.translate(msg, values);
     }
 
-    getCorpora():Immutable.List<string> {
-        return this.queryModel.getCorpora();
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return this.queryModel.getAvailableAlignedCorpora();
-    }
-
-    getCurrentSubcorpus():string {
-        return this.queryModel.getCurrentSubcorpus();
-    }
-
-    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
-        return this.queryModel.getAvailableSubcorpora();
-    }
-
-
     private initCorplistComponent():React.ComponentClass {
         const plg = corplistComponent(this.layoutModel.pluginApi());
         return plg.createWidget(
             'first_form',
-            this.queryModel,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                     return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
@@ -249,7 +231,8 @@ export class FirstFormPage {
                 hasLemma: queryFormArgs.has_lemma,
                 tagsetDocs: queryFormArgs.tagset_docs,
                 useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
-                tagAttr: this.layoutModel.getConf<string>('tagAttr')
+                tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+                isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
             }
         );
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
@@ -266,7 +249,7 @@ export class FirstFormPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryModel.getTagAttr() : null,
+            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.layoutModel.getConf<string>('tagAttr') : null,
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             currQueries: queryFormArgs.curr_queries
         });
@@ -300,8 +283,7 @@ export class FirstFormPage {
         );
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.queryModel
+            this.layoutModel.getComponentHelpers()
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
@@ -309,6 +291,9 @@ export class FirstFormPage {
             {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
             }
         );
     }
@@ -358,7 +343,6 @@ export class FirstFormPage {
             this.initQueryModel();
             const corparchWidget = this.initCorplistComponent();
             this.attachQueryForm(ttAns, corparchWidget);
-            this.layoutModel.registerSwitchCorpAwareObject(this.cqlEditorModel);
             this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
             this.initCorpnameLink();
             new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);

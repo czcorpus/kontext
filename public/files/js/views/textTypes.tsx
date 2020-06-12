@@ -85,7 +85,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 toValue: null,
                 keepCurrent: false,
                 intervalBehavior: 'strict',
-                hasSelectedValues: textTypesModel.hasSelectedItems(this.props.attrName),
+                hasSelectedValues: textTypesModel.findHasSelectedItems(this.props.attrName),
                 showHelp: false
             };
         }

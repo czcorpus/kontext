@@ -16,9 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../models/base';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { StatefulModel } from '../../models/base';
 import * as corplistDefault from '../defaultCorparch/corplist';
 import { Kontext } from '../../types/common';
 import { Action, IFullActionControl } from 'kombo';
@@ -27,7 +26,7 @@ import { CorplistItem } from '../defaultCorparch/common';
 
 
 export interface CorplistTableModelState extends corplistDefault.CorplistTableModelState {
-    rows:Immutable.List<CorplistItem>;
+    rows:Array<CorplistItem>;
 }
 
 /**

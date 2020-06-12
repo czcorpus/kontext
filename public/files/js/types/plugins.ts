@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
-import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -33,6 +33,7 @@ import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
 export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
     getNestedConf<T>(...keys:Array<string>):T;
+    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void;
     createStaticUrl(path:string):string;
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
@@ -48,7 +49,7 @@ export interface IPluginApi extends ITranslator {
     pluginIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict;
     getCorpusIdent():Kontext.FullCorpusIdent;
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
@@ -268,16 +269,6 @@ export namespace PluginInterfaces {
 
         export type WidgetView = React.ComponentClass<{}>;
 
-
-        export interface ICorpSelection extends IEventEmitter {
-            getCurrentSubcorpus():string;
-            getCurrentSubcorpusOrigName():string;
-            getIsForeignSubcorpus():boolean;
-            getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
-            getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
-            getCorpora():Immutable.List<string>;
-        }
-
         /**
          * A factory class for generating corplist page. The page is expected
          * to contain two blocks
@@ -297,8 +288,7 @@ export namespace PluginInterfaces {
             /**
              * Create a corpus selection widget used on the query page
              */
-            createWidget(targetAction:string, corpSel:ICorpSelection,
-                    options:Kontext.GeneralProps):React.ComponentClass<{}>;
+            createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}>;
 
             /**
              * This is needed when corpus change is performed.

@@ -19,30 +19,27 @@
  */
 
 import * as Immutable from 'immutable';
-import {Kontext} from '../types/common';
-import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/page';
-import { StatefulModel } from './base';
-import { Action, IFullActionControl } from 'kombo';
+import { Kontext } from '../types/common';
+import { PageModel } from '../app/page';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
+
+
+export interface NonQueryCorpusSelectionModelState {
+    currentSubcorp:string;
+    origSubcorpName:string;
+    isForeignSubcorp:boolean;
+    availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
+    corpora:Immutable.List<string>;
+}
 
 /**
  * Fixed corpus, selectable subcorpus. This is used as an alternative to query model
  * on the 'first_form' page for pages where we still expect switching of (sub)corpus
  * but not for querying purposes.
  */
-export class NonQueryCorpusSelectionModel extends StatefulModel implements PluginInterfaces.Corparch.ICorpSelection {
+export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSelectionModelState> {
 
-    private layoutModel:PageModel;
-
-    private currentSubcorp:string;
-
-    private origSubcorpName:string;
-
-    private isForeignSubcorp:boolean;
-
-    private availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
-
-    private corpora:Immutable.List<string>;
+    private readonly layoutModel:PageModel;
 
     constructor({layoutModel, dispatcher, usesubcorp, origSubcorpName, foreignSubcorp, corpora, availSubcorpora=[]}:{
             layoutModel:PageModel;
@@ -52,66 +49,48 @@ export class NonQueryCorpusSelectionModel extends StatefulModel implements Plugi
             foreignSubcorp:boolean;
             corpora:Array<string>;
             availSubcorpora:Array<Kontext.SubcorpListItem>}) {
-        super(dispatcher);
-        this.layoutModel = layoutModel;
-        this.currentSubcorp = usesubcorp;
-        this.origSubcorpName = origSubcorpName;
-        this.isForeignSubcorp = foreignSubcorp;
-        this.availSubcorpora = Immutable.List<Kontext.SubcorpListItem>(availSubcorpora);
-        this.corpora = Immutable.List<string>(corpora);
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (action.payload['pubName']) {
-                        this.currentSubcorp = action.payload['pubName'];
-                        this.origSubcorpName = action.payload['subcorp'];
-                        this.isForeignSubcorp = action.payload['foreign'];
-
-                    } else {
-                        this.currentSubcorp = action.payload['subcorp'];
-                        this.origSubcorpName = action.payload['subcorp'];
-                        this.isForeignSubcorp = false;
-                    }
-                    const corpIdent = this.layoutModel.getCorpusIdent();
-                    this.layoutModel.setConf<Kontext.FullCorpusIdent>(
-                        'corpusIdent',
-                        {
-                            id: corpIdent.id,
-                            name: corpIdent.name,
-                            variant: corpIdent.variant,
-                            usesubcorp: this.currentSubcorp,
-                            origSubcorpName: this.origSubcorpName,
-                            foreignSubcorp: this.isForeignSubcorp
-                        }
-                    );
-                    this.emitChange();
-                break;
+        super(
+            dispatcher,
+            {
+                currentSubcorp: usesubcorp,
+                origSubcorpName: origSubcorpName,
+                isForeignSubcorp: foreignSubcorp,
+                availSubcorpora: Immutable.List<Kontext.SubcorpListItem>(availSubcorpora),
+                corpora: Immutable.List<string>(corpora)
             }
-        });
+        );
+        this.layoutModel = layoutModel;
     }
 
-    getCurrentSubcorpus():string {
-        return this.currentSubcorp;
+    onAction(action:Action) {
+        switch (action.name) {
+            case 'QUERY_INPUT_SELECT_SUBCORP':
+                if (action.payload['pubName']) {
+                    this.state.currentSubcorp = action.payload['pubName'];
+                    this.state.origSubcorpName = action.payload['subcorp'];
+                    this.state.isForeignSubcorp = action.payload['foreign'];
+
+                } else {
+                    this.state.currentSubcorp = action.payload['subcorp'];
+                    this.state.origSubcorpName = action.payload['subcorp'];
+                    this.state.isForeignSubcorp = false;
+                }
+                const corpIdent = this.layoutModel.getCorpusIdent();
+                this.layoutModel.setConf<Kontext.FullCorpusIdent>(
+                    'corpusIdent',
+                    {
+                        id: corpIdent.id,
+                        name: corpIdent.name,
+                        variant: corpIdent.variant,
+                        usesubcorp: this.state.currentSubcorp,
+                        origSubcorpName: this.state.origSubcorpName,
+                        foreignSubcorp: this.state.isForeignSubcorp
+                    }
+                );
+                this.emitChange();
+            break;
+        }
     }
 
-    getCurrentSubcorpusOrigName():string {
-        return this.origSubcorpName;
-    }
-
-    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
-        return this.availSubcorpora;
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getCorpora():Immutable.List<string> {
-        return this.corpora;
-    }
-
-    getIsForeignSubcorpus():boolean {
-        return this.isForeignSubcorp;
-    }
+    unregister():void {}
 }

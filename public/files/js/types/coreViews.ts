@@ -211,7 +211,7 @@ export namespace CoreViews {
 
         export interface Props {}
 
-        export type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<{}>;
     }
 
     // -------------------------------

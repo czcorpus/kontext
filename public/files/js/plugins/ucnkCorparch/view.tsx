@@ -21,9 +21,9 @@ import {Kontext} from '../../types/common';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 import { corplistItemIsUcnk } from './common';
 import { CorplistTableModel, CorplistTableModelState } from './corplist';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { CorplistItem } from '../defaultCorparch/common';
+import { Actions, ActionName } from '../defaultCorparch/actions';
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -36,13 +36,9 @@ export interface CorplistTableProps {
     anonymousUser:boolean;
 }
 
-export interface FilterFormProps {
-
-}
-
 export interface Views {
     CorplistTable:React.ComponentClass<CorplistTableProps>;
-    FilterForm:React.ComponentClass<FilterFormProps>;
+    FilterForm:React.ComponentClass<{}>;
 }
 
 export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):Views {
@@ -295,20 +291,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     /**
      * dataset table
      */
-    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
-
-        private modelSubscription:Subscription;
+    class CorplistTable extends React.PureComponent<CorplistTableProps & CorplistTableModelState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = listModel.getState();
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
         }
 
         _detailClickHandler(corpusId) {
@@ -321,24 +309,14 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _detailCloseHandler() {
-            const newState = he.cloneState(this.state);
-            this.setState(newState);
             dispatcher.dispatch({
                 name: 'CORPARCH_CORPUS_INFO_CLOSED',
                 payload: {}
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderDetailBox() {
-            if (this.state.detailData) {
+            if (this.props.detailData) {
                 const bcr = document.body.getBoundingClientRect();
                 return (
                     <layoutViews.PopupBox
@@ -349,7 +327,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
                                 top: `${-1 * bcr.top + 150}px`
                             }}
                             takeFocus={true}>
-                        <CorpusInfoBox data={this.state.detailData} isWaiting={this.state.isBusy} />
+                        <CorpusInfoBox data={this.props.detailData} isWaiting={this.props.isBusy} />
                     </layoutViews.PopupBox>
                 );
 
@@ -359,7 +337,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         render() {
-            const rows = this.state.rows.map((row, i) => {
+            const rows = this.props.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
                                     enableUserActions={!this.props.anonymousUser}
                                     userIsAnonymous={this.props.anonymousUser}
@@ -373,8 +351,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
                         <tbody>
                             <defaultComponents.CorplistHeader />
                             {rows}
-                            {this.state.nextOffset ?
-                                <ListExpansion offset={this.state.nextOffset} limit={this.state.limit} /> :
+                            {this.props.nextOffset ?
+                                <ListExpansion offset={this.props.nextOffset} limit={this.props.limit} /> :
                                 null
                             }
                         </tbody>
@@ -383,6 +361,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             );
         }
     }
+
+    const BoundCorplistTable = BoundWithProps(CorplistTable, listModel);
 
     // --------------------- <ListExpansion /> ----------------------------
 
@@ -397,8 +377,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch({
-                name: 'EXPANSION_CLICKED',
+            dispatcher.dispatch<Actions.ExpansionClicked>({
+                name: ActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }
@@ -415,7 +395,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     };
 
     return {
-        CorplistTable: CorplistTable,
+        CorplistTable: BoundCorplistTable,
         FilterForm: defaultComponents.FilterForm
     };
 }

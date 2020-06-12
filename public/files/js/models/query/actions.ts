@@ -29,6 +29,7 @@ export enum ActionName {
     MainMenuOverviewShowQueryInfo = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO',
     MainMenuOverviewShowQueryInfoDone = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE',
     EditQueryOperation = 'EDIT_QUERY_OPERATION',
+    EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
     BranchQueryDone = 'BRANCH_QUERY_DONE',
@@ -42,7 +43,9 @@ export enum ActionName {
     QueryInputToggleVirtualKeyboardShift = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputUnhitVirtualKeyboardShift = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
-    QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM'
+    QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+    QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
+    QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM'
 }
 
 export namespace Actions {
@@ -69,6 +72,12 @@ export namespace Actions {
         sourceId:string;
     }> {
         name:ActionName.EditQueryOperation
+    }
+
+    export interface EditLastQueryOperation extends Action<{
+        sourceId:string;
+    }> {
+        name:ActionName.EditLastQueryOperation
     }
 
     export interface EditQueryOperationDone extends Action<{
@@ -153,4 +162,13 @@ export namespace Actions {
         name:ActionName.QueryInputSelectContextFormItem;
     }
 
+    export interface QueryContextToggleForm extends Action<{
+    }> {
+        name:ActionName.QueryContextToggleForm;
+    }
+
+    export interface QueryTextTypesToggleForm extends Action<{
+    }> {
+        name:ActionName.QueryTextTypesToggleForm;
+    }
 }

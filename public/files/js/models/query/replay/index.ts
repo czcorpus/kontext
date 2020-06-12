@@ -227,6 +227,35 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
+
+        this.addActionHandler<Actions.EditLastQueryOperation>(
+            ActionName.EditLastQueryOperation,
+            (state, action) => {
+                state.editedOperationIdx = state.currEncodedOperations.length - 1;
+            },
+            (state, action, dispatch) => {
+                this.syncFormData(state, state.currEncodedOperations.length - 1).subscribe(
+                    ([data, sourceId]) => {
+                        dispatch<Actions.EditQueryOperationDone>({
+                            name: ActionName.EditQueryOperationDone,
+                            payload: {
+                                operationIdx: state.currEncodedOperations.length - 1,
+                                sourceId: sourceId,
+                                data: data
+                            }
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.EditQueryOperationDone>({
+                            name: ActionName.EditQueryOperationDone,
+                            error: err
+                        });
+                        this.pageModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
         this.addActionHandler<Actions.EditQueryOperationDone>(
             ActionName.EditQueryOperationDone,
             (state, action) => {

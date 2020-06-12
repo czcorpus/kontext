@@ -26,9 +26,7 @@ export interface QueryContextModelState {
     formData:QueryContextArgs;
 }
 
-type ExportedArgs = {[p in keyof QueryContextArgs]?:string};
-
-interface QueryContextArgs {
+export interface QueryContextArgs {
     fc_lemword_window_type:string;
     fc_lemword_wsize:string;
     fc_lemword:string;
@@ -55,30 +53,11 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
                 fc_pos_type: 'all'
             }
         });
-
         this.addActionHandler<Actions.QueryInputSelectContextFormItem>(
             ActionName.QueryInputSelectContextFormItem,
             (state, action) => {
                 state.formData[action.payload.name] = action.payload.value;
             }
         );
-    }
-
-    getContextArgs():ExportedArgs {
-        const data = this.getState().formData;
-        const ans:ExportedArgs = {};
-        if (data.fc_lemword) {
-            ans.fc_lemword = data.fc_lemword;
-            ans.fc_lemword_type = data.fc_lemword_type;
-            ans.fc_lemword_window_type = data.fc_lemword_window_type;
-            ans.fc_lemword_wsize = data.fc_lemword_wsize;
-        }
-        if (data.fc_pos) {
-            ans.fc_pos = data.fc_pos;
-            ans.fc_pos_type = data.fc_pos_type;
-            ans.fc_pos_window_type = data.fc_pos_window_type;
-            ans.fc_pos_wsize = ans.fc_pos_wsize;
-        }
-        return ans;
     }
 }

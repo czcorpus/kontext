@@ -23,7 +23,7 @@
 
 import * as Immutable from 'immutable';
 import * as translations from 'translations';
-import IntlMessageFormat = require('vendor/intl-messageformat');
+import * as IntlMessageFormat from '../vendor/intl-messageformat';
 import { ITranslator } from 'kombo';
 
 /**

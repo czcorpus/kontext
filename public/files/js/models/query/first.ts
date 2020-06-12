@@ -20,19 +20,24 @@
 
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
-import {Kontext, ViewOptions} from '../../types/common';
-import {AjaxResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
-import {TextTypesModel} from '../textTypes/main';
-import {QueryContextModel} from './context';
-import {PluginInterfaces} from '../../types/plugins';
-import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} from './common';
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { List, Dict } from 'cnc-tskit';
+import { Dict, tuple } from 'cnc-tskit';
+
+import { Kontext, ViewOptions } from '../../types/common';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { TextTypesModel } from '../textTypes/main';
+import { QueryContextModel } from './context';
+import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory } from './common';
+import { QueryContextArgs } from './context';
+import { ActionName } from './actions';
+
+
+type ExportedQueryContextArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
 
 
 export interface QueryFormUserEntries {
@@ -60,6 +65,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     selectedTextTypes:{[structattr:string]:Array<string>};
     hasLemma:{[corpname:string]:boolean};
     tagsetDocs:{[corpname:string]:boolean};
+    isAnonymousUser:boolean;
 }
 
 export interface QueryInputSetQueryProps {
@@ -105,64 +111,73 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     }
 };
 
-/**
- *
- */
-export interface CorpusSwitchPreserved {
-    queries:Immutable.Map<string, string>;
-    queryTypes:Immutable.Map<string, string>;
-    matchCases:Immutable.Map<string, boolean>;
+
+function determineSupportedWidgets(corpora:Immutable.List<string>, queryTypes:Immutable.Map<string, string>, isAnonymousUser:boolean):WidgetsMap {
+    const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
+        const ans = ['keyboard'];
+        if (!isAnonymousUser) {
+            ans.push('history');
+        }
+        if (queryType === 'cql') {
+            ans.push('within');
+            if (this.state.tagBuilderSupport.get(corpname)) {
+                ans.push('tag');
+            }
+        }
+        return ans;
+    }
+    return new WidgetsMap(
+            corpora.map<[string, Immutable.List<string>]>(corpname =>
+                tuple(
+                    corpname,
+                    Immutable.List<string>(getCorpWidgets(corpname, queryTypes.get(corpname)))
+                )
+            )
+            .toList());
 }
 
 
-/**
- *
- */
-export class FirstQueryFormModel extends QueryFormModel implements PluginInterfaces.Corparch.ICorpSelection, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+export interface FirstQueryFormModelState extends QueryFormModelState {
 
-    private corpora:Immutable.List<string>;
+    corpora:Immutable.List<string>;
 
-    private availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
+    availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
 
-    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
+    subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
-    private currentSubcorp:string;
+    currentSubcorp:string;
 
-    private origSubcorpName:string;
+    origSubcorpName:string;
 
-    private isForeignSubcorpus:boolean;
+    isForeignSubcorpus:boolean;
 
-    private shuffleConcByDefault:boolean;
+    shuffleConcByDefault:boolean;
 
-    private downArrowTriggersHistory:Immutable.Map<string, boolean>;
+    lposValues:Immutable.Map<string, string>; // corpname -> lpos
 
-    private lposValues:Immutable.Map<string, string>; // corpname -> lpos
+    matchCaseValues:Immutable.Map<string, boolean>; // corpname -> qmcase
 
-    private matchCaseValues:Immutable.Map<string, boolean>; // corpname -> qmcase
+    defaultAttrValues:Immutable.Map<string, string>;
 
-    private defaultAttrValues:Immutable.Map<string, string>;
+    pcqPosNegValues:Immutable.Map<string, string>;
 
-    private pcqPosNegValues:Immutable.Map<string, string>;
+    queryTypes:Immutable.Map<string, string>;
 
-    private queryTypes:Immutable.Map<string, string>;
+    tagBuilderSupport:Immutable.Map<string, boolean>;
 
-    private tagBuilderSupport:Immutable.Map<string, boolean>;
+    inputLanguages:Immutable.Map<string, string>;
 
-    private inputLanguages:Immutable.Map<string, string>;
+    hasLemma:Immutable.Map<string, boolean>;
 
-    private activeWidgets:Immutable.Map<string, string>;
+    tagsetDocs:Immutable.Map<string, string>;
 
-    private hasLemma:Immutable.Map<string, boolean>;
-
-    private tagsetDocs:Immutable.Map<string, string>;
-
-    private includeEmptyValues:Immutable.Map<string, boolean>; // applies only for aligned languages
+    includeEmptyValues:Immutable.Map<string, boolean>; // applies only for aligned languages
 
     /**
      * Text descriptions of text type structure for end user.
      * (applies for the main corpus)
      */
-    private textTypesNotes:string;
+    textTypesNotes:string;
 
     /**
      * This does not equal to URL param shuffle=0/1.
@@ -176,12 +191,16 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
      * shuffle to the initial query operation
      * (if applicable).
      */
-    private shuffleForbidden:boolean = false;
+    shuffleForbidden:boolean;
 
-    ident:string;
+    queryContextArgs:ExportedQueryContextArgs;
+}
 
 
-    // ----------------------
+/**
+ *
+ */
+export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState> {
 
     constructor(
             dispatcher:IFullActionControl,
@@ -189,190 +208,227 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
             props:QueryFormProperties) {
-        super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
-        this.ident = (Math.random() * 100).toFixed();
-        this.corpora = Immutable.List<string>(props.corpora);
-        this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
-        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(props.subcorpList);
-        this.currentSubcorp = props.currentSubcorp || '';
-        this.origSubcorpName = props.origSubcorpName || '';
-        this.isForeignSubcorpus = !!props.isForeignSubcorpus;
-        this.shuffleConcByDefault = props.shuffleConcByDefault;
-        this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
-        this.downArrowTriggersHistory = Immutable.Map<string, boolean>(props.corpora.map(item => [item, this.shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0)]));
-        this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
-        this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false]));
-        this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
-        this.queryTypes = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueryTypes[item] || 'iquery'])).toMap();
-        this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
-        this.includeEmptyValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currIncludeEmptyValues[item] || false]));
-        this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
-        this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
-        this.hasLemma = Immutable.Map<string, boolean>(props.hasLemma);
-        this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDocs);
-        this.textTypesNotes = props.textTypesNotes;
-        this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
+        const corpora = Immutable.List<string>(props.corpora);
+        const queryTypes = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueryTypes[item] || 'iquery'])).toMap();
+        super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
+            forcedAttr: props.forcedAttr,
+            attrList: Immutable.List<Kontext.AttrItem>(props.attrList),
+            structAttrList: Immutable.List<Kontext.AttrItem>(props.structAttrList),
+            lemmaWindowSizes: Immutable.List<number>(props.lemmaWindowSizes),
+            posWindowSizes: Immutable.List<number>(props.posWindowSizes),
+            wPoSList: Immutable.List<{v:string; n:string}>(props.wPoSList),
+            tagAttr: props.tagAttr,
+            useCQLEditor: props.useCQLEditor,
+            currentAction: 'first_form',
+            widgetArgs: {},
+            corpora: corpora,
+            availableAlignedCorpora: Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora),
+            subcorpList: Immutable.List<Kontext.SubcorpListItem>(props.subcorpList),
+            currentSubcorp: props.currentSubcorp || '',
+            origSubcorpName: props.origSubcorpName || '',
+            isForeignSubcorpus: !!props.isForeignSubcorpus,
+            shuffleForbidden: false,
+            shuffleConcByDefault: props.shuffleConcByDefault,
+            queries: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || ''])),
+            downArrowTriggersHistory: Immutable.Map<string, boolean>(props.corpora.map(item => [item, shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0)])),
+            lposValues: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || ''])),
+            matchCaseValues: Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false])),
+            defaultAttrValues: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word'])),
+            queryTypes: queryTypes,
+            pcqPosNegValues: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos'])),
+            includeEmptyValues: Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currIncludeEmptyValues[item] || false])),
+            tagBuilderSupport: Immutable.Map<string, boolean>(props.tagBuilderSupport),
+            inputLanguages: Immutable.Map<string, string>(props.inputLanguages),
+            hasLemma: Immutable.Map<string, boolean>(props.hasLemma),
+            tagsetDocs: Immutable.Map<string, string>(props.tagsetDocs),
+            textTypesNotes: props.textTypesNotes,
+            activeWidgets: Immutable.Map<string, string>(props.corpora.map(item => null)),
+            queryContextArgs: {},
+            isAnonymousUser: props.isAnonymousUser,
+            supportedWidgets: determineSupportedWidgets(corpora, queryTypes, props.isAnonymousUser),
+            contextFormVisible: false,
+            textTypesFormVisible: false
+        });
         this.setUserValues(props);
-        this.currentAction = 'first_form';
-        this.supportedWidgets = this.determineSupportedWidgets();
 
-        this.dispatcherRegister(action => {
-            switch (action.name) {
-                case 'CQL_EDITOR_DISABLE':
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SELECT_TYPE':
-                    let qType = action.payload['queryType'];
-                    if (!this.hasLemma.get(action.payload['sourceId']) &&  qType === 'lemma') {
-                        qType = 'phrase';
-                        this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
-                    }
-                    this.queryTypes = this.queryTypes.set(action.payload['sourceId'], qType);
-                    this.supportedWidgets = this.determineSupportedWidgets();
-                    this.emitChange();
-                break;
-                case 'CORPARCH_FAV_ITEM_CLICK':
-
-                break;
-                case 'QUERY_INPUT_SELECT_SUBCORP':
-                    if (action.payload['pubName']) {
-                        this.currentSubcorp = action.payload['pubName'];
-                        this.origSubcorpName = action.payload['subcorp'];
-                        this.isForeignSubcorpus = !!action.payload['foreign'];
-
-                    } else {
-                        this.currentSubcorp = action.payload['subcorp'];
-                        this.origSubcorpName = action.payload['subcorp'];
-                        this.isForeignSubcorpus = false;
-                    }
-                    const corpIdent = this.pageModel.getCorpusIdent();
-                    this.pageModel.setConf<Kontext.FullCorpusIdent>(
-                        'corpusIdent',
-                        {
-                            id: corpIdent.id,
-                            name: corpIdent.name,
-                            variant: corpIdent.variant,
-                            usesubcorp: this.currentSubcorp,
-                            origSubcorpName: this.origSubcorpName,
-                            foreignSubcorp: this.isForeignSubcorpus
-                        }
-                    );
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_MOVE_CURSOR':
-                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        action.payload['sourceId'],
-                        this.shouldDownArrowTriggerHistory(
-                            this.queries.get(action.payload['sourceId']),
-                            action.payload['rawAnchorIdx'],
-                            action.payload['rawFocusIdx']
-                        )
-                    );
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_QUERY':
-                    if (action.payload['insertRange']) {
-                        this.addQueryInfix(action.payload['sourceId'], action.payload['query'], action.payload['insertRange']);
-
-                    } else {
-                        this.queries = this.queries.set(action.payload['sourceId'], action.payload['query']);
-                    }
-                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        action.payload['sourceId'],
-                        this.shouldDownArrowTriggerHistory(
-                            action.payload['query'],
-                            action.payload['rawAnchorIdx'],
-                            action.payload['rawFocusIdx']
-                        )
-                    );
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_APPEND_QUERY':
-                    this.queries = this.queries.set(
-                        action.payload['sourceId'],
-                        appendQuery(
-                            this.queries.get(action.payload['sourceId']),
-                            action.payload['query'],
-                            !!action.payload['prependSpace']
-                        )
-                    );
-                    if (action.payload['closeWhenDone']) {
-                        this.activeWidgets = this.activeWidgets.set(action.payload['sourceId'], null);
-                    }
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_REMOVE_LAST_CHAR':
-                    const currQuery2 = this.queries.get(action.payload['sourceId']);
-                    if (currQuery2.length > 0) {
-                        this.queries = this.queries.set(action.payload['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
-                    }
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_LPOS':
-                    this.lposValues = this.lposValues.set(action.payload['sourceId'], action.payload['lpos']);
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_MATCH_CASE':
-                    this.matchCaseValues = this.matchCaseValues.set(action.payload['sourceId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_DEFAULT_ATTR':
-                    this.defaultAttrValues = this.defaultAttrValues.set(action.payload['sourceId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
-                    this.addAlignedCorpus(action.payload['corpname']);
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                    this.removeAlignedCorpus(action.payload['corpname']);
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_PCQ_POS_NEG':
-                    this.pcqPosNegValues = this.pcqPosNegValues.set(action.payload['corpname'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_INCLUDE_EMPTY':
-                    this.includeEmptyValues = this.includeEmptyValues.set(action.payload['corpname'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'QUERY_MAKE_CORPUS_PRIMARY':
-                    this.makeCorpusPrimary(action.payload['corpname']);
-                    break;
-                case 'QUERY_INPUT_SUBMIT':
-                    if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
-                        this.submitQuery();
-                    }
-                break;
-                case 'CORPUS_SWITCH_MODEL_RESTORE':
-                    this.restoreFromCorpSwitch(action.payload as Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>);
-                break;
+        this.queryContextModel.addListener((state) => {
+            this.state.queryContextArgs = {};
+            if (state.formData.fc_lemword) {
+                this.state.queryContextArgs.fc_lemword = state.formData.fc_lemword;
+                this.state.queryContextArgs.fc_lemword_type = state.formData.fc_lemword_type;
+                this.state.queryContextArgs.fc_lemword_window_type = state.formData.fc_lemword_window_type;
+                this.state.queryContextArgs.fc_lemword_wsize = state.formData.fc_lemword_wsize;
             }
+            if (state.formData.fc_pos.length > 0) {
+                this.state.queryContextArgs.fc_pos = state.formData.fc_pos;
+                this.state.queryContextArgs.fc_pos_type = state.formData.fc_pos_type;
+                this.state.queryContextArgs.fc_pos_window_type = state.formData.fc_pos_window_type;
+                this.state.queryContextArgs.fc_pos_wsize = state.formData.fc_pos_wsize;
+            }
+            this.emitChange();
         });
     }
 
-    private restoreFromCorpSwitch(props:Kontext.CorpusSwitchActionProps<CorpusSwitchPreserved>):void {
-        if (props.key === this.csGetStateKey()) {
-            props.currCorpora.forEach((corp, i) => {
-                this.queries = this.queries.set(corp, props.data.queries.get(props.prevCorpora.get(i)) || '');
-                this.queryTypes = this.queryTypes.set(corp, props.data.queryTypes.get(props.prevCorpora.get(i)) || '');
-                this.matchCaseValues = this.matchCaseValues.set(corp, props.data.matchCases.get(props.prevCorpora.get(i)) || false);
-            });
-            this.corpora = props.currCorpora;
-            this.queries = this.queries.filter((_, k) => props.currCorpora.includes(k)).toMap();
-            this.queryTypes = this.queryTypes.filter((_, k) => props.currCorpora.includes(k)).toMap();
-            this.matchCaseValues = this.matchCaseValues.filter((_, k) => props.currCorpora.includes(k)).toMap();
+    onAction(action) {
+        switch (action.name) {
+            case 'CQL_EDITOR_DISABLE':
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SELECT_TYPE':
+                let qType = action.payload['queryType'];
+                if (!this.state.hasLemma.get(action.payload['sourceId']) &&  qType === 'lemma') {
+                    qType = 'phrase';
+                    this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
+                }
+                this.state.queryTypes = this.state.queryTypes.set(action.payload['sourceId'], qType);
+                this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes, this.state.isAnonymousUser);
+                this.emitChange();
+            break;
+            case 'CORPARCH_FAV_ITEM_CLICK':
 
-            const concArgs = this.pageModel.getConf<{[opKey:string]:AjaxResponse.QueryFormArgs}>('ConcFormsArgs');
-            this.tagBuilderSupport = Immutable.Map<string, boolean>(concArgs['__new__'] ? concArgs['__new__'].tag_builder_support : {});
-            this.supportedWidgets = this.determineSupportedWidgets();
+            break;
+            case 'QUERY_INPUT_SELECT_SUBCORP':
+                if (action.payload['pubName']) {
+                    this.state.currentSubcorp = action.payload['pubName'];
+                    this.state.origSubcorpName = action.payload['subcorp'];
+                    this.state.isForeignSubcorpus = !!action.payload['foreign'];
 
+                } else {
+                    this.state.currentSubcorp = action.payload['subcorp'];
+                    this.state.origSubcorpName = action.payload['subcorp'];
+                    this.state.isForeignSubcorpus = false;
+                }
+                const corpIdent = this.pageModel.getCorpusIdent();
+                this.pageModel.setConf<Kontext.FullCorpusIdent>(
+                    'corpusIdent',
+                    {
+                        id: corpIdent.id,
+                        name: corpIdent.name,
+                        variant: corpIdent.variant,
+                        usesubcorp: this.state.currentSubcorp,
+                        origSubcorpName: this.state.origSubcorpName,
+                        foreignSubcorp: this.state.isForeignSubcorpus
+                    }
+                );
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_MOVE_CURSOR':
+                this.state.downArrowTriggersHistory = this.state.downArrowTriggersHistory.set(
+                    action.payload['sourceId'],
+                    shouldDownArrowTriggerHistory(
+                        this.state.queries.get(action.payload['sourceId']),
+                        action.payload['rawAnchorIdx'],
+                        action.payload['rawFocusIdx']
+                    )
+                );
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SET_QUERY':
+                if (action.payload['insertRange']) {
+                    this.addQueryInfix(action.payload['sourceId'], action.payload['query'], action.payload['insertRange']);
+
+                } else {
+                    this.state.queries = this.state.queries.set(action.payload['sourceId'], action.payload['query']);
+                }
+                this.state.downArrowTriggersHistory = this.state.downArrowTriggersHistory.set(
+                    action.payload['sourceId'],
+                    shouldDownArrowTriggerHistory(
+                        action.payload['query'],
+                        action.payload['rawAnchorIdx'],
+                        action.payload['rawFocusIdx']
+                    )
+                );
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_APPEND_QUERY':
+                this.state.queries = this.state.queries.set(
+                    action.payload['sourceId'],
+                    appendQuery(
+                        this.state.queries.get(action.payload['sourceId']),
+                        action.payload['query'],
+                        !!action.payload['prependSpace']
+                    )
+                );
+                if (action.payload['closeWhenDone']) {
+                    this.state.activeWidgets = this.state.activeWidgets.set(action.payload['sourceId'], null);
+                }
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_REMOVE_LAST_CHAR':
+                const currQuery2 = this.state.queries.get(action.payload['sourceId']);
+                if (currQuery2.length > 0) {
+                    this.state.queries = this.state.queries.set(action.payload['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
+                }
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SET_LPOS':
+                this.state.lposValues = this.state.lposValues.set(action.payload['sourceId'], action.payload['lpos']);
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SET_MATCH_CASE':
+                this.state.matchCaseValues = this.state.matchCaseValues.set(action.payload['sourceId'], action.payload['value']);
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SET_DEFAULT_ATTR':
+                this.state.defaultAttrValues = this.state.defaultAttrValues.set(action.payload['sourceId'], action.payload['value']);
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
+                this.addAlignedCorpus(action.payload['corpname']);
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
+                this.removeAlignedCorpus(action.payload['corpname']);
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SET_PCQ_POS_NEG':
+                this.state.pcqPosNegValues = this.state.pcqPosNegValues.set(action.payload['corpname'], action.payload['value']);
+                this.emitChange();
+            break;
+            case 'QUERY_INPUT_SET_INCLUDE_EMPTY':
+                this.state.includeEmptyValues = this.state.includeEmptyValues.set(action.payload['corpname'], action.payload['value']);
+                this.emitChange();
+            break;
+            case 'QUERY_MAKE_CORPUS_PRIMARY':
+                this.makeCorpusPrimary(action.payload['corpname']);
+                break;
+            case 'QUERY_INPUT_SUBMIT':
+                if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
+                    this.submitQuery();
+                }
+            break;
+            case 'CORPUS_SWITCH_MODEL_RESTORE':
+                this.restoreFromCorpSwitch(action.payload);
+            break;
+            case ActionName.QueryContextToggleForm:
+                this.state.contextFormVisible = !this.state.contextFormVisible;
+                this.emitChange();
+            break;
+            case ActionName.QueryTextTypesToggleForm:
+                this.state.textTypesFormVisible = !this.state.textTypesFormVisible;
+                this.emitChange();
+            break;
+        }
+    }
+
+    unregister():void {
+    }
+
+    disableDefaultShuffling():void {
+        this.state.shuffleConcByDefault = true;
+        this.emitChange();
+    }
+
+    private restoreFromCorpSwitch(payload:any):void { // TODO TYPE !!!!
+        if (payload.key === this.csGetStateKey()) {
+            this.state = {...payload.data};
+            this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes, this.state.isAnonymousUser);
             this.emitChange();
         }
     }
 
     private testPrimaryQueryNonEmpty():boolean {
-        if (this.queries.get(this.corpora.get(0)).length > 0) {
+        if (this.state.queries.get(this.state.corpora.get(0)).length > 0) {
             return true;
 
         } else {
@@ -382,16 +438,8 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     }
 
     private testQueryTypeMismatch():boolean {
-        const errors = this.corpora.map(corpname => this.isPossibleQueryTypeMismatch(corpname)).filter(err => !!err);
+        const errors = this.state.corpora.map(corpname => this.isPossibleQueryTypeMismatch(corpname)).filter(err => !!err);
         return errors.size === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
-    }
-
-    csExportState():CorpusSwitchPreserved {
-        return {
-            queries: this.queries,
-            queryTypes: this.queryTypes,
-            matchCases: this.matchCaseValues
-        };
     }
 
     csGetStateKey():string {
@@ -399,20 +447,20 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     }
 
     getActiveWidget(sourceId:string):string {
-        return this.activeWidgets.get(sourceId);
+        return this.state.activeWidgets.get(sourceId);
     }
 
     setActiveWidget(sourceId:string, ident:string):void {
-        this.activeWidgets = this.activeWidgets.set(sourceId, ident);
+        this.state.activeWidgets = this.state.activeWidgets.set(sourceId, ident);
     }
 
     private setUserValues(data:QueryFormUserEntries):void {
-        this.queries = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currQueries[item] || '']));
-        this.lposValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currLposValues[item] || '']));
-        this.matchCaseValues = Immutable.Map<string, boolean>(this.corpora.map(item => [item, data.currQmcaseValues[item] || false]));
-        this.defaultAttrValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currDefaultAttrValues[item] || 'word']));
-        this.queryTypes = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currQueryTypes[item] || 'iquery'])).toMap();
-        this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currPcqPosNegValues[item] || 'pos']));
+        this.state.queries = Immutable.Map<string, string>(this.state.corpora.map(item => [item, data.currQueries[item] || '']));
+        this.state.lposValues = Immutable.Map<string, string>(this.state.corpora.map(item => [item, data.currLposValues[item] || '']));
+        this.state.matchCaseValues = Immutable.Map<string, boolean>(this.state.corpora.map(item => [item, data.currQmcaseValues[item] || false]));
+        this.state.defaultAttrValues = Immutable.Map<string, string>(this.state.corpora.map(item => [item, data.currDefaultAttrValues[item] || 'word']));
+        this.state.queryTypes = Immutable.Map<string, string>(this.state.corpora.map(item => [item, data.currQueryTypes[item] || 'iquery'])).toMap();
+        this.state.pcqPosNegValues = Immutable.Map<string, string>(this.state.corpora.map(item => [item, data.currPcqPosNegValues[item] || 'pos']));
     }
 
     syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
@@ -429,9 +477,9 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
                             currPcqPosNegValues: data.curr_pcq_pos_neg_values,
                             currIncludeEmptyValues: data.curr_include_empty_values
                         });
-                        this.tagBuilderSupport = Immutable.Map<string, boolean>(data.tag_builder_support);
-                        this.hasLemma = Immutable.Map<string, boolean>(data.has_lemma);
-                        this.tagsetDocs = Immutable.Map<string, string>(data.tagset_docs);
+                        this.state.tagBuilderSupport = Immutable.Map<string, boolean>(data.tag_builder_support);
+                        this.state.hasLemma = Immutable.Map<string, boolean>(data.has_lemma);
+                        this.state.tagsetDocs = Immutable.Map<string, string>(data.tagset_docs);
                     }
                 }
             ),
@@ -452,44 +500,46 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     }
 
     onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
+        /* TODO
         super.onSettingsChange(optsModel);
-        this.shuffleConcByDefault = optsModel.getShuffle();
+        this.state.shuffleConcByDefault = optsModel.getShuffle();
+        */
     }
 
     private makeCorpusPrimary(corpname:string):void {
-        const idx = this.corpora.indexOf(corpname);
+        const idx = this.state.corpora.indexOf(corpname);
         if (idx > -1) {
-            this.corpora = this.corpora.remove(idx).insert(0, corpname);
-            this.currentSubcorp = '';
-            window.location.href = this.pageModel.createActionUrl(this.currentAction, this.createSubmitArgs().items());
+            this.state.corpora = this.state.corpora.remove(idx).insert(0, corpname);
+            this.state.currentSubcorp = '';
+            window.location.href = this.pageModel.createActionUrl(this.state.currentAction, this.createSubmitArgs().items());
         }
     }
 
     private addAlignedCorpus(corpname:string):void {
-        if (!this.corpora.contains(corpname) && this.availableAlignedCorpora.find(x => x.n === corpname)) {
-            this.corpora = this.corpora.push(corpname);
-            if (!this.queries.has(corpname)) {
-                this.queries = this.queries.set(corpname, '');
+        if (!this.state.corpora.contains(corpname) && this.state.availableAlignedCorpora.find(x => x.n === corpname)) {
+            this.state.corpora = this.state.corpora.push(corpname);
+            if (!this.state.queries.has(corpname)) {
+                this.state.queries = this.state.queries.set(corpname, '');
             }
-            if (!this.lposValues.has(corpname)) {
-                this.lposValues = this.lposValues.set(corpname, '');
+            if (!this.state.lposValues.has(corpname)) {
+                this.state.lposValues = this.state.lposValues.set(corpname, '');
             }
-            if (!this.matchCaseValues.has(corpname)) {
-                this.matchCaseValues = this.matchCaseValues.set(corpname, false);
+            if (!this.state.matchCaseValues.has(corpname)) {
+                this.state.matchCaseValues = this.state.matchCaseValues.set(corpname, false);
             }
-            if (!this.queryTypes.has(corpname)) {
-                this.queryTypes = this.queryTypes.set(corpname, 'iquery'); // TODO what about some session-stored stuff?
+            if (!this.state.queryTypes.has(corpname)) {
+                this.state.queryTypes = this.state.queryTypes.set(corpname, 'iquery'); // TODO what about some session-stored stuff?
             }
-            if (!this.pcqPosNegValues.has(corpname)) {
-                this.pcqPosNegValues = this.pcqPosNegValues.set(corpname, 'pos');
+            if (!this.state.pcqPosNegValues.has(corpname)) {
+                this.state.pcqPosNegValues = this.state.pcqPosNegValues.set(corpname, 'pos');
             }
-            if (!this.includeEmptyValues.has(corpname)) {
-                this.includeEmptyValues = this.includeEmptyValues.set(corpname, false);
+            if (!this.state.includeEmptyValues.has(corpname)) {
+                this.state.includeEmptyValues = this.state.includeEmptyValues.set(corpname, false);
             }
-            if (!this.defaultAttrValues.has(corpname)) {
-                this.defaultAttrValues = this.defaultAttrValues.set(corpname, 'word');
+            if (!this.state.defaultAttrValues.has(corpname)) {
+                this.state.defaultAttrValues = this.state.defaultAttrValues.set(corpname, 'word');
             }
-            this.supportedWidgets = this.determineSupportedWidgets();
+            this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes, this.state.isAnonymousUser);
 
         } else {
             // TODO error
@@ -497,9 +547,9 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     }
 
     private removeAlignedCorpus(corpname:string):void {
-        const idx = this.corpora.indexOf(corpname);
+        const idx = this.state.corpora.indexOf(corpname);
         if (idx > -1) {
-            this.corpora = this.corpora.remove(idx);
+            this.state.corpora = this.state.corpora.remove(idx);
 
         } else {
             console.error('Cannot remove corpus ', corpname);
@@ -507,14 +557,14 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     }
 
     private createSubmitArgs():MultiDict {
-        const primaryCorpus = this.corpora.get(0);
+        const primaryCorpus = this.state.corpora.get(0);
         const args = this.pageModel.getConcArgs();
         args.set('corpname', primaryCorpus);
-        args.set('usesubcorp', this.currentSubcorp);
+        args.set('usesubcorp', this.state.currentSubcorp);
 
-        if (this.corpora.size > 1) {
+        if (this.state.corpora.size > 1) {
             args.set('maincorp', primaryCorpus);
-            args.replace('align', this.corpora.rest().toArray());
+            args.replace('align', this.state.corpora.rest().toArray());
             args.set('viewmode', 'align');
 
         } else {
@@ -527,36 +577,37 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
             return corpname !== primaryCorpus ? name + '_' + corpname : name;
         }
 
-        this.corpora.forEach(corpname => {
-            args.add(createArgname('queryselector', corpname), `${this.queryTypes.get(corpname)}row`);
+        this.state.corpora.forEach(corpname => {
+            args.add(createArgname('queryselector', corpname), `${this.state.queryTypes.get(corpname)}row`);
             // now we set the query; we have to remove possible new-line
             // characters as while the client's cql parser and CQL widget are ok with that
             // server is unable to parse this
-            args.add(createArgname(this.queryTypes.get(corpname), corpname),
+            args.add(createArgname(this.state.queryTypes.get(corpname), corpname),
                      this.getQueryUnicodeNFC(corpname));
 
-            if (this.lposValues.get(corpname)) {
-                switch (this.queryTypes.get(corpname)) {
+            if (this.state.lposValues.get(corpname)) {
+                switch (this.state.queryTypes.get(corpname)) {
                     case 'lemma':
-                        args.add(createArgname('lpos', corpname), this.lposValues.get(corpname));
+                        args.add(createArgname('lpos', corpname), this.state.lposValues.get(corpname));
                     break;
                     case 'word':
-                        args.add(createArgname('wpos', corpname), this.lposValues.get(corpname));
+                        args.add(createArgname('wpos', corpname), this.state.lposValues.get(corpname));
                     break;
                 }
             }
-            if (this.matchCaseValues.get(corpname)) {
-                args.add(createArgname('qmcase', corpname), this.matchCaseValues.get(corpname) ? '1' : '0');
+            if (this.state.matchCaseValues.get(corpname)) {
+                args.add(createArgname('qmcase', corpname), this.state.matchCaseValues.get(corpname) ? '1' : '0');
             }
-            args.set(createArgname('pcq_pos_neg', corpname), this.pcqPosNegValues.get(corpname));
-            args.set(createArgname('include_empty', corpname), this.includeEmptyValues.get(corpname) ? '1' : '0');
-            args.set(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
+            args.set(createArgname('pcq_pos_neg', corpname), this.state.pcqPosNegValues.get(corpname));
+            args.set(createArgname('include_empty', corpname), this.state.includeEmptyValues.get(corpname) ? '1' : '0');
+            args.set(createArgname('default_attr', corpname), this.state.defaultAttrValues.get(corpname));
         });
 
+
         // query context
-        Dict.forEach<string, string>(
+        Dict.forEach(
             (value, key) => args.replace(key, [value]),
-            this.queryContextModel.getContextArgs()
+            this.state.queryContextArgs as {}
         );
 
         // text types
@@ -568,7 +619,7 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         }
 
         // default shuffle
-        if (this.shuffleConcByDefault) {
+        if (this.state.shuffleConcByDefault) {
             args.set('shuffle', 1);
 
         } else {
@@ -576,35 +627,10 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         }
 
         // default shuffling
-        if (this.shuffleForbidden) {
+        if (this.state.shuffleForbidden) {
             args.set('shuffle', 0);
         }
         return args;
-    }
-
-    private determineSupportedWidgets():WidgetsMap {
-        const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
-        const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
-            const ans = ['keyboard'];
-            if (!userIsAnonymous()) {
-                ans.push('history');
-            }
-            if (queryType === 'cql') {
-                ans.push('within');
-                if (this.tagBuilderSupport.get(corpname)) {
-                    ans.push('tag');
-                }
-            }
-            return ans;
-        }
-        return new WidgetsMap(
-                this.corpora.map<[string, Immutable.List<string>]>(corpname =>
-                    [
-                        corpname,
-                        Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))
-                    ]
-                )
-                .toList());
     }
 
     submitQuery():void {
@@ -624,93 +650,15 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
     }
 
     isPossibleQueryTypeMismatch(corpname:string):boolean {
-        const query = this.queries.get(corpname);
-        const queryType = this.queryTypes.get(corpname);
+        const query = this.state.queries.get(corpname);
+        const queryType = this.state.queryTypes.get(corpname);
         return this.validateQuery(query, queryType);
     }
 
-    getQueryTypes():Immutable.Map<string, string> {
-        return this.queryTypes;
-    }
-
-    getLposValues():Immutable.Map<string, string> {
-        return this.lposValues;
-    }
-
-    getMatchCaseValues():Immutable.Map<string, boolean> {
-        return this.matchCaseValues;
-    }
-
-    getDefaultAttrValues():Immutable.Map<string, string> {
-        return this.defaultAttrValues;
-    }
-
-    getQuery(corpname:string):string {
-        return this.queries.get(corpname);
-    }
-
-    getQueries():Immutable.Map<string, string> {
-        return this.queries;
-    }
-
+    /* TODO
     supportsParallelCorpora():boolean {
         return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
     }
+    */
 
-    getPcqPosNegValues():Immutable.Map<string, string> {
-        return this.pcqPosNegValues;
-    }
-
-    getIncludeEmptyValues():Immutable.Map<string, boolean> {
-        return this.includeEmptyValues;
-    }
-
-    getCorpora():Immutable.List<string> {
-        return this.corpora;
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return this.availableAlignedCorpora;
-    }
-
-
-    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
-        return this.subcorpList;
-    }
-
-    getCurrentSubcorpus():string {
-        return this.currentSubcorp;
-    }
-
-    getCurrentSubcorpusOrigName():string {
-        return this.origSubcorpName;
-    }
-
-    getIsForeignSubcorpus():boolean {
-        return this.isForeignSubcorpus;
-    }
-
-    getInputLanguages():Immutable.Map<string, string> {
-        return this.inputLanguages;
-    }
-
-    disableDefaultShuffling():void {
-        this.shuffleForbidden = true;
-    }
-
-    getTextTypesNotes():string {
-        return this.textTypesNotes;
-    }
-
-    getHasLemmaAttr():Immutable.Map<string, boolean> {
-        return this.hasLemma;
-    }
-
-    getTagsetDocUrls():Immutable.Map<string, string> {
-        return this.tagsetDocs;
-    }
-
-    getDownArrowTriggersHistory(sourceId:string):boolean {
-        return this.downArrowTriggersHistory.get(sourceId);
-    }
 }

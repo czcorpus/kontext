@@ -19,7 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import { IEventEmitter } from 'kombo';
+import { IEventEmitter, IModel } from 'kombo';
 import {CoreViews} from './coreViews';
 import { ObservablePrerequisite } from '../models/mainMenu';
 import { Observable } from 'rxjs';
@@ -575,13 +575,8 @@ export namespace Kontext {
      * to be sure it works with its own serialized
      * data.
      */
-    export interface ICorpusSwitchAware<T> {
+    export interface ICorpusSwitchAwareModel<T> extends IModel<T> {
 
-        /**
-         * Export desired properties packed into
-         * a single object T
-         */
-        csExportState():T;
 
         /**
          * Return a key under which the data will
@@ -1002,7 +997,7 @@ export namespace TextTypes {
          * Returns true if a specific attribute (or at least one attribute
          * if attrName is undefined) contains at least one selected value.
          */
-        hasSelectedItems(attrName?:string):boolean;
+        findHasSelectedItems(attrName?:string):boolean;
 
         /**
          * Returns a list of attribute names passing 'hasSelectedItems' test.

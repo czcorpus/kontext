@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import { CollResultsSaveModel } from '../../models/coll/result';
 import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../types/common';
+import { SaveData } from '../../app/navigation';
+import { CollResultsSaveModel } from '../../models/coll/save';
+import { Actions, ActionName } from '../../models/coll/actions';
 
 
 export interface SaveModuleArgs {
@@ -209,65 +210,39 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     // --------------- <SaveCollForm /> ------------------------
 
-    class SaveCollForm extends React.Component<SaveCollFormProps, SaveCollFormState> {
+    class SaveCollForm extends React.PureComponent<SaveCollFormProps & SaveCollFormState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
             this._switchLineLimitHint = this._switchLineLimitHint.bind(this);
         }
 
-        private modelSubscription:Subscription;
-
-        _fetchModelState() {
-            return {
-                saveformat: collSaveModel.getSaveformat(),
-                includeColHeaders: collSaveModel.getIncludeColHeaders(),
-                includeHeading: collSaveModel.getIncludeHeading(),
-                fromLine: collSaveModel.getFromLine(),
-                toLine: collSaveModel.getToLine(),
-                saveLinesLimit: collSaveModel.getMaxSaveLines(),
-                lineLimitHintVisible: false
-            };
-        }
-
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.SaveFormSubmit>({
+                name: ActionName.SaveFormSubmit
             });
         }
 
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = collSaveModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderFormatDependentOptions() {
-            switch (this.state.saveformat) {
+            switch (this.props.saveformat) {
                 case SaveData.Format.XML:
-                    return <TRIncludeHeadingCheckbox value={this.state.includeHeading} />;
+                    return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
                 case SaveData.Format.CSV:
                 case SaveData.Format.XLSX:
-                    return <TRColHeadersCheckbox value={this.state.includeColHeaders} />
+                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
                 default:
                 return <span />;
             }
         }
 
         _switchLineLimitHint(v) {
+            /* TODO implement within model
+
             const state = this._fetchModelState();
             state.lineLimitHintVisible = v;
             this.setState(state);
+            */
         }
 
         render() {
@@ -277,13 +252,13 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                         <form className="SaveCollForm">
                             <table className="form">
                                 <tbody>
-                                    <TRSaveFormatSelect value={this.state.saveformat} />
+                                    <TRSaveFormatSelect value={this.props.saveformat} />
                                     {this._renderFormatDependentOptions()}
                                     <TRSelLineRangeInputs
-                                            fromValue={this.state.fromLine}
-                                            toValue={this.state.toLine}
-                                            saveLinesLimit={this.state.saveLinesLimit}
-                                            lineLimitHintVisible={this.state.lineLimitHintVisible}
+                                            fromValue={this.props.fromLine}
+                                            toValue={this.props.toLine}
+                                            saveLinesLimit={this.props.saveLinesLimit}
+                                            lineLimitHintVisible={this.props.lineLimitHintVisible}
                                             onLineLimitHintShow={this._switchLineLimitHint} />
                                 </tbody>
                             </table>

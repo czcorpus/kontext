@@ -159,7 +159,7 @@ export class SubcorpFormModel extends StatefulModel {
             this.subcname,
             this.description,
             mustHaveTTSelection,
-            this.textTypesModel.hasSelectedItems(),
+            this.textTypesModel.findHasSelectedItems(),
             this.pageModel
         );
     }

@@ -19,32 +19,18 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
-import {init as initSaveViews} from './save';
-import { CollResultModel, CollResultRow, CollResultHeadingCell } from '../../models/coll/result';
 import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+
+import { Kontext, KeyCodes } from '../../types/common';
+import { init as initSaveViews } from './save';
+import { CollResultModel, CollResultModelState } from '../../models/coll/result';
+import { CollResultsSaveModel } from '../../models/coll/save';
+import { CollResultRow, CollResultHeadingCell } from '../../models/coll/common';
+import { Actions, ActionName } from '../../models/coll/actions';
 
 
 export interface CollResultViewProps {
     onClose:()=>void;
-}
-
-
-interface CollResultViewState {
-    data:Immutable.List<CollResultRow>;
-    heading:Immutable.List<CollResultHeadingCell>;
-    currPageInput:string;
-    isWaiting:boolean;
-    lineOffset:number;
-    currPage:number;
-    hasNextPage:boolean;
-    sortFn:string;
-    cattr:string;
-    saveFormVisible:boolean;
-    saveLinesLimit:number;
-    calcStatus:number;
 }
 
 
@@ -53,12 +39,12 @@ export interface ResultViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelpers, collResultModel:CollResultModel):ResultViews {
+export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelpers, collResultModel:CollResultModel, collSaveModel:CollResultsSaveModel):ResultViews {
 
     const saveViews = initSaveViews({
-        dispatcher:dispatcher,
-        utils: utils,
-        collSaveModel: collResultModel.getSaveModel()
+        dispatcher,
+        utils,
+        collSaveModel
     });
 
     // ---------------- <TDPosNegFilterLink /> ------------------------
@@ -157,7 +143,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     const TRDataHeading:React.SFC<{
         cattr:string;
         sortFn:string;
-        data:Immutable.List<CollResultHeadingCell>;
+        data:Array<CollResultHeadingCell>;
 
     }> = (props) => {
         return (
@@ -174,11 +160,11 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     // ---------------- <DataTable /> ------------------------
 
     const DataTable:React.SFC<{
-        heading:Immutable.List<CollResultHeadingCell>;
+        heading:Array<CollResultHeadingCell>;
         sortFn:string;
         cattr:string;
         lineOffset:number;
-        rows:Immutable.List<CollResultRow>;
+        rows:Array<CollResultRow>;
 
     }> = (props) => {
         return (
@@ -327,69 +313,35 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <CollResultView /> ------------------------
 
-    class CollResultView extends React.Component<CollResultViewProps, CollResultViewState> {
+    class CollResultView extends React.PureComponent<CollResultViewProps & CollResultModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSaveFormClose = this._handleSaveFormClose.bind(this);
         }
 
-        private modelSubscription:Subscription;
-
-        _fetchModelState() {
-            return {
-                data: collResultModel.getData(),
-                heading: collResultModel.getHeading(),
-                currPageInput: collResultModel.getCurrPageInput(),
-                isWaiting: collResultModel.getIsWaiting(),
-                lineOffset: collResultModel.getLineOffset(),
-                currPage: collResultModel.getCurrPage(),
-                hasNextPage: collResultModel.getHasNextPage(),
-                sortFn: collResultModel.getSortFn(),
-                cattr: collResultModel.getCattr(),
-                saveFormVisible: collResultModel.getSaveModel().getFormIsActive(),
-                saveLinesLimit: collResultModel.getSaveLinesLimit(),
-                calcStatus: collResultModel.getCalcStatus()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
         _handleSaveFormClose() {
-            dispatcher.dispatch({
-                name: 'COLL_RESULT_CLOSE_SAVE_FORM',
-                payload: {}
+            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
+                name: ActionName.ResultCloseSaveForm
             });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = collResultModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
             return (
                 <div className="CollResultView">
-                    {this.state.saveFormVisible ?
-                        <saveViews.SaveCollForm onClose={this._handleSaveFormClose} saveLinesLimit={this.state.saveLinesLimit} />
+                    {this.props.saveFormVisible ?
+                        <saveViews.SaveCollForm onClose={this._handleSaveFormClose} saveLinesLimit={this.props.saveLinesLimit} />
                         : null
                     }
-                    {this.state.calcStatus < 100 ?
-                        <CalcStatusBar status={this.state.calcStatus} /> :
+                    {this.props.calcStatus < 100 ?
+                        <CalcStatusBar status={this.props.calcStatus} /> :
                         (<div>
-                            <Pagination currPageInput={this.state.currPageInput}
-                                currPage={this.state.currPage}
-                                isWaiting={this.state.isWaiting} hasNextPage={this.state.hasNextPage} />
-                            <DataTable rows={this.state.data} heading={this.state.heading}
-                                    lineOffset={this.state.lineOffset} sortFn={this.state.sortFn}
-                                    cattr={this.state.cattr} />
+                            <Pagination currPageInput={this.props.currPageInput}
+                                currPage={this.props.currPage}
+                                isWaiting={this.props.isWaiting} hasNextPage={this.props.hasNextPage} />
+                            <DataTable rows={this.props.data} heading={this.props.heading}
+                                    lineOffset={this.props.pageSize * (this.props.currPage - 1)} sortFn={this.props.sortFn}
+                                    cattr={this.props.cattr} />
                         </div>)
                     }
                 </div>

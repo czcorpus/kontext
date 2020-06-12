@@ -19,38 +19,18 @@
  */
 
 import { Observable, of as rxOf } from 'rxjs';
-import * as Immutable from 'immutable';
+import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
+import { concatMap, tap, map, skip } from 'rxjs/operators';
 
-import {Kontext} from '../../types/common';
-import {StatefulModel, validateGzNumber} from '../base';
-import {PageModel} from '../../app/page';
-import {WordlistFormModel} from './form';
-import {MultiDict} from '../../multidict';
-import { Action, IFullActionControl } from 'kombo';
-import { concatMap } from 'rxjs/operators';
+import { Kontext } from '../../types/common';
+import { validateGzNumber } from '../base';
+import { PageModel } from '../../app/page';
+import { WordlistFormModel } from './form';
+import { MultiDict } from '../../multidict';
+import { ActionName, Actions } from './actions';
+import { List, HTTP, tuple } from 'cnc-tskit';
+import { ResultItem, IndexedResultItem, HeadingItem, ResultData } from './common';
 
-
-export type ResultData = {
-    data:Array<ResultItem>,
-    page:number;
-    pageSize:number;
-    isLastPage:boolean;
-}
-
-
-export interface ResultItem {
-    freq:number;
-    str:string;
-}
-
-export interface IndexedResultItem extends ResultItem {
-    idx:number;
-}
-
-export interface HeadingItem {
-    str:string;
-    sortKey:string;
-}
 
 
 export interface DataAjaxResponse extends Kontext.AjaxResponse {
@@ -64,26 +44,19 @@ export interface WlSizeAjaxResponse extends Kontext.AjaxResponse {
 }
 
 
-/**
- *
- */
-export class WordlistResultModel extends StatefulModel {
+export interface WordlistResultModelState {
 
-    private layoutModel:PageModel;
+    data:Array<IndexedResultItem>;
 
-    private formModel:WordlistFormModel;
+    headings:Array<HeadingItem>;
 
-    private data:Immutable.List<IndexedResultItem>;
+    currPage:number;
 
-    private headings:Immutable.List<HeadingItem>;
+    currPageInput:string;
 
-    private currPage:number;
+    pageSize:number;
 
-    private currPageInput:string;
-
-    private pageSize:number;
-
-    private isLastPage:boolean;
+    isLastPage:boolean;
 
      /*
       * this is not obtained automatically as a
@@ -91,36 +64,64 @@ export class WordlistResultModel extends StatefulModel {
       * provide this. We fetch this by user's
       * explicit request (when going to the last page)
       */
-    private numItems:number;
+    numItems:number;
 
-    private isBusy:boolean;
+    isBusy:boolean;
 
-    private isUnfinished:boolean;
+    isUnfinished:boolean;
 
-    private bgCalcStatus:number; // per-cent value
+    bgCalcStatus:number; // per-cent value
 
-    private isError:boolean;
+    isError:boolean;
 
-    private reloadArgs:Kontext.ListOfPairs;
+    reloadArgs:Kontext.ListOfPairs;
+}
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, formModel:WordlistFormModel,
+
+function importData(data:Array<ResultItem>, currPage:number, pageSize:number):Array<IndexedResultItem> {
+    return List.map(
+        (item, i) => ({
+            freq: item.freq,
+            str: item.str,
+            idx: (currPage - 1) * pageSize + i
+        }),
+        data
+    );
+}
+
+
+/**
+ *
+ */
+export class WordlistResultModel extends StatelessModel<WordlistResultModelState> {
+
+    private readonly layoutModel:PageModel;
+
+    private readonly formModel:WordlistFormModel;
+
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
             data:ResultData, headings:Array<HeadingItem>, reloadArgs:Kontext.ListOfPairs, isUnfinished:boolean) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                currPage: data.page,
+                currPageInput: data.page + '',
+                pageSize: data.pageSize,
+                isLastPage: data.isLastPage,
+                data: importData(data.data, data.page, data.pageSize),
+                headings: [...headings],
+                isBusy: false,
+                numItems: null,
+                isUnfinished: isUnfinished,
+                bgCalcStatus: 0,
+                isError: false,
+                reloadArgs: reloadArgs
+            }
+        );
         this.layoutModel = layoutModel;
         this.formModel = formModel;
-        this.currPage = data.page;
-        this.currPageInput = String(this.currPage);
-        this.pageSize = data.pageSize;
-        this.isLastPage = data.isLastPage;
-        this.data = this.importData(data.data);
-        this.headings = Immutable.List<HeadingItem>(headings);
-        this.isBusy = false;
-        this.numItems = null;
-        this.isUnfinished = isUnfinished;
-        this.bgCalcStatus = 0;
-        this.isError = false;
-        this.reloadArgs = reloadArgs;
 
+        /* TODO !!!
         this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
             if (evt.state['pagination']) {
                 this.currPage = evt.state['page'];
@@ -128,167 +129,268 @@ export class WordlistResultModel extends StatefulModel {
                 this.processPageLoad(true);
             }
         });
+        */
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'WORDLIST_RESULT_VIEW_CONC':
-                    const args = new MultiDict();
-                    args.set('corpname', this.formModel.getState().corpusId);
-                    args.set('usesubcorp', this.formModel.getState().currentSubcorpus);
-                    args.set('default_attr', this.formModel.getState().wlattr);
-                    args.set('qmcase', '1');
-                    args.set('queryselector', 'cqlrow');
-                    args.set('cql', this.createPQuery(action.payload['word']));
-                    window.location.href = this.layoutModel.createActionUrl('first', args.items());
-                break;
-                case 'WORDLIST_RESULT_RELOAD':
-                    this.processPageLoad();
-                break;
-                case 'WORDLIST_RESULT_NEXT_PAGE':
-                    if (!this.isLastPage) {
-                        this.currPage += 1;
-                        this.currPageInput = String(this.currPage);
-                        this.processPageLoad();
+        this.addActionHandler<Actions.WordlistResultViewConc>(
+            ActionName.WordlistResultViewConc,
+            null,
+            (state, action, dispatch) => {
+                this.suspend({}, (otherAction, syncData) => {
+                    if (otherAction.name === ActionName.WordlistFormSubmitReady) {
+                        return null;
+                    }
+                    return {};
 
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('wordlist__page_not_found_err'));
+                }).subscribe(
+                    otherAction => {
+                        const formArgs = (otherAction as Actions.WordlistFormSubmitReady).payload.args;
+                        const args = new MultiDict();
+                        args.set('corpname', formArgs.head('corpname'));
+                        args.set('usesubcorp', formArgs.head('usesubcorp'));
+                        args.set('default_attr', formArgs.head('wlattr'));
+                        args.set('qmcase', '1');
+                        args.set('queryselector', 'cqlrow');
+                        args.set('cql', this.createPQuery(action.payload.word, formArgs.head('wlattr')));
+                        window.location.href = this.layoutModel.createActionUrl('first', args.items());
+                    },
+                    err => {
+                        this.layoutModel.showMessage('error', err);
                     }
-                break;
-                case 'WORDLIST_RESULT_PREV_PAGE':
-                    if (this.currPage > 1) {
-                        this.currPage -= 1;
-                        this.currPageInput = String(this.currPage);
-                        this.processPageLoad();
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('wordlist__page_not_found_err'));
-                    }
-                break;
-                case 'WORDLIST_RESULT_SET_PAGE':
-                    if (validateGzNumber(action.payload['page'])) {
-                        this.currPageInput = action.payload['page'];
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('wordlist__invalid_page_num'));
-                    }
-                    this.emitChange();
-                break;
-                case 'WORDLIST_RESULT_CONFIRM_PAGE':
-                    this.currPage = parseInt(this.currPageInput, 10);
-                    this.processPageLoad();
-                break;
-                case 'WORDLIST_GO_TO_LAST_PAGE':
-                    this.isBusy = true;
-                    this.emitChange();
-                    this.fetchLastPage().subscribe(
-                        null,
-                        (err) => {
-                            this.isBusy = false;
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        },
-                        () => {
-                            this.processPageLoad();
-                        }
-                    );
-                break;
-                case 'WORDLIST_GO_TO_FIRST_PAGE':
-                    this.currPageInput = '1';
-                    this.currPage = 1;
-                    this.processPageLoad();
-                break;
-                case 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED':
-                    this.bgCalcStatus = action.payload['status'];
-                    if (action.error) {
-                        this.isError = true;
-                    }
-                    this.emitChange();
-                break;
+                )
             }
-        });
+        );
+
+        this.addActionHandler<Actions.WordlistPageLoadDone>(
+            ActionName.WordlistPageLoadDone,
+            (state, action) => {
+                if (!action.error) {
+                    state.currPage = action.payload.page;
+                    state.currPageInput = action.payload.page + '';
+                }
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistResultReload>(
+            ActionName.WordlistResultReload,
+            null,
+            (state, action, dispatch) => {
+                this.processPageLoad(state, state.currPage, dispatch);
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistResultNextPage>(
+            ActionName.WordlistResultNextPage,
+            (state, action) => {
+                if (!state.isLastPage) {
+                    state.isBusy = true;
+                }
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, state.currPage + 1, dispatch);
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistResultPrevPage>(
+            ActionName.WordlistResultPrevPage,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, state.currPage - 1, dispatch);
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistResultSetPage>(
+            ActionName.WordlistResultSetPage,
+            (state, action) => {
+                if (validateGzNumber(action.payload.page)) {
+                    state.currPageInput = action.payload.page;
+                }
+            },
+            (state, action, dispatch) => {
+                if (!validateGzNumber(action.payload.page)) {
+                    this.layoutModel.showMessage('error',
+                            this.layoutModel.translate('wordlist__invalid_page_num'));
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistResultConfirmPage>(
+            ActionName.WordlistResultConfirmPage,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                // action.payload.page is already validated here
+                this.processPageLoad(state, parseInt(action.payload.page), dispatch);
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistGoToLastPage>(
+            ActionName.WordlistGoToLastPage,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.suspend({}, (action, syncData) => {
+                    if (action.name === ActionName.WordlistFormSubmitReady) {
+                        return null;
+                    }
+                    return {};
+
+                }).pipe(
+                    concatMap(
+                        action => {
+                            const formArgs = (action as Actions.WordlistFormSubmitReady).payload.args;
+                            return this.fetchLastPage(state, formArgs);
+                        }
+                    )
+                ).subscribe(
+                    ([data, pageNum, isLastPage, size]) => {
+                        dispatch<Actions.WordlistPageLoadDone>({
+                            name: ActionName.WordlistPageLoadDone,
+                            payload: {
+                                page: pageNum,
+                                isLast: isLastPage,
+                                newNumOfItems: size,
+                                data: data
+                            }
+                        });
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                        dispatch<Actions.WordlistPageLoadDone>({
+                            name: ActionName.WordlistPageLoadDone,
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistGoToFirstPage>(
+            ActionName.WordlistGoToFirstPage,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, 1, dispatch);
+            }
+        );
+
+        this.addActionHandler(
+            'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+            (state, action) => {
+                state.bgCalcStatus = action.payload['status'];
+                if (action.error) {
+                    state.isError = true;
+                }
+            }
+        );
     }
 
-    private fetchLastPage():Observable<boolean> {
-        const args = this.formModel.createSubmitArgs(this.formModel.getState());
+    private fetchLastPage(state:WordlistResultModelState, formSubmitArgs:MultiDict):Observable<[Array<IndexedResultItem>, number, boolean, number]> {
         return (() => {
-            if (this.numItems === null) {
+            if (state.numItems === null) {
                 return this.layoutModel.ajax$<WlSizeAjaxResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.layoutModel.createActionUrl('wordlist/ajax_get_wordlist_size'),
-                    args
-
+                    formSubmitArgs
                 );
 
             } else {
                 return rxOf({
                         messages: [],
-                        size: this.numItems
+                        size: state.numItems
                 });
             }
         })().pipe(
+            map(
+                data => tuple(
+                    data.size,
+                    ~~Math.ceil(state.numItems / state.pageSize)
+                )
+            ),
             concatMap(
-                (data) => {
-                    this.numItems = data.size;
-                    this.currPage = ~~Math.ceil(this.numItems / this.pageSize);
-                    this.currPageInput = String(this.currPage);
-                    return rxOf(true);
+                ([size, numPages]) => {
+                    return this.pageLoad(state, numPages).pipe(
+                        map(
+                            ([data, pageNum, isLast]) => tuple(
+                                data, pageNum, isLast, size
+                            )
+                        )
+                    )
                 }
             )
         );
     }
 
-    private createPQuery(s:string):string {
-        return `[${this.formModel.getState().wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
+    private createPQuery(s:string, wlattr:string):string {
+        return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
     }
 
-    private processPageLoad(skipHistory=false):void {
-        this.isBusy = true;
-        this.emitChange();
-        this.loadData().subscribe(
-            null,
-            (err) => {
-                this.isBusy = false;
-                this.layoutModel.showMessage('error', err);
-                this.emitChange();
-            },
-            () => {
-                this.isBusy = false;
-                this.emitChange();
-                if (!skipHistory) {
-                    this.layoutModel.getHistory().pushState(
-                        'wordlist/result',
-                        new MultiDict(this.reloadArgs.concat([['wlpage', this.currPage.toString()]])),
-                        {
-                            pagination: true,
-                            page: this.currPage
-                        }
-                    );
+    private pageLoad(state:WordlistResultModelState, newPage:number, skipHistory=false):Observable<[Array<IndexedResultItem>, number, boolean]> {
+        return this.suspend({}, (action, syncData) => {
+            if (action.name === ActionName.WordlistFormSubmitReady) {
+                return null;
+            }
+            return {};
+        }).pipe(
+            concatMap(
+                action => {
+                    if (newPage < 1) {
+                        throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
                     }
+                    const args = (action as Actions.WordlistFormSubmitReady).payload.args;
+                    return this.loadData(state, newPage, args);
+                }
+            ),
+            tap(
+                data => {
+                    if (!skipHistory) {
+                        this.layoutModel.getHistory().pushState(
+                            'wordlist/result',
+                            new MultiDict(state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
+                            {
+                                pagination: true,
+                                page: state.currPage
+                            }
+                        );
+                    }
+                }
+            )
+        );
+    }
+
+    private processPageLoad(state:WordlistResultModelState, newPage:number, dispatch:SEDispatcher, skipHistory=false):void {
+        this.pageLoad(state, newPage, skipHistory).subscribe(
+            ([data, pageNum, isLastPage]) => {
+                dispatch<Actions.WordlistPageLoadDone>({
+                    name: ActionName.WordlistPageLoadDone,
+                    payload: {
+                        page: pageNum,
+                        isLast: isLastPage,
+                        data: data
+                    }
+                });
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+                dispatch<Actions.WordlistPageLoadDone>({
+                    name: ActionName.WordlistPageLoadDone,
+                    error: err
+                });
             }
         );
     }
 
-    private importData(data:Array<ResultItem>):Immutable.List<IndexedResultItem> {
-        return Immutable.List<IndexedResultItem>(data.map((item, i) => {
-            return {
-                freq: item.freq,
-                str: item.str,
-                idx: (this.currPage - 1) * this.pageSize + i
-            }
-        }));
-    }
-
-    private loadData():Observable<DataAjaxResponse> {
-        const args = this.formModel.createSubmitArgs(this.formModel.getState());
-        args.set('wlpage', this.currPage);
-
+    private loadData(state:WordlistResultModelState, newPage:number, formModelSubmitArgs:MultiDict):Observable<[Array<IndexedResultItem>, number, boolean]> {
+        formModelSubmitArgs.set('wlpage', state.currPage);
         return this.layoutModel.ajax$<DataAjaxResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
-            args
+            formModelSubmitArgs
 
         ).pipe(
             concatMap(
@@ -296,59 +398,13 @@ export class WordlistResultModel extends StatefulModel {
                     if (data.lastpage && data.Items.length === 0) {
                         throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
                     }
-                    this.data = this.importData(data.Items);
-                    this.isLastPage = !!data.lastpage;
-                    return rxOf(data);
+                    return rxOf(tuple(
+                        importData(data.Items, state.currPage, state.pageSize),
+                        newPage,
+                        !!data.lastpage
+                    ));
                 }
             )
         );
-    }
-
-    getData():Immutable.List<IndexedResultItem> {
-        return this.data;
-    }
-
-    getHeadings():Immutable.List<HeadingItem> {
-        return this.headings;
-    }
-
-    getCurrPageInput():string {
-        return this.currPageInput;
-    }
-
-    getCurrPage():number {
-        return this.currPage;
-    }
-
-    getIsLastPage():boolean {
-        return this.isLastPage;
-    }
-
-    getIsBusy():boolean {
-        return this.isBusy;
-    }
-
-    usesStructAttr():boolean {
-        return this.formModel.getState().wlattr.indexOf('.') > -1;
-    }
-
-    getWlsort():string {
-        return this.formModel.getState().wlsort;
-    }
-
-    getIsUnfinished():boolean {
-        return this.isUnfinished;
-    }
-
-    getBgCalcStatus():number {
-        return this.bgCalcStatus;
-    }
-
-    getWlpat():string {
-        return this.formModel.getState().wlpat;
-    }
-
-    getIsError():boolean {
-        return this.isError;
     }
 }

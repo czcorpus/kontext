@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {init as lineSelViewsInit} from './lineSelection';
@@ -873,31 +873,12 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
 
-    class ConcordanceDashboard extends React.Component<ConcordanceDashboardProps, ConcDashboardState> {
+    class ConcordanceDashboard extends React.PureComponent<ConcordanceDashboardProps & ConcDashboardState> {
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = dashboardModel.getState();
-            this._modelChangeListener = this._modelChangeListener.bind(this);
-        }
-
-        _modelChangeListener(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = dashboardModel.addListener(this._modelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
 
         private getModClass():string {
-            if (this.state.showFreqInfo || this.state.showKwicConnect) {
-                return this.state.expanded ? '' : ' collapsed';
+            if (this.props.showFreqInfo || this.props.showKwicConnect) {
+                return this.props.expanded ? '' : ' collapsed';
 
             } else {
                 return ' disabled';
@@ -907,7 +888,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         render() {
             return (
                 <div className={`ConcordanceDashboard${this.getModClass()}`}>
-                    {this.state.showFreqInfo || this.state.showKwicConnect ?
+                    {this.props.showFreqInfo || this.props.showKwicConnect ?
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
                     }
@@ -919,7 +900,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
 
     return {
-        ConcordanceDashboard: ConcordanceDashboard
+        ConcordanceDashboard: BoundWithProps(ConcordanceDashboard, dashboardModel)
     };
 
 }

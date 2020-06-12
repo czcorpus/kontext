@@ -51,8 +51,7 @@ export class Plugin {
      * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
      * @param options A configuration for the widget
      */
-    createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
-                options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
 
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
         const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -69,7 +68,6 @@ export class Plugin {
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
             corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            corpSelection: corpSel,
             anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
             searchEngine: searchEngine,
             dataFav: favData,
@@ -81,8 +79,7 @@ export class Plugin {
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
-            widgetModel: this.model,
-            corpusSelection: corpSel
+            widgetModel: this.model
         });
         // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     }

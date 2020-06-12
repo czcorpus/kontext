@@ -18,17 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {PageModel} from '../app/page';
-import {PluginInterfaces} from '../types/plugins';
 import * as Immutable from 'immutable';
-import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {WordlistFormModel, WlnumsTypes, WlTypes} from '../models/wordlist/form';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
-import createCorparch from 'plugins/corparch/init';
-import { KontextPage } from '../app/main';
 import { tap } from 'rxjs/operators';
+
+import { Kontext } from '../types/common';
+import { PageModel } from '../app/page';
+import { PluginInterfaces } from '../types/plugins';
+import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
+import { WordlistFormModel, WlnumsTypes, WlTypes } from '../models/wordlist/form';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
+import { KontextPage } from '../app/main';
+import createCorparch from 'plugins/corparch/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -49,7 +50,7 @@ class WordlistFormPage {
 
     private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
+    private subcorpSel:NonQueryCorpusSelectionModel;
 
 
     constructor(layoutModel:PageModel) {
@@ -61,7 +62,6 @@ class WordlistFormPage {
     private initCorparchPlugin():PluginInterfaces.Corparch.WidgetView {
         return createCorparch(this.layoutModel.pluginApi()).createWidget(
             'wordlist_form',
-            this.subcorpSel,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                     return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
@@ -123,8 +123,7 @@ class WordlistFormPage {
 
             const queryOverviewViews = basicOverviewViewsInit(
                 this.layoutModel.dispatcher,
-                this.layoutModel.getComponentHelpers(),
-                this.subcorpSel
+                this.layoutModel.getComponentHelpers()
             );
             this.layoutModel.renderReactComponent(
                 queryOverviewViews.EmptyQueryOverviewBar,
@@ -132,6 +131,9 @@ class WordlistFormPage {
                 {
                     corpname: this.layoutModel.getCorpusIdent().id,
                     humanCorpname: this.layoutModel.getCorpusIdent().name,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
                 }
             );
 

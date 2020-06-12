@@ -67,14 +67,11 @@ export class TreeWidgetModel extends StatefulModel {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    private queryModel:PluginInterfaces.Corparch.ICorpSelection;
-
     constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                queryModel:PluginInterfaces.Corparch.ICorpSelection, corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
+                corpusClickHandler:Kontext.CorplistItemClick) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;
-        this.queryModel = queryModel;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
         this.dispatcherRegister((action:Action) => {
@@ -95,7 +92,7 @@ export class TreeWidgetModel extends StatefulModel {
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
                         this.corpusClickHandler(
                             [action.payload['ident']],
-                            this.queryModel.getCurrentSubcorpus()
+                            this.pluginApi.getCorpusIdent().usesubcorp
                         );
                     break;
                 }
@@ -159,15 +156,11 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     private viewsLib:TreeCorparchViews;
 
-    private queryModel:PluginInterfaces.Corparch.ICorpSelection;
-
-    constructor(pluginApi:IPluginApi, queryModel:PluginInterfaces.Corparch.ICorpSelection) {
+    constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
-        this.queryModel = queryModel;
         this.treeModel = new TreeWidgetModel(
             pluginApi,
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            queryModel,
             (corpora:Array<string>, subcorpId:string) => {
                 window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpora[0]);
                 return null; // just to keep the type check cool
@@ -180,9 +173,6 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
         );
     }
 
-    setData(data:any):void {
-    }
-
     getForm():React.SFC<{}> {
         return this.viewsLib.FilterPageComponent;
     }
@@ -190,40 +180,6 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
     getList():React.ComponentClass {
         return this.viewsLib.CorptreePageComponent;
     }
-}
-
-
-class DummyQueryModel implements PluginInterfaces.Corparch.ICorpSelection {
-
-    getCurrentSubcorpus():string {
-        return null;
-    }
-
-    getCurrentSubcorpusOrigName():string {
-        return null;
-    }
-
-    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
-        return Immutable.List<Kontext.SubcorpListItem>();
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
-    }
-
-    getIsForeignSubcorpus():boolean {
-        return false;
-    }
-
-    addListener(fn:()=>void):Subscription {
-        return rxOf({}).subscribe(fn);
-    }
-
-    emitChange(eventType?:string, error?:Error):void {}
 }
 
 
@@ -246,11 +202,10 @@ class Plugin {
      * @param targetAction - ignored here
      * @param options A configuration of the widget
      */
-    createWidget(targetAction:string, queryModel:FirstQueryFormModel, options:Kontext.GeneralProps):React.ComponentClass {
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            queryModel,
             options.itemClickAction
         );
         return viewInit(
@@ -265,7 +220,7 @@ class Plugin {
     }
 
     initCorplistPageComponents():CorplistPage {
-        return new CorplistPage(this.pluginApi, new DummyQueryModel());
+        return new CorplistPage(this.pluginApi);
     }
 }
 

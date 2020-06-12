@@ -34,6 +34,7 @@ import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { PluginInterfaces } from '../../types/plugins';
 import { UsageTipsModel } from '../../models/usageTips';
 import { ActionName, Actions } from '../../models/query/actions';
+import { Keyboard } from 'cnc-tskit';
 
 
 
@@ -132,62 +133,16 @@ export function init(
 
     // -------- <FilterForm /> ---------------------------------------
 
-    class FilterForm extends React.Component<FilterFormProps, FilterFormState> {
-
-        private modelSubscription:Subscription;
+    class FilterForm extends React.PureComponent<FilterFormProps & FilterFormState> {
 
         constructor(props) {
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handlePosNegSelect = this._handlePosNegSelect.bind(this);
             this._handleSelTokenSelect = this._handleSelTokenSelect.bind(this);
             this._handleToFromRangeValChange = this._handleToFromRangeValChange.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
             this._handleInclKwicCheckbox = this._handleInclKwicCheckbox.bind(this);
-            this.state = this._fetchState();
-        }
-
-        _fetchState() {
-            return {
-                queryTypes: filterModel.getQueryTypes(),
-                supportedWidgets: filterModel.getSupportedWidgets(),
-                lposValues: filterModel.getLposValues(),
-                matchCaseValues: filterModel.getMatchCaseValues(),
-                forcedAttr: filterModel.getForcedAttr(),
-                defaultAttrValues: filterModel.getDefaultAttrValues(),
-                attrList: filterModel.getAttrList(),
-                tagsetDocUrl: filterModel.getTagsetDocUrls().get(this.props.filterId),
-                lemmaWindowSizes: filterModel.getLemmaWindowSizes(),
-                posWindowSizes: filterModel.getPosWindowSizes(),
-                hasLemmaAttr: filterModel.getHasLemmaAttr().get(this.props.filterId),
-                wPoSList: filterModel.getwPoSList(),
-                contextFormVisible: false,
-                inputLanguage: filterModel.getInputLanguage(),
-                pnFilterValue: filterModel.getPnFilterValues().get(this.props.filterId),
-                filfposValue: filterModel.getFilfposValues().get(this.props.filterId),
-                filtposValue: filterModel.getFiltposValues().get(this.props.filterId),
-                filflValue: filterModel.getFilflValues().get(this.props.filterId),
-                inclKwicValue: filterModel.getInclKwicValues().get(this.props.filterId),
-                isLocked: filterModel.getOpLocks().get(this.props.filterId),
-                withinArg: filterModel.getWithinArgs().get(this.props.filterId),
-                useCQLEditor: filterModel.getUseCQLEditor(),
-                tagAttr: filterModel.getTagAttr()
-            };
-        }
-
-        _modelChangeHandler() {
-            const ans = this._fetchState();
-            ans['contextFormVisible'] = this.state.contextFormVisible;
-            this.setState(ans);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = filterModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _handlePosNegSelect(evt) {
@@ -222,7 +177,7 @@ export function init(
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === KeyCodes.ENTER && !evt.ctrlKey && !evt.shiftKey) {
+            if (evt.keyCode === Keyboard.Code.ENTER && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,
@@ -264,13 +219,13 @@ export function init(
                 name: 'FILTER_QUERY_SET_INCL_KWIC',
                 payload: {
                     filterId: this.props.filterId,
-                    value: !this.state.inclKwicValue
+                    value: !this.props.inclKwicValue
                 }
             });
         }
 
         _renderForm() {
-            if (this.state.withinArg === 1) {
+            if (this.props.withinArg === 1) {
                 return this._renderSwitchMaincorpForm();
 
             } else {
@@ -284,28 +239,28 @@ export function init(
                     <table className="form">
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
+                                queryType={this.props.queryTypes.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
                                 actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.state.hasLemmaAttr} />
+                                hasLemmaAttr={this.props.hasLemmaAttr} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
-                                widgets={this.state.supportedWidgets.get(this.props.filterId)}
+                                queryType={this.props.queryTypes.get(this.props.filterId)}
+                                widgets={this.props.supportedWidgets.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
-                                wPoSList={this.state.wPoSList}
-                                lposValue={this.state.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
-                                attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues.get(this.props.filterId)}
+                                matchCaseValue={this.props.matchCaseValues.get(this.props.filterId)}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttrValues.get(this.props.filterId)}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocUrl}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.state.inputLanguage}
+                                inputLanguage={this.props.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
-                                useCQLEditor={this.state.useCQLEditor}
+                                useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit} />
                         </tbody>
                     </table>
@@ -328,18 +283,18 @@ export function init(
                             <tr>
                                 <th>{he.translate('query__filter_th')}:</th>
                                 <td>
-                                    <select value={this.state.pnFilterValue} onChange={this._handlePosNegSelect}>
+                                    <select value={this.props.pnFilterValue} onChange={this._handlePosNegSelect}>
                                         <option value="p">{he.translate('query__qfilter_pos')}</option>
                                         <option value="n">{he.translate('query__qfilter_neg')}</option>
                                     </select>
                                 </td>
                             </tr>
-                            {this.state.pnFilterValue === 'p' ?
+                            {this.props.pnFilterValue === 'p' ?
                                 (<tr>
                                     <th>{he.translate('query__qlfilter_sel_token')}:</th>
                                     <td>
                                         <select onChange={this._handleSelTokenSelect}
-                                                value={this.state.filflValue}>
+                                                value={this.props.filflValue}>
                                             <option value="f">{he.translate('query__token_first')}</option>
                                             <option value="l">{he.translate('query__token_last')}</option>
                                         </select>
@@ -355,25 +310,25 @@ export function init(
                                 <td>
                                     <label>
                                         {he.translate('query__qfilter_range_from')}:{'\u00a0'}
-                                        <layoutViews.ValidatedItem invalid={this.state.filfposValue.isInvalid}>
+                                        <layoutViews.ValidatedItem invalid={this.props.filfposValue.isInvalid}>
                                             <input type="text" style={{width: '3em'}}
-                                                value={this.state.filfposValue.value}
+                                                value={this.props.filfposValue.value}
                                                 onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
                                         </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_range_to')}:{'\u00a0'}
-                                        <layoutViews.ValidatedItem invalid={this.state.filtposValue.isInvalid}>
+                                        <layoutViews.ValidatedItem invalid={this.props.filtposValue.isInvalid}>
                                             <input type="text" style={{width: '3em'}}
-                                                value={this.state.filtposValue.value}
+                                                value={this.props.filtposValue.value}
                                                 onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
                                         </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0,\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_include_kwic')}
-                                        <input type="checkbox" checked={this.state.inclKwicValue}
+                                        <input type="checkbox" checked={this.props.inclKwicValue}
                                             onChange={this._handleInclKwicCheckbox} />
                                     </label>
                                 </td>
@@ -381,28 +336,28 @@ export function init(
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
+                                queryType={this.props.queryTypes.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
                                 actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.state.hasLemmaAttr} />
+                                hasLemmaAttr={this.props.hasLemmaAttr} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
-                                widgets={this.state.supportedWidgets.get(this.props.filterId)}
+                                queryType={this.props.queryTypes.get(this.props.filterId)}
+                                widgets={this.props.supportedWidgets.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
-                                wPoSList={this.state.wPoSList}
-                                lposValue={this.state.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
-                                attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues.get(this.props.filterId)}
+                                matchCaseValue={this.props.matchCaseValues.get(this.props.filterId)}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttrValues.get(this.props.filterId)}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocUrl}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.state.inputLanguage}
+                                inputLanguage={this.props.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
-                                useCQLEditor={this.state.useCQLEditor}
+                                useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit}
                                 takeFocus={false} />
                         </tbody>
@@ -419,7 +374,7 @@ export function init(
         }
 
         render() {
-            if (this.state.isLocked) {
+            if (this.props.isLocked) {
                 return (
                     <div>
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')}

@@ -40,6 +40,7 @@ import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs } from '..
 import { UsageTipsModel } from '../models/usageTips';
 import { CQLEditorModel } from '../models/query/cqleditor/model';
 import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
 import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
 import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
 import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs } from '../models/query/switchmc';
@@ -379,17 +380,14 @@ export class ViewPage {
             case 'sortx':
             case 'shuffle':
             case 'reduce': {
-                const state = this.queryModels.queryReplayModel.getState(); // TODO antipattern
-                const numOps = state.currEncodedOperations.length > 0 ?
-                                    state.currEncodedOperations[state.currEncodedOperations.length - 1].size : 0;
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
                     {
                         modalAction: {
-                            name: 'EDIT_QUERY_OPERATION',
+                            name: QueryActionName.EditLastQueryOperation,
                             payload: {
-                                operationIdx: numOps - 1
+                                sourceId: this.layoutModel.getConcArgs()['q']
                             }
                         }
                     },
@@ -477,7 +475,8 @@ export class ViewPage {
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
             selectedTextTypes: queryFormArgs.selected_text_types,
             useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr')
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(
@@ -545,7 +544,8 @@ export class ViewPage {
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr')
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
         }
 
         this.queryModels.filterModel = new FilterFormModel(
@@ -741,9 +741,7 @@ export class ViewPage {
             },
             queryReplayModel: this.queryModels.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.queryModels.saveAsFormModel,
-            corparchModel: this.queryModels.queryModel
-
+            querySaveAsModel: this.queryModels.saveAsFormModel
         });
 
         this.layoutModel.renderReactComponent(

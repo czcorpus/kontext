@@ -215,7 +215,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * Please avoid calling this method in page model's init() method
      * as it would lead to an infinite recursion.
      */
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
         this.appNavig.registerSwitchCorpAwareObject(obj);
     }
 

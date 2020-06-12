@@ -19,13 +19,12 @@
  */
 
 import * as Immutable from 'immutable';
-import {Kontext, ViewOptions} from '../../types/common';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import {TextTypesModel} from '../textTypes/main';
-import {QueryContextModel} from './context';
-import {parse as parseQuery, ITracer} from 'cqlParser/parser';
-import { Action, IFullActionControl } from 'kombo';
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
+import { TextTypesModel } from '../textTypes/main';
+import { QueryContextModel } from './context';
+import { parse as parseQuery, ITracer } from 'cqlParser/parser';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
 
 export interface GeneralQueryFormProperties {
@@ -85,47 +84,69 @@ export interface AppendQueryInputAction extends Action<{
 }> {};
 
 
+export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
+    if (anchorIdx === focusIdx) {
+        return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
+
+    } else {
+        return false;
+    }
+}
+
+
+export interface QueryFormModelState {
+
+    forcedAttr:string;
+
+    attrList:Immutable.List<Kontext.AttrItem>;
+
+    structAttrList:Immutable.List<Kontext.AttrItem>;
+
+    lemmaWindowSizes:Immutable.List<number>;
+
+    posWindowSizes:Immutable.List<number>;
+
+    wPoSList:Immutable.List<{v:string; n:string}>;
+
+    currentAction:string;
+
+    queries:Immutable.Map<string, string>; // corpname|filter_id -> query
+
+    tagBuilderSupport:Immutable.Map<string, boolean>;
+
+    useCQLEditor:boolean;
+
+    tagAttr:string;
+
+    widgetArgs:Kontext.GeneralProps;
+
+    supportedWidgets:WidgetsMap;
+
+    isAnonymousUser:boolean;
+
+    activeWidgets:Immutable.Map<string, string>;
+
+    downArrowTriggersHistory:Immutable.Map<string, boolean>;
+
+    contextFormVisible:boolean;
+
+    textTypesFormVisible:boolean;
+}
+
 /**
  *
  */
-export abstract class QueryFormModel extends StatefulModel {
+export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T> implements Kontext.ICorpusSwitchAwareModel<T> {
 
-    protected pageModel:PageModel;
+    protected readonly pageModel:PageModel;
 
-    protected forcedAttr:string;
+    protected readonly queryContextModel:QueryContextModel;
 
-    protected attrList:Immutable.List<Kontext.AttrItem>;
+    protected readonly textTypesModel:TextTypesModel;
 
-    protected structAttrList:Immutable.List<Kontext.AttrItem>;
+    protected readonly queryTracer:ITracer;
 
-    protected lemmaWindowSizes:Immutable.List<number>;
-
-    protected posWindowSizes:Immutable.List<number>;
-
-    protected wPoSList:Immutable.List<{v:string; n:string}>;
-
-    protected currentAction:string;
-
-    protected queries:Immutable.Map<string, string>; // corpname|filter_id -> query
-
-    // ----- other models
-
-    protected textTypesModel:TextTypesModel;
-
-    protected queryContextModel:QueryContextModel;
-
-    protected queryTracer:ITracer;
-
-    // ----
-
-    protected useCQLEditor:boolean;
-
-    private tagAttr:string;
-
-    private widgetArgs:Kontext.GeneralProps;
-
-    protected supportedWidgets:WidgetsMap;
-
+    protected readonly ident:string;
 
     // -------
 
@@ -135,23 +156,20 @@ export abstract class QueryFormModel extends StatefulModel {
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            payload:GeneralQueryFormProperties) {
-        super(dispatcher);
+            ident:string,
+            initState:T) {
+        super(
+            dispatcher,
+            initState
+        );
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
         this.queryContextModel = queryContextModel;
-        this.forcedAttr = payload.forcedAttr;
-        this.attrList = Immutable.List<Kontext.AttrItem>(payload.attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(payload.structAttrList);
-        this.lemmaWindowSizes = Immutable.List<number>(payload.lemmaWindowSizes);
-        this.posWindowSizes = Immutable.List<number>(payload.posWindowSizes);
-        this.wPoSList = Immutable.List<{v:string; n:string}>(payload.wPoSList);
-        this.tagAttr = payload.tagAttr;
         this.queryTracer = {trace:(_)=>undefined};
-        this.useCQLEditor = payload.useCQLEditor;
-        this.queries = Immutable.Map<string, string>();
+        this.ident = ident;
 
-        this.dispatcherRegister(action => {
+        /*
+        this.onAction(action => {
             switch (action.name) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
                     this.setActiveWidget(action.payload['sourceId'], action.payload['value']);
@@ -160,60 +178,9 @@ export abstract class QueryFormModel extends StatefulModel {
                 break;
             }
         });
-    }
-
-    /**
-     * Returns a currently active widget identifier
-     * (one of 'tag', 'keyboard', 'within', 'history')
-     */
-    abstract getActiveWidget(sourceId:string):string;
-
-    /**
-     * Sets a currently active widget.
-     */
-    abstract setActiveWidget(sourceId:string, ident:string):void;
+        */
 
 
-    abstract getQueries():Immutable.Map<string, string>;
-
-    abstract getQuery(sourceId:string):string;
-
-    abstract getQueryTypes():Immutable.Map<string, string>;
-
-    abstract getDownArrowTriggersHistory(sourceId:string):boolean;
-
-    /// ---------
-
-    getSupportedWidgets():WidgetsMap {
-        return this.supportedWidgets;
-    }
-
-    getWidgetArgs():Kontext.GeneralProps {
-        return this.widgetArgs;
-    }
-
-    getForcedAttr():string {
-        return this.forcedAttr;
-    }
-
-    getAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.attrList;
-    }
-
-    getStructAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.structAttrList;
-    }
-
-    getLemmaWindowSizes():Immutable.List<number> {
-        return this.lemmaWindowSizes;
-    }
-
-    getPosWindowSizes():Immutable.List<number> {
-        return this.posWindowSizes;
-    }
-
-    getwPoSList():Immutable.List<{v:string; n:string}> {
-        return this.wPoSList;
     }
 
     protected validateQuery(query:string, queryType:string):boolean {
@@ -249,38 +216,20 @@ export abstract class QueryFormModel extends StatefulModel {
         return mismatch;
     }
 
-    protected shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
-        if (anchorIdx === focusIdx) {
-            return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
-
-        } else {
-            return false;
-        }
-    }
-
     protected addQueryInfix(sourceId:string, query:string, insertRange:[number, number]):void {
-        this.queries = this.queries.set(
+        this.state.queries = this.state.queries.set(
             sourceId,
-            this.queries.get(sourceId).substring(0, insertRange[0]) + query +
-                this.queries.get(sourceId).substr(insertRange[1])
+            this.state.queries.get(sourceId).substring(0, insertRange[0]) + query +
+                this.state.queries.get(sourceId).substr(insertRange[1])
         );
-    }
-
-    onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
-        this.useCQLEditor = optsModel.getUseCQLEditor();
-        this.emitChange();
-    }
-
-    getTagAttr():string {
-        return this.tagAttr;
-    }
-
-    getUseCQLEditor():boolean {
-        return this.useCQLEditor;
     }
 
     getQueryUnicodeNFC(queryId:string):string {
          // TODO ES2015 stuff here
-        return this.queries.has(queryId) ? this.queries.get(queryId)['normalize']() : undefined;
+        return this.state.queries.has(queryId) ? this.state.queries.get(queryId)['normalize']() : undefined;
+    }
+
+    csGetStateKey():string {
+        return this.ident;
     }
 }

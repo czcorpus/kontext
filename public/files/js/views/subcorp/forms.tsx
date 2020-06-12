@@ -18,7 +18,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, Bound} from 'kombo';
 import {Subscription} from 'rxjs';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
@@ -254,29 +254,12 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <TRWithinBuilderWrapper /> ----------------------------
 
-    class TRWithinBuilderWrapper extends React.Component<
-        {}, SubcorpWithinFormModelState> {
-
-        private modelSubscription:Subscription;
+    class TRWithinBuilderWrapper extends React.PureComponent<SubcorpWithinFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = subcorpWithinFormModel.getState();
             this._handleHelpClick = this._handleHelpClick.bind(this);
             this._handleHelpCloseClick = this._handleHelpCloseClick.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = subcorpWithinFormModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _handleHelpClick() {
@@ -302,19 +285,21 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 onClick={this._handleHelpClick}>
                             <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
                         </a>:
-                        {this.state.helpHintVisible ?
-                            <StructsHint structsAndAttrs={this.state.structsAndAttrs}
+                        {this.props.helpHintVisible ?
+                            <StructsHint structsAndAttrs={this.props.structsAndAttrs}
                                     onCloseClick={this._handleHelpCloseClick} /> :
                             null
                         }
                     </th>
                     <td className="container">
-                        <WithinBuilder lines={this.state.lines} structsAndAttrs={this.state.structsAndAttrs} />
+                        <WithinBuilder lines={this.props.lines} structsAndAttrs={this.props.structsAndAttrs} />
                     </td>
                 </tr>
             );
         }
     }
+
+    const BoundTRWithinBuilderWrapper = Bound(TRWithinBuilderWrapper, subcorpWithinFormModel);
 
     /**
      *
@@ -504,7 +489,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         _renderTextTypeSelection() {
             switch (this.state.inputMode) {
                 case 'raw':
-                    return <TRWithinBuilderWrapper  />;
+                    return <BoundTRWithinBuilderWrapper  />;
                 case 'gui':
                     return (
                         <tr>

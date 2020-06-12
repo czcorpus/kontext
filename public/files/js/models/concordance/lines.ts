@@ -904,7 +904,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getProvidesAdHocIpm():boolean {
-        return this.ttModel.hasSelectedItems();
+        return this.ttModel.findHasSelectedItems();
     }
 
     getAdHocIpm():number {

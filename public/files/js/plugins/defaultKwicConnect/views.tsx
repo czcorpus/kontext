@@ -45,7 +45,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         constructor(props) {
             super(props);
-            this.state = model.getState();
+            this.state = model.getInitialState();
             this.stateChangeHandler = this.stateChangeHandler.bind(this);
         }
 
