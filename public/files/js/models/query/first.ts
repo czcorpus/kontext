@@ -32,6 +32,7 @@ import {GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery} fro
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { List, Dict } from 'cnc-tskit';
 
 
 export interface QueryFormUserEntries {
@@ -553,15 +554,10 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         });
 
         // query context
-        const contextArgs = this.queryContextModel.getContextArgs();
-        for (let k in contextArgs) {
-            if (Object.prototype.toString.call(contextArgs[k]) === '[object Array]') {
-                args.replace(k, contextArgs[k]);
-
-            } else {
-                args.replace(k, [contextArgs[k]]);
-            }
-        }
+        Dict.forEach<string, string>(
+            (value, key) => args.replace(key, [value]),
+            this.queryContextModel.getContextArgs()
+        );
 
         // text types
         const ttData = this.textTypesModel.exportSelections(false);

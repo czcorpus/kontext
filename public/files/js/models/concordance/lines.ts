@@ -628,7 +628,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getViewAttrs():Array<string> {
-        return (this.layoutModel.getConcArgs()['attrs'] || []).split(',');
+        return this.layoutModel.getConcArgs().head('attrs').split(',');
     }
 
     getViewAttrsVmode():ViewOptions.AttrViewMode {
