@@ -23,7 +23,7 @@ import * as Immutable from 'immutable';
 import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
-import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -48,7 +48,7 @@ export interface IPluginApi extends ITranslator {
     pluginIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict;
     getCorpusIdent():Kontext.FullCorpusIdent;
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
@@ -268,16 +268,6 @@ export namespace PluginInterfaces {
 
         export type WidgetView = React.ComponentClass<{}>;
 
-
-        export interface ICorpSelection extends IEventEmitter {
-            getCurrentSubcorpus():string;
-            getCurrentSubcorpusOrigName():string;
-            getIsForeignSubcorpus():boolean;
-            getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
-            getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
-            getCorpora():Immutable.List<string>;
-        }
-
         /**
          * A factory class for generating corplist page. The page is expected
          * to contain two blocks
@@ -297,7 +287,7 @@ export namespace PluginInterfaces {
             /**
              * Create a corpus selection widget used on the query page
              */
-            createWidget(targetAction:string, corpSel:ICorpSelection,
+            createWidget(targetAction:string, corpSel:IModel<{}>,
                     options:Kontext.GeneralProps):React.ComponentClass<{}>;
 
             /**

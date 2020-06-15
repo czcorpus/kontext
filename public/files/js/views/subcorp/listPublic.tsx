@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PublicSubcorpListState, PublicSubcorpListModel,
     DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
@@ -242,39 +242,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <List /> -------------------------
 
-    class List extends React.Component<ListProps, PublicSubcorpListState> {
+    class List extends React.PureComponent<ListProps & PublicSubcorpListState> {
 
         private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = model.getState();
-        }
-
-        _modelChangeHandler(state:PublicSubcorpListState):void {
-            this.setState(state);
-        }
-
-        componentDidMount():void {
-            this.modelSubscription = model.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount():void {
-            this.modelSubscription.unsubscribe();
+            this.state = model.getInitialState();
         }
 
         render() {
             return (
                 <div className="List">
                     <form>
-                        <Filter searchType={this.state.searchType}
-                                query={this.state.searchQuery}
-                                minQuerySize={this.state.minQuerySize} />
+                        <Filter searchType={this.props.searchType}
+                                query={this.props.searchQuery}
+                                minQuerySize={this.props.minQuerySize} />
                     </form>
-                    {this.state.isBusy ?
+                    {this.props.isBusy ?
                         <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                        <DataList data={this.state.data} hasQuery={this.state.searchQuery.length >= this.state.minQuerySize} />
+                        <DataList data={this.props.data} hasQuery={this.props.searchQuery.length >= this.props.minQuerySize} />
                     }
                     <p className="disclaimer">
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
@@ -286,7 +273,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        List: List
+        List: BoundWithProps(List, model)
     };
 
 }

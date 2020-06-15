@@ -19,7 +19,7 @@
  */
 
 import * as Immutable from 'immutable';
-import { IEventEmitter } from 'kombo';
+import { IEventEmitter, IModel } from 'kombo';
 import {CoreViews} from './coreViews';
 import { ObservablePrerequisite } from '../models/mainMenu';
 import { Observable } from 'rxjs';
@@ -575,13 +575,8 @@ export namespace Kontext {
      * to be sure it works with its own serialized
      * data.
      */
-    export interface ICorpusSwitchAware<T> {
+    export interface ICorpusSwitchAwareModel<T> extends IModel<T> {
 
-        /**
-         * Export desired properties packed into
-         * a single object T
-         */
-        csExportState():T;
 
         /**
          * Return a key under which the data will

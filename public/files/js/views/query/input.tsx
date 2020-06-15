@@ -20,13 +20,13 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {init as keyboardInit} from './virtualKeyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
 import {Kontext, KeyCodes} from '../../types/common';
-import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction} from '../../models/query/common';
+import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction, QueryFormModelState} from '../../models/query/common';
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
 import {CQLEditorModel} from '../../models/query/cqleditor/model';
@@ -37,7 +37,7 @@ import { Actions, ActionName } from '../../models/query/actions';
 export interface InputModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    queryModel:QueryFormModel;
+    queryModel:QueryFormModel<QueryFormModelState>;
     queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
@@ -98,6 +98,24 @@ export interface TRIncludeEmptySelectorProps {
     corpname:string;
 }
 
+interface SingleLineInputProps {
+    actionPrefix:string;
+    sourceId:string;
+    refObject:React.RefObject<HTMLInputElement>;
+    hasHistoryWidget:boolean;
+    historyIsVisible:boolean;
+    onReqHistory:()=>void;
+    onEsc:()=>void;
+}
+
+interface QueryToolboxProps {
+    sourceId:string;
+    actionPrefix:string;
+    widgets:Immutable.List<string>;
+    inputLanguage:string;
+    tagHelperView:PluginInterfaces.TagHelper.View;
+    toggleHistoryWidget:()=>void;
+}
 
 export function init({
     dispatcher, he, queryModel, queryHintModel, withinBuilderModel,
@@ -125,7 +143,7 @@ export function init({
             super(props);
             this._changeListener = this._changeListener.bind(this);
             this._clickHandler = this._clickHandler.bind(this);
-            this.state = queryHintModel.getState();
+            this.state = queryHintModel.getInitialState();
         }
 
         _changeListener(state) {
@@ -522,31 +540,13 @@ export function init({
 
     // ------------------- <QueryToolbox /> -----------------------------
 
-    class QueryToolbox extends React.Component<{
-        sourceId:string;
-        actionPrefix:string;
-        widgets:Immutable.List<string>;
-        inputLanguage:string;
-        tagHelperView:PluginInterfaces.TagHelper.View;
-        toggleHistoryWidget:()=>void;
-
-    }, {
-        activeWidget:string;
-        widgetArgs:Kontext.GeneralProps;
-    }> {
-
-        private modelSubscription:Subscription;
+    class QueryToolbox extends React.PureComponent<QueryToolboxProps & QueryFormModelState> {
 
         constructor(props) {
             super(props);
             this._handleWidgetTrigger = this._handleWidgetTrigger.bind(this);
             this._handleHistoryWidget = this._handleHistoryWidget.bind(this);
             this._handleCloseWidget = this._handleCloseWidget.bind(this);
-            this._handleQueryModelChange = this._handleQueryModelChange.bind(this);
-            this.state = {
-                activeWidget: queryModel.getActiveWidget(this.props.sourceId),
-                widgetArgs: queryModel.getWidgetArgs()
-            };
         }
 
         _renderButtons() {
@@ -596,13 +596,13 @@ export function init({
         }
 
         _renderWidget() {
-            switch (this.state.activeWidget) {
+            switch (this.props.activeWidgets.get(this.props.sourceId)) {
                 case 'tag':
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
                                 actionPrefix={this.props.actionPrefix}
-                                args={this.state.widgetArgs} />;
+                                args={this.props.widgetArgs} />;
                 case 'within':
                     return <WithinWidget closeClickHandler={this._handleCloseWidget}
                                 sourceId={this.props.sourceId} actionPrefix={this.props.actionPrefix} />;
@@ -613,21 +613,6 @@ export function init({
                 default:
                     return null;
             }
-        }
-
-        _handleQueryModelChange() {
-            this.setState({
-                activeWidget: queryModel.getActiveWidget(this.props.sourceId),
-                widgetArgs: queryModel.getWidgetArgs()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryModel.addListener(this._handleQueryModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -643,6 +628,8 @@ export function init({
             );
         }
     }
+
+    const BoundQueryToolbox = BoundWithProps<QueryToolboxProps, QueryFormModelState>(QueryToolbox, queryModel);
 
     // ------------------- <LposSelector /> -----------------------------
 
@@ -707,37 +694,12 @@ export function init({
 
     // ------------------- <SingleLineInput /> -----------------------------
 
-    class SingleLineInput extends React.Component<{
-        actionPrefix:string;
-        sourceId:string;
-        refObject:React.RefObject<HTMLInputElement>;
-        hasHistoryWidget:boolean;
-        historyIsVisible:boolean;
-        onReqHistory:()=>void;
-        onEsc:()=>void;
-    }, {
-        query:string;
-        downArrowTriggersHistory:boolean;
-    }> {
-
-        private modelSubscription:Subscription;
+    class SingleLineInput extends React.Component<SingleLineInputProps & QueryFormModelState> {
 
         constructor(props) {
             super(props);
             this.handleInputChange = this.handleInputChange.bind(this);
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleKeyDown = this.handleKeyDown.bind(this);
-            this.state = {
-                query: queryModel.getQuery(this.props.sourceId),
-                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
-            };
-        }
-
-        private handleModelChange() {
-            this.setState({
-                query: queryModel.getQuery(this.props.sourceId),
-                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
-            });
         }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
@@ -756,7 +718,7 @@ export function init({
         private handleKeyDown(evt) {
             if (evt.keyCode === KeyCodes.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.state.downArrowTriggersHistory &&
+                    this.props.downArrowTriggersHistory.get(this.props.sourceId) &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
@@ -765,23 +727,17 @@ export function init({
             }
         }
 
-        componentDidMount() {
-            this.modelSubscription = queryModel.addListener(this.handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
             return <input className="simple-input" type="text"
                                 spellCheck={false}
                                 ref={this.props.refObject}
                                 onChange={this.handleInputChange}
-                                value={this.state.query}
+                                value={this.props.queries.get(this.props.sourceId)}
                                 onKeyDown={this.handleKeyDown} />;
         }
     }
+
+    const BoundSingleLineInput = BoundWithProps<SingleLineInputProps, QueryFormModelState>(SingleLineInput, queryModel);
 
     // ------------------- <DefaultAttrSelector /> -----------------------------
 
@@ -910,7 +866,7 @@ export function init({
                 case 'phrase':
                 case 'word':
                 case 'char':
-                    return <SingleLineInput
+                    return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
                                 actionPrefix={this.props.actionPrefix}
                                 refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
@@ -992,7 +948,7 @@ export function init({
                     <th>{he.translate('query__query_th')}:</th>
                     <td>
                         <div className="query-area">
-                            <QueryToolbox widgets={this.props.widgets}
+                            <BoundQueryToolbox widgets={this.props.widgets}
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}

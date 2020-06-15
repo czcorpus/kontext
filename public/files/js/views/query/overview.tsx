@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Subscription } from 'rxjs';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { init as saveViewInit } from './save';
@@ -68,7 +68,7 @@ export interface OverviewModuleArgs {
     queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
     mainMenuModel:Kontext.IMainMenuModel;
     querySaveAsModel:QuerySaveAsFormModel;
-    corparchModel:PluginInterfaces.Corparch.ICorpSelection;
+    corparchModel:IModel<{}>;
 }
 
 
@@ -660,7 +660,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         constructor(props) {
             super(props);
-            this.state = querySaveAsModel.getState();
+            this.state = querySaveAsModel.getInitialState();
             this.handleCloseEvent = this.handleCloseEvent.bind(this);
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleSubmit = this.handleSubmit.bind(this);

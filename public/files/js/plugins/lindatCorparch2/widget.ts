@@ -151,7 +151,7 @@ export interface CorplistWidgetModelArgs {
  *
  */
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-                                 implements Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+                                 implements Kontext.ICorpusSwitchAwareModel<CorpusSwitchPreserved> {
 
     private pluginApi:IPluginApi;
 
@@ -631,15 +631,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-
-    csExportState():CorpusSwitchPreserved {
-        return {dataFav: this.getState().dataFav};
-    }
-
     csGetStateKey():string {
         return 'default-corparch-widget';
     }
-
 
     /**
      * According to the state of the current query form, this method creates

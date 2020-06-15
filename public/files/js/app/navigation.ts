@@ -26,6 +26,7 @@ import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
 import {MultiDict} from '../multidict';
+import { HTTP, Dict } from 'cnc-tskit';
 
 
 /**
@@ -173,9 +174,9 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     private conf:Kontext.IConfHandler;
 
-    private switchCorpAwareObjects:Immutable.List<Kontext.ICorpusSwitchAware<any>>;
+    private switchCorpAwareObjects:{[ident:string]:(state:{})=>void};
 
-    private switchCorpStateStorage:Immutable.OrderedMap<string, any>;
+    private switchCorpStateStorage:{[ident:string]:{}};
 
     private switchCorpPreviousCorpora:Immutable.List<string>;
 
@@ -183,7 +184,7 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     constructor(conf:Kontext.IConfHandler) {
         this.conf = conf;
-        this.switchCorpAwareObjects = Immutable.List<Kontext.ICorpusSwitchAware<any>>();
+        this.switchCorpAwareObjects = {};
         this.switchCorpStateStorage = Immutable.OrderedMap<string, any>();
         this.switchCorpPreviousCorpora = Immutable.List<string>();
         this.history = createHistory(this);
@@ -404,12 +405,14 @@ export class AppNavigation implements Kontext.IURLHandler {
      * Please avoid calling this method in page model's init() method
      * as it would lead to an infinite recursion.
      */
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
-        this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
+        this.switchCorpAwareObjects[obj.csGetStateKey()] = (state) => {
+            this.switchCorpStateStorage[obj.csGetStateKey()] = state;
+        }
     }
 
     forEachCorpSwitchSerializedItem(fn:(storeKey:string, data:any)=>void):void {
-        this.switchCorpStateStorage.forEach((value, key) => fn(key, value));
+        Dict.forEach((value, key) => fn(key, value), this.switchCorpStateStorage);
     }
 
     /**
@@ -429,15 +432,12 @@ export class AppNavigation implements Kontext.IURLHandler {
      * @param subcorpus - an optional subcorpus
      */
     switchCorpus(corpora:Array<string>, subcorpus:string):Observable<any> {
-        this.switchCorpAwareObjects.forEach((item, key) => {
-            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.csGetStateKey(), item.csExportState());
-        });
-        this.switchCorpAwareObjects = this.switchCorpAwareObjects.clear();
+        this.switchCorpAwareObjects = {};
         this.switchCorpPreviousCorpora = Immutable.List<string>(
             [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id].concat(this.conf.getConf<Array<string>>('alignedCorpora'))
         );
         return this.ajax$<AjaxResponse.CorpusSwitchResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.createActionUrl('ajax_switch_corpus'),
             {
                 corpname: corpora[0],

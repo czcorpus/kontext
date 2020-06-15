@@ -135,7 +135,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.getCorpusIdent();
     }
 
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
         return this.pageModel.registerSwitchCorpAwareObject(obj);
     }
 

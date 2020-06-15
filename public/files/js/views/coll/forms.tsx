@@ -22,17 +22,12 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {CollFormModel, CollFormModelState} from '../../models/coll/collForm';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, Bound } from 'kombo';
 
-
-export interface CollFormProps {
-
-}
 
 
 export interface FormsViews {
-    CollForm:React.ComponentClass<CollFormProps>;
+    CollForm:React.ComponentClass<{}>;
 }
 
 
@@ -245,19 +240,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // -------------------- <CollocationsForm /> --------------------------------------------
 
-    class CollForm extends React.Component<CollFormProps, CollFormModelState> {
+    class CollForm extends React.PureComponent<CollFormModelState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this.state = collFormModel.getState();
-        }
-
-        private modelSubscription:Subscription;
-
-        _modelChangeListener(state:CollFormModelState) {
-            this.setState(state);
         }
 
         _handleSubmitClick() {
@@ -265,14 +252,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 name: 'COLL_FORM_SUBMIT',
                 payload: {}
             });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = collFormModel.addListener(this._modelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -283,27 +262,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             <tr>
                                 <th>{he.translate('coll__attribute_label')}:</th>
                                 <td>
-                                    <AttrSelection attrList={this.state.attrList} cattr={this.state.cattr} />
+                                    <AttrSelection attrList={this.props.attrList} cattr={this.props.cattr} />
                                 </td>
                             </tr>
                             <tr>
                                 <th>{he.translate('coll__coll_window_span')}:</th>
                                 <td>
                                     <WindowSpanInput
-                                            cfromw={this.state.cfromw}
-                                            ctow={this.state.ctow} />
+                                            cfromw={this.props.cfromw}
+                                            ctow={this.props.ctow} />
                                 </td>
                             </tr>
                             <tr>
                                 <th>{he.translate('coll__min_coll_freq_in_corpus')}:</th>
                                 <td>
-                                    <MinCollFreqCorpInput cminfreq={this.state.cminfreq} />
+                                    <MinCollFreqCorpInput cminfreq={this.props.cminfreq} />
                                 </td>
                             </tr>
                             <tr>
                                 <th>{he.translate('coll__min_coll_freq_in_span')}:</th>
                                 <td>
-                                    <MinCollFreqSpanInput cminbgr={this.state.cminbgr} />
+                                    <MinCollFreqSpanInput cminbgr={this.props.cminbgr} />
                                 </td>
                             </tr>
                             <tr>
@@ -312,9 +291,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             </tr>
                             <tr>
                                 <td colSpan={2}>
-                                    <CollMetricsSelection cbgrfns={this.state.cbgrfns}
-                                                availCbgrfns={this.state.availCbgrfns}
-                                                csortfn={this.state.csortfn} />
+                                    <CollMetricsSelection cbgrfns={this.props.cbgrfns}
+                                                availCbgrfns={this.props.availCbgrfns}
+                                                csortfn={this.props.csortfn} />
                                 </td>
                             </tr>
                         </tbody>
@@ -331,7 +310,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        CollForm: CollForm
+        CollForm: Bound(CollForm, collFormModel)
     };
 
 }

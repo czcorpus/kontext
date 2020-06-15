@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
-import {WordlistFormModel, WordlistFormState, WlnumsTypes, FileTarget} from '../../models/wordlist/form';
-import {PluginInterfaces} from '../../types/plugins';
+import { IActionDispatcher, Bound } from 'kombo';
+import { Kontext, KeyCodes } from '../../types/common';
+import { WordlistFormModel, WordlistFormState, WlnumsTypes } from '../../models/wordlist/form';
+import { PluginInterfaces } from '../../types/plugins';
 import { Subscription } from 'rxjs';
+import { Actions, ActionName, FileTarget } from '../../models/wordlist/actions';
 
 export interface WordlistFormViewArgs {
     dispatcher:IActionDispatcher;
@@ -77,8 +77,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     const TRAttrSelector:React.SFC<{
         wlattr:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
-        structAttrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
+        structAttrList:Array<Kontext.AttrItem>;
 
     }> = (props) => {
 
@@ -209,7 +209,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     const OutTypeAttrSel:React.SFC<{
         position:number;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
         enabled:boolean;
         value:string;
 
@@ -236,7 +236,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     // --------------------- <MultiLevelPosAttr /> -------------------------------
 
     const MultiLevelPosAttr:React.SFC<{
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
         enabled:boolean;
         numWlPosattrLevels:number;
         wposattrs:[string, string, string];
@@ -244,9 +244,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleAddPosAttrLevelBtn = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
-                payload: {}
+            dispatcher.dispatch<Actions.WordlistFormAddPosattrLevel>({
+                name: ActionName.WordlistFormAddPosattrLevel
             });
         };
 
@@ -291,7 +290,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         wltype:string;
         allowsMultilevelWltype:boolean;
         wlattr:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
         wposattrs:[string, string, string];
         numWlPosattrLevels:number;
 
@@ -354,7 +353,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     const FieldsetOutputOptions:React.SFC<{
         wlnums:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
         wposattrs:[string, string, string];
         numWlPosattrLevels:number;
         wltype:string;
@@ -581,8 +580,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<{}>) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
+            dispatcher.dispatch<Actions.WordlistFormSetIncludeNonwords>({
+                name: ActionName.WordlistFormSetIncludeNonwords,
                 payload: {
                     value: !props.value
                 }
@@ -648,15 +647,11 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------- <WordListForm /> ------------------------
 
-    class WordListForm extends React.Component<{}, WordlistFormState> {
-
-        private modelSubscription:Subscription;
+    class WordListForm extends React.PureComponent<WordlistFormState> {
 
         constructor(props) {
             super(props);
-            this.state = wordlistFormModel.getState();
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleKeyPress = this._handleKeyPress.bind(this);
         }
 
@@ -667,10 +662,6 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             });
         }
 
-        _handleModelChange(state:WordlistFormState) {
-            this.setState(state);
-        }
-
         _handleKeyPress(evt) {
             if (evt.keyCode === KeyCodes.ENTER) {
                 evt.preventDefault();
@@ -679,18 +670,10 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             }
         }
 
-        componentDidMount() {
-            this.modelSubscription = wordlistFormModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
             return (
                 <form className="wordlist_form" onKeyDown={this._handleKeyPress}>
-                    {this.state.filterEditorData.target !== FileTarget.EMPTY ? <FileEditor data={this.state.filterEditorData} /> : null}
+                    {this.props.filterEditorData.target !== FileTarget.EMPTY ? <FileEditor data={this.props.filterEditorData} /> : null}
                     <table className="form">
                         <tbody>
                             <tr>
@@ -698,7 +681,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                     <table>
                                         <tbody>
                                             <TRCorpusField corparchWidget={CorparchWidget}
-                                                    currentSubcorp={this.state.currentSubcorpus} />
+                                                    currentSubcorp={this.props.currentSubcorpus} />
                                         </tbody>
                                     </table>
                                 </td>
@@ -711,24 +694,24 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                         </legend>
                         <table className="form">
                             <tbody>
-                                <TRAttrSelector attrList={this.state.attrList}
-                                        structAttrList={this.state.structAttrList}
-                                        wlattr={this.state.wlattr} />
-                                <TRWlpatternInput wlpat={this.state.wlpat} />
-                                <TRWlminfreqInput wlminfreq={this.state.wlminfreq} />
+                                <TRAttrSelector attrList={this.props.attrList}
+                                        structAttrList={this.props.structAttrList}
+                                        wlattr={this.props.wlattr} />
+                                <TRWlpatternInput wlpat={this.props.wlpat} />
+                                <TRWlminfreqInput wlminfreq={this.props.wlminfreq} />
                                 <TRFilterFile label={he.translate('wordlist__whitelist_label')} target={FileTarget.WHITELIST}
-                                            hasValue={!!this.state.wlwords} fileName={this.state.wlFileName} />
+                                            hasValue={!!this.props.wlwords} fileName={this.props.wlFileName} />
                                 <TRFilterFile label={he.translate('wordlist__blacklist_label')} target={FileTarget.BLACKLIST}
-                                            hasValue={!!this.state.blacklist} fileName={this.state.blFileName} />
+                                            hasValue={!!this.props.blacklist} fileName={this.props.blFileName} />
                                 <TRFileFormatHint />
-                                <TRIncludeNonWordsCheckbox value={this.state.includeNonwords} />
+                                <TRIncludeNonWordsCheckbox value={this.props.includeNonwords} />
                             </tbody>
                         </table>
                     </fieldset>
-                    <FieldsetOutputOptions wlnums={this.state.wlnums} wposattrs={this.state.wlposattrs}
-                            numWlPosattrLevels={this.state.numWlPosattrLevels}
-                            attrList={this.state.attrList} wltype={this.state.wltype} wlattr={this.state.wlattr}
-                            allowsMultilevelWltype={this.state.wlnums === WlnumsTypes.FRQ} />
+                    <FieldsetOutputOptions wlnums={this.props.wlnums} wposattrs={this.props.wlposattrs}
+                            numWlPosattrLevels={this.props.numWlPosattrLevels}
+                            attrList={this.props.attrList} wltype={this.props.wltype} wlattr={this.props.wlattr}
+                            allowsMultilevelWltype={this.props.wlnums === WlnumsTypes.FRQ} />
                     <div className="buttons">
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
@@ -741,7 +724,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }
 
     return {
-        WordListForm: WordListForm,
+        WordListForm: Bound(WordListForm, wordlistFormModel),
         CorpInfoToolbar: CorpInfoToolbar
     };
 }

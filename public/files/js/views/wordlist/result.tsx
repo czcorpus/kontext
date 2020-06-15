@@ -20,13 +20,13 @@
 
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
-import {IActionDispatcher} from 'kombo';
+import { Kontext, KeyCodes } from '../../types/common';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { WordlistSaveModel } from '../../models/wordlist/save';
-import {WordlistResultModel, IndexedResultItem, HeadingItem} from '../../models/wordlist/main';
-import {WordlistSaveViews} from './save';
-import { Subscription } from 'rxjs';
+import { WordlistResultModel, WordlistResultModelState } from '../../models/wordlist/main';
+import { WordlistSaveViews } from './save';
+import { ActionName, Actions } from '../../models/wordlist/actions';
+import { List } from 'cnc-tskit';
 
 export interface WordlistResultViewsArgs {
     dispatcher:IActionDispatcher;
@@ -36,28 +36,9 @@ export interface WordlistResultViewsArgs {
     wordlistSaveModel:WordlistSaveModel;
 }
 
-export interface WordlistResultProps {
-
-}
-
-export interface WordlistResultState {
-    data:Immutable.List<IndexedResultItem>;
-    headings:Immutable.List<HeadingItem>;
-    currPageInput:string;
-    currPage:number;
-    modelIsBusy:boolean;
-    usesStructAttr:boolean;
-    wlsort:string;
-    saveFormActive:boolean;
-    isLastPage:boolean;
-    isUnfinished:boolean;
-    bgCalcStatus:number;
-    wlpat:string;
-    isError:boolean;
-}
 
 export interface WordlistResultViews {
-    WordlistResult:React.ComponentClass<WordlistResultProps>
+    WordlistResult:React.SFC<{}>
 }
 
 
@@ -78,15 +59,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_RESULT_SET_SORT_COLUMN',
+            dispatcher.dispatch<Actions.WordlistResultSetSortColumn>({
+                name: ActionName.WordlistResultSetSortColumn,
                 payload: {
                     sortKey: props.sortKey
                 }
             });
-            dispatcher.dispatch({
-                name: 'WORDLIST_RESULT_RELOAD',
-                payload: {}
+            dispatcher.dispatch<Actions.WordlistResultReload>({
+                name: ActionName.WordlistResultReload
             });
         };
 
@@ -121,8 +101,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
     }> = (props) => {
 
         const handleViewConcClick = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_RESULT_VIEW_CONC',
+            dispatcher.dispatch<Actions.WordlistResultViewConc>({
+                name: ActionName.WordlistResultViewConc,
                 payload: {
                     word: props.word
                 }
@@ -178,8 +158,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
      }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_RESULT_SET_PAGE',
+            dispatcher.dispatch<Actions.WordlistResultSetPage>({
+                name: ActionName.WordlistResultSetPage,
                 payload: {
                     page: evt.target.value
                 }
@@ -203,15 +183,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const PaginatorLeftArrows:React.SFC<{}> = (props) => {
 
         const handlePrevPageClick = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_RESULT_PREV_PAGE',
-                payload: {}
+            dispatcher.dispatch<Actions.WordlistResultPrevPage>({
+                name: ActionName.WordlistResultPrevPage
             });
         };
 
         const handleFirstPageClick = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_GO_TO_FIRST_PAGE',
+            dispatcher.dispatch<Actions.WordlistGoToFirstPage>({
+                name: ActionName.WordlistGoToFirstPage,
                 payload: {}
             });
         };
@@ -233,15 +212,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const PaginatorRightArrows:React.SFC<{}> = (props) => {
 
         const handleNextPageClick = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_RESULT_NEXT_PAGE',
-                payload: {}
+            dispatcher.dispatch<Actions.WordlistResultNextPage>({
+                name: ActionName.WordlistResultNextPage
             });
         };
 
         const handleLastPageClick = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_GO_TO_LAST_PAGE',
+            dispatcher.dispatch<Actions.WordlistGoToLastPage>({
+                name: ActionName.WordlistGoToLastPage,
                 payload: {}
             });
         };
@@ -273,9 +251,11 @@ export function init({dispatcher, utils, wordlistSaveViews,
             if (evt.keyCode === KeyCodes.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
-                dispatcher.dispatch({
-                    name: 'WORDLIST_RESULT_CONFIRM_PAGE',
-                    payload: {}
+                dispatcher.dispatch<Actions.WordlistResultConfirmPage>({
+                    name: ActionName.WordlistResultConfirmPage,
+                    payload: {
+                        page: props.currPageInput
+                    }
                 });
             }
         };
@@ -331,95 +311,62 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
     };
 
+    const DataTable:React.SFC<WordlistResultModelState & {wlsort:string; usesStructAttr:boolean, wlpat:string}> = (props) => {
+        if (props.data.length === 0) {
+            return (
+                <p className="no-result">
+                    {utils.translate('wordlist__no_result_for_{wlpat}', {wlpat: props.wlpat})}
+                </p>
+            );
+
+        } else if (props.isBusy) {
+            return (
+                <div className="WordlistResult">
+                    <CalculationStatus progressPercent={props.bgCalcStatus}
+                            isError={props.isError} />
+                </div>
+            );
+
+        } else {
+            return <>
+                <Paginator currPageInput={props.currPageInput} modelIsBusy={props.isBusy}
+                                currPage={props.currPage} isLastPage={props.isLastPage} />
+                <table className="data">
+                    <thead>
+                        <tr>
+                            <th />
+                            <th>
+                                {utils.translate('wordlist__filter_th')}
+                            </th>
+                            {List.map(
+                                item => <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
+                                    isActive={props.wlsort === item.sortKey} />,
+                                props.headings
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {List.map(
+                            (item, i) => <TRResultRow key={item.idx} idx={item.idx} str={item.str} freq={item.freq}
+                                usesStructAttr={props.usesStructAttr} />,
+                            props.data
+                        )}
+                    </tbody>
+                </table>
+            </>;
+        }
+    };
+
+    const BoundDataTable = BoundWithProps(DataTable, wordlistResultModel);
+
     // ---------------------- <WordlistResult /> -------------------
 
-    class WordlistResult extends React.Component<WordlistResultProps, WordlistResultState> {
-
-        private modelSubscriptions:Array<Subscription>;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this.modelSubscriptions = [];
-        }
-
-        _fetchModelState() {
-            return {
-                data: wordlistResultModel.getData(),
-                headings: wordlistResultModel.getHeadings(),
-                currPageInput: wordlistResultModel.getCurrPageInput(),
-                currPage: wordlistResultModel.getCurrPage(),
-                modelIsBusy: wordlistResultModel.getIsBusy(),
-                usesStructAttr: wordlistResultModel.usesStructAttr(),
-                wlsort: wordlistResultModel.getWlsort(),
-                saveFormActive: wordlistSaveModel.getFormIsActive(),
-                isLastPage: wordlistResultModel.getIsLastPage(),
-                isUnfinished: wordlistResultModel.getIsUnfinished(),
-                bgCalcStatus: wordlistResultModel.getBgCalcStatus(),
-                wlpat: wordlistResultModel.getWlpat(),
-                isError: wordlistResultModel.getIsError()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscriptions = [
-                wordlistResultModel.addListener(this._handleModelChange),
-                wordlistSaveModel.addListener(this._handleModelChange)
-            ];
-        }
-
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe());
-        }
-
-        render() {
-            if (this.state.isUnfinished) {
-                return (
-                    <div className="WordlistResult">
-                        <CalculationStatus progressPercent={this.state.bgCalcStatus}
-                                isError={this.state.isError} />
-                    </div>
-                );
-
-            } else {
-                return (
-                    <div className="WordlistResult">
-                        {this.state.data.size > 0  ?
-                            <>
-                                <Paginator currPageInput={this.state.currPageInput} modelIsBusy={this.state.modelIsBusy}
-                                            currPage={this.state.currPage} isLastPage={this.state.isLastPage} />
-                                <table className="data">
-                                    <thead>
-                                        <tr>
-                                            <th />
-                                            <th>
-                                                {utils.translate('wordlist__filter_th')}
-                                            </th>
-                                            {this.state.headings.map(item =>
-                                                <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
-                                                        isActive={this.state.wlsort === item.sortKey} />)}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {this.state.data.map((item, i) =>
-                                            <TRResultRow key={item.idx} idx={item.idx} str={item.str} freq={item.freq}
-                                                    usesStructAttr={this.state.usesStructAttr} />)}
-                                    </tbody>
-                                </table>
-                                {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
-                            </> :
-                            <p className="no-result">{utils.translate('wordlist__no_result_for_{wlpat}', {wlpat: this.state.wlpat})}</p>
-                        }
-                    </div>
-                );
-            }
-        }
-    }
+    const WordlistResult:React.SFC<{}> = (props) => (
+        <div className="WordlistResult">
+            <BoundDataTable />
+            <wordlistSaveViews.WordlistSaveForm />
+        </div>
+    );
 
     return {
         WordlistResult: WordlistResult

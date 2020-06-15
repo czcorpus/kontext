@@ -19,18 +19,20 @@
  */
 
 import { Observable, interval as rxInterval } from 'rxjs';
-import {Kontext} from '../types/common';
-import {PageModel, DownloadType} from '../app/page';
-import {MultiDict} from '../multidict';
-import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
-import {init as wordlistResultViewInit} from '../views/wordlist/result';
-import {init as wordlistSaveViewInit} from '../views/wordlist/save';
-import {StatefulModel} from '../models/base';
-import {WordlistResultModel, ResultItem} from '../models/wordlist/main';
-import {WordlistFormModel, WordlistModelInitialArgs} from '../models/wordlist/form';
-import {WordlistSaveModel} from '../models/wordlist/save';
 import { concatMap, scan, takeWhile, last } from 'rxjs/operators';
+
+import { Kontext } from '../types/common';
+import { PageModel, DownloadType } from '../app/page';
+import { MultiDict } from '../multidict';
+import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
+import { init as wordlistResultViewInit } from '../views/wordlist/result';
+import { init as wordlistSaveViewInit } from '../views/wordlist/save';
+import { StatefulModel } from '../models/base';
+import { WordlistFormModel, WordlistModelInitialArgs, WordlistFormState } from '../models/wordlist/form';
+import { WordlistSaveModel } from '../models/wordlist/save';
 import { KontextPage } from '../app/main';
+import { WordlistResultModel } from '../models/wordlist/main';
+import { ResultItem } from '../models/wordlist/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -55,6 +57,8 @@ export class WordlistPage extends StatefulModel  {
     private saveModel:WordlistSaveModel;
 
     private wordlistViews:WordlistFormExportViews;
+
+    private wordlistFormState:WordlistFormState;
 
     static MAX_NUM_NO_CHANGE = 30;
 
@@ -200,8 +204,7 @@ export class WordlistPage extends StatefulModel  {
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
-                saveLinkFn: this.setDownloadLink.bind(this),
-                wordlistArgsProviderFn: () => formModel.createSubmitArgs(formModel.getState())
+                saveLinkFn: this.setDownloadLink.bind(this)
             });
 
             const resultModel = new WordlistResultModel(
