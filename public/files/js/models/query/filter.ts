@@ -30,7 +30,8 @@ import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
-import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery, WidgetsMap } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery, WidgetsMap, shouldDownArrowTriggerHistory } from './common';
+import { ActionName } from './actions';
 
 
 /**
@@ -201,7 +202,9 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             tagsetDocs: Immutable.Map<string, string>(props.tagsetDoc),
             inputLanguage: props.inputLanguage,
             isAnonymousUser: props.isAnonymousUser,
-            supportedWidgets: determineSupportedWidgets(queries, queryTypes, tagBuilderSupport)
+            supportedWidgets: determineSupportedWidgets(queries, queryTypes, tagBuilderSupport),
+            contextFormVisible: false,
+            textTypesFormVisible: false
         });
     }
 
@@ -224,7 +227,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 }
                 this.state.downArrowTriggersHistory = this.state.downArrowTriggersHistory.set(
                     action.payload['sourceId'],
-                    this.shouldDownArrowTriggerHistory(
+                    shouldDownArrowTriggerHistory(
                         action.payload['query'],
                         action.payload['rawAnchorIdx'],
                         action.payload['rawFocusIdx']
@@ -235,7 +238,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             case 'FILTER_QUERY_INPUT_MOVE_CURSOR':
                 this.state.downArrowTriggersHistory = this.state.downArrowTriggersHistory.set(
                     action.payload['sourceId'],
-                    this.shouldDownArrowTriggerHistory(
+                    shouldDownArrowTriggerHistory(
                         this.state.queries.get(action.payload['sourceId']),
                         action.payload['anchorIdx'],
                         action.payload['focusIdx']
@@ -296,6 +299,14 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     this.pageModel.showMessage('error', err);
                     this.emitChange();
                 }
+            break;
+            case ActionName.QueryContextToggleForm:
+                this.state.contextFormVisible = !this.state.contextFormVisible;
+                this.emitChange();
+            break;
+            case ActionName.QueryTextTypesToggleForm:
+                this.state.textTypesFormVisible = !this.state.textTypesFormVisible;
+                this.emitChange();
             break;
         }
     }

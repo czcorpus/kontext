@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import * as common from './common';
-import {IPluginApi, PluginInterfaces} from '../../types/plugins';
-import * as Immutable from 'immutable';
-import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Subscription, timer as rxTimer, Observable, of as rxOf, throwError } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
+import { Ident, List } from 'cnc-tskit';
+
+import {Kontext} from '../../types/common';
+import * as common from './common';
+import { IPluginApi } from '../../types/plugins';
+import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 
 /**
  *
@@ -81,8 +82,8 @@ const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => {
     };
 };
 
-const importServerFavitems = (items:Array<common.ServerFavlistItem>):Immutable.List<FavListItem> => {
-    return Immutable.List<FavListItem>(items.map(importServerFavitem));
+const importServerFavitems = (items:Array<common.ServerFavlistItem>):Array<FavListItem> => {
+    return List.map(importServerFavitem, items);
 };
 
 
@@ -93,7 +94,7 @@ const importServerFavitems = (items:Array<common.ServerFavlistItem>):Immutable.L
  * @param item
  * @returns an ID if the current item is set as favorite else undefined
  */
-const findCurrFavitemId = (dataFav:Immutable.List<FavListItem>, item:common.GeneratedFavListItem):string => {
+const findCurrFavitemId = (dataFav:Array<FavListItem>, item:common.GeneratedFavListItem):string => {
     const normalize = (v:string) => v ? v : '';
     const srch = dataFav.filter(x => x.trashTTL === null).find(x => {
             return normalize(x.subcorpus_id) === normalize(item.subcorpus_id) &&
@@ -104,7 +105,7 @@ const findCurrFavitemId = (dataFav:Immutable.List<FavListItem>, item:common.Gene
 
 
 export interface CorpusSwitchPreserved {
-    dataFav:Immutable.List<FavListItem>;
+    dataFav:Array<FavListItem>;
 }
 
 
@@ -116,19 +117,16 @@ export interface CorplistWidgetModelState {
     activeTab:number;
     activeListItem:[number, number];
     corpusIdent:Kontext.FullCorpusIdent;
-    dataFav:Immutable.List<FavListItem>;
-    dataFeat:Immutable.List<common.CorplistItem>;
+    dataFav:Array<FavListItem>;
+    dataFeat:Array<common.CorplistItem>;
     isBusy:boolean;
     currFavitemId:string;
-    origSubcorpName:string;
     anonymousUser:boolean;
     isWaitingForSearchResults:boolean;
-    currSearchResult:Immutable.List<SearchResultRow>;
+    currSearchResult:Array<SearchResultRow>;
     currSearchPhrase:string;
-    currentSubcorp:string;
-    availSearchKeywords:Immutable.List<SearchKeyword>;
-    availableSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
-    currSubcorpus:string;
+    availSearchKeywords:Array<SearchKeyword>;
+    availableSubcorpora:Array<Kontext.SubcorpListItem>;
     focusedRowIdx:number;
 }
 
@@ -137,7 +135,6 @@ export interface CorplistWidgetModelArgs {
     dispatcher:IActionDispatcher;
     pluginApi:IPluginApi;
     corpusIdent:Kontext.FullCorpusIdent;
-    corpSelection:PluginInterfaces.Corparch.ICorpSelection;
     anonymousUser:boolean;
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
@@ -159,8 +156,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private onItemClick:Kontext.CorplistItemClick;
 
-    private corpSelection:PluginInterfaces.Corparch.ICorpSelection;
-
     private inputThrottleTimer:number;
 
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
@@ -171,43 +166,42 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private ident:string;
 
-    constructor({dispatcher, pluginApi, corpusIdent, corpSelection, anonymousUser, searchEngine,
+    constructor({dispatcher, pluginApi, corpusIdent, anonymousUser, searchEngine,
             dataFav, dataFeat, onItemClick, corporaLabels}:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
+        const currCorp = pluginApi.getCorpusIdent();
         super(dispatcher, {
             isVisible: false,
             activeTab: 0,
             activeListItem: [null, null],
             corpusIdent: corpusIdent,
-            currentSubcorp: corpSelection.getCurrentSubcorpus(),
-            origSubcorpName: corpSelection.getCurrentSubcorpusOrigName(),
             anonymousUser: anonymousUser,
             dataFav: dataFavImp,
-            dataFeat: Immutable.List<common.CorplistItem>(dataFeat),
+            dataFeat: [...dataFeat],
             isBusy: false,
             currFavitemId: findCurrFavitemId(
                 dataFavImp,
                 {
-                    subcorpus_id: corpSelection.getCurrentSubcorpus(),
-                    subcorpus_orig_id: corpSelection.getCurrentSubcorpusOrigName(),
-                    corpora: corpSelection.getCorpora().toArray()
+                    subcorpus_id: currCorp.usesubcorp,
+                    subcorpus_orig_id: currCorp.origSubcorpName,
+                    corpora: [currCorp.id].concat(pluginApi.getConf<Array<string>>('alignedCorpora')),
                 }
             ),
             isWaitingForSearchResults: false,
             currSearchPhrase: '',
-            currSearchResult: Immutable.List<SearchResultRow>(),
-            availSearchKeywords: Immutable.List<SearchKeyword>(corporaLabels.map(item => (
-                {id: item[0], label: item[1], color: item[2], selected:false}))),
-            availableSubcorpora: corpSelection.getAvailableSubcorpora(),
-            currSubcorpus: corpSelection.getCurrentSubcorpus(),
+            currSearchResult: [],
+            availSearchKeywords: List.map(
+                item => ({id: item[0], label: item[1], color: item[2], selected:false}),
+                corporaLabels
+            ),
+            availableSubcorpora: pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
             focusedRowIdx: -1
         });
         this.pluginApi = pluginApi;
         this.searchEngine = searchEngine;
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
-        this.corpSelection = corpSelection;
-        this.ident = (Math.random() * 1000).toFixed();
+        this.ident = Ident.puid();
     }
 
     reduce(state:CorplistWidgetModelState, action:Action):CorplistWidgetModelState {
@@ -260,7 +254,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 newState.isBusy = true;
                 const idx = state.dataFav.findIndex(x => x.id === action.payload['itemId']);
                 if (idx > -1) {
-                    const item = newState.dataFav.get(idx);
+                    const item = newState.dataFav[idx];
                     newState.dataFav = newState.dataFav.set(idx, {
                         id: item.id,
                         name: item.name,
@@ -646,11 +640,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      */
     getFullCorpusSelection():common.GeneratedFavListItem {
         return {
-            subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
-            subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
-            `#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
-                    this.corpSelection.getCurrentSubcorpusOrigName(),
-            corpora: this.corpSelection.getCorpora().toArray()
+            subcorpus_id: null, // TODO this.corpSelection.getCurrentSubcorpus(),
+            subcorpus_orig_id: null, // TODO this.pluginApi.getCorpusIdent().foreignSubcorp ?
+                //`#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
+                //    this.corpSelection.getCurrentSubcorpusOrigName(),
+            corpora: [] // TODO this.corpSelection.getCorpora().toArray()
         };
     };
 

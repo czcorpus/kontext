@@ -19,23 +19,24 @@
  */
 import * as Immutable from 'immutable';
 import * as React from 'react';
-import {Kontext, TextTypes} from '../types/common';
-import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/page';
-import {init as subcorpViewsInit} from '../views/subcorp/forms';
-import {SubcorpFormModel} from '../models/subcorp/form';
-import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
-import {TextTypesModel, SelectedTextTypes} from '../models/textTypes/main';
-import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
+import { tap } from 'rxjs/operators';
+
+import { Kontext, TextTypes } from '../types/common';
+import { PluginInterfaces } from '../types/plugins';
+import { PageModel } from '../app/page';
+import { init as subcorpViewsInit } from '../views/subcorp/forms';
+import { SubcorpFormModel } from '../models/subcorp/form';
+import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
+import { TextTypesModel, SelectedTextTypes } from '../models/textTypes/main';
+import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import { InputMode } from '../models/subcorp/common';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
-import { tap } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -75,7 +76,7 @@ export class SubcorpForm {
 
     private textTypesModel:TextTypesModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
+    private subcorpSel:NonQueryCorpusSelectionModel;
 
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
@@ -190,8 +191,7 @@ export class SubcorpForm {
     private initCorpusInfo():void {
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.subcorpSel
+            this.layoutModel.getComponentHelpers()
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
@@ -199,6 +199,9 @@ export class SubcorpForm {
             {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
             }
         );
     }
@@ -235,7 +238,6 @@ export class SubcorpForm {
 
             const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
                 this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                this.subcorpSel,
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                         return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Kontext } from "../../types/common";
+
 
 /*
  * Common types and functions used by plug-in objects
@@ -68,6 +70,23 @@ export interface CorplistItem {
     featured:boolean;
     keywords:Array<[string, string]>;
 }
+
+
+export interface Filters {
+    maxSize:string;
+    minSize:string;
+    name:string;
+    query?:string;
+}
+
+export interface CorplistDataResponse extends Kontext.AjaxResponse {
+    nextOffset:number;
+    current_keywords:Array<string>;
+    filters:Filters;
+    keywords:Array<string>;
+    rows:Array<CorplistItem>;
+}
+
 
 
 

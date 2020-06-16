@@ -25,7 +25,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 
 import { CQLEditorModel, CQLEditorModelState } from '../../models/query/cqleditor/model';
-import { SetQueryInputAction, MoveCursorInputAction } from '../../models/query/common';
+import { SetQueryInputAction, MoveCursorInputAction, QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
 
 
@@ -57,28 +57,18 @@ export interface CQLEditorViews {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryModel:QueryFormModel, editorModel:CQLEditorModel) {
+            queryModel:QueryFormModel<QueryFormModelState>, editorModel:CQLEditorModel) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps, {
-        query:string;
-        downArrowTriggersHistory:boolean;
-    }> {
-
-        private modelSubscription:Subscription;
+    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps & QueryFormModelState> {
 
         constructor(props) {
             super(props);
             this.handleKeyDown = this.handleKeyDown.bind(this);
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleInputChange = this.handleInputChange.bind(this);
-            this.state = {
-                query: queryModel.getQuery(this.props.sourceId),
-                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
-            };
         }
 
         private inputKeyUpHandler(evt) {
@@ -97,7 +87,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private handleKeyDown(evt) {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.state.downArrowTriggersHistory &&
+                    this.props.downArrowTriggersHistory &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
@@ -119,25 +109,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        private handleModelChange() {
-            this.setState({
-                query: queryModel.getQuery(this.props.sourceId),
-                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryModel.addListener(this.handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={this.props.inputRef}
-                                value={this.state.query}
+                                value={this.props.queries.get(this.props.sourceId)}
                                 onChange={this.handleInputChange}
                                 onKeyDown={this.handleKeyDown}
                                 onKeyUp={this.inputKeyUpHandler}
@@ -444,10 +419,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const BoundEditor = BoundWithProps<CQLEditorProps, CQLEditorModelState>(CQLEditor, editorModel);
 
+    const BoundFallbackEditor = BoundWithProps<CQLEditorFallbackProps, QueryFormModelState>(CQLEditorFallback, queryModel);
 
     return {
         CQLEditor: BoundEditor,
-        CQLEditorFallback: CQLEditorFallback
+        CQLEditorFallback: BoundFallbackEditor
     };
 
 

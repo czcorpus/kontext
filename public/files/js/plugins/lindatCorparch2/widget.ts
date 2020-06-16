@@ -27,6 +27,7 @@ import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
+import { HTTP } from 'cnc-tskit';
 
 /**
  *
@@ -120,16 +121,15 @@ export interface CorplistWidgetModelState {
     dataFeat:Immutable.List<common.CorplistItem>;
     isBusy:boolean;
     currFavitemId:string;
-    origSubcorpName:string;
     anonymousUser:boolean;
     isWaitingForSearchResults:boolean;
     currSearchResult:Immutable.List<SearchResultRow>;
     currSearchPhrase:string;
-    currentSubcorp:string;
     availSearchKeywords:Immutable.List<SearchKeyword>;
-    availableSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
     currSubcorpus:string;
+    currSubcorpusOrigName:string;
     focusedRowIdx:number;
+    availableSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
 }
 
 
@@ -137,7 +137,6 @@ export interface CorplistWidgetModelArgs {
     dispatcher:IActionDispatcher;
     pluginApi:IPluginApi;
     corpusIdent:Kontext.FullCorpusIdent;
-    corpSelection:PluginInterfaces.Corparch.ICorpSelection;
     anonymousUser:boolean;
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
@@ -159,8 +158,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private onItemClick:Kontext.CorplistItemClick;
 
-    private corpSelection:PluginInterfaces.Corparch.ICorpSelection;
-
     private inputThrottleTimer:number;
 
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
@@ -169,7 +166,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private trashTimerSubsc:Subscription;
 
-    constructor({dispatcher, pluginApi, corpusIdent, corpSelection, anonymousUser, searchEngine,
+    constructor({dispatcher, pluginApi, corpusIdent, anonymousUser, searchEngine,
             dataFav, dataFeat, onItemClick, corporaLabels}:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
         super(dispatcher, {
@@ -177,8 +174,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             activeTab: 0,
             activeListItem: [null, null],
             corpusIdent: corpusIdent,
-            currentSubcorp: corpSelection.getCurrentSubcorpus(),
-            origSubcorpName: corpSelection.getCurrentSubcorpusOrigName(),
             anonymousUser: anonymousUser,
             dataFav: dataFavImp,
             dataFeat: Immutable.List<common.CorplistItem>(dataFeat),
@@ -186,9 +181,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             currFavitemId: findCurrFavitemId(
                 dataFavImp,
                 {
-                    subcorpus_id: corpSelection.getCurrentSubcorpus(),
-                    subcorpus_orig_id: corpSelection.getCurrentSubcorpusOrigName(),
-                    corpora: corpSelection.getCorpora().toArray()
+                    subcorpus_id: pluginApi.getCorpusIdent().usesubcorp,
+                    subcorpus_orig_id: pluginApi.getCorpusIdent().origSubcorpName,
+                    corpora: [pluginApi.getCorpusIdent().id].concat(pluginApi.getConf<Array<string>>('alignedCorpora'))
                 }
             ),
             isWaitingForSearchResults: false,
@@ -196,15 +191,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             currSearchResult: Immutable.List<SearchResultRow>(),
             availSearchKeywords: Immutable.List<SearchKeyword>(corporaLabels.map(item => (
                 {id: item[0], label: item[1], color: item[2], selected:false}))),
-            availableSubcorpora: corpSelection.getAvailableSubcorpora(),
-            currSubcorpus: corpSelection.getCurrentSubcorpus(),
-            focusedRowIdx: -1
+            currSubcorpus: pluginApi.getCorpusIdent().usesubcorp,
+            currSubcorpusOrigName: pluginApi.getCorpusIdent().origSubcorpName,
+            focusedRowIdx: -1,
+            availableSubcorpora: Immutable.List<Kontext.SubcorpListItem>(pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'))
         });
         this.pluginApi = pluginApi;
         this.searchEngine = searchEngine;
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
-        this.corpSelection = corpSelection;
     }
 
     reduce(state:CorplistWidgetModelState, action:Action):CorplistWidgetModelState {
@@ -363,12 +358,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 newState = this.copyState(state);
                 if (action.payload['pubName']) {
-                    newState.currentSubcorp = action.payload['pubName'];
-                    newState.origSubcorpName = action.payload['subcorp'];
+                    newState.currSubcorpus = action.payload['pubName'];
+                    newState.currSubcorpusOrigName = action.payload['subcorp'];
 
                 } else {
-                    newState.currentSubcorp = action.payload['subcorp'];
-                    newState.origSubcorpName = action.payload['subcorp'];
+                    newState.currSubcorpus = action.payload['subcorp'];
+                    newState.currSubcorpusOrigName = action.payload['subcorp'];
                 }
                 newState.currFavitemId = findCurrFavitemId(
                     newState.dataFav,
@@ -640,6 +635,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      * a new CorplistItem instance with proper type, id, etc.
      */
     getFullCorpusSelection():common.GeneratedFavListItem {
+        throw new Error('getFullCorpusSelection...'); // TODO
+        /*
         return {
             subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
             subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
@@ -647,11 +644,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     this.corpSelection.getCurrentSubcorpus(),
             corpora: this.corpSelection.getCorpora().toArray()
         };
+        */
     };
 
     private removeFavItemFromServer(itemId:string):Observable<boolean> {
         return this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
             {id: itemId}
 

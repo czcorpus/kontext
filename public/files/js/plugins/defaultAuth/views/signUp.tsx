@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../../types/common';
-import {UserProfileModel, UserProfileState, Actions, UsernameAvailability} from './../profile';
-import { UserProfileViews } from './profile';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
 import { Subject, Observable, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators'
+
+import { Kontext } from '../../../types/common';
+import { UserProfileModel, UserProfileState, Actions, UsernameAvailability } from './../profile';
+import { UserProfileViews } from './profile';
 
 
 export interface UserSignUpViews {
@@ -125,24 +126,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // --------------- <SignUpForm /> ----------------------------------------------
 
-    class SignUpForm extends React.Component<{}, UserProfileState> {
-
-        private modelSubscription:Subscription;
+    class SignUpForm extends React.PureComponent<UserProfileState> {
 
         constructor(props) {
             super(props);
-            this.state = userProfileModel.getState();
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleFirstNameChange = this.handleFirstNameChange.bind(this);
             this.handleLastNameChange = this.handleLastNameChange.bind(this);
             this.handleEmailChange = this.handleEmailChange.bind(this);
             this.handleSignUpButton = this.handleSignUpButton.bind(this);
             this.handleNewRegistration = this.handleNewRegistration.bind(this);
             this.handleGoToMainpage = this.handleGoToMainpage.bind(this);
-        }
-
-        private handleModelChange(state:UserProfileState) {
-            this.setState(state);
         }
 
         private handleFirstNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
@@ -193,23 +186,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = userProfileModel.addListener(this.handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
-            if (this.state.isFinished) {
+            if (this.props.isFinished) {
                 return (
                     <form className="SignUpForm">
                         <fieldset>
                             <legend>{he.translate('user__signup_heading')}</legend>
                             <p className="confirm-msg">
                                 <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
-                                {he.translate('user__confirm_mail_has_been_sent_{email}', {email: this.state.email.value})}
+                                {he.translate('user__confirm_mail_has_been_sent_{email}', {email: this.props.email.value})}
                             </p>
                             <p>
                                 <button type="button" className="util-button" onClick={this.handleNewRegistration}>
@@ -227,25 +212,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             } else {
                 return (
                     <form className="SignUpForm">
-                        {this.state.message ?
-                        <p className="message"><layoutViews.StatusIcon inline={true} status="warning" />{this.state.message}</p> :
+                        {this.props.message ?
+                        <p className="message"><layoutViews.StatusIcon inline={true} status="warning" />{this.props.message}</p> :
                         null}
                         <fieldset>
                             <legend>{he.translate('user__signup_heading')}</legend>
                             <table className="form">
                                 <tbody>
-                                    <TrUsernameInput value={this.state.username}
-                                            usernameAvail={this.state.usernameAvail}
-                                            usernameAvailBusy={this.state.usernameAvailBusy} />
-                                    <profileViews.TrUserFirstNameInput value={this.state.firstName} onChange={this.handleFirstNameChange} />
-                                    <profileViews.TrUserLastNameInput value={this.state.lastName} onChange={this.handleLastNameChange} />
-                                    <profileViews.TrUserEmailInput value={this.state.email} onChange={this.handleEmailChange} />
-                                    <profileViews.TRNewPasswdInput value={this.state.newPasswd} isRegistration={true} />
-                                    <profileViews.TRNewPasswdInput2 value={this.state.newPasswd2} isRegistration={true} />
+                                    <TrUsernameInput value={this.props.username}
+                                            usernameAvail={this.props.usernameAvail}
+                                            usernameAvailBusy={this.props.usernameAvailBusy} />
+                                    <profileViews.TrUserFirstNameInput value={this.props.firstName} onChange={this.handleFirstNameChange} />
+                                    <profileViews.TrUserLastNameInput value={this.props.lastName} onChange={this.handleLastNameChange} />
+                                    <profileViews.TrUserEmailInput value={this.props.email} onChange={this.handleEmailChange} />
+                                    <profileViews.TRNewPasswdInput value={this.props.newPasswd} isRegistration={true} />
+                                    <profileViews.TRNewPasswdInput2 value={this.props.newPasswd2} isRegistration={true} />
                                 </tbody>
                             </table>
                             <p>
-                                {this.state.isBusy ?
+                                {this.props.isBusy ?
                                     <layoutViews.AjaxLoaderBarImage /> :
                                     <button type="button" className="default-button" onClick={this.handleSignUpButton}>
                                         {he.translate('user__signup_btn')}
@@ -262,6 +247,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
 
     return {
-        SignUpForm: SignUpForm
+        SignUpForm: Bound(SignUpForm, userProfileModel)
     };
 }

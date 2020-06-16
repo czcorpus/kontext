@@ -22,8 +22,8 @@ import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 import { corplistItemIsUcnk } from './common';
 import { CorplistTableModel, CorplistTableModelState } from './corplist';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Subscription } from 'rxjs';
 import { CorplistItem } from '../defaultCorparch/common';
+import { Actions, ActionName } from '../defaultCorparch/actions';
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -377,8 +377,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch({
-                name: 'EXPANSION_CLICKED',
+            dispatcher.dispatch<Actions.ExpansionClicked>({
+                name: ActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }

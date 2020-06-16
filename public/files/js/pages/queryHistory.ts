@@ -18,15 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/page';
-import {init as initQueryHistoryViews} from '../views/query/history';
-import {init as corpnameLinkInit} from '../views/overview';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
-import queryStoragePlugin from 'plugins/queryStorage/init';
+import { Kontext } from '../types/common';
+import { PageModel } from '../app/page';
+import { init as initQueryHistoryViews } from '../views/query/history';
+import { init as corpnameLinkInit } from '../views/overview';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
+import queryStoragePlugin from 'plugins/queryStorage/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -38,8 +37,6 @@ require('styles/queryHistory.less');
 class QueryHistoryPage {
 
     private layoutModel:PageModel;
-
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -53,22 +50,24 @@ class QueryHistoryPage {
         );
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.subcorpSel
+            this.layoutModel.getComponentHelpers()
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
             window.document.getElementById('query-overview-mount'),
             {
                 corpname: this.layoutModel.getCorpusIdent().id,
-                humanCorpname: this.layoutModel.getCorpusIdent().name
+                humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
             }
         );
     }
 
     init():void {
         this.layoutModel.init(() => {
-            this.subcorpSel = new NonQueryCorpusSelectionModel({
+            const corpSelModel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,

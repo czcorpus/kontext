@@ -32,8 +32,9 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
-import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory } from './common';
 import { QueryContextArgs } from './context';
+import { ActionName } from './actions';
 
 
 type ExportedQueryContextArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
@@ -229,7 +230,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             shuffleForbidden: false,
             shuffleConcByDefault: props.shuffleConcByDefault,
             queries: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || ''])),
-            downArrowTriggersHistory: Immutable.Map<string, boolean>(props.corpora.map(item => [item, this.shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0)])),
+            downArrowTriggersHistory: Immutable.Map<string, boolean>(props.corpora.map(item => [item, shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0)])),
             lposValues: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || ''])),
             matchCaseValues: Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false])),
             defaultAttrValues: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word'])),
@@ -244,7 +245,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             activeWidgets: Immutable.Map<string, string>(props.corpora.map(item => null)),
             queryContextArgs: {},
             isAnonymousUser: props.isAnonymousUser,
-            supportedWidgets: determineSupportedWidgets(corpora, queryTypes, props.isAnonymousUser)
+            supportedWidgets: determineSupportedWidgets(corpora, queryTypes, props.isAnonymousUser),
+            contextFormVisible: false,
+            textTypesFormVisible: false
         });
         this.setUserValues(props);
 
@@ -312,7 +315,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             case 'QUERY_INPUT_MOVE_CURSOR':
                 this.state.downArrowTriggersHistory = this.state.downArrowTriggersHistory.set(
                     action.payload['sourceId'],
-                    this.shouldDownArrowTriggerHistory(
+                    shouldDownArrowTriggerHistory(
                         this.state.queries.get(action.payload['sourceId']),
                         action.payload['rawAnchorIdx'],
                         action.payload['rawFocusIdx']
@@ -329,7 +332,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 }
                 this.state.downArrowTriggersHistory = this.state.downArrowTriggersHistory.set(
                     action.payload['sourceId'],
-                    this.shouldDownArrowTriggerHistory(
+                    shouldDownArrowTriggerHistory(
                         action.payload['query'],
                         action.payload['rawAnchorIdx'],
                         action.payload['rawFocusIdx']
@@ -396,6 +399,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             break;
             case 'CORPUS_SWITCH_MODEL_RESTORE':
                 this.restoreFromCorpSwitch(action.payload);
+            break;
+            case ActionName.QueryContextToggleForm:
+                this.state.contextFormVisible = !this.state.contextFormVisible;
+                this.emitChange();
+            break;
+            case ActionName.QueryTextTypesToggleForm:
+                this.state.textTypesFormVisible = !this.state.textTypesFormVisible;
+                this.emitChange();
             break;
         }
     }

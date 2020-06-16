@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Subscription } from 'rxjs';
-import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { init as saveViewInit } from './save';
@@ -34,7 +34,6 @@ import { Actions, ActionName } from '../../models/query/actions';
 import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from './miscActions';
 import { QueryFormLiteProps, QueryFormProps } from './first';
 import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
-import { PluginInterfaces } from '../../types/plugins';
 import { SortFormProps } from './sort';
 
 /*
@@ -68,7 +67,6 @@ export interface OverviewModuleArgs {
     queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
     mainMenuModel:Kontext.IMainMenuModel;
     querySaveAsModel:QuerySaveAsFormModel;
-    corparchModel:IModel<{}>;
 }
 
 
@@ -119,11 +117,11 @@ type AnyEditorProps = QueryFormLiteProps | FilterFormProps | SubHitsFormProps | 
 
 
 export function init({dispatcher, he, viewDeps, queryReplayModel,
-                      mainMenuModel, querySaveAsModel, corparchModel}:OverviewModuleArgs):OverviewViews {
+                      mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
     const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
-    const basicOverviewViews = basicOverviewInit(dispatcher, he, corparchModel);
+    const basicOverviewViews = basicOverviewInit(dispatcher, he);
 
 
     const formTypeToTitle = (opFormType:string) => {

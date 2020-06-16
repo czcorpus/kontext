@@ -475,7 +475,8 @@ export class ViewPage {
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
             selectedTextTypes: queryFormArgs.selected_text_types,
             useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr')
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(
@@ -543,7 +544,8 @@ export class ViewPage {
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr')
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
         }
 
         this.queryModels.filterModel = new FilterFormModel(
@@ -739,9 +741,7 @@ export class ViewPage {
             },
             queryReplayModel: this.queryModels.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.queryModels.saveAsFormModel,
-            corparchModel: this.queryModels.queryModel
-
+            querySaveAsModel: this.queryModels.saveAsFormModel
         });
 
         this.layoutModel.renderReactComponent(

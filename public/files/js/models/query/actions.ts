@@ -43,7 +43,9 @@ export enum ActionName {
     QueryInputToggleVirtualKeyboardShift = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputUnhitVirtualKeyboardShift = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
-    QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM'
+    QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+    QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
+    QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM'
 }
 
 export namespace Actions {
@@ -160,4 +162,13 @@ export namespace Actions {
         name:ActionName.QueryInputSelectContextFormItem;
     }
 
+    export interface QueryContextToggleForm extends Action<{
+    }> {
+        name:ActionName.QueryContextToggleForm;
+    }
+
+    export interface QueryTextTypesToggleForm extends Action<{
+    }> {
+        name:ActionName.QueryTextTypesToggleForm;
+    }
 }

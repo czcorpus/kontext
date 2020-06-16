@@ -17,14 +17,15 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
-import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
-import { CorplistItem } from './common';
-import { CorpusInfoBoxProps } from '../../views/overview';
-import { CorpusInfoType } from '../../models/common/layout';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+import { Actions, ActionName } from './actions';
+
+import { Kontext } from '../../types/common';
+import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from './corplist';
+import { CorplistItem, Filters } from './common';
+import { CorpusInfoBoxProps } from '../../views/overview';
+import { CorpusInfoType } from '../../models/common/layout';
 
 
 export interface CorplistTableProps {
@@ -183,8 +184,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch({
-                name: 'EXPANSION_CLICKED',
+            dispatcher.dispatch<Actions.ExpansionClicked>({
+                name: ActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }
@@ -395,7 +396,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const KeywordsField:React.SFC<{
         label:string;
-        keywords:Immutable.List<KeywordInfo>;
+        keywords:Array<KeywordInfo>;
         favouritesOnly:boolean;
         anonymousUser:boolean;
     }> = (props) => {
@@ -439,13 +440,14 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const MinSizeInput:React.SFC<{
         value:string;
+        currFilter:Filters;
 
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
-                payload: {minSize: e.target.value}
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
+                payload: {...props.currFilter, minSize: e.target.value}
             });
         };
 
@@ -461,13 +463,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const MaxSizeInput:React.SFC<{
         value:string;
+        currFilter:Filters;
 
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
-                payload: {maxSize: e.target.value}
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
+                payload: {
+                    ...props.currFilter,
+                    maxSize: e.target.value
+                }
             });
         };
 
@@ -480,6 +486,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     class NameSearchInput extends React.PureComponent<{
         value:string;
+        currFilter:Filters;
 
     }> {
 
@@ -496,9 +503,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 window.clearTimeout(this._timer);
             }
             this._timer = window.setTimeout(((value) => () => {
-                dispatcher.dispatch({
-                    name: 'FILTER_CHANGED',
-                    payload: {corpusName: value}
+                dispatcher.dispatch<Actions.FilterChanged>({
+                    name: ActionName.FilterChanged,
+                    payload: {
+                        ...this.props.currFilter,
+                        corpusName: value
+                    }
                 });
                 window.clearTimeout(this._timer);
             })(e.target.value), 300);
@@ -542,16 +552,16 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 fields = (
                     <div>
                         <span>{he.translate('defaultCorparch__size_from')}: </span>
-                        <MinSizeInput value={this.props.filters.minSize}  />
+                        <MinSizeInput value={this.props.filters.minSize} currFilter={this.props.filters}  />
                         <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
-                        <MaxSizeInput value={this.props.filters.maxSize}  />
+                        <MaxSizeInput value={this.props.filters.maxSize} currFilter={this.props.filters}  />
                         <div className="hint">
                             {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
                         </div>
                         <p>
                             <span>
                             {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                            <NameSearchInput value={this.props.filters.name} />
+                            <NameSearchInput value={this.props.filters.name} currFilter={this.props.filters} />
                         </p>
                     </div>
                 );
@@ -575,30 +585,16 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * Filter form root component
      */
-    class FilterForm extends React.Component<FilterFormProps, CorplistTableModelState> {
+    class FilterForm extends React.PureComponent<FilterFormProps & CorplistTableModelState> {
 
         private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = listModel.getInitialState();
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _renderLoader() {
-            if (this.state.isBusy) {
+            if (this.props.isBusy) {
                 return <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} />;
 
@@ -614,12 +610,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                         {this._renderLoader()}
                     </div>
                     <KeywordsField
-                        keywords={this.state.keywords}
+                        keywords={this.props.keywords}
                         label={he.translate('defaultCorparch__keywords_field_label')}
-                        favouritesOnly={this.state.favouritesOnly}
-                        anonymousUser={this.state.anonymousUser}/>
+                        favouritesOnly={this.props.favouritesOnly}
+                        anonymousUser={this.props.anonymousUser}/>
                     <FilterInputFieldset
-                        filters={this.state.filters} />
+                        filters={this.props.filters} />
                 </section>
             )
         }

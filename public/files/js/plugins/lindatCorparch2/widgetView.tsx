@@ -18,24 +18,17 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
+import { Kontext, KeyCodes } from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
-import { PluginInterfaces } from '../../types/plugins';
 import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
 
 
 export interface WidgetViewModuleArgs {
     dispatcher:IActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
-    corpusSelection:PluginInterfaces.Corparch.ICorpSelection;
-}
-
-export interface CorplistWidgetProps {
-
 }
 
 export interface WidgetViews {
@@ -43,7 +36,7 @@ export interface WidgetViews {
 }
 
 
-export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
+export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React.ComponentClass<{}> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -614,16 +607,12 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
 
     // ------------------------- <CorplistWidget /> -------------------------------
 
-    class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
-
-        private modelSubscription:Subscription;
+    class CorplistWidget extends React.PureComponent<CorplistWidgetModelState> {
 
         constructor(props) {
             super(props);
-            this.state = widgetModel.getInitialState();
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleOnShow = this._handleOnShow.bind(this);
             this._handleKeypress = this._handleKeypress.bind(this);
             this._handleWidgetButtonClick = this._handleWidgetButtonClick.bind(this);
@@ -631,10 +620,10 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         }
 
         _handleKeypress(evt) {
-            if (this.state.isVisible) {
+            if (this.props.isVisible) {
                 switch (evt.keyCode) {
                     case KeyCodes.TAB:
-                        this._handleTabSwitch(1 - this.state.activeTab);
+                        this._handleTabSwitch(1 - this.props.activeTab);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
@@ -662,7 +651,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
         }
 
         _handleWidgetButtonClick() {
-            if (this.state.isVisible) {
+            if (this.props.isVisible) {
                 this._handleCloseClick();
 
             } else {
@@ -683,7 +672,7 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             dispatcher.dispatch({
                 name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
                 payload: {
-                    value: this.state.activeTab
+                    value: this.props.activeTab
                 }
             });
         }
@@ -692,37 +681,29 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             this.setState(state);
         }
 
-        componentDidMount() {
-            this.modelSubscription = widgetModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderWidget() {
             return (
                 <layoutViews.PopupBox customClass="corplist-widget"
                         onCloseClick={this._handleCloseClick}
                         onAreaClick={this._handleAreaClick}
                         keyPressHandler={this._handleKeypress}>
-                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.state.activeTab}
+                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.props.activeTab}
                                 onEscKey={this._handleCloseClick} />
-                    {this.state.activeTab === 0 ?
-                        <ListsTab dataFav={this.state.dataFav} dataFeat={this.state.dataFeat}
-                                anonymousUser={this.state.anonymousUser}
-                                activeListItem={this.state.activeListItem} /> :
-                        <SearchTab availSearchKeywords={this.state.availSearchKeywords}
-                                isWaitingForSearchResults={this.state.isWaitingForSearchResults}
-                                currSearchResult={this.state.currSearchResult}
-                                currSearchPhrase={this.state.currSearchPhrase}
-                                hasSelectedKeywords={this.state.availSearchKeywords.find(x => x.selected) !== undefined}
-                                focusedRowIdx={this.state.focusedRowIdx}
+                    {this.props.activeTab === 0 ?
+                        <ListsTab dataFav={this.props.dataFav} dataFeat={this.props.dataFeat}
+                                anonymousUser={this.props.anonymousUser}
+                                activeListItem={this.props.activeListItem} /> :
+                        <SearchTab availSearchKeywords={this.props.availSearchKeywords}
+                                isWaitingForSearchResults={this.props.isWaitingForSearchResults}
+                                currSearchResult={this.props.currSearchResult}
+                                currSearchPhrase={this.props.currSearchPhrase}
+                                hasSelectedKeywords={this.props.availSearchKeywords.find(x => x.selected) !== undefined}
+                                focusedRowIdx={this.props.focusedRowIdx}
                                 handleTab={this._handleCloseClick} />
                     }
                     <div className="footer">
                         <span>
-                            {this.state.activeTab === 0 ?
+                            {this.props.activeTab === 0 ?
                                 util.translate('defaultCorparch__hit_tab_to_see_other') :
                                 util.translate('defaultCorparch__hit_tab_to_see_fav')}
                         </span>
@@ -735,21 +716,21 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
             return (
                 <div className="CorplistWidget">
                     <div>
-                        <CorpusButton isWaitingToSwitch={this.state.isBusy}
-                                corpusIdent={this.state.corpusIdent} onClick={this._handleWidgetButtonClick}
-                                isWidgetVisible={this.state.isVisible} />
-                        {this.state.isVisible ? this._renderWidget() : null}
-                        {this.state.availableSubcorpora.size > 0 ?
+                        <CorpusButton isWaitingToSwitch={this.props.isBusy}
+                                corpusIdent={this.props.corpusIdent} onClick={this._handleWidgetButtonClick}
+                                isWidgetVisible={this.props.isVisible} />
+                        {this.props.isVisible ? this._renderWidget() : null}
+                        {this.props.availableSubcorpora.size > 0 ?
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
-                                <SubcorpSelection currSubcorpus={this.state.currSubcorpus}
-                                    origSubcorpName={this.state.origSubcorpName}
-                                    availSubcorpora={this.state.availableSubcorpora} />
+                                <SubcorpSelection currSubcorpus={this.props.currSubcorpus}
+                                    origSubcorpName={this.props.currSubcorpusOrigName}
+                                    availSubcorpora={this.props.availableSubcorpora} />
                             </span>) :
                             null
                         }
-                        {!this.state.anonymousUser ?
-                            <StarComponent currFavitemId={this.state.currFavitemId} /> :
+                        {!this.props.anonymousUser ?
+                            <StarComponent currFavitemId={this.props.currFavitemId} /> :
                             null
                         }
                     </div>

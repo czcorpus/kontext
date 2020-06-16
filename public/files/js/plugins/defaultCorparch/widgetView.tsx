@@ -22,16 +22,15 @@ import {Kontext, KeyCodes} from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
-import { PluginInterfaces } from '../../types/plugins';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+import { Actions, ActionName } from './actions';
 
 
 export interface WidgetViewModuleArgs {
     dispatcher:IActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
-    corpusSelection:PluginInterfaces.Corparch.ICorpSelection;
 }
 
 export interface CorplistWidgetProps {
@@ -43,7 +42,7 @@ export interface WidgetViews {
 }
 
 
-export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
+export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -351,8 +350,8 @@ export function init({dispatcher, util, widgetModel, corpusSelection}:WidgetView
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
                     keywordId: props.id,
                     status: !props.selected,

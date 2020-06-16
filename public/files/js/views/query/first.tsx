@@ -21,7 +21,6 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import { Subscription } from 'rxjs';
 import { IActionDispatcher } from 'kombo';
 
 import { init as inputInit } from './input';
@@ -39,6 +38,7 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { ActionName, Actions } from '../../models/query/actions';
+import { Keyboard } from 'cnc-tskit';
 
 
 export interface MainModuleArgs {
@@ -207,56 +207,14 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <QueryForm /> -----------------------------
 
-    class QueryForm extends React.Component<QueryFormProps, QueryFormState> {
-
-        private modelSubscriptions:Array<Subscription>;
+    class QueryForm extends React.PureComponent<QueryFormProps & QueryFormState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
             this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
             this._handleTextTypesFormVisibility = this._handleTextTypesFormVisibility.bind(this);
             this._keyEventHandler = this._keyEventHandler.bind(this);
-            this.state = this._fetchModelState();
-            this.modelSubscriptions = [];
-        }
-
-        _fetchModelState() {
-            return {
-                corpora: queryModel.getCorpora(),
-                availableAlignedCorpora: queryModel.getAvailableAlignedCorpora(),
-                supportsParallelCorpora: queryModel.supportsParallelCorpora(),
-                queryTypes: queryModel.getQueryTypes(),
-                supportedWidgets: queryModel.getSupportedWidgets(),
-                lposValues: queryModel.getLposValues(),
-                matchCaseValues: queryModel.getMatchCaseValues(),
-                forcedAttr: queryModel.getForcedAttr(),
-                defaultAttrValues: queryModel.getDefaultAttrValues(),
-                attrList: queryModel.getAttrList(),
-                structAttrList: queryModel.getStructAttrList(),
-                tagsetDocUrls: queryModel.getTagsetDocUrls(),
-                pcqPosNegValues: queryModel.getPcqPosNegValues(),
-                includeEmptyValues: queryModel.getIncludeEmptyValues(),
-                lemmaWindowSizes: queryModel.getLemmaWindowSizes(),
-                posWindowSizes: queryModel.getPosWindowSizes(),
-                hasLemmaAttr: queryModel.getHasLemmaAttr(),
-                wPoSList: queryModel.getwPoSList(),
-                contextFormVisible: false, // TODO use data from session?
-                textTypesFormVisible: textTypesModel.hasSelectedItems(),
-                hasSelectedTextTypes: textTypesModel.hasSelectedItems(),
-                inputLanguages: queryModel.getInputLanguages(),
-                textTypesNotes: queryModel.getTextTypesNotes(),
-                useCQLEditor: queryModel.getUseCQLEditor(),
-                tagAttr: queryModel.getTagAttr()
-            };
-        }
-
-        _modelChangeHandler() {
-            const state = this._fetchModelState();
-            state['contextFormVisible'] = this.state.contextFormVisible;
-            state['textTypesFormVisible'] = this.state.textTypesFormVisible;
-            this.setState(state);
         }
 
         _handleSubmit() {
@@ -264,18 +222,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 name: 'QUERY_INPUT_SUBMIT',
                 payload: {}
             });
-        }
-
-        _handleContextFormVisibility() {
-            const newState = he.cloneState(this.state);
-            newState.contextFormVisible = !this.state.contextFormVisible;
-            this.setState(newState);
-        }
-
-        _handleTextTypesFormVisibility() {
-            const newState = he.cloneState(this.state);
-            newState.textTypesFormVisible = !this.state.textTypesFormVisible;
-            this.setState(newState);
         }
 
         _keyEventHandler(evt) {
@@ -291,23 +237,20 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             }
         }
 
-        componentDidMount() {
-            this.modelSubscriptions = [
-                queryModel.addListener(this._modelChangeHandler),
-                textTypesModel.addListener(this._modelChangeHandler)
-            ];
+        _handleTextTypesFormVisibility() {
+            dispatcher.dispatch<Actions.QueryTextTypesToggleForm>({
+                name: ActionName.QueryTextTypesToggleForm
+            });
         }
 
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe());
-            this._handleSubmit = undefined;
-            this._handleContextFormVisibility = undefined;
-            this._handleTextTypesFormVisibility = undefined;
-            this._keyEventHandler = undefined;
+        _handleContextFormVisibility() {
+            dispatcher.dispatch<Actions.QueryContextToggleForm>({
+                name: ActionName.QueryContextToggleForm
+            });
         }
 
         render() {
-            const primaryCorpname = this.state.corpora.get(0);
+            const primaryCorpname = this.props.corpora.get(0);
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form primary-language">
@@ -316,81 +259,81 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 <TRCorpusField corparchWidget={CorparchWidget} />
                                 : null}
                             <inputViews.TRQueryTypeField
-                                    queryType={this.state.queryTypes.get(primaryCorpname)}
+                                    queryType={this.props.queryTypes.get(primaryCorpname)}
                                     sourceId={primaryCorpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.state.hasLemmaAttr.get(primaryCorpname)} />
+                                    hasLemmaAttr={this.props.hasLemmaAttr.get(primaryCorpname)} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(primaryCorpname)}
-                                widgets={this.state.supportedWidgets.get(primaryCorpname)}
+                                queryType={this.props.queryTypes.get(primaryCorpname)}
+                                widgets={this.props.supportedWidgets.get(primaryCorpname)}
                                 sourceId={primaryCorpname}
-                                wPoSList={this.state.wPoSList}
-                                lposValue={this.state.lposValues.get(primaryCorpname)}
-                                matchCaseValue={this.state.matchCaseValues.get(primaryCorpname)}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(primaryCorpname)}
-                                attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrls.get(primaryCorpname)}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues.get(primaryCorpname)}
+                                matchCaseValue={this.props.matchCaseValues.get(primaryCorpname)}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttrValues.get(primaryCorpname)}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocUrls.get(primaryCorpname)}
                                 tagHelperView={this.props.tagHelperViews.get(primaryCorpname)}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
+                                inputLanguage={this.props.inputLanguages.get(primaryCorpname)}
                                 actionPrefix={this.props.actionPrefix}
                                 onEnterKey={this._handleSubmit}
-                                useCQLEditor={this.state.useCQLEditor}
+                                useCQLEditor={this.props.useCQLEditor}
                                 takeFocus={true} />
                         </tbody>
                     </table>
-                    {this.state.supportsParallelCorpora ?
+                    {this.props.supportsParallelCorpora ?
                         <alignedViews.AlignedCorpora
-                                availableCorpora={this.state.availableAlignedCorpora}
-                                alignedCorpora={this.state.corpora.rest().toList()}
-                                queryTypes={this.state.queryTypes}
-                                supportedWidgets={this.state.supportedWidgets}
-                                wPoSList={this.state.wPoSList}
-                                lposValues={this.state.lposValues}
-                                matchCaseValues={this.state.matchCaseValues}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttrValues={this.state.defaultAttrValues}
-                                attrList={this.state.attrList}
-                                tagsetDocUrls={this.state.tagsetDocUrls}
-                                pcqPosNegValues={this.state.pcqPosNegValues}
-                                includeEmptyValues={this.state.includeEmptyValues}
-                                inputLanguages={this.state.inputLanguages}
+                                availableCorpora={this.props.availableAlignedCorpora}
+                                alignedCorpora={this.props.corpora.rest().toList()}
+                                queryTypes={this.props.queryTypes}
+                                supportedWidgets={this.props.supportedWidgets}
+                                wPoSList={this.props.wPoSList}
+                                lposValues={this.props.lposValues}
+                                matchCaseValues={this.props.matchCaseValues}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttrValues={this.props.defaultAttrValues}
+                                attrList={this.props.attrList}
+                                tagsetDocUrls={this.props.tagsetDocUrls}
+                                pcqPosNegValues={this.props.pcqPosNegValues}
+                                includeEmptyValues={this.props.includeEmptyValues}
+                                inputLanguages={this.props.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
-                                hasLemmaAttr={this.state.hasLemmaAttr}
-                                useCQLEditor={this.state.useCQLEditor}
+                                hasLemmaAttr={this.props.hasLemmaAttr}
+                                useCQLEditor={this.props.useCQLEditor}
                                 tagHelperViews={this.props.tagHelperViews}
                                 onEnterKey={this._handleSubmit} />
                         : null
                     }
                     <fieldset id="specify-context">
                         <AdvancedFormLegend
-                                formVisible={this.state.contextFormVisible}
+                                formVisible={this.props.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
                                 title={he.translate('query__specify_context')}
                                 hintWhenClosed={null} />
-                        {this.state.contextFormVisible ?
+                        {this.props.contextFormVisible ?
                             <contextViews.SpecifyContextForm
-                                    lemmaWindowSizes={this.state.lemmaWindowSizes}
-                                    posWindowSizes={this.state.posWindowSizes}
-                                    hasLemmaAttr={this.state.hasLemmaAttr.get(primaryCorpname)}
-                                    wPoSList={this.state.wPoSList} />
+                                    lemmaWindowSizes={this.props.lemmaWindowSizes}
+                                    posWindowSizes={this.props.posWindowSizes}
+                                    hasLemmaAttr={this.props.hasLemmaAttr.get(primaryCorpname)}
+                                    wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
                     <fieldset className="specify-query-metainformation">
                         <AdvancedFormLegend
-                                formVisible={this.state.textTypesFormVisible}
+                                formVisible={this.props.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
                                 title={he.translate('query__specify_tt')}
-                                hintWhenClosed={this.state.hasSelectedTextTypes ? he.translate('query__contains_selected_text_types') : null} />
-                        {this.state.textTypesFormVisible ?
+                                hintWhenClosed={this.props.hasSelectedTextTypes ? he.translate('query__contains_selected_text_types') : null} />
+                        {this.props.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
                                         liveAttrsCustomTT={this.props.liveAttrsCustomTT}
                                         onReady={()=>undefined} />
-                                : <TextTypesNotes description={this.state.textTypesNotes} />
+                                : <TextTypesNotes description={this.props.textTypesNotes} />
                         }
                     </fieldset>
                     <div className="buttons">
@@ -426,46 +369,17 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // -------- <QueryFormLite /> ------------------------------------
 
-    class QueryFormLite extends React.Component<QueryFormLiteProps, QueryFormLiteState> {
-
-        private modelSubscription:Subscription;
+    class QueryFormLite extends React.PureComponent<QueryFormLiteProps & QueryFormLiteState> {
 
         constructor(props) {
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
             this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                corpora: queryModel.getCorpora(),
-                queryTypes: queryModel.getQueryTypes(),
-                supportedWidgets: queryModel.getSupportedWidgets(),
-                lposValues: queryModel.getLposValues(),
-                matchCaseValues: queryModel.getMatchCaseValues(),
-                forcedAttr: queryModel.getForcedAttr(),
-                defaultAttrValues: queryModel.getDefaultAttrValues(),
-                attrList: queryModel.getAttrList(),
-                tagsetDocUrls: queryModel.getTagsetDocUrls(),
-                pcqPosNegValues: queryModel.getPcqPosNegValues(),
-                includeEmptyValues: queryModel.getIncludeEmptyValues(),
-                lemmaWindowSizes: queryModel.getLemmaWindowSizes(),
-                posWindowSizes: queryModel.getPosWindowSizes(),
-                hasLemmaAttr: queryModel.getHasLemmaAttr(),
-                wPoSList: queryModel.getwPoSList(),
-                contextFormVisible: false,
-                inputLanguages: queryModel.getInputLanguages(),
-                hasSelectedTextTypes: textTypesModel.hasSelectedItems(),
-                textTypeSelections: textTypesModel.exportSelections(false),
-                useCQLEditor: queryModel.getUseCQLEditor()
-            };
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
+            if (evt.keyCode === Keyboard.Code.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey) {
                     if (this.props.operationIdx !== undefined) {
                         dispatcher.dispatch<Actions.BranchQuery>({
@@ -486,9 +400,9 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _handleContextFormVisibility() {
-            const newState = he.cloneState(this.state);
-            newState.contextFormVisible = !this.state.contextFormVisible;
-            this.setState(newState);
+            dispatcher.dispatch<Actions.QueryContextToggleForm>({
+                name: ActionName.QueryContextToggleForm
+            });
         }
 
         _handleSubmit() {
@@ -506,65 +420,51 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             }
         }
 
-        _modelChangeHandler() {
-            const state = this._fetchModelState();
-            state['contextFormVisible'] = this.state.contextFormVisible;
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form primary-language">
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                    queryType={this.state.queryTypes.get(this.props.corpname)}
+                                    queryType={this.props.queryTypes.get(this.props.corpname)}
                                     sourceId={this.props.corpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.state.hasLemmaAttr.get(this.props.corpname)} />
+                                    hasLemmaAttr={this.props.hasLemmaAttr.get(this.props.corpname)} />
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(this.props.corpname)}
-                                widgets={this.state.supportedWidgets.get(this.props.corpname)}
+                                queryType={this.props.queryTypes.get(this.props.corpname)}
+                                widgets={this.props.supportedWidgets.get(this.props.corpname)}
                                 sourceId={this.props.corpname}
-                                wPoSList={this.state.wPoSList}
-                                lposValue={this.state.lposValues.get(this.props.corpname)}
-                                matchCaseValue={this.state.matchCaseValues.get(this.props.corpname)}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
-                                attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrls.get(this.props.corpname)}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues.get(this.props.corpname)}
+                                matchCaseValue={this.props.matchCaseValues.get(this.props.corpname)}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttrValues.get(this.props.corpname)}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocUrls.get(this.props.corpname)}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
+                                inputLanguage={this.props.inputLanguages.get(this.props.corpname)}
                                 actionPrefix={this.props.actionPrefix}
                                 onEnterKey={this._handleSubmit}
-                                useCQLEditor={this.state.useCQLEditor} />
+                                useCQLEditor={this.props.useCQLEditor} />
                         </tbody>
                     </table>
                     <fieldset id="specify-context">
                         <AdvancedFormLegend
-                                formVisible={this.state.contextFormVisible}
+                                formVisible={this.props.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
                                 title={he.translate('query__specify_context')}
                                 hintWhenClosed={null} />
-                        {this.state.contextFormVisible ?
+                        {this.props.contextFormVisible ?
                             <contextViews.SpecifyContextForm
-                                    lemmaWindowSizes={this.state.lemmaWindowSizes}
-                                    posWindowSizes={this.state.posWindowSizes}
-                                    hasLemmaAttr={this.state.hasLemmaAttr.get(this.props.corpname)}
-                                    wPoSList={this.state.wPoSList} />
+                                    lemmaWindowSizes={this.props.lemmaWindowSizes}
+                                    posWindowSizes={this.props.posWindowSizes}
+                                    hasLemmaAttr={this.props.hasLemmaAttr.get(this.props.corpname)}
+                                    wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
-                    {this.state.hasSelectedTextTypes ?
-                        <SelectedTextTypesLite data={this.state.textTypeSelections} /> : null}
+                    {this.props.hasSelectedTextTypes ?
+                        <SelectedTextTypesLite data={this.props.textTypeSelections} /> : null}
 
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>

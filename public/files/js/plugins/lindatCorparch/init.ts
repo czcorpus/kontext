@@ -83,8 +83,7 @@ export class Plugin {
     }
 
 
-    createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
-            options:Kontext.GeneralProps):React.ComponentClass<{}> {
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> {
 
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,

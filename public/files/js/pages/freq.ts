@@ -77,8 +77,6 @@ class FreqPage {
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
-
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
@@ -229,8 +227,7 @@ class FreqPage {
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.querySaveAsFormModel,
-            corparchModel: null
+            querySaveAsModel: this.querySaveAsFormModel
         });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
@@ -385,7 +382,7 @@ class FreqPage {
 
     init() {
         this.layoutModel.init(() => {
-            this.subcorpSel = new NonQueryCorpusSelectionModel({
+            const subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,

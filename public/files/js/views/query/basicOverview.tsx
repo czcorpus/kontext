@@ -20,16 +20,18 @@
 
 import * as React from 'react';
 import { Subscription } from 'rxjs';
-import { IActionDispatcher } from 'kombo';
-import { Kontext } from '../../types/common';
+import { IActionDispatcher, IModel } from 'kombo';
 
-import { PluginInterfaces } from '../../types/plugins';
+import { Kontext } from '../../types/common';
 import { ActionName, Actions } from '../../models/query/actions';
 
 
 export interface EmptyQueryOverviewBarProps {
     corpname:string;
     humanCorpname:string;
+    usesubcorp:string;
+    origSubcorpName:string;
+    foreignSubcorp:boolean;
 }
 
 
@@ -40,7 +42,7 @@ export interface QueryOverviewTableProps {
 
 
 export interface BasicOverviewViews {
-    EmptyQueryOverviewBar:React.ComponentClass<EmptyQueryOverviewBarProps>;
+    EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps>;
     QueryOverviewTable:React.SFC<QueryOverviewTableProps>;
 }
 
@@ -53,64 +55,24 @@ export interface BasicOverviewViews {
  * @param {*} dispatcher
  * @param {*} he
  */
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-        model:PluginInterfaces.Corparch.ICorpSelection):BasicOverviewViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    class EmptyQueryOverviewBar extends React.Component<EmptyQueryOverviewBarProps,
-    {
-        usesubcorp:string;
-        origSubcorpName:string;
-        foreignSubcorp:boolean;
-
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = {
-                usesubcorp: model.getCurrentSubcorpus(),
-                origSubcorpName: model.getCurrentSubcorpusOrigName(),
-                foreignSubcorp: model.getIsForeignSubcorpus()
-            };
-            this.handleStoreChange = this.handleStoreChange.bind(this);
-        }
-
-        private handleStoreChange() {
-            this.setState({
-                usesubcorp: model.getCurrentSubcorpus(),
-                origSubcorpName: model.getCurrentSubcorpusOrigName(),
-                foreignSubcorp: model.getIsForeignSubcorpus()
-            })
-        }
-
-        componentDidMount() {
-            this.modelSubscription = model.addListener(this.handleStoreChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <div>
-                    <ul id="query-overview-bar">
-                        <layoutViews.CorpnameInfoTrigger
-                                corpname={this.props.corpname}
-                                humanCorpname={this.props.humanCorpname}
-                                usesubcorp={this.state.usesubcorp}
-                                origSubcorpName={this.state.origSubcorpName}
-                                foreignSubcorp={this.state.foreignSubcorp} />
-                    </ul>
-                </div>
-            );
-        }
-    }
+    const EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps> = (props) => (
+        <div>
+            <ul id="query-overview-bar">
+                <layoutViews.CorpnameInfoTrigger
+                        corpname={props.corpname}
+                        humanCorpname={props.humanCorpname}
+                        usesubcorp={props.usesubcorp}
+                        origSubcorpName={props.origSubcorpName}
+                        foreignSubcorp={props.foreignSubcorp} />
+            </ul>
+        </div>
+    );
 
     // ----------------------------- <QueryOverviewTable /> --------------------------
 

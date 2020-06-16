@@ -84,6 +84,16 @@ export interface AppendQueryInputAction extends Action<{
 }> {};
 
 
+export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
+    if (anchorIdx === focusIdx) {
+        return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
+
+    } else {
+        return false;
+    }
+}
+
+
 export interface QueryFormModelState {
 
     forcedAttr:string;
@@ -118,6 +128,9 @@ export interface QueryFormModelState {
 
     downArrowTriggersHistory:Immutable.Map<string, boolean>;
 
+    contextFormVisible:boolean;
+
+    textTypesFormVisible:boolean;
 }
 
 /**
@@ -166,6 +179,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         });
         */
+
+
     }
 
     protected validateQuery(query:string, queryType:string):boolean {
@@ -199,15 +214,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             console.error(e);
         }
         return mismatch;
-    }
-
-    protected shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
-        if (anchorIdx === focusIdx) {
-            return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
-
-        } else {
-            return false;
-        }
     }
 
     protected addQueryInfix(sourceId:string, query:string, insertRange:[number, number]):void {

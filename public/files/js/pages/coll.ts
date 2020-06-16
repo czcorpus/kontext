@@ -26,7 +26,7 @@ import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
 import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
 import { QuerySaveAsFormModel } from '../models/query/save';
-import { CollResultModel, CollResultData, CollResultHeading } from '../models/coll/result';
+import { CollResultModel } from '../models/coll/result';
 import { init as analysisFrameInit } from '../views/analysis';
 import { init as collFormInit } from '../views/coll/forms';
 import { init as collResultViewInit, CollResultViewProps } from '../views/coll/result';
@@ -36,6 +36,9 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
+import { CollResultsSaveModel } from '../models/coll/save';
+import { CollResultData, CollResultHeading } from '../models/coll/common';
+import { IModel } from 'kombo';
 
 
 declare var require:any;
@@ -61,9 +64,11 @@ export class CollPage {
 
     private collResultModel:CollResultModel;
 
+    private collResultSaveModel:CollResultsSaveModel;
+
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
+    private subcorpSel:NonQueryCorpusSelectionModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -146,6 +151,7 @@ export class CollPage {
                 csortfn: currArgs.csortfn
             }
         );
+
         const collFormViews = collFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
@@ -176,9 +182,14 @@ export class CollPage {
             initialData: this.layoutModel.getConf<CollResultData>('CollResultData'),
             resultHeading: this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
             pageSize: this.layoutModel.getConf<number>('CollPageSize'),
-            saveLinkFn: this.setDownloadLink.bind(this),
             saveLinesLimit: this.layoutModel.getConf<number>('CollSaveLinesLimit'),
-            unfinished: !!this.layoutModel.getConf<number>('CollUnfinished'),
+            unfinished: !!this.layoutModel.getConf<number>('CollUnfinished')
+        });
+
+        this.collResultSaveModel = new CollResultsSaveModel({
+            dispatcher: this.layoutModel.dispatcher,
+            layoutModel: this.layoutModel,
+            saveLinkFn: this.setDownloadLink.bind(this),
             quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
             saveCollMaxLines: this.layoutModel.getConf<number>('SaveCollMaxLines')
         });
@@ -186,7 +197,8 @@ export class CollPage {
         const collResultViews = collResultViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.collResultModel
+            this.collResultModel,
+            this.collResultSaveModel
         );
 
         this.layoutModel.renderReactComponent<CollResultViewProps>(
@@ -226,8 +238,7 @@ export class CollPage {
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.querySaveAsFormModel,
-            corparchModel: this.subcorpSel
+            querySaveAsModel: this.querySaveAsFormModel
         });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,

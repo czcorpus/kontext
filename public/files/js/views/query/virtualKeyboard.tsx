@@ -21,7 +21,7 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {QueryFormModel, AppendQueryInputAction} from '../../models/query/common';
+import {QueryFormModel, QueryFormModelState, AppendQueryInputAction} from '../../models/query/common';
 import { VirtualKeyboardModel, VirtualKeyboardState } from '../../models/query/virtualKeyboard';
 import { ActionName, Actions } from '../../models/query/actions';
 import { List } from 'cnc-tskit';
@@ -41,7 +41,7 @@ export interface VirtualKeyboardViews {
 export interface VirtualKeyboardModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    queryModel:QueryFormModel;
+    queryModel:QueryFormModel<QueryFormModelState>;
     virtualKeyboardModel:VirtualKeyboardModel;
 }
 

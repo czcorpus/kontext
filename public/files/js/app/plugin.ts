@@ -62,6 +62,10 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.getNestedConf<T>(...keys);
     }
 
+    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
+        this.pageModel.addConfChangeHandler(key, handler);
+    }
+
     createStaticUrl(path) {
         return this.pageModel.createStaticUrl(path);
     }
