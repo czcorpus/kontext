@@ -29,6 +29,7 @@ import { Actions, ActionName } from '../actions';
 export interface IndirectQueryReplayModelState {
     currentQueryOverview:Array<Kontext.QueryOperation>|null;
     currEncodedOperations:Array<ExtendedQueryOperation>;
+    overviewVisible:boolean;
 }
 
 /**
@@ -45,7 +46,8 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel, {
             currEncodedOperations: importEncodedOperations(currentOperations),
-            currentQueryOverview: [...currentOperations]
+            currentQueryOverview: [...currentOperations],
+            overviewVisible: false
         });
 
 

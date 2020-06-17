@@ -42,6 +42,8 @@ export interface CollResulModelArgs {
     pageSize:number;
     saveLinesLimit:number;
     unfinished:boolean;
+    sortFn:string;
+    cattr:string;
 }
 
 export interface CollResultModelState {
@@ -71,7 +73,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     constructor({
             dispatcher, layoutModel, initialData, resultHeading,
-            pageSize, saveLinesLimit, unfinished}:CollResulModelArgs) {
+            pageSize, saveLinesLimit, unfinished, sortFn, cattr}:CollResulModelArgs) {
         super(
             dispatcher,
             {
@@ -85,8 +87,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 saveLinesLimit: saveLinesLimit,
                 calcStatus: unfinished ? 0 : 100,
                 quickSaveRowLimit: 0,
-                sortFn: 'c', // TODO !!!!!
-                cattr: '', // TODO !!!
+                sortFn: sortFn,
+                cattr: cattr,
                 saveFormVisible: false
             }
         );
@@ -251,6 +253,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             concatMap(
                 action => {
                     const payload = (action as Actions.FormPrepareSubmitArgsDone).payload;
+                    console.log('payload: ' , payload);
                     return this.loadData(state, payload.args);
                 }
             )
@@ -278,6 +281,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     private getSubmitArgs(state:CollResultModelState, formArgs:MultiDict):MultiDict {
         formArgs.set('format', 'json');
+        formArgs.set('csortfn', state.sortFn);
         formArgs.set('collpage', state.currPage);
         return formArgs;
     }

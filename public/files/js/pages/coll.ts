@@ -22,7 +22,7 @@ import { PluginInterfaces } from '../types/plugins';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
 import { MultiDict } from '../multidict';
-import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
 import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
 import { QuerySaveAsFormModel } from '../models/query/save';
@@ -183,7 +183,9 @@ export class CollPage {
             resultHeading: this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
             pageSize: this.layoutModel.getConf<number>('CollPageSize'),
             saveLinesLimit: this.layoutModel.getConf<number>('CollSaveLinesLimit'),
-            unfinished: !!this.layoutModel.getConf<number>('CollUnfinished')
+            unfinished: !!this.layoutModel.getConf<number>('CollUnfinished'),
+            sortFn: this.layoutModel.getConf<CollFormProps>('CollFormProps').csortfn,
+            cattr: this.layoutModel.getConf<CollFormProps>('CollFormProps').cattr
         });
 
         this.collResultSaveModel = new CollResultsSaveModel({

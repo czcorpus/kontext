@@ -96,6 +96,12 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         );
         this.pageModel = pageModel;
 
+        this.DEBUG_onActionMatch((s, action, m) => {
+            if (m) {
+                console.log(`${action.name} -> `, action.payload)
+            }
+        })
+
         this.addActionHandler<Actions.FormSetCattr>(
             ActionName.FormSetCattr,
             (state, action) => {
@@ -194,7 +200,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         ).sideEffectAlsoOn(
             ActionName.ResultGetPrevPage,
             ActionName.ResultConfirmPageValue,
-            ActionName.SaveFormSubmit
+            ActionName.SaveFormSubmit,
+            ActionName.ResultSortByColumn
         );
     }
 

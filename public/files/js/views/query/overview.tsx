@@ -828,10 +828,10 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         return (
             <div>
                 <RedirectingQueryOverview {...props} ops={props.currEncodedOperations} />
-                {props.currentQueryOverview !== null ?
-                    <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
-                            onEditClick={()=>undefined} /> :
-                null}
+                {props.overviewVisible ?
+                    <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview} onEditClick={()=>undefined} /> :
+                    null
+                }
             </div>
         );
     };
