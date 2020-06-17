@@ -73,8 +73,9 @@ class Cache {
     }
 
     get(phrase:string):Array<SearchResultRow> {
-        if (this.has(phrase)) {
-            return this.phrases[phrase][1];
+        const idx = List.findIndex(([p, ]) => p === phrase, this.phrases);
+        if (idx > -1) {
+            return this.phrases[idx][1];
         }
         return [];
     }

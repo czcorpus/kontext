@@ -185,7 +185,7 @@ export class AppNavigation implements Kontext.IURLHandler {
     constructor(conf:Kontext.IConfHandler) {
         this.conf = conf;
         this.switchCorpAwareObjects = {};
-        this.switchCorpStateStorage = Immutable.OrderedMap<string, any>();
+        this.switchCorpStateStorage = {};
         this.switchCorpPreviousCorpora = Immutable.List<string>();
         this.history = createHistory(this);
     }

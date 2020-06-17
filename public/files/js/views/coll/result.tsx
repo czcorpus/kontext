@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext, KeyCodes } from '../../types/common';
 import { init as initSaveViews } from './save';
@@ -350,7 +350,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     }
 
     return {
-        CollResultView: CollResultView
+        CollResultView: BoundWithProps<CollResultViewProps, CollResultModelState>(CollResultView, collResultModel)
     };
 
 }

@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, Bound } from 'kombo';
+import { IActionDispatcher, Bound, ActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { CollFormModel, CollFormModelState } from '../../models/coll/collForm';
-import { Dict } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 import { Actions, ActionName } from '../../models/coll/actions';
 
 
@@ -182,9 +182,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     }> = (props) => {
 
-        const handleDisplayCheckboxClick = (value) => (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CBGRFNS',
+        const handleDisplayCheckboxClick = (value:string) => (evt) => {
+            dispatcher.dispatch<Actions.FormSetCbgrfns>({
+                name: ActionName.FormSetCbgrfns,
                 payload: {
                     value: value
                 }
@@ -192,7 +192,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             evt.stopPropagation();
         };
 
-        const handleCheckboxClick = (value) => (evt) => {
+        const handleCheckboxClick = (value:string) => (evt) => {
             dispatcher.dispatch<Actions.FormSetCsortfn>({
                 name: ActionName.FormSetCsortfn,
                 payload: {
@@ -216,25 +216,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     </tr>
                 </thead>
                 <tbody>
-                    {props.availCbgrfns.map(([fn, label], k) => {
-                        return (
-                            <tr key={`v_${k}`} className={Dict.hasKey(fn, props.cbgrfns) ? 'selected' : null}>
-                                <CollMetricsTermTh value={label} code={fn} />
-                                <td className="display-chk"
-                                        onClick={handleDisplayCheckboxClick(k)}>
-                                    <input type="checkbox" value={k}
-                                            checked={Dict.hasKey(fn, props.cbgrfns)}
-                                            readOnly={true} />
-                                </td>
-                                <td className={props.csortfn === fn ? 'unique-sel is-selected' : 'unique-sel'}
-                                        onClick={handleCheckboxClick(k)}>
-                                    <input type="radio" value={k}
-                                            checked={props.csortfn === fn}
-                                            readOnly={true} />
-                                </td>
-                            </tr>
-                        );
-                    })}
+                    {List.map(
+                        ([fn, label], k) => {
+                            console.log('fn: ', fn, ', label: ', label);
+                            return (
+                                <tr key={`v_${k}:${fn}`} className={Dict.hasKey(fn, props.cbgrfns) ? 'selected' : null}>
+                                    <CollMetricsTermTh value={label} code={fn} />
+                                    <td className="display-chk"
+                                            onClick={handleDisplayCheckboxClick(fn)}>
+                                        <input type="checkbox" value={fn}
+                                                checked={Dict.hasKey(fn, props.cbgrfns)}
+                                                readOnly={true} />
+                                    </td>
+                                    <td className={props.csortfn === fn ? 'unique-sel is-selected' : 'unique-sel'}
+                                            onClick={handleCheckboxClick(fn)}>
+                                        <input type="radio" value={fn}
+                                                checked={props.csortfn === fn}
+                                                readOnly={true} />
+                                    </td>
+                                </tr>
+                            );
+                        },
+                        props.availCbgrfns
+                    )}
                 </tbody>
             </table>
         );

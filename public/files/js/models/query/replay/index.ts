@@ -104,6 +104,8 @@ export interface QueryReplayModelState {
     stopAfterOpIdx:number;
 
     editIsLocked:boolean;
+
+    overviewVisible:boolean;
 }
 
 /**
@@ -167,7 +169,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             branchReplayIsRunning: false,
             editedOperationIdx: null,
             stopAfterOpIdx: null,
-            editIsLocked: pageModel.getConf<number>('NumLinesInGroups') > 0
+            editIsLocked: pageModel.getConf<number>('NumLinesInGroups') > 0,
+            overviewVisible: false
         };
         syncCache(state, pageModel);
         super(

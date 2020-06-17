@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
+import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Subscription, timer as rxTimer, Observable, of as rxOf, throwError } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
-import { Ident, List, tuple, HTTP, pipe } from 'cnc-tskit';
+import { List, tuple, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import * as common from './common';
@@ -113,6 +113,7 @@ export interface CorplistWidgetModelState {
     activeTab:number;
     activeListItem:[number, number];
     corpusIdent:Kontext.FullCorpusIdent;
+    alignedCorpora:Array<string>;
     dataFav:Array<FavListItem>;
     dataFeat:Array<common.CorplistItem>;
     isBusy:boolean;
@@ -160,8 +161,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private trashTimerSubsc:Subscription;
 
-    private ident:string;
-
     constructor({dispatcher, pluginApi, corpusIdent, anonymousUser, searchEngine,
             dataFav, dataFeat, onItemClick, corporaLabels}:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
@@ -169,8 +168,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         super(dispatcher, {
             isVisible: false,
             activeTab: 0,
-            activeListItem: [null, null],
+            activeListItem: tuple(null, null),
             corpusIdent: corpusIdent,
+            alignedCorpora: pluginApi.getConf<Array<string>>('alignedCorpora'),
             anonymousUser: anonymousUser,
             dataFav: dataFavImp,
             dataFeat: [...dataFeat],
@@ -197,7 +197,31 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.searchEngine = searchEngine;
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
-        this.ident = Ident.puid();
+
+        this.addActionHandler(
+            'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+            (state, action) => {
+                state.alignedCorpora.push(action.payload['corpname']);
+                state.currFavitemId = findCurrFavitemId(
+                    state.dataFav,
+                    this.getFullCorpusSelection(state)
+                );
+            }
+        );
+
+        this.addActionHandler(
+            'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+            (state, action) => {
+                const srch = List.findIndex(v => v === action.payload['corpname'], state.alignedCorpora);
+                if (srch > -1) {
+                    state.alignedCorpora.splice(srch, 1);
+                    state.currFavitemId = findCurrFavitemId(
+                        state.dataFav,
+                        this.getFullCorpusSelection(state)
+                    );
+                }
+            }
+        )
 
         this.addActionHandler<Actions.WidgetShow>(
             ActionName.WidgetShow,
@@ -428,6 +452,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
+                console.log('action: ', action);
                 (action.payload.status ?
                     this.setFavItem(state) :
                     this.unsetFavItem(action.payload.itemId)
@@ -457,7 +482,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     state.dataFav = importServerFavitems(action.payload.data);
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
-                        this.getFullCorpusSelection()
+                        this.getFullCorpusSelection(state)
                     );
                 }
             }
@@ -490,7 +515,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         ).sideEffectAlsoOn(
             ActionName.KeywordResetClicked,
-            ActionName.SearchInputChanged
+            ActionName.SearchInputChanged,
+            ActionName.KeywordClicked
         )
 
         this.addActionHandler<Actions.KeywordClicked>(
@@ -583,27 +609,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
-                    this.getFullCorpusSelection()
-                );
-            }
-        );
-
-        this.addActionHandler(
-            'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-            (state, action) => {
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection()
-                );
-            }
-        );
-
-        this.addActionHandler(
-            'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-            (state, action) => {
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection()
+                    this.getFullCorpusSelection(state)
                 );
             }
         );
@@ -615,7 +621,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     state.dataFav = action.payload['data'].dataFav.filter(v => v.trashTTL === null);
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
-                        this.getFullCorpusSelection()
+                        this.getFullCorpusSelection(state)
                     );
                 }
             }
@@ -689,13 +695,13 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      * According to the state of the current query form, this method creates
      * a new CorplistItem instance with proper type, id, etc.
      */
-    getFullCorpusSelection():common.GeneratedFavListItem {
+    getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
-            subcorpus_id: null, // TODO this.corpSelection.getCurrentSubcorpus(),
-            subcorpus_orig_id: null, // TODO this.pluginApi.getCorpusIdent().foreignSubcorp ?
-                //`#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
-                //    this.corpSelection.getCurrentSubcorpusOrigName(),
-            corpora: [] // TODO this.corpSelection.getCorpora().toArray()
+            subcorpus_id: state.corpusIdent.usesubcorp,
+            subcorpus_orig_id: state.corpusIdent.origSubcorpName ?
+                    `#${state.corpusIdent.origSubcorpName}` :
+                    state.corpusIdent.usesubcorp,
+            corpora: [state.corpusIdent.id].concat(state.alignedCorpora)
         };
     };
 
@@ -727,7 +733,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
         state.currFavitemId = findCurrFavitemId(
             state.dataFav,
-            this.getFullCorpusSelection()
+            this.getFullCorpusSelection(state)
         );
         const trashedItem = state.dataFav.find(x => x.id === itemId);
         if (trashedItem) {
@@ -756,7 +762,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             };
             state.currFavitemId = findCurrFavitemId(
                 state.dataFav,
-                this.getFullCorpusSelection()
+                this.getFullCorpusSelection(state)
             );
         }
     }
@@ -851,9 +857,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         const message = showMessage ?
                 this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
                 null;
-        const newItem = this.getFullCorpusSelection();
+        const newItem = this.getFullCorpusSelection(state);
+        console.log('new item: ', newItem);
         return this.reloadItems(this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/set_favorite_item'),
             newItem
         ), message);
@@ -864,7 +871,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 this.pluginApi.translate('defaultCorparch__item_removed_from_fav') :
                 null;
         return this.reloadItems(this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
             {id: id}
         ), message);
