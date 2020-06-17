@@ -21,7 +21,7 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 
 import { init as inputInit } from './input';
 import { init as alignedInit } from './aligned';
@@ -29,10 +29,10 @@ import { init as contextInit } from './context';
 import { init as ttViewsInit } from '../textTypes';
 import { Kontext, KeyCodes } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { FirstQueryFormModel } from '../../models/query/first';
+import { FirstQueryFormModel, FirstQueryFormModelState } from '../../models/query/first';
 import { WidgetsMap } from '../../models/query/common';
 import { UsageTipsModel } from '../../models/usageTips';
-import { TextTypesModel } from '../../models/textTypes/main';
+import { TextTypesModel, TextTypesModelState } from '../../models/textTypes/main';
 import { WithinBuilderModel } from '../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
@@ -99,23 +99,6 @@ interface FirstQueryFormState {
 }
 
 
-interface QueryFormLiteState extends FirstQueryFormState {
-    hasSelectedTextTypes:boolean;
-    textTypeSelections:{[attr:string]:Array<string>};
-}
-
-
-interface QueryFormState extends FirstQueryFormState {
-    tagAttr:string;
-    textTypesFormVisible:boolean;
-    hasSelectedTextTypes:boolean;
-    textTypesNotes:string;
-    structAttrList:Immutable.List<Kontext.AttrItem>;
-    availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
-    supportsParallelCorpora:boolean;
-}
-
-
 export interface MainViews {
     QueryForm:React.ComponentClass<QueryFormProps>;
     QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
@@ -146,27 +129,30 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
-    const AdvancedFormLegend:React.SFC<{
+    interface AdvancedFormLegendProps {
         formVisible:boolean;
         title:string;
-        hintWhenClosed:string;
         handleClick:()=>void;
+    }
 
-    }> = (props) => {
+    const AdvancedFormLegend:React.SFC<AdvancedFormLegendProps & TextTypesModelState> = (props) => {
 
         const htmlClasses = ['form-extension-switch'];
         htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
+        const hintWhenClosed = props.hasSelectedItems ? he.translate('query__contains_selected_text_types') : null;
+
         return (
             <legend>
                 <a className={htmlClasses.join(' ')}
                         onClick={props.handleClick}>
                     {props.title}
                 </a>
-                {!props.formVisible && props.hintWhenClosed ?
-                    <span title={props.hintWhenClosed}>{'\u2713'}</span> : null}
+                {!props.formVisible && hintWhenClosed ? <span title={hintWhenClosed}>{'\u2713'}</span> : null}
             </legend>
         );
     };
+
+    const BoundAdvancedFormLegend = BoundWithProps<AdvancedFormLegendProps, TextTypesModelState>(AdvancedFormLegend, textTypesModel);
 
     // ------------------- <TextTypesNote /> -----------------------------
 
@@ -207,7 +193,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <QueryForm /> -----------------------------
 
-    class QueryForm extends React.PureComponent<QueryFormProps & QueryFormState> {
+    class QueryForm extends React.PureComponent<QueryFormProps & FirstQueryFormModelState> {
 
         constructor(props) {
             super(props);
@@ -262,7 +248,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     queryType={this.props.queryTypes.get(primaryCorpname)}
                                     sourceId={primaryCorpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.props.hasLemmaAttr.get(primaryCorpname)} />
+                                    hasLemmaAttr={this.props.hasLemma.get(primaryCorpname)} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
@@ -275,7 +261,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 defaultAttr={this.props.defaultAttrValues.get(primaryCorpname)}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocUrls.get(primaryCorpname)}
+                                tagsetDocUrl={this.props.tagsetDocs.get(primaryCorpname)}
                                 tagHelperView={this.props.tagHelperViews.get(primaryCorpname)}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguages.get(primaryCorpname)}
@@ -285,7 +271,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 takeFocus={true} />
                         </tbody>
                     </table>
-                    {this.props.supportsParallelCorpora ?
+                    {this.props.corpora.size > 1 || this.props.availableAlignedCorpora.size > 0 ?
                         <alignedViews.AlignedCorpora
                                 availableCorpora={this.props.availableAlignedCorpora}
                                 alignedCorpora={this.props.corpora.rest().toList()}
@@ -297,37 +283,35 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 defaultAttrValues={this.props.defaultAttrValues}
                                 attrList={this.props.attrList}
-                                tagsetDocUrls={this.props.tagsetDocUrls}
+                                tagsetDocUrls={this.props.tagsetDocs}
                                 pcqPosNegValues={this.props.pcqPosNegValues}
                                 includeEmptyValues={this.props.includeEmptyValues}
                                 inputLanguages={this.props.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
-                                hasLemmaAttr={this.props.hasLemmaAttr}
+                                hasLemmaAttr={this.props.hasLemma}
                                 useCQLEditor={this.props.useCQLEditor}
                                 tagHelperViews={this.props.tagHelperViews}
                                 onEnterKey={this._handleSubmit} />
                         : null
                     }
                     <fieldset id="specify-context">
-                        <AdvancedFormLegend
+                        <BoundAdvancedFormLegend
                                 formVisible={this.props.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
-                                title={he.translate('query__specify_context')}
-                                hintWhenClosed={null} />
+                                title={he.translate('query__specify_context')} />
                         {this.props.contextFormVisible ?
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.props.lemmaWindowSizes}
                                     posWindowSizes={this.props.posWindowSizes}
-                                    hasLemmaAttr={this.props.hasLemmaAttr.get(primaryCorpname)}
+                                    hasLemmaAttr={this.props.hasLemma.get(primaryCorpname)}
                                     wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
                     <fieldset className="specify-query-metainformation">
-                        <AdvancedFormLegend
+                        <BoundAdvancedFormLegend
                                 formVisible={this.props.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
-                                title={he.translate('query__specify_tt')}
-                                hintWhenClosed={this.props.hasSelectedTextTypes ? he.translate('query__contains_selected_text_types') : null} />
+                                title={he.translate('query__specify_tt')} />
                         {this.props.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
@@ -348,28 +332,35 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // -------- <SelectedTextTypesLite /> ---------------------------
 
-    const SelectedTextTypesLite = (props) => {
-        return (
-            <fieldset className="SelectedTextTypesLite specify-query-metainformation">
-                <legend>{he.translate('query__chosen_texts')}</legend>
-                <ul>
-                    {Object.keys(props.data).map(v => (
-                        <li key={v}>
-                            <strong>{v}</strong>
-                            {' \u2208 {' + props.data[v].map(v => `"${v}"`).join(', ') + '}'}
-                        </li>
-                    ))}
-                </ul>
-                <p className="hint">
-                    ({he.translate('query__chosen_texts_cannot_be_changed')})
-                </p>
-            </fieldset>
-        );
+    const SelectedTextTypesLite:React.SFC<TextTypesModelState> = (props) => {
+        if (props.hasSelectedItems) {
+            return (
+                <fieldset className="SelectedTextTypesLite specify-query-metainformation">
+                    <legend>{he.translate('query__chosen_texts')}</legend>
+                    <ul>
+                        {Object.keys(props.attributes).map(v => (
+                            <li key={v}>
+                                <strong>{v}</strong>
+                                {' \u2208 {' + props.attributes[v].map(v => `"${v}"`).join(', ') + '}'}
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="hint">
+                        ({he.translate('query__chosen_texts_cannot_be_changed')})
+                    </p>
+                </fieldset>
+            );
+
+        } else {
+            return <fieldset className="SelectedTextTypesLite" />;
+        }
     }
+
+    const BoundSelectedTextTypesLite = Bound(SelectedTextTypesLite, textTypesModel);
 
     // -------- <QueryFormLite /> ------------------------------------
 
-    class QueryFormLite extends React.PureComponent<QueryFormLiteProps & QueryFormLiteState> {
+    class QueryFormLite extends React.PureComponent<QueryFormLiteProps & FirstQueryFormModelState> {
 
         constructor(props) {
             super(props);
@@ -429,7 +420,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     queryType={this.props.queryTypes.get(this.props.corpname)}
                                     sourceId={this.props.corpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.props.hasLemmaAttr.get(this.props.corpname)} />
+                                    hasLemmaAttr={this.props.hasLemma.get(this.props.corpname)} />
                             <inputViews.TRQueryInputField
                                 queryType={this.props.queryTypes.get(this.props.corpname)}
                                 widgets={this.props.supportedWidgets.get(this.props.corpname)}
@@ -440,7 +431,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 defaultAttr={this.props.defaultAttrValues.get(this.props.corpname)}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocUrls.get(this.props.corpname)}
+                                tagsetDocUrl={this.props.tagsetDocs.get(this.props.corpname)}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguages.get(this.props.corpname)}
@@ -450,21 +441,19 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         </tbody>
                     </table>
                     <fieldset id="specify-context">
-                        <AdvancedFormLegend
+                        <BoundAdvancedFormLegend
                                 formVisible={this.props.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
-                                title={he.translate('query__specify_context')}
-                                hintWhenClosed={null} />
+                                title={he.translate('query__specify_context')} />
                         {this.props.contextFormVisible ?
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.props.lemmaWindowSizes}
                                     posWindowSizes={this.props.posWindowSizes}
-                                    hasLemmaAttr={this.props.hasLemmaAttr.get(this.props.corpname)}
+                                    hasLemmaAttr={this.props.hasLemma.get(this.props.corpname)}
                                     wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
-                    {this.props.hasSelectedTextTypes ?
-                        <SelectedTextTypesLite data={this.props.textTypeSelections} /> : null}
+                    <BoundSelectedTextTypesLite />
 
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
@@ -479,7 +468,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     }
 
     return {
-        QueryForm: QueryForm,
-        QueryFormLite: QueryFormLite
+        QueryForm: BoundWithProps<QueryFormProps, FirstQueryFormModelState>(QueryForm, queryModel),
+        QueryFormLite: BoundWithProps<QueryFormLiteProps, FirstQueryFormModelState>(QueryFormLite, queryModel)
     };
 }

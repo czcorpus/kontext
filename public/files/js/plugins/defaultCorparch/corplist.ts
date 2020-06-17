@@ -18,7 +18,7 @@
 
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher, ActionDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { List, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';

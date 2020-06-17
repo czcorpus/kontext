@@ -997,7 +997,7 @@ export namespace TextTypes {
          * Returns true if a specific attribute (or at least one attribute
          * if attrName is undefined) contains at least one selected value.
          */
-        hasSelectedItems(attrName?:string):boolean;
+        findHasSelectedItems(attrName?:string):boolean;
 
         /**
          * Returns a list of attribute names passing 'hasSelectedItems' test.

@@ -17,14 +17,16 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
+import { IActionDispatcher, Bound } from 'kombo';
+import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
 import { Actions, ActionName } from './actions';
+import { Keyboard } from 'cnc-tskit';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
 
 export interface WidgetViewModuleArgs {
@@ -33,16 +35,12 @@ export interface WidgetViewModuleArgs {
     widgetModel:CorplistWidgetModel;
 }
 
-export interface CorplistWidgetProps {
-
-}
-
 export interface WidgetViews {
 
 }
 
 
-export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React.ComponentClass<CorplistWidgetProps> {
+export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React.ComponentClass<{}, CorplistWidgetModelState> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -55,14 +53,22 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleRemoveClick = () => {
-            dispatcher.dispatch({
-                name: props.trashTTL === null ?
-                        'DEFAULT_CORPARCH_FAV_ITEM_REMOVE' :
-                        'DEFAULT_CORPARCH_FAV_ITEM_ADD',
-                payload: {
-                    itemId: props.ident
-                }
-            });
+            if (props.trashTTL === null) {
+                dispatcher.dispatch<Actions.FavItemRemove>({
+                    name: ActionName.FavItemRemove,
+                    payload: {
+                        itemId: props.ident
+                    }
+                });
+
+            } else {
+                dispatcher.dispatch<Actions.FavItemAdd>({
+                    name: ActionName.FavItemAdd,
+                    payload: {
+                        itemId: props.ident
+                    }
+                });
+            }
         };
 
         return (
@@ -88,8 +94,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK',
+            dispatcher.dispatch<Actions.FavItemClick>({
+                name: ActionName.FavItemClick,
                 payload: {
                     itemId: props.data.id
                 }
@@ -128,7 +134,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // -------------------------- <FavoritesBox /> ---------------------
 
     const FavoritesBox:React.SFC<{
-        data:Immutable.List<FavListItem>;
+        data:Array<FavListItem>;
         anonymousUser:boolean;
         activeIdx:number;
 
@@ -165,8 +171,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK',
+            dispatcher.dispatch<Actions.FeatItemClick>({
+                name: ActionName.FeatItemClick,
                 payload: {
                     itemId: props.data.id
                 }
@@ -192,7 +198,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // ---------------------------------- <FeaturedBox /> --------------------------------
 
     const FeaturedBox:React.SFC<{
-        data:Immutable.List<CorplistItem>;
+        data:Array<CorplistItem>;
         activeIdx:number;
 
     }> = (props) => {
@@ -236,8 +242,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         };
 
         const handleStarClick = () => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK',
+            dispatcher.dispatch<Actions.StarIconClick>({
+                name: ActionName.StarIconClick,
                 payload: {
                     status: props.currFavitemId ? false : true,
                     itemId: props.currFavitemId
@@ -287,8 +293,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // ----------------------------- <ListsTab /> -------------------------------
 
     const ListsTab:React.SFC<{
-        dataFav:Immutable.List<FavListItem>;
-        dataFeat:Immutable.List<CorplistItem>;
+        dataFav:Array<FavListItem>;
+        dataFeat:Array<CorplistItem>;
         anonymousUser:boolean;
         activeListItem:[number, number];
 
@@ -296,18 +302,18 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             const argMap = {
-                [KeyCodes.DOWN_ARROW]: [0, 1],
-                [KeyCodes.UP_ARROW]: [0, -1],
-                [KeyCodes.LEFT_ARROW]: [-1, 0],
-                [KeyCodes.RIGHT_ARROW]: [1, 0]
+                [Keyboard.Code.DOWN_ARROW]: [0, 1],
+                [Keyboard.Code.UP_ARROW]: [0, -1],
+                [Keyboard.Code.LEFT_ARROW]: [-1, 0],
+                [Keyboard.Code.RIGHT_ARROW]: [1, 0]
             };
             switch (evt.keyCode) {
-                case KeyCodes.DOWN_ARROW:
-                case KeyCodes.UP_ARROW:
-                case KeyCodes.LEFT_ARROW:
-                case KeyCodes.RIGHT_ARROW:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
+                case Keyboard.Code.DOWN_ARROW:
+                case Keyboard.Code.UP_ARROW:
+                case Keyboard.Code.LEFT_ARROW:
+                case Keyboard.Code.RIGHT_ARROW:
+                    dispatcher.dispatch<Actions.MoveFocusToNextListItem>({
+                        name: ActionName.MoveFocusToNextListItem,
                         payload: {
                             change: argMap[evt.keyCode]
                         }
@@ -315,10 +321,9 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                     evt.preventDefault();
                     evt.stopPropagation();
                 break;
-                case KeyCodes.ENTER:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
-                        payload: {}
+                case Keyboard.Code.ENTER:
+                    dispatcher.dispatch<Actions.EnterOnActiveListItem>({
+                        name: ActionName.EnterOnActiveListItem
                     });
                     evt.preventDefault();
                     evt.stopPropagation();
@@ -383,9 +388,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     const ResetKeyword:React.SFC<{}> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED',
-                payload: {}
+            dispatcher.dispatch<Actions.KeywordResetClicked>({
+                name: ActionName.KeywordResetClicked
             });
         };
 
@@ -407,8 +411,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED',
+            dispatcher.dispatch<Actions.SearchInputChanged>({
+                name: ActionName.SearchInputChanged,
                 payload: {
                     value: evt.target.value
                 }
@@ -418,26 +422,25 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         const handleKeyDown = (evt) => {
 
             switch (evt.keyCode) {
-                case KeyCodes.DOWN_ARROW:
-                case KeyCodes.UP_ARROW:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
+                case Keyboard.Code.DOWN_ARROW:
+                case Keyboard.Code.UP_ARROW:
+                    dispatcher.dispatch<Actions.FocusSearchRow>({
+                        name: ActionName.FocusSearchRow,
                         payload: {
-                            inc: evt.keyCode === KeyCodes.DOWN_ARROW ? 1 : -1
+                            inc: evt.keyCode === Keyboard.Code.DOWN_ARROW ? 1 : -1
                         }
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case KeyCodes.ENTER:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
-                        payload: {}
+                case Keyboard.Code.ENTER:
+                    dispatcher.dispatch<Actions.FocusedItemSelect>({
+                        name: ActionName.FocusedItemSelect
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case KeyCodes.TAB:
+                case Keyboard.Code.TAB:
                     props.handleTab();
                     evt.stopPropagation();
                 break;
@@ -461,8 +464,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED',
+            dispatcher.dispatch<Actions.SearchResultItemClicked>({
+                name: ActionName.SearchResultItemClicked,
                 payload: {
                     itemId: props.data.id
                 }
@@ -513,9 +516,9 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // ---------------------------- <SearchTab /> -----------------------------------
 
     const SearchTab:React.SFC<{
-        availSearchKeywords:Immutable.List<SearchKeyword>;
+        availSearchKeywords:Array<SearchKeyword>;
         isWaitingForSearchResults:boolean;
-        currSearchResult:Immutable.List<SearchResultRow>;
+        currSearchResult:Array<SearchResultRow>;
         currSearchPhrase:string;
         hasSelectedKeywords:boolean;
         focusedRowIdx:number;
@@ -534,7 +537,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 <div className="autocomplete-wrapper">
                     <SearchInput value={props.currSearchPhrase} handleTab={props.handleTab} />
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
-                    {props.currSearchResult.size > 0 ?
+                    {props.currSearchResult.length > 0 ?
                         (<div className="tt-menu">
                             {props.currSearchResult.map((item, i) =>
                                     <SearchResultRow key={item.id} data={item}
@@ -556,7 +559,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
-            if (evt.keyCode === KeyCodes.ENTER || evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ENTER || evt.keyCode === Keyboard.Code.ESC) {
                 props.onClick();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -578,7 +581,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     const SubcorpSelection:React.SFC<{
         currSubcorpus:string;
         origSubcorpName:string;
-        availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
+        availSubcorpora:Array<Kontext.SubcorpListItem>;
 
     }> = (props) => {
 
@@ -586,9 +589,9 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             dispatcher.dispatch({
                 name: 'QUERY_INPUT_SELECT_SUBCORP',
                 payload: {
-                    subcorp: props.availSubcorpora.get(evt.target.value).v,
-                    pubName: props.availSubcorpora.get(evt.target.value).pub,
-                    foreign: props.availSubcorpora.get(evt.target.value).foreign
+                    subcorp: props.availSubcorpora[evt.target.value].v,
+                    pubName: props.availSubcorpora[evt.target.value].pub,
+                    foreign: props.availSubcorpora[evt.target.value].foreign
                 }
             });
         };
@@ -613,16 +616,14 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
 
     // ------------------------- <CorplistWidget /> -------------------------------
 
-    class CorplistWidget extends React.Component<CorplistWidgetProps, CorplistWidgetModelState> {
+    class CorplistWidget extends React.PureComponent<CorplistWidgetModelState> {
 
         private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
-            this.state = widgetModel.getInitialState();
             this._handleCloseClick = this._handleCloseClick.bind(this);
             this._handleTabSwitch = this._handleTabSwitch.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleOnShow = this._handleOnShow.bind(this);
             this._handleKeypress = this._handleKeypress.bind(this);
             this._handleWidgetButtonClick = this._handleWidgetButtonClick.bind(this);
@@ -630,14 +631,14 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         }
 
         _handleKeypress(evt) {
-            if (this.state.isVisible) {
+            if (this.props.isVisible) {
                 switch (evt.keyCode) {
-                    case KeyCodes.TAB:
-                        this._handleTabSwitch(1 - this.state.activeTab);
+                    case Keyboard.Code.TAB:
+                        this._handleTabSwitch(1 - this.props.activeTab);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
-                    case KeyCodes.ESC:
+                    case Keyboard.Code.ESC:
                         this._handleCloseClick();
                         evt.preventDefault();
                         evt.stopPropagation();
@@ -647,21 +648,19 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         }
 
         _handleOnShow() {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_WIDGET_SHOW',
-                payload: {}
+            dispatcher.dispatch<Actions.WidgetShow>({
+                name: ActionName.WidgetShow
             });
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_WIDGET_HIDE',
-                payload: {}
+            dispatcher.dispatch<Actions.WidgetHide>({
+                name: ActionName.WidgetHide
             });
         }
 
         _handleWidgetButtonClick() {
-            if (this.state.isVisible) {
+            if (this.props.isVisible) {
                 this._handleCloseClick();
 
             } else {
@@ -669,9 +668,9 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             }
         }
 
-        _handleTabSwitch(v) {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+        _handleTabSwitch(v:number) {
+            dispatcher.dispatch<Actions.SetActiveTab>({
+                name: ActionName.SetActiveTab,
                 payload: {
                     value: v
                 }
@@ -679,24 +678,12 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         }
 
         _handleAreaClick() {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+            dispatcher.dispatch<Actions.SetActiveTab>({
+                name: ActionName.SetActiveTab,
                 payload: {
-                    value: this.state.activeTab
+                    value: this.props.activeTab
                 }
             });
-        }
-
-        _handleModelChange(state:CorplistWidgetModelState) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = widgetModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _renderWidget() {
@@ -705,23 +692,23 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                         onCloseClick={this._handleCloseClick}
                         onAreaClick={this._handleAreaClick}
                         keyPressHandler={this._handleKeypress}>
-                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.state.activeTab}
+                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.props.activeTab}
                                 onEscKey={this._handleCloseClick} />
-                    {this.state.activeTab === 0 ?
-                        <ListsTab dataFav={this.state.dataFav} dataFeat={this.state.dataFeat}
-                                anonymousUser={this.state.anonymousUser}
-                                activeListItem={this.state.activeListItem} /> :
-                        <SearchTab availSearchKeywords={this.state.availSearchKeywords}
-                                isWaitingForSearchResults={this.state.isWaitingForSearchResults}
-                                currSearchResult={this.state.currSearchResult}
-                                currSearchPhrase={this.state.currSearchPhrase}
-                                hasSelectedKeywords={this.state.availSearchKeywords.find(x => x.selected) !== undefined}
-                                focusedRowIdx={this.state.focusedRowIdx}
+                    {this.props.activeTab === 0 ?
+                        <ListsTab dataFav={this.props.dataFav} dataFeat={this.props.dataFeat}
+                                anonymousUser={this.props.anonymousUser}
+                                activeListItem={this.props.activeListItem} /> :
+                        <SearchTab availSearchKeywords={this.props.availSearchKeywords}
+                                isWaitingForSearchResults={this.props.isWaitingForSearchResults}
+                                currSearchResult={this.props.currSearchResult}
+                                currSearchPhrase={this.props.currSearchPhrase}
+                                hasSelectedKeywords={this.props.availSearchKeywords.find(x => x.selected) !== undefined}
+                                focusedRowIdx={this.props.focusedRowIdx}
                                 handleTab={this._handleCloseClick} />
                     }
                     <div className="footer">
                         <span>
-                            {this.state.activeTab === 0 ?
+                            {this.props.activeTab === 0 ?
                                 util.translate('defaultCorparch__hit_tab_to_see_other') :
                                 util.translate('defaultCorparch__hit_tab_to_see_fav')}
                         </span>
@@ -734,21 +721,21 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             return (
                 <div className="CorplistWidget">
                     <div>
-                        <CorpusButton isWaitingToSwitch={this.state.isBusy}
-                                corpusIdent={this.state.corpusIdent} onClick={this._handleWidgetButtonClick}
-                                isWidgetVisible={this.state.isVisible} />
-                        {this.state.isVisible ? this._renderWidget() : null}
-                        {this.state.availableSubcorpora.size > 0 ?
+                        <CorpusButton isWaitingToSwitch={this.props.isBusy}
+                                corpusIdent={this.props.corpusIdent} onClick={this._handleWidgetButtonClick}
+                                isWidgetVisible={this.props.isVisible} />
+                        {this.props.isVisible ? this._renderWidget() : null}
+                        {this.props.availableSubcorpora.length > 0 ?
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
-                                <SubcorpSelection currSubcorpus={this.state.currSubcorpus}
-                                    origSubcorpName={this.state.origSubcorpName}
-                                    availSubcorpora={this.state.availableSubcorpora} />
+                                <SubcorpSelection currSubcorpus={this.props.corpusIdent.usesubcorp}
+                                    origSubcorpName={this.props.corpusIdent.origSubcorpName}
+                                    availSubcorpora={this.props.availableSubcorpora} />
                             </span>) :
                             null
                         }
-                        {!this.state.anonymousUser ?
-                            <StarComponent currFavitemId={this.state.currFavitemId} /> :
+                        {!this.props.anonymousUser ?
+                            <StarComponent currFavitemId={this.props.currFavitemId} /> :
                             null
                         }
                     </div>
@@ -758,6 +745,6 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }
 
 
-    return CorplistWidget;
+    return Bound(CorplistWidget, widgetModel);
 
 }
