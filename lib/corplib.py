@@ -436,13 +436,14 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
         gen = attr.regexp2ids(enc_pattern, 0)
     items = []
     while not gen.end():
-        if wlsort == 'f':
-            if len(items) > 5 * wlmaxitems:
-                items.sort()
+        if len(items) > 5 * wlmaxitems:
+            if wlsort == 'f':
+                items.sort(key=lambda x: x[0])
                 del items[:-wlmaxitems]
-        else:
-            if len(items) >= wlmaxitems:
-                break
+            else:
+                items.sort(key=lambda x: x[1])
+                del items[wlmaxitems:]
+
         wid = gen.next()
         frq = attrfreq[wid]
         if not frq:
@@ -460,13 +461,14 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
 def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlmaxitems, wlnums):
     items = []
     for word in words:
-        if wlsort == 'f':
-            if len(items) > 5 * wlmaxitems:
-                items.sort()
+        if len(items) > 5 * wlmaxitems:
+            if wlsort == 'f':
+                items.sort(key=lambda x: x[0])
                 del items[:-wlmaxitems]
-        else:
-            if len(items) >= wlmaxitems:
-                break
+            else:
+                items.sort(key=lambda x: x[1])
+                del items[wlmaxitems:]
+
         id = attr.str2id(word)
         if id == -1:
             frq = 0
