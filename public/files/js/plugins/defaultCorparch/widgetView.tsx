@@ -360,7 +360,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 payload: {
                     keywordId: props.id,
                     status: !props.selected,
-                    exclusive: !evt.ctrlKey
+                    attachToCurrent: evt.ctrlKey || evt.metaKey
                 }
             });
         };

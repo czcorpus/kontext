@@ -17,16 +17,16 @@
  */
 
 import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import { List, HTTP, pipe } from 'cnc-tskit';
+import { map } from 'rxjs/operators';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+import { List, HTTP, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { Actions, ActionName } from './actions';
-import { CorplistItem, Filters, CorplistDataResponse, GeneratedFavListItem } from './common';
+import { CorplistItem, Filters, CorplistDataResponse } from './common';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -59,15 +59,14 @@ export interface KeywordInfo {
     selected:boolean;
 }
 
-const importKeywordInfo = (preselected:Array<string>) => (v:[string, string, boolean, string]):KeywordInfo => {
-    return {
-        ident: v[0],
-        label: v[1],
-        color: v[3],
-        visible: true,
-        selected: preselected.indexOf(v[0]) > -1
-    };
-}
+const importKeywordInfo = (preselected:Array<string>) =>
+        (v:[string, string, boolean, string]):KeywordInfo => ({
+    ident: v[0],
+    label: v[1],
+    color: v[3],
+    visible: true,
+    selected: preselected.indexOf(v[0]) > -1
+});
 
 
 export interface CorplistTableModelState {
@@ -82,7 +81,7 @@ export interface CorplistTableModelState {
     nextOffset:number;
     limit:number;
     rows:Array<CorplistItem>;
-    anonymousUser: boolean;
+    anonymousUser:boolean;
 }
 
 
@@ -91,15 +90,12 @@ export interface CorplistTableModelState {
  */
 export class CorplistTableModel extends StatelessModel<CorplistTableModelState> {
 
-    protected pluginApi:IPluginApi;
+    protected readonly pluginApi:IPluginApi;
 
-    protected tagPrefix:string;
+    protected readonly tagPrefix:string;
 
-    /**
-     *
-     * @param pluginApi
-     */
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData, preselectedKeywords:Array<string>) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData,
+            preselectedKeywords:Array<string>) {
         super(
             dispatcher,
             {
@@ -112,6 +108,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 detailData: null,
                 isBusy: false,
                 offset: 0,
+                // TODO type safety
                 limit: pluginApi.getConf('pluginData')['corparch']['max_page_size'],
                 searchedCorpName: '',
                 nextOffset: initialData.nextOffset,
@@ -120,6 +117,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
         this.pluginApi = pluginApi;
+        // TODO type safety
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
 
         this.addActionHandler<Actions.LoadDataDone>(
@@ -156,7 +154,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             ActionName.KeywordClicked,
             (state, action) => {
                 state.offset = 0;
-                if (!action.payload.exclusive) {
+                if (!action.payload.attachToCurrent) {
                     state.favouritesOnly = false;
                     state.keywords = List.map(
                         v => ({...v, selected: false}),
@@ -171,7 +169,10 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                         v => v.ident === action.payload.keywordId,
                         state.keywords
                     );
-                    state.keywords[idx] = {...state.keywords[idx], selected: !state.keywords[idx].selected};
+                    state.keywords[idx] = {
+                        ...state.keywords[idx],
+                        selected: !state.keywords[idx].selected
+                    };
                 }
                 state.isBusy = true;
             },
@@ -181,7 +182,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     (data) => {
                         dispatch<Actions.LoadDataDone>({
                             name: ActionName.LoadDataDone,
-                            payload: {data: data}
+                            payload: {data}
                         });
                     },
                     (err) => {
@@ -224,14 +225,13 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     (data) => {
                         dispatch({
                             name: ActionName.LoadExpansionDataDone,
-                            payload: {data: data}
+                            payload: {data}
                         });
                     },
                     (err) => {
                         dispatch({
                             name: ActionName.LoadExpansionDataDone,
-                            error: err,
-                            payload: {}
+                            error: err
                         });
                     }
                 );
@@ -256,14 +256,27 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.changeFavStatus(state, action.payload['corpusId'], action.payload['favId']).subscribe(
-                    (message) => {
+                this.changeFavStatus(action.payload.corpusId, action.payload.favId).subscribe(
+                    ([itemId, itemAction]) => {
+                        if (itemAction === 'add') {
+                            this.pluginApi.showMessage('info',
+                                this.pluginApi.translate('defaultCorparch__item_added_to_fav'));
+
+                        } else {
+                            this.pluginApi.showMessage('info',
+                            this.pluginApi.translate('defaultCorparch__item_removed_from_fav'));
+                        }
                         dispatch<Actions.ListStarClickedDone>({
                             name: ActionName.ListStarClickedDone,
-                            payload: {message: message}
+                            payload: {
+                                corpusId: action.payload.corpusId,
+                                newId: itemId,
+                                action: itemAction
+                            }
                         });
                     },
                     (err) => {
+                        this.pluginApi.showMessage('error', err);
                         dispatch<Actions.ListStarClickedDone>({
                             name: ActionName.ListStarClickedDone,
                             error: err
@@ -277,13 +290,29 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             ActionName.ListStarClickedDone,
             (state, action) => {
                 state.isBusy = false;
-            },
-            (state, action, dispatch) => {
-                if (action.error) {
-                    this.pluginApi.showMessage('error', action.error);
+                if (!action.error) {
+                    if (action.payload.action === 'add') {
+                        this.updateDataItem(
+                            state,
+                            action.payload.corpusId,
+                            action.payload.newId
+                        );
 
-                } else {
-                    this.pluginApi.showMessage('info', action.payload['message']);
+                    } else {
+                        if (state.favouritesOnly) {
+                            state.rows = List.filter(
+                                value => value.corpus_id !== action.payload.corpusId,
+                                state.rows
+                            );
+
+                        } else {
+                            this.updateDataItem(
+                                state,
+                                action.payload.corpusId,
+                                null
+                            );
+                        }
+                    }
                 }
             }
         );
@@ -335,14 +364,6 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    sideEffects(state:CorplistTableModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case 'CORPARCH_CORPUS_INFO_REQUIRED':
-
-            break;
-        }
-    };
-
     public exportFilter(state:CorplistTableModelState):Filters {
         return state.filters;
     }
@@ -383,43 +404,23 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         };
     }
 
-    private changeFavStatus(state:CorplistTableModelState, corpusId:string, favId:string):Observable<string> {
-        if (favId === null) {
-            const item:GeneratedFavListItem = {
-                subcorpus_id: null,
-                subcorpus_orig_id: null,
-                corpora:[corpusId]
-            };
-            return this.pluginApi.ajax$<SetFavItemResponse>(
+    private changeFavStatus(corpusId:string, favId:string):Observable<[string, 'add'|'remove']> {
+        return favId === null ?
+             this.pluginApi.ajax$<SetFavItemResponse>(
                 HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
-                item
-
-            ).pipe(
-                tap((data) => {
-                    this.updateDataItem(state, corpusId, {fav_id: data.id});
-                }),
-                map(_ => this.pluginApi.translate('defaultCorparch__item_added_to_fav'))
-            );
-
-        } else {
-            return this.pluginApi.ajax$<SetFavItemResponse>(
+                {
+                    subcorpus_id: null,
+                    subcorpus_orig_id: null,
+                    corpora:[corpusId]
+                }
+            ).pipe(map(v => tuple(v.id, 'add'))) :
+            this.pluginApi.ajax$<SetFavItemResponse>(
                 HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/unset_favorite_item'),
                 {id: favId}
 
-            ).pipe(
-                tap((data) => {
-                    if (state.favouritesOnly) {
-                        state.rows = List.filter(value => value.corpus_id !== corpusId, state.rows);
-
-                    } else {
-                        this.updateDataItem(state, corpusId, {fav_id: null});
-                    }
-                }),
-                map(_ => this.pluginApi.translate('defaultCorparch__item_removed_from_fav'))
-            );
-        }
+            ).pipe(map(v => tuple(v.id, 'remove')));
     }
 
     private loadCorpusInfo(corpusId:string):Observable<CorpusInfoResponse> {
@@ -432,7 +433,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    private loadData(query:string, filters:Filters, offset:number, limit?:number, favouriteOnly?:boolean):Observable<CorplistDataResponse> {
+    private loadData(query:string, filters:Filters, offset:number, limit?:number,
+            favouriteOnly?:boolean):Observable<CorplistDataResponse> {
         const args = new MultiDict();
         args.set('query', query);
         args.set('offset', offset);
@@ -455,16 +457,12 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    protected updateDataItem(state:CorplistTableModelState, corpusId, data):void {
-        state.rows.forEach((item:CorplistItem) => {
-            if (item.id === corpusId) {
-                for (var p in data) {
-                    if (data.hasOwnProperty(p)) {
-                        item[p] = data[p];
-                    }
-                }
-            }
-        });
+    protected updateDataItem(state:CorplistTableModelState, corpusId:string,
+            favId:string|null):void {
+        const srch = List.find(v => v.corpus_id === corpusId, state.rows);
+        if (srch) {
+            srch.fav_id = favId;
+        }
     }
 
     isFav(state:CorplistTableModelState, corpusId:string):boolean {
@@ -512,9 +510,15 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 
     protected corplistTableModel:CorplistTableModel;
 
-    constructor(pluginApi:IPluginApi, initialData:CorplistServerData, viewsInit:((...args:any[])=>any)) {
+    constructor(pluginApi:IPluginApi, initialData:CorplistServerData,
+            viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(), pluginApi, initialData, []);
+        this.corplistTableModel = new CorplistTableModel(
+            pluginApi.dispatcher(),
+            pluginApi,
+            initialData,
+            []
+        );
         this.components = viewsInit(this.corplistTableModel);
     }
 
