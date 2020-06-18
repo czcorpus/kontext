@@ -71,7 +71,8 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { List } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
+import { disableMenuItems } from '../models/mainMenu';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -553,7 +554,8 @@ export class ViewPage {
             this.layoutModel,
             this.queryModels.textTypesModel,
             this.queryModels.queryContextModel,
-            filterFormProps
+            filterFormProps,
+            this.concFormsInitialArgs.filter
         );
 
         this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
@@ -563,16 +565,6 @@ export class ViewPage {
                 {}
             );
         });
-
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_FILTER',
-            (args:{}) => {
-                if (args['within'] === 1) {
-                    this.layoutModel.replaceConcArg('maincorp', [args['maincorp']]);
-                }
-                return this.queryModels.filterModel.syncFrom(rxOf({...this.concFormsInitialArgs.filter, ...args}));
-            }
-        );
 
         this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,
@@ -611,27 +603,15 @@ export class ViewPage {
         this.queryModels.sortModel = new ConcSortModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sortModelProps
+            sortModelProps,
+            this.concFormsInitialArgs.sort
         );
         this.queryModels.multiLevelConcSortModel = new MultiLevelConcSortModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sortModelProps
+            sortModelProps,
+            this.concFormsInitialArgs.sort
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_SORT',
-            (args:Kontext.GeneralProps) => this.queryModels.sortModel.syncFrom(
-                rxOf({...this.concFormsInitialArgs.sort, ...args})
-
-            ).pipe(
-                mergeMap(
-                    () => this.queryModels.multiLevelConcSortModel.syncFrom(
-                        rxOf({...this.concFormsInitialArgs.sort, ...args})
-                    )
-                )
-            )
-        );
-
         this.sortFormViews = sortFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -651,13 +631,8 @@ export class ViewPage {
         this.queryModels.sampleModel = new ConcSampleModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sampleModelProps
-        );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_SAMPLE',
-            (args:Kontext.GeneralProps) => this.queryModels.sampleModel.syncFrom(
-                rxOf({...this.concFormsInitialArgs.sample, ...args})
-            )
+            sampleModelProps,
+            this.concFormsInitialArgs.sample
         );
         this.miscQueryOpsViews = sampleFormInit(
             this.layoutModel.dispatcher,
@@ -678,29 +653,16 @@ export class ViewPage {
         this.queryModels.switchMcModel = new SwitchMainCorpModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            switchMainCorpProps
-        );
-
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_SWITCHMC',
-            (args:Kontext.GeneralProps) => {
-                return this.queryModels.switchMcModel.syncFrom(
-                    rxOf({...this.concFormsInitialArgs.switchmc, ...args})
-                )
-            }
+            switchMainCorpProps,
+            this.concFormsInitialArgs.switchmc
         );
     }
 
     private initFirsthitsForm():void {
         this.queryModels.firstHitsModel = new FirstHitsModel(
             this.layoutModel.dispatcher,
-            this.layoutModel
-        );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
-            (args:Kontext.GeneralProps) => this.queryModels.firstHitsModel.syncFrom(
-                rxOf({...this.concFormsInitialArgs.firsthits, ...args})
-            )
+            this.layoutModel,
+            this.concFormsInitialArgs.firsthits
         );
     }
 
@@ -903,27 +865,6 @@ export class ViewPage {
                 initialFreqFormVariant: 'ml'
             }
         );
-    }
-
-    private updateMainMenu():void {
-        const updateMenu = (numLinesInGroups) => {
-            if (numLinesInGroups > 0) {
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-filter');
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sorting');
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'shuffle');
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sample');
-
-            } else {
-                if (!this.layoutModel.getConf<boolean>('anonymousUser')) {
-                    this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-filter');
-                }
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sorting');
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'shuffle');
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sample');
-            }
-        };
-        updateMenu(this.layoutModel.getConf<number>('NumLinesInGroups'));
-        this.layoutModel.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
     }
 
     private initKeyShortcuts():void {
@@ -1130,6 +1071,11 @@ export class ViewPage {
     }
 
     init():void {
+        const numLinesInGroups = this.layoutModel.getConf<number>('NumLinesInGroups');
+        const disabledMenuItems = numLinesInGroups > 0 ?
+            [ tuple('menu-filter', null), tuple('menu-concordance', 'sorting'), tuple('menu-concordance', 'shuffle'), tuple('menu-concordance', 'sample') ] :
+            [ tuple('menu-concordance', 'sorting'), tuple('menu-concordance', 'shuffle'), tuple('menu-concordance', 'sample') ];
+
         this.layoutModel.init(() => {
             this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
                 (optsModel) => {
@@ -1201,7 +1147,7 @@ export class ViewPage {
                 () => undefined,
                 (err) => this.layoutModel.showMessage('error', err)
             );
-        });
+        }, disabledMenuItems);
     }
 }
 

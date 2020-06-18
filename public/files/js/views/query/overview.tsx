@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Subscription } from 'rxjs';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { init as saveViewInit } from './save';
@@ -65,7 +65,7 @@ export interface OverviewModuleArgs {
         SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
     };
     queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<{}>;
     querySaveAsModel:QuerySaveAsFormModel;
 }
 

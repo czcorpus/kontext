@@ -187,14 +187,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.textTypesModel = replayModelDeps.textTypesModel;
         this.firstHitsModel = replayModelDeps.firstHitsModel;
 
-        this.pageModel.addConfChangeHandler<number>('NumLinesInGroups', (v) => {
-            if (v > 0) {
-                dispatcher.dispatch<Actions.LockQueryPipeline>({
-                    name: ActionName.LockQueryPipeline
-                });
-            }
-        });
-
         this.addActionHandler<Actions.LockQueryPipeline>(
             ActionName.LockQueryPipeline,
             (state, action) => {

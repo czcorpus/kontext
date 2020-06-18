@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, IModel} from 'kombo';
 import {Kontext, ViewOptions} from '../../types/common';
 import {init as generalViewsInit} from './general';
 import {init as structsAttrsViewsInit} from './structsAttrs';
@@ -31,7 +31,7 @@ export interface MainModuleArgs {
     helpers:Kontext.ComponentHelpers;
     generalOptionsModel:ViewOptions.IGeneralViewOptionsModel;
     viewOptionsModel:CorpusViewOptionsModel;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<{}>;
 }
 
 export interface OptionsContainerProps {

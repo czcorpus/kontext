@@ -22,7 +22,7 @@ import * as React from 'react';
 import {Kontext} from '../types/common';
 import {FormsViews as CollFormsViews} from './coll/forms';
 import {FormsViews as FreqFormsViews} from './freqs/forms';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, IModel } from 'kombo';
 import { Subscription } from 'rxjs';
 
 
@@ -31,7 +31,7 @@ export interface AnalysisModuleArgs {
     he:Kontext.ComponentHelpers;
     collViews:CollFormsViews;
     freqViews:FreqFormsViews;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<{}>;
 }
 
 export interface AnalysisFrameProps {

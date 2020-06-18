@@ -267,7 +267,7 @@ export class SubcorpForm {
                 subcorpWithinFormModel: this.subcorpWithinFormModel
             });
             this.initSubcorpForm(ttComponent.component, ttComponent.props);
-        });
+        }, []);
     }
 }
 

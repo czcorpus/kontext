@@ -46,7 +46,7 @@ export class ViewPageModels {
     refsDetailModel:RefsDetailModel;
     userInfoModel:Kontext.IUserInfoModel;
     collFormModel:CollFormModel;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<{}>;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
     usageTipsModel:UsageTipsModel;

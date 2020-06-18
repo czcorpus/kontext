@@ -312,41 +312,41 @@ export class CollPage {
             // the 'view' action with additional information (encoded in
             // the fragment part of the URL) which form should be opened
             // once the 'view' page is loaded
-            mainMenuModel.addListener(() => {
-                const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
-                switch (activeItem.actionName) {
-                    case 'MAIN_MENU_SHOW_FILTER':
-                        const filterArgs = new MultiDict(Dict.toEntries(activeItem.actionArgs));
-                        window.location.replace(
-                            this.layoutModel.createActionUrl(
+            this.layoutModel.dispatcher.registerActionListener(
+                (action) => {
+                    switch (action.name) {
+                        case 'MAIN_MENU_SHOW_FILTER':
+                            const filterArgs = new MultiDict(Dict.toEntries(action.payload));
+                            window.location.replace(
+                                this.layoutModel.createActionUrl(
+                                    'view',
+                                    this.layoutModel.getConcArgs().items()
+                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                            );
+                        break;
+                        case 'MAIN_MENU_SHOW_SORT':
+                            window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
-                            ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
-                        );
-                    break;
-                    case 'MAIN_MENU_SHOW_SORT':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#sort');
-                    break;
-                    case 'MAIN_MENU_SHOW_SAMPLE':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#sample');
-                    break;
-                    case 'MAIN_MENU_APPLY_SHUFFLE':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#shuffle');
-                    break;
+                            ) + '#sort');
+                        break;
+                        case 'MAIN_MENU_SHOW_SAMPLE':
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#sample');
+                        break;
+                        case 'MAIN_MENU_APPLY_SHUFFLE':
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#shuffle');
+                        break;
                 }
             });
             this.initAnalysisViews();
             this.initQueryOpNavigation();
-        });
+        }, []);
     }
 }
 

@@ -119,7 +119,6 @@ export namespace Kontext {
         getConf<T>(item:string):T;
         getNestedConf<T>(...keys:Array<string>):T;
         setConf<T>(key:string, value:T):void;
-        addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void;
     }
 
     export interface FullCorpusIdent {
@@ -173,6 +172,10 @@ export namespace Kontext {
         addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void;
     }
 
+    export interface IKeyShorcutProvider<T> extends IModel<T> {
+        exportKeyShortcutActions():IMainMenuShortcutMapper;
+    }
+
     // ---------------------- main menu ---------------------------------
 
     /**
@@ -209,7 +212,7 @@ export namespace Kontext {
         disabled:boolean;
         fallbackAction:string;
         label:string;
-        items:Immutable.List<SubmenuItem>;
+        items:Array<SubmenuItem>;
     }
 
     export type MenuEntry = [string, MenuItem];
@@ -220,55 +223,6 @@ export namespace Kontext {
     export interface IMainMenuShortcutMapper {
         get(keyCode:number, keyMod:string):EventTriggeringSubmenuItem;
         register(keyCode:number, keyMod:string, message:string, args:GeneralProps):void;
-    }
-
-    /**
-     * A model watched by components which are
-     * able to render user content based on a selected
-     * menu item.
-     *
-     */
-    export interface IMainMenuModel extends IEventEmitter {
-
-        getActiveItem():MainMenuActiveItem;
-        disableMenuItem(itemId:string, subItemId?:string):void;
-        enableMenuItem(itemId:string, subItemId?:string):void;
-        getVisibleSubmenu():string;
-        unregister():void;
-
-        /**
-         * Register an action which is run before listeners
-         * are notified. This is used to allow other models
-         * to prepare themselves before their views are
-         * shown. Please note that StatelessModel has a more
-         * general mechanism to solve this (suspend()).
-         */
-        addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
-
-        removeItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
-
-        exportKeyShortcutActions():IMainMenuShortcutMapper;
-
-        /**
-         * Bind a custom event handler (typically a one dispatching a custom
-         * Flux action) to a server-defined main menu sub-item. Server config
-         * (see conf/main-menu.sample.json) is expected to provide a unique
-         * 'ident' for the item which is then used when calling this method.
-         * In case such an item is defined and no binding is called for the item,
-         * main menu React component will omit it when rendering the result.
-         *
-         * This is an ideal solution for miscellaneous plug-in features not
-         * included in KonText core.
-         */
-        bindDynamicItem(ident:string, label:string, hint:string, indirect:boolean, handler:()=>void);
-
-        getData():Immutable.List<MenuEntry>;
-
-        resetActiveItemAndNotify():void;
-
-        getConcArgs():IMultiDict;
-
-        isBusy():boolean;
     }
 
     // ---------------------------------------------------------
@@ -365,7 +319,7 @@ export namespace Kontext {
         corpusViewOptionsModel:CorpusViewOptionsModel,
         generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;
         asyncTaskInfoModel:IAsyncTaskModel,
-        mainMenuModel:IMainMenuModel;
+        mainMenuModel:Kontext.IKeyShorcutProvider<{}>;
     }
 
     export interface AjaxOptions {

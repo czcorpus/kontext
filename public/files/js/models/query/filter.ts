@@ -20,7 +20,7 @@
 
 import * as Immutable from 'immutable';
 import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 import { Kontext } from '../../types/common';
@@ -162,12 +162,15 @@ export interface FilterFormModelState extends QueryFormModelState {
  */
 export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
+    private readonly syncInitialArgs:AjaxResponse.FilterFormArgs;
+
     constructor(
             dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            props:FilterFormProperties) {
+            props:FilterFormProperties,
+            syncInitialArgs:AjaxResponse.FilterFormArgs) {
         const queries = Immutable.Map<string, string>([['__new__', '']]);
         const queryTypes = Immutable.Map<string, string>(props.currQueryTypes).set('__new__', 'iquery');
         const tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
@@ -206,10 +209,15 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             contextFormVisible: false,
             textTypesFormVisible: false
         });
+        this.syncInitialArgs = syncInitialArgs;
     }
 
     onAction(action:Action) {
         switch (action.name) {
+            case 'MAIN_MENU_SHOW_FILTER':
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                this.emitChange();
+            break;
             case 'CQL_EDITOR_DISABLE':
                 this.emitChange();
             break;

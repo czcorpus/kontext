@@ -95,7 +95,7 @@ class QueryHistoryPage {
                 {}
             );
             this.initCorpnameLink();
-        });
+        }, []);
     }
 }
 

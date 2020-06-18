@@ -197,7 +197,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
             });
         }
 
-        return (
+        return props.formIsActive ? (
             <layoutViews.ModalOverlay onCloseKey={handleCloseClick}>
                 <layoutViews.CloseableFrame onCloseClick={handleCloseClick}
                         label={utils.translate('wordlist__save_form_heading')}>
@@ -219,7 +219,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
                     </form>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
-        );
+        ) : null;
     };
 
     const BoundWordlistSaveForm = Bound(WordlistSaveForm, saveModel);

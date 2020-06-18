@@ -63,7 +63,7 @@ class MessagePage {
                     () => this.layoutModel.dispatchServerMessages()
                 );
             },
-            false
+            []
         );
     }
 }

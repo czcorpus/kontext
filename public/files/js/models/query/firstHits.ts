@@ -18,28 +18,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
 import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import * as Immutable from 'immutable';
+
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { StatefulModel } from '../base';
+import { PageModel } from '../../app/page';
+
 
 
 export class FirstHitsModel extends StatefulModel {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
+
+    private readonly syncInitialArgs:AjaxResponse.FirstHitsFormArgs;
 
     private docStructValues:Immutable.Map<string, string>;
 
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, syncInitialArgs:AjaxResponse.FirstHitsFormArgs) {
         super(dispatcher);
         this.layoutModel = layoutModel;
+        this.syncInitialArgs = syncInitialArgs;
         this.docStructValues = Immutable.Map<string, string>();
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
+                case 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES':
+                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                    this.emitChange();
+                break;
                 case 'FILTER_FIRST_HITS_SUBMIT':
                     this.submitForm(action.payload['opKey']);
                     // app leaves here

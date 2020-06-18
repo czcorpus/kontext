@@ -44,5 +44,5 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
                 anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
             }
         );
-    });
+    }, []);
 }

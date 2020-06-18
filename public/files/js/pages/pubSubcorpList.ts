@@ -53,7 +53,7 @@ class PubSubcorpPage {
                 views.List,
                 document.getElementById('published-subcorpora-mount')
             );
-        });
+        }, []);
     }
 }
 

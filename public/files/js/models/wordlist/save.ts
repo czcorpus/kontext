@@ -74,6 +74,11 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             }
         );
 
+        this.DEBUG_onActionMatch((s, a, m) => {
+            console.log('>>> ', a.name, a.payload);
+            console.log('   ', s.formIsActive);
+        })
+
         this.addActionHandler<Actions.WordlistSaveFormHide>(
             ActionName.WordlistSaveFormHide,
             (state, action) => {

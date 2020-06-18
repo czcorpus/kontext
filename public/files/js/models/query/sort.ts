@@ -18,15 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import * as Immutable from 'immutable';
+
+import { Kontext } from '../../types/common';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { StatefulModel } from '../base';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
 
 
 export interface SortFormProperties {
@@ -104,7 +105,9 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
  */
 export class ConcSortModel extends StatefulModel implements ISubmitableConcSortModel {
 
-    private pageModel:PageModel;
+    private readonly pageModel:PageModel;
+
+    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
 
     private availAttrList:Immutable.List<Kontext.AttrItem>;
 
@@ -128,9 +131,10 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
         super(dispatcher);
         this.pageModel = pageModel;
+        this.syncInitialArgs = syncInitialArgs;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
         this.sattrValues = Immutable.Map<string, string>(props.sattr);
@@ -142,6 +146,10 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
 
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
+                case 'MAIN_MENU_SHOW_SORT':
+                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                    this.emitChange();
+                break;
                 case 'SORT_SET_ACTIVE_STORE':
                     this.isActiveActionValues = this.isActiveActionValues.set(
                         action.payload['sortId'], action.payload['formAction'] === 'sortx'
@@ -282,7 +290,9 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
     private static LEFTMOST_CTX = ['-3<0', '-2<0', '-1<0', '0~0<0', '1<0', '2<0', '3<0'];
     private static RIGHTMOST_CTX = ['-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0'];
 
-    private pageModel:PageModel;
+    private readonly pageModel:PageModel;
+
+    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
 
     private availAttrList:Immutable.List<Kontext.AttrItem>;
 
@@ -312,9 +322,10 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
         super(dispatcher);
         this.pageModel = pageModel;
+        this.syncInitialArgs = syncInitialArgs;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
         this.sortlevelValues = Immutable.Map<string, number>(props.sortlevel);
@@ -337,6 +348,10 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
 
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
+                case 'MAIN_MENU_SHOW_SORT':
+                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                    this.emitChange();
+                break;
                 case 'ML_SORT_FORM_SUBMIT':
                     this.submit(action.payload['sortId']);
                     this.emitChange();

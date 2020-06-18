@@ -19,10 +19,9 @@
  */
 
 import * as Immutable from 'immutable';
-import {Kontext} from '../types/common';
-import {IPluginApi} from '../types/plugins';
-import {StatefulModel} from './base';
-import {Action, IFullActionControl} from 'kombo';
+import { Kontext } from '../types/common';
+import { IPluginApi } from '../types/plugins';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable } from 'rxjs';
 
 
@@ -37,6 +36,13 @@ export enum AsyncTaskStatus {
     FAILURE = 'FAILURE'
 }
 
+export interface AsyncTaskCheckerState {
+
+    asyncTasks:Array<Kontext.AsyncTaskInfo>;
+    onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
+    asyncTaskCheckerInterval:number;
+}
+
 /**
  * This class handles checking for the state
  * of currently active bacground tasks triggered
@@ -45,15 +51,11 @@ export enum AsyncTaskStatus {
  * Possible task statuses: PENDING, STARTED, RETRY, FAILURE, SUCCESS
  * (see Python module kontext.AsyncTaskStatus)
  */
-export class AsyncTaskChecker extends StatefulModel implements Kontext.IAsyncTaskModel {
+export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> implements Kontext.IAsyncTaskModel {
 
-    private pageModel:IPluginApi;
+    private readonly pageModel:IPluginApi;
 
-    private asyncTasks:Immutable.List<Kontext.AsyncTaskInfo>;
 
-    private onUpdate:Immutable.List<Kontext.AsyncTaskOnUpdate>;
-
-    private asyncTaskCheckerInterval:number;
 
     static CHECK_INTERVAL = 10000;
 

@@ -42,7 +42,7 @@ import {L10n} from './l10n';
 import * as Immutable from 'immutable';
 import {AsyncTaskChecker, AsyncTaskStatus} from '../models/asyncTask';
 import {UserSettings} from './userSettings';
-import {MainMenuModel, InitialMenuData} from '../models/mainMenu';
+import {MainMenuModel, InitialMenuData, disableMenuItems} from '../models/mainMenu';
 import {AppNavigation, AjaxArgs} from './navigation';
 import {EmptyPlugin} from '../plugins/empty/init';
 import applicationBar from 'plugins/applicationBar/init';
@@ -100,7 +100,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
 
     private generalViewOptionsModel:GeneralViewOptionsModel;
 
-    private mainMenuModel:Kontext.IMainMenuModel;
+    private mainMenuModel:Kontext.IKeyShorcutProvider;
 
     private authPlugin:PluginInterfaces.Auth.IPlugin;
 
@@ -519,14 +519,6 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     }
 
     /**
-     * Register a handler triggered when configuration is
-     * changed via setConf(), replaceConcArg() functions.
-     */
-    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
-        this.conf.addConfChangeHandler(key, handler);
-    }
-
-    /**
      * Return a list of concordance arguments and their values. Multi-value keys
      * are preserved.
      * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
@@ -613,7 +605,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
         }
     }
 
-    private initViewOptions(mainMenuModel:Kontext.IMainMenuModel,
+    private initViewOptions(mainMenuModel:Kontext.IKeyShorcutProvider,
                 generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel,
                 corpViewOptionsModel:CorpusViewOptionsModel):void {
         const viewOptionsViews = viewOptionsFactory({
@@ -727,7 +719,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * expected to be synchronous. Any implicit asynchronous initialization
      * should be performed as a side effect of a respective model.
      */
-    init(pageInitFn:()=>void, popupMessages:boolean=true):void {
+    init(pageInitFn:()=>void, disabledMenuItems:Array<[string, string|null]>, popupMessages:boolean=true):void {
         try {
             this.asyncTaskChecker = new AsyncTaskChecker(
                 this.dispatcher,
@@ -751,7 +743,10 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             this.mainMenuModel = new MainMenuModel(
                 this.dispatcher,
                 this,
-                this.getConf<InitialMenuData>('menuData')
+                disableMenuItems(
+                    this.getConf<InitialMenuData>('menuData'),
+                    []
+                )
             );
 
             this.generalViewOptionsModel = new GeneralViewOptionsModel(

@@ -35,5 +35,5 @@ export function init(conf:Kontext.Conf):void {
             document.getElementById('user-administration-mount'),
             {}
         );
-    });
+    }, []);
 }

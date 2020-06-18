@@ -69,7 +69,7 @@ class SubcorpListPage {
                 this.layoutModel.getConf<SubcListFilter>('Filter')
             );
             this.renderView();
-        });
+        }, []);
     }
 }
 

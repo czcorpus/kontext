@@ -20,24 +20,21 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
+import { Subscription } from 'rxjs';
 import {Kontext} from '../types/common';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, IModel, Bound} from 'kombo';
 import { MultiDict } from '../multidict';
 import {isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
-        DynamicSubmenuItem} from '../models/mainMenu';
-import { Subscription } from 'rxjs';
+        DynamicSubmenuItem,
+        MainMenuModelState} from '../models/mainMenu';
+import { Actions, ActionName } from '../models/mainMenu/actions';
 
 
 export interface MenuModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<{}>;
     asyncTaskModel:Kontext.IAsyncTaskModel;
-}
-
-
-export interface MainMenuProps {
-
 }
 
 
@@ -51,7 +48,7 @@ interface MainMenuState {
 
 
 export interface MainMenuViews {
-    MainMenu:React.ComponentClass<MainMenuProps>;
+    MainMenu:React.ComponentClass<{}, MainMenuModelState>;
 }
 
 
@@ -427,59 +424,27 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <MainMenu /> --------------------------
 
-    class MainMenu extends React.Component<MainMenuProps, MainMenuState> {
-
-        private modelSubscriptions:Array<Subscription>;
+    class MainMenu extends React.PureComponent<MainMenuState> {
 
         constructor(props) {
             super(props);
             this._handleHoverChange = this._handleHoverChange.bind(this);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._closeActiveSubmenu = this._closeActiveSubmenu.bind(this);
-            this.state = {
-                visibleSubmenu: mainMenuModel.getVisibleSubmenu(),
-                numRunningTasks: asyncTaskModel.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
-                menuItems: mainMenuModel.getData(),
-                concArgs: mainMenuModel.getConcArgs()
-            };
-            this.modelSubscriptions = [];
         }
 
         _handleHoverChange(ident, enable) {
             if (!enable) {
-                dispatcher.dispatch({
-                    name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
+                dispatcher.dispatch<Actions.ClearVisibleSubmenu>({
+                    name: ActionName.ClearVisibleSubmenu,
                     payload: {value: ident}
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'MAIN_MENU_SET_VISIBLE_SUBMENU',
+                dispatcher.dispatch<Actions.SetVisibleSubmenu>({
+                    name: ActionName.SetVisibleSubmenu,
                     payload: {value: ident}
                 });
             }
-        }
-
-        _modelChangeListener() {
-            this.setState({
-                visibleSubmenu: mainMenuModel.getVisibleSubmenu(),
-                numRunningTasks: asyncTaskModel.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
-                menuItems: mainMenuModel.getData(),
-                concArgs: mainMenuModel.getConcArgs()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscriptions = [
-                asyncTaskModel.addListener(this._modelChangeListener),
-                mainMenuModel.addListener(this._modelChangeListener)
-            ];
-        }
-
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe());
         }
 
         _closeActiveSubmenu() {
@@ -504,8 +469,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                     closeActiveSubmenu={this._closeActiveSubmenu}
                                     concArgs={this.state.concArgs} />;
                     })}
-                    <LiAsyncTaskNotificator numRunning={this.state.numRunningTasks}
-                        numFinished={this.state.numFinishedTasks} />
+                    <LiAsyncTaskNotificator  />
                 </ul>
             );
         }
@@ -513,6 +477,6 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
 
     return {
-        MainMenu: MainMenu
+        MainMenu: Bound(MainMenu, mainMenuModel)
     }
 }

@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import * as Immutable from 'immutable';
+
+import { StatefulModel } from '../base';
+import { PageModel } from '../../app/page';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { MultiDict } from '../../multidict';
 
 
 export interface SampleFormProperties {
@@ -47,17 +48,24 @@ export function fetchSampleFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 
 export class ConcSampleModel extends StatefulModel {
 
-    private pageModel:PageModel;
+    private readonly pageModel:PageModel;
+
+    private readonly syncInitialArgs:AjaxResponse.SampleFormArgs;
 
     private rlinesValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SampleFormProperties) {
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SampleFormProperties, syncInitialArgs:AjaxResponse.SampleFormArgs) {
         super(dispatcher);
         this.pageModel = pageModel;
+        this.syncInitialArgs = syncInitialArgs;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
+                case 'MAIN_MENU_SHOW_SAMPLE':
+                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                    this.emitChange();
+                break;
                 case 'SAMPLE_FORM_SET_RLINES':
                     const v = action.payload['value'];
                     if (/^([1-9]\d*)?$/.exec(v)) {
