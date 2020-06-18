@@ -79,7 +79,7 @@ export namespace Actions {
     export interface KeywordClicked extends Action<{
         keywordId:string;
         status:boolean;
-        exclusive:boolean;
+        attachToCurrent:boolean;
     }> {
         name:ActionName.KeywordClicked;
     }
@@ -102,11 +102,16 @@ export namespace Actions {
     }
 
     export interface ListStarClicked extends Action<{
+        corpusId:string;
+        favId:string|null;
     }> {
         name:ActionName.ListStarClicked;
     }
 
     export interface ListStarClickedDone extends Action<{
+        corpusId:string;
+        newId:string|null;
+        action:'add'|'remove';
     }> {
         name:ActionName.ListStarClickedDone;
     }
