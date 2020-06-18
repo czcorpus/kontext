@@ -16,15 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import {init as viewInit, Views as TreeCorparchViews} from './view';
-import {FirstQueryFormModel} from '../../models/query/first';
 import { Action } from 'kombo';
-import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 declare var require:any;

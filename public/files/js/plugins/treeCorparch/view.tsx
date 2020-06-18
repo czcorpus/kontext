@@ -21,6 +21,7 @@ import {Kontext} from '../../types/common';
 import {TreeWidgetModel, Node} from './init';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+import { ActionName, Actions } from './actions';
 
 export interface CorptreeWidgetProps {
 
@@ -53,8 +54,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch({
-                name: 'TREE_CORPARCH_SET_NODE_STATUS',
+            dispatcher.dispatch<Actions.SetNodeStatus>({
+                name: ActionName.SetNodeStatus,
                 payload: {
                     nodeId: props.ident
                 }
@@ -83,8 +84,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const TreeLeaf = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch({
-                name: 'TREE_CORPARCH_LEAF_NODE_CLICKED',
+            dispatcher.dispatch<Actions.LeafNodeClicked>({
+                name: ActionName.LeafNodeClicked,
                 payload: {
                     ident: props.ident
                 }
@@ -146,10 +147,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _buttonClickHandler() {
             if (!this.state.active) {
-                dispatcher.dispatch({
-                    name: 'TREE_CORPARCH_GET_DATA',
-                    payload: {}
-                });
+                dispatcher.dispatch<Actions.GetData>({name: ActionName.GetData});
 
             } else {
                 this.setState({
@@ -218,10 +216,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidMount() {
             this.modelSubscription = treeModel.addListener(this._changeListener);
-            dispatcher.dispatch({
-                name: 'TREE_CORPARCH_GET_DATA',
-                payload: {}
-            });
+            dispatcher.dispatch<Actions.GetData>({name: ActionName.GetData});
         }
 
         componentWillUnmount() {
