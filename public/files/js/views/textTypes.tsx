@@ -22,7 +22,8 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {IActionDispatcher} from 'kombo';
 import {PluginInterfaces} from '../types/plugins';
-import {Kontext, TextTypes, KeyCodes} from '../types/common';
+import {Kontext, TextTypes} from '../types/common';
+import { Keyboard } from 'cnc-tskit';
 import { ExtendedInfo } from '../models/textTypes/valueSelections';
 import { CoreViews } from '../types/coreViews';
 import { Subscription } from 'rxjs';
@@ -117,7 +118,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _keyboardHandler(evt) {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 this._confirmClickHandler();
                 evt.preventDefault();
             }

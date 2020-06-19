@@ -21,9 +21,8 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
 
-import { Kontext, KeyCodes} from '../../types/common';
+import { Kontext } from '../../types/common';
 import { init as inputInit } from './input';
 import { FilterFormModel } from '../../models/query/filter';
 import { WidgetsMap } from '../../models/query/common';

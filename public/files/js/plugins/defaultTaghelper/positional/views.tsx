@@ -21,9 +21,8 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {PositionValue, PositionOptions, TagHelperModelState} from './models';
-import {Kontext, KeyCodes} from '../../../types/common';
+import { Kontext } from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
-import { ConcSortModel } from '../../../models/query/sort';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;

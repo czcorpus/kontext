@@ -16,7 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, KeyCodes} from '../types/common';
+import {Kontext} from '../types/common';
+import {Keyboard} from 'cnc-tskit';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -95,7 +96,7 @@ export function init(
         }
 
         _keyPressHandler(evt) {
-            if (evt.keyCode === KeyCodes.ESC && typeof this.props.onCloseKey === 'function') {
+            if (evt.keyCode === Keyboard.Code.ESC && typeof this.props.onCloseKey === 'function') {
                 this.props.onCloseKey();
             }
         }
@@ -221,7 +222,7 @@ export function init(
         }
 
         _handleKeyPress(evt:React.KeyboardEvent) {
-            if (evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ESC) {
                  this._closeClickHandler();
                  evt.stopPropagation();
             }

@@ -21,8 +21,8 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext, KeyCodes } from '../../types/common';
-import { init as initSaveViews } from './save';
+import { Kontext } from '../../types/common';
+import { Keyboard } from 'cnc-tskit';import { init as initSaveViews } from './save';
 import { CollResultModel, CollResultModelState } from '../../models/coll/result';
 import { CollResultsSaveModel } from '../../models/coll/save';
 import { CollResultRow, CollResultHeadingCell } from '../../models/coll/common';
@@ -265,7 +265,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     }> = (props) => {
 
         const handleKeyPress = (evt) => {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 dispatcher.dispatch({
                     name: 'COLL_RESULT_CONFIRM_PAGE_VALUE',
                     payload: {}
