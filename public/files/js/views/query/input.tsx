@@ -25,7 +25,8 @@ import {init as keyboardInit} from './virtualKeyboard';
 import {init as cqlEditoInit} from './cqlEditor';
 import {WithinBuilderModel} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
-import {Kontext, KeyCodes} from '../../types/common';
+import {Kontext} from '../../types/common';
+import {Keyboard} from 'cnc-tskit';
 import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction, QueryFormModelState} from '../../models/query/common';
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
@@ -415,7 +416,7 @@ export function init({
         }
 
         _handleKeyDown(evt) {
-            if (evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ESC) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 this.props.closeClickHandler();
@@ -716,13 +717,13 @@ export function init({
         }
 
         private handleKeyDown(evt) {
-            if (evt.keyCode === KeyCodes.DOWN_ARROW &&
+            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
                     this.props.downArrowTriggersHistory.get(this.props.sourceId) &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
-            } else if (evt.keyCode === KeyCodes.ESC) {
+            } else if (evt.keyCode === Keyboard.Code.ESC) {
                 this.props.onEsc();
             }
         }

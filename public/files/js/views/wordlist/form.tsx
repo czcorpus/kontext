@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Kontext, KeyCodes } from '../../types/common';
+import { Kontext } from '../../types/common';
+import { Keyboard } from 'cnc-tskit';
 import { WordlistFormModel, WordlistFormState, WlnumsTypes } from '../../models/wordlist/form';
 import { PluginInterfaces } from '../../types/plugins';
 import { Subscription } from 'rxjs';
@@ -538,7 +539,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         const handleKeyDown = (evt:React.KeyboardEvent<{}>) => {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 if (evt.shiftKey) {
                     dispatcher.dispatch({
                         name: 'WORDLIST_FORM_UPDATE_EDITOR',
@@ -663,7 +664,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         _handleKeyPress(evt) {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 this._handleSubmitClick();

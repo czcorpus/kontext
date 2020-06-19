@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
+import { Keyboard } from 'cnc-tskit';
+import {Kontext } from '../../types/common';
 import { QueryStorageModel, InputBoxHistoryItem } from './models';
 import { SetQueryInputAction } from '../../models/query/common';
 import { IActionDispatcher } from 'kombo';
@@ -70,8 +71,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _keyPressHandler(evt) {
             const inc = Number({
-                [KeyCodes.UP_ARROW]: this.state.data.size - 1,
-                [KeyCodes.DOWN_ARROW]: 1
+                [Keyboard.Code.UP_ARROW]: this.state.data.size - 1,
+                [Keyboard.Code.DOWN_ARROW]: 1
             }[evt.keyCode]);
             const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
             if (!isNaN(inc)) {
@@ -81,7 +82,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     currentItem: (this.state.currentItem + inc) % modulo
                 });
 
-            } else if (evt.keyCode === KeyCodes.ENTER) {
+            } else if (evt.keyCode === Keyboard.Code.ENTER) {
                 const historyItem = this.state.data.get(this.state.currentItem);
                 dispatcher.dispatch({
                     name: 'QUERY_INPUT_SELECT_TYPE',

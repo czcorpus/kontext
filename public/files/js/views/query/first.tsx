@@ -27,7 +27,7 @@ import { init as inputInit } from './input';
 import { init as alignedInit } from './aligned';
 import { init as contextInit } from './context';
 import { init as ttViewsInit } from '../textTypes';
-import { Kontext, KeyCodes } from '../../types/common';
+import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { FirstQueryFormModel, FirstQueryFormModelState } from '../../models/query/first';
 import { WidgetsMap } from '../../models/query/common';
@@ -211,7 +211,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === KeyCodes.ENTER && !evt.shiftKey) {
+            if (evt.keyCode === Keyboard.Code.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
                     dispatcher.dispatch({
                         name: 'QUERY_INPUT_SUBMIT',

@@ -18,7 +18,8 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import { Kontext, KeyCodes } from '../../types/common';
+import { Keyboard } from 'cnc-tskit';
+import { Kontext } from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
@@ -290,33 +291,28 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             const argMap = {
-                [KeyCodes.DOWN_ARROW]: [0, 1],
-                [KeyCodes.UP_ARROW]: [0, -1],
-                [KeyCodes.LEFT_ARROW]: [-1, 0],
-                [KeyCodes.RIGHT_ARROW]: [1, 0]
+                [Keyboard.Code.DOWN_ARROW]: [0, 1],
+                [Keyboard.Code.UP_ARROW]: [0, -1],
+                [Keyboard.Code.LEFT_ARROW]: [-1, 0],
+                [Keyboard.Code.RIGHT_ARROW]: [1, 0]
             };
-            switch (evt.keyCode) {
-                case KeyCodes.DOWN_ARROW:
-                case KeyCodes.UP_ARROW:
-                case KeyCodes.LEFT_ARROW:
-                case KeyCodes.RIGHT_ARROW:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
-                        payload: {
-                            change: argMap[evt.keyCode]
-                        }
-                    });
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                break;
-                case KeyCodes.ENTER:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
-                        payload: {}
-                    });
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                break;
+            if (Keyboard.isArrowKey(evt.keyCode)) {
+                dispatcher.dispatch({
+                    name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
+                    payload: {
+                        change: argMap[evt.keyCode]
+                    }
+                });
+                evt.preventDefault();
+                evt.stopPropagation();
+            
+            } else if (evt.keyCode === Keyboard.Code.ENTER) {
+                dispatcher.dispatch({
+                    name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
+                    payload: {}
+                });
+                evt.preventDefault();
+                evt.stopPropagation();
             }
         };
 
@@ -412,18 +408,18 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         const handleKeyDown = (evt) => {
 
             switch (evt.keyCode) {
-                case KeyCodes.DOWN_ARROW:
-                case KeyCodes.UP_ARROW:
+                case Keyboard.Code.DOWN_ARROW:
+                case Keyboard.Code.UP_ARROW:
                     dispatcher.dispatch({
                         name: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
                         payload: {
-                            inc: evt.keyCode === KeyCodes.DOWN_ARROW ? 1 : -1
+                            inc: evt.keyCode === Keyboard.Code.DOWN_ARROW ? 1 : -1
                         }
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case KeyCodes.ENTER:
+                case Keyboard.Code.ENTER:
                     dispatcher.dispatch({
                         name: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
                         payload: {}
@@ -431,7 +427,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case KeyCodes.TAB:
+                case Keyboard.Code.TAB:
                     props.handleTab();
                     evt.stopPropagation();
                 break;
@@ -550,7 +546,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
-            if (evt.keyCode === KeyCodes.ENTER || evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ENTER || evt.keyCode === Keyboard.Code.ESC) {
                 props.onClick();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -622,12 +618,12 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         _handleKeypress(evt) {
             if (this.props.isVisible) {
                 switch (evt.keyCode) {
-                    case KeyCodes.TAB:
+                    case Keyboard.Code.TAB:
                         this._handleTabSwitch(1 - this.props.activeTab);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
-                    case KeyCodes.ESC:
+                    case Keyboard.Code.ESC:
                         this._handleCloseClick();
                         evt.preventDefault();
                         evt.stopPropagation();

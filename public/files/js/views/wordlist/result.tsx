@@ -20,7 +20,8 @@
 
 
 import * as React from 'react';
-import { Kontext, KeyCodes } from '../../types/common';
+import { Kontext } from '../../types/common';
+import { Keyboard } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { WordlistSaveModel } from '../../models/wordlist/save';
 import { WordlistResultModel, WordlistResultModelState } from '../../models/wordlist/main';
@@ -248,7 +249,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
      }> = (props) => {
 
         const handleKeyPress = (evt) => {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 dispatcher.dispatch<Actions.WordlistResultConfirmPage>({

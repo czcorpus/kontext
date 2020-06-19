@@ -23,7 +23,8 @@ import * as Immutable from 'immutable';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
-import { Kontext, KeyCodes } from '../../types/common';
+import { Kontext } from '../../types/common';
+import { Keyboard } from 'cnc-tskit';
 import { ConcSampleModel } from '../../models/query/sample';
 import { SwitchMainCorpModel } from '../../models/query/switchmc';
 import { ActionName, Actions } from '../../models/query/actions';
@@ -112,7 +113,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmitEvent(evt) {
-            if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === undefined || evt.keyCode === Keyboard.Code.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,
@@ -261,7 +262,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmitEvent(evt) {
-            if (evt.keyCode === undefined || evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === undefined || evt.keyCode === Keyboard.Code.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,

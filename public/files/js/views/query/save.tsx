@@ -20,9 +20,9 @@
 
 import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
-import{QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
-import { Subscription } from 'rxjs';
+import {Kontext} from '../../types/common';
+import {Keyboard} from 'cnc-tskit';
+import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 
 
 export interface QuerySaveAsFormProps {
@@ -118,7 +118,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleKeyDown(evt:React.KeyboardEvent<{}>):void {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 this.submit();
                 evt.preventDefault();
                 evt.stopPropagation();

@@ -21,7 +21,8 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
+import {Kontext} from '../../types/common';
+import {Keyboard} from 'cnc-tskit';
 import {PluginInterfaces} from '../../types/plugins';
 import { Subscription } from 'rxjs';
 
@@ -347,12 +348,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleKeyDown = (evt) => {
-            if (evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ESC) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleCloseClick();
 
-            } else if (evt.keyCode === KeyCodes.ENTER) {
+            } else if (evt.keyCode === Keyboard.Code.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleSubmitClick();

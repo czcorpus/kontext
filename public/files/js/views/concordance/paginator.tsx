@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
+import {Kontext} from '../../types/common';
+import {Keyboard} from 'cnc-tskit';
 import {ConcLineModel} from '../../models/concordance/lines';
 import { Subscription } from 'rxjs';
 
@@ -264,7 +265,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                this._navigActionHandler();
                 dispatcher.dispatch({
                     name: 'CONCORDANCE_CHANGE_PAGE',
