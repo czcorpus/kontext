@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { List, HTTP, pipe } from 'cnc-tskit';
+
 import { Kontext } from '../types/common';
 import { IPluginApi } from '../types/plugins';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
-import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
@@ -37,10 +39,12 @@ export enum AsyncTaskStatus {
 }
 
 export interface AsyncTaskCheckerState {
-
     asyncTasks:Array<Kontext.AsyncTaskInfo>;
-    onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
     asyncTaskCheckerInterval:number;
+    removeFinishedOnSubmit:boolean;
+    numRunning:number;
+    numFinished:number;
+    overviewVisible:boolean;
 }
 
 /**
@@ -51,133 +55,149 @@ export interface AsyncTaskCheckerState {
  * Possible task statuses: PENDING, STARTED, RETRY, FAILURE, SUCCESS
  * (see Python module kontext.AsyncTaskStatus)
  */
-export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> implements Kontext.IAsyncTaskModel {
+export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private readonly pageModel:IPluginApi;
 
-
+    private readonly onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
 
     static CHECK_INTERVAL = 10000;
 
 
-    constructor(dispatcher:IFullActionControl, pageModel:IPluginApi, conf:any) {
-        super(dispatcher);
+    constructor(dispatcher:IFullActionControl, pageModel:IPluginApi, currTasks:Array<Kontext.AsyncTaskInfo>) {
+        super(
+            dispatcher,
+            {
+                asyncTasks: [...currTasks],
+                asyncTaskCheckerInterval: AsyncTaskChecker.CHECK_INTERVAL,
+                removeFinishedOnSubmit: false,
+                numRunning: 0,
+                numFinished: 0,
+                overviewVisible: false
+            }
+        );
+        this.recalcNums();
         this.pageModel = pageModel;
-        this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(conf.map(item => {
-            return {
-                status: item['status'],
-                ident: item['ident'],
-                created: item['created'],
-                label: item['label'],
-                category: item['category'],
-                error: item['error'],
-                args: item['args']
-            }
-        }));
-        this.asyncTaskCheckerInterval = null;
-        this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'INBOX_CLEAR_FINISHED_TASKS':
-                    this.deleteFinishedTaskInfo().subscribe(
-                        (data) => {
-                            this.updateMessageList(data.data);
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.emitChange();
-                            this.pageModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'INBOX_ADD_ASYNC_TASK':
-                    this.asyncTasks = this.asyncTasks.push({
-                        status: AsyncTaskStatus.PENDING,
-                        ident: action.payload['ident'],
-                        created: new Date().getTime() / 1000,
-                        label: action.payload['label'],
-                        category: action.payload['category'],
-                        error: null,
-                        args: {}
-                    });
-                    this.emitChange();
-                break;
-                case 'INBOX_UPDATE_ASYNC_TASK':
-                    const srchIdx = this.asyncTasks.findIndex(v => v.ident === action.payload['ident']);
-                    if (srchIdx > -1) {
-                        const old = this.asyncTasks.get(srchIdx);
-                        this.asyncTasks = this.asyncTasks.set(srchIdx, {
-                            status: action.payload['status'],
-                            ident: action.payload['ident'],
-                            created: old.created,
-                            label: old.label,
-                            category: old.category,
-                            error: old.error,
-                            args: old.args
-                        });
-                        this.emitChange();
-                    }
-
-                break;
-            }
-        });
+        this.onUpdate = [];
     }
 
+    onAction(action:Action) {
+        switch (action.name) {
+            case 'INBOX_TOGGLE_OVERVIEW_VISIBILITY':
+                this.state.overviewVisible = !this.state.overviewVisible;
+                this.emitChange();
+            break;
+            case 'INBOX_TOGGLE_REMOVE_FINISHED_ON_SUBMIT':
+                this.state.removeFinishedOnSubmit = !this.state.removeFinishedOnSubmit;
+                this.emitChange();
+            break;
+            case 'INBOX_CLOSE_TASK_OVERVIEW':
+                (this.state.removeFinishedOnSubmit ?
+                    this.deleteFinishedTaskInfo() :
+                    rxOf(this.state.asyncTasks)
+
+                ).subscribe(
+                    (data) => {
+                        this.updateMessageList(data);
+                        this.recalcNums();
+                        this.state.overviewVisible = false;
+                        this.emitChange();
+                    },
+                    (err) => {
+                        this.recalcNums();
+                        this.state.overviewVisible = false;
+                        this.emitChange();
+                        this.pageModel.showMessage('error', err);
+                    }
+                );
+            break;
+            case 'INBOX_ADD_ASYNC_TASK':
+                this.state.asyncTasks.push({
+                    status: AsyncTaskStatus.PENDING,
+                    ident: action.payload['ident'],
+                    created: new Date().getTime() / 1000,
+                    label: action.payload['label'],
+                    category: action.payload['category'],
+                    error: null,
+                    args: {}
+                });
+                this.recalcNums();
+                this.emitChange();
+            break;
+            case 'INBOX_UPDATE_ASYNC_TASK':
+                const srchIdx = List.findIndex(v => v.ident === action.payload['ident'], this.state.asyncTasks);
+                if (srchIdx > -1) {
+                    const old = this.state.asyncTasks[srchIdx];
+                    this.state.asyncTasks[srchIdx] = {
+                        ...old,
+                        status: action.payload['status'],
+                        ident: action.payload['ident'],
+                    };
+                    if ((old.status === AsyncTaskStatus.PENDING || old.status === AsyncTaskStatus.STARTED)
+                            && (this.state.asyncTasks[srchIdx].status === AsyncTaskStatus.FAILURE ||
+                                this.state.asyncTasks[srchIdx].status === AsyncTaskStatus.SUCCESS)) {
+                        this.state.overviewVisible = true;
+                    }
+                    this.recalcNums();
+                    this.emitChange();
+                }
+
+            break;
+        }
+    }
+
+    unregister():void {}
+
     private updateMessageList(data:Array<Kontext.AsyncTaskInfo>) {
-        this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data);
+        this.state.asyncTasks = [...data];
     }
 
     registerTask(task:Kontext.AsyncTaskInfo):void {
-        this.asyncTasks = this.asyncTasks.push(task);
+        this.state.asyncTasks.push(task);
         this.init();
     }
 
-    getAsyncTasks():Immutable.List<Kontext.AsyncTaskInfo> {
-        return this.asyncTasks;
+    private recalcNums():void {
+        this.state.numRunning = List.filter(this.taskIsActive, this.state.asyncTasks).length;
+        this.state.numFinished = List.filter(this.taskIsFinished, this.state.asyncTasks).length;
     }
 
     private taskIsActive(t:Kontext.AsyncTaskInfo):boolean {
-        return t.status === 'STARTED' || t.status === 'PENDING';
+        return t.status === AsyncTaskStatus.STARTED || t.status === AsyncTaskStatus.PENDING;
     }
 
     private taskIsFinished(t:Kontext.AsyncTaskInfo):boolean {
-        return t.status === 'SUCCESS' || t.status === 'FAILURE';
+        return t.status === AsyncTaskStatus.SUCCESS || t.status === AsyncTaskStatus.FAILURE;
     }
 
-    getNumRunningTasks():number {
-        return this.asyncTasks.filter(this.taskIsActive).size;
-    }
-
-    getNumFinishedTasks():number {
-        return this.asyncTasks.filter(item => this.taskIsFinished(item)).size;
+    private getNumRunningTasks():number {
+        return List.filter(this.taskIsActive, this.state.asyncTasks).length;
     }
 
     private checkForStatus():Observable<AsyncTaskResponse> {
          return this.pageModel.ajax$(
-            'GET',
+            HTTP.Method.GET,
             this.pageModel.createActionUrl('check_tasks_status'),
             {}
         );
     }
 
-    private deleteFinishedTaskInfo():Observable<AsyncTaskResponse> {
-        const finishedTasksIds = this.asyncTasks.filter(this.taskIsFinished).map(item => item.ident).toArray();
-        return this.pageModel.ajax$(
-            'DELETE',
+    private deleteFinishedTaskInfo():Observable<Array<Kontext.AsyncTaskInfo>> {
+        return this.pageModel.ajax$<AsyncTaskResponse>(
+            HTTP.Method.DELETE,
             this.pageModel.createActionUrl('remove_task_info'),
-            {'tasks': finishedTasksIds}
-        );
+            {
+                tasks: pipe(
+                    this.state.asyncTasks,
+                    List.filter(this.taskIsFinished),
+                    List.map(item => item.ident)
+                )
+            }
+        ).pipe(map(resp => resp.data));
     }
 
-    private getFinishedTasks():Immutable.List<Kontext.AsyncTaskInfo> {
-        return this.asyncTasks.filter(item => this.taskIsFinished(item)).toList();
-    }
-
-    private createTaskDesc(taskInfo:Kontext.AsyncTaskInfo) {
-        let label = taskInfo.label ? taskInfo.label : taskInfo.ident.substr(0, 8) + '...';
-        let desc = taskInfo.error ? taskInfo.status + ': ' + taskInfo.error : taskInfo.status;
-        return label + ' (' + desc + ')';
+    private getFinishedTasks():Array<Kontext.AsyncTaskInfo> {
+        return List.filter(this.taskIsFinished, this.state.asyncTasks);
     }
 
     /**
@@ -185,23 +205,23 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> imple
      * received from server.
      */
     addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
-        this.onUpdate = this.onUpdate.push(fn);
+        this.onUpdate.push(fn);
     }
 
     init():void {
-        if (this.asyncTasks.size > 0) {
+        if (this.state.asyncTasks.length > 0) {
             this.emitChange();
-            if (!this.asyncTaskCheckerInterval) {
-                this.asyncTaskCheckerInterval = window.setInterval(() => {
+            if (!this.state.asyncTaskCheckerInterval) {
+                this.state.asyncTaskCheckerInterval = window.setInterval(() => {
                     this.checkForStatus().subscribe(
                         (data) => {
-                            this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data.data);
+                            this.state.asyncTasks = [...data.data];
                             if (this.getNumRunningTasks() === 0) {
-                                window.clearInterval(this.asyncTaskCheckerInterval);
-                                this.asyncTaskCheckerInterval = null;
+                                window.clearInterval(this.state.asyncTaskCheckerInterval);
+                                this.state.asyncTaskCheckerInterval = null;
                             }
                             const finished = this.getFinishedTasks();
-                            if (finished.size > 0) {
+                            if (finished.length > 0) {
                                 this.onUpdate.forEach(item => {
                                     item(finished);
                                 });

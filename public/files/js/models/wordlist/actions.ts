@@ -66,7 +66,8 @@ export enum ActionName {
     WordlistSaveSetIncludeHeading = 'WORDLIST_SAVE_SET_INCLUDE_HEADING',
     WordlistSaveSetIncludeColHeaders = 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
     WordlistSaveFormSubmit = 'WORDLIST_SAVE_FORM_SUBMIT',
-    WordlistSaveFormSubmitDone = 'WORDLIST_SAVE_FORM_SUBMIT_DONE'
+    WordlistSaveFormSubmitDone = 'WORDLIST_SAVE_FORM_SUBMIT_DONE',
+    WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE'
 }
 
 
@@ -274,5 +275,11 @@ export namespace Actions {
     export interface WordlistSaveFormSubmitDone extends Action<{
     }> {
         name:ActionName.WordlistSaveFormSubmitDone;
+    }
+
+    export interface WordlistHistoryPopState extends Action<{
+        currPageInput:string;
+    }> {
+        name:ActionName.WordlistHistoryPopState;
     }
 }

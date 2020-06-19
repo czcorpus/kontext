@@ -218,7 +218,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 <tbody>
                     {List.map(
                         ([fn, label], k) => {
-                            console.log('fn: ', fn, ', label: ', label);
                             return (
                                 <tr key={`v_${k}:${fn}`} className={Dict.hasKey(fn, props.cbgrfns) ? 'selected' : null}>
                                     <CollMetricsTermTh value={label} code={fn} />

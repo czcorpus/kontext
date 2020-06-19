@@ -189,7 +189,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     }
                 });
             }
-        ).sideEffectAlsoOn(ActionName.WordlistSaveFormSubmit);
+        ).sideEffectAlsoOn(
+            ActionName.WordlistSaveFormSubmit,
+            'MAIN_MENU_DIRECT_SAVE',
+            ActionName.WordlistResultNextPage,
+            ActionName.WordlistResultPrevPage,
+            ActionName.WordlistGoToLastPage,
+            ActionName.WordlistResultConfirmPage
+        );
 
         this.addActionHandler<Actions.WordlistFormSelectAttr>(
             ActionName.WordlistFormSelectAttr,

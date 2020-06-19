@@ -25,7 +25,7 @@ import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './wi
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { Actions, ActionName } from './actions';
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, Strings } from 'cnc-tskit';
 import { Action } from 'rxjs/internal/scheduler/Action';
 
 
@@ -110,15 +110,17 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             htmlClasses.push('in-trash')
         }
 
+        const shortName = Strings.shortenText(props.data.name, 50);
+
         return (
             <tr className={htmlClasses.join(' ')}>
                 <td>
                     <a className="corplist-item"
                             title={props.data.trashTTL === null ?
-                                        props.data.description :
-                                        util.translate('defaultCorparch__item_will_be_removed')}
+                                    (shortName.length < props.data.name.length ? props.data.name : props.data.description) :
+                                    util.translate('defaultCorparch__item_will_be_removed')}
                             onClick={handleItemClick}>
-                        {props.data.name}
+                        {shortName}
                     </a>
                 </td>
                 <td className="num">

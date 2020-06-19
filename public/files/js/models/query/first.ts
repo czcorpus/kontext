@@ -35,6 +35,7 @@ import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory } from './common';
 import { QueryContextArgs } from './context';
 import { ActionName } from './actions';
+import { GeneralViewOptionsModel } from '../options/general';
 
 
 type ExportedQueryContextArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
@@ -112,7 +113,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 };
 
 
-function determineSupportedWidgets(corpora:Immutable.List<string>, queryTypes:Immutable.Map<string, string>, isAnonymousUser:boolean):WidgetsMap {
+function determineSupportedWidgets(corpora:Immutable.List<string>, queryTypes:Immutable.Map<string, string>, tagBuilderSupport:Immutable.Map<string, boolean>, isAnonymousUser:boolean):WidgetsMap {
     const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
         const ans = ['keyboard'];
         if (!isAnonymousUser) {
@@ -120,7 +121,7 @@ function determineSupportedWidgets(corpora:Immutable.List<string>, queryTypes:Im
         }
         if (queryType === 'cql') {
             ans.push('within');
-            if (this.state.tagBuilderSupport.get(corpname)) {
+            if (tagBuilderSupport.get(corpname)) {
                 ans.push('tag');
             }
         }
@@ -210,6 +211,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             props:QueryFormProperties) {
         const corpora = Immutable.List<string>(props.corpora);
         const queryTypes = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueryTypes[item] || 'iquery'])).toMap();
+        const tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
             forcedAttr: props.forcedAttr,
             attrList: Immutable.List<Kontext.AttrItem>(props.attrList),
@@ -237,7 +239,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             queryTypes: queryTypes,
             pcqPosNegValues: Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos'])),
             includeEmptyValues: Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currIncludeEmptyValues[item] || false])),
-            tagBuilderSupport: Immutable.Map<string, boolean>(props.tagBuilderSupport),
+            tagBuilderSupport: tagBuilderSupport,
             inputLanguages: Immutable.Map<string, string>(props.inputLanguages),
             hasLemma: Immutable.Map<string, boolean>(props.hasLemma),
             tagsetDocs: Immutable.Map<string, string>(props.tagsetDocs),
@@ -245,7 +247,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             activeWidgets: Immutable.Map<string, string>(props.corpora.map(item => null)),
             queryContextArgs: {},
             isAnonymousUser: props.isAnonymousUser,
-            supportedWidgets: determineSupportedWidgets(corpora, queryTypes, props.isAnonymousUser),
+            supportedWidgets: determineSupportedWidgets(corpora, queryTypes, tagBuilderSupport, props.isAnonymousUser),
             contextFormVisible: false,
             textTypesFormVisible: false
         });
@@ -271,6 +273,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     onAction(action) {
         switch (action.name) {
+            case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
+                this.setActiveWidget(action.payload['sourceId'], action.payload['value']);
+                this.state.widgetArgs = action.payload['widgetArgs'] || {};
+                this.emitChange();
+            break;
             case 'CQL_EDITOR_DISABLE':
                 this.emitChange();
             break;
@@ -281,7 +288,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
                 }
                 this.state.queryTypes = this.state.queryTypes.set(action.payload['sourceId'], qType);
-                this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes, this.state.isAnonymousUser);
+                this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes,
+                    this.state.tagBuilderSupport, this.state.isAnonymousUser);
                 this.emitChange();
             break;
             case 'CORPARCH_FAV_ITEM_CLICK':
@@ -408,6 +416,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.state.textTypesFormVisible = !this.state.textTypesFormVisible;
                 this.emitChange();
             break;
+            case 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE':
+                this.state.shuffleConcByDefault = action.payload['value'];
+                this.emitChange();
+            break;
         }
     }
 
@@ -415,14 +427,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     disableDefaultShuffling():void {
-        this.state.shuffleConcByDefault = true;
+        this.state.shuffleForbidden = true;
         this.emitChange();
     }
 
     private restoreFromCorpSwitch(payload:any):void { // TODO TYPE !!!!
         if (payload.key === this.csGetStateKey()) {
             this.state = {...payload.data};
-            this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes, this.state.isAnonymousUser);
+            this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes,
+                    this.state.tagBuilderSupport, this.state.isAnonymousUser);
             this.emitChange();
         }
     }
@@ -499,13 +512,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         )
     }
 
-    onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
-        /* TODO
-        super.onSettingsChange(optsModel);
-        this.state.shuffleConcByDefault = optsModel.getShuffle();
-        */
-    }
-
     private makeCorpusPrimary(corpname:string):void {
         const idx = this.state.corpora.indexOf(corpname);
         if (idx > -1) {
@@ -539,7 +545,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             if (!this.state.defaultAttrValues.has(corpname)) {
                 this.state.defaultAttrValues = this.state.defaultAttrValues.set(corpname, 'word');
             }
-            this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes, this.state.isAnonymousUser);
+            this.state.supportedWidgets = determineSupportedWidgets(this.state.corpora, this.state.queryTypes,
+                this.state.tagBuilderSupport, this.state.isAnonymousUser);
 
         } else {
             // TODO error

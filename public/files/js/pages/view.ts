@@ -22,7 +22,7 @@
 
 import { Action } from 'kombo';
 import { Observable, of as rxOf, zip } from 'rxjs';
-import { expand, mergeMap, takeWhile, delay, concatMap, take } from 'rxjs/operators';
+import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { KontextPage } from '../app/main';
 
 import { Kontext, TextTypes, ViewOptions } from '../types/common';
@@ -40,7 +40,7 @@ import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs } from '..
 import { UsageTipsModel } from '../models/usageTips';
 import { CQLEditorModel } from '../models/query/cqleditor/model';
 import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
+import { ActionName as QueryActionName } from '../models/query/actions';
 import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
 import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
 import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs } from '../models/query/switchmc';
@@ -72,7 +72,6 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { List, tuple } from 'cnc-tskit';
-import { disableMenuItems } from '../models/mainMenu';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -171,9 +170,9 @@ export class ViewPage {
     }
 
     private deserializeHashAction(v:string):Action {
-        const tmp = (v || '').substr(1).split('/');
-        const args = new MultiDict(parseUrlArgs(tmp[1] || ''));
-        return this.createFormAction(tmp[0], args);
+        const [action, rawArgs] = (v || '').substr(1).split('/');
+        const args = new MultiDict(parseUrlArgs(rawArgs || ''));
+        return this.createFormAction(action, args);
     }
 
     private createFormAction(actionName:string, args:Kontext.IMultiDict):Action {
@@ -201,8 +200,8 @@ export class ViewPage {
                 };
             case 'edit_op':
                 return {
-                    name: 'EDIT_QUERY_OPERATION',
-                    payload: {operationIdx: Number(args['operationIdx'])}
+                    name: QueryActionName.EditQueryOperation,
+                    payload: {operationIdx: Number(args.head('operationIdx'))}
                 };
             default:
                 return null;
@@ -487,9 +486,6 @@ export class ViewPage {
             this.queryModels.queryContextModel,
             queryFormProps
         );
-        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModels.queryModel.onSettingsChange(model);
-        });
 
         this.queryModels.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -517,7 +513,7 @@ export class ViewPage {
 
     private initFilterForm(firstHitsModel:FirstHitsModel):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
+        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
         const filterFormProps:FilterFormProperties = {
             filters: Object.keys(concFormsArgs)
                         .filter(k => concFormsArgs[k].form_type === 'filter'),
@@ -547,7 +543,7 @@ export class ViewPage {
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
-        }
+        };
 
         this.queryModels.filterModel = new FilterFormModel(
             this.layoutModel.dispatcher,
@@ -557,14 +553,6 @@ export class ViewPage {
             filterFormProps,
             this.concFormsInitialArgs.filter
         );
-
-        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModels.filterModel.emitChange();
-            this.layoutModel.dispatchSideEffect(
-                model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
-                {}
-            );
-        });
 
         this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,
@@ -889,17 +877,6 @@ export class ViewPage {
         });
     }
 
-    private initUndoFunction():void {
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_UNDO_LAST_QUERY_OP',
-            (args:Kontext.GeneralProps) => new Observable((observer) => {
-                    window.history.back();
-                    observer.next();
-                    observer.complete();
-            })
-        );
-    }
-
     private initTextTypesModel():TextTypes.ITextTypesModel {
         this.queryModels.textTypesModel = new TextTypesModel(
             this.layoutModel.dispatcher,
@@ -1077,11 +1054,6 @@ export class ViewPage {
             [ tuple('menu-concordance', 'sorting'), tuple('menu-concordance', 'shuffle'), tuple('menu-concordance', 'sample') ];
 
         this.layoutModel.init(() => {
-            this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
-                (optsModel) => {
-                    this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
-                }
-            );
             const ttModel = this.initTextTypesModel();
             let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
             if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
@@ -1099,7 +1071,6 @@ export class ViewPage {
                     usePrevData
                 );
             };
-            this.initUndoFunction();
             this.concViews = concViewsInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
@@ -1122,7 +1093,6 @@ export class ViewPage {
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg, queryStoragePlg);
             this.initAnalysisViews(ttModel);
-            this.updateMainMenu();
             this.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {

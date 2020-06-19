@@ -147,6 +147,11 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> {
                 newState.isEnabled = false;
                 return newState;
             },
+            'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR': (state, action) => {
+                const newState = this.copyState(state);
+                newState.isEnabled = action.payload['value'];
+                return newState;
+            },
             'QUERY_INPUT_MOVE_CURSOR': (state, action) => {
                 const newState = this.copyState(state);
                 newState.rawAnchorIdx = newState.rawAnchorIdx.set(

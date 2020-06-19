@@ -143,7 +143,7 @@ class WordlistFormPage {
                 {}
             );
             this.layoutModel.restoreModelsDataAfterSwitch();
-        });
+        }, []);
     }
 }
 

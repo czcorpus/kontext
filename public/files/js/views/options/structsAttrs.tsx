@@ -20,15 +20,16 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher, BoundWithProps, IModel} from 'kombo';
-import {Kontext, ViewOptions} from '../../types/common';
+import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
+import { Kontext, ViewOptions } from '../../types/common';
 import { CorpusViewOptionsModel, CorpusViewOptionsModelState, ActionName } from '../../models/options/structsAttrs';
+import { MainMenuModelState } from '../../models/mainMenu';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
     viewOptionsModel:CorpusViewOptionsModel;
-    mainMenuModel:IModel<{}>;
+    mainMenuModel:IModel<MainMenuModelState>;
 }
 
 export interface StructAttrsViewOptionsProps {

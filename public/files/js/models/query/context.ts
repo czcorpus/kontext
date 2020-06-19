@@ -53,6 +53,7 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
                 fc_pos_type: 'all'
             }
         });
+
         this.addActionHandler<Actions.QueryInputSelectContextFormItem>(
             ActionName.QueryInputSelectContextFormItem,
             (state, action) => {

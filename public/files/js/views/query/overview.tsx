@@ -35,6 +35,7 @@ import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from './mi
 import { QueryFormLiteProps, QueryFormProps } from './first';
 import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
 import { SortFormProps } from './sort';
+import { MainMenuModelState } from '../../models/mainMenu';
 
 /*
 Important note regarding variable naming conventions:
@@ -65,7 +66,7 @@ export interface OverviewModuleArgs {
         SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
     };
     queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
-    mainMenuModel:IModel<{}>;
+    mainMenuModel:IModel<MainMenuModelState>;
     querySaveAsModel:QuerySaveAsFormModel;
 }
 
@@ -752,33 +753,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
-    class QueryToolbar extends React.Component<QueryToolbarProps, QueryToolbarState>  {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._mainMenuModelChangeListener = this._mainMenuModelChangeListener.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                activeItem: mainMenuModel.getActiveItem()
-            };
-        }
-
-        _mainMenuModelChangeListener() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = mainMenuModel.addListener(this._mainMenuModelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class QueryToolbar extends React.PureComponent<QueryToolbarProps & MainMenuModelState>  {
 
         _renderOperationForm() {
             const actions = [
@@ -789,8 +764,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE',
                 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
             ];
-            if (this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1) {
-                return <BoundAppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem} />;
+            if (this.props.activeItem !== null && actions.indexOf(this.props.activeItem.actionName) > -1) {
+                return <BoundAppendOperationOverlay {...this.props} menuActiveItem={this.props.activeItem} />;
 
             } else {
                 return null;
@@ -798,8 +773,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         _renderSaveForm() {
-            if (this.state.activeItem) {
-                switch (this.state.activeItem.actionName) {
+            if (this.props.activeItem) {
+                switch (this.props.activeItem.actionName) {
                     case 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM':
                         return <saveViews.QuerySaveAsForm />;
                     case 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT':
@@ -820,6 +795,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
     }
 
+    const BoundQueryToolbar = BoundWithProps<QueryToolbarProps, MainMenuModelState>(QueryToolbar, mainMenuModel);
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
@@ -840,7 +816,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
 
     return {
-        QueryToolbar: QueryToolbar,
+        QueryToolbar: BoundQueryToolbar,
         NonViewPageQueryToolbar: BoundNonViewPageQueryToolbar
     };
 }

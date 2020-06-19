@@ -74,11 +74,6 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             }
         );
 
-        this.DEBUG_onActionMatch((s, a, m) => {
-            console.log('>>> ', a.name, a.payload);
-            console.log('   ', s.formIsActive);
-        })
-
         this.addActionHandler<Actions.WordlistSaveFormHide>(
             ActionName.WordlistSaveFormHide,
             (state, action) => {
@@ -186,7 +181,6 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                     )
                 ).subscribe(
                     data => {
-
                     },
                     err => {
                         this.layoutModel.showMessage('error', err);

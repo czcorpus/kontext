@@ -235,13 +235,6 @@ export class FirstFormPage {
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
             }
         );
-        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModel.onSettingsChange(model);
-            this.layoutModel.dispatchSideEffect(
-                model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
-                {}
-            );
-        });
 
         this.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,

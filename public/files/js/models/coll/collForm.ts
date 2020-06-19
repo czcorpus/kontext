@@ -57,6 +57,7 @@ export interface CollFormModelState {
     cminbgr:Kontext.FormValue<string>;
     cbgrfns:{[key:string]:true};
     csortfn:string;
+    isBusy:boolean;
 }
 
 /**
@@ -91,16 +92,11 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
                     List.map<string, [string, true]>(v => tuple(v, true)),
                     Dict.fromEntries()
                 ),
-                csortfn: props.csortfn
+                csortfn: props.csortfn,
+                isBusy: false
             }
         );
         this.pageModel = pageModel;
-
-        this.DEBUG_onActionMatch((s, action, m) => {
-            if (m) {
-                console.log(`${action.name} -> `, action.payload)
-            }
-        })
 
         this.addActionHandler<Actions.FormSetCattr>(
             ActionName.FormSetCattr,
@@ -172,12 +168,12 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         this.addActionHandler<Actions.FormSubmit>(
             ActionName.FormSubmit,
             (state, action) => {
-
+                state.isBusy = true;
+                this.validateForm(state);
             },
             (state, action, dispatch) => {
-                const err = this.validateForm(state);
-                if (err) {
-                    this.pageModel.showMessage('error', err);
+                if (this.hasErrorInputs(state)) {
+                    this.pageModel.showMessage('error', this.pageModel.translate('global__the_form_contains_errors_msg'));
 
                 } else {
                     this.submit(state);
@@ -205,13 +201,13 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         );
     }
 
-    private validateForm(state:CollFormModelState):Error|null {
+    private validateForm(state:CollFormModelState):void {
         if (this.validateNumber(state.cfromw.value)) {
             state.cfromw.isInvalid = false;
 
         } else {
             state.cfromw.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_number_value'));
+            state.cfromw.errorDesc = this.pageModel.translate('coll__invalid_number_value');
         }
 
         if (this.validateNumber(state.ctow.value)) {
@@ -219,7 +215,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
 
         } else {
             state.ctow.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_number_value'));
+            state.ctow.errorDesc = this.pageModel.translate('coll__invalid_number_value');
         }
 
         if (parseInt(state.cfromw.value) <= parseInt(state.ctow.value)) {
@@ -229,7 +225,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         } else {
             state.cfromw.isInvalid = true;
             state.ctow.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_context_range'));
+            state.cfromw.errorDesc = this.pageModel.translate('coll__invalid_context_range');
+            state.ctow.errorDesc = this.pageModel.translate('coll__invalid_context_range');
         }
 
         if (this.validateGzNumber(state.cminfreq.value)) {
@@ -237,7 +234,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
 
         } else {
             state.cminfreq.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+            state.cminfreq.errorDesc = this.pageModel.translate('coll__invalid_gz_number_value');
         }
 
         if (this.validateGzNumber(state.cminbgr.value)) {
@@ -245,8 +242,16 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
 
         } else {
             state.cminbgr.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+            state.cminbgr.errorDesc = this.pageModel.translate('coll__invalid_gz_number_value');
         }
+    }
+
+    private hasErrorInputs(state:CollFormModelState):boolean {
+        return pipe(
+            state,
+            Dict.toEntries(),
+            List.some(([,item]) => Kontext.isFormValue(item) && item.isInvalid)
+        );
     }
 
     private validateNumber(s:string):boolean {

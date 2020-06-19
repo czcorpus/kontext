@@ -20,31 +20,31 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ITranslator, IFullActionControl } from 'kombo';
+import { ITranslator, IFullActionControl, StatefulModel, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { AjaxError } from 'rxjs/ajax';
-
-import {PluginInterfaces, IPluginApi} from '../types/plugins';
-import {Kontext, ViewOptions} from '../types/common';
-import {CoreViews} from '../types/coreViews';
-import {init as documentViewsFactory} from '../views/document';
-import {init as commonViewsFactory, CommonViews} from '../views/common';
-import {init as menuViewsFactory} from '../views/menu';
-import {init as overviewAreaViewsFactory} from '../views/overview';
-import {init as viewOptionsFactory} from '../views/options/main';
-import {MultiDict} from '../multidict';
-import * as docModels from '../models/common/layout';
-import {UserInfo} from '../models/user/info';
-import {CorpusViewOptionsModel, ActionName as CorpusViewOptionsActionName} from '../models/options/structsAttrs';
-import {GeneralViewOptionsModel} from '../models/options/general';
-import {L10n} from './l10n';
 import * as Immutable from 'immutable';
-import {AsyncTaskChecker, AsyncTaskStatus} from '../models/asyncTask';
-import {UserSettings} from './userSettings';
-import {MainMenuModel, InitialMenuData, disableMenuItems} from '../models/mainMenu';
-import {AppNavigation, AjaxArgs} from './navigation';
-import {EmptyPlugin} from '../plugins/empty/init';
+
+import { PluginInterfaces, IPluginApi } from '../types/plugins';
+import { Kontext } from '../types/common';
+import { CoreViews } from '../types/coreViews';
+import { init as documentViewsFactory } from '../views/document';
+import { init as commonViewsFactory, CommonViews } from '../views/common';
+import { init as menuViewsFactory } from '../views/menu';
+import { init as overviewAreaViewsFactory } from '../views/overview';
+import { init as viewOptionsFactory } from '../views/options/main';
+import { MultiDict } from '../multidict';
+import * as docModels from '../models/common/layout';
+import { UserInfo } from '../models/user/info';
+import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
+import { GeneralViewOptionsModel, GeneralViewOptionsModelState } from '../models/options/general';
+import { L10n } from './l10n';
+import { AsyncTaskChecker, AsyncTaskStatus } from '../models/asyncTask';
+import { UserSettings } from './userSettings';
+import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
+import { AppNavigation, AjaxArgs } from './navigation';
+import { EmptyPlugin } from '../plugins/empty/init';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../models/mainMenu/actions';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
@@ -98,9 +98,9 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
 
     private corpViewOptionsModel:CorpusViewOptionsModel;
 
-    private generalViewOptionsModel:GeneralViewOptionsModel;
+    private generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
 
-    private mainMenuModel:Kontext.IKeyShorcutProvider;
+    private mainMenuModel:MainMenuModel;
 
     private authPlugin:PluginInterfaces.Auth.IPlugin;
 
@@ -566,7 +566,9 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     }
 
     resetMenuActiveItemAndNotify():void {
-        this.mainMenuModel.resetActiveItemAndNotify();
+        this.dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
+            name: MainMenuActionName.ClearActiveItem
+        });
     }
 
     /**
@@ -605,8 +607,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
         }
     }
 
-    private initViewOptions(mainMenuModel:Kontext.IKeyShorcutProvider,
-                generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel,
+    private initViewOptions(mainMenuModel:MainMenuModel,
+                generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>,
                 corpViewOptionsModel:CorpusViewOptionsModel):void {
         const viewOptionsViews = viewOptionsFactory({
             dispatcher: this.dispatcher,
@@ -615,10 +617,6 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             viewOptionsModel: corpViewOptionsModel,
             mainMenuModel: mainMenuModel
         });
-        this.mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
-            (args:Kontext.GeneralProps) => this.generalViewOptionsModel.loadData()
-        );
 
         this.renderReactComponent(
             viewOptionsViews.OptionsContainer,
@@ -744,18 +742,15 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 this.dispatcher,
                 this,
                 disableMenuItems(
-                    this.getConf<InitialMenuData>('menuData'),
-                    []
-                )
+                    this.getConf<InitialMenuData>('menuData')
+                ),
+                this.getConf<Array<[string, string]>>('currentArgs')
             );
 
             this.generalViewOptionsModel = new GeneralViewOptionsModel(
                 this.dispatcher,
                 this,
                 this.getConf<boolean>('anonymousUser')
-            );
-            this.generalViewOptionsModel.addOnSubmitResponseHandler(
-                ()=>this.mainMenuModel.resetActiveItemAndNotify()
             );
 
             this.layoutViews = documentViewsFactory(

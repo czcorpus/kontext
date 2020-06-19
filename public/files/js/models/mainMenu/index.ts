@@ -19,12 +19,12 @@
  */
 
  import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Observable } from 'rxjs';
 import { List, tuple, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
+import { Actions as GeneralOptsActions, ActionName as GeneralOptsActionName } from '../options/actions';
 
 
 
@@ -75,7 +75,7 @@ export function isEventTriggeringItem(item:Kontext.SubmenuItem): item is Kontext
     return (<Kontext.EventTriggeringSubmenuItem>item).message !== undefined;
 }
 
-function importMenuData(data:InitialMenuData):Array<Kontext.MenuEntry> {
+function importMenuData(data:Array<InitialMenuEntry>):Array<Kontext.MenuEntry> {
     return List.map(
         ([ident, item]) => tuple(
             ident,
@@ -86,7 +86,7 @@ function importMenuData(data:InitialMenuData):Array<Kontext.MenuEntry> {
                 items: item.items
             }
         ),
-        data.submenuItems
+        data
     );
 }
 
@@ -147,33 +147,41 @@ class MenuShortcutMapper implements Kontext.IMainMenuShortcutMapper {
     }
 }
 
-export type ObservablePrerequisite = (args:Kontext.GeneralProps)=>Observable<any>;
-
 
 export interface MainMenuModelState {
-    activeItem:Kontext.MainMenuActiveItem;
+    activeItem:Kontext.MainMenuActiveItem|null;
     visibleSubmenu:string|null;
     data:Array<Kontext.MenuEntry>;
     isBusy:boolean;
+    concArgs:Array<[string, string]>;
 }
 
 
-export class MainMenuModel extends StatelessModel<MainMenuModelState> implements Kontext.IKeyShorcutProvider {
+export class MainMenuModel extends StatelessModel<MainMenuModelState> {
 
     private readonly pageModel:PageModel;
 
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData, concArgs:Array<[string, string]>) {
         super(
             dispatcher,
             {
                 activeItem: null,
                 visibleSubmenu: null,
-                data: importMenuData(initialData),
-                isBusy: false
+                data: importMenuData(initialData.submenuItems),
+                isBusy: false,
+                concArgs: concArgs
             }
         );
         this.pageModel = pageModel;
+
+        this.addActionHandler<Actions.UndoLastQueryOp>(
+            ActionName.UndoLastQueryOp,
+            null,
+            (state, action, dispatch) => {
+                window.history.back();
+            }
+        );
 
         this.addActionHandler<Actions.SetVisibleSubmenu>(
             ActionName.SetVisibleSubmenu,
@@ -234,6 +242,13 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> implements
                 if (action.payload['within'] === 1) {
                     this.pageModel.replaceConcArg('maincorp', [action.payload['maincorp']]);
                 }
+            }
+        );
+
+        this.addActionHandler<GeneralOptsActions.GeneralSubmitDone>(
+            GeneralOptsActionName.GeneralSubmitDone,
+            (state, action) => {
+                state.activeItem = null;
             }
         )
     }

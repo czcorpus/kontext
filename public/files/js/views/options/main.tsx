@@ -19,19 +19,22 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, IModel} from 'kombo';
-import {Kontext, ViewOptions} from '../../types/common';
-import {init as generalViewsInit} from './general';
-import {init as structsAttrsViewsInit} from './structsAttrs';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, IModel, BoundWithProps, StatelessModel } from 'kombo';
+
+import { Kontext } from '../../types/common';
+import { init as generalViewsInit } from './general';
+import { init as structsAttrsViewsInit } from './structsAttrs';
 import { CorpusViewOptionsModel } from '../../models/options/structsAttrs';
+import { MainMenuModelState } from '../../models/mainMenu';
+import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../../models/mainMenu/actions';
+import { GeneralViewOptionsModelState } from '../../models/options/general';
 
 export interface MainModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
-    generalOptionsModel:ViewOptions.IGeneralViewOptionsModel;
+    generalOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
     viewOptionsModel:CorpusViewOptionsModel;
-    mainMenuModel:IModel<{}>;
+    mainMenuModel:IModel<MainMenuModelState>;
 }
 
 export interface OptionsContainerProps {
@@ -54,61 +57,28 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
         mainMenuModel: mainMenuModel
     });
 
-    class OptionsContainer extends React.Component<OptionsContainerProps, {
-        activeItem:Kontext.MainMenuActiveItem;
-        menuBusy:boolean;
-
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                activeItem: mainMenuModel.getActiveItem(),
-                menuBusy: mainMenuModel.isBusy()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
+    class OptionsContainer extends React.PureComponent<OptionsContainerProps & MainMenuModelState> {
 
         _isActiveItem(itemName) {
-            return this.state.activeItem && this.state.activeItem.actionName === itemName;
+            return this.props.activeItem && this.props.activeItem.actionName === itemName;
         }
 
         _isActive() {
-            return this._isActiveItem('MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS')
-                || this._isActiveItem('MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS');
+            return this._isActiveItem(MainMenuActionName.ShowAttrsViewOptions)
+                || this._isActiveItem(MainMenuActionName.ShowGeneralViewOptions);
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
+                name: MainMenuActionName.ClearActiveItem
             });
         }
 
-        componentDidMount() {
-             this.modelSubscription = mainMenuModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderForm() {
-            if (this._isActiveItem('MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS')) {
+            if (this._isActiveItem(MainMenuActionName.ShowAttrsViewOptions)) {
                 return <structsAttrsOptionsViews.StructAttrsViewOptions />;
 
-            } else if (this._isActiveItem('MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS')) {
+            } else if (this._isActiveItem(MainMenuActionName.ShowGeneralViewOptions)) {
                 return <generalOptionsViews.GeneralOptions />;
 
             } else {
@@ -117,10 +87,10 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
         }
 
         _renderTitle() {
-            if (this._isActiveItem('MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS')) {
+            if (this._isActiveItem(MainMenuActionName.ShowAttrsViewOptions)) {
                 return helpers.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.corpusIdent.name})
 
-            } else if (this._isActiveItem('MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS')) {
+            } else if (this._isActiveItem(MainMenuActionName.ShowGeneralViewOptions)) {
                 return helpers.translate('options__general_options_heading');
 
             } else {
@@ -140,7 +110,7 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
                         </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay>;
 
-            } else if (this.state.menuBusy) {
+            } else if (this.props.isBusy) {
                 return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
                         <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
                                     onCloseClick={()=>undefined}
@@ -156,7 +126,7 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
     }
 
     return {
-        OptionsContainer: OptionsContainer
+        OptionsContainer: BoundWithProps<OptionsContainerProps, MainMenuModelState>(OptionsContainer, mainMenuModel)
     };
 
 }

@@ -19,11 +19,13 @@
  */
 
 import * as Immutable from 'immutable';
-import { IEventEmitter, IModel } from 'kombo';
+import { IEventEmitter, IModel, StatelessModel } from 'kombo';
 import {CoreViews} from './coreViews';
-import { ObservablePrerequisite } from '../models/mainMenu';
+import { MainMenuModel } from '../models/mainMenu';
 import { Observable } from 'rxjs';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
+import { AsyncTaskChecker } from '../models/asyncTask';
+import { GeneralViewOptionsModelState } from '../models/options/general';
 
 /**
  *
@@ -150,31 +152,6 @@ export namespace Kontext {
         isLoading():boolean;
     }
 
-    /**
-     * handling state of server-asynchronous
-     * tasks.
-     */
-    export interface IAsyncTaskModel extends IEventEmitter {
-
-        registerTask(task:Kontext.AsyncTaskInfo):void;
-
-        getAsyncTasks():Immutable.List<Kontext.AsyncTaskInfo>;
-
-        getNumRunningTasks():number;
-
-        getNumFinishedTasks():number;
-
-        init():void;
-
-        /**
-         * Add an external callback
-         */
-        addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void;
-    }
-
-    export interface IKeyShorcutProvider<T> extends IModel<T> {
-        exportKeyShortcutActions():IMainMenuShortcutMapper;
-    }
 
     // ---------------------- main menu ---------------------------------
 
@@ -317,9 +294,9 @@ export namespace Kontext {
         corpusInfoModel:ICorpusInfoModel,
         userInfoModel:IUserInfoModel,
         corpusViewOptionsModel:CorpusViewOptionsModel,
-        generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;
-        asyncTaskInfoModel:IAsyncTaskModel,
-        mainMenuModel:Kontext.IKeyShorcutProvider<{}>;
+        generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
+        asyncTaskInfoModel:AsyncTaskChecker,
+        mainMenuModel:MainMenuModel;
     }
 
     export interface AjaxOptions {
@@ -350,7 +327,7 @@ export namespace Kontext {
     }
 
     export interface AsyncTaskOnUpdate {
-        (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
+        (taskInfoList:Array<AsyncTaskInfo>):void;
     }
 
     /**
@@ -664,20 +641,6 @@ export namespace ViewOptions {
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
         widectx_globals:Array<[string, string]>;
-    }
-
-    export interface IGeneralViewOptionsModel extends IEventEmitter {
-        getPageSize():Kontext.FormValue<string>;
-        getNewCtxSize():Kontext.FormValue<string>;
-        getLineNumbers():boolean;
-        getShuffle():boolean;
-        getWlPageSize():Kontext.FormValue<string>;
-        getFmaxItems():Kontext.FormValue<string>;
-        getCitemsPerPage():Kontext.FormValue<string>;
-        getIsBusy():boolean;
-        addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
-        getUseCQLEditor():boolean;
-        getUserIsAnonymous():boolean;
     }
 
 }

@@ -59,7 +59,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
                     this.pageModel.createActionUrl(
                         'view',
                         this.pageModel.getConcArgs().items()
-                    ) + '#edit_op/operationIdx=' + action.payload['operationIdx']
+                    ) + '#edit_op/operationIdx=' + action.payload.operationIdx
                 );
             }
         );

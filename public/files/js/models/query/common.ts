@@ -167,20 +167,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryContextModel = queryContextModel;
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
-
-        /*
-        this.onAction(action => {
-            switch (action.name) {
-                case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
-                    this.setActiveWidget(action.payload['sourceId'], action.payload['value']);
-                    this.widgetArgs = action.payload['widgetArgs'] || {};
-                    this.emitChange();
-                break;
-            }
-        });
-        */
-
-
     }
 
     protected validateQuery(query:string, queryType:string):boolean {

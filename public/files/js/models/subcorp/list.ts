@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-
-import {PageModel} from '../../app/page';
-import {StatefulModel} from '../base';
-import { MultiDict } from '../../multidict';
-import { AsyncTaskStatus } from '../asyncTask';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, throwError, of as rxOf } from 'rxjs';
 import { tap, concatMap } from 'rxjs/operators';
+
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
+import { StatefulModel } from '../base';
+import { MultiDict } from '../../multidict';
+import { AsyncTaskStatus } from '../asyncTask';
 
 
 
@@ -100,7 +100,7 @@ export class SubcorpListModel extends StatefulModel {
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             const subcTasks = itemList.filter(item => item.category == 'subcorpus');
-            if (subcTasks.size > 0) {
+            if (subcTasks.length > 0) {
                 this.layoutModel.showMessage('info',
                     this.layoutModel.translate('task__type_subcorpus_done'));
                 this.reloadItems().subscribe(

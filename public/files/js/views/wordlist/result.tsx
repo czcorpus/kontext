@@ -319,7 +319,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
                 </p>
             );
 
-        } else if (props.isBusy) {
+        } else if (props.isUnfinished) {
             return (
                 <div className="WordlistResult">
                     <CalculationStatus progressPercent={props.bgCalcStatus}

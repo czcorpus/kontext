@@ -20,7 +20,7 @@
 
 import { Observable, of as rxOf } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
-import { concatMap, tap, map, skip } from 'rxjs/operators';
+import { concatMap, tap, map } from 'rxjs/operators';
 
 import { Kontext } from '../../types/common';
 import { validateGzNumber } from '../base';
@@ -121,15 +121,6 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         this.layoutModel = layoutModel;
         this.formModel = formModel;
 
-        /* TODO !!!
-        this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
-            if (evt.state['pagination']) {
-                this.currPage = evt.state['page'];
-                this.currPageInput = evt.state['page'].toFixed();
-                this.processPageLoad(true);
-            }
-        });
-        */
 
         this.addActionHandler<Actions.WordlistResultViewConc>(
             ActionName.WordlistResultViewConc,
@@ -166,6 +157,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 if (!action.error) {
                     state.currPage = action.payload.page;
                     state.currPageInput = action.payload.page + '';
+                    state.data = action.payload.data;
+                    state.isLastPage = action.payload.isLast;
                 }
                 state.isBusy = false;
             }
@@ -288,6 +281,17 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 }
             }
         );
+
+        this.addActionHandler<Actions.WordlistHistoryPopState>(
+            ActionName.WordlistHistoryPopState,
+            (state, action) => {
+                state.currPageInput = action.payload.currPageInput;
+                state.currPage = parseInt(state.currPageInput);
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, state.currPage, dispatch);
+            }
+        )
     }
 
     private fetchLastPage(state:WordlistResultModelState, formSubmitArgs:MultiDict):Observable<[Array<IndexedResultItem>, number, boolean, number]> {
@@ -347,14 +351,14 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 }
             ),
             tap(
-                data => {
+                ([pageNum,]) => {
                     if (!skipHistory) {
                         this.layoutModel.getHistory().pushState(
                             'wordlist/result',
                             new MultiDict(state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
                             {
                                 pagination: true,
-                                page: state.currPage
+                                page: pageNum
                             }
                         );
                     }
@@ -386,7 +390,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
     }
 
     private loadData(state:WordlistResultModelState, newPage:number, formModelSubmitArgs:MultiDict):Observable<[Array<IndexedResultItem>, number, boolean]> {
-        formModelSubmitArgs.set('wlpage', state.currPage);
+        formModelSubmitArgs.set('wlpage', newPage);
         return this.layoutModel.ajax$<DataAjaxResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
@@ -399,7 +403,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                         throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
                     }
                     return rxOf(tuple(
-                        importData(data.Items, state.currPage, state.pageSize),
+                        importData(data.Items, newPage, state.pageSize),
                         newPage,
                         !!data.lastpage
                     ));

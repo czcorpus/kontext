@@ -20,15 +20,17 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext, ViewOptions} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
-import {init as lineSelViewsInit} from './lineSelection';
-import {init as paginatorViewsInit} from './paginator';
-import {init as linesViewInit} from './lines';
-import {init as concDetailViewsInit} from './detail/index';
-import {init as concSaveViewsInit} from './save';
-import {init as extendedInfoViewsInit} from './extendedInfo';
+import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
+import { Subscription } from 'rxjs';
+
+import { Kontext, ViewOptions } from '../../types/common';
+import { PluginInterfaces } from '../../types/plugins';
+import { init as lineSelViewsInit } from './lineSelection';
+import { init as paginatorViewsInit } from './paginator';
+import { init as linesViewInit } from './lines';
+import { init as concDetailViewsInit } from './detail/index';
+import { init as concSaveViewsInit } from './save';
+import { init as extendedInfoViewsInit } from './extendedInfo';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';
 import { ConcLineModel, ConcSummary as LinesConcSummary } from '../../models/concordance/lines';
 import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/concordance/detail';
@@ -36,7 +38,7 @@ import { CollFormModel } from '../../models/coll/collForm';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
 import { UsageTipsModel } from '../../models/usageTips';
-import { Subscription } from 'rxjs';
+import { MainMenuModelState } from '../../models/mainMenu';
 
 
 export class ViewPageModels {
@@ -46,7 +48,7 @@ export class ViewPageModels {
     refsDetailModel:RefsDetailModel;
     userInfoModel:Kontext.IUserInfoModel;
     collFormModel:CollFormModel;
-    mainMenuModel:IModel<{}>;
+    mainMenuModel:IModel<MainMenuModelState>;
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
     usageTipsModel:UsageTipsModel;

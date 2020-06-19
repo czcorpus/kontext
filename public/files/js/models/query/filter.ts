@@ -32,6 +32,7 @@ import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery, WidgetsMap, shouldDownArrowTriggerHistory } from './common';
 import { ActionName } from './actions';
+import { tuple } from 'cnc-tskit';
 
 
 /**
@@ -64,13 +65,16 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
 /**
  *import {GeneralViewOptionsModel} from '../options/general';
  */
-export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
+export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs}, initialArgs:AjaxResponse.FilterFormArgs,
         key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
     const ans = [];
     for (let formId in args) {
         if (args.hasOwnProperty(formId) && args[formId].form_type === 'filter') {
             ans.push([formId, key(<AjaxResponse.FilterFormArgs>args[formId])]);
         }
+    }
+    if (args['__new__'] === undefined) {
+        args['__new__'] = initialArgs;
     }
     return ans;
 }
@@ -194,8 +198,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             defaultAttrValues: Immutable.Map<string, string>(props.currDefaultAttrValues),
             pnFilterValues: Immutable.Map<string, string>(props.currPnFilterValues),
             filflValues: Immutable.Map<string, string>(props.currFilflVlaues),
-            filfposValues: Immutable.Map<string, Kontext.FormValue<string>>(props.currFilfposValues),
-            filtposValues: Immutable.Map<string, Kontext.FormValue<string>>(props.currFiltposValues),
+            filfposValues: Immutable.Map<string, Kontext.FormValue<string>>(props.currFilfposValues.map(([fid, v]) => tuple(fid, Kontext.newFormValue(v, true)))),
+            filtposValues: Immutable.Map<string, Kontext.FormValue<string>>(props.currFiltposValues.map(([fid, v]) => tuple(fid, Kontext.newFormValue(v, true)))),
             inclkwicValues: Immutable.Map<string, boolean>(props.currInclkwicValues),
             tagBuilderSupport: tagBuilderSupport,
             opLocks: Immutable.Map<string, boolean>(props.opLocks),
@@ -214,6 +218,11 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
     onAction(action:Action) {
         switch (action.name) {
+            case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
+                this.setActiveWidget(action.payload['sourceId'], action.payload['value']);
+                this.state.widgetArgs = action.payload['widgetArgs'] || {};
+                this.emitChange();
+            break;
             case 'MAIN_MENU_SHOW_FILTER':
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
                 this.emitChange();

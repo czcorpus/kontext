@@ -34,6 +34,8 @@ import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
 import {AudioPlayer, AudioPlayerStatus} from './media';
 import {ConcSaveModel} from './save';
 import { transformVmode, ActionName as ViewOptionsActionName} from '../options/structsAttrs';
+import { GeneralViewOptionsModel } from '../options/general';
+import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionsName } from '../options/actions';
 
 export interface ServerTextChunk {
     class:string;
@@ -554,7 +556,21 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                 break;
                 case ViewOptionsActionName.SaveSettingsDone:
                     this.baseViewAttr = action.payload['baseViewAttr'];
-                    this.updateOnCorpViewOptsChange();
+                break;
+                case GeneralViewOptionsActionsName.GeneralSubmitDone:
+                    if (!action.error) {
+                        this.showLineNumbers = action.payload['showLineNumbers'];
+                        this.currentPage = 1;
+                        this.reloadPage().subscribe(
+                            (data) => {
+                                this.pushHistoryState(this.currentPage);
+                                this.emitChange();
+                            },
+                            (err) => {
+                                this.layoutModel.showMessage('error', err);
+                            }
+                        );
+                    }
                 break;
             }
         });
@@ -602,20 +618,6 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         this.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
         this.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
 
-        this.reloadPage().subscribe(
-            (data) => {
-                this.pushHistoryState(this.currentPage);
-                this.emitChange();
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
-    }
-
-    updateOnGlobalViewOptsChange(model:ViewOptions.IGeneralViewOptionsModel):void {
-        this.showLineNumbers = model.getLineNumbers();
-        this.currentPage = 1;
         this.reloadPage().subscribe(
             (data) => {
                 this.pushHistoryState(this.currentPage);
