@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import {calcTextColorFromBg, color2str} from '../../../multidict';
 import { Speech, ConcDetailModel } from '../../../models/concordance/detail';
 import { Subscription } from 'rxjs';
 import { IActionDispatcher } from 'kombo';
 import { Kontext } from '../../../types/common';
+import { Color, pipe } from 'cnc-tskit';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
@@ -247,8 +247,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const style = {
-            backgroundColor: color2str(props.speech.colorCode),
-            color: color2str(calcTextColorFromBg(props.speech.colorCode))
+            backgroundColor: Color.color2str(props.speech.colorCode),
+            color: pipe(props.speech.colorCode, Color.textColorFromBg(), Color.color2str())
         };
         return (
             <tr key={`speech-${props.idx}`} className="speech">
@@ -260,7 +260,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td className="text">
                     <SpeechText data={props.speech.text} key={props.idx}
-                            bulletColor={color2str(props.speech.colorCode)}
+                            bulletColor={Color.color2str(props.speech.colorCode)}
                             handleClick={props.handlePlayClick}
                             handleStopClick={props.handleStopClick}
                             isPlaying={props.isPlaying}
@@ -289,8 +289,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     ans.push(<span key={`p-${props.idx}:${i}`} className="plus">{'\u00a0'}+{'\u00a0'}</span>);
                 }
                 const css = {
-                    backgroundColor: color2str(speech.colorCode),
-                    color: color2str(calcTextColorFromBg(speech.colorCode))
+                    backgroundColor: Color.color2str(speech.colorCode),
+                    color: pipe(speech.colorCode, Color.textColorFromBg(), Color.color2str())
                 };
                 ans.push(<strong key={`${props.idx}:${i}`} className="speaker"
                                 title={exportMetadata(speech.metadata)}
@@ -307,7 +307,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <td className="text overlapping-block">
                     {props.speeches.map((speech, i) => <SpeechText data={speech.text}
                                 key={`${props.idx}:${i}`}
-                                bulletColor={color2str(speech.colorCode)}
+                                bulletColor={Color.color2str(speech.colorCode)}
                                 handleClick={props.handlePlayClick}
                                 handleStopClick={props.handleStopClick}
                                 isPlaying={props.isPlaying}

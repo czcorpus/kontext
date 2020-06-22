@@ -23,11 +23,11 @@ import { Observable, Observer, of as rxOf } from 'rxjs';
 import {Kontext} from '../../types/common';
 import {validateGzNumber} from '../base';
 import {PageModel} from '../../app/page';
-import {MultiDict, puid} from '../../multidict';
+import {MultiDict} from '../../multidict';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 import { ActionName, Actions, FileTarget } from './actions';
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, Ident } from 'cnc-tskit';
 
 
 /**
@@ -261,7 +261,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             (state, action) => {
                 state.filterEditorData = {
                     target: FileTarget.WHITELIST,
-                    fileName: `unsaved-file-${puid().substr(0, 5)}`,
+                    fileName: `unsaved-file-${Ident.puid().substr(0, 5)}`,
                     data: ''
                 };
             }
@@ -272,7 +272,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             (state, action) => {
                 state.filterEditorData = {
                     target: FileTarget.BLACKLIST,
-                    fileName: `unsaved-file-${puid().substr(0, 5)}`,
+                    fileName: `unsaved-file-${Ident.puid().substr(0, 5)}`,
                     data: ''
                 };
             }
