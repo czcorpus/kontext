@@ -145,11 +145,3 @@ export class MultiDict implements Kontext.IMultiDict {
         return this._data.hasOwnProperty(key);
     }
 }
-
-/**
- * note: this has only a limited reliability
- */
-export function isTouchDevice():boolean {
-    return 'ontouchstart' in window &&
-        window.matchMedia('screen and (max-width: 479px)').matches;
-}
