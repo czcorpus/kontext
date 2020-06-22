@@ -43,9 +43,19 @@ export class MultiDict implements Kontext.IMultiDict {
                 if (this._data[k] === undefined) {
                     this._data[k] = [];
                 }
-                this._data[k].push(v + '');
+                this._data[k].push(this.importValue(v));
             }
         }
+    }
+
+    private importValue(v:string|number|boolean):string|undefined {
+        if (v === '' || v === null || v === undefined) {
+            return undefined;
+
+        } else if (typeof v === 'boolean') {
+            return v ? '1' : '0';
+        }
+        return v + '';
     }
 
     size():number {
@@ -66,7 +76,7 @@ export class MultiDict implements Kontext.IMultiDict {
      * first.
      */
     set(key:string, value:number|boolean|string):void {
-        this._data[key] = [value + ''];
+        this._data[key] = [this.importValue(value)];
     }
 
     /**
@@ -76,7 +86,7 @@ export class MultiDict implements Kontext.IMultiDict {
      */
     replace(key:string, values:Array<string|number|boolean>):void {
         if (values.length > 0) {
-            this._data[key] = values.map(v => v + '');
+            this._data[key] = values.map(this.importValue);
 
         } else {
             this.remove(key);
@@ -98,7 +108,7 @@ export class MultiDict implements Kontext.IMultiDict {
         if (this._data[key] === undefined) {
             this._data[key] = [];
         }
-        this._data[key].push(value + '');
+        this._data[key].push(this.importValue(value));
     }
 
     /**
@@ -108,7 +118,9 @@ export class MultiDict implements Kontext.IMultiDict {
         let ans = [];
         for (let p in this._data) {
             for (let i = 0; i < this._data[p].length; i += 1) {
-                ans.push([p, this._data[p][i]]);
+                if (this._data[p][i] !== undefined) {
+                    ans.push([p, this._data[p][i]]);
+                }
             }
         }
         return ans;
