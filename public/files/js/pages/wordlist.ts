@@ -34,6 +34,7 @@ import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
 import { ResultItem } from '../models/wordlist/common';
 import { Actions, ActionName } from '../models/wordlist/actions';
+import { HTTP } from 'cnc-tskit';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -85,7 +86,7 @@ export class WordlistPage extends StatefulModel  {
         return rxInterval(WordlistPage.STATUS_CHECK_INTERVAL).pipe(
             concatMap((v, i) => {
                 return this.layoutModel.ajax$<AsyncProcessResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.layoutModel.createActionUrl('wordlist/process'),
                     args
                 );

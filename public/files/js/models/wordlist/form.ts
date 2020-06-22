@@ -195,7 +195,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistResultNextPage,
             ActionName.WordlistResultPrevPage,
             ActionName.WordlistGoToLastPage,
-            ActionName.WordlistResultConfirmPage
+            ActionName.WordlistResultConfirmPage,
+            ActionName.WordlistResultViewConc
         );
 
         this.addActionHandler<Actions.WordlistFormSelectAttr>(
@@ -418,27 +419,28 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
 
         this.addActionHandler<Actions.WordlistFormSubmit>(
             ActionName.WordlistFormSubmit,
-            null,
+            (state, action) => {
+                this.validateForm(state);
+            },
             (state, action, dispatch) => {
-                const err = this.validateForm(state);
-                if (!err) {
+                if (!state.wlminfreq.isInvalid) {
                     this.submit(state);
 
                 } else {
-                    this.layoutModel.showMessage('error', err);
+                    this.layoutModel.showMessage('error', state.wlminfreq.errorDesc);
                 }
             }
         )
     }
 
-    private validateForm(state:WordlistFormState):Error|null {
+    private validateForm(state:WordlistFormState):void {
         if (validateGzNumber(state.wlminfreq.value)) {
             state.wlminfreq.isInvalid = false;
             return null;
 
         } else {
             state.wlminfreq.isInvalid = true;
-            return new Error(this.layoutModel.translate('wordlist__minfreq_err'));
+            state.wlminfreq.errorDesc = this.layoutModel.translate('wordlist__minfreq_err');
         }
     }
 

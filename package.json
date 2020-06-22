@@ -36,7 +36,7 @@
     "@types/react-dom": "^16.9.8",
     "immutable": "^3.8.2",
     "rxjs": "^6.5.5",
-    "kombo": "^0.76.0",
+    "kombo": "^0.77.0",
     "cnc-tskit": "0.15.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
