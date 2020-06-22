@@ -39,3 +39,21 @@ export interface HeadingItem {
     str:string;
     sortKey:string;
 }
+
+
+export enum WlnumsTypes {
+    FRQ = 'frq',
+    DOCF = 'docf',
+    ARF = 'arf'
+}
+
+export enum WlTypes {
+    SIMPLE = 'simple',
+    MULTILEVEL = 'multilevel'
+}
+
+export enum FileTarget {
+    WHITELIST = 'wlwords',
+    BLACKLIST = 'blacklist',
+    EMPTY = 'empty'
+}

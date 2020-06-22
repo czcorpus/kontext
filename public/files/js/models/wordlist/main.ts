@@ -21,6 +21,7 @@
 import { Observable, of as rxOf } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
+import { List, HTTP, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { validateGzNumber } from '../base';
@@ -28,7 +29,6 @@ import { PageModel } from '../../app/page';
 import { WordlistFormModel } from './form';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
-import { List, HTTP, tuple } from 'cnc-tskit';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData } from './common';
 
 

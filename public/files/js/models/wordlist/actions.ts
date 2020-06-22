@@ -20,15 +20,8 @@
 
 import { Action } from 'kombo';
 import { MultiDict } from '../../multidict';
-import { IndexedResultItem } from './common';
+import { IndexedResultItem, WlTypes, FileTarget } from './common';
 import { SaveData } from '../../app/navigation';
-
-
-export enum FileTarget {
-    WHITELIST = 'wlwords',
-    BLACKLIST = 'blacklist',
-    EMPTY = 'empty'
-}
 
 
 export enum ActionName {
@@ -152,7 +145,7 @@ export namespace Actions {
     }
 
     export interface WordlistFormSetWltype extends Action<{
-        value:string;
+        value:WlTypes;
     }> {
         name:ActionName.WordlistFormSetWltype;
     }

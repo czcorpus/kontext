@@ -60,8 +60,6 @@ export class WordlistPage extends StatefulModel  {
 
     private wordlistViews:WordlistFormExportViews;
 
-    private wordlistFormState:WordlistFormState;
-
     static MAX_NUM_NO_CHANGE = 30;
 
     static MAX_NUM_STATUS_CHECK = 300;
@@ -245,7 +243,7 @@ export class WordlistPage extends StatefulModel  {
                 utils: this.layoutModel.getComponentHelpers(),
                 wordlistSaveViews:saveViews,
                 wordlistResultModel: resultModel,
-                wordlistSaveModel: this.saveModel
+                wordlistFormModel: formModel
             });
 
             this.layoutModel.renderReactComponent(
