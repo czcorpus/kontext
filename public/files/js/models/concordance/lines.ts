@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -18,227 +18,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { List, pipe, HTTP } from 'cnc-tskit';
 
-import {Kontext, TextTypes, ViewOptions} from '../../types/common';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {PluginInterfaces} from '../../types/plugins';
-import {MultiDict} from '../../multidict';
-import {StatefulModel, UNSAFE_SynchronizedModel} from '../base';
-import {PageModel} from '../../app/page';
-import {KWICSection} from './line';
-import {Line, TextChunk, IConcLinesProvider} from '../../types/concordance';
-import {AudioPlayer, AudioPlayerStatus} from './media';
-import {ConcSaveModel} from './save';
-import { transformVmode, ActionName as ViewOptionsActionName} from '../options/structsAttrs';
-import { GeneralViewOptionsModel } from '../options/general';
+import { Kontext, TextTypes, ViewOptions } from '../../types/common';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { PluginInterfaces } from '../../types/plugins';
+import { MultiDict } from '../../multidict';
+import { PageModel } from '../../app/page';
+import { KWICSection } from './line';
+import { Line, TextChunk, IConcLinesProvider } from '../../types/concordance';
+import { AudioPlayer, AudioPlayerStatus} from './media';
+import { ConcSaveModel } from './save';
+import { transformVmode, ActionName as ViewOptionsActionName } from '../options/structsAttrs';
 import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionsName } from '../options/actions';
+import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary, ViewConfiguration, AudioPlayerActions } from './common';
+import { Actions, ActionName } from './actions';
 
-export interface ServerTextChunk {
-    class:string;
-    str:string;
-    open_link?:{speech_path:string};
-    close_link?:{speech_path:string};
-    continued?:boolean;
-    tail_posattrs?:Array<string>;
-}
 
-export interface ServerPagination {
-    firstPage:number;
-    prevPage:number;
-    nextPage:number;
-    lastPage:number;
-}
-
-export interface SingleCorpServerLineData {
-    Left:Array<ServerTextChunk>;
-    Right:Array<ServerTextChunk>;
-    Kwic:Array<ServerTextChunk>;
-    rightsize:number;
-    hitlen:string;
-    linegroup:number;
-    leftsize:number;
-    ref:Array<string>;
-    rightspace:string;
-    linenum:number;
-    leftspace:string;
-    kwiclen:number;
-    toknum:number;
-}
-
-export interface ServerLineData extends SingleCorpServerLineData {
-    Align:Array<SingleCorpServerLineData>;
-}
-
-export interface ConcSummary {
-    concSize: number;
-    fullSize: number;
-    sampledSize: number;
-    ipm: number;
-    arf: number;
-    isShuffled: boolean;
-}
-
-export interface CorpColumn {
-    n:string;
-    label:string;
-    visible:boolean;
-}
-
-export interface ViewConfiguration {
-
-    /**
-     * A positional attribute representing the original text.
-     * In KonText this is locked to the 'word'.
-     */
-    basePosAttr:string;
-
-    /**
-     * A positional attribute used to create main text flow.
-     * In most cases it is the same value as 'basePosAttr' but
-     * for some corpora it can make sense to switch to a different
-     * one (e.g. when dealing with different layers within spoken corpora)
-     */
-    baseViewAttr:string;
-
-    activePosAttrs:Array<string>;
-
-    anonymousUser:boolean;
-
-    /**
-     * Determine concordance view mode (kwic/sen/align)
-     */
-    ViewMode:string;
-
-    /**
-     * Where we should display additional positional attributes
-     */
-    AttrAllpos:ViewOptions.PosAttrViewScope;
-
-    /**
-     * How we should display additional positional attributes
-     */
-    AttrViewMode:ViewOptions.PosAttrViewMode;
-
-    ShowLineNumbers:boolean;
-
-    KWICCorps:Array<string>;
-
-    CorporaColumns:Array<CorpColumn>;
-
-    SortIdx:Array<{page:number; label:string}>;
-
-    NumItemsInLockedGroups:number;
-
-    baseCorpname:string;
-
-    mainCorp:string;
-
-    /**
-     * For private subcorpus this is just what user entered
-     * as a subc. name. In the current corpus is published, a
-     * special code is used here instead and the original
-     * name is moved to the 'origSubCorpName' attribute.
-     */
-    subCorpName:string;
-
-    /**
-     * The original name user entered for a subcorpus.
-     * The value is non-empty only if a respective corpus
-     * is published.
-     */
-    origSubCorpName:string;
-
-    pagination:ServerPagination;
-
-    currentPage:number;
-
-    concSummary:ConcSummary;
-
-    canSendEmail:boolean;
-
-    useSafeFont:boolean;
-
-    /**
-     * If true then client regularly fetches status
-     * of the calculation until it is finished.
-     */
-    Unfinished:boolean;
-
-    /**
-     * If true then we don't have to notify
-     * user that the calculation will take quite a long time
-     * as we are able to calc. the stuff quicker
-     * (due to the liveattrs plugin).
-     */
-    FastAdHocIpm:boolean;
-
-    /**
-     * If true then a concordance toolbar providing
-     * some useful options is shown.
-     */
-    ShowConcToolbar:boolean;
-
-    /**
-     * A structural attribute identifying a speaker (e.g. 'sp.num').
-     * If null then the corpus is not considered to be spoken.
-     */
-    SpeakerIdAttr:[string, string];
-
-    /**
-     * A structural attribute specifying whether there is
-     * an overlap between speeches.
-     */
-    SpeechOverlapAttr:[string, string];
-
-    /**
-     * A value denoting 'true' in case of SpeechOverlapAttr
-     */
-    SpeechOverlapVal:string;
-
-    /**
-     * A list of structural attributes containing
-     * speech metadata. Used in speech detail mode.
-     */
-    SpeechAttrs:Array<string>;
-
-    /**
-     * A structural attribute referring to an audio chunk
-     * representing a speech segment.
-     */
-    SpeechSegment:[string, string];
-
-    SpeakerColors:Array<string>;
-
-    /**
-     * A structure used to show whole document. It is optional (null is ok).
-     */
-    StructCtx:string;
-
-    WideCtxGlobals:Array<[string,string]>;
-
-    catColors:Array<string>;
-
-    supportsSyntaxView:boolean;
-
-    anonymousUserConcLoginPrompt:boolean;
-
-    onSyntaxPaneReady:(tokenId:number, kwicLength:number)=>void;
-
-    onSyntaxPaneClose:()=>void;
-
-    onReady:()=>void;
-
-    onChartFrameReady?:(usePrevData:boolean)=>void;
-}
 
 /**
  *
  */
-function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Immutable.List<Line> {
+function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line> {
     let ans:Array<Line> = [];
 
     function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
@@ -277,9 +81,9 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Immutable.L
             item.toknum,
             item.linenum,
             item.ref,
-            Immutable.List<TextChunk>(item.Left.map((v, j) => importTextChunk(v, `C${i}:L${j}`))),
-            Immutable.List<TextChunk>(item.Kwic.map((v, j) => importTextChunk(v, `C${i}:K${j}`))),
-            Immutable.List<TextChunk>(item.Right.map((v, j) => importTextChunk(v, `C${i}:R${j}`)))
+            List.map((v, j) => importTextChunk(v, `C${i}:L${j}`), item.Left),
+            List.map((v, j) => importTextChunk(v, `C${i}:K${j}`), item.Kwic),
+            List.map((v, j) => importTextChunk(v, `C${i}:R${j}`), item.Right)
         ));
 
         line = line.concat((item.Align || []).map((item, k) => {
@@ -287,9 +91,9 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Immutable.L
                 item.toknum,
                 item.linenum,
                 item.ref,
-                Immutable.List<TextChunk>(item.Left.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`))),
-                Immutable.List<TextChunk>(item.Kwic.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`))),
-                Immutable.List<TextChunk>(item.Right.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`)))
+                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`), item.Left),
+                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`), item.Kwic),
+                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`), item.Right)
             );
         }));
 
@@ -297,69 +101,43 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Immutable.L
         ansItem.lineNumber = item.linenum;
         ansItem.lineGroup = item.linegroup;
         ansItem.kwicLength = item.kwiclen;
-        ansItem.languages = Immutable.List(line);
+        ansItem.languages = line;
         ans.push(ansItem); // TODO
     });
 
-    return Immutable.List(ans);
+    return ans;
 }
 
 
-/**
- *
- */
-export class DummySyntaxViewModel extends StatefulModel implements PluginInterfaces.SyntaxViewer.IPlugin {
+export interface ConclineModelState {
 
-    render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
+    lines:Array<Line>;
 
-    close():void {}
+    viewMode:string;
 
-    onPageResize():void {}
+    attrAllpos:ViewOptions.PosAttrViewScope;
 
-    isWaiting():boolean {
-        return false;
-    }
+    attrViewMode:ViewOptions.PosAttrViewMode;
 
-    registerOnError(fn:(e:Error)=>void):void {}
-}
+    showLineNumbers:boolean;
 
+    kwicCorps:Array<string>;
 
-/**
- *
- */
-export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLinesProvider {
+    corporaColumns:Array<CorpColumn>;
 
-    private layoutModel:PageModel;
+    baseCorpname:string;
 
-    private lines:Immutable.List<Line>;
+    subCorpName:string;
 
-    private viewMode:string;
+    origSubcorpName:string;
 
-    private attrAllpos:ViewOptions.PosAttrViewScope;
+    playerAttachedChunk:string;
 
-    private attrViewMode:ViewOptions.PosAttrViewMode;
+    pagination:ServerPagination;
 
-    private showLineNumbers:boolean;
+    currentPage:number;
 
-    private kwicCorps:Immutable.List<string>;
-
-    private corporaColumns:Immutable.List<CorpColumn>;
-
-    private baseCorpname:string;
-
-    private subCorpName:string;
-
-    private origSubcorpName:string;
-
-    private audioPlayer:AudioPlayer;
-
-    private playerAttachedChunk:string;
-
-    private pagination:ServerPagination;
-
-    private currentPage:number;
-
-    private numItemsInLockedGroups:number;
+    numItemsInLockedGroups:number;
 
     /**
      * Note: do not confuse with isBusy.
@@ -367,63 +145,86 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
      * (typically 1st page) but the process of calculating
      * data is still running in background.
      */
-    private unfinishedCalculation:boolean;
+    unfinishedCalculation:boolean;
 
-    private concSummary:ConcSummary;
+    concSummary:ConcSummary;
 
-    private adHocIpm:number;
+    adHocIpm:number;
 
-    private fastAdHocIpm:boolean;
+    fastAdHocIpm:boolean;
 
-    private useSafeFont:boolean;
+    useSafeFont:boolean;
 
-    private saveModel:ConcSaveModel;
+    supportsSyntaxView:boolean;
 
-    private syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin;
+    busyWaitSecs:number;
 
-    private supportsSyntaxView:boolean;
+    baseViewAttr:string;
 
-    private ttModel:TextTypes.ITextTypesModel;
+    viewAttrs:Array<string>;
+}
+
+
+/**
+ *
+ */
+export class ConcLineModel extends StatefulModel<ConclineModelState> implements IConcLinesProvider {
+
+    private readonly layoutModel:PageModel;
+
+    private readonly saveModel:ConcSaveModel;
+
+    private readonly syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin;
+
+    private readonly audioPlayer:AudioPlayer;
+
+    private readonly ttModel:TextTypes.ITextTypesModel;
 
     /**
      * Note: substitutes "isBusy". Also compare with unfinishedCalculation.
      */
     private busyTimer:Subscription;
 
-    private busyWaitSecs:number;
-
-    private baseViewAttr:string;
+    private readonly runBusyTimer:(currTimer:Subscription)=>Subscription;
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
             ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
-        super(dispatcher);
+        const viewAttrs = layoutModel.getConcArgs().head('attrs').split(',');
+        super(
+            dispatcher,
+            {
+                viewMode: lineViewProps.ViewMode,
+                attrAllpos: lineViewProps.AttrAllpos,
+                attrViewMode: lineViewProps.AttrViewMode,
+                showLineNumbers: lineViewProps.ShowLineNumbers,
+                kwicCorps: lineViewProps.KWICCorps,
+                corporaColumns: lineViewProps.CorporaColumns,
+                baseCorpname: lineViewProps.baseCorpname,
+                subCorpName: lineViewProps.subCorpName,
+                origSubcorpName: lineViewProps.origSubCorpName,
+                unfinishedCalculation: lineViewProps.Unfinished,
+                fastAdHocIpm: lineViewProps.FastAdHocIpm,
+                concSummary: lineViewProps.concSummary,
+                baseViewAttr: lineViewProps.baseViewAttr,
+                lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
+                viewAttrs: viewAttrs,
+                numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
+                pagination: lineViewProps.pagination, // TODO possible mutable mess
+                currentPage: lineViewProps.currentPage || 1,
+                useSafeFont: lineViewProps.useSafeFont,
+                busyWaitSecs: 0,
+                supportsSyntaxView: lineViewProps.supportsSyntaxView,
+                adHocIpm: -1,
+                playerAttachedChunk: ''
+            }
+        );
         this.layoutModel = layoutModel;
         this.saveModel = saveModel;
-        this.syntaxViewModel = syntaxViewModel;
         this.ttModel = ttModel;
-        this.viewMode = lineViewProps.ViewMode;
-        this.attrAllpos = lineViewProps.AttrAllpos;
-        this.attrViewMode = lineViewProps.AttrViewMode;
-        this.showLineNumbers = lineViewProps.ShowLineNumbers;
-        this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
-        this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
-        this.baseCorpname = lineViewProps.baseCorpname;
-        this.subCorpName = lineViewProps.subCorpName;
-        this.origSubcorpName = lineViewProps.origSubCorpName;
-        this.unfinishedCalculation = lineViewProps.Unfinished;
-        this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
-        this.concSummary = lineViewProps.concSummary;
-        this.baseViewAttr = lineViewProps.baseViewAttr;
-        this.lines = importLines(initialData, this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
-        this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
-        this.pagination = lineViewProps.pagination; // TODO possible mutable mess
-        this.currentPage = lineViewProps.currentPage || 1;
-        this.useSafeFont = lineViewProps.useSafeFont;
+        this.syntaxViewModel = syntaxViewModel;
         this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
-        this.busyWaitSecs = 0;
-        this.supportsSyntaxView = lineViewProps.supportsSyntaxView;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -441,81 +242,118 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
         );
+        this.runBusyTimer = (currTimer:Subscription):Subscription => {
+            if (currTimer) {
+                currTimer.unsubscribe();
+            }
+            return interval(1000).subscribe(
+                (idx) => {
+                    dispatcher.dispatch({
+                        name: 'CONCORDANCE_DATA_WAIT_TIME_INC',
+                        payload: {
+                            idx: idx
+                        }
+                    });
+                }
+            );
+        };
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
-                    this.changeMainCorpus(action.payload['maincorp']);
-                break;
-                case 'CONCORDANCE_PLAY_AUDIO_SEGMENT':
-                    this.playAudio(action.payload['chunksIds']);
-                    this.emitChange();
-                break;
-                case 'AUDIO_PLAYER_CLICK_CONTROL':
-                    this.handlePlayerControls(action.payload['action']);
-                    this.emitChange();
-                break;
-                case 'CONCORDANCE_CHANGE_PAGE':
-                case 'CONCORDANCE_REVISIT_PAGE':
-                    this.changePage(action.payload['action'], action.payload['pageNum']).subscribe(
-                        (data) => {
-                            if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
-                                this.pushHistoryState(this.currentPage);
-                            }
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    const prevConcSize = this.concSummary.concSize;
-                    this.unfinishedCalculation = !action.payload['finished'];
-                    this.concSummary.concSize = action.payload['concsize'];
-                    this.concSummary.fullSize = action.payload['fullsize'];
-                    this.concSummary.ipm = action.payload['relconcsize'];
-                    this.concSummary.arf = action.payload['arf'];
-                    this.pagination.lastPage = action.payload['availPages'];
-                    this.synchronize(
-                        action.name,
-                        {
-                            isUnfinished: this.isUnfinishedCalculation()
-                        }
-                    );
-                    if (this.concSummary.concSize > 0) {
-                        if (prevConcSize === 0) {
-                            this.changePage('customPage', 1).subscribe(
-                                (data) => {
-                                    if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
-                                        this.pushHistoryState(this.currentPage);
-                                    }
-                                    this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                                    this.emitChange();
-                                },
-                                (err) => {
-                                    this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                                    this.emitChange();
-                                    this.layoutModel.showMessage('error', err);
-                                }
-                            );
+        this.addActionHandler<Actions.ChangeMainCorpus>(
+            ActionName.ChangeMainCorpus,
+            action => {
+                this.changeMainCorpus(action.payload.maincorp);
+                    // we leave the page here
+            }
+        );
 
-                        } else {
-                            this.busyTimer = this.stopBusyTimer(this.busyTimer);
+        this.addActionHandler<Actions.PlayAudioSegment>(
+            ActionName.PlayAudioSegment,
+            action => {
+                this.playAudio(action.payload.chunksIds);
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.AudioPlayerClickControl>(
+            ActionName.AudioPlayerClickControl,
+            action => {
+                this.handlePlayerControls(action.payload.action);
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ChangePage>(
+            [
+                ActionName.ChangePage,
+                ActionName.RevisitPage
+            ],
+            action => {
+                this.changePage(action.payload.action, action.payload.pageNum).subscribe(
+                    (data) => {
+                        if (action.name === ActionName.ChangePage) {
+                            this.pushHistoryState(this.state.currentPage);
                         }
+                        this.emitChange();
+                    },
+                    (err) => {
+                        this.emitChange();
+                        this.layoutModel.showMessage('error', err);
                     }
-                    this.emitChange();
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.AsyncCalculationUpdated>(
+            ActionName.AsyncCalculationUpdated,
+            action => {
+                const prevConcSize = this.state.concSummary.concSize;
+                this.state.unfinishedCalculation = !action.payload.finished;
+                this.state.concSummary.concSize = action.payload.concsize;
+                this.state.concSummary.fullSize = action.payload.fullsize;
+                this.state.concSummary.ipm = action.payload.relconcsize;
+                this.state.concSummary.arf = action.payload.arf;
+                this.state.pagination.lastPage = action.payload.availPages;
+                if (this.state.concSummary.concSize > 0) {
+                    if (prevConcSize === 0) {
+                        this.changePage('customPage', 1).subscribe(
+                            (data) => {
+                                if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
+                                    this.pushHistoryState(this.state.currentPage);
+                                }
+                                this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                                this.emitChange();
+                            },
+                            (err) => {
+                                this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                                this.emitChange();
+                                this.layoutModel.showMessage('error', err);
+                            }
+                        );
+
+                    } else {
+                        this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                    }
+                }
+                this.emitChange();
+            }
+        )
+    }
+
+    foo() {
+        ((action:Action) => {
+            switch (action.name) {
+                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
                     this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                    this.unfinishedCalculation = false;
-                    this.concSummary.concSize = 0;
-                    this.concSummary.fullSize = 0;
-                    this.concSummary.ipm = 0;
-                    this.concSummary.arf = 0;
-                    this.pagination.lastPage = 0;
-                    this.lines = this.lines.clear();
+                    this.state.unfinishedCalculation = false;
+                    this.state.concSummary.concSize = 0;
+                    this.state.concSummary.fullSize = 0;
+                    this.state.concSummary.ipm = 0;
+                    this.state.concSummary.arf = 0;
+                    this.state.pagination.lastPage = 0;
+                    this.state.lines = [];
                     this.emitChange();
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
@@ -551,19 +389,19 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
                     );
                 break;
                 case 'CONCORDANCE_DATA_WAIT_TIME_INC':
-                    this.busyWaitSecs = action.payload['idx'];
+                    this.state.busyWaitSecs = action.payload['idx'];
                     this.emitChange();
                 break;
                 case ViewOptionsActionName.SaveSettingsDone:
-                    this.baseViewAttr = action.payload['baseViewAttr'];
+                    this.state.baseViewAttr = action.payload['baseViewAttr'];
                 break;
                 case GeneralViewOptionsActionsName.GeneralSubmitDone:
                     if (!action.error) {
-                        this.showLineNumbers = action.payload['showLineNumbers'];
-                        this.currentPage = 1;
+                        this.state.showLineNumbers = action.payload['showLineNumbers'];
+                        this.state.currentPage = 1;
                         this.reloadPage().subscribe(
                             (data) => {
-                                this.pushHistoryState(this.currentPage);
+                                this.pushHistoryState(this.state.currentPage);
                                 this.emitChange();
                             },
                             (err) => {
@@ -576,22 +414,6 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         });
     }
 
-    private runBusyTimer(currTimer:Subscription):Subscription {
-        if (currTimer) {
-            currTimer.unsubscribe();
-        }
-        return interval(1000).subscribe(
-            (idx) => {
-                this.dispatcher.dispatch({
-                    name: 'CONCORDANCE_DATA_WAIT_TIME_INC',
-                    payload: {
-                        idx: idx
-                    }
-                });
-            }
-        )
-    }
-
     private stopBusyTimer(subs:Subscription):null {
         if (subs !== null) {
             subs.unsubscribe();
@@ -600,14 +422,14 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     private changeColVisibility(corpusId:string, status:boolean):void {
-        const srchIdx = this.corporaColumns.findIndex(v => v.n === corpusId);
+        const srchIdx = this.state.corporaColumns.findIndex(v => v.n === corpusId);
         if (srchIdx > -1) {
-            const srch = this.corporaColumns.get(srchIdx);
-            this.corporaColumns = this.corporaColumns.set(srchIdx, {
+            const srch = this.state.corporaColumns[srchIdx];
+            this.state.corporaColumns[srchIdx] = {
                 n: srch.n,
                 label: srch.label,
                 visible: status
-            });
+            };
 
         } else {
             throw new Error(`column for ${corpusId} not found`);
@@ -615,12 +437,12 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     private updateOnCorpViewOptsChange():void {
-        this.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
-        this.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
+        this.state.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
+        this.state.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
 
         this.reloadPage().subscribe(
             (data) => {
-                this.pushHistoryState(this.currentPage);
+                this.pushHistoryState(this.state.currentPage);
                 this.emitChange();
             },
             (err) => {
@@ -634,11 +456,11 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getViewAttrsVmode():ViewOptions.AttrViewMode {
-        return transformVmode(this.attrViewMode, this.attrAllpos);
+        return transformVmode(this.state.attrViewMode, this.state.attrAllpos);
     }
 
     getNumItemsInLockedGroups():number {
-        return this.numItemsInLockedGroups;
+        return this.state.numItemsInLockedGroups;
     }
 
     private pushHistoryState(pageNum:number):void {
@@ -654,11 +476,11 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
      * currently displayed data page.
      */
     reloadPage(concId?:string):Observable<MultiDict> {
-        return this.changePage('customPage', this.currentPage, concId);
+        return this.changePage('customPage', this.state.currentPage, concId);
     }
 
     private pageIsInRange(num:number):boolean {
-        return this.pagination.firstPage <= num && num <= this.pagination.lastPage;
+        return this.state.pagination.firstPage <= num && num <= this.state.pagination.lastPage;
     }
 
     private pageNumIsValid(num:number):boolean {
@@ -672,12 +494,12 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
      * currently displayed data page.
      */
     private changePage(action:string, pageNumber?:number, concId?:string):Observable<MultiDict> {
-        const args = this.layoutModel.getConcArgs();
-        const pageNum:number = Number(action === 'customPage' ? pageNumber : this.pagination[action]);
+        const pageNum:number = Number(action === 'customPage' ? pageNumber : this.state.pagination[action]);
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
             return throwError(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));
         }
 
+        const args = this.layoutModel.getConcArgs();
         args.set('fromp', pageNum);
         args.set('format', 'json');
         if (concId) {
@@ -685,25 +507,25 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         }
 
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.layoutModel.createActionUrl('view'),
             args
 
         ).pipe(
             tap((data) => {
                 this.importData(data);
-                this.currentPage = pageNum;
+                this.state.currentPage = pageNum;
             }),
             map(_ => this.layoutModel.getConcArgs())
         );
     }
 
-    private importData(data:Kontext.AjaxResponse):void {
+    private importData(data:Kontext.AjaxResponse):void { // data type is too general
         try {
-            this.lines = importLines(data['Lines'], this.getViewAttrs().indexOf(this.baseViewAttr) - 1);
-            this.numItemsInLockedGroups = data['num_lines_in_groups'];
-            this.pagination = data['pagination'];
-            this.unfinishedCalculation = data['running_calc'];
+            this.state.lines = importLines(data['Lines'], this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1);
+            this.state.numItemsInLockedGroups = data['num_lines_in_groups'];
+            this.state.pagination = data['pagination'];
+            this.state.unfinishedCalculation = data['running_calc'];
 
         } catch (e) {
             console.error(e);
@@ -713,19 +535,19 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private changeViewMode():Observable<any> {
         let mode:string;
-        if (this.corporaColumns.size > 1) {
-            mode = {'align': 'kwic', 'kwic': 'align'}[this.viewMode];
+        if (this.state.corporaColumns.length > 1) {
+            mode = {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode];
 
         } else {
-            mode = {'sen': 'kwic', 'kwic': 'sen'}[this.viewMode];
+            mode = {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
         }
-        this.viewMode = mode;
-        this.layoutModel.replaceConcArg('viewmode', [this.viewMode]);
+        this.state.viewMode = mode;
+        this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
         const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
 
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.layoutModel.createActionUrl('view'),
             args
 
@@ -741,7 +563,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         if (tmp) {
             return this.layoutModel.createActionUrl(
                 'audio',
-                [['corpname', this.baseCorpname], ['chunk', tmp.speechPath]]
+                [['corpname', this.state.baseCorpname], ['chunk', tmp.speechPath]]
             );
 
         } else {
@@ -751,8 +573,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     private changeMainCorpus(corpusId:string) {
         const args:MultiDict = this.layoutModel.getConcArgs();
-
-        if (this.hasKwic(corpusId)) {
+        if (this.state.kwicCorps.indexOf(corpusId) > -1) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');
             this.layoutModel.setLocationPost(
@@ -764,9 +585,9 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     private findActiveLineIdx(chunkId:string):number {
-        for (let i = 0; i < this.lines.size; i += 1) {
-            for (let j = 0; j < this.lines.get(i).languages.size; j += 1) {
-                if (this.lines.get(i).languages.get(j).findChunk(chunkId)) {
+        for (let i = 0; i < this.state.lines.length; i += 1) {
+            for (let j = 0; j < this.state.lines[i].languages.length; j += 1) {
+                if (this.state.lines[i].languages[j].findChunk(chunkId)) {
                     return i;
                 }
             }
@@ -775,9 +596,13 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     private findChunks(...chunkIds:Array<string>):Array<TextChunk> {
-        for (let i = 0; i < this.lines.size; i += 1) {
-            for (let j = 0; j < this.lines.get(i).languages.size; j += 1) {
-                const ans = chunkIds.map(c => this.lines.get(i).languages.get(j).findChunk(c)).filter(v => v !== undefined);
+        for (let i = 0; i < this.state.lines.length; i += 1) {
+            for (let j = 0; j < this.state.lines[i].languages.length; j += 1) {
+                const ans = pipe(
+                    chunkIds,
+                    List.map(c => this.state.lines[i].languages[j].findChunk(c)),
+                    List.filter(v => v !== undefined)
+                );
                 if (ans.length > 0) {
                     return ans;
                 }
@@ -786,19 +611,23 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
         return [];
     }
 
-    private playAudio(chunksIds:Array<string>) {
+    private playAudio(chunksIds:Array<string>):void {
         this.setStopStatus(); // stop anything playing right now
         const activeChunkId = chunksIds[chunksIds.length - 1];
-        this.playerAttachedChunk = activeChunkId;
-        // let's get active line - there can be only one even if we play multiple chunks
+        this.state.playerAttachedChunk = activeChunkId;
+        // let's get an active line - there can be only one even if we play multiple chunks
         const activeLine = this.findActiveLineIdx(activeChunkId);
-        const fakeChangedLine = this.lines.get(activeLine).clone();
-        this.lines = this.lines.set(activeLine, fakeChangedLine);
+        const fakeChangedLine = this.state.lines[activeLine];
+        this.state.lines[activeLine] = fakeChangedLine;
 
         const playChunks = this.findChunks(...chunksIds);
         if (playChunks.length > 0) {
             playChunks[playChunks.length - 1].showAudioPlayer = true
-            this.audioPlayer.start(playChunks.map(item => this.createAudioLink(item)).filter(item => !!item));
+            this.audioPlayer.start(pipe(
+                playChunks,
+                List.map(item => this.createAudioLink(item)),
+                List.filter(item => !!item)
+            ));
 
         } else {
             throw new Error('No chunks to play');
@@ -806,23 +635,23 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     private setStopStatus():void {
-        if (this.playerAttachedChunk) {
+        if (this.state.playerAttachedChunk) {
             this.audioPlayer.stop();
-            const playingLineIdx = this.findActiveLineIdx(this.playerAttachedChunk);
-            const modLine = this.lines.get(playingLineIdx).clone();
-            this.lines = this.lines.set(playingLineIdx, modLine);
-            const playingChunk = this.findChunks(this.playerAttachedChunk)[0];
+            const playingLineIdx = this.findActiveLineIdx(this.state.playerAttachedChunk);
+            const modLine = this.state.lines[playingLineIdx]; // TODO clone?
+            this.state.lines[playingLineIdx] = modLine;
+            const playingChunk = this.findChunks(this.state.playerAttachedChunk)[0];
             if (playingChunk) {
                 playingChunk.showAudioPlayer = false;
-                this.playerAttachedChunk = null;
+                this.state.playerAttachedChunk = null;
 
             } else {
-                throw new Error(`Failed to find playing chunk "${this.playerAttachedChunk}"`);
+                throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
             }
         }
     }
 
-    private handlePlayerControls(action) {
+    private handlePlayerControls(action:AudioPlayerActions) {
         switch (action) {
             case 'play':
                 this.audioPlayer.play();
@@ -841,7 +670,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     private calculateAdHocIpm():Observable<number> {
         const selections = this.ttModel.exportSelections(false);
         const args = new MultiDict();
-        args.set('corpname', this.baseCorpname);
+        args.set('corpname', this.state.baseCorpname);
         for (let p in selections) {
             args.replace(`sca_${p}`, selections[p]);
         }
@@ -852,57 +681,56 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
         ).pipe(
             tap((data) => {
-                this.adHocIpm = this.concSummary.fullSize / data.total * 1e6;
+                this.state.adHocIpm = this.state.concSummary.fullSize / data.total * 1e6;
             }),
-            map(_ => this.adHocIpm)
+            map(_ => this.state.adHocIpm)
         );
     }
 
-    hasKwic(corpusId:string):boolean {
-        return this.kwicCorps.indexOf(corpusId) > -1;
+    getLines():Array<Line> {
+        return this.state.lines;
     }
 
-    getLines():Immutable.List<Line> {
-        return this.lines;
+    isUnfinishedCalculation():boolean {
+        return this.state.unfinishedCalculation;
     }
 
     getPagination():ServerPagination {
-        return this.pagination;
+        return this.state.pagination;
     }
 
     getCurrentPage():number {
-        return this.currentPage;
+        return this.state.currentPage;
     }
 
     setLineFocus(lineIdx:number, focus:boolean) {
-        this.lines = this.lines.map(item => {
-            if (item.hasFocus) {
-                const ans = item.clone();
-                ans.hasFocus = false;
-                return ans;
+        this.state.lines = List.map(
+            item => {
+                if (item.hasFocus) {
+                    const ans = item.clone();
+                    ans.hasFocus = false;
+                    return ans;
 
-            } else {
-                return item;
-            }
-        }).toList();
+                } else {
+                    return item;
+                }
+            },
+            this.state.lines
+        );
 
         if (focus === true) {
-            const oldLine = this.lines.get(lineIdx);
+            const oldLine = this.state.lines[lineIdx];
             if (oldLine) {
-                const idx = this.lines.indexOf(oldLine);
+                const idx = this.state.lines.indexOf(oldLine);
                 const newVal = oldLine.clone();
                 newVal.hasFocus = focus;
-                this.lines = this.lines.set(idx, newVal);
+                this.state.lines[idx] = newVal;
             }
         }
     }
 
-    isUnfinishedCalculation():boolean {
-        return this.unfinishedCalculation;
-    }
-
     getConcSummary():ConcSummary {
-        return this.concSummary;
+        return this.state.concSummary;
     }
 
     getProvidesAdHocIpm():boolean {
@@ -910,19 +738,19 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getAdHocIpm():number {
-        return this.adHocIpm;
+        return this.state.adHocIpm;
     }
 
     getFastAdHocIpm():boolean {
-        return this.fastAdHocIpm;
+        return this.state.fastAdHocIpm;
     }
 
     getSubCorpName():string {
-        return this.subCorpName;
+        return this.state.subCorpName;
     }
 
     getCurrentSubcorpusOrigName():string {
-        return this.origSubcorpName;
+        return this.state.origSubcorpName;
     }
 
     getAudioPlayerStatus():AudioPlayerStatus {
@@ -930,7 +758,7 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getUseSafeFont():boolean {
-        return this.useSafeFont;
+        return this.state.useSafeFont;
     }
 
     getSaveModel():ConcSaveModel {
@@ -942,27 +770,27 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
     }
 
     getSupportsSyntaxView():boolean {
-        return this.supportsSyntaxView;
+        return this.state.supportsSyntaxView;
     }
 
     getBaseCorpname():string {
-        return this.baseCorpname;
+        return this.state.baseCorpname;
     }
 
     getEmptyRefValPlaceholder():string {
         return '\u2014';
     }
 
-    getCorporaColumns():Immutable.List<CorpColumn> {
-        return this.corporaColumns;
+    getCorporaColumns():Array<CorpColumn> {
+        return this.state.corporaColumns;
     }
 
     getViewMode():string {
-        return this.viewMode;
+        return this.state.viewMode;
     }
 
     getShowLineNumbers():boolean {
-        return this.showLineNumbers;
+        return this.state.showLineNumbers;
     }
 
     getIsBusy():boolean {
@@ -971,17 +799,17 @@ export class ConcLineModel extends UNSAFE_SynchronizedModel implements IConcLine
 
     // TODO pick a good heuristics here
     getRecommOverviewMinFreq():number {
-        if (this.concSummary.concSize > 10000) {
+        if (this.state.concSummary.concSize > 10000) {
             return 100;
 
-        } else if (this.concSummary.concSize > 1000) {
+        } else if (this.state.concSummary.concSize > 1000) {
             return 10;
         }
         return 1;
     }
 
     getNumWaitingSecs():number {
-        return this.busyWaitSecs;
+        return this.state.busyWaitSecs;
     }
 }
 

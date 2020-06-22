@@ -21,7 +21,6 @@
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import * as Immutable from 'immutable';
 
 import {MultiDict, importColor} from '../../multidict';
 import {Kontext} from '../../types/common';
@@ -32,6 +31,7 @@ import {PageModel} from '../../app/page';
 import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import { ActionName as ViewOptionsActionName } from '../options/structsAttrs';
+import { Color, List } from 'cnc-tskit';
 
 /**
  *
@@ -45,9 +45,9 @@ export type ConcDetailText = Array<{str:string; class:string}>;
 export interface Speech {
     text:ConcDetailText;
     speakerId:string;
-    segments:Immutable.List<string>;
+    segments:Array<string>;
     colorCode:Kontext.RGBAColor;
-    metadata:Immutable.Map<string, string>;
+    metadata:{[ident:string]:string};
 }
 
 /**
@@ -90,9 +90,9 @@ export class ConcDetailModel extends StatefulModel {
 
     private concDetail:ConcDetailText;
 
-    private expandLeftArgs:Immutable.List<ExpandArgs>;
+    private expandLeftArgs:Array<ExpandArgs>;
 
-    private expandRightArgs:Immutable.List<ExpandArgs>;
+    private expandRightArgs:Array<ExpandArgs>;
 
     private corpusId:string;
 
@@ -116,7 +116,7 @@ export class ConcDetailModel extends StatefulModel {
 
     private playingRowIdx:number;
 
-    private speakerColors:Immutable.List<Kontext.RGBAColor>;
+    private speakerColors:Array<Kontext.RGBAColor>;
 
     private wideCtxGlobals:Array<[string, string]>;
 
@@ -135,7 +135,7 @@ export class ConcDetailModel extends StatefulModel {
      * changed into red one after a context expasion due to
      * some new incoming or outcoming users.
      */
-    private speakerColorsAttachments:Immutable.Map<string, Kontext.RGBAColor>;
+    private speakerColorsAttachments:{[ident:string]:Kontext.RGBAColor};
 
     private isBusy:boolean;
 
@@ -165,16 +165,19 @@ export class ConcDetailModel extends StatefulModel {
         this.lineIdx = null;
         this.playingRowIdx = -1;
         this.wholeDocumentLoaded = false;
-        this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => importColor(item, ConcDetailModel.SPK_LABEL_OPACITY)));
-        this.speakerColorsAttachments = Immutable.Map<string, Kontext.RGBAColor>();
+        this.speakerColors = List.map(
+            item => Color.importColor(ConcDetailModel.SPK_LABEL_OPACITY, item),
+            speakerColors
+        );
+        this.speakerColorsAttachments = {};
         this.spkOverlapMode = (speechOpts.speechOverlapAttr || [])[1] ?
                 ConcDetailModel.SPK_OVERLAP_MODE_FULL : ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE;
-        this.expandLeftArgs = Immutable.List<ExpandArgs>();
-        this.expandRightArgs = Immutable.List<ExpandArgs>();
+        this.expandLeftArgs = Array<ExpandArgs>();
+        this.expandRightArgs = Array<ExpandArgs>();
         this.tokenConnectPlg = tokenConnectPlg;
         this.tokenConnectData = {
             token: null,
-            renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>()
+            renders: Array<PluginInterfaces.TokenConnect.DataAndRenderer>()
         };
         this.concDetail = null;
         this.audioPlayer = new AudioPlayer(
@@ -227,8 +230,8 @@ export class ConcDetailModel extends StatefulModel {
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
                     this.isBusy = true;
                     this.tokenConnectIsBusy = true;
-                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                    this.expandRightArgs = Immutable.List<ExpandArgs>();
+                    this.expandLeftArgs = Array<ExpandArgs>();
+                    this.expandRightArgs = Array<ExpandArgs>();
                     forkJoin(
                         this.loadConcDetail(
                             action.payload['corpusId'],
@@ -236,7 +239,7 @@ export class ConcDetailModel extends StatefulModel {
                             action.payload['kwicLength'],
                             action.payload['lineIdx'],
                             [],
-                            this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null
+                            this.expandLeftArgs.length > 1 && this.expandRightArgs.length > 1 ? 'reload' : null
                         ),
                         this.loadTokenConnect(
                             action.payload['corpusId'],
@@ -297,8 +300,8 @@ export class ConcDetailModel extends StatefulModel {
                 break;
                 case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
                     this.mode = 'speech';
-                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                    this.expandRightArgs = Immutable.List<ExpandArgs>();
+                    this.expandLeftArgs = Array<ExpandArgs>();
+                    this.expandRightArgs = Array<ExpandArgs>();
                     this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
                     this.isBusy = true;
                     this.emitChange();
@@ -347,8 +350,8 @@ export class ConcDetailModel extends StatefulModel {
                     (() => {
                         if (action.payload['value'] === 'default') {
                             this.mode = 'default';
-                            this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                            this.expandRightArgs = Immutable.List<ExpandArgs>();
+                            this.expandLeftArgs = Array<ExpandArgs>();
+                            this.expandRightArgs = Array<ExpandArgs>();
                             this.expaningSide = null;
                             this.concDetail = null;
                             this.isBusy = true;
@@ -357,8 +360,8 @@ export class ConcDetailModel extends StatefulModel {
 
                         } else if (action.payload['value'] === 'speech') {
                             this.mode = 'speech';
-                            this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                            this.expandRightArgs = Immutable.List<ExpandArgs>();
+                            this.expandLeftArgs = Array<ExpandArgs>();
+                            this.expandRightArgs = Array<ExpandArgs>();
                             this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
                             this.expaningSide = null;
                             this.concDetail = null;
@@ -368,8 +371,8 @@ export class ConcDetailModel extends StatefulModel {
 
                         } else {
                             this.mode = action.payload['value'];
-                            this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                            this.expandRightArgs = Immutable.List<ExpandArgs>();
+                            this.expandLeftArgs = Array<ExpandArgs>();
+                            this.expandRightArgs = Array<ExpandArgs>();
                             this.expaningSide = null;
                             this.concDetail = null;
                             this.isBusy = true;
@@ -402,7 +405,7 @@ export class ConcDetailModel extends StatefulModel {
                         this.emitChange();
                     }
                     this.playingRowIdx = action.payload['rowIdx'];
-                    const itemsToPlay = (<Immutable.List<string>>action.payload['segments']).map(item => {
+                    const itemsToPlay = (<Array<string>>action.payload['segments']).map(item => {
                             return this.layoutModel.createActionUrl(`audio?corpname=${this.corpusId}&chunk=${item}`);
                         }).toArray();
                     if (itemsToPlay.length > 0) {
@@ -488,7 +491,7 @@ export class ConcDetailModel extends StatefulModel {
             return {
                 text: [],
                 speakerId: speakerId,
-                segments: Immutable.List<string>(),
+                segments: Array<string>(),
                 metadata: importedMetadata,
                 colorCode: colorCode
             };
@@ -611,8 +614,8 @@ export class ConcDetailModel extends StatefulModel {
                 (data) => {
                     this.concDetail = data.content;
                     this.wholeDocumentLoaded = true;
-                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                    this.expandRightArgs = Immutable.List<ExpandArgs>();
+                    this.expandLeftArgs = Array<ExpandArgs>();
+                    this.expandRightArgs = Array<ExpandArgs>();
                 }
             )
         );
@@ -812,7 +815,7 @@ export class RefsDetailModel extends StatefulModel {
 
     private layoutModel:PageModel;
 
-    private data:Immutable.List<RefsColumn>;
+    private data:Array<RefsColumn>;
 
     private linesModel:ConcLineModel;
 
@@ -825,7 +828,7 @@ export class RefsDetailModel extends StatefulModel {
         this.layoutModel = layoutModel;
         this.linesModel = linesModel;
         this.lineIdx = null;
-        this.data = Immutable.List<RefsColumn>();
+        this.data = Array<RefsColumn>();
         this.isBusy = false;
 
         this.dispatcherRegister((action:Action) => {
@@ -862,16 +865,16 @@ export class RefsDetailModel extends StatefulModel {
         });
     }
 
-    getData():Immutable.List<[RefsColumn, RefsColumn]> {
+    getData():Array<[RefsColumn, RefsColumn]> {
         if (this.lineIdx !== null) {
             const ans:Array<[RefsColumn, RefsColumn]> = [];
             for (let i = 0; i < this.data.size; i += 2) {
                 ans.push([this.data.get(i), this.data.get(i+1)]);
             }
-            return Immutable.List<[RefsColumn, RefsColumn]>(ans);
+            return Array<[RefsColumn, RefsColumn]>(ans);
 
         } else if (this.isBusy) {
-            return Immutable.List<[RefsColumn, RefsColumn]>();
+            return Array<[RefsColumn, RefsColumn]>();
 
         } else {
             return null;
@@ -888,7 +891,7 @@ export class RefsDetailModel extends StatefulModel {
             tap(
                 (data) => {
                     this.lineIdx = lineIdx;
-                    this.data = Immutable.List<RefsColumn>(data.Refs);
+                    this.data = Array<RefsColumn>(data.Refs);
                 }
             ),
             map(data => !!data)
