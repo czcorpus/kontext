@@ -18,35 +18,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { Keyboard } from 'cnc-tskit';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { WordlistSaveModel } from '../../models/wordlist/save';
+import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { WordlistResultModel, WordlistResultModelState } from '../../models/wordlist/main';
 import { WordlistSaveViews } from './save';
 import { ActionName, Actions } from '../../models/wordlist/actions';
 import { List } from 'cnc-tskit';
+import { WordlistFormState } from '../../models/wordlist/form';
 
 export interface WordlistResultViewsArgs {
     dispatcher:IActionDispatcher;
     utils:Kontext.ComponentHelpers;
     wordlistSaveViews:WordlistSaveViews;
     wordlistResultModel:WordlistResultModel;
-    wordlistSaveModel:WordlistSaveModel;
+    wordlistFormModel:IModel<WordlistFormState>;
 }
 
 
 export interface WordlistResultViews {
-    WordlistResult:React.SFC<{}>
+    WordlistResult:React.ComponentClass<{}>;
 }
 
 
 /**
  */
 export function init({dispatcher, utils, wordlistSaveViews,
-                      wordlistResultModel, wordlistSaveModel}:WordlistResultViewsArgs):WordlistResultViews {
+                      wordlistResultModel, wordlistFormModel}:WordlistResultViewsArgs):WordlistResultViews {
 
     const layoutViews = utils.getLayoutViews();
 
@@ -312,7 +311,15 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
     };
 
-    const DataTable:React.SFC<WordlistResultModelState & {wlsort:string; usesStructAttr:boolean, wlpat:string}> = (props) => {
+    // -------------------------- <DataTable /> -------------------------------------
+
+    interface DataTableProps {
+        wlsort:string;
+        usesStructAttr:boolean;
+        wlpat:string;
+    }
+
+    const DataTable:React.SFC<WordlistResultModelState & DataTableProps> = (props) => {
         if (props.isUnfinished) {
             return (
                 <div className="WordlistResult">
@@ -358,19 +365,21 @@ export function init({dispatcher, utils, wordlistSaveViews,
         }
     };
 
-    const BoundDataTable = BoundWithProps(DataTable, wordlistResultModel);
+    const BoundDataTable = BoundWithProps<DataTableProps, WordlistResultModelState>(DataTable, wordlistResultModel);
 
     // ---------------------- <WordlistResult /> -------------------
 
-    const WordlistResult:React.SFC<{}> = (props) => (
-        <div className="WordlistResult">
-            <BoundDataTable />
+    const WordlistResult:React.SFC<WordlistFormState> = (props) => {
+    return<div className="WordlistResult">
+            <BoundDataTable wlpat={props.wlpat} wlsort={props.wlsort} usesStructAttr={props.usesStructAttr} />
             <wordlistSaveViews.WordlistSaveForm />
         </div>
-    );
+    };
+
+    const BoundWordlistResult = Bound(WordlistResult, wordlistFormModel);
 
     return {
-        WordlistResult: WordlistResult
+        WordlistResult: BoundWordlistResult
     };
 
 }
