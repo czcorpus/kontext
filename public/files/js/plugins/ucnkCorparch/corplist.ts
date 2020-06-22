@@ -23,6 +23,7 @@ import { Kontext } from '../../types/common';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { CorplistItem } from '../defaultCorparch/common';
+import { Actions, ActionName} from './actions';
 
 
 export interface CorplistTableModelState extends corplistDefault.CorplistTableModelState {
@@ -55,7 +56,7 @@ export class CorpusAccessRequestModel extends StatefulModel {
         this.pluginApi = pluginApi;
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
-                case 'CORPUS_ACCESS_REQ_SUBMITTED':
+                case ActionName.CorpusAccessReqSubmitted:
                     this.askForAccess(action.payload['corpusId'], action.payload['corpusName'], action.payload['customMessage']).subscribe(
                         null,
                         (error) => {
