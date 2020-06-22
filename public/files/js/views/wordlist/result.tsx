@@ -313,19 +313,19 @@ export function init({dispatcher, utils, wordlistSaveViews,
     };
 
     const DataTable:React.SFC<WordlistResultModelState & {wlsort:string; usesStructAttr:boolean, wlpat:string}> = (props) => {
-        if (props.data.length === 0) {
-            return (
-                <p className="no-result">
-                    {utils.translate('wordlist__no_result_for_{wlpat}', {wlpat: props.wlpat})}
-                </p>
-            );
-
-        } else if (props.isUnfinished) {
+        if (props.isUnfinished) {
             return (
                 <div className="WordlistResult">
                     <CalculationStatus progressPercent={props.bgCalcStatus}
                             isError={props.isError} />
                 </div>
+            );
+
+        } else if (props.data.length === 0) {
+            return (
+                <p className="no-result">
+                    {utils.translate('wordlist__no_result_for_{wlpat}', {wlpat: props.wlpat})}
+                </p>
             );
 
         } else {
