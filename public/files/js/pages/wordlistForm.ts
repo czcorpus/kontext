@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { tap } from 'rxjs/operators';
 
 import { Kontext } from '../types/common';
@@ -26,9 +25,10 @@ import { PageModel } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { WordlistFormModel, WlnumsTypes, WlTypes } from '../models/wordlist/form';
+import { WordlistFormModel } from '../models/wordlist/form';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
+import { WlnumsTypes, WlTypes } from '../models/wordlist/common';
 import createCorparch from 'plugins/corparch/init';
 
 declare var require:any;
@@ -48,15 +48,11 @@ class WordlistFormPage {
 
     private wordlistFormModel:WordlistFormModel;
 
-    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
-
     private subcorpSel:NonQueryCorpusSelectionModel;
 
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(
-                this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'));
     }
 
     private initCorparchPlugin():PluginInterfaces.Corparch.WidgetView {

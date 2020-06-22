@@ -19,15 +19,17 @@
  */
 
 import { Observable, Observer, of as rxOf } from 'rxjs';
-
-import {Kontext} from '../../types/common';
-import {validateGzNumber} from '../base';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { ActionName, Actions, FileTarget } from './actions';
 import { Dict, List, Ident } from 'cnc-tskit';
+
+
+import { Kontext } from '../../types/common';
+import { validateGzNumber } from '../base';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { ActionName, Actions } from './actions';
+import { FileTarget, WlnumsTypes, WlTypes } from './common';
 
 
 /**
@@ -51,16 +53,6 @@ export interface EmptyFilterEditorData {
 
 export type FilterEditorData = WLFilterEditorData|BLFilterEditorData|EmptyFilterEditorData;
 
-export enum WlnumsTypes {
-    FRQ = 'frq',
-    DOCF = 'docf',
-    ARF = 'arf'
-}
-
-export enum WlTypes {
-    SIMPLE = 'simple',
-    MULTILEVEL = 'multilevel'
-}
 
 export interface WordlistFormState {
     corpusId:string;
@@ -231,7 +223,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<Actions.WordlistFormSetWltype>(
             ActionName.WordlistFormSetWltype,
             (state, action) => {
-                state.wltype = action.payload.value as WlTypes; // TODO
+                state.wltype = action.payload.value;
             }
         );
 

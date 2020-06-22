@@ -20,12 +20,14 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Kontext } from '../../types/common';
 import { Keyboard } from 'cnc-tskit';
-import { WordlistFormModel, WordlistFormState, WlnumsTypes } from '../../models/wordlist/form';
+
+import { Kontext } from '../../types/common';
+import { WordlistFormModel, WordlistFormState } from '../../models/wordlist/form';
 import { PluginInterfaces } from '../../types/plugins';
-import { Subscription } from 'rxjs';
-import { Actions, ActionName, FileTarget } from '../../models/wordlist/actions';
+import { Actions, ActionName } from '../../models/wordlist/actions';
+import { FileTarget, WlnumsTypes } from '../../models/wordlist/common';
+
 
 export interface WordlistFormViewArgs {
     dispatcher:IActionDispatcher;
