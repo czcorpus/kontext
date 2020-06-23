@@ -70,3 +70,10 @@ export class Line {
         return copy;
     }
 }
+
+
+export interface IConcLinesProvider {
+    getLines():Array<Line>;
+    isUnfinishedCalculation():boolean;
+    getRecommOverviewMinFreq():number;
+}

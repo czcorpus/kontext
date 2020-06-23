@@ -89,7 +89,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         const handleLimitRemove = () => {
             dispatcher.dispatch({
-                name: 'REMOVE_CHART_ITEMS_LIMIT',
+                name: 'CONCORDANCE_REMOVE_CHART_ITEMS_LIMIT',
                 payload: {}
             });
         };

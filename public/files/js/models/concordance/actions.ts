@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions } from './common';
+import { AudioPlayerActions, DetailExpandPositions } from './common';
 
 export enum ActionName {
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
@@ -28,7 +28,25 @@ export enum ActionName {
     AudioPlayerClickControl = 'AUDIO_PLAYER_CLICK_CONTROL',
     ChangePage = 'CONCORDANCE_CHANGE_PAGE',
     RevisitPage = 'CONCORDANCE_REVISIT_PAGE',
-    AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED'
+    AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+    AsyncCalculationFailed = 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+    CalculateIpmForAdHocSubc = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
+    ChangeLangVisibility = 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
+    SwitchKwicSentMode = 'CONCORDANCE_SWITCH_KWIC_SENT_MODE',
+    DataWaitTimeInc = 'CONCORDANCE_DATA_WAIT_TIME_INC',
+    LoadTTDictOverview = 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+    RemoveChartItemsLimit = 'CONCORDANCE_REMOVE_CHART_ITEMS_LIMIT',
+    RestoreChartItemsLimit = 'CONCORDANCE_RESTORE_CHART_ITEMS_LIMIT',
+    ShowKwicDetail = 'CONCORDANCE_SHOW_KWIC_DETAIL',
+    ShowTokenDetail = 'CONCORDANCE_SHOW_TOKEN_DETAIL',
+    ShowWholeDocument = 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
+    ShowSpeechDetail = 'CONCORDANCE_SHOW_SPEECH_DETAIL',
+    ExpandSpeechDetail = 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
+    DetailSwitchMode = 'CONCORDANCE_DETAIL_SWITCH_MODE',
+    ResetDetail = 'CONCORDANCE_RESET_DETAIL',
+    ShowRefDetail = 'CONCORDANCE_SHOW_REF_DETAIL',
+    PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
+    StopSpeech = 'CONCORDANCE_STOP_SPEECH'
 }
 
 export namespace Actions {
@@ -76,23 +94,117 @@ export namespace Actions {
         name:ActionName.AsyncCalculationUpdated;
     }
 
-    export interface X extends Action<{
+    export interface AsyncCalculationFailed extends Action<{
     }> {
-        name:ActionName.X;
+        name:ActionName.AsyncCalculationFailed;
     }
 
-    export interface X extends Action<{
+    export interface CalculateIpmForAdHocSubc extends Action<{
     }> {
-        name:ActionName.X;
+        name:ActionName.CalculateIpmForAdHocSubc;
     }
 
-    export interface X extends Action<{
+    export interface ChangeLangVisibility extends Action<{
+        corpusId:string;
+        value:boolean;
     }> {
-        name:ActionName.X;
+        name:ActionName.ChangeLangVisibility;
+    }
+
+    export interface SwitchKwicSentMode extends Action<{
+    }> {
+        name:ActionName.SwitchKwicSentMode;
+    }
+
+    export interface DataWaitTimeInc extends Action<{
+    }> {
+        name:ActionName.DataWaitTimeInc;
     }
 
     export interface ExpandKwicDetail extends Action<{
+        position:DetailExpandPositions;
     }> {
         name:ActionName.ExpandKwicDetail;
     }
+
+    export interface LoadTTDictOverview extends Action<{
+    }> {
+        name:ActionName.LoadTTDictOverview;
+    }
+
+    export interface RemoveChartItemsLimit extends Action<{
+    }> {
+        name:ActionName.RemoveChartItemsLimit;
+    }
+
+    export interface RestoreChartItemsLimit extends Action<{
+    }> {
+        name:ActionName.RestoreChartItemsLimit;
+    }
+
+    export interface ShowKwicDetail extends Action<{
+        corpusId:string;
+        tokenNumber:number;
+        kwicLength:number;
+        lineIdx:number;
+    }> {
+        name:ActionName.ShowKwicDetail;
+    }
+
+    export interface ShowTokenDetail extends Action<{
+        corpusId:string;
+        tokenNumber:number;
+        lineIdx:number;
+    }> {
+        name:ActionName.ShowTokenDetail;
+    }
+
+    export interface ShowWholeDocument extends Action<{
+    }> {
+        name:ActionName.ShowWholeDocument;
+    }
+
+    export interface ShowSpeechDetail extends Action<{
+        corpusId:string;
+        tokenNumber:number;
+        kwicLength:number;
+        lineIdx:number;
+    }> {
+        name:ActionName.ShowSpeechDetail;
+    }
+
+    export interface ExpandSpeechDetail extends Action<{
+        position:DetailExpandPositions;
+    }> {
+        name:ActionName.ExpandSpeechDetail;
+    }
+
+    export interface DetailSwitchMode extends Action<{
+        value:string; // TODO more specific types here
+    }> {
+        name:ActionName.DetailSwitchMode;
+    }
+
+    export interface ResetDetail extends Action<{
+    }> {
+        name:ActionName.ResetDetail;
+    }
+
+    export interface ShowRefDetail extends Action<{
+    }> {
+        name:ActionName.ShowRefDetail;
+    }
+
+    export interface PlaySpeech extends Action<{
+        rowIdx:number;
+        segments:Array<string>;
+    }> {
+        name:ActionName.PlaySpeech;
+    }
+
+    export interface StopSpeech extends Action<{
+    }> {
+        name:ActionName.StopSpeech;
+    }
+
 }

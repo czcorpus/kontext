@@ -32,8 +32,8 @@ import { KWICSection } from './line';
 import { Line, TextChunk, IConcLinesProvider } from '../../types/concordance';
 import { AudioPlayer, AudioPlayerStatus} from './media';
 import { ConcSaveModel } from './save';
-import { transformVmode, ActionName as ViewOptionsActionName } from '../options/structsAttrs';
-import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionsName } from '../options/actions';
+import { transformVmode } from '../options/structsAttrs';
+import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
 import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary, ViewConfiguration, AudioPlayerActions } from './common';
 import { Actions, ActionName } from './actions';
 
@@ -317,9 +317,6 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                     if (prevConcSize === 0) {
                         this.changePage('customPage', 1).subscribe(
                             (data) => {
-                                if (action.name === 'CONCORDANCE_CHANGE_PAGE') {
-                                    this.pushHistoryState(this.state.currentPage);
-                                }
                                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
                                 this.emitChange();
                             },
@@ -336,83 +333,104 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 }
                 this.emitChange();
             }
-        )
-    }
+        );
 
-    foo() {
-        ((action:Action) => {
-            switch (action.name) {
-                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-
-                break;
-                case 'CONCORDANCE_ASYNC_CALCULATION_FAILED':
-                    this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                    this.state.unfinishedCalculation = false;
-                    this.state.concSummary.concSize = 0;
-                    this.state.concSummary.fullSize = 0;
-                    this.state.concSummary.ipm = 0;
-                    this.state.concSummary.arf = 0;
-                    this.state.pagination.lastPage = 0;
-                    this.state.lines = [];
-                    this.emitChange();
-                break;
-                case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
-                    this.busyTimer = this.runBusyTimer(this.busyTimer);
-                    this.emitChange();
-                    this.calculateAdHocIpm().subscribe(
-                        (data) => {
-                            this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                            this.emitChange();
-                            console.error(err);
-                            this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
-                        }
-                    );
-                break;
-                case 'CONCORDANCE_CHANGE_LANG_VISIBILITY':
-                    this.changeColVisibility(action.payload['corpusId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'CONCORDANCE_SWITCH_KWIC_SENT_MODE':
-                    this.changeViewMode().subscribe(
-                        () => {
-                            this.emitChange();
-                        },
-                        (err) => {
-                            console.error(err);
-                            this.layoutModel.showMessage('error', err);
-                            this.emitChange();
-                        }
-                    );
-                break;
-                case 'CONCORDANCE_DATA_WAIT_TIME_INC':
-                    this.state.busyWaitSecs = action.payload['idx'];
-                    this.emitChange();
-                break;
-                case ViewOptionsActionName.SaveSettingsDone:
-                    this.state.baseViewAttr = action.payload['baseViewAttr'];
-                break;
-                case GeneralViewOptionsActionsName.GeneralSubmitDone:
-                    if (!action.error) {
-                        this.state.showLineNumbers = action.payload['showLineNumbers'];
-                        this.state.currentPage = 1;
-                        this.reloadPage().subscribe(
-                            (data) => {
-                                this.pushHistoryState(this.state.currentPage);
-                                this.emitChange();
-                            },
-                            (err) => {
-                                this.layoutModel.showMessage('error', err);
-                            }
-                        );
-                    }
-                break;
+        this.addActionHandler<Actions.AsyncCalculationFailed>(
+            ActionName.AsyncCalculationFailed,
+            action => {
+                this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                this.state.unfinishedCalculation = false;
+                this.state.concSummary.concSize = 0;
+                this.state.concSummary.fullSize = 0;
+                this.state.concSummary.ipm = 0;
+                this.state.concSummary.arf = 0;
+                this.state.pagination.lastPage = 0;
+                this.state.lines = [];
+                this.emitChange();
             }
-        });
+        );
+
+        this.addActionHandler<Actions.CalculateIpmForAdHocSubc>(
+            ActionName.CalculateIpmForAdHocSubc,
+            action => {
+                this.busyTimer = this.runBusyTimer(this.busyTimer);
+                this.emitChange();
+                this.calculateAdHocIpm().subscribe(
+                    (data) => {
+                        this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                        this.emitChange();
+                    },
+                    (err) => {
+                        this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                        this.emitChange();
+                        console.error(err);
+                        this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.ChangeLangVisibility>(
+            ActionName.ChangeLangVisibility,
+            action => {
+                this.changeColVisibility(action.payload.corpusId, action.payload.value);
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.SwitchKwicSentMode>(
+            ActionName.SwitchKwicSentMode,
+            action => {
+                this.changeViewMode().subscribe(
+                    () => {
+                        this.emitChange();
+                    },
+                    (err) => {
+                        console.error(err);
+                        this.layoutModel.showMessage('error', err);
+                        this.emitChange();
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.DataWaitTimeInc>(
+            ActionName.DataWaitTimeInc,
+            action => {
+                this.state.busyWaitSecs = action.payload['idx'];
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<ViewOptionsActions.SaveSettingsDone>(
+            ViewOptionsActionName.SaveSettingsDone,
+            action => {
+                this.state.baseViewAttr = action.payload.baseViewAttr;
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<ViewOptionsActions.GeneralSubmitDone>(
+            ViewOptionsActionName.GeneralSubmitDone,
+            action => {
+                if (!action.error) {
+                    this.state.showLineNumbers = action.payload.showLineNumbers;
+                    this.state.currentPage = 1;
+                    this.reloadPage().subscribe(
+                        (data) => {
+                            this.pushHistoryState(this.state.currentPage);
+                            this.emitChange();
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                }
+            }
+        );
     }
+
+    unregister():void {}
 
     private stopBusyTimer(subs:Subscription):null {
         if (subs !== null) {

@@ -137,27 +137,38 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         this.layoutModel = layoutModel;
         this.concLineModel = concLineModel;
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.blockedByAsyncConc = action.payload['isUnfinished'];
-                    this.performDataLoad();
-                break;
-                case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
-                    if (this.blocks.size === 0) {
-                        this.performDataLoad();
-                    }
-                break;
-                case 'REMOVE_CHART_ITEMS_LIMIT':
-                    this.maxBlockItems = -1;
-                    this.emitChange();
-                break;
-                case 'RESTORE_CHART_ITEMS_LIMIT':
-                    this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
-                    this.emitChange();
-                break;
+        this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
+            ConcActionName.AsyncCalculationUpdated,
+            action => {
+                this.state.blockedByAsyncConc = !action.payload.finished;
+                this.performDataLoad();
             }
-        });
+        );
+
+        this.addActionHandler<ConcActions.LoadTTDictOverview>(
+            ConcActionName.LoadTTDictOverview,
+            action => {
+                if (this.state.blocks.length === 0) {
+                    this.performDataLoad();
+                }
+            }
+        );
+
+        this.addActionHandler<ConcActions.RemoveChartItemsLimit>(
+            ConcActionName.RemoveChartItemsLimit,
+            action => {
+                this.state.maxBlockItems = -1;
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<ConcActions.RestoreChartItemsLimit>(
+            ConcActionName.RestoreChartItemsLimit,
+            action => {
+                this.state.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
+                this.emitChange();
+            }
+        );
     }
 
     unregister():void {}
@@ -255,7 +266,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
     }
 
     isDisplayedBlocksSubset():boolean {
-        return this.getBlocks().length > this.getDisplayableBlocks().length;
+        return this.state.blocks.length > this.getDisplayableBlocks().length;
     }
 
     shouldDisplayBlocksSubset():boolean {

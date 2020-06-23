@@ -19,10 +19,11 @@
  */
 
 import * as Immutable from 'immutable';
-import { IEventEmitter, IModel, StatelessModel } from 'kombo';
-import {CoreViews} from './coreViews';
-import { MainMenuModel } from '../models/mainMenu';
 import { Observable } from 'rxjs';
+import { IEventEmitter, IModel, StatelessModel } from 'kombo';
+
+import { CoreViews } from './coreViews';
+import { MainMenuModel } from '../models/mainMenu';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
@@ -609,7 +610,7 @@ export namespace ViewOptions {
         MOUSEOVER = 'mouseover'
     }
 
-    export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
+    export type AvailStructAttrs = {[key:string]:Array<StructAttrDesc>};
 
     export interface PageData {
         AttrList:Array<AttrDesc>;

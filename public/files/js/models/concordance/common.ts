@@ -26,6 +26,7 @@ import { PluginInterfaces } from '../../types/plugins';
 
 export type AudioPlayerActions = 'play'|'pause'|'stop';
 
+export type DetailExpandPositions = 'left'|'right';
 
 export interface ServerTextChunk {
     class:string;
