@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import { IActionDispatcher } from 'kombo';
 import { Kontext, ViewOptions } from '../../types/common';
-import { calcTextColorFromBg, color2str, importColor } from '../../multidict';
+import { Color, pipe } from 'cnc-tskit';
 import { init as lineExtrasViewsInit } from './lineExtras';
 import { ConcLineModel, CorpColumn } from '../../models/concordance/lines';
 import { LineSelectionModel } from '../../models/concordance/lineSelection';
@@ -785,8 +785,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             const cat = tmp ? tmp[1] : dataItem.lineGroup;
             if (cat >= 1) {
                 const bgColor = this.props.catColors[cat % this.props.catColors.length];
-                const fgColor = color2str(calcTextColorFromBg(importColor(bgColor, 0)));
-                return [color2str(importColor(bgColor, 0.9)), fgColor];
+                const fgColor = pipe(bgColor, Color.importColor(0), Color.textColorFromBg(), Color.color2str());
+                return [pipe(bgColor, Color.importColor(0.9), Color.color2str()), fgColor];
             }
             return [null, null];
         }

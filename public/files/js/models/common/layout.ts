@@ -24,8 +24,8 @@ import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl } from 'kombo';
 import {IPluginApi} from '../../types/plugins';
-import {puid} from '../../multidict';
 import * as Immutable from 'immutable';
+import { Ident } from 'cnc-tskit';
 
 
 export interface MessageModelState {
@@ -125,7 +125,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         state.messages = state.messages.push({
             messageType: messageType,
             messageText: messageText,
-            messageId: puid(),
+            messageId: Ident.puid(),
             ttl: this.calcMessageTTL(messageType),
             timeFadeout: MessageModel.TIME_FADEOUT
         });

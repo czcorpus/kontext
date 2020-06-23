@@ -17,17 +17,16 @@
  */
 
 import {Kontext} from '../types/common';
-import {Keyboard} from 'cnc-tskit';
+import {Keyboard, Client} from 'cnc-tskit';
 import {CoreViews} from '../types/coreViews';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {isTouchDevice} from '../multidict';
 import {MessageModel, MessageModelState} from '../models/common/layout';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
-    if (isTouchDevice()) {
+    if (Client.isMobileTouchDevice()) {
         return window.innerWidth;
 
     } else if (val === CoreViews.AutoWidth.NARROW) {

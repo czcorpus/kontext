@@ -21,7 +21,6 @@
 import {Kontext, TextTypes} from '../../types/common';
 import * as Immutable from 'immutable';
 import * as React from 'react';
-import {calcTextColorFromBg, importColor, color2str} from '../../multidict';
 import {init as ctFlatResultFactory} from './ctFlatResult';
 import {init as ctViewOptsFactory} from './ctViewOpts';
 import {Freq2DFlatViewModel} from '../../models/freqs/flatCtable';
@@ -31,6 +30,7 @@ import {FreqQuantities, CTFreqCell} from '../../models/freqs/generalCtable';
 import {DataPoint} from '../../charts/confIntervals';
 import {IActionDispatcher} from 'kombo';
 import { Subscription } from 'rxjs';
+import { Color, pipe } from 'cnc-tskit';
 
 
 const enum TableViewMode {
@@ -655,7 +655,7 @@ export function init(
 
         renderWarning() {
             if (this.shouldWarn()) {
-                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
+                const linkStyle = {color: pipe(this.props.data.bgColor, Color.importColor(1), Color.textColorFromBg(), Color.color2str())}
                 return <strong className="warn" style={linkStyle}
                                 title={he.translate('freq__ct_conf_interval_too_uncertain')}>
                             {'\u00a0'}
@@ -683,7 +683,7 @@ export function init(
 
                 } else {
                     bgStyle['backgroundColor'] = this.props.data.bgColor;
-                    linkStyle['color'] = color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)));
+                    linkStyle['color'] = pipe(this.props.data.bgColor, Color.importColor(1), Color.textColorFromBg(), Color.color2str());
                 }
                 return (
                     <td className={tdClasses.join(' ')} style={bgStyle}>

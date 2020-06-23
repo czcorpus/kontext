@@ -23,7 +23,7 @@ import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import * as Immutable from 'immutable';
 
-import {MultiDict, importColor} from '../../multidict';
+import {MultiDict} from '../../multidict';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
@@ -32,6 +32,7 @@ import {PageModel} from '../../app/page';
 import {ConcLineModel} from './lines';
 import {AudioPlayer} from './media';
 import { ActionName as ViewOptionsActionName } from '../options/structsAttrs';
+import { Color } from 'cnc-tskit';
 
 /**
  *
@@ -165,7 +166,7 @@ export class ConcDetailModel extends StatefulModel {
         this.lineIdx = null;
         this.playingRowIdx = -1;
         this.wholeDocumentLoaded = false;
-        this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => importColor(item, ConcDetailModel.SPK_LABEL_OPACITY)));
+        this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => Color.importColor(ConcDetailModel.SPK_LABEL_OPACITY, item)));
         this.speakerColorsAttachments = Immutable.Map<string, Kontext.RGBAColor>();
         this.spkOverlapMode = (speechOpts.speechOverlapAttr || [])[1] ?
                 ConcDetailModel.SPK_OVERLAP_MODE_FULL : ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE;
