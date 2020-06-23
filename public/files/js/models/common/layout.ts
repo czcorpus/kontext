@@ -21,8 +21,7 @@
 import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpty } from 'rxjs';
 import { take, concatMap } from 'rxjs/operators';
 import {Kontext} from '../../types/common';
-import {StatefulModel} from '../base';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl } from 'kombo';
+import { StatelessModel, StatefulModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl } from 'kombo';
 import {IPluginApi} from '../../types/plugins';
 import {puid} from '../../multidict';
 import * as Immutable from 'immutable';
@@ -206,97 +205,114 @@ export type AnyOverviewInfo = CorpusInfo|SubcorpusInfo|CitationInfo|KeyShortcuts
 /**
  *
  */
-export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInfoModel {
+export interface CorpusInfoModelState {
+    corpusData:CorpusInfoResponse;
+    subcorpusData:SubcorpusInfoResponse;
+    currentCorpus:string;
+    currentSubcorpus:string;
+    currentInfoType:CorpusInfoType;
+    isWaiting:boolean;
+}
+
+export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState> implements Kontext.ICorpusInfoModel {
 
     pluginApi:IPluginApi;
 
-    corpusData:CorpusInfoResponse;
-
-    subcorpusData:SubcorpusInfoResponse;
-
-    currentCorpus:string;
-
-    currentSubcorpus:string;
-
-    currentInfoType:CorpusInfoType;
-
-    isWaiting:boolean = false;
-
-
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
-        super(dispatcher);
-        this.pluginApi = pluginApi;
-        this.dispatcher = dispatcher;
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'OVERVIEW_CLOSE':
-                    this.currentInfoType = null;
-                    this.emitChange();
-                break;
-                case 'OVERVIEW_CORPUS_INFO_REQUIRED':
-                    this.isWaiting = true;
-                    this.emitChange();
-                    this.loadCorpusInfo(action.payload['corpusId']).subscribe(
-                        null,
-                        (err) => {
-                            this.isWaiting = false;
-                            this.pluginApi.showMessage('error', err);
-                        },
-                        () => {
-                            this.currentCorpus = action.payload['corpusId'];
-                            this.currentInfoType = CorpusInfoType.CORPUS;
-                            this.isWaiting = false;
-                            this.emitChange();
-                        },
-                    )
-                    break;
-                    case 'OVERVIEW_SHOW_CITATION_INFO':
-                        this.isWaiting = true;
-                        this.emitChange();
-                        this.loadCorpusInfo(action.payload['corpusId']).subscribe(
-                            null,
-                            (err) => {
-                                this.isWaiting = false;
-                                this.pluginApi.showMessage('error', err);
-                            },
-                            () => {
-                                this.currentCorpus = action.payload['corpusId'];
-                                this.currentInfoType = CorpusInfoType.CITATION;
-                                this.isWaiting = false;
-                                this.emitChange();
-                            },
-                        );
-                    break;
-                    case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
-                        this.isWaiting = true;
-                        this.emitChange();
-                        this.loadSubcorpusInfo(action.payload['corpusId'], action.payload['subcorpusId']).subscribe(
-                            null,
-                            (err) => {
-                                this.isWaiting = false;
-                                this.pluginApi.showMessage('error', err);
-                            },
-                            () => {
-                                this.currentCorpus = action.payload['corpusId'];
-                                this.currentSubcorpus = action.payload['subcorpusId'];
-                                this.currentInfoType = CorpusInfoType.SUBCORPUS;
-                                this.isWaiting = false;
-                                this.emitChange();
-                            }
-                        )
-                    break;
-                    case 'OVERVIEW_SHOW_KEY_SHORTCUTS':
-                        this.currentInfoType = CorpusInfoType.KEY_SHORTCUTS;
-                        this.emitChange();
-                    break;
+        super(
+            dispatcher,
+            {
+                corpusData: null,
+                subcorpusData: null,
+                currentCorpus: null,
+                currentSubcorpus: null,
+                currentInfoType: null,
+                isWaiting: false
             }
-        });
+        );
+        this.pluginApi = pluginApi;
+    }
+
+    onAction(action:Action):void {
+        switch (action.name) {
+            case 'OVERVIEW_CLOSE':
+                this.changeState(state => {state.currentInfoType = null})
+                this.emitChange();
+            break;
+            case 'OVERVIEW_CORPUS_INFO_REQUIRED':
+                this.changeState(state => {state.isWaiting = true})
+                this.emitChange();
+                this.loadCorpusInfo(action.payload['corpusId']).subscribe(
+                    null,
+                    (err) => {
+                        this.changeState(state => {state.isWaiting = false});
+                        this.emitChange();
+                        this.pluginApi.showMessage('error', err);
+                    },
+                    () => {
+                        this.changeState(state => {
+                            state.currentCorpus = action.payload['corpusId'];
+                            state.currentInfoType = CorpusInfoType.CORPUS;
+                            state.isWaiting = false;
+                        });
+                        this.emitChange();
+                    },
+                )
+            break;
+            case 'OVERVIEW_SHOW_CITATION_INFO':
+                this.changeState(state => {state.isWaiting = true})
+                this.emitChange();
+                this.loadCorpusInfo(action.payload['corpusId']).subscribe(
+                    null,
+                    (err) => {
+                        this.changeState(state => {state.isWaiting = false});
+                        this.emitChange();
+                        this.pluginApi.showMessage('error', err);
+                    },
+                    () => {
+                        this.changeState(state => {
+                            state.currentCorpus = action.payload['corpusId'];
+                            state.currentInfoType = CorpusInfoType.CITATION;
+                            state.isWaiting = false;
+                        });
+                        this.emitChange();
+                    },
+                )
+            break;
+            case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
+                this.changeState(state => {state.isWaiting = true})
+                this.emitChange();
+                this.loadSubcorpusInfo(action.payload['corpusId'], action.payload['subcorpusId']).subscribe(
+                    null,
+                    (err) => {
+                        this.changeState(state => {state.isWaiting = false});
+                        this.emitChange();
+                        this.pluginApi.showMessage('error', err);
+                    },
+                    () => {
+                        this.changeState(state => {
+                            state.currentCorpus = action.payload['corpusId'];
+                            state.currentSubcorpus = action.payload['subcorpusId'];
+                            state.currentInfoType = CorpusInfoType.SUBCORPUS;
+                            state.isWaiting = false;
+                        });
+                        this.emitChange();
+                    }
+                )
+            break;
+            case 'OVERVIEW_SHOW_KEY_SHORTCUTS':
+                this.changeState(state => {state.currentInfoType = CorpusInfoType.KEY_SHORTCUTS})
+                this.emitChange();
+            break;
+        }
+    }
+
+    unregister():void {
     }
 
     private loadCorpusInfo(corpusId:string):Observable<any> {
-        if (this.corpusData && this.currentCorpus === corpusId) {
-            return rxOf(this.corpusData);
+        if (this.state.corpusData && this.state.currentCorpus === corpusId) {
+            return rxOf(this.state.corpusData);
 
         } else {
             return this.pluginApi.ajax$<CorpusInfoResponse>(
@@ -308,8 +324,10 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
             ).pipe(
                 concatMap(
                     (data) => {
-                        this.corpusData = data;
-                        this.currentCorpus = corpusId;
+                        this.changeState(state => {
+                            state.corpusData = data;
+                            state.currentCorpus = corpusId;
+                        })
                         return rxOf(data);
                     }
                 )
@@ -319,12 +337,12 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
 
     private loadSubcorpusInfo(corpusId:string, subcorpusId:string):Observable<any> {
 
-        const prom = corpusId !== this.currentCorpus ?
+        const prom = corpusId !== this.state.currentCorpus ?
             this.loadCorpusInfo(corpusId) :
-            rxOf(this.corpusData);
+            rxOf(this.state.corpusData);
 
-        if (this.subcorpusData && this.currentSubcorpus === subcorpusId) {
-            return prom.pipe(concatMap((_) => rxOf(this.subcorpusData)));
+        if (this.state.subcorpusData && this.state.currentSubcorpus === subcorpusId) {
+            return prom.pipe(concatMap((_) => rxOf(this.state.subcorpusData)));
 
         } else {
             return prom.pipe(
@@ -343,8 +361,11 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
                                     if (!data.extended_info) {
                                         data.extended_info = {cql: '-'};
                                     }
-                                    this.currentSubcorpus = subcorpusId;
-                                    this.subcorpusData = data;
+                                    this.changeState(state => {
+                                        state.subcorpusData = data;
+                                        state.currentCorpus = corpusId;
+                                        state.currentSubcorpus = subcorpusId;
+                                    })
                                     return rxEmpty();
                                 }
                             )
@@ -356,17 +377,17 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
     }
 
     getCurrentInfoType():CorpusInfoType {
-        return this.currentInfoType;
+        return this.state.currentInfoType;
     }
 
     getCurrentInfoData():AnyOverviewInfo {
-        switch (this.currentInfoType) {
+        switch (this.state.currentInfoType) {
             case CorpusInfoType.CORPUS:
-                return {...this.corpusData, type:CorpusInfoType.CORPUS};
+                return {...this.state.corpusData, type:CorpusInfoType.CORPUS};
             case CorpusInfoType.CITATION:
-                return {...this.corpusData['citation_info'], corpname: this.currentCorpus, type:CorpusInfoType.CITATION};
+                return {...this.state.corpusData['citation_info'], corpname: this.state.currentCorpus, type:CorpusInfoType.CITATION};
             case CorpusInfoType.SUBCORPUS:
-                return {...this.subcorpusData, type:CorpusInfoType.SUBCORPUS};
+                return {...this.state.subcorpusData, type:CorpusInfoType.SUBCORPUS};
             case CorpusInfoType.KEY_SHORTCUTS:
                 return {type:CorpusInfoType.KEY_SHORTCUTS};
             default:
@@ -375,6 +396,6 @@ export class CorpusInfoModel extends StatefulModel implements Kontext.ICorpusInf
     }
 
     isLoading():boolean {
-        return this.isWaiting;
+        return this.state.isWaiting;
     }
 }
