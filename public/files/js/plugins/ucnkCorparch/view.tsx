@@ -23,7 +23,8 @@ import { corplistItemIsUcnk } from './common';
 import { CorplistTableModel, CorplistTableModelState } from './corplist';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { CorplistItem } from '../defaultCorparch/common';
-import { Actions, ActionName } from '../defaultCorparch/actions';
+import { Actions as DefaultActions, ActionName as DefaultActionName } from '../defaultCorparch/actions';
+import { Actions, ActionName } from './actions';
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -71,8 +72,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _submitHandler() {
-            dispatcher.dispatch({
-                name: 'CORPUS_ACCESS_REQ_SUBMITTED',
+            dispatcher.dispatch<Actions.CorpusAccessReqSubmitted>({
+                name: ActionName.CorpusAccessReqSubmitted,
                 payload: {
                     corpusId: this.props.corpusId,
                     corpusName: this.props.corpusName,
@@ -300,8 +301,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _detailClickHandler(corpusId) {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_REQUIRED',
+            dispatcher.dispatch<DefaultActions.CorpusInfoRequired>({
+                name: DefaultActionName.CorpusInfoRequired,
                 payload: {
                     corpusId: corpusId
                 }
@@ -309,8 +310,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _detailCloseHandler() {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_CLOSED',
+            dispatcher.dispatch<DefaultActions.CorpusInfoClosed>({
+                name: DefaultActionName.CorpusInfoClosed,
                 payload: {}
             });
         }
@@ -377,8 +378,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch<Actions.ExpansionClicked>({
-                name: ActionName.ExpansionClicked,
+            dispatcher.dispatch<DefaultActions.ExpansionClicked>({
+                name: DefaultActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }
