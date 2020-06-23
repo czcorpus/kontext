@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { List, pipe, HTTP } from 'cnc-tskit';

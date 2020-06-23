@@ -161,7 +161,7 @@ export namespace Actions {
 
     export interface ToggleReference extends Action<{
         refIdent:string;
-        refAttrIdent:string;
+        refAttrIdent:string|null;
     }> {
         name:ActionName.ToggleReference;
     }

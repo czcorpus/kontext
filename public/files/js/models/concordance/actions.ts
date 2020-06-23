@@ -46,7 +46,8 @@ export enum ActionName {
     ResetDetail = 'CONCORDANCE_RESET_DETAIL',
     ShowRefDetail = 'CONCORDANCE_SHOW_REF_DETAIL',
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
-    StopSpeech = 'CONCORDANCE_STOP_SPEECH'
+    StopSpeech = 'CONCORDANCE_STOP_SPEECH',
+    RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL'
 }
 
 export namespace Actions {
@@ -191,6 +192,9 @@ export namespace Actions {
     }
 
     export interface ShowRefDetail extends Action<{
+        corpusId:string;
+        tokenNumber:number;
+        lineIdx:number;
     }> {
         name:ActionName.ShowRefDetail;
     }
@@ -207,4 +211,8 @@ export namespace Actions {
         name:ActionName.StopSpeech;
     }
 
+    export interface RefResetDetail extends Action<{
+    }> {
+        name:ActionName.RefResetDetail;
+    }
 }

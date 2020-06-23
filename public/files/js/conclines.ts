@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-
 
 const accessKey = 'concLines';
 const queryKey = '__query__';
@@ -48,18 +46,13 @@ function loadAll() {
  */
 export class ConcLinesStorage {
 
-    /**
-     * Selected lines information. Encoding is as follows:
-     * [kwic_token_id, [line_number, ]]
-     */
-    data:{[key:string]:[number, number]};
+
 
     errorHandler:any; // TODO type
 
     static DEFAULT_GROUP_ID = 1;
 
     constructor(errorHandler) {
-        this.data = loadAll();
         this.errorHandler = errorHandler;
     }
 
@@ -128,10 +121,6 @@ export class ConcLinesStorage {
             return true;
         });
         return ans;
-    }
-
-    asMap():Immutable.Map<string, [number, number]> {
-        return Immutable.Map<string, [number, number]>(this.data);
     }
 
     /**

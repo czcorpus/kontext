@@ -236,7 +236,7 @@ export function init(
                 <layoutViews.TabView
                     className="TagsetFormSelector"
                     callback={handleTabSelection}
-                    items={tagsetTabs} >
+                    items={tagsetTabs.toArray()} >
 
                     {children.toArray()}
                 </layoutViews.TabView>

@@ -18,16 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {MultiDict} from '../../multidict';
-import {StatefulModel} from '../base';
-import {ConcLinesStorage} from '../../conclines';
-import {PageModel} from '../../app/page';
-import {ConcLineModel} from './lines';
-import * as Immutable from 'immutable';
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
+
+import { Kontext } from '../../types/common';
+import { MultiDict } from '../../multidict';
+import { ConcLinesStorage } from '../../conclines';
+import { PageModel } from '../../app/page';
+import { ConcLineModel } from './lines';
+import { HTTP } from 'cnc-tskit';
+import { LineSelections } from './common';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
@@ -40,62 +41,80 @@ interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
 
 export type LineSelValue = [number, number];
 
+
+export interface LineSelectionModelState {
+
+    /**
+     * Selected lines information. Encoding is as follows:
+     * [kwic_token_id, [line_number, ]]
+     */
+    data:LineSelections;
+
+    mode:'simple'|'groups';
+
+    currentGroupIds:Array<number>;
+
+    maxGroupId:number;
+
+    isBusy:boolean;
+
+    emailDialogCredentials:Kontext.UserCredentials|null;
+}
+
+function determineMode(clStorage:ConcLinesStorage, concLineModel:ConcLineModel):'simple'|'groups' {
+    if (clStorage.size() > 0) {
+        return this.clStorage.getMode();
+
+    } else if (concLineModel.getNumItemsInLockedGroups() > 0) {
+        return 'groups';
+
+    } else {
+        return 'simple';
+    }
+}
+
 /**
  * This class handles state of selected concordance lines.
  * The selection can have one of two modes:
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionModel extends StatefulModel {
+export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     static FILTER_NEGATIVE = 'n';
 
     static FILTER_POSITIVE = 'p';
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private mode:string;
+    private readonly userInfoModel:Kontext.IUserInfoModel;
 
-    private clStorage:ConcLinesStorage;
+    private readonly concLineModel:ConcLineModel;
 
-    private actionFinishHandlers:Array<()=>void>;
+    private readonly clStorage:ConcLinesStorage;
 
-    private concLineModel:ConcLineModel;
-
-    private currentGroupIds:Array<number>;
-
-    private maxGroupId:number;
-
-    private _isBusy:boolean;
-
-    private userInfoModel:Kontext.IUserInfoModel;
-
-    private onLeavePage:()=>void;
-
-    private emailDialogCredentials:Kontext.UserCredentials;
+    private readonly onLeavePage:()=>void;
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                mode: determineMode(clStorage, concLineModel),
+                currentGroupIds: layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
+                isBusy: false,
+                emailDialogCredentials: null
+            }
+        );
         this.layoutModel = layoutModel;
         this.concLineModel = concLineModel;
         this.userInfoModel = userInfoModel;
         this.clStorage = clStorage;
         this.onLeavePage = onLeavePage;
-        if (clStorage.size() > 0) {
-            this.mode = this.clStorage.getMode();
+    }
 
-        } else if (concLineModel.getNumItemsInLockedGroups() > 0) {
-            this.mode = 'groups';
-
-        } else {
-            this.mode = 'simple';
-        }
-        this.actionFinishHandlers = [];
-        this.currentGroupIds = this.layoutModel.getConf<Array<number>>('LinesGroupsNumbers');
-        this.maxGroupId = this.layoutModel.getConf<number>('concLineMaxGroupNum');
-        this._isBusy = false;
-        this.emailDialogCredentials = null;
+    foo() {
 
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
@@ -298,7 +317,7 @@ export class LineSelectionModel extends StatefulModel {
 
         } else {
             return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-                'POST',
+                HTTP.Method.POST,
                 this.layoutModel.createActionUrl(
                     'ajax_rename_line_group',
                     this.layoutModel.getConcArgs().items()
@@ -472,27 +491,6 @@ export class LineSelectionModel extends StatefulModel {
      */
     registerQuery(query:Array<string>):void {
         this.clStorage.init(this.queryChecksum(query.join('')));
-    }
-
-    addActionFinishHandler(fn:()=>void):void {
-        this.actionFinishHandlers.push(fn);
-    }
-
-    removeActionFinishHandler(fn:()=>void):void {
-        for (let i = 0; i < this.actionFinishHandlers.length; i += 1) {
-            if (this.actionFinishHandlers[i] === fn) {
-                this.actionFinishHandlers.splice(i, 1);
-                break;
-            }
-        }
-    }
-
-    removeAllActionFinishHandlers():void {
-        this.actionFinishHandlers = [];
-    }
-
-    private performActionFinishHandlers():void {
-        this.actionFinishHandlers.forEach((fn:()=>void)=> fn());
     }
 
     getMode():string {

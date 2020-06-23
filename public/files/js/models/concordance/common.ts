@@ -24,6 +24,8 @@ import { ViewOptions } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 
 
+export type LineSelections = {[key:string]:[number, number]};
+
 export type AudioPlayerActions = 'play'|'pause'|'stop';
 
 export type DetailExpandPositions = 'left'|'right';

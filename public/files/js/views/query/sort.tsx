@@ -650,7 +650,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                             className="SortFormSelector"
                             defaultId={this.state.sortType}
                             callback={this._handleSortTypeChange}
-                            items={items} >
+                            items={items.toArray()} >
 
                             <SimpleSortForm sortId={this.props.sortId} />
                             <MultiLevelSortForm sortId={this.props.sortId} />

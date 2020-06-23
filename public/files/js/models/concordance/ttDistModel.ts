@@ -258,18 +258,18 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         );
     }
 
-    getDisplayableBlocks():Array<FreqBlock> {
+    static getDisplayableBlocks(state:TextTypesDistModelState):Array<FreqBlock> {
         return List.filter(
-            block => block.items.length <= this.state.maxBlockItems || this.state.maxBlockItems === -1,
-            this.state.blocks
+            block => block.items.length <= state.maxBlockItems || state.maxBlockItems === -1,
+            state.blocks
         );
     }
 
-    isDisplayedBlocksSubset():boolean {
-        return this.state.blocks.length > this.getDisplayableBlocks().length;
+    static isDisplayedBlocksSubset(state:TextTypesDistModelState):boolean {
+        return state.blocks.length > TextTypesDistModel.getDisplayableBlocks(state).length;
     }
 
-    shouldDisplayBlocksSubset():boolean {
-        return this.state.blocks.find(block => block.items.length > this.state.maxBlockItems) !== undefined;
+    static shouldDisplayBlocksSubset(state:TextTypesDistModelState):boolean {
+        return List.find(block => block.items.length > state.maxBlockItems, state.blocks) !== undefined;
     }
 }

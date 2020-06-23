@@ -18,9 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatefulModel } from 'kombo';
+import { StatefulModel, IFullActionControl } from 'kombo';
+
 import { PageModel } from '../../app/page';
 import { ConcLineModel } from './lines';
+import { Actions, ActionName } from './actions';
+import { tuple, HTTP } from 'cnc-tskit';
+import { Observable } from 'rxjs';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { tap, map } from 'rxjs/operators';
 
 
 export interface RefsColumn {
@@ -29,8 +35,8 @@ export interface RefsColumn {
 }
 
 export interface RefsDetailModelState {
-    data:Array<RefsColumn>;
-    lineIdx:number;
+    data:Array<[RefsColumn, RefsColumn]>;
+    lineIdx:number|null;
     isBusy:boolean;
 }
 
@@ -44,81 +50,80 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
     private readonly linesModel:ConcLineModel;
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                lineIdx: null,
+                data: [],
+                isBusy: false
+            }
+        );
         this.layoutModel = layoutModel;
         this.linesModel = linesModel;
-        this.lineIdx = null;
-        this.data = Array<RefsColumn>();
-        this.isBusy = false;
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'CONCORDANCE_SHOW_REF_DETAIL':
-                    this.isBusy = true;
-                    this.emitChange();
-                    this.loadRefs(action.payload['corpusId'], action.payload['tokenNumber'], action.payload['lineIdx']).subscribe(
-                        () => {
-                            this.linesModel.setLineFocus(action.payload['lineIdx'], true);
-                            this.linesModel.emitChange();
-                            this.isBusy = false;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                            this.isBusy = false;
-                            this.emitChange();
-                        }
-                    );
-                break;
-                case 'CONCORDANCE_REF_RESET_DETAIL':
-                case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
-                case 'CONCORDANCE_SHOW_KWIC_DETAIL':
-                case 'CONCORDANCE_SHOW_TOKEN_DETAIL':
-                    if (this.lineIdx !== null) {
-                        this.linesModel.setLineFocus(this.lineIdx, false);
-                        this.lineIdx = null;
-                        this.emitChange();
+        this.addActionHandler<Actions.ShowRefDetail>(
+            ActionName.ShowRefDetail,
+            action => {
+                this.state.isBusy = true;
+                this.emitChange();
+                this.loadRefs(action.payload.corpusId, action.payload.tokenNumber, action.payload.lineIdx).subscribe(
+                    () => {
+                        this.linesModel.setLineFocus(action.payload['lineIdx'], true);
                         this.linesModel.emitChange();
+                        this.state.isBusy = false;
+                        this.emitChange();
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                        this.state.isBusy = false;
+                        this.emitChange();
                     }
-                break;
+                );
             }
-        });
+        );
+
+        this.addActionHandler<Actions.RefResetDetail>(
+            [
+                ActionName.RefResetDetail,
+                ActionName.ShowSpeechDetail,
+                ActionName.ShowKwicDetail,
+                ActionName.ShowTokenDetail
+            ],
+            action => {
+                if (this.state.lineIdx !== null) {
+                    this.linesModel.setLineFocus(this.state.lineIdx, false);
+                    this.state.lineIdx = null;
+                    this.emitChange();
+                    this.linesModel.emitChange();
+                }
+            }
+        );
     }
 
-    getData():Array<[RefsColumn, RefsColumn]> {
-        if (this.lineIdx !== null) {
-            const ans:Array<[RefsColumn, RefsColumn]> = [];
-            for (let i = 0; i < this.data.size; i += 2) {
-                ans.push([this.data.get(i), this.data.get(i+1)]);
-            }
-            return Array<[RefsColumn, RefsColumn]>(ans);
+    unregister():void {}
 
-        } else if (this.isBusy) {
-            return Array<[RefsColumn, RefsColumn]>();
-
-        } else {
-            return null;
+    importData(data:AjaxResponse.FullRef):Array<[RefsColumn, RefsColumn]> {
+        const ans:Array<[RefsColumn, RefsColumn]> = [];
+        for (let i = 0; i < data.Refs.length; i += 2) {
+            ans.push(tuple(data.Refs[i], data.Refs[i + 1]));
         }
+        return ans;
     }
 
     private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):Observable<boolean> {
         return this.layoutModel.ajax$<AjaxResponse.FullRef>(
-            'GET',
+            HTTP.Method.GET,
             this.layoutModel.createActionUrl('fullref'),
             {corpname: corpusId, pos: tokenNum}
 
         ).pipe(
             tap(
                 (data) => {
-                    this.lineIdx = lineIdx;
-                    this.data = Array<RefsColumn>(data.Refs);
+                    this.state.lineIdx = lineIdx;
+                    this.state.data = this.importData(data);
                 }
             ),
             map(data => !!data)
         );
-    }
-
-    getIsBusy():boolean {
-        return this.isBusy;
     }
 }
