@@ -16,18 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {Keyboard} from 'cnc-tskit';
-import {CoreViews} from '../types/coreViews';
+import { Keyboard, Client } from 'cnc-tskit';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {isTouchDevice} from '../multidict';
-import {MessageModel, MessageModelState} from '../models/common/layout';
+
+import { Kontext } from '../types/common';
+import { CoreViews } from '../types/coreViews';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { MessageModel, MessageModelState} from '../models/common/layout';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
-    if (isTouchDevice()) {
+    if (Client.isMobileTouchDevice()) {
         return window.innerWidth;
 
     } else if (val === CoreViews.AutoWidth.NARROW) {
@@ -705,7 +705,7 @@ export function init(
         </span>;
     };
 
-    // ------------------------------------------------------------------------------------
+    // ----------------------- <TabButton /> ------------------------------------------------------
 
     /**
      * This button is used along with [ul.tabs li] as a tab-like sub-forms and control
@@ -722,8 +722,10 @@ export function init(
             </span>;
     };
 
+    // ----------------- <TabView /> ---------------------------------------------
+
     const TabView:CoreViews.TabView.Component = (props) => {
-        if (props.items.size === 1) {
+        if (props.items.length === 1) {
             return <div>{props.children[0]}</div>
         } else {
             const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);

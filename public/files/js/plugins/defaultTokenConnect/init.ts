@@ -25,6 +25,7 @@ import * as Immutable from 'immutable';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { HTTP } from 'cnc-tskit';
 
 
 declare var require:any;
@@ -62,7 +63,7 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         args.set('num_tokens', numTokens);
         args.replace('align', this.alignedCorpora.toArray());
         return this.pluginApi.ajax$<PluginInterfaces.TokenConnect.Response>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('fetch_token_detail'),
             args
 
@@ -70,15 +71,13 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
             map(
                 (data:PluginInterfaces.TokenConnect.Response) => ({
                     token: data.token,
-                    renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(
-                        data.items.map(x => ({
-                            renderer: this.selectRenderer(x.renderer),
-                            isKwicView: x.is_kwic_view,
-                            contents: x.contents,
-                            found: x.found,
-                            heading: x.heading
-                        }))
-                    )
+                    renders: data.items.map(x => ({
+                        renderer: this.selectRenderer(x.renderer),
+                        isKwicView: x.is_kwic_view,
+                        contents: x.contents,
+                        found: x.found,
+                        heading: x.heading
+                    }))
                 })
             )
         );

@@ -127,6 +127,8 @@ export interface ConclineModelState {
 
     baseCorpname:string;
 
+    maincorp:string; // primary corpus in alignent mode (can be different from baseCorpname)
+
     subCorpName:string;
 
     origSubcorpName:string;
@@ -153,6 +155,8 @@ export interface ConclineModelState {
 
     fastAdHocIpm:boolean;
 
+    providesAdHocIpm:boolean;
+
     useSafeFont:boolean;
 
     supportsSyntaxView:boolean;
@@ -162,6 +166,16 @@ export interface ConclineModelState {
     baseViewAttr:string;
 
     viewAttrs:Array<string>;
+
+    showAnonymousUserWarn:boolean;
+
+    syntaxBoxData:{tokenNumber:number; kwicLength:number}|null;
+
+    supportsTokenConnect:boolean;
+
+    catColors:Array<string>;
+
+    emptyRefValPlaceholder:string;
 }
 
 
@@ -202,10 +216,12 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 kwicCorps: lineViewProps.KWICCorps,
                 corporaColumns: lineViewProps.CorporaColumns,
                 baseCorpname: lineViewProps.baseCorpname,
+                maincorp: lineViewProps.mainCorp,
                 subCorpName: lineViewProps.subCorpName,
                 origSubcorpName: lineViewProps.origSubCorpName,
                 unfinishedCalculation: lineViewProps.Unfinished,
                 fastAdHocIpm: lineViewProps.FastAdHocIpm,
+                providesAdHocIpm: ttModel.findHasSelectedItems(),
                 concSummary: lineViewProps.concSummary,
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
@@ -217,7 +233,12 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 busyWaitSecs: 0,
                 supportsSyntaxView: lineViewProps.supportsSyntaxView,
                 adHocIpm: -1,
-                playerAttachedChunk: ''
+                playerAttachedChunk: '',
+                showAnonymousUserWarn: lineViewProps.anonymousUser,
+                supportsTokenConnect: lineViewProps.supportsTokenConnect,
+                syntaxBoxData: null,
+                emptyRefValPlaceholder: '\u2014',
+                catColors: [] // TODO !!!!
             }
         );
         this.layoutModel = layoutModel;
@@ -428,6 +449,13 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 }
             }
         );
+
+        this.addActionHandler<Actions.LineSelectionReset>(
+            ActionName.LineSelectionReset,
+            action => {
+                this.emitChange(); // TODO do we need this? TEST
+            }
+        )
     }
 
     unregister():void {}
@@ -454,7 +482,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         }
     }
 
-    private updateOnCorpViewOptsChange():void {
+    private updateOnCorpViewOptsChange():void { // TODO !!
         this.state.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
         this.state.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
 
@@ -473,8 +501,8 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         return this.layoutModel.getConcArgs().head('attrs').split(',');
     }
 
-    getViewAttrsVmode():ViewOptions.AttrViewMode {
-        return transformVmode(this.state.attrViewMode, this.state.attrAllpos);
+    static getViewAttrsVmode(state:ConclineModelState):ViewOptions.AttrViewMode {
+        return transformVmode(state.attrViewMode, state.attrAllpos);
     }
 
     getNumItemsInLockedGroups():number {
@@ -538,7 +566,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         );
     }
 
-    private importData(data:Kontext.AjaxResponse):void { // data type is too general
+    private importData(data:Kontext.AjaxResponse):void { // TODO data type is too general
         try {
             this.state.lines = importLines(data['Lines'], this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1);
             this.state.numItemsInLockedGroups = data['num_lines_in_groups'];
@@ -751,10 +779,6 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         return this.state.concSummary;
     }
 
-    getProvidesAdHocIpm():boolean {
-        return this.ttModel.findHasSelectedItems();
-    }
-
     getAdHocIpm():number {
         return this.state.adHocIpm;
     }
@@ -793,10 +817,6 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
 
     getBaseCorpname():string {
         return this.state.baseCorpname;
-    }
-
-    getEmptyRefValPlaceholder():string {
-        return '\u2014';
     }
 
     getCorporaColumns():Array<CorpColumn> {

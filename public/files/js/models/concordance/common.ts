@@ -24,6 +24,8 @@ import { ViewOptions } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 
 
+export type LineSelectionModes = 'simple'|'groups';
+
 export type LineSelections = {[key:string]:[number, number]};
 
 export type AudioPlayerActions = 'play'|'pause'|'stop';
@@ -216,6 +218,8 @@ export interface ViewConfiguration {
     catColors:Array<string>;
 
     supportsSyntaxView:boolean;
+
+    supportsTokenConnect:boolean;
 
     anonymousUserConcLoginPrompt:boolean;
 

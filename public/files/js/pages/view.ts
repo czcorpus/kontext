@@ -23,19 +23,19 @@
 import { Action } from 'kombo';
 import { Observable, of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { KontextPage } from '../app/main';
+import { List, tuple } from 'cnc-tskit';
 
+import { KontextPage } from '../app/main';
 import { Kontext, TextTypes, ViewOptions } from '../types/common';
 import { AjaxResponse } from '../types/ajaxResponses';
 import { PageModel, DownloadType } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
 import { parseUrlArgs } from '../app/navigation';
 import { MultiDict } from '../multidict';
-import * as conclines from '../conclines';
 import { init as concViewsInit, ViewPageModels, MainViews as ConcViews } from '../views/concordance/main';
 import { LineSelectionModel } from '../models/concordance/lineSelection';
-import { ConcDetailModel, RefsDetailModel } from '../models/concordance/detail';
-import { ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel } from '../models/concordance/lines';
+import { ConcDetailModel } from '../models/concordance/detail';
+import { ConcLineModel } from '../models/concordance/lines';
 import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs } from '../models/query/first';
 import { UsageTipsModel } from '../models/usageTips';
 import { CQLEditorModel } from '../models/query/cqleditor/model';
@@ -66,12 +66,15 @@ import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData,
+    DummySyntaxViewModel } from '../models/concordance/common';
+import { RefsDetailModel } from '../models/concordance/refsDetail';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { List, tuple } from 'cnc-tskit';
+import { openStorage } from '../models/concordance/selectionStorage';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -223,7 +226,7 @@ export class ViewPage {
     }
 
     private handleBeforeUnload(event:any):void {
-        if (this.viewModels.lineSelectionModel.size() > 0) {
+        if (this.viewModels.lineSelectionModel.hasSelectedLines()) {
             event.returnValue = this.translate('global__are_you_sure_to_leave');
             return event.returnValue;
         }
@@ -951,6 +954,7 @@ export class ViewPage {
             catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
+            supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>('anonymousUserConcLoginPrompt'),
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
                 syntaxViewer.render(
@@ -992,7 +996,7 @@ export class ViewPage {
                 this.layoutModel.dispatcher,
                 this.viewModels.lineViewModel,
                 this.layoutModel.getModels().userInfoModel,
-                conclines.openStorage(()=>{}),
+                openStorage(()=>{}),
                 () => {
                     window.removeEventListener('beforeunload', this.handleBeforeUnload);
                 }
@@ -1057,7 +1061,7 @@ export class ViewPage {
             const ttModel = this.initTextTypesModel();
             let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
             if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
-                syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
+                syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher, {});
             }
             const lineViewProps = this.initModels(
                 ttModel,

@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions, DetailExpandPositions } from './common';
+import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes } from './common';
 
 export enum ActionName {
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
@@ -47,7 +47,22 @@ export enum ActionName {
     ShowRefDetail = 'CONCORDANCE_SHOW_REF_DETAIL',
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
     StopSpeech = 'CONCORDANCE_STOP_SPEECH',
-    RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL'
+    RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
+    SelectLine = 'LINE_SELECTION_SELECT_LINE',
+    LineSelectionStatusRequest = 'LINE_SELECTION_STATUS_REQUEST',
+    LineSelectionReset = 'LINE_SELECTION_RESET',
+    LineSelectionResetOnServer = 'LINE_SELECTION_RESET_ON_SERVER',
+    RemoveSelectedLines = 'LINE_SELECTION_REMOVE_LINES',
+    RemoveNonSelectedLines = 'LINE_SELECTION_REMOVE_OTHER_LINES',
+    MarkLines = 'LINE_SELECTION_MARK_LINES',
+    RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
+    UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
+    RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
+    SendLineSelectionToEmail = 'LINE_SELECTION_SEND_URL_TO_EMAIL',
+    SortLineSelection = 'LINE_SELECTION_SORT_LINES',
+    SetLineSelectionMode = 'CONCORDANCE_SET_LINE_SELECTION_MODE',
+    LoadUserCredentials = 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
+    ClearUserCredentials = 'LINE_SELECTION_CLEAR_USER_CREDENTIALS'
 }
 
 export namespace Actions {
@@ -214,5 +229,87 @@ export namespace Actions {
     export interface RefResetDetail extends Action<{
     }> {
         name:ActionName.RefResetDetail;
+    }
+
+    export interface SelectLine extends Action<{
+        value:number;
+        tokenNumber:number;
+        kwicLength:number;
+    }> {
+        name:ActionName.SelectLine;
+    }
+
+    export interface LineSelectionStatusRequest extends Action<{
+    }> {
+        name:ActionName.LineSelectionStatusRequest;
+    }
+
+    export interface LineSelectionReset extends Action<{
+    }> {
+        name:ActionName.LineSelectionReset;
+    }
+
+    export interface LineSelectionResetOnServer extends Action<{
+    }> {
+        name:ActionName.LineSelectionResetOnServer;
+    }
+
+    export interface RemoveSelectedLines extends Action<{
+    }> {
+        name:ActionName.RemoveSelectedLines;
+    }
+
+    export interface RemoveNonSelectedLines extends Action<{
+    }> {
+        name:ActionName.RemoveNonSelectedLines;
+    }
+
+    export interface MarkLines extends Action<{
+    }> {
+        name:ActionName.MarkLines;
+    }
+
+    export interface RemoveLinesNotInGroups extends Action<{
+    }> {
+        name:ActionName.RemoveLinesNotInGroups;
+    }
+
+    export interface UnlockLineSelection extends Action<{
+    }> {
+        name:ActionName.UnlockLineSelection;
+    }
+
+    export interface RenameSelectionGroup extends Action<{
+        srcGroupNum:number;
+        dstGroupNum:number;
+    }> {
+        name:ActionName.RenameSelectionGroup;
+    }
+
+    export interface SendLineSelectionToEmail extends Action<{
+        email:string;
+    }> {
+        name:ActionName.SendLineSelectionToEmail;
+    }
+
+    export interface SortLineSelection extends Action<{
+    }> {
+        name:ActionName.SortLineSelection;
+    }
+
+    export interface SetLineSelectionMode extends Action<{
+        mode:LineSelectionModes;
+    }> {
+        name:ActionName.SetLineSelectionMode;
+    }
+
+    export interface LoadUserCredentials extends Action<{
+    }> {
+        name:ActionName.LoadUserCredentials;
+    }
+
+    export interface ClearUserCredentials extends Action<{
+    }> {
+        name:ActionName.ClearUserCredentials;
     }
 }

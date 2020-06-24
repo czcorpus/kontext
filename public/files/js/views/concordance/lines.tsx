@@ -46,15 +46,6 @@ export interface LinesModuleArgs {
 
 
 export interface ConcLinesProps {
-    baseCorpname:string;
-    mainCorp:string;
-    supportsSyntaxView:boolean;
-    supportsTokenConnect:boolean;
-    catColors:Array<string>;
-    KWICCorps:Array<string>;
-    tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
-    onSyntaxViewClick:(tokenNum:number, kwicLength:number)=>void;
-    refsDetailClickHandler:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
     onReady:()=>void;
 }
 
@@ -518,9 +509,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             languages:Array<KWICSection>;
             lineGroup:number;
         };
-        tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
-        onSyntaxViewClick:(tokenNum:number, kwicLength:number)=>void;
-        refsDetailClickHandler:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
     },
     {
         selectionValue:LineSelValue;
@@ -532,6 +520,45 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             super(props);
             this.state = this._fetchModelState();
             this._handleModelChange = this._handleModelChange.bind(this);
+            this._detailClickHandler = this._detailClickHandler.bind(this);
+            this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
+        }
+
+        _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
+            if (this.props.viewMode === 'speech') {
+                dispatcher.dispatch({
+                    name: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
+                    payload: {
+                        corpusId: corpusId,
+                        tokenNumber: tokenNumber,
+                        kwicLength: kwicLength,
+                        lineIdx: lineIdx
+                    }
+                });
+
+            } else { // = default and custom modes
+                if (kwicLength > 0) {
+                    dispatcher.dispatch({
+                        name: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                        payload: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            kwicLength: kwicLength,
+                            lineIdx: lineIdx
+                        }
+                    });
+
+                } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
+                    dispatcher.dispatch({
+                        name: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
+                        payload: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            lineIdx: lineIdx
+                        }
+                    });
+                }
+            }
         }
 
         _fetchModelState() {
@@ -600,7 +627,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                             lineIdx={this.props.lineIdx}
                             output={corpusOutput}
                             kwicLength={this.props.data.kwicLength}
-                            tokenConnectClickHandler={this.props.tokenConnectClickHandler}
+                            tokenConnectClickHandler={this._detailClickHandler}
                             attrViewMode={this.props.attrViewMode} />;
 
             } else {
@@ -617,11 +644,22 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
-            this.props.tokenConnectClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+            this._detailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
-            this.props.tokenConnectClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
+        }
+
+        _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
+            dispatcher.dispatch({
+                name: 'CONCORDANCE_SHOW_REF_DETAIL',
+                payload: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx
+                }
+            });
         }
 
         _handleModelChange() {
@@ -666,9 +704,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         selectionValue={this.state.selectionValue} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
-                            <extras.SyntaxTreeButton
-                                    onSyntaxViewClick={()=>this.props.onSyntaxViewClick(primaryLang.tokenNumber, this.props.data.kwicLength)}
-                                     /> :
+                            <extras.SyntaxTreeButton tokenNumber={primaryLang.tokenNumber}
+                                    kwicLength={this.props.data.kwicLength} /> :
                             null
                         }
                     </td>
@@ -678,7 +715,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                                     tokenNumber={primaryLang.tokenNumber}
                                     lineIdx={this.props.lineIdx}
                                     data={primaryLang.ref}
-                                    refsDetailClickHandler={this.props.refsDetailClickHandler}
+                                    refsDetailClickHandler={this._refsDetailClickHandler}
                                     emptyRefValPlaceholder={this.props.emptyRefValPlaceholder} /> :
                             null}
 
@@ -696,7 +733,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                                         lineIdx={this.props.lineIdx}
                                         data={alCorp.ref}
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
-                                        refsDetailClickHandler={this.props.refsDetailClickHandler} />
+                                        refsDetailClickHandler={this._refsDetailClickHandler} />
                                 </td>
                                 {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1) :
                                     <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
@@ -715,10 +752,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
     }
 
+    // --------------------------- <LinesWithSelection /> ------------------------------
+
     class LinesWithSelection extends React.PureComponent<ConclineModelState & LineSelectionModelState> {
 
         _getCatColors(dataItem) {
-            const tmp = this.state.lineSelData.get(dataItem.languages.first().tokenNumber);
+            const tmp = this.props.data[dataItem.languages.first().tokenNumber];
             const cat = tmp ? tmp[1] : dataItem.lineGroup;
             if (cat >= 1) {
                 const bgColor = this.props.catColors[cat % this.props.catColors.length];
@@ -733,29 +772,26 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
                          lineIdx={i}
                          data={item}
-                         cols={this.state.corporaColumns}
-                         viewMode={this.state.viewMode}
-                         attrViewMode={this.state.attrViewMode}
+                         cols={this.props.corporaColumns}
+                         viewMode={this.props.viewMode}
+                         attrViewMode={ConcLineModel.getViewAttrsVmode(this.props)}
                          baseCorpname={this.props.baseCorpname}
-                         mainCorp={this.props.mainCorp}
-                         corpsWithKwic={this.props.KWICCorps}
-                         showLineNumbers={this.state.showLineNumbers}
-                         lineSelMode={this.state.lineSelMode}
-                         numItemsInLockedGroups={this.state.numItemsInLockedGroups}
-                         tokenConnectClickHandler={this.props.tokenConnectClickHandler}
-                         refsDetailClickHandler={this.props.refsDetailClickHandler}
-                         emptyRefValPlaceholder={this.state.emptyRefValPlaceholder}
+                         mainCorp={this.props.maincorp}
+                         corpsWithKwic={this.props.kwicCorps}
+                         showLineNumbers={this.props.showLineNumbers}
+                         lineSelMode={this.props.mode}
+                         numItemsInLockedGroups={this.props.numItemsInLockedGroups}
+                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                          catBgColor={catColor[0]}
                          catTextColor={catColor[1]}
                          supportsSyntaxView={this.props.supportsSyntaxView}
-                         onSyntaxViewClick={this.props.onSyntaxViewClick}
                          supportsTokenConnect={this.props.supportsTokenConnect} />;
         }
 
         render() {
             return (
                 <>
-                    {this.state.lines.map(this._renderLine.bind(this))}
+                    {this.props.lines.map(this._renderLine.bind(this))}
                 </>
             );
         }
@@ -767,15 +803,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     class ConcLines extends React.PureComponent<ConcLinesProps & ConclineModelState> {
 
-        private lmSubscription:Subscription;
-        private lsmSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
-            this.state = this._fetchModelState();
-        }
-
         _getLineSelMode() {
             if (lineModel.getNumItemsInLockedGroups() > 0) {
                 return 'groups';
@@ -785,51 +812,20 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             }
         }
 
-        _fetchModelState() {
-            return {
-                lines: lineModel.getLines(),
-                lineSelData: lineSelectionModel.asMap(),
-                lineSelMode: this._getLineSelMode(),
-                numItemsInLockedGroups: lineModel.getNumItemsInLockedGroups(),
-                useSafeFont: lineModel.getUseSafeFont(),
-                emptyRefValPlaceholder: lineModel.getEmptyRefValPlaceholder(),
-                corporaColumns: lineModel.getCorporaColumns(),
-                viewMode: lineModel.getViewMode(),
-                attrViewMode: lineModel.getViewAttrsVmode(),
-                supportsTokenConnect: concDetailModel.supportsTokenConnect(),
-                showLineNumbers: lineModel.getShowLineNumbers()
-            };
-        }
-
-        _modelChangeListener() {
-            this.setState(this._fetchModelState());
-        }
-
         componentDidMount() {
-            this.lmSubscription = lineModel.addListener(this._modelChangeListener);
-            this.lsmSubscription = lineSelectionModel.addListener(this._modelChangeListener);
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
                 this.props.onReady();
             }
         }
 
-        componentWillUnmount() {
-            this.lmSubscription.unsubscribe();
-            this.lsmSubscription.unsubscribe();
-        }
-
-
-
-
-
         render() {
-            const numVisibleCols = this.state.corporaColumns.reduce((prev, c) => prev + (c.visible ? 1 : 0), 0);
+            const numVisibleCols = this.props.corporaColumns.reduce((prev, c) => prev + (c.visible ? 1 : 0), 0);
             return (
-                <table id="conclines" className={this.state.useSafeFont ? 'safe' : null}>
+                <table id="conclines" className={this.props.useSafeFont ? 'safe' : null}>
                     <tbody>
-                        {this.state.corporaColumns.size > 1 ?
-                            <ConcColsHeading cols={this.state.corporaColumns} corpsWithKwic={this.props.KWICCorps}
-                                    viewMode={this.state.viewMode} hideable={numVisibleCols > 1} />
+                        {this.props.corporaColumns.length > 1 ?
+                            <ConcColsHeading cols={this.props.corporaColumns} corpsWithKwic={this.props.kwicCorps}
+                                    viewMode={this.props.viewMode} hideable={numVisibleCols > 1} />
                             : null
                         }
                         <BoundLinesWithSelection {...this.props} />

@@ -19,7 +19,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { Subscription } from 'rxjs';
 
@@ -31,14 +30,17 @@ import { init as linesViewInit } from './lines';
 import { init as concDetailViewsInit } from './detail/index';
 import { init as concSaveViewsInit } from './save';
 import { init as extendedInfoViewsInit } from './extendedInfo';
-import { LineSelectionModel } from '../../models/concordance/lineSelection';
-import { ConcLineModel, ConcSummary as LinesConcSummary } from '../../models/concordance/lines';
-import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../models/concordance/detail';
+import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
+import { ConcLineModel, ConclineModelState } from '../../models/concordance/lines';
+import { ConcDetailModel } from '../../models/concordance/detail';
+import { RefsDetailModel } from '../../models/concordance/refsDetail';
 import { CollFormModel } from '../../models/coll/collForm';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
 import { UsageTipsModel } from '../../models/usageTips';
 import { MainMenuModelState } from '../../models/mainMenu';
+import { Dict } from 'cnc-tskit';
+import { Actions, ActionName } from '../../models/concordance/actions';
 
 
 export class ViewPageModels {
@@ -469,51 +471,21 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcToolbarWrapper /> ---------------------------
 
-
-    class ConcToolbarWrapper extends React.Component<{
+    interface ConcToolbarWrapperProps {
         showConcToolbar:boolean;
         canSendEmail:boolean;
         viewMode:ViewOptions.AttrViewMode;
         onChartFrameReady?:()=>void;
-    },
-    {
-        numSelected:number;
-        numItemsInLockedGroups:number;
-    }> {
+    }
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                numSelected: lineSelectionModel.size(),
-                numItemsInLockedGroups: lineViewModel.getNumItemsInLockedGroups()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = lineSelectionModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class ConcToolbarWrapper extends React.Component<ConcToolbarWrapperProps & LineSelectionModelState> {
 
         render() {
             return (
                 <div className="toolbar-level">
                     <LineSelectionOps
-                            numSelected={this.state.numSelected}
-                            numItemsInLockedGroups={this.state.numItemsInLockedGroups}
+                            numSelected={Dict.size(this.props.data) - 1} // TODO abstraction leaking
+                            numItemsInLockedGroups={this.props.numItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
                             canSendEmail={this.props.canSendEmail} />
                     {this.props.showConcToolbar ?
@@ -524,6 +496,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
     }
 
+    const BoundConcToolbarWrapper = BoundWithProps<ConcToolbarWrapperProps, LineSelectionModelState>(ConcToolbarWrapper, lineSelectionModel);
 
     // ------------------------- <AnonymousUserLoginPopup /> ---------------------------
 
@@ -625,141 +598,28 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     // ------------------------- <ConcordanceView /> ---------------------------
 
     class ConcordanceView extends React.Component<
-    ConcordanceDashboardProps['concViewProps'],
-    {
-        hasConcDetailData:boolean;
-        tokenConnectData:PluginInterfaces.TokenConnect.TCData;
-        tokenConnectIsBusy:boolean;
-        concDetailModelIsBusy:boolean;
-        refsDetailData:Immutable.List<[RefsColumn, RefsColumn]>;
-        viewMode:string;
-        attrViewMode:ViewOptions.AttrViewMode;
-        isUnfinishedCalculation:boolean;
-        concSummary:LinesConcSummary;
-        showAnonymousUserWarn:boolean;
-        saveFormVisible:boolean;
-        supportsSyntaxView:boolean;
-        syntaxBoxData:{tokenNumber:number; kwicLength:number};
-        canCalculateAdHocIpm:boolean;
-        fastAdHocIpm:boolean;
-        adHocIpm:number;
-        subCorpName:string;
-        origSubcorpName:string;
-        hasLines:boolean;
-        isWaiting:boolean;
-        numWaitingSecs:number;
-    }> {
-
-        private modelSubscriptions:Array<Subscription>;
+    ConcordanceDashboardProps['concViewProps'] & ConclineModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleDetailCloseClick = this._handleDetailCloseClick.bind(this);
-            this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
             this._handleAnonymousUserWarning = this._handleAnonymousUserWarning.bind(this);
-            this._handleSyntaxBoxClick = this._handleSyntaxBoxClick.bind(this);
             this._handleSyntaxBoxClose = this._handleSyntaxBoxClose.bind(this);
-            this._detailClickHandler = this._detailClickHandler.bind(this);
-            this.modelSubscriptions = [];
-        }
-
-        _fetchModelState() {
-            return {
-                hasConcDetailData: concDetailModel.hasConcDetailData(),
-                tokenConnectData: concDetailModel.getTokenConnectData(),
-                tokenConnectIsBusy: concDetailModel.getTokenConnectIsBusy(),
-                concDetailModelIsBusy: concDetailModel.getIsBusy(),
-                refsDetailData: refsDetailModel.getData(),
-                viewMode: lineViewModel.getViewMode(),
-                attrViewMode: lineViewModel.getViewAttrsVmode(),
-                isUnfinishedCalculation: lineViewModel.isUnfinishedCalculation(),
-                concSummary: lineViewModel.getConcSummary(),
-                showAnonymousUserWarn: this.props.anonymousUser && this.props.anonymousUserConcLoginPrompt,
-                saveFormVisible: lconcSaveModel.getFormIsActive(),
-                supportsSyntaxView: lineViewModel.getSupportsSyntaxView(),
-                syntaxBoxData: null,
-                canCalculateAdHocIpm: lineViewModel.getProvidesAdHocIpm(),
-                fastAdHocIpm: lineViewModel.getFastAdHocIpm(),
-                adHocIpm: lineViewModel.getAdHocIpm(),
-                subCorpName: lineViewModel.getSubCorpName(),
-                origSubcorpName: lineViewModel.getCurrentSubcorpusOrigName(),
-                hasLines: lineViewModel.getLines().size > 0,
-                isWaiting: lineViewModel.getIsBusy(),
-                numWaitingSecs: lineViewModel.getNumWaitingSecs()
-            };
-        }
-
-        _handleModelChange() {
-            const state = this._fetchModelState();
-            state.showAnonymousUserWarn = this.state.showAnonymousUserWarn;
-            this.setState(state);
         }
 
         _handleDetailCloseClick() {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_STOP_SPEECH',
-                payload: {}
+            dispatcher.dispatch<Actions.StopSpeech>({
+                name: ActionName.StopSpeech
             });
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_RESET_DETAIL',
-                payload: {}
-            });
-        }
-
-        _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
-            if (concDetailModel.getViewMode() === 'speech') {
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
-                    payload: {
-                        corpusId: corpusId,
-                        tokenNumber: tokenNumber,
-                        kwicLength: kwicLength,
-                        lineIdx: lineIdx
-                    }
-                });
-
-            } else { // = default and custom modes
-                if (kwicLength > 0) {
-                    dispatcher.dispatch({
-                        name: 'CONCORDANCE_SHOW_KWIC_DETAIL',
-                        payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
-                            kwicLength: kwicLength,
-                            lineIdx: lineIdx
-                        }
-                    });
-
-                } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
-                    dispatcher.dispatch({
-                        name: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
-                        payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
-                            lineIdx: lineIdx
-                        }
-                    });
-                }
-            }
-        }
-
-        _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SHOW_REF_DETAIL',
-                payload: {
-                    corpusId: corpusId,
-                    tokenNumber: tokenNumber,
-                    lineIdx: lineIdx
-                }
+            dispatcher.dispatch<Actions.ResetDetail>({
+                name: ActionName.ResetDetail
             });
         }
 
         _handleAnonymousUserWarning() {
-            const state = this._fetchModelState();
-            state.showAnonymousUserWarn = false;
-            this.setState(state);
+            dispatcher.dispatch({
+                name: 'CONCORDANCE_HIDE_ANONYMOUS_USER_WARNING'
+            })
         }
 
         _handleRefsDetailCloseClick() {
@@ -769,96 +629,67 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             });
         }
 
-        _handleSyntaxBoxClick(tokenNumber, kwicLength) {
-            const newState = he.cloneState(this.state);
-            newState.syntaxBoxData = {tokenNumber: tokenNumber, kwicLength: kwicLength};
-            this.setState(newState);
-        }
-
         _handleSyntaxBoxClose() {
-            const newState = he.cloneState(this.state);
-            newState.syntaxBoxData = null;
-            this.setState(newState);
-        }
-
-        componentDidMount() {
-            this.modelSubscriptions = [
-                lineViewModel.addListener(this._handleModelChange),
-                lconcSaveModel.addListener(this._handleModelChange),
-                concDetailModel.addListener(this._handleModelChange),
-                refsDetailModel.addListener(this._handleModelChange)
-            ];
-            syntaxViewModel.registerOnError(() => {
-                const newState = he.cloneState(this.state);
-                    newState.syntaxBoxData = null;
-                    this.setState(newState);
-                this.setState(newState);
-            })
-        }
-
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe());
+            dispatcher.dispatch({
+                name: 'HIDE_SYNTAX_VIEW',
+                payload: {}
+            });
         }
 
         _shouldDisplayConcDetailBox() {
-            return this.state.hasConcDetailData
-                    || this.state.tokenConnectData.renders.size > 0
-                    || this.state.concDetailModelIsBusy
-                    || this.state.tokenConnectIsBusy;
+            /* TODO !!!
+            return this.props.hasConcDetailData
+                    || this.props.tokenConnectData.renders.size > 0
+                    || this.props.concDetailModelIsBusy
+                    || this.props.tokenConnectIsBusy;
+                    */
+            return false; // TODO
         }
 
         render() {
             return (
                 <div className="ConcordanceView">
-                    {this.state.syntaxBoxData ?
+                    {this.props.syntaxBoxData ?
                         <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose}
-                                tokenNumber={this.state.syntaxBoxData.tokenNumber}
-                                kwicLength={this.state.syntaxBoxData.kwicLength}
+                                tokenNumber={this.props.syntaxBoxData.tokenNumber}
+                                kwicLength={this.props.syntaxBoxData.kwicLength}
                                 onReady={this.props.onSyntaxPaneReady}
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
                     {this._shouldDisplayConcDetailBox() ?
-                        <concDetailViews.TokenConnect closeClickHandler={this._handleDetailCloseClick} />
+                        <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null
                     }
-                    {this.state.refsDetailData ?
-                        <concDetailViews.RefDetail
-                            closeClickHandler={this._handleRefsDetailCloseClick} />
-                        : null
-                    }
+                    <concDetailViews.RefDetail
+                        closeClickHandler={this._handleRefsDetailCloseClick} />
                     <div id="conc-top-bar">
                         <div className="info-level">
                             <paginationViews.Paginator {...this.props} />
-                            <ConcSummary {...this.state.concSummary}
-                                corpname={this.props.baseCorpname}
-                                isUnfinishedCalculation={this.state.isUnfinishedCalculation}
-                                canCalculateAdHocIpm={this.state.canCalculateAdHocIpm}
-                                fastAdHocIpm={this.state.fastAdHocIpm}
-                                adHocIpm={this.state.adHocIpm}
-                                subCorpName={this.state.subCorpName}
-                                origSubcorpName={this.state.origSubcorpName}
-                                isWaiting={this.state.isWaiting}
-                                />
+                            <ConcSummary {...this.props.concSummary}
+                                    corpname={this.props.baseCorpname}
+                                    isUnfinishedCalculation={this.props.unfinishedCalculation}
+                                    canCalculateAdHocIpm={this.props.providesAdHocIpm}
+                                    fastAdHocIpm={this.props.fastAdHocIpm}
+                                    adHocIpm={this.props.adHocIpm}
+                                    subCorpName={this.props.subCorpName}
+                                    origSubcorpName={this.props.origSubcorpName}
+                                    isWaiting={this.props.unfinishedCalculation} />
                         </div>
-                        <ConcToolbarWrapper
+                        <BoundConcToolbarWrapper
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
-                                viewMode={this.state.attrViewMode} />
-                        {this.state.showAnonymousUserWarn ?
+                                viewMode={ConcLineModel.getViewAttrsVmode(this.props)} />
+                        {this.props.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
                     <div id="conclines-wrapper">
-                        {!this.state.hasLines && this.state.isWaiting ?
+                        {this.props.lines.length === 0 && this.props.unfinishedCalculation ?
                             <div className="no-data">
                                 <p>{he.translate('concview__waiting_for_data')}</p>
-                                <p>({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}{secs2hms(this.state.numWaitingSecs)})</p>
+                                <p>({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}{secs2hms(this.props.busyWaitSecs)})</p>
                                 <p><layoutViews.AjaxLoaderImage /></p>
                             </div> :
-                            <linesViews.ConcLines {...this.props}
-                                supportsSyntaxView={this.state.supportsSyntaxView}
-                                onSyntaxViewClick={this._handleSyntaxBoxClick}
-                                tokenConnectClickHandler={this._detailClickHandler}
-                                refsDetailClickHandler={this._refsDetailClickHandler} />
+                            <linesViews.ConcLines {...this.props} />
                         }
                     </div>
                     <div id="conc-bottom-bar">
@@ -866,11 +697,15 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <paginationViews.Paginator {...this.props} />
                         </div>
                     </div>
-                    {this.state.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
+                    <concSaveViews.ConcSaveForm />
                 </div>
             );
         }
     }
+
+
+    const BoundConcordanceView = BoundWithProps<ConcordanceDashboardProps['concViewProps'],
+            ConclineModelState>(ConcordanceView, lineViewModel)
 
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
@@ -894,7 +729,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
                     }
-                    <ConcordanceView {...this.props.concViewProps} />
+                    <BoundConcordanceView {...this.props.concViewProps} />
                 </div>
             );
         }

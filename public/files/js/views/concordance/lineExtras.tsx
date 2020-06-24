@@ -47,7 +47,8 @@ export interface LineExtrasViews {
     }>;
 
     SyntaxTreeButton:React.SFC<{
-        onSyntaxViewClick:()=>void;
+        tokenNumber:number;
+        kwicLength:number;
     }>;
 
     RefInfo:React.SFC<{
@@ -206,8 +207,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ------------------------- <SyntaxTreeButton /> ---------------------
 
     const SyntaxTreeButton:LineExtrasViews['SyntaxTreeButton'] = (props) => {
+
+        const handleSyntaxBoxClick = () => {
+
+            dispatcher.dispatch({
+                name: 'SHOW_SYNTAX_VIEW',
+                payload: {
+                    tokenNumber: props.tokenNumber,
+                    kwicLength: props.kwicLength
+                }
+            });
+        };
+
         return (
-            <a onClick={props.onSyntaxViewClick} title={he.translate('concview__click_to_see_the_tree')}>
+            <a onClick={handleSyntaxBoxClick} title={he.translate('concview__click_to_see_the_tree')}>
                 <img src={he.createStaticUrl('img/syntax-tree-icon.svg')} style={{width: '1em'}}
                         alt="syntax-tree-icon" />
             </a>
